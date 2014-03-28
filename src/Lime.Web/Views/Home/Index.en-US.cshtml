@@ -1,0 +1,934 @@
+﻿@{
+    ViewBag.Title = "Home";
+}
+
+<div class="col-md-10" role="main">
+    <h1 class="page-header anchor" id="introduction">Introduction</h1>
+
+    <h3>What is it?</h3>
+    <p><strong>LIME Protocol</strong> (acronym for <em>Lightweight Messaging Protocol</em>) is a JSON based protocol for P2P messaging, inspired by the XMPP protocol. It aims to be simple but extensible, with little verbosity but yet providing good readability.</p>
+
+    <h3>And why not just use XMPP?</h3>
+    <p>XMPP is a protocol widely used for real-time communication but is complex due to the number of features and extensions that it implements. Just take a look at its <a href="http://xmpp.org/xmpp-protocols/xmpp-core/">specification</a> to understand that XMPP goes far beyond what LIME proposes.</p>
+    <p>The LIME protocol defines only a basic message structure and makes use of the MIME content type declarations to remain extensible, but is not mean to cover all the scenarios that XMPP supports.</p>
+
+    <h1 id="definitions" class="anchor">Definitions</h1>
+    <h3 id="concepts">Concepts</h3>
+
+    <p>The basic idea of the protocol is the exchange of JSON documents between elements in a network. These documents are called <strong>envelopes</strong> and the elements <strong>nodes</strong>.</p>
+    <p>The protocol defines four types of envelopes:</p>
+    <ul>
+        <li>
+            <strong><a href="#message">Message</a></strong> - Provides the transport of a content between nodes in a network.
+        </li>
+        <li>
+            <strong><a href="#notification">Notification</a></strong> - Notify events related to a message.
+        </li>
+        <li>
+            <strong><a href="#command">Command</a></strong> - Allows the manipulation of node resources, like server session parameters or information related to network nodes.
+        </li>
+        <li>
+            <strong><a href="#session">Session</a></strong> - Allows the configuration and establishment of the communication channel between nodes.
+        </li>
+    </ul>
+
+    <p>The nodes communicate with each other over duplex persistent connections, like TCP or Websockets. When connected, each node can have a different role with different capabilities. These roles and their capabilities are:</p>
+    <ul>
+        <li>
+            <strong>Node</strong>
+            <ul>
+                <li>Can send and receive messages, commands and notifications.</li>
+                <li>Can connect to servers.</li>
+                <li>Can request the session establishment when connected to a server.</li>
+            </ul>
+        </li>
+        <li>
+            <strong>Server</strong>
+            <ul>
+                <li>Has the same capabilities of the nodes.</li>
+                <li>Can establish a session.</li>
+                <li>Can forward messages in behalf of a node to other servers.</li>
+                <li>Can hold resources owned by other identities than the server identity.</li>
+                <li>Can manipulate a specific set of resources of the connected servers.</li>
+            </ul>
+        </li>
+        <li>
+            <strong>Application</strong>
+            <ul>
+                <li>Has the same capabilities of the nodes.</li>
+                <li>Can receive messages and commands addressed to nodes in a specific subdomain.</li>
+                <li>Can manipulate a specific set of resources of the server.</li>
+            </ul>
+        </li>
+        <li>
+            <strong>Gateway</strong>
+            <ul>
+                <li>Has the same capabilities of the nodes.</li>
+                <li>Can receive messages addressed to a specific domain, different of the server domain.</li>
+                <li>Can manipulate a specific set of resources of the server.</li>
+            </ul>
+        </li>
+    </ul>
+
+    <p>Every connected node must have an identity, presented in the format <em>name@domain</em>, as defined by the <a href="http://tools.ietf.org/html/rfc2822#section-3.4.1">RFC 2822, section 3.4.1</a>. The domain name SHOULD be a valid domain (i.e. can be resolved by a DNS server) and the name a valid user account identifier in the domain. The identity is authenticated by the server during the establishment of the session.</p>
+    <p>In addition to the identity, the connected node can provide a name to the particular connection using a identifier called <em>instance</em>. This identifier should appears after the identity, separated by a slash (/) symbol, during the session authentication process. Since one identity can have more than one active connection in a domain, the <em>instance</em> should be used to differentiate these connections. Normally is used the name of the device (John-Cellphone, John-PC) but can be any valid string. If not provided, the server will set a generic value.</p>
+    <p>Therewith, the complete format of a node identifier is <em>name@domain/instance</em>, similar to the <a href="http://xmpp.org/rfcs/rfc3920.html#rfc.section.3">XMPP's Jabber ID</a> (the difference is that the identifier located after the slash is called <em>instance</em> instead of <em>resource</em>). The node identifier must be unique in a LIME network and a envelope addressed to a specific node should be delivered to a connection with that identifier (except for <a href="http://limeprotocol.org/resourcetypes#presence">promiscuous sessions</a>). envelopes addressed to a identity (<em>name@domain</em>) can be routed in different ways, according to the node presence configuration: A node can opt to always receive all messages sent to the identity, or to receive if it have the highest priority (like XMPP) or only receive if are addressed to the specific instance.</p>
+
+    <h3 id="envelope">Envelope</h3>
+    <p>The JSON documents exchanged in a LIME conversation are called envelopes. The JSON data MUST be encoded in the <a href="http://tools.ietf.org/html/rfc3629">UTF-8</a> format.</p>
+    <p>Each envelope MAY contains the following properties:</p>
+    <ul>
+        <li>
+            <strong>from</strong> - Identifier of the sender node of the envelope, in the <em>name@domain/instance</em> format. 
+        </li>
+        <li>
+            <strong>to</strong> - Identifier of the destination node of the envelope, in the same format of the sender. 
+        </li>
+        <li>
+            <strong>pp</strong> - Acronym for <em>per procurationem</em>. Identifier of a delegate node, in the <em>name@domain/instance</em> format. Allows a node to send an envelope on behalf of another identity. The sender must have been delegated by this identity through a <a href="#">delegate</a> command.
+        </li>
+        <li>
+            <strong>id</strong> - Unique identifier of the envelope, in the <a href="http://www.ietf.org/rfc/rfc4122.txt">UUID</a> format. 
+            The purpose of using a 128-bit identifier is minimize the risk of a collision, since the protocol allows interconnections between networks in different domains, each one with a large number of connected nodes.
+        </li>
+        <li>
+            <strong>metadata</strong> - Allows the transport of generic information, in the "name": "value" format. This property is OPTIONAL for all envelopes. Any value set in this property SHOULD NOT change the behavior of the server.
+        </li>
+    </ul>
+
+    <h3 id="message">Message</h3>
+    <p>A message provides the transport of a content between nodes in a network.</p>
+    <p>JSON Schema:</p>
+<pre>
+<code class="json-schema">
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "message",
+    "type": "object",
+    "properties": {
+        "from": {
+            "type": "string",
+            "pattern": "^(?:([^\"&'/:<>@@]{1,1023})@@)?([^/@@]{1,1023})(?:/(.{1,1023}))?$"
+        },
+        "to": {
+            "type": "string",
+            "pattern": "^(?:([^\"&'/:<>@@]{1,1023})@@)?([^/@@]{1,1023})(?:/(.{1,1023}))?$"
+        },
+        "pp": {
+            "type": "string",
+            "pattern": "^(?:([^\"&'/:<>@@]{1,1023})@@)?([^/@@]{1,1023})(?:/(.{1,1023}))?$"
+        },
+        "id" : {
+            "type": "string",
+            "pattern": "\b[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}\b"
+        },
+        "metadata": {
+            "type": "object"
+        },
+        "type" : {
+            "type": "string",
+            "pattern": "^[-\w]+/[-\w.]+(\+json)$"
+        },
+        "content" : {
+            "type": "object"
+        },
+    },
+    "required": [ "type", "content" ],
+    "additionalProperties": false
+}
+</code>
+</pre>
+
+    <p>In a message, the following constraints should apply to the envelope properties:</p>
+    <ul>
+        <li>
+            <strong>id</strong> - OPTIONAL. The sender just need provide this information in order to receive notifications related to the message. If not provided, the message is processed in the <em>fire-and-forget</em> mode.
+        </li>
+        <li>
+            <strong>from</strong> - OPTIONAL for the sender, since the value can be determined by the server in the session. MANDATORY in the destination.
+        </li>
+        <li>
+            <strong>to</strong> - MANDATORY for the sender, but he may ommit the value of the <em>instance</em>. OPTIONAL in the destination.
+        </li>
+        <li>
+            <strong>pp</strong> - OPTIONAL for the sender, when is considered the identity of the session. Is MANDATORY in the destination if the identity of the originator is different of the identity of the <em>from</em> property.
+        </li>
+        <li>
+            <strong>metadata</strong> - The sender should avoid to use this property to transport any kind of content-related information, but merely data relevant to the context of the communication. Consider to define a new content type if there's a need to include more content information into the message.
+        </li>
+
+    </ul>
+
+    <p>Besides the properties defined in the envelope, a message SHOULD contains:</p>
+    <ul>
+        <li>
+            <strong>type</strong> - <a href="http://tools.ietf.org/html/rfc2045">MIME</a> declaration of the content type of the message. It is used by the destination to handle the content in the appropriate way. The protocol defines some <a href="@Url.Action("ContentTypes")">common types</a> that SHOULD be reused, but any kind of content with subtype JSON is supported. If you are using a custom content type, consider <a href="http://www.iana.org/cgi-bin/mediatypes.pl">registering it</a> with IANA in order to provide interoperability.
+        </li>
+        <li>
+            <strong>content</strong> - JSON representation of the content.
+        </li>
+    </ul>
+
+    <p class="lead">Examples</p>
+
+    <p><em>Fire-and-forget</em> text message (no id):</p>
+<pre>
+<code class="json">
+{
+    "from": "skyler@breakingbad.com/bedroom",
+    "to": "ww@breakingbad.com",
+    "type": "application/vnd.lime.text+json",
+    "content": {
+        "text": "Walter, are you in danger?"
+    }
+}
+</code>
+</pre>
+
+    <p>Text message with metadata and notification support:</p>
+<pre>
+<code class="json">
+{
+    "id": "48600604-ce09-479c-b985-1195b196fe8e",
+    "from": "heisenberg@breakingbad.com/bedroom",
+    "to": "skyler@breakingbad.com",
+    "type": "application/vnd.lime.text+json",
+    "content": {
+        "text": "I am the one who knocks!"
+    },
+    "metadata": {
+        "serverIp": "192.168.0.1"
+    }
+}
+</code>
+</pre>
+
+    <h3 id="notification">Notification</h3>
+    <p>A notification transports information about events associated to a message sent in a session. Can be originated by a server or by the message destination node.</p>
+
+    <p>JSON Schema:</p>
+<pre>
+<code class="json-schema">
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "notification",
+    "type": "object",
+    "properties": {
+        "from": {
+            "type": "string",
+            "pattern": "^(?:([^\"&'/:<>@@]{1,1023})@@)?([^/@@]{1,1023})(?:/(.{1,1023}))?$"
+        },
+        "to": {
+            "type": "string",
+            "pattern": "^(?:([^\"&'/:<>@@]{1,1023})@@)?([^/@@]{1,1023})(?:/(.{1,1023}))?$"
+        },
+        "pp": {
+            "type": "string",
+            "pattern": "^(?:([^\"&'/:<>@@]{1,1023})@@)?([^/@@]{1,1023})(?:/(.{1,1023}))?$"
+        },
+        "id" : {
+            "type": "string",
+            "pattern": "\b[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}\b"
+        },
+        "metadata": {
+            "type": "object"
+        },
+        "event" : {
+            "enum": [ 
+                "accepted",
+                "validated",
+                "authorized",
+                "dispatched",
+                "received",
+                "failed"
+            ]
+        },
+        "reason" : {
+            "type": "object",
+            "properties": {
+                "code" : {
+                    "type": "integer"
+                },
+                "description": {
+                    "type": "string"
+                }
+            },
+            "required": [ "code" ]
+        }
+    },
+    "required": [ "id", "event" ],
+    "additionalProperties": false
+}
+</code>
+</pre>
+
+    <p>In a notification, the following constraints should apply to the envelope properties:</p>
+    <ul>
+        <li>
+            <strong>id</strong> - MANDATORY. The id references the related message.
+        </li>
+        <li>
+            <strong>from</strong> - OPTIONAL. If the value is not present in the destination, it means that the notification was generated by the connected node (server).
+        </li>
+        <li>
+            <strong>to</strong> - MANDATORY for the sender and OPTIONAL in the destination.
+        </li>
+        <li>
+            <strong>pp</strong> - OPTIONAL for the sender, when is considered the identity of the session. Is MANDATORY in the destination if the identity of the originator is different of the identity of the <em>from</em> property.
+        </li>
+        <li>
+            <strong>metadata</strong> - Avoid to use this property to transport any event-related data.
+        </li>
+    </ul>
+
+    <p>Besides the envelope properties, a notification MAY contains:</p>
+    <ul>
+        <li>
+            <strong>event</strong> - Name of the event. This property is mandatory. The possible values are:
+            <ul>
+                <li>
+                    <strong>accepted</strong> - The message was received and accepted by the server.
+                </li>
+                <li>
+                    <strong>validated</strong> - The message format was validated by the server.
+                </li>
+                <li>
+                    <strong>authorized</strong> - The dispatch of the message was authorized by the server.
+                </li>
+                <li>
+                    <strong>dispatched</strong> - The message was dispatched to the destination by the server.
+                </li>
+                <li>
+                    <strong>received</strong> - The destination has received the message.
+                </li>
+                <li>
+                    <strong>failed</strong> - A problem occurred during the processing of the message. In this case, the <em>reason</em> property of the notification SHOULD be present.
+                </li>
+            </ul>
+        </li>
+        <li>
+            <strong>reason</strong> - In the case of a <em>failed</em> event, this property brings more details about the problem. It contains the following properties:
+            <ul>
+                <li>
+                    <strong>code</strong> - Code number of the reason. There are some protocol pre-defined codes, but may exists specific codes for each implementation of the protocol.
+                </li>
+                <li>
+                    <strong>description</strong> - Description message of the problem. This property can be omitted.
+                </li>
+            </ul>
+
+        </li>
+    </ul>
+
+    <p class="lead">Examples</p>
+    <p>Received notification sent by the destination node:</p>
+<pre>
+<code class="json">
+{
+    "id": "48600604-ce09-479c-b985-1195b196fe8e",
+    "from": "skyler@breakingbad.com/bedroom",
+    "to": "heisenberg@breakingbad.com/bedroom",
+    "event": "received"
+}
+</code>
+</pre>
+
+    <p>Failure notification sent by the server:</p>
+<pre>
+<code class="json">
+{
+    "id": "9d0c4fea-75c7-432a-a164-c1a219bc17a8",
+    "to": "skyler@breakingbad.com/bedroom",
+    "event": "failed",
+    "reason": {
+        "code": 42,
+        "description": "The message destination was not found"
+    }
+}
+</code>
+</pre>
+
+    <h3 id="command">Command</h3>
+
+    <p>Allows the manipulation of node resources, like server session parameters or information related to the network nodes.</p>
+    <p>JSON Schema:</p>
+<pre>
+<code class="json-schema">
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "command",
+    "type": "object",
+    "properties": {
+        "from": {
+            "type": "string",
+            "pattern": "^(?:([^\"&'/:<>@@]{1,1023})@@)?([^/@@]{1,1023})(?:/(.{1,1023}))?$"
+        },
+        "to": {
+            "type": "string",
+            "pattern": "^(?:([^\"&'/:<>@@]{1,1023})@@)?([^/@@]{1,1023})(?:/(.{1,1023}))?$"
+        },
+        "pp": {
+            "type": "string",
+            "pattern": "^(?:([^\"&'/:<>@@]{1,1023})@@)?([^/@@]{1,1023})$"
+        },
+        "id" : {
+            "type": "string",
+            "pattern": "\b[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}\b"
+        },
+        "metadata": {
+            "type": "object"
+        },
+        "method" : {
+            "enum": [ 
+                "get",
+                "set",
+                "delete",
+                "observe"
+            ]
+        },
+        "type" : {
+            "type": "string",
+            "pattern": "^[-\w]+/[-\w.]+(\+json)$"
+        },
+        "resource" : {
+            "type": "object"
+        },
+        "status": {
+            "enum": [
+                "success",
+                "failure"
+            ]
+        },
+        "reason" : {
+            "type": "object",
+            "properties": {
+                "code" : {
+                    "type": "integer"
+                },
+                "description": {
+                    "type": "string"
+                }
+            },
+            "required": [ "code" ]
+        }
+    },
+    "required": [ "id", "method" ],
+    "additionalProperties": false
+}
+</code>
+</pre>
+
+    <p>In a command, the following constraints should apply to the envelope properties:</p>
+    <ul>
+        <li>
+            <strong>id</strong> - MANDATORY, except for the <em>observe</em> method. Must be provided during the request and the same value should be in the related response command.
+        </li>
+        <li>
+            <strong>from</strong> - OPTIONAL. If the value is not present in the destination, it means that the notification was generated by the connected node (server).
+        </li>
+        <li>
+            <strong>to</strong> - OPTIONAL. If the value is left empty in the request, the command will be processed by the connected node (server).
+        </li>
+        <li>
+            <strong>pp</strong> - OPTIONAL. This property is useful to get resources in the server owned by different identities, like presence and account information. The value SHOULD be defined if the resource of an <em>observe</em> method command is owned by a different identity than the destination.
+        </li>
+        <li>
+            <strong>metadata</strong> - Avoid to use this property to transport any command-related data, like extra parameters.
+        </li>
+    </ul>
+
+    <p>Besides the envelope properties, a command MAY contains:</p>
+    <ul>
+        <li>
+            <strong>method</strong> - Method for the manipulation of the resource. This property is mandatory. The possible values are:
+            <ul>
+                <li>
+                    <strong>get</strong> - Gets an existing value of the resource.
+                </li>
+                <li>
+                    <strong>set</strong> - Sets a new value for the resource.
+                </li>
+                <li>
+                    <strong>delete</strong> - Deletes a value of the resource or the resource itself.
+                </li>
+                <li>
+                    <strong>observe</strong> - Notify the destination about a change in the resource value of the sender. This method is one way and the destination SHOULD NOT send a response for it. Because of that, a command envelope with this method MAY NOT have an <em>id</em>.
+                </li>
+            </ul>
+        </li>
+        <li>
+            <strong>type</strong> - MIME type of the resource. Like the messages, the protocol defines some <a href="@Url.Action("ResourceTypes")">common resource types</a>, but may exists specific resources to the implementation. this property should be present if the method is<em>get</em> or if the <em>resource</em> property is defined.
+        </li>
+        <li>
+            <strong>resource</strong> - JSON representation of the resource. It MUST be present in commands with the methods <em>set</em> and <em>observe</em> and MAY be present in the method <em>delete</em>.
+            In a command response, MUST be present in successfully processed command with the method <em>get</em>.
+        </li>
+    </ul>
+
+    <p>In addition of the above, the command response MAY contains the following properties:</p>
+    <ul>
+        <li>
+            <strong>status</strong> - Result status of the command processing. The valid values are:
+            <ul>
+                <li>
+                    <strong>success</strong> - The command was processed successfully. In cases of command of method <em>get</em>, the property <em>resource</em> of the response should have a value.
+                </li>
+                <li>
+                    <strong>failure</strong> - A problem occurred while processing the command. In this case, the property <em>reason</em> of the response should have a value.
+                </li>
+            </ul>
+        </li>
+        <li>
+            <strong>reason</strong> - If the command was not successfully processed, this property should provide more details about the problem. It contains the following properties:
+            <ul>
+                <li>
+                    <strong>code</strong> - Code number of the reason. There are some protocol pre-defined codes, but may exists specific codes for each implementation of the protocol.
+                </li>
+                <li>
+                    <strong>description</strong> - Description message of the problem. This property can be omitted.
+                </li>
+            </ul>
+        </li>
+    </ul>
+
+    <p class="lead">Examples</p>
+
+    <p>Setting the presence:</p>
+<pre>
+C:
+<code class="json">
+{
+    "id": "9cbe5fe1-b6b2-4afe-ab12-0675aa139f36",
+    "from": "jesse@breakingbad.com/home", 
+    "method": "set",
+    "type": "application/vnd.lime.presence+json",
+    "resource": {
+        "status": "available",
+        "message": "Yo 148, 3-to-the-3-to-the-6-to-the-9. Representin' the ABQ. What up, biatch?"
+    }
+}
+</code>
+S:
+<code class="json">
+{
+    "id": "9cbe5fe1-b6b2-4afe-ab12-0675aa139f36",
+    "from": "server@breakingbad.com",    
+    "method": "set",
+    "status": "success"    
+}
+</code>
+</pre>
+
+    <p>Getting the roster:</p>
+<pre>
+C:
+<code class="json">
+{
+    "id": "b784a7d2-59d7-45de-a1eb-8c50a0f5edb8",
+    "from": "jesse@breakingbad.com/home",    
+    "method": "get",
+    "type": "application/vnd.lime.roster+json"
+}
+</code>
+S:
+<code class="json">
+{
+    "id": "b784a7d2-59d7-45de-a1eb-8c50a0f5edb8",
+    "from": "server@breakingbad.com",    
+    "method": "get",
+    "status": "success",
+    "type": "application/vnd.lime.roster+json",
+    "resource": {
+        "contacts": [
+            { 
+                "identity": "skinnypete@breakingbad.com"
+            },
+            { 
+                "identity": "badger@breakingbad.com"
+            },
+            { 
+                "identity": "combo@breakingbad.com"
+            },
+            { 
+                "identity": "krazy8@breakingbad.com",
+                "sharePresence": false
+            }
+        ]
+    }
+}
+</code>
+</pre>
+
+    <p>Trying without success to get another user account information:</p>
+<pre>
+C:
+<code class="json">
+{
+    "id": "5c95e87f-7f0c-4cc3-b55b-99056d9f288d",
+    "from": "gusfring@breakingbad.com",
+    "pp": "saul@breakingbad.com",
+    "method": "get",
+    "type": "application/vnd.lime.account+json"
+}
+</code>
+S:
+<code class="json">
+{
+    "id": "5c95e87f-7f0c-4cc3-b55b-99056d9f288d",
+    "from": "server@breakingbad.com",
+    "method": "get",
+    "status": "failure",
+    "reason": {
+        "code": 56,
+        "description": "The request account is not sharing information with current session identity"
+    }
+}
+</code>
+</pre>
+
+    <h3 id="session">Session</h3>
+
+    <p>Allows the configuration and establishment of the communication channel between nodes. Parameters like authentication, cryptography and compression are set through the session envelope.</p>
+
+    <p>JSON Schema:</p>
+<pre>
+<code class="json-schema">
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "session",
+    "type": "object",
+    "properties": {
+        "from": {
+            "type": "string",
+            "pattern": "^(?:([^\"&'/:<>@@]{1,1023})@@)?([^/@@]{1,1023})(?:/(.{1,1023}))?$"
+        },
+        "to": {
+            "type": "string",
+            "pattern": "^(?:([^\"&'/:<>@@]{1,1023})@@)?([^/@@]{1,1023})(?:/(.{1,1023}))?$"
+        },
+        "id" : {
+            "type": "string",
+            "pattern": "\b[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}\b"
+        },
+        "metadata": {
+            "type": "object"
+        },
+        "state" : {
+            "enum": [ 
+                "new",
+                "negotiating",
+                "authenticating",
+                "established",
+                "finishing",
+                "finished",
+                "failed"
+            ]
+        },
+        "mode" : {
+            "enum": [
+                "node",
+                "application",
+                "server",
+                "gateway"
+            ]
+        },
+        "encryptionOptions": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string" },
+            "uniqueItems": true
+        },
+        "encryption": {
+            "type": "string"
+        },
+        "compressionOptions": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string" },
+            "uniqueItems": true
+        },
+        "compression": {
+            "type": "string"
+        },
+        "schemeOptions": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string" },
+            "uniqueItems": true
+        },
+        "scheme": {
+            "type": "string"
+        },
+        "authentication": {
+            "type": "object"
+        },
+        "reason" : {
+            "type": "object",
+            "properties": {
+                "code" : {
+                    "type": "integer"
+                },
+                "description": {
+                    "type": "string"
+                }
+            },
+            "required": [ "code" ]
+        }
+    },
+    "required": [ "state" ],
+    "additionalProperties": false
+}
+</code>
+</pre>
+
+
+    <p>In a session, the following constraints should apply to the envelope properties:</p>
+    <ul>
+        <li>
+            <strong>id</strong> - MANDATORY, except in the first request sent by the client (<em>new</em> state). This value is generated by the server in the first session envelope sent to the client.
+        </li>
+        <li>
+            <strong>from</strong> - MANDATORY for the client during the session authentication. Otherwise, is OPTIONAL.
+        </li>
+        <li>
+            <strong>to</strong> - OPTIONAL.
+        </li>
+        <li>
+            <strong>pp</strong> - NOT APPLICABLE.
+        </li>
+        <li>
+            <strong>metadata</strong> - The server should ignore any value set in this property by the client but it can use this property to send statistics about itself (serverVersion, lastConnectionDate, and so) to the client.
+        </li>
+    </ul>
+
+    <p>Besides envelope properties, a session MAY contains:</p>
+    <ul>
+        <li>
+            <strong>state</strong> - Informs or changes the state of a session. Only the server can change the session state, but the client can request the state transition. The valid values are:
+            <ul>
+                <li>
+                    <strong>new</strong> - The session is new and doesn't exists an established context. It is sent by a client node to start a session with a server.
+                </li>
+                <li>
+                    <strong>negotiating</strong> - The server and the client are negotiating the session options, like cryptography and compression. The server sends to the client the options (if available) and the client chooses the desired options.
+                    If there's no options (for instance, if the connection is already encrypted or the transport protocol doesn't support these options), the server SHOULD skip the negotiation.
+                </li>
+                <li>
+                    <strong>authenticating</strong> - The session is being authenticated. The server sends to the client the available authentication schemes list and the client must choose one and send the specific authentication data.
+                    The authentication can occurs in multiple roundtrips, according to the selected schema.
+                </li>
+                <li>
+                    <strong>established</strong> - The session is active and is possible to send and receive messages and commands. The server sends this state after the session was authenticated.
+                </li>
+                <li>
+                    <strong>finishing</strong> - The client node is requesting to the server to finish the session.
+                </li>
+                <li>
+                    <strong>finished</strong> - The session was finished by the server.
+                </li>
+                <li>
+                    <strong>failed</strong> - A problem occurred while the session was established, under negotiation or authentication and it was closed by the server. In this case, the property <em>reason</em> MUST be present to provide more details about the problem.
+                </li>
+            </ul>
+
+        </li>
+        <li>
+            <strong>mode</strong> - Defines the role of the client node in the session with the server. This property is optional and the possible values are:
+            <ul>
+                <li>
+                    <strong>node</strong> - Default mode. Allows the message, notification and command exchange with other nodes.
+                </li>
+                <li>
+                    <strong>application</strong> - In this mode, the server defines a subdomain to forward messages and commands addressed to identities of this subdomain.
+                    For instance, if the user <em>chat@domain.com</em> starts a session in the application mode, a message addressed to <em>anyuser@chat.mydomain.com</em> will be delivered to the node <em>chat@domain.com</em>.
+                </li>
+                <li>
+                    <strong>server</strong> - Establish a session between server of the same domain. The servers exchange information about the connected nodes and forward messages from local nodes to remote nodes.
+                </li>
+                <li>
+                    <strong>gateway</strong> - Establish a session between servers of different domains. The gateway session receive messages addressed to identities of the specified domain and can send messages to local nodes sent by foreign nodes.
+                </li>
+            </ul>
+        </li>
+        <li>
+            <strong>encryptionOptions</strong> - Encryption options provided by the server during the session negotiation. Some of the valid values (not limited to) are:
+            <ul>
+                <li>
+                    <strong>none</strong> - The session will be not encrypted.
+                </li>
+            </ul>
+            <ul>
+                <li>
+                    <strong>tls</strong> - The session will be encrypted by TLS.
+                </li>
+            </ul>
+        </li>
+        <li>
+            <strong>encryption</strong> - The encryption option selected for the session. This property is provided by the client in the negotiation and by the server in the confirmation after that.
+        </li>
+        <li>
+            <strong>compressionOptions</strong> - Compression options provided by the server during the session negotiation. Some of the valid values (not limited to) are:
+            <ul>
+                <li>
+                    <strong>none</strong> - The session will not be compressed.
+                </li>
+            </ul>
+            <ul>
+                <li>
+                    <strong>gzip</strong> - The session will use the GZip algorithm for compression.
+                </li>
+            </ul>
+        </li>
+        <li>
+            <strong>compression</strong> - The compression option selected for the session. This property is provided by the client in the negotiation and by the server in the confirmation after that.
+        </li>
+        <li>
+            <strong>schemeOptions</strong> - List of available authentication schemas for session authentication provided by the server. Some of the valid values (not limited to) are:
+            <ul>
+                <li>
+                    <strong>guest</strong> - The server doesn't requires a client credential, and provides a temporary identity to the node. Some restriction may apply to guest sessions, like the inability of sending some commands or other nodes may want to block messages originated by guest identities.
+                </li>
+                <li>
+                    <strong>plain</strong> - User and password authentication.
+                </li>
+            </ul>
+        </li>
+        <li>
+            <strong>scheme</strong> - The authentication scheme option selected for the session. This property must be present if the property authentication is defined.
+        </li>
+        <li>
+            <strong>authentication</strong> - Authentication data, related to the selected schema. Information like password sent by the client or roundtrip data sent by the server.
+        </li>
+        <li>
+            <strong>reason</strong> - In cases where the client receives a session with <em>failed</em> state, this property should provide more details about the problem. It contains the following properties:
+            <ul>
+                <li>
+                    <strong>code</strong> - Code number of the reason. There are some protocol pre-defined codes, but may exists specific codes for each implementation of the protocol.
+                </li>
+                <li>
+                    <strong>description</strong> - Description message of the problem. This property can be omitted.
+                </li>
+            </ul>
+        </li>
+    </ul>
+
+    <p class="lead">Examples</p>
+    <p>Establishment and closing of a session with negotiation and authentication:</p>
+<pre>
+C:
+<code class="json">
+{
+    "state": "new"
+}
+</code>
+S:
+<code class="json">
+{
+    "id": "d35ad2be-9aa9-4825-9096-d6332655ed1d",
+    "from": "server@breakingbad.com/server1",    
+    "state": "negotiating",
+    "encryptionOptions": [ "none", "tls" ],
+    "compressionOptions": [ "none", "gzip" ]
+    
+}
+</code>
+C:
+<code class="json">
+{
+    "id": "d35ad2be-9aa9-4825-9096-d6332655ed1d",
+    "state": "negotiating",    
+    "encryption": "tls",
+    "compression": "none"
+}
+</code>
+S:
+<code class="json">
+{
+    "id": "d35ad2be-9aa9-4825-9096-d6332655ed1d",
+    "from": "server@breakingbad.com/server1",    
+    "state": "negotiating",    
+    "encryption": "tls",
+    "compression": "none"
+}
+</code>
+S:
+<code class="json">
+{
+    "id": "d35ad2be-9aa9-4825-9096-d6332655ed1d",
+    "from": "server@breakingbad.com/server1",    
+    "state": "authenticating",    
+    "schemeOptions": [ "anonymous", "plain" ]
+}
+</code>
+C:
+<code class="json">
+{
+    "id": "d35ad2be-9aa9-4825-9096-d6332655ed1d",
+    "from": "gale@breakingbad.com/lab",
+    "state": "authenticating",
+    "scheme": "plain",
+    "authentication": {
+        "password": "aWxvdmV1d3c="
+    }
+}
+</code>
+S:
+<code class="json">
+{
+    "id": "d35ad2be-9aa9-4825-9096-d6332655ed1d",
+    "from": "server@breakingbad.com",   
+    "to": "gale@breakingbad.com/lab",             
+    "state": "established"    
+}
+</code>
+C:
+<code class="json">
+{
+    "id": "d35ad2be-9aa9-4825-9096-d6332655ed1d",
+    "state": "finishing"
+}
+</code>
+S:
+<code class="json">
+{
+    "id": "d35ad2be-9aa9-4825-9096-d6332655ed1d",
+    "from": "server@breakingbad.com/server1",
+    "state": "finished"
+}
+</code>
+</pre>
+
+</div>
+
+<div class="col-md-2" role="complementary">
+    <div id="sidebar">
+        <ul class="nav nav-pills nav-stacked">
+            <li>
+                <a href="#introduction">Introduction</a>
+            </li>
+            <li>
+                <a href="#definitions">Definitions</a>
+                <ul class="nav">
+                    <li>
+                        <a href="#concepts">Concepts</a>
+                    </li>
+                    <li>
+                        <a href="#envelope">Envelope</a>
+                    </li>
+                    <li>
+                        <a href="#message">Message</a>
+                    </li>
+                    <li>
+                        <a href="#notification">Notification</a>
+                    </li>
+                    <li>
+                        <a href="#command">Command</a>
+                    </li>
+                    <li>
+                        <a href="#session">Session</a>
+                    </li>
+                </ul>
+            </li>
+        </ul>
+    </div>
+</div>

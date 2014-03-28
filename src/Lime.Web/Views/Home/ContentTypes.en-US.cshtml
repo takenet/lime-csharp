@@ -1,0 +1,140 @@
+﻿@{
+    ViewBag.Title = "Content Types";
+}
+
+<div class="col-md-10" role="main">
+    <h1>Content Types</h1>
+    <p>The LIME protocol defines some common message content types that can be reused by the implementations of the protocol.</p>
+
+    <h2 id="text">Text</h2>
+    <p>Plain text content type. It's intended to be used for general text messages, like SMS or messenger clients.</p>
+
+    <h4>MIME type</h4>
+<pre>
+    application/vnd.lime.text+json
+</pre>
+
+    <h4>JSON Schema</h4>
+<pre>
+<code class="json-schema">
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "Message",
+    "type": "object",
+    "properties": {
+        "text": {
+            "type": "string"
+        },        
+    },
+    "required": [ "text" ]
+}
+</code>
+</pre>
+
+    <h4>Properties</h4>
+    <ul>
+        <li>
+            <strong>text</strong> - The actual message text.
+        </li>
+    </ul>
+
+    <h4>Example</h4>
+<pre>
+<code class="json">
+{
+    "from": "jesse@breakingbad.com/junkyard",
+    "to": "heisenberg@breakingbad.com",
+    "type": "application/vnd.lime.text+json",
+    "content": {
+        "text": "Yeah, bitch! Magnets!"
+    }        
+}
+</code>
+</pre>
+
+    <hr />
+
+    <h2 id="chatstate">Chat State</h2>
+
+    <p>Allows the chat clients to exchange information about conversation events.</p>
+
+    <h4>MIME type</h4>
+<pre>
+    application/vnd.lime.chatstate+json
+</pre>
+
+    <h4>JSON Schema</h4>
+<pre>
+<code class="json-schema">
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "ChatState",
+    "type": "object",
+    "properties": {
+        "state": {
+            "enum": [
+                "starting",
+                "composing",
+                "paused",
+                "deleting",
+                "gone"
+            ]
+        },        
+    },
+    "required": [ "state" ]
+}
+</code>
+</pre>
+
+    <h4>Properties</h4>
+    <ul>
+        <li>
+            <strong>state</strong> - The current chat state. The possible values are:
+            <ul>
+                <li>
+                    <strong>starting</strong> - The other chat party started a new chat a conversation.
+                </li>
+                <li>
+                    <strong>composing</strong> - The other party is typing.
+                </li>
+                <li>
+                    <strong>paused</strong> - The other party was typing but stopped.
+                </li>
+                <li>
+                    <strong>deleting</strong> - The other party is deleting a text.
+                </li>
+                <li>
+                    <strong>gone</strong> - The other party left the conversation.
+                </li>
+            </ul>
+        </li>
+    </ul>
+
+    <h4>Example</h4>
+
+<pre>
+<code class="json">
+{
+    "from": "jesse@breakingbad.com/junkyard",
+    "to": "heisenberg@breakingbad.com",
+    "type": "application/vnd.lime.chatstate+json",
+    "content": {
+        "state": "composing"
+    }        
+}
+</code>
+</pre>
+</div>
+
+<div class="col-md-2" role="complementary">
+    <div id="sidebar">
+        <ul class="nav nav-pills nav-stacked">
+            <li>
+                <a href="#text">Text</a>
+            </li>
+            <li>
+                <a href="#chatstate">Chat state</a>
+            </li>
+        </ul>
+    </div>
+</div>
