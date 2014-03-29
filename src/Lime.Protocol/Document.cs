@@ -15,6 +15,8 @@ namespace Lime.Protocol
     {
         private MediaType _mediaType;
 
+        #region Constructor
+
         public Document(MediaType mediaType)
         {
             if (mediaType == null)
@@ -25,6 +27,7 @@ namespace Lime.Protocol
             _mediaType = mediaType;
         }
 
+        #endregion
 
         #region IDocument Members
 

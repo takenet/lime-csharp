@@ -82,7 +82,9 @@
     <Compile Include="Resources\Subscription.cs" />
     <Compile Include="Security\GuestAuthentication.cs" />
     <Compile Include="Security\PlainAuthentication.cs" />
+    <Compile Include="Serialization\TypeUtil.cs" />
     <Compile Include="Serialization\IEnvelopeSerializer.cs" />
+    <Compile Include="Serialization\ServiceStackSerializer.cs" />
     <Compile Include="Session.cs" />
   </ItemGroup>
   <ItemGroup />
