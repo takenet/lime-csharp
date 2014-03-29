@@ -10,7 +10,7 @@ namespace Lime.Protocol.Network
     /// Holds the information for a 
     /// envelope related event
     /// </summary>
-    public class EnvelopeEventArgs<T> : IEnvelopeContainer<T> where T : Envelope
+    public class EnvelopeEventArgs<T> : EventArgs, IEnvelopeContainer<T> where T : Envelope
     {
         public EnvelopeEventArgs(T envelope)
         {

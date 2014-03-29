@@ -69,15 +69,37 @@ namespace Lime.Protocol
         public Reason Reason { get; set; }
     }
 
+    /// <summary>
+    /// Defines method for the manipulation 
+    /// of resources.
+    /// </summary>
     [DataContract(Namespace = "http://limeprotocol.org/2014")]
     public enum CommandMethod
     {
+        /// <summary>
+        /// Gets an existing value of the resource.
+        /// </summary>
         [EnumMember(Value = "get")]
         Get,
+        /// <summary>
+        /// Sets or updates a for the resource.
+        /// </summary>
         [EnumMember(Value = "set")]
         Set,
+        /// <summary>
+        /// Deletes a value of the resource 
+        /// or the resource itself.
+        /// </summary>
         [EnumMember(Value = "delete")]
         Delete,
+        /// <summary>
+        /// Notify the destination about a change 
+        /// in the resource value of the sender. 
+        /// This method is one way and the destination 
+        /// SHOULD NOT send a response for it. 
+        /// Because of that, a command envelope with this 
+        /// method MAY NOT have an id.
+        /// </summary>
         [EnumMember(Value = "observe")]
         Observe,
     }

@@ -20,7 +20,7 @@ namespace Lime.Protocol.Network
 
         /// <summary>
         /// Occurs when a notification is 
-        /// received by the client
+        /// received by the node
         /// </summary>
         event EventHandler<EnvelopeEventArgs<Notification>> NotificationReceived;
     }

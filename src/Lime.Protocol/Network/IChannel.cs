@@ -6,6 +6,10 @@ using System.Threading.Tasks;
 
 namespace Lime.Protocol.Network
 {
+    /// <summary>
+    /// Defines a communication channel 
+    /// for the protocol
+    /// </summary>
     public interface IChannel : IMessageChannel, ICommandChannel, INotificationChannel, ISessionChannel
     {
         /// <summary>
@@ -22,6 +26,11 @@ namespace Lime.Protocol.Network
         /// Remote node identifier
         /// </summary>
         Node LocalNode { get; }
+
+        /// <summary>
+        /// The session Id
+        /// </summary>
+        Guid SessionId { get; }
 
         /// <summary>
         /// Current session state

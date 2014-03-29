@@ -16,7 +16,7 @@ namespace Lime.Protocol.Network
     /// </summary>
     public class DeferralEventArgs : EventArgs
     {
-        private readonly DeferralManager deferrals = new DeferralManager();
+        private readonly DeferralManager _deferrals = new DeferralManager();
 
         public DeferralEventArgs()
         {
@@ -25,12 +25,12 @@ namespace Lime.Protocol.Network
 
         public IDisposable GetDeferral()
         {
-            return deferrals.GetDeferral();
+            return _deferrals.GetDeferral();
         }
 
         internal Task WaitForDeferralsAsync()
         {
-            return deferrals.SignalAndWaitAsync();
+            return _deferrals.SignalAndWaitAsync();
         }
     }
 }
