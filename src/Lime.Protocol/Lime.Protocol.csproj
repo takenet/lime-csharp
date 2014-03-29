@@ -43,6 +43,19 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Network\AsyncCountdownEvent.cs" />
+    <Compile Include="Network\DeferralEventArgs.cs" />
+    <Compile Include="Network\EnvelopeEventArgs.cs" />
+    <Compile Include="Network\ExceptionEventArgs.cs" />
+    <Compile Include="Network\IChannel.cs" />
+    <Compile Include="Network\ICommandChannel.cs" />
+    <Compile Include="Network\IEnvelopeContainer.cs" />
+    <Compile Include="Network\IMessageChannel.cs" />
+    <Compile Include="Network\INotificationChannel.cs" />
+    <Compile Include="Network\DeferralManager.cs" />
+    <Compile Include="Network\ISessionChannel.cs" />
+    <Compile Include="Notification.cs" />
+    <Compile Include="Security\Authentication.cs" />
     <Compile Include="Command.cs" />
     <Compile Include="Contents\ChatState.cs" />
     <Compile Include="Document.cs" />
@@ -53,6 +66,7 @@
     <Compile Include="IIdentity.cs" />
     <Compile Include="Message.cs" />
     <Compile Include="MediaType.cs" />
+    <Compile Include="Network\ITransport.cs" />
     <Compile Include="Node.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Reason.cs" />
@@ -66,7 +80,10 @@
     <Compile Include="Resources\Quota.cs" />
     <Compile Include="Resources\Roster.cs" />
     <Compile Include="Resources\Subscription.cs" />
+    <Compile Include="Security\GuestAuthentication.cs" />
+    <Compile Include="Security\PlainAuthentication.cs" />
     <Compile Include="Serialization\IEnvelopeSerializer.cs" />
+    <Compile Include="Session.cs" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
