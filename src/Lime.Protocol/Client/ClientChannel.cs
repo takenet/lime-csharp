@@ -73,7 +73,7 @@ namespace Lime.Protocol.Client
         /// <summary>
         /// Send a authenticate session envelope
         /// to the server to establish
-        /// a authenticated session
+        /// an authenticated session
         /// </summary>
         /// <param name="identity"></param>
         /// <param name="authentication">Authentication information.</param>
