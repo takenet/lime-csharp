@@ -13,9 +13,11 @@ namespace Lime.Protocol.Network
     /// </summary>
     public abstract class ChannelBase : IChannel, IDisposable
     {
+        private TimeSpan _sendTimeout;
+
         #region Constructors
 
-        public ChannelBase(ITransport transport)
+        public ChannelBase(ITransport transport, TimeSpan sendTimeout)
         {
             if (transport == null)
             {
@@ -25,6 +27,7 @@ namespace Lime.Protocol.Network
             this.Transport = transport;
             this.Transport.EnvelopeReceived += Transport_EnvelopeReceived;
 
+            _sendTimeout = sendTimeout;
         }
 
         ~ChannelBase()
@@ -85,7 +88,8 @@ namespace Lime.Protocol.Network
                 throw new InvalidOperationException(string.Format("Cannot send a message in the '{0}' session state", this.State));
             }
 
-            return this.Transport.SendAsync(message);
+            
+            return this.SendAsync(message);
         }
 
         /// <summary>
@@ -110,7 +114,7 @@ namespace Lime.Protocol.Network
         {
             if (command == null)
             {
-                throw new ArgumentNullException("message");
+                throw new ArgumentNullException("command");
             }
 
             if (this.State != SessionState.Established)
@@ -118,7 +122,7 @@ namespace Lime.Protocol.Network
                 throw new InvalidOperationException(string.Format("Cannot send a command in the '{0}' session state", this.State));
             }
 
-            return this.Transport.SendAsync(command);
+            return this.SendAsync(command);
         }
 
         /// <summary>
@@ -151,7 +155,7 @@ namespace Lime.Protocol.Network
                 throw new InvalidOperationException(string.Format("Cannot send a notification in the '{0}' session state", this.State));
             }
 
-            return this.Transport.SendAsync(notification);
+            return this.SendAsync(notification);
         }
 
         /// <summary>
@@ -178,7 +182,7 @@ namespace Lime.Protocol.Network
                 throw new ArgumentNullException("session");
             }
 
-            return this.Transport.SendAsync(session);
+            return this.SendAsync(session);
         }
 
         /// <summary>
@@ -190,6 +194,17 @@ namespace Lime.Protocol.Network
         #endregion
 
         /// <summary>
+        /// Sends the envelope to the transport
+        /// </summary>
+        /// <param name="envelope"></param>
+        /// <returns></returns>
+        private Task SendAsync(Envelope envelope)
+        {
+            var cts = new CancellationTokenSource(_sendTimeout);
+            return this.Transport.SendAsync(envelope, cts.Token);
+        }
+
+        /// <summary>
         /// Handles the EnvelopeReceived event of the Transport.
         /// </summary>
         /// <param name="sender">The source of the event.</param>
@@ -198,44 +213,75 @@ namespace Lime.Protocol.Network
         {
             if (e.Envelope is Notification)
             {
-                await this.OnNotificationReceivedAsync((Notification)e.Envelope);
+                await this.OnNotificationReceivedAsync((Notification)e.Envelope).ConfigureAwait(false);
             }
             else if (e.Envelope is Message)
             {
-                await this.OnMessageReceivedAsync((Message)e.Envelope);
+                await this.OnMessageReceivedAsync((Message)e.Envelope).ConfigureAwait(false);
             }
             else if (e.Envelope is Command)
             {
-                await this.OnCommandReceivedAsync((Command)e.Envelope);
+                await this.OnCommandReceivedAsync((Command)e.Envelope).ConfigureAwait(false);
             }
             else if (e.Envelope is Session)
             {
-                await this.OnSessionReceivedAsync((Session)e.Envelope);
+                await this.OnSessionReceivedAsync((Session)e.Envelope).ConfigureAwait(false);
             }
         }
 
         #region Protected Members
 
+        /// <summary>
+        /// Raises the MessageReceived event
+        /// </summary>
+        /// <param name="message"></param>
+        /// <returns></returns>
         protected virtual Task OnMessageReceivedAsync(Message message)
         {
             this.MessageReceived.RaiseEvent(this, new EnvelopeEventArgs<Message>(message));
             return Task.FromResult<object>(null);
         }
 
+        /// <summary>
+        /// Raises the CommandReceived event
+        /// </summary>
+        /// <param name="message"></param>
+        /// <returns></returns>
         protected virtual Task OnCommandReceivedAsync(Command command)
         {
             this.CommandReceived.RaiseEvent(this, new EnvelopeEventArgs<Command>(command));
             return Task.FromResult<object>(null);
         }
 
+        /// <summary>
+        /// Raises the NotificationReceived event
+        /// </summary>
+        /// <param name="message"></param>
+        /// <returns></returns>
         protected virtual Task OnNotificationReceivedAsync(Notification notification)
         {
             this.NotificationReceived.RaiseEvent(this, new EnvelopeEventArgs<Notification>(notification));
             return Task.FromResult<object>(null);
         }
 
+        /// <summary>
+        /// Raises the SessionReceived event and
+        /// updates the channel session properties
+        /// </summary>
+        /// <param name="message"></param>
+        /// <returns></returns>
         protected virtual Task OnSessionReceivedAsync(Session session)
-        {
+        {            
+            this.SessionId = session.Id.Value;
+            this.State = session.State;
+
+            if (session.State == SessionState.Established &&
+                session.Id.HasValue)
+            {
+                this.LocalNode = session.To;
+                this.RemoteNode = session.From;                
+            }
+
             this.SessionReceived.RaiseEvent(this, new EnvelopeEventArgs<Session>(session));
             return Task.FromResult<object>(null);
         }

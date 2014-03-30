@@ -9,8 +9,8 @@ using System.Threading.Tasks;
 namespace Lime.Protocol.Client
 {
     /// <summary>
-    /// Extended IChannel interface with methods
-    /// for client-specific interactions
+    /// Defines the communication channel
+    /// between a node and a server
     /// </summary>
     public interface IClientChannel : IChannel
     {

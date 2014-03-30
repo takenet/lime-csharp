@@ -6,6 +6,10 @@ using System.Threading.Tasks;
 
 namespace Lime.Protocol.Network
 {
+    /// <summary>
+    /// Utility extensions for the
+    /// IChannel interface
+    /// </summary>
     public static class IChannelExtensions
     {
 
