@@ -227,6 +227,40 @@ namespace Lime.Protocol.Tcp
             return true;
         }
 
+        private async Task ReadAsync()
+        {
+            
+        }
+
+
+        private async Task<Envelope> ReadEnvelopeAsync(CancellationToken cancellationToken)
+        {
+            Envelope envelope = null;
+
+            while (envelope == null)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                if (!_stream.CanRead)
+                {
+                    throw new InvalidOperationException("Cannot read from the stream");
+                }
+
+                var totalRead = await _stream.ReadAsync(_buffer, _bufferPos, _buffer.Length - _bufferPos, cancellationToken).ConfigureAwait(false);
+                _bufferPos += totalRead;
+
+                byte[] json;
+
+                if (this.TryExtractJsonFromBuffer(out json))
+                {
+                    var jsonString = Encoding.UTF8.GetString(json);
+                    envelope = _envelopeSerializer.Deserialize(jsonString);                    
+                }
+            }
+
+            return envelope;
+        }
+
         private Task BeginReadAsync()
         {
             return _stream
@@ -259,9 +293,7 @@ namespace Lime.Protocol.Tcp
                     try
                     {
                         // Try to extract a JSON message from the buffer
-                        extractedJson = ExtractJson();
-
-                        if (extractedJson != null)
+                        if (this.TryExtractJsonFromBuffer(out extractedJson))
                         {
                             // Make a copy of the value
                             var json = extractedJson;
@@ -301,7 +333,7 @@ namespace Lime.Protocol.Tcp
         private int _jsonStackedBrackets;
         private bool _jsonStarted = false;
 
-        private byte[] ExtractJson()
+        private bool TryExtractJsonFromBuffer(out byte[] json)
         {
             if (_buffer.Length < _bufferPos)
             {
@@ -336,7 +368,7 @@ namespace Lime.Protocol.Tcp
                 }                
             }
 
-            byte[] json = null;
+            json = null;
 
             if (jsonLenght > 1)
             {
@@ -350,9 +382,11 @@ namespace Lime.Protocol.Tcp
                 _jsonPos = 0;
                 _jsonStartPos = 0;
                 _jsonStarted = false;
+
+                return true;
             }
 
-            return json;
+            return false;
         }
 
         private void OnJsonReceived(byte[] json)
