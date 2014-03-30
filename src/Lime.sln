@@ -15,6 +15,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution items", "Solution 
 		..\README.md = ..\README.md
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lime.Protocol.Tcp", "Lime.Protocol.Tcp\Lime.Protocol.Tcp.csproj", "{0EE0DB06-832F-4D33-96A8-0D2703AF27A9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{024CCDAA-7ED2-4528-94D8-A3940BCBE19D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{024CCDAA-7ED2-4528-94D8-A3940BCBE19D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{024CCDAA-7ED2-4528-94D8-A3940BCBE19D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0EE0DB06-832F-4D33-96A8-0D2703AF27A9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0EE0DB06-832F-4D33-96A8-0D2703AF27A9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0EE0DB06-832F-4D33-96A8-0D2703AF27A9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0EE0DB06-832F-4D33-96A8-0D2703AF27A9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
