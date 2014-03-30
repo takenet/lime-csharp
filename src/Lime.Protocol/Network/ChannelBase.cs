@@ -28,6 +28,8 @@ namespace Lime.Protocol.Network
             this.Transport.EnvelopeReceived += Transport_EnvelopeReceived;
 
             _sendTimeout = sendTimeout;
+
+            this.State = SessionState.New;
         }
 
         ~ChannelBase()
@@ -62,7 +64,52 @@ namespace Lime.Protocol.Network
         /// <summary>
         /// Current session state
         /// </summary>
-        public SessionState State { get; private set; }
+        public SessionState State { get; protected set; }
+
+        /// <summary>
+        /// Current session mode
+        /// </summary>
+        public SessionMode Mode { get; protected set; }
+
+        /// <summary>
+        /// Occours when a session negotiation option
+        /// is received by the node or server
+        /// </summary>
+        public event EventHandler<EnvelopeEventArgs<Session>> NegotiateSessionReceived;
+
+        /// <summary>
+        /// Occours when a session authentication option
+        /// is received by the node or server
+        /// </summary>
+        public event EventHandler<EnvelopeEventArgs<Session>> AuthenticateSessionReceived;
+
+        /// <summary>
+        /// Send a negotiate session envelope
+        /// to the remote node to choose or
+        /// confirm the session negotiation options
+        /// parameters
+        /// </summary>
+        /// <param name="sessionCompression">The session compression option</param>
+        /// <param name="sessionEncryption">The session encryption option</param>
+        /// <returns></returns>
+        /// <exception cref="System.InvalidOperationException"></exception>
+        public Task SendNegotiatingSessionAsync(SessionCompression sessionCompression, SessionEncryption sessionEncryption)
+        {
+            if (this.State != SessionState.Negotiating)
+            {
+                throw new InvalidOperationException(string.Format("Cannot negotiate a session in the '{0}' state", this.State));
+            }
+
+            var session = new Session()
+            {
+                Id = this.SessionId,
+                State = SessionState.Negotiating,
+                Compression = sessionCompression,
+                Encryption = sessionEncryption
+            };
+
+            return this.SendSessionAsync(session);
+        }
 
         #endregion
 
@@ -265,24 +312,24 @@ namespace Lime.Protocol.Network
         }
 
         /// <summary>
-        /// Raises the SessionReceived event and
-        /// updates the channel session properties
+        /// Raises the SessionReceived event 
         /// </summary>
-        /// <param name="message"></param>
+        /// <param name="session"></param>
         /// <returns></returns>
         protected virtual Task OnSessionReceivedAsync(Session session)
         {            
-            this.SessionId = session.Id.Value;
-            this.State = session.State;
+            this.SessionReceived.RaiseEvent(this, new EnvelopeEventArgs<Session>(session));
 
-            if (session.State == SessionState.Established &&
-                session.Id.HasValue)
+            switch (session.State)
             {
-                this.LocalNode = session.To;
-                this.RemoteNode = session.From;                
+                case SessionState.Negotiating:
+                    this.NegotiateSessionReceived.RaiseEvent(this, new EnvelopeEventArgs<Session>(session));
+                    break;
+                case SessionState.Authenticating:
+                    this.AuthenticateSessionReceived.RaiseEvent(this, new EnvelopeEventArgs<Session>(session));
+                    break;
             }
 
-            this.SessionReceived.RaiseEvent(this, new EnvelopeEventArgs<Session>(session));
             return Task.FromResult<object>(null);
         }
 

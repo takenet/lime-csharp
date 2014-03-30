@@ -89,12 +89,12 @@
     <Compile Include="Serialization\TypeUtil.cs" />
     <Compile Include="Serialization\IEnvelopeSerializer.cs" />
     <Compile Include="Serialization\ServiceStackSerializer.cs" />
+    <Compile Include="Server\IServerChannel.cs" />
+    <Compile Include="Server\ServerChannel.cs" />
     <Compile Include="Session.cs" />
     <Compile Include="UtilExtensions.cs" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Server\" />
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>

@@ -23,16 +23,6 @@ namespace Lime.Protocol.Client
         Task SendNewSessionAsync();
 
         /// <summary>
-        /// Send a negotiate session envelope
-        /// to the server to choose the session
-        /// parameters
-        /// </summary>
-        /// <param name="sessionCompression"></param>
-        /// <param name="sessionEncryption"></param>
-        /// <returns></returns>
-        Task SendNegotiateSessionAsync(SessionCompression sessionCompression = SessionCompression.None, SessionEncryption sessionEncryption = SessionEncryption.TLS);
-
-        /// <summary>
         /// Send a authenticate session envelope
         /// to the server to establish
         /// a authenticated session
@@ -42,13 +32,13 @@ namespace Lime.Protocol.Client
         /// <param name="instance"></param>
         /// <param name="sessionMode"></param>
         /// <returns></returns>
-        Task SendAuthenticateSessionAsync(Identity identity, Authentication authentication, string instance = null, SessionMode sessionMode = SessionMode.Node);
+        Task SendAuthenticatingSessionAsync(Identity identity, Authentication authentication, string instance = null, SessionMode sessionMode = SessionMode.Node);
 
         /// <summary>
         /// Sends a finish session envelope
         /// to the server to finish the session
         /// </summary>
-        Task SendFinishSessionAsync();
+        Task SendFinishingSessionAsync();
 
         /// <summary>
         /// Notify to the server that

@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Lime.Protocol.Security;
 using Lime.Protocol.Network;
 using Lime.Protocol.Resources;
+using System.Threading;
 
 namespace Lime.Protocol.Client
 {
@@ -70,33 +71,6 @@ namespace Lime.Protocol.Client
         }
 
         /// <summary>
-        /// Send a negotiate session envelope
-        /// to the server to choose the session
-        /// parameters
-        /// </summary>
-        /// <param name="sessionCompression"></param>
-        /// <param name="sessionEncryption"></param>
-        /// <returns></returns>
-        /// <exception cref="System.InvalidOperationException"></exception>
-        public Task SendNegotiateSessionAsync(SessionCompression sessionCompression = SessionCompression.None, SessionEncryption sessionEncryption = SessionEncryption.TLS)
-        {
-            if (base.State != SessionState.Negotiating)
-            {
-                throw new InvalidOperationException(string.Format("Cannot negotiate a session in the '{0}' state", base.State));
-            }
-
-            var session = new Session()
-            {
-                Id = base.SessionId,
-                State = SessionState.Negotiating,
-                Compression = sessionCompression,
-                Encryption = sessionEncryption
-            };
-
-            return base.SendSessionAsync(session);
-        }
-
-        /// <summary>
         /// Send a authenticate session envelope
         /// to the server to establish
         /// a authenticated session
@@ -112,7 +86,7 @@ namespace Lime.Protocol.Client
         /// or
         /// authentication
         /// </exception>
-        public Task SendAuthenticateSessionAsync(Identity identity, Authentication authentication, string instance = null, SessionMode sessionMode = SessionMode.Node)
+        public Task SendAuthenticatingSessionAsync(Identity identity, Authentication authentication, string instance = null, SessionMode sessionMode = SessionMode.Node)
         {
             if (base.State != SessionState.Authenticating)
             {
@@ -152,7 +126,7 @@ namespace Lime.Protocol.Client
         /// </summary>
         /// <returns></returns>
         /// <exception cref="System.InvalidOperationException"></exception>
-        public Task SendFinishSessionAsync()
+        public Task SendFinishingSessionAsync()
         {
             if (base.State != SessionState.Established)
             {
@@ -265,9 +239,19 @@ namespace Lime.Protocol.Client
         /// </summary>
         /// <param name="session"></param>
         /// <returns></returns>
-        protected override Task OnSessionReceivedAsync(Session session)
+        protected async override Task OnSessionReceivedAsync(Session session)
         {           
-            var result = base.OnSessionReceivedAsync(session);
+            this.SessionId = session.Id.Value;
+            this.State = session.State;
+
+            if (session.State == SessionState.Established &&
+                session.Id.HasValue)
+            {
+                this.LocalNode = session.To;
+                this.RemoteNode = session.From;
+            }
+
+            await base.OnSessionReceivedAsync(session).ConfigureAwait(false);
 
             switch (session.State)
             {
@@ -275,14 +259,14 @@ namespace Lime.Protocol.Client
                     this.SessionEstablished.RaiseEvent(this, new EnvelopeEventArgs<Session>(session));
                     break;
                 case SessionState.Finished:
-                    this.SessionFinished.RaiseEvent(this, new EnvelopeEventArgs<Session>(session));
+                    this.SessionFinished.RaiseEvent(this, new EnvelopeEventArgs<Session>(session));                    
+                    await this.Transport.CloseAsync(CancellationToken.None);
                     break;
                 case SessionState.Failed:
                     this.SessionFailed.RaiseEvent(this, new EnvelopeEventArgs<Session>(session));
                     break;
             }
 
-            return result;
         }
 
         #endregion
