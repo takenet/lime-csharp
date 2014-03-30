@@ -16,11 +16,11 @@ namespace Lime.Protocol.Network
     /// </summary>
     public class DeferralEventArgs : EventArgs
     {
-        private readonly DeferralManager _deferrals = new DeferralManager();
+        private readonly DeferralManager _deferrals;
 
         public DeferralEventArgs()
         {
-
+            _deferrals = new DeferralManager();
         }
 
         public IDisposable GetDeferral()

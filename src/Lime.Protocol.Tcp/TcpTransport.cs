@@ -4,7 +4,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net.Security;
 using System.Net.Sockets;
+using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
@@ -16,9 +18,9 @@ namespace Lime.Protocol.Tcp
     /// Provides the messaging protocol 
     /// transport for TCP connections
     /// </summary>
-    public class TcpTransport : ITransport
+    public class TcpTransport : TransportBase, ITransport
     {
-        private readonly IEnvelopeSerializer _serializer;
+        private readonly IEnvelopeSerializer _envelopeSerializer;
         private readonly ITraceWriter _traceWriter;
 
         private TcpClient _tcpClient;
@@ -28,66 +30,347 @@ namespace Lime.Protocol.Tcp
         private X509Certificate _sslCertificate;
         private string _hostName;
 
-        private int _pos;
-        private byte[] _buffer;
+
         const int DEFAULT_BUFFER_SIZE = 8192;
 
+        private Task _readTask;
 
-        public TcpTransport(IEnvelopeSerializer serializer, ITraceWriter traceWriter)
+        public TcpTransport(TcpClient tcpClient, IEnvelopeSerializer envelopeSerializer, X509Certificate sslCertificate = null, string hostName = null, int bufferSize = DEFAULT_BUFFER_SIZE, ITraceWriter traceWriter = null)
         {
+            if (tcpClient == null)
+            {
+                throw new ArgumentNullException("tcpClient");
+            }
 
+            _tcpClient = tcpClient;
+
+            _networkStream = _tcpClient.GetStream();
+
+            if (!_networkStream.CanRead || !_networkStream.CanWrite)
+            {
+                throw new ArgumentException("Invalid stream state");
+            }
+
+            _stream = _networkStream;
+
+            _buffer = new byte[bufferSize];
+            _bufferPos = 0;
+
+            if (envelopeSerializer == null)
+            {
+                throw new ArgumentNullException("envelopeSerializer");
+            }
+
+            _envelopeSerializer = envelopeSerializer;
+            _sslCertificate = sslCertificate;
+            _hostName = hostName;
+            _traceWriter = traceWriter;
+
+            _readTask = this.BeginReadAsync()
+                .ContinueWith(t =>
+                {
+                    // In case of an uncatch exception
+                    if (t.Exception != null)
+                    {
+                        return OnFailedAsync(t.Exception.InnerException);
+                    }
+                    else
+                    {
+                        return Task.FromResult<object>(null);
+                    }
+                })
+                .Unwrap();
         }
 
-        #region ITransport Members
+        #region TransportBase Members
 
-        public Task SendAsync(Envelope envelope, CancellationToken cancellationToken)
+        /// <summary>
+        /// Sends an envelope to 
+        /// the connected node
+        /// </summary>
+        /// <param name="envelope">Envelope to be transported</param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        /// <exception cref="System.NotImplementedException"></exception>
+        public override Task SendAsync(Envelope envelope, CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            var envelopeJson = _envelopeSerializer.Serialize(envelope);
+
+            if (_traceWriter != null &&
+                _traceWriter.IsEnabled)
+            {
+                _traceWriter.TraceAsync(envelopeJson, DataOperation.Send);
+            }
+
+            var jsonBytes = Encoding.UTF8.GetBytes(envelopeJson);
+            return _stream.WriteAsync(jsonBytes, 0, jsonBytes.Length);
         }
 
-        public event EventHandler<EnvelopeEventArgs<Envelope>> EnvelopeReceived;
-
-        public Task CloseAsync(CancellationToken cancellationToken)
+        /// <summary>
+        /// Closes the transport
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        /// <exception cref="System.NotImplementedException"></exception>
+        protected override Task PerformCloseAsync(CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            _stream.Close();
+            _tcpClient.Close();
+            return Task.FromResult<object>(null);
         }
 
-        public SessionCompression[] GetSupportedCompression()
+
+        /// <summary>
+        /// Enumerates the supported encryption
+        /// options for the transport
+        /// </summary>
+        /// <returns></returns>
+        public override SessionEncryption[] GetSupportedEncryption()
         {
-            throw new NotImplementedException();
+            return new SessionEncryption[]
+            {
+                SessionEncryption.None,
+                SessionEncryption.TLS
+            };
         }
 
-        public SessionCompression Compression
+
+        /// <summary>
+        /// Defines the encryption mode
+        /// for the transport
+        /// </summary>
+        /// <param name="encryption"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        /// <exception cref="System.NotSupportedException"></exception>
+        public override Task SetEncryptionAsync(SessionEncryption encryption, CancellationToken cancellationToken)
         {
-            get { throw new NotImplementedException(); }
+            this.Encryption = encryption;
+
+            switch (encryption)
+            {
+                case SessionEncryption.None:
+                    _stream = _networkStream;
+                    break;
+                case SessionEncryption.TLS:
+                    if (_sslCertificate != null)
+                    {
+                        // Server
+                        var sslStream = new SslStream(
+                            _networkStream,
+                            false);
+
+                        return sslStream
+                            .AuthenticateAsServerAsync(
+                                _sslCertificate,
+                                false,
+                                SslProtocols.Tls,
+                                false)
+                            .ContinueWith(t => 
+                                {
+                                    if (t.Exception != null)
+                                    {
+                                        return OnFailedAsync(t.Exception.InnerException);
+                                    }
+                                    else
+                                    {
+                                        _stream = sslStream;
+                                        return Task.FromResult<object>(null);
+                                    }
+                                }).Unwrap();                        
+                    }
+                    else
+                    {
+                        // Client
+                        var sslStream = new SslStream(
+                            _networkStream,
+                            false,
+                             new RemoteCertificateValidationCallback(ValidateServerCertificate),
+                             null
+                            );
+
+                        return sslStream
+                            .AuthenticateAsClientAsync(
+                                _hostName)                                
+                            .ContinueWith(t => 
+                            {
+                                if (t.Exception != null)
+                                {
+                                    return OnFailedAsync(t.Exception.InnerException);
+                                }
+                                else
+                                {
+                                    _stream = sslStream;
+                                    return Task.FromResult<object>(null);
+                                }
+                            }).Unwrap();    
+
+                    }
+
+                default:
+                    throw new NotSupportedException();
+            }
+
+            return Task.FromResult<object>(null);
         }
-
-        public Task SetCompressionAsync(SessionCompression compression, CancellationToken cancellationToken)
-        {
-            throw new NotImplementedException();
-        }
-
-        public SessionEncryption[] GetSupportedEncryption()
-        {
-            throw new NotImplementedException();
-        }
-
-        public SessionEncryption Encryption
-        {
-            get { throw new NotImplementedException(); }
-        }
-
-        public Task SetEncryptionAsync(SessionEncryption encryption, CancellationToken cancellationToken)
-        {
-            throw new NotImplementedException();
-        }
-
-        public event EventHandler<ExceptionEventArgs> Failed;
-
-        public event EventHandler<DeferralEventArgs> Closing;
-
-        public event EventHandler Closed;
 
         #endregion
+
+        #region Private methods
+
+        private static bool ValidateServerCertificate(
+              object sender,
+              X509Certificate certificate,
+              X509Chain chain,
+              SslPolicyErrors sslPolicyErrors)
+        {
+            return true;
+        }
+
+        private Task BeginReadAsync()
+        {
+            return _stream
+                .ReadAsync(_buffer, _bufferPos, _buffer.Length - _bufferPos, CancellationToken.None)
+                .ContinueWith(t => this.ProcessReadResultAsync(t))
+                .Unwrap();
+        }
+
+        private Task ProcessReadResultAsync(Task<int> resultTask)
+        {
+            if (resultTask.Exception == null)
+            {
+                return OnFailedAsync(resultTask.Exception.InnerException);
+            }
+            else
+            {
+                int totalRead = resultTask.Result;
+                if (totalRead == 0)
+                {
+                    // The connection was closed
+                    return Task.FromResult<object>(null);
+                }
+                
+                _bufferPos += totalRead;
+
+                byte[] extractedJson;
+
+                do
+                {
+                    try
+                    {
+                        // Try to extract a JSON message from the buffer
+                        extractedJson = ExtractJson();
+
+                        if (extractedJson != null)
+                        {
+                            // Make a copy of the value
+                            var json = extractedJson;
+                            this.OnJsonReceived(json);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        return OnFailedAsync(ex);                        
+                    }
+
+                } while (extractedJson != null && _bufferPos > 0);
+
+                if (_bufferPos >= _buffer.Length)
+                {
+                    _stream.Close();
+
+                    var exception = new InvalidOperationException("Maximum buffer size reached");
+                    return OnFailedAsync(exception);
+                }
+
+                if (_stream.CanRead)
+                {
+                    return BeginReadAsync();
+                }
+                else
+                {
+                    return Task.FromResult<object>(null);
+                }
+            }
+        }
+
+        private int _bufferPos;
+        private byte[] _buffer;
+        private int _jsonStartPos;
+        private int _jsonPos;
+        private int _jsonStackedBrackets;
+        private bool _jsonStarted = false;
+
+        private byte[] ExtractJson()
+        {
+            if (_buffer.Length < _bufferPos)
+            {
+                throw new ArgumentException("Length value is invalid");
+            }
+
+            int jsonLenght = 0;           
+
+            for (int i = _jsonPos; i < _bufferPos; i++)
+            {
+                _jsonPos = i;
+
+                if (_buffer[i] == '{')
+                {
+                    _jsonStackedBrackets++;
+                    if (!_jsonStarted)
+                    {
+                        _jsonStartPos = i;
+                        _jsonStarted = true;
+                    }
+                }
+                else if (_buffer[i] == '}')
+                {
+                    _jsonStackedBrackets--;
+                }
+
+                if (_jsonStarted &&
+                    _jsonStackedBrackets == 0)
+                {
+                    jsonLenght = i - _jsonStartPos + 1;
+                    break;
+                }                
+            }
+
+            byte[] json = null;
+
+            if (jsonLenght > 1)
+            {
+                json = new byte[jsonLenght];
+                Array.Copy(_buffer, _jsonStartPos, json, 0, jsonLenght);
+
+                // Shifts the buffer to the left
+                _bufferPos -= (jsonLenght + _jsonStartPos);
+                Array.Copy(_buffer, jsonLenght + _jsonStartPos, _buffer, 0, _bufferPos);
+
+                _jsonPos = 0;
+                _jsonStartPos = 0;
+                _jsonStarted = false;
+            }
+
+            return json;
+        }
+
+        private void OnJsonReceived(byte[] json)
+        {
+            var jsonString = Encoding.UTF8.GetString(json);
+
+            if (_traceWriter != null &&
+                _traceWriter.IsEnabled)
+            {
+                _traceWriter.TraceAsync(jsonString, DataOperation.Receive);
+            }
+
+            var envelope = _envelopeSerializer.Deserialize(jsonString);
+
+            base.OnEnvelopeReceived(envelope);
+        }
+
+
+        #endregion        
     }
 }

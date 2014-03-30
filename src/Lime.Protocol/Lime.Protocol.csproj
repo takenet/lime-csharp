@@ -59,6 +59,7 @@
     <Compile Include="Network\DeferralManager.cs" />
     <Compile Include="Network\ISessionChannel.cs" />
     <Compile Include="Network\ITraceWriter.cs" />
+    <Compile Include="Network\TransportBase.cs" />
     <Compile Include="Notification.cs" />
     <Compile Include="Security\Authentication.cs" />
     <Compile Include="Command.cs" />
