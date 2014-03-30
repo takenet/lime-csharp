@@ -241,13 +241,6 @@ namespace Lime.Protocol.Tcp
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                if (!_stream.CanRead)
-                {
-                    throw new InvalidOperationException("Cannot read from the stream");
-                }
-
-                _bufferPos += await _stream.ReadAsync(_buffer, _bufferPos, _buffer.Length - _bufferPos, cancellationToken).ConfigureAwait(false);
-
                 byte[] json;
 
                 if (this.TryExtractJsonFromBuffer(out json))
@@ -255,6 +248,13 @@ namespace Lime.Protocol.Tcp
                     var jsonString = Encoding.UTF8.GetString(json);
                     envelope = _envelopeSerializer.Deserialize(jsonString);                    
                 }
+
+                if (!_stream.CanRead)
+                {
+                    throw new InvalidOperationException("Cannot read from the stream");
+                }
+
+                _bufferPos += await _stream.ReadAsync(_buffer, _bufferPos, _buffer.Length - _bufferPos, cancellationToken).ConfigureAwait(false);
             }
 
             return envelope;
