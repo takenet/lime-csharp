@@ -246,8 +246,7 @@ namespace Lime.Protocol.Tcp
                     throw new InvalidOperationException("Cannot read from the stream");
                 }
 
-                var totalRead = await _stream.ReadAsync(_buffer, _bufferPos, _buffer.Length - _bufferPos, cancellationToken).ConfigureAwait(false);
-                _bufferPos += totalRead;
+                _bufferPos += await _stream.ReadAsync(_buffer, _bufferPos, _buffer.Length - _bufferPos, cancellationToken).ConfigureAwait(false);
 
                 byte[] json;
 
