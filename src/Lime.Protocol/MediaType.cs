@@ -46,6 +46,30 @@ namespace Lime.Protocol
             }
         }
 
+        public MediaType(string type, string subtype, string suffix)
+        {
+            if (string.IsNullOrWhiteSpace(type))
+            {
+                throw new ArgumentNullException("type");
+            }
+
+            this.Type = type;
+
+            if (string.IsNullOrWhiteSpace(subtype))
+            {
+                throw new ArgumentNullException("subtype");
+            }
+
+            this.Subtype = subtype;
+
+            if (string.IsNullOrWhiteSpace(suffix))
+            {
+                throw new ArgumentNullException("suffix");
+            }
+
+            this.Suffix = suffix;
+        }
+
         #endregion
 
         [DataMember(Name = "type")]
@@ -63,7 +87,7 @@ namespace Lime.Protocol
 
         public override string ToString()
         {
-            return string.Format("{0}/{1}+2", this.Type, this.Subtype, this.Suffix).TrimEnd('+');
+            return string.Format("{0}/{1}+{2}", this.Type, this.Subtype, this.Suffix).TrimEnd('+');
         }
         public override int GetHashCode()
         {

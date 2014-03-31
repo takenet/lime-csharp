@@ -1,5 +1,6 @@
 ﻿using Lime.Protocol;
 using Lime.Protocol.Client;
+using Lime.Protocol.Contents;
 using Lime.Protocol.Network;
 using Lime.Protocol.Security;
 using Lime.Protocol.Serialization;
@@ -122,8 +123,19 @@ namespace Lime.Console
         }
 
 
-        private static void ClientChannel_SessionEstablished(object sender, EnvelopeEventArgs<Session> e)
+        private async static void ClientChannel_SessionEstablished(object sender, EnvelopeEventArgs<Session> e)
         {
+            IClientChannel channel = (IClientChannel)sender;
+
+            var message = new Message()
+            {
+                Content = new TextContent()
+                {
+                    Text = "Hello!"
+                }
+            };
+
+            await channel.SendMessageAsync(message);
 
         }
 
