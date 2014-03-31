@@ -30,6 +30,10 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Newtonsoft.Json.6.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="ServiceStack.Text">
       <HintPath>..\packages\ServiceStack.Text.4.0.15\lib\net40\ServiceStack.Text.dll</HintPath>
     </Reference>
@@ -88,6 +92,7 @@
     <Compile Include="Resources\Subscription.cs" />
     <Compile Include="Security\GuestAuthentication.cs" />
     <Compile Include="Security\PlainAuthentication.cs" />
+    <Compile Include="Serialization\JsonNetSerializer.cs" />
     <Compile Include="Serialization\TypeUtil.cs" />
     <Compile Include="Serialization\IEnvelopeSerializer.cs" />
     <Compile Include="Serialization\ServiceStackSerializer.cs" />

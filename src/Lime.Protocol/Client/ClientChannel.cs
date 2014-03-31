@@ -266,7 +266,6 @@ namespace Lime.Protocol.Client
                     this.SessionFailed.RaiseEvent(this, new EnvelopeEventArgs<Session>(session));
                     break;
             }
-
         }
 
         #endregion

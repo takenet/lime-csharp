@@ -13,7 +13,6 @@ namespace Lime.Protocol.Serialization
         private static Dictionary<MediaType, Type> _documentMediaTypeDictionary;
         private static Dictionary<AuthenticationScheme, Type> _authenticationSchemeDictionary;
 
-
         static TypeUtil()
         {
             _documentMediaTypeDictionary = new Dictionary<MediaType, Type>();

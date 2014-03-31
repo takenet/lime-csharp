@@ -23,7 +23,7 @@ namespace Lime.Protocol
 
         protected Envelope(Guid? id)
         {
-            Id = id;
+            this.Id = id;
         }
 
         #endregion
