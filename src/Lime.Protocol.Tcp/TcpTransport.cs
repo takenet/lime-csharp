@@ -44,15 +44,6 @@ namespace Lime.Protocol.Tcp
 
             _tcpClient = tcpClient;
 
-            _networkStream = _tcpClient.GetStream();
-
-            if (!_networkStream.CanRead || !_networkStream.CanWrite)
-            {
-                throw new ArgumentException("Invalid stream state");
-            }
-
-            _stream = _networkStream;
-
             _buffer = new byte[bufferSize];
             _bufferPos = 0;
 
@@ -108,6 +99,15 @@ namespace Lime.Protocol.Tcp
             {
                 await _tcpClient.ConnectAsync(uri.Host, uri.Port).ConfigureAwait(false);
             }
+
+            _networkStream = _tcpClient.GetStream();
+
+            if (!_networkStream.CanRead || !_networkStream.CanWrite)
+            {
+                throw new ArgumentException("Invalid stream state");
+            }
+
+            _stream = _networkStream;
 
             _readTask = this.ReadAsync(CancellationToken.None)
                 .ContinueWith(t =>
@@ -283,10 +283,17 @@ namespace Lime.Protocol.Tcp
                 if (this.TryExtractJsonFromBuffer(out json))
                 {
                     var jsonString = Encoding.UTF8.GetString(json);
+
+                    if (_traceWriter != null &&
+                        _traceWriter.IsEnabled)
+                    {
+                        _traceWriter.TraceAsync(jsonString, DataOperation.Receive);
+                    }
+
                     envelope = _envelopeSerializer.Deserialize(jsonString);                    
                 }
 
-                if (_stream.CanRead)
+                if (envelope == null && _stream.CanRead)
                 {
                     _bufferPos += await _stream.ReadAsync(_buffer, _bufferPos, _buffer.Length - _bufferPos, cancellationToken).ConfigureAwait(false);
 

@@ -92,7 +92,9 @@
     <Compile Include="Serialization\IEnvelopeSerializer.cs" />
     <Compile Include="Serialization\ServiceStackSerializer.cs" />
     <Compile Include="Server\IServerChannel.cs" />
+    <Compile Include="Server\ITransportListener.cs" />
     <Compile Include="Server\ServerChannel.cs" />
+    <Compile Include="Server\TransportEventArgs.cs" />
     <Compile Include="Session.cs" />
     <Compile Include="UtilExtensions.cs" />
   </ItemGroup>

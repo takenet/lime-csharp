@@ -1,8 +1,11 @@
 ﻿using Lime.Protocol.Security;
+using ServiceStack;
 using ServiceStack.Text;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -17,7 +20,8 @@ namespace Lime.Protocol.Serialization
         static ServiceStackSerializer()
         {
             JsConfig.ExcludeTypeInfo = true;
-            
+            JsConfig.EmitCamelCaseNames = true;            
+
             JsConfig<Message>.IncludeTypeInfo = false;
             JsConfig<Notification>.IncludeTypeInfo = false;
             JsConfig<Command>.IncludeTypeInfo = false;
@@ -29,8 +33,8 @@ namespace Lime.Protocol.Serialization
             JsConfig<Node>.DeSerializeFn = s => Node.ParseNode(s);
             JsConfig<Identity>.SerializeFn = i => i.ToString();
             JsConfig<Identity>.DeSerializeFn = s => Identity.ParseIdentity(s);
-            JsConfig<Guid>.SerializeFn = g => g.ToString();
-            JsConfig<Guid>.DeSerializeFn = s => new Guid(s);
+            JsConfig<Guid?>.SerializeFn = g => { if (g.HasValue) return g.ToString(); else return null; };
+            JsConfig<Guid?>.DeSerializeFn = s => { if (string.IsNullOrWhiteSpace(s)) return null; else return new Guid(s); };
         }
 
         #region IEnvelopeSerializer Members

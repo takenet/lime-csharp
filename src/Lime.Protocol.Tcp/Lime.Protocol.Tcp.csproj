@@ -41,6 +41,7 @@
   <ItemGroup>
     <Compile Include="TcpTransport.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TcpTransportListener.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Lime.Protocol\Lime.Protocol.csproj">

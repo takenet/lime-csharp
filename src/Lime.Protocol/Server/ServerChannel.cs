@@ -266,5 +266,25 @@ namespace Lime.Protocol.Server
         public event EventHandler<EnvelopeEventArgs<Session>> FinishingSessionReceived;
 
         #endregion
+
+        /// <summary>
+        /// Raises the SessionReceived event
+        /// </summary>
+        /// <param name="session"></param>
+        /// <returns></returns>
+        protected async override Task OnSessionReceivedAsync(Session session)
+        {
+            await base.OnSessionReceivedAsync(session).ConfigureAwait(false);
+
+            switch (session.State)
+            {
+                case SessionState.New:
+                    this.NewSessionReceived.RaiseEvent(this, new EnvelopeEventArgs<Session>(session));
+                    break;
+                case SessionState.Finishing:
+                    this.FinishingSessionReceived.RaiseEvent(this, new EnvelopeEventArgs<Session>(session));
+                    break;
+            }
+        }
     }
 }
