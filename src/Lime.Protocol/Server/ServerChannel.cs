@@ -17,10 +17,11 @@ namespace Lime.Protocol.Server
     {
         #region Constructor
 
-        public ServerChannel(Guid sessionId, ITransport transport, TimeSpan sendTimeout)
+        public ServerChannel(Guid sessionId, Node serverNode, ITransport transport, TimeSpan sendTimeout)
             : base(transport, sendTimeout)
         {
-            this.SessionId = sessionId;
+            base.LocalNode = serverNode;
+            base.SessionId = sessionId;
         }
 
         #endregion
