@@ -38,6 +38,17 @@ namespace Lime.Protocol.Network
         /// </summary>
         public event EventHandler<EnvelopeEventArgs<Envelope>> EnvelopeReceived;
 
+
+        /// <summary>
+        /// Opens the transport connection with
+        /// the specified Uri
+        /// </summary>
+        /// <param name="uri"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        /// <exception cref="System.NotImplementedException"></exception>
+        public abstract Task OpenAsync(Uri uri, CancellationToken cancellationToken);
+
         /// <summary>
         /// Closes the connection
         /// </summary>
@@ -211,5 +222,6 @@ namespace Lime.Protocol.Network
         {
             this.EnvelopeReceived.RaiseEvent(this, new EnvelopeEventArgs<Envelope>(envelope));
         }
+
     }
 }

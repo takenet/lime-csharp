@@ -28,6 +28,15 @@ namespace Lime.Protocol.Network
         event EventHandler<EnvelopeEventArgs<Envelope>> EnvelopeReceived;
 
         /// <summary>
+        /// Opens the transport connection with
+        /// the specified Uri
+        /// </summary>
+        /// <param name="uri"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        Task OpenAsync(Uri uri, CancellationToken cancellationToken);
+
+        /// <summary>
         /// Closes the connection
         /// </summary>
         Task CloseAsync(CancellationToken cancellationToken);

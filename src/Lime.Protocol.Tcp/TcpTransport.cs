@@ -65,21 +65,6 @@ namespace Lime.Protocol.Tcp
             _sslCertificate = sslCertificate;
             _hostName = hostName;
             _traceWriter = traceWriter;
-
-            _readTask = this.BeginReadAsync()
-                .ContinueWith(t =>
-                {
-                    // In case of an uncatch exception
-                    if (t.Exception != null)
-                    {
-                        return OnFailedAsync(t.Exception.InnerException);
-                    }
-                    else
-                    {
-                        return Task.FromResult<object>(null);
-                    }
-                })
-                .Unwrap();
         }
 
         #region TransportBase Members
@@ -107,6 +92,40 @@ namespace Lime.Protocol.Tcp
         }
 
         /// <summary>
+        /// Opens the transport connection with
+        /// the specified Uri and begins to 
+        /// read from the stream
+        /// </summary>
+        /// <param name="uri"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        /// <exception cref="System.NotImplementedException"></exception>
+        public async override Task OpenAsync(Uri uri, CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            if (!_tcpClient.Connected)
+            {
+                await _tcpClient.ConnectAsync(uri.Host, uri.Port).ConfigureAwait(false);
+            }
+
+            _readTask = this.ReadAsync(CancellationToken.None)
+                .ContinueWith(t =>
+                {
+                    // In case of an uncatch exception
+                    if (t.Exception != null)
+                    {
+                        return OnFailedAsync(t.Exception.InnerException);
+                    }
+                    else
+                    {
+                        return Task.FromResult<object>(null);
+                    }
+                })
+                .Unwrap();
+        }
+
+        /// <summary>
         /// Closes the transport
         /// </summary>
         /// <param name="cancellationToken"></param>
@@ -118,7 +137,6 @@ namespace Lime.Protocol.Tcp
             _tcpClient.Close();
             return Task.FromResult<object>(null);
         }
-
 
         /// <summary>
         /// Enumerates the supported encryption
@@ -133,7 +151,6 @@ namespace Lime.Protocol.Tcp
                 SessionEncryption.TLS
             };
         }
-
 
         /// <summary>
         /// Defines the encryption mode
@@ -227,17 +244,37 @@ namespace Lime.Protocol.Tcp
             return true;
         }
 
-        private async Task ReadAsync()
+        /// <summary>
+        /// Reads from the stream while
+        /// connected
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        private async Task ReadAsync(CancellationToken cancellationToken)
         {
-            
+            while (_stream.CanRead)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                var envelope = await ReadEnvelopeAsync(cancellationToken).ConfigureAwait(false);
+
+                if (envelope != null)
+                {
+                    base.OnEnvelopeReceived(envelope);
+                }                
+            }            
         }
 
-
+        /// <summary>
+        /// Reads one envelope from the stream
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
         private async Task<Envelope> ReadEnvelopeAsync(CancellationToken cancellationToken)
         {
             Envelope envelope = null;
 
-            while (envelope == null)
+            while (envelope == null && _stream.CanRead)
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
@@ -249,80 +286,21 @@ namespace Lime.Protocol.Tcp
                     envelope = _envelopeSerializer.Deserialize(jsonString);                    
                 }
 
-                if (!_stream.CanRead)
+                if (_stream.CanRead)
                 {
-                    throw new InvalidOperationException("Cannot read from the stream");
-                }
+                    _bufferPos += await _stream.ReadAsync(_buffer, _bufferPos, _buffer.Length - _bufferPos, cancellationToken).ConfigureAwait(false);
 
-                _bufferPos += await _stream.ReadAsync(_buffer, _bufferPos, _buffer.Length - _bufferPos, cancellationToken).ConfigureAwait(false);
+                    if (_bufferPos >= _buffer.Length)
+                    {
+                        _stream.Close();
+
+                        var exception = new InvalidOperationException("Maximum buffer size reached");
+                        await OnFailedAsync(exception).ConfigureAwait(false);
+                    }
+                }
             }
 
             return envelope;
-        }
-
-        private Task BeginReadAsync()
-        {
-            return _stream
-                .ReadAsync(_buffer, _bufferPos, _buffer.Length - _bufferPos, CancellationToken.None)
-                .ContinueWith(t => this.ProcessReadResultAsync(t))
-                .Unwrap();
-        }
-
-        private Task ProcessReadResultAsync(Task<int> resultTask)
-        {
-            if (resultTask.Exception == null)
-            {
-                return OnFailedAsync(resultTask.Exception.InnerException);
-            }
-            else
-            {
-                int totalRead = resultTask.Result;
-                if (totalRead == 0)
-                {
-                    // The connection was closed
-                    return Task.FromResult<object>(null);
-                }
-                
-                _bufferPos += totalRead;
-
-                byte[] extractedJson;
-
-                do
-                {
-                    try
-                    {
-                        // Try to extract a JSON message from the buffer
-                        if (this.TryExtractJsonFromBuffer(out extractedJson))
-                        {
-                            // Make a copy of the value
-                            var json = extractedJson;
-                            this.OnJsonReceived(json);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        return OnFailedAsync(ex);                        
-                    }
-
-                } while (extractedJson != null && _bufferPos > 0);
-
-                if (_bufferPos >= _buffer.Length)
-                {
-                    _stream.Close();
-
-                    var exception = new InvalidOperationException("Maximum buffer size reached");
-                    return OnFailedAsync(exception);
-                }
-
-                if (_stream.CanRead)
-                {
-                    return BeginReadAsync();
-                }
-                else
-                {
-                    return Task.FromResult<object>(null);
-                }
-            }
         }
 
         private int _bufferPos;
@@ -332,11 +310,17 @@ namespace Lime.Protocol.Tcp
         private int _jsonStackedBrackets;
         private bool _jsonStarted = false;
 
+        /// <summary>
+        /// Try to extract a JSON document
+        /// from the buffer
+        /// </summary>
+        /// <param name="json"></param>
+        /// <returns></returns>
         private bool TryExtractJsonFromBuffer(out byte[] json)
         {
-            if (_buffer.Length < _bufferPos)
+            if (_bufferPos > _buffer.Length)
             {
-                throw new ArgumentException("Length value is invalid");
+                throw new ArgumentException("Pos or length value is invalid");
             }
 
             int jsonLenght = 0;           
@@ -387,22 +371,6 @@ namespace Lime.Protocol.Tcp
 
             return false;
         }
-
-        private void OnJsonReceived(byte[] json)
-        {
-            var jsonString = Encoding.UTF8.GetString(json);
-
-            if (_traceWriter != null &&
-                _traceWriter.IsEnabled)
-            {
-                _traceWriter.TraceAsync(jsonString, DataOperation.Receive);
-            }
-
-            var envelope = _envelopeSerializer.Deserialize(jsonString);
-
-            base.OnEnvelopeReceived(envelope);
-        }
-
 
         #endregion        
     }
