@@ -23,90 +23,16 @@ namespace Lime.Console
         private static IDictionary<Node, Guid> _serverNodeSessionIdDictionary;
         private static Uri _listenerUri;
 
+        private static IDictionary<Identity, string> _identityPasswordDictionary;
+
         static void Main(string[] args)
         {
-
-            //var json = "{\"state\":\"negotiating\",\"encryptionOptions\":[\"none\",\"tls\"],\"compressionOptions\":[\"none\"],\"id\":\"13ab443f-290d-495d-ae31-ec7b5e4ea149\",\"from\":\"server@takenet.com.br/NOTEBIRES\"}";
-            var json = "{\"state\":\"authenticating\",\"scheme\":\"plain\",\"authentication\":{\"password\":\"bXlwYXNzd29yZA==\"},\"id\":\"458f5c19-5655-47c9-8f67-a064c5f9f9d6\",\"from\":\"andreb@takenet.com.br/NOTEBIRES\"}";
-
-            var serializer1 = new InternalJsonSerializer();
-            var serializer2 = new JsonNetSerializer();
-            var serializer3 = new ServiceStackSerializer();
-
-            Envelope envelope1 = null, envelope2 = null, envelope3 = null;
-           
-            int count = 100000;            
-
-            var sw1 = System.Diagnostics.Stopwatch.StartNew();
-
-            for (int i = 0; i < count; i++)
+            _identityPasswordDictionary = new Dictionary<Identity, string>
             {
-                envelope1 = serializer1.Deserialize(json);
-            }
-            sw1.Stop();
+                { Identity.Parse("john@domain.com") , "123456" },
+                { Identity.Parse("paul@domain.com") , "abcdef" }
 
-            var sw2 = System.Diagnostics.Stopwatch.StartNew();
-
-            for (int i = 0; i < count; i++)
-            {
-                envelope2 = serializer2.Deserialize(json);
-            }
-            sw2.Stop();
-
-            var sw3 = System.Diagnostics.Stopwatch.StartNew();
-
-            for (int i = 0; i < count; i++)
-            {
-                envelope3 = serializer3.Deserialize(json);
-            }
-            sw3.Stop();
-
-            System.Console.WriteLine("Deserialization:");
-            System.Console.WriteLine("Serializer 1: {0} ms", sw1.ElapsedMilliseconds);
-            System.Console.WriteLine("Serializer 2: {0} ms", sw2.ElapsedMilliseconds);
-            System.Console.WriteLine("Serializer 3: {0} ms", sw3.ElapsedMilliseconds);
-
-            var json1 = serializer2.Serialize(envelope1);
-            var json2 = serializer2.Serialize(envelope1);
-            var json3 = serializer2.Serialize(envelope1);            
-
-            if (json1 == json2 && json2 == json3)
-            {
-                System.Console.WriteLine("All deserialized types are equals");
-            }
-
-            var envelope = envelope1;
-
-            sw1 = System.Diagnostics.Stopwatch.StartNew();
-            for (int i = 0; i < count; i++)
-            {
-                json1 = serializer1.Serialize(envelope);
-            }
-            sw1.Stop();
-
-            sw2 = System.Diagnostics.Stopwatch.StartNew();
-            for (int i = 0; i < count; i++)
-            {
-                json2 = serializer2.Serialize(envelope);
-            }
-            sw2.Stop();
-
-            sw3 = System.Diagnostics.Stopwatch.StartNew();
-            for (int i = 0; i < count; i++)
-            {
-                json3 = serializer3.Serialize(envelope);
-            }
-            sw3.Stop();
-
-            System.Console.WriteLine("Serialization:");
-            System.Console.WriteLine("Serializer 1: {0} ms", sw1.ElapsedMilliseconds);
-            System.Console.WriteLine("Serializer 2: {0} ms", sw2.ElapsedMilliseconds);
-            System.Console.WriteLine("Serializer 3: {0} ms", sw3.ElapsedMilliseconds);
-
-            System.Console.Read();
-
-
-            return;
+            };
 
             _serverConnectedNodesDictionary = new Dictionary<Guid, IServerChannel>();
             _serverNodeSessionIdDictionary = new Dictionary<Node, Guid>();

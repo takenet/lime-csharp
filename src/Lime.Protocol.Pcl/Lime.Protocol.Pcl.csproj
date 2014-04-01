@@ -147,21 +147,6 @@
     <Compile Include="..\Lime.Protocol\Security\PlainAuthentication.cs">
       <Link>Security\PlainAuthentication.cs</Link>
     </Compile>
-    <Compile Include="..\Lime.Protocol\Serialization\IJsonSerializable.cs">
-      <Link>Serialization\IJsonSerializable.cs</Link>
-    </Compile>
-    <Compile Include="..\Lime.Protocol\Serialization\IJsonWritable.cs">
-      <Link>Serialization\IJsonWritable.cs</Link>
-    </Compile>
-    <Compile Include="..\Lime.Protocol\Serialization\IJsonWriter.cs">
-      <Link>Serialization\IJsonWriter.cs</Link>
-    </Compile>
-    <Compile Include="..\Lime.Protocol\Serialization\JsonObject.cs">
-      <Link>Serialization\JsonObject.cs</Link>
-    </Compile>
-    <Compile Include="..\Lime.Protocol\Serialization\JsonWriter.cs">
-      <Link>Serialization\JsonWriter.cs</Link>
-    </Compile>
     <Compile Include="..\Lime.Protocol\Serialization\SerializationExtensions.cs">
       <Link>Serialization\SerializationExtensions.cs</Link>
     </Compile>

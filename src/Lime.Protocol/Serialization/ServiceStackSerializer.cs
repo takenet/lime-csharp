@@ -63,7 +63,7 @@ namespace Lime.Protocol.Serialization
         /// <exception cref="System.ArgumentException">JSON string is not a valid envelope</exception>
         public Envelope Deserialize(string envelopeString)
         {
-            var jsonObject = ServiceStack.Text.JsonObject.Parse(envelopeString);
+            var jsonObject = JsonObject.Parse(envelopeString);
 
             if (jsonObject.ContainsKey("content"))
             {
@@ -91,22 +91,22 @@ namespace Lime.Protocol.Serialization
 
         #region Private methods
 
-        private static Session DeserializeAsSession(ServiceStack.Text.JsonObject jsonObject)
+        private static Session DeserializeAsSession(JsonObject jsonObject)
         {
             var session = CreateEnvelope<Session>(jsonObject);
-            session.Mode = jsonObject.Get<SessionMode>("mode");
-            session.State = jsonObject.Get<SessionState>("state");
-            session.Reason = jsonObject.Get<Reason>("reason");
-            session.Encryption = jsonObject.Get<SessionEncryption?>("encryption");
-            session.EncryptionOptions = jsonObject.Get<SessionEncryption[]>("encryptionOptions");
-            session.Compression = jsonObject.Get<SessionCompression?>("compression");
-            session.CompressionOptions = jsonObject.Get<SessionCompression[]>("compressionOptions");
-            session.SchemeOptions = jsonObject.Get<AuthenticationScheme[]>("schemeOptions");
+            session.Mode = jsonObject.Get<SessionMode>(Session.MODE_KEY);
+            session.State = jsonObject.Get<SessionState>(Session.STATE_KEY);
+            session.Reason = jsonObject.Get<Reason>(Session.REASON_KEY);
+            session.Encryption = jsonObject.Get<SessionEncryption?>(Session.ENCRYPTION_KEY);
+            session.EncryptionOptions = jsonObject.Get<SessionEncryption[]>(Session.ENCRYPTION_OPTIONS_KEY);
+            session.Compression = jsonObject.Get<SessionCompression?>(Session.COMPRESSION_KEY);
+            session.CompressionOptions = jsonObject.Get<SessionCompression[]>(Session.COMPRESSION_OPTIONS_KEY);
+            session.SchemeOptions = jsonObject.Get<AuthenticationScheme[]>(Session.SCHEME_OPTIONS_KEY);
 
-            if (jsonObject.ContainsKey("authentication"))
+            if (jsonObject.ContainsKey(Session.AUTHENTICATION_KEY))
             {
                 AuthenticationScheme scheme;
-                if (!Enum.TryParse<AuthenticationScheme>(jsonObject["scheme"], true, out scheme))
+                if (!Enum.TryParse<AuthenticationScheme>(jsonObject[Session.SCHEME_KEY], true, out scheme))
                 {
                     throw new ArgumentException("Invalid or unknown authentication scheme name");
                 }
@@ -118,64 +118,62 @@ namespace Lime.Protocol.Serialization
                 }
 
                 session.Authentication = (Authentication)JsonSerializer.DeserializeFromString(
-                    jsonObject.GetUnescaped("authentication"), authenticationType);
+                    jsonObject.GetUnescaped(Session.AUTHENTICATION_KEY), authenticationType);
             }
 
             return session;
         }
 
-        private static Message DeserializeAsMessage(ServiceStack.Text.JsonObject jsonObject)
+        private static Message DeserializeAsMessage(JsonObject jsonObject)
         {
             var message = CreateEnvelope<Message>(jsonObject);
-            message.Content = GetDocument(jsonObject, "content");
+            message.Content = GetDocument(jsonObject, Message.CONTENT_KEY);
             return message;
         }
 
-        private static Command DeserializeAsCommand(ServiceStack.Text.JsonObject jsonObject)
+        private static Command DeserializeAsCommand(JsonObject jsonObject)
         {
             var command = CreateEnvelope<Command>(jsonObject);
-            command.Method = jsonObject.Get<CommandMethod>("method");
-            command.Reason = jsonObject.Get<Reason>("reason");
-            command.Status = jsonObject.Get<CommandStatus>("status");
-
-            if (jsonObject.ContainsKey("resource"))
-            {
-                command.Resource = GetDocument(jsonObject, "resource");
-            }
+            command.Method = jsonObject.Get<CommandMethod>(Command.METHOD_KEY);
+            command.Reason = jsonObject.Get<Reason>(Command.REASON_KEY);
+            command.Status = jsonObject.Get<CommandStatus>(Command.STATUS_KEY);
+            command.Resource = GetDocument(jsonObject, Command.RESOURCE_KEY);
 
             return command;
         }
 
-        private static Document GetDocument(ServiceStack.Text.JsonObject jsonObject, string documentPropertyName)
-        {
-            if (!jsonObject.ContainsKey("type"))
-            {
-                throw new ArgumentException("Type information not found");
-            }
-
-            var mediaType = jsonObject.Get<MediaType>("type");
-
-            Type documentType;
-
-            if (!TypeUtil.TryGetTypeForMediaType(mediaType, out documentType))
-            {
-                throw new ArgumentException("Unknown document type");
-            }
-
-            return (Document)JsonSerializer.DeserializeFromString(
-                jsonObject.GetUnescaped(documentPropertyName), documentType);
-        }
-
-        private static TEnvelope CreateEnvelope<TEnvelope>(ServiceStack.Text.JsonObject j) where TEnvelope : Envelope, new()
+        private static TEnvelope CreateEnvelope<TEnvelope>(JsonObject j) where TEnvelope : Envelope, new()
         {
             return new TEnvelope()
             {
-                Id = j.Get<Guid>("id"),
+                Id = j.Get<Guid?>("id"),
                 From = j.Get<Node>("from"),
                 Pp = j.Get<Node>("pp"),
                 To = j.Get<Node>("to"),
                 Metadata = j.Get<Dictionary<string, string>>("metadata")
             };
+        }
+
+        private static Document GetDocument(JsonObject jsonObject, string documentPropertyName)
+        {
+            Document document = null;
+
+            if (jsonObject.ContainsKey("type"))
+            {
+                var mediaType = jsonObject.Get<MediaType>("type");
+
+                Type documentType;
+
+                if (!TypeUtil.TryGetTypeForMediaType(mediaType, out documentType))
+                {
+                    throw new ArgumentException("Unknown document type");
+                }
+
+                document = (Document)JsonSerializer.DeserializeFromString(
+                    jsonObject.GetUnescaped(documentPropertyName), documentType);
+            }
+
+            return document;
         }
 
         #endregion

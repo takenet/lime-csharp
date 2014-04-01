@@ -14,7 +14,7 @@ namespace Lime.Protocol.Security
     /// Should be used only with encrypted sessions.
     /// </summary>
     [DataContract(Namespace = "http://limeprotocol.org/2014")]
-    public class PlainAuthentication : Authentication, IJsonWritable
+    public class PlainAuthentication : Authentication
     {
         public const string PASSWORD_KEY = "password";
 
@@ -30,23 +30,5 @@ namespace Lime.Protocol.Security
         /// </summary>
         [DataMember(Name = "password")]
         public string Password { get; set; }
-
-        #region IJsonWritable Members
-
-        public override void WriteJson(IJsonWriter writer)
-        {
-            writer.WriteStringProperty(PASSWORD_KEY, this.Password);
-        }
-
-        #endregion
-
-        internal static PlainAuthentication FromJsonObject(JsonObject jsonObject)
-        {
-            var authentication = new PlainAuthentication();
-
-            authentication.Password = jsonObject.GetValueOrDefault(PASSWORD_KEY, v => (string)v);
-
-            return authentication;
-        }
     }
 }

@@ -1,5 +1,4 @@
 ﻿using Lime.Protocol.Resources;
-using Lime.Protocol.Serialization;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -23,10 +22,16 @@ namespace Lime.Protocol
     //[KnownType(typeof(Subscription))]
     public class Command : Envelope
     {
+        public const string TYPE_KEY = "type";
+        public const string RESOURCE_KEY = "resource";
+        public const string METHOD_KEY = "method";
+        public const string STATUS_KEY = "status";
+        public const string REASON_KEY = "reason";
+
         /// <summary>
         ///  MIME declaration of the resource type of the command.
         /// </summary>
-        [DataMember(Name = "type")]
+        [DataMember(Name = TYPE_KEY)]
         public MediaType Type
         {
             get
@@ -44,21 +49,21 @@ namespace Lime.Protocol
         /// Server resource that are subject
         /// of the command
         /// </summary>
-        [DataMember(Name = "resource")]
+        [DataMember(Name = RESOURCE_KEY)]
         public Document Resource { get; set; }
 
         /// <summary>
         /// Action to be taken to the
         /// resource
         /// </summary>
-        [DataMember(Name = "method")]
+        [DataMember(Name = METHOD_KEY)]
         public CommandMethod Method { get; set; }
 
         /// <summary>
         /// Indicates the status of 
         /// the action taken to the resource
         /// </summary>
-        [DataMember(Name = "status", EmitDefaultValue = false)]
+        [DataMember(Name = STATUS_KEY, EmitDefaultValue = false)]
         [DefaultValue(CommandStatus.Pending)]
         public CommandStatus Status { get; set; }
 
@@ -66,13 +71,8 @@ namespace Lime.Protocol
         /// Indicates a reason for
         /// the status
         /// </summary>
-        [DataMember(Name = "reason")]
+        [DataMember(Name = REASON_KEY)]
         public Reason Reason { get; set; }
-
-        internal static Envelope FromJsonObject(JsonObject jsonObject)
-        {
-            throw new NotImplementedException();
-        }
     }
 
     /// <summary>

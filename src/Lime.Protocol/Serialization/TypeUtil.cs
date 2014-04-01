@@ -117,39 +117,5 @@ namespace Lime.Protocol.Serialization
 
             return (TEnum)value;
         }
-
-
-        public static Delegate GetFromJsonObjectDelegate(Type type)
-        {
-            Delegate fromDictionaryDelegate;
-
-
-#if !PCL
-            if (!_fromDictionaryMethodDictionary.TryGetValue(type, out fromDictionaryDelegate))
-            {
-                lock (_syncRoot)
-                {
-                    if (!_fromDictionaryMethodDictionary.TryGetValue(type, out fromDictionaryDelegate))
-                    {
-                        var fromDictionaryMethod = type.GetMethod("FromJsonObject", BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.ExactBinding);
-
-                        if (fromDictionaryMethod == null)
-                        {
-                            throw new ArgumentException("Type doesn't contains a JsonObject method");
-                        }
-
-                        var delegateType = typeof(Func<JsonObject, object>);
-
-                        fromDictionaryDelegate = Delegate.CreateDelegate(delegateType, fromDictionaryMethod);
-                        _fromDictionaryMethodDictionary.Add(type, fromDictionaryDelegate);
-                    }
-                }
-            }
-#else
-            // TODO: Implements it to PCL
-            fromDictionaryDelegate = null;
-#endif
-            return fromDictionaryDelegate;
-        }
     }
 }
