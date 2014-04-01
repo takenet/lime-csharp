@@ -49,6 +49,7 @@
   <ItemGroup>
     <Compile Include="Client\IClientChannel.cs" />
     <Compile Include="Client\ClientChannel.cs" />
+    <Compile Include="Client\IClientChannelExtensions.cs" />
     <Compile Include="Network\AsyncCountdownEvent.cs" />
     <Compile Include="Network\ChannelBase.cs" />
     <Compile Include="Network\DeferralEventArgs.cs" />

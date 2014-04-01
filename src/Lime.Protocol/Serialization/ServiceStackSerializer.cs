@@ -127,7 +127,7 @@ namespace Lime.Protocol.Serialization
         private static Message DeserializeAsMessage(JsonObject jsonObject)
         {
             var message = CreateEnvelope<Message>(jsonObject);
-            message.Content = GetDocument(jsonObject, Message.CONTENT_KEY);
+            message.Content = GetDocument(jsonObject, Message.TYPE_KEY, Message.CONTENT_KEY);
             return message;
         }
 
@@ -137,7 +137,7 @@ namespace Lime.Protocol.Serialization
             command.Method = jsonObject.Get<CommandMethod>(Command.METHOD_KEY);
             command.Reason = jsonObject.Get<Reason>(Command.REASON_KEY);
             command.Status = jsonObject.Get<CommandStatus>(Command.STATUS_KEY);
-            command.Resource = GetDocument(jsonObject, Command.RESOURCE_KEY);
+            command.Resource = GetDocument(jsonObject, Command.TYPE_KEY, Command.RESOURCE_KEY);
 
             return command;
         }
@@ -146,21 +146,21 @@ namespace Lime.Protocol.Serialization
         {
             return new TEnvelope()
             {
-                Id = j.Get<Guid?>("id"),
-                From = j.Get<Node>("from"),
-                Pp = j.Get<Node>("pp"),
-                To = j.Get<Node>("to"),
-                Metadata = j.Get<Dictionary<string, string>>("metadata")
+                Id = j.Get<Guid?>(Envelope.ID_KEY),
+                From = j.Get<Node>(Envelope.FROM_KEY),
+                Pp = j.Get<Node>(Envelope.PP_KEY),
+                To = j.Get<Node>(Envelope.TO_KEY),
+                Metadata = j.Get<Dictionary<string, string>>(Envelope.METADATA_KEY)
             };
         }
 
-        private static Document GetDocument(JsonObject jsonObject, string documentPropertyName)
+        private static Document GetDocument(JsonObject jsonObject, string typeKey, string documentPropertyName)
         {
             Document document = null;
 
-            if (jsonObject.ContainsKey("type"))
+            if (jsonObject.ContainsKey(typeKey))
             {
-                var mediaType = jsonObject.Get<MediaType>("type");
+                var mediaType = jsonObject.Get<MediaType>(typeKey);
 
                 Type documentType;
 
