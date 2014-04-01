@@ -17,7 +17,7 @@ namespace Lime.Protocol.Contents
         public const string MIME_TYPE = "application/vnd.lime.chatstate+json";
 
         public ChatState()
-            : base(new MediaType(MIME_TYPE))            
+            : base(MediaType.Parse(MIME_TYPE))            
         {
         }
 

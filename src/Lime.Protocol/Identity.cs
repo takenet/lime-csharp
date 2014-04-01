@@ -42,7 +42,7 @@ namespace Lime.Protocol
             return ToString().Equals(obj.ToString());
         }
 
-        public static Identity ParseIdentity(string s)
+        public static Identity Parse(string s)
         {
             if (string.IsNullOrWhiteSpace(s))
             {
@@ -67,7 +67,7 @@ namespace Lime.Protocol
         {
             try
             {
-                value = ParseIdentity(s);
+                value = Parse(s);
                 return true;
             }
             catch

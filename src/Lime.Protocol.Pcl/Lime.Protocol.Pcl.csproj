@@ -28,7 +28,7 @@
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
+    <DefineConstants>TRACE;PCL</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
@@ -147,13 +147,16 @@
     <Compile Include="..\Lime.Protocol\Security\PlainAuthentication.cs">
       <Link>Security\PlainAuthentication.cs</Link>
     </Compile>
+    <Compile Include="..\Lime.Protocol\Serialization\SerializationExtensions.cs">
+      <Link>Serialization\SerializationExtensions.cs</Link>
+    </Compile>
+    <Compile Include="..\Lime.Protocol\Serialization\TypeUtil.cs">
+      <Link>Serialization\TypeUtil.cs</Link>
+    </Compile>
     <Compile Include="..\Lime.Protocol\Session.cs">
       <Link>Session.cs</Link>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Serialization\IJsonSerializable.cs" />
-    <Compile Include="Serialization\IJsonWriter.cs" />
-    <Compile Include="Serialization\JsonWriter.cs" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />

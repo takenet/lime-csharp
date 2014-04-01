@@ -17,7 +17,7 @@ namespace Lime.Protocol.Resources
         public const string MIME_TYPE = "application/vnd.lime.capability+json";
 
         public Capability()
-            : base(new MediaType(MIME_TYPE))
+            : base(MediaType.Parse(MIME_TYPE))
         {
 
         }

@@ -1,4 +1,5 @@
 ﻿using Lime.Protocol.Security;
+using Lime.Protocol.Serialization;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -16,6 +17,17 @@ namespace Lime.Protocol
     [DataContract(Namespace = "http://limeprotocol.org/2014")]
     public class Session : Envelope
     {
+        public const string STATE_KEY = "state";
+        public const string MODE_KEY = "mode";
+        public const string ENCRYPTION_OPTIONS_KEY = "encryptionOptions";
+        public const string ENCRYPTION_KEY = "encryption";
+        public const string COMPRESSION_OPTIONS_KEY = "compressionOptions";
+        public const string COMPRESSION_KEY = "compression";
+        public const string SCHEME_OPTIONS_KEY = "schemeOptions";
+        public const string SCHEME_KEY = "scheme";
+        public const string AUTHENTICATION_KEY = "authentication";
+        public const string REASON_KEY = "reason";
+
         public Session()
             : base(null)
         {
@@ -27,14 +39,14 @@ namespace Lime.Protocol
         ///  Only the server can change the session state, 
         ///  but the client can request the state transition. 
         /// </summary>
-        [DataMember(Name = "state")]
+        [DataMember(Name = STATE_KEY)]
         public SessionState State { get; set; }
 
         /// <summary>
         /// Defines the role of the 
         /// client node in the session with the server.
         /// </summary>
-        [DataMember(Name = "mode", EmitDefaultValue = false)]
+        [DataMember(Name = MODE_KEY, EmitDefaultValue = false)]
         [DefaultValue(SessionMode.Node)]
         public SessionMode Mode { get; set; }
 
@@ -42,7 +54,7 @@ namespace Lime.Protocol
         /// Encryption options provided by 
         /// the server during the session negotiation.
         /// </summary>
-        [DataMember(Name = "encryptionOptions", EmitDefaultValue = false)]
+        [DataMember(Name = ENCRYPTION_OPTIONS_KEY, EmitDefaultValue = false)]
         public SessionEncryption[] EncryptionOptions { get; set; }
 
         /// <summary>
@@ -51,14 +63,14 @@ namespace Lime.Protocol
         /// negotiation and by the server in the confirmation 
         /// after that.
         /// </summary>
-        [DataMember(Name = "encryption")]
+        [DataMember(Name = ENCRYPTION_KEY)]
         public SessionEncryption? Encryption { get; set; }
 
         /// <summary>
         /// Compression options provided by the 
         /// server during the session negotiation.
         /// </summary>
-        [DataMember(Name = "compressionOptions", EmitDefaultValue = false)]
+        [DataMember(Name = COMPRESSION_OPTIONS_KEY, EmitDefaultValue = false)]
         public SessionCompression[] CompressionOptions { get; set; }
 
         /// <summary>
@@ -67,14 +79,14 @@ namespace Lime.Protocol
         /// negotiation and by the server in the confirmation 
         /// after that.
         /// </summary>
-        [DataMember(Name = "compression")]
+        [DataMember(Name = COMPRESSION_KEY)]
         public SessionCompression? Compression { get; set; }
 
         /// <summary>
         /// List of available authentication schemas 
         /// for session authentication provided by the server.
         /// </summary>
-        [DataMember(Name = "schemeOptions")]
+        [DataMember(Name = SCHEME_OPTIONS_KEY)]
         public AuthenticationScheme[] SchemeOptions { get; set; }
 
         /// <summary>
@@ -82,7 +94,7 @@ namespace Lime.Protocol
         /// for the session. This property must be present 
         /// if the property authentication is defined.
         /// </summary>
-        [DataMember(Name = "scheme")]
+        [DataMember(Name = SCHEME_KEY)]
         public AuthenticationScheme? Scheme
         {
             get
@@ -101,7 +113,7 @@ namespace Lime.Protocol
         /// Information like password sent by the client or 
         /// roundtrip data sent by the server.
         /// </summary>
-        [DataMember(Name = "authentication")]
+        [DataMember(Name = AUTHENTICATION_KEY)]
         public Authentication Authentication { get; set; }
 
         /// <summary>
@@ -109,8 +121,8 @@ namespace Lime.Protocol
         /// failed state, this property should provide more 
         /// details about the problem.
         /// </summary>
-        [DataMember(Name = "reason")]
-        public Reason Reason { get; set; }
+        [DataMember(Name = REASON_KEY)]
+        public Reason Reason { get; set; }       
     }
 
     /// <summary>

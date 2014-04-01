@@ -20,32 +20,6 @@ namespace Lime.Protocol
 
         }
 
-        public MediaType(string mediaType)
-        {
-            if (string.IsNullOrWhiteSpace(mediaType))
-            {
-                throw new ArgumentNullException("value");
-            }
-
-            var splittedMediaType = mediaType.Split('/');
-
-            if (splittedMediaType.Length != 2)
-            {
-                throw new FormatException("Invalid media type format");
-            }
-
-            this.Type = splittedMediaType[0];
-
-            var splittedSubtype = splittedMediaType[1].Split('+');
-
-            this.Subtype = splittedSubtype[0];
-
-            if (splittedSubtype.Length > 1)
-            {
-                this.Suffix = splittedSubtype[1];
-            }
-        }
-
         public MediaType(string type, string subtype, string suffix)
         {
             if (string.IsNullOrWhiteSpace(type))
@@ -104,11 +78,56 @@ namespace Lime.Protocol
             return obj.ToString().Equals(this.ToString(), StringComparison.CurrentCultureIgnoreCase);
         }
 
+
+        /// <summary> 
+        /// Parses the string to a MediaType object.
+        /// </summary>
+        /// <param name="s">The string.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">value</exception>
+        /// <exception cref="System.FormatException">Invalid media type format</exception>
+        public static MediaType Parse(string s)
+        {
+            if (string.IsNullOrWhiteSpace(s))
+            {
+                throw new ArgumentNullException("value");
+            }
+
+            var splittedMediaType = s.Split('/');
+
+            if (splittedMediaType.Length != 2)
+            {
+                throw new FormatException("Invalid media type format");
+            }
+           
+            var type = splittedMediaType[0];
+
+            var splittedSubtype = splittedMediaType[1].Split('+');
+
+            var subtype = splittedSubtype[0];
+
+            string suffix = null;
+
+            if (splittedSubtype.Length > 1)
+            {
+                suffix = splittedSubtype[1];
+            }
+
+            return new MediaType(type, subtype, suffix);
+        }
+
+
+        /// <summary>
+        /// Try parses the string to a MediaType object.
+        /// </summary>
+        /// <param name="s">The string.</param>
+        /// <param name="mediaType">Type of the media.</param>
+        /// <returns></returns>
         public static bool TryParse(string s, out MediaType mediaType)
         {
             try
             {
-                mediaType = new MediaType(s);
+                mediaType = MediaType.Parse(s);
                 return true;
             }
             catch

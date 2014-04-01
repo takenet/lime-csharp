@@ -23,8 +23,17 @@ namespace Lime.Console
         private static IDictionary<Node, Guid> _serverNodeSessionIdDictionary;
         private static Uri _listenerUri;
 
+        private static IDictionary<Identity, string> _identityPasswordDictionary;
+
         static void Main(string[] args)
         {
+            _identityPasswordDictionary = new Dictionary<Identity, string>
+            {
+                { Identity.Parse("john@domain.com") , "123456" },
+                { Identity.Parse("paul@domain.com") , "abcdef" }
+
+            };
+
             _serverConnectedNodesDictionary = new Dictionary<Guid, IServerChannel>();
             _serverNodeSessionIdDictionary = new Dictionary<Node, Guid>();
 
@@ -37,7 +46,6 @@ namespace Lime.Console
             System.Console.ReadLine();
 
             clientChannel.SendFinishingSessionAsync().Wait();
-
         }
 
         private static async Task<ITransportListener> StartListenerAsync()

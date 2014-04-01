@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Lime.Protocol.Serialization;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
@@ -15,6 +16,8 @@ namespace Lime.Protocol.Security
     [DataContract(Namespace = "http://limeprotocol.org/2014")]
     public class PlainAuthentication : Authentication
     {
+        public const string PASSWORD_KEY = "password";
+
         public PlainAuthentication()
             : base(AuthenticationScheme.Plain)
         {

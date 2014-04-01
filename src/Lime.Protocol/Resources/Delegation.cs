@@ -20,7 +20,7 @@ namespace Lime.Protocol.Resources
         public const string MIME_TYPE = "application/vnd.lime.delegation+json";
 
         public Delegation()
-            : base(new MediaType(MIME_TYPE))
+            : base(MediaType.Parse(MIME_TYPE))
         {
 
         }

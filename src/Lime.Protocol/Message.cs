@@ -12,10 +12,13 @@ namespace Lime.Protocol
     [KnownType(typeof(TextContent))]
     public class Message : Envelope
     {
+        public const string TYPE_KEY = "type";
+        public const string CONTENT_KEY = "content";
+
         /// <summary>
         ///  MIME declaration of the content type of the message.
         /// </summary>
-        [DataMember(Name = "type", IsRequired = true)]
+        [DataMember(Name = TYPE_KEY, IsRequired = true)]
         public MediaType Type
         {
             get 
@@ -32,7 +35,7 @@ namespace Lime.Protocol
         /// <summary>
         /// Message body content
         /// </summary>
-        [DataMember(Name = "content", IsRequired = true)]
+        [DataMember(Name = CONTENT_KEY, IsRequired = true)]
         public Document Content { get; set; }
     }
 }

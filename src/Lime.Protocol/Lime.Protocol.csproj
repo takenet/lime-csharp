@@ -49,6 +49,7 @@
   <ItemGroup>
     <Compile Include="Client\IClientChannel.cs" />
     <Compile Include="Client\ClientChannel.cs" />
+    <Compile Include="Client\IClientChannelExtensions.cs" />
     <Compile Include="Network\AsyncCountdownEvent.cs" />
     <Compile Include="Network\ChannelBase.cs" />
     <Compile Include="Network\DeferralEventArgs.cs" />
@@ -93,7 +94,7 @@
     <Compile Include="Security\GuestAuthentication.cs" />
     <Compile Include="Security\PlainAuthentication.cs" />
     <Compile Include="Serialization\JsonNetSerializer.cs" />
-    <Compile Include="Serialization\InternalJsonSerializer.cs" />
+    <Compile Include="Serialization\SerializationExtensions.cs" />
     <Compile Include="Serialization\TypeUtil.cs" />
     <Compile Include="Serialization\IEnvelopeSerializer.cs" />
     <Compile Include="Serialization\ServiceStackSerializer.cs" />

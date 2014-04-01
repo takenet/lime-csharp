@@ -15,10 +15,13 @@ namespace Lime.Protocol
     [DataContract(Namespace = "http://limeprotocol.org/2014")]
     public class Reason
     {
-        [DataMember(Name = "code")]
+        public const string CODE_KEY = "code";
+        public const string DESCRIPTION_KEY = "description";
+
+        [DataMember(Name = CODE_KEY)]
         public int Code { get; set; }
 
-        [DataMember(Name = "description")]
+        [DataMember(Name = DESCRIPTION_KEY)]
         public string Description { get; set; }
     }
 }

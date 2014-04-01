@@ -21,7 +21,7 @@ namespace Lime.Protocol.Resources
         public const string MIME_TYPE = "application/vnd.lime.subscription+json";
 
         public Subscription()
-            : base(new MediaType(MIME_TYPE))
+            : base(MediaType.Parse(MIME_TYPE))
         {
 
         }
