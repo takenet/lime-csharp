@@ -23,7 +23,6 @@ namespace Lime.Console
         private static IDictionary<Node, Guid> _serverNodeSessionIdDictionary;
         private static Uri _listenerUri;
 
-
         static void Main(string[] args)
         {
             _serverConnectedNodesDictionary = new Dictionary<Guid, IServerChannel>();
@@ -255,15 +254,73 @@ namespace Lime.Console
             }
         }
 
-        private static void ServerChannel_MessageReceived(object sender, EnvelopeEventArgs<Message> e)
+        private static async void ServerChannel_MessageReceived(object sender, EnvelopeEventArgs<Message> e)
         {
             IServerChannel channel = (IServerChannel)sender;
 
             if (channel.State == SessionState.Established)
             {
+                var message = e.Envelope;
+                if (message.From == null)
+                {
+                    message.From = channel.RemoteNode;
+                }
 
+                if (message.To == null)
+                {
+                    var notification = new Notification()
+                    {
+                        Id = message.Id,
+                        Event = Event.Failed,
+                        Reason = new Reason()
+                        {
+                            Code = ReasonCodes.VALIDATION_INVALID_DESTINATION,
+                            Description = "Invalid destination"
+                        }
+                    };
 
+                    await channel.SendNotificationAsync(notification);
+                }
+                else if (!_serverNodeSessionIdDictionary.ContainsKey(message.To))
+                {
+                    var notification = new Notification()
+                    {
+                        Id = message.Id,
+                        Event = Event.Failed,
+                        Reason = new Reason()
+                        {
+                            Code = ReasonCodes.DISPATCHING_DESTINATION_NOT_FOUND,
+                            Description = "Destination not found"
+                        }
+                    };
 
+                    await channel.SendNotificationAsync(notification);
+                }
+                else
+                {
+                    Guid destinationSessionId = _serverNodeSessionIdDictionary[message.To];
+                    IServerChannel destinationChannel;
+
+                    if (!_serverConnectedNodesDictionary.TryGetValue(destinationSessionId, out destinationChannel))
+                    {
+                        var notification = new Notification()
+                        {
+                            Id = message.Id,
+                            Event = Event.Failed,
+                            Reason = new Reason()
+                            {
+                                Code = ReasonCodes.DISPATCHING_ERROR,
+                                Description = "Destination session is unavailable"
+                            }
+                        };
+
+                        await channel.SendNotificationAsync(notification);
+                    }
+                    else
+                    {
+                        await destinationChannel.SendMessageAsync(message);
+                    }                    
+                }
             }
         }
 

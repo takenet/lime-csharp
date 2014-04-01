@@ -27,7 +27,8 @@ namespace Lime.Protocol.Serialization
             _settings.Converters.Add(new SessionJsonConverter());
             _settings.Converters.Add(new AuthenticationJsonConverter());
             _settings.Converters.Add(new DocumentJsonConverter());
-
+            _settings.Converters.Add(new MessageJsonConverter());
+            
             JsonConvert.DefaultSettings = () => _settings;
         }
 
