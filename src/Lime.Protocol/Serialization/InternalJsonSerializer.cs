@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Lime.Protocol.Security;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -13,7 +14,7 @@ namespace Lime.Protocol.Serialization
 
         public string Serialize(Envelope envelope)
         {
-            throw new NotImplementedException();
+            return envelope.ToJson();
         }
 
         public Envelope Deserialize(string envelopeString)
@@ -22,19 +23,19 @@ namespace Lime.Protocol.Serialization
 
             if (jsonDictionary.ContainsKey("content"))
             {
-                return this.DeserializeAsMessage(jsonDictionary);
+                return Message.FromJsonObject(jsonDictionary);
             }
             else if (jsonDictionary.ContainsKey("event"))
             {
-                return this.DeserializeAsNotification(envelopeString);
+                return Notification.FromJsonObject(jsonDictionary);
             }
             else if (jsonDictionary.ContainsKey("method"))
             {
-                return DeserializeAsCommand(jsonDictionary);
+                return Command.FromJsonObject(jsonDictionary);
             }
             else if (jsonDictionary.ContainsKey("state"))
             {
-                return DeserializeAsSession(jsonDictionary);
+                return Session.FromJsonObject(jsonDictionary);
             }
             else
             {
@@ -42,103 +43,97 @@ namespace Lime.Protocol.Serialization
             }
         }
 
-
-
         #endregion
 
-        private Session DeserializeAsSession(Dictionary<string, object> jsonDictionary)
-        {
-            var session = new Session();
-            session.From = Node.ParseNode((string)jsonDictionary["from"]);
 
-            throw new NotImplementedException();
-        }
+        #region JSON Parser
 
-        private Command DeserializeAsCommand(Dictionary<string, object> jsonDictionary)
-        {
-            throw new NotImplementedException();
-        }
-
-        private Notification DeserializeAsNotification(string envelopeString)
-        {
-            throw new NotImplementedException();
-        }
-
-        private Message DeserializeAsMessage(Dictionary<string, object> jsonDictionary)
-        {
-            throw new NotImplementedException();
-        }
-
-
+        private static Regex _unicodeRegex = new Regex(@"\\u([0-9a-z]{4})", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
         /// <summary>
         /// <see cref="http://stackoverflow.com/questions/1207731/how-can-i-deserialize-json-to-a-simple-dictionarystring-string-in-asp-net"/>
         /// </summary>
-        /// <param name="json"></param>
+        /// <param name="jsonString"></param>
         /// <returns></returns>
-        private static Dictionary<string, object> ParseJson(string json)
+        private static JsonObject ParseJson(string jsonString)
         {
-            int end;
-            return ParseJson(json, 0, out end);
-        }
-
-        private static Regex _regex = new Regex(@"\\u([0-9a-z]{4})", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-
-        private static Dictionary<string, object> ParseJson(string json, int start, out int end)
-        {
-            Dictionary<string, object> dict = new Dictionary<string, object>();
-            bool escbegin = false;
-            bool escend = false;
-            bool inquotes = false;
-            string key = null;
-            int cend;
-            StringBuilder sb = new StringBuilder();
-            Dictionary<string, object> child = null;
-            List<object> arraylist = null;
-            int autoKey = 0;
-            for (int i = start; i < json.Length; i++)
+            try
             {
-                char c = json[i];
-                if (c == '\\') escbegin = !escbegin;
-                if (!escbegin)
+                int end;
+                return ParseJson(jsonString, 0, out end);
+            }
+            catch (Exception ex)
+            {
+                throw new ArgumentException("Invalid or not supported JSON string", "jsonString", ex);
+            }
+        }
+        
+        private static JsonObject ParseJson(string jsonString, int start, out int end)
+        {
+            var resultDictionary = new JsonObject();
+
+            bool escBegin = false;
+            bool escEnd = false;
+            bool inQuotes = false;
+            string key = null;
+            int cEnd;
+            var tokenBuilder = new StringBuilder();
+            JsonObject child = null;
+            IList<object> arrayList = null;
+            int autoKey = 0;
+
+            for (int i = start; i < jsonString.Length; i++)
+            {
+                char c = jsonString[i];
+
+                if (c == '\\')
+                    escBegin = !escBegin;
+
+                if (!escBegin)
                 {
                     if (c == '"')
                     {
-                        inquotes = !inquotes;
-                        if (!inquotes && arraylist != null)
+                        inQuotes = !inQuotes;
+                        if (!inQuotes && arrayList != null)
                         {
-                            arraylist.Add(DecodeString(_regex, sb.ToString()));
-                            sb.Length = 0;
+                            tokenBuilder.Append(c);
+                            arrayList.Add(ParseValue(tokenBuilder.ToString()));
+                            tokenBuilder.Length = 0;
+                            continue;
                         }
-                        continue;
                     }
-                    if (!inquotes)
+                    if (!inQuotes)
                     {
                         switch (c)
                         {
                             case '{':
                                 if (i != start)
                                 {
-                                    child = ParseJson(json, i, out cend);
-                                    if (arraylist != null) arraylist.Add(child);
+                                    child = ParseJson(jsonString, i, out cEnd);
+                                    if (arrayList != null)
+                                    {
+                                        arrayList.Add(child);
+                                    }
                                     else
                                     {
-                                        dict.Add(key, child);
+                                        resultDictionary.Add(key, child);
                                         key = null;
                                     }
-                                    i = cend;
+                                    i = cEnd;
                                 }
                                 continue;
                             case '}':
                                 end = i;
                                 if (key != null)
                                 {
-                                    if (arraylist != null) dict.Add(key, arraylist);
-                                    else dict.Add(key, DecodeString(_regex, sb.ToString()));
+                                    if (arrayList != null)
+                                        resultDictionary.Add(key, arrayList);
+                                    else
+                                        resultDictionary.Add(key, ParseValue(tokenBuilder.ToString()));
                                 }
-                                return dict;
+                                return resultDictionary;
                             case '[':
-                                arraylist = new List<object>();
+                                arrayList = new List<object>();
                                 continue;
                             case ']':
                                 if (key == null)
@@ -146,48 +141,84 @@ namespace Lime.Protocol.Serialization
                                     key = "array" + autoKey.ToString();
                                     autoKey++;
                                 }
-                                if (arraylist != null && sb.Length > 0)
+                                if (arrayList != null && tokenBuilder.Length > 0)
                                 {
-                                    arraylist.Add(sb.ToString());
-                                    sb.Length = 0;
+                                    arrayList.Add(ParseValue(tokenBuilder.ToString()));
+                                    tokenBuilder.Length = 0;
                                 }
-                                dict.Add(key, arraylist);
-                                arraylist = null;
+                                resultDictionary.Add(key, arrayList);
+                                arrayList = null;
                                 key = null;
                                 continue;
                             case ',':
-                                if (arraylist == null && key != null)
+                                if (arrayList == null && key != null)
                                 {
-                                    dict.Add(key, DecodeString(_regex, sb.ToString()));
+                                    resultDictionary.Add(key, ParseValue(tokenBuilder.ToString()));
                                     key = null;
-                                    sb.Length = 0;
+                                    tokenBuilder.Length = 0;
                                 }
-                                if (arraylist != null && sb.Length > 0)
+                                if (arrayList != null && tokenBuilder.Length > 0)
                                 {
-                                    arraylist.Add(sb.ToString());
-                                    sb.Length = 0;
+                                    arrayList.Add(ParseValue(tokenBuilder.ToString()));
+                                    tokenBuilder.Length = 0;
                                 }
                                 continue;
                             case ':':
-                                key = DecodeString(_regex, sb.ToString());
-                                sb.Length = 0;
+                                key = ParseValue(tokenBuilder.ToString()).ToString();
+                                tokenBuilder.Length = 0;
+                                continue;
+                            case ' ':
                                 continue;
                         }
                     }
                 }
-                sb.Append(c);
-                if (escend) escbegin = false;
-                if (escbegin) escend = true;
-                else escend = false;
+
+                tokenBuilder.Append(c);
+
+                if (escEnd)
+                    escBegin = false;
+
+                if (escBegin)
+                    escEnd = true;
+                else
+                    escEnd = false;
             }
-            end = json.Length - 1;
-            return dict; //theoretically shouldn't ever get here
+            end = jsonString.Length - 1;
+            return resultDictionary; //theoretically shouldn't ever get here
         }
-        private static string DecodeString(Regex regex, string str)
+
+        private static object ParseValue(string value)
         {
-            return Regex.Unescape(
-                regex.Replace(str, match => char.ConvertFromUtf32(
-                    Int32.Parse(match.Groups[1].Value, System.Globalization.NumberStyles.HexNumber))));
+            if (value[0] == '"' &&
+                value[value.Length - 1] == '"')
+            {
+                value = value.Trim('"');
+
+                return Regex.Unescape(
+                    _unicodeRegex.Replace(value, match => char.ConvertFromUtf32(
+                        Int32.Parse(match.Groups[1].Value, System.Globalization.NumberStyles.HexNumber))));
+            }
+            else
+            {
+                bool boolResult;
+                int intResult;
+
+                if (bool.TryParse(value, out boolResult))
+                {
+                    return boolResult;
+                }
+                else if (int.TryParse(value, out intResult))
+                {
+                    return intResult;
+                }
+                else
+                {
+                    return null;
+                }
+            }
         }
+
+        #endregion
+
     }
 }

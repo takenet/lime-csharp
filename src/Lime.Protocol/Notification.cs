@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Lime.Protocol.Serialization;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
@@ -34,6 +35,11 @@ namespace Lime.Protocol
         /// </summary>
         [DataMember(Name = "reason")]
         public Reason Reason { get; set; }
+
+        internal static Envelope FromJsonObject(JsonObject jsonObject)
+        {
+            throw new NotImplementedException();
+        }
     }
 
     /// <summary>

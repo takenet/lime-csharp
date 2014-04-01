@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Lime.Protocol.Serialization
 {
-    public class JsonWriter : IJsonWriter, IDisposable
+    internal class JsonWriter : IJsonWriter, IDisposable
     {
         #region Private fields
 
@@ -180,7 +180,9 @@ namespace Lime.Protocol.Serialization
 
         #endregion
 
-        public void WriteProperty(string propertyName, object value)
+        #region IJsonWriter Members
+
+        public void WriteProperty(string propertyName, object value, bool stringToCamelCase = false)
         {
             if (value != null)
             {
@@ -208,10 +210,14 @@ namespace Lime.Protocol.Serialization
                 {
                     WriteJsonProperty(propertyName, ((IJsonSerializable)value));
                 }
+                else if (stringToCamelCase)
+                {
+                    WriteStringProperty(propertyName, value.ToString().ToCamelCase());
+                }
                 else
                 {
                     WriteStringProperty(propertyName, value.ToString());
-                }
+                }                                    
             }
         }
 
@@ -290,7 +296,7 @@ namespace Lime.Protocol.Serialization
             }
         }
 
-        public void WriteDictionaryProperty(string propertyName, IDictionary<string, object> dictionary)
+        public void WriteDictionaryProperty(string propertyName, IDictionary<string, string> dictionary)
         {
             if (dictionary != null)
             {
@@ -304,8 +310,8 @@ namespace Lime.Protocol.Serialization
                 WriteOpenBrackets();
 
                 foreach (var item in dictionary)
-                {                    
-                    WriteProperty(item.Key, item.Value);                    
+                {
+                    WriteStringProperty(item.Key, item.Value);
                 }
 
                 WriteCloseBrackets();
@@ -314,7 +320,7 @@ namespace Lime.Protocol.Serialization
             }
         }
 
-        public void WriteArrayProperty(string propertyName, IEnumerable items)
+        public void WriteArrayProperty(string propertyName, IEnumerable items, bool stringToCamelCase = false)
         {
             if (items != null)
             {
@@ -335,7 +341,7 @@ namespace Lime.Protocol.Serialization
                         {
                             WriteComma();
                         }
-                        
+
                         if (item is int ||
                             item is long ||
                             item is bool)
@@ -345,6 +351,10 @@ namespace Lime.Protocol.Serialization
                         else if (item is IJsonSerializable)
                         {
                             WriteJson((IJsonSerializable)item);
+                        }
+                        else if (stringToCamelCase)
+                        {
+                            WriteStringValue(item.ToString().ToCamelCase());
                         }
                         else
                         {
@@ -392,7 +402,9 @@ namespace Lime.Protocol.Serialization
 
                 _commaNeeded = true;
             }
-        }
+        } 
+
+        #endregion
 
         public override string ToString()
         {
@@ -404,7 +416,6 @@ namespace Lime.Protocol.Serialization
             return _writer.ToString();
         }
         
-
         protected virtual void Dispose(bool disposing)
         {
             if (disposing)

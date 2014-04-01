@@ -13,13 +13,13 @@ namespace Lime.Protocol.Serialization
 
         void WriteDateTimeProperty(string propertyName, DateTime value);
 
-        void WriteDictionaryProperty(string propertyName, IDictionary<string, object> dictionary);
+        void WriteDictionaryProperty(string propertyName, IDictionary<string, string> dictionary);
 
         void WriteGuidProperty(string propertyName, Guid value);
 
         void WriteIntProperty(string propertyName, int value);
 
-        void WriteArrayProperty(string propertyName, IEnumerable items);
+        void WriteArrayProperty(string propertyName, IEnumerable items, bool stringToCamelCase = false);
 
         void WriteJsonArrayProperty(string propertyName, IEnumerable<IJsonSerializable> jsonItems);
 
@@ -27,7 +27,7 @@ namespace Lime.Protocol.Serialization
 
         void WriteLongProperty(string propertyName, long value);
 
-        void WriteProperty(string propertyName, object value);
+        void WriteProperty(string propertyName, object value, bool stringToCamelCase = false);
 
         void WriteStringProperty(string propertyName, string value);
 

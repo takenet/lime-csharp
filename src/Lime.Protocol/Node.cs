@@ -26,7 +26,7 @@ namespace Lime.Protocol
             return string.Format("{0}/{1}", base.ToString(), Instance).TrimEnd('/');
         }
 
-        public static Node ParseNode(string s)
+        public static new Node Parse(string s)
         {
             if (string.IsNullOrWhiteSpace(s))
             {
@@ -60,7 +60,7 @@ namespace Lime.Protocol
         {
             try
             {
-                value = ParseNode(s);
+                value = Parse(s);
                 return true;
             }
             catch

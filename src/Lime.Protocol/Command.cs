@@ -1,4 +1,5 @@
 ﻿using Lime.Protocol.Resources;
+using Lime.Protocol.Serialization;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -67,6 +68,11 @@ namespace Lime.Protocol
         /// </summary>
         [DataMember(Name = "reason")]
         public Reason Reason { get; set; }
+
+        internal static Envelope FromJsonObject(JsonObject jsonObject)
+        {
+            throw new NotImplementedException();
+        }
     }
 
     /// <summary>

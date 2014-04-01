@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Lime.Protocol.Serialization;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
@@ -17,5 +18,18 @@ namespace Lime.Protocol.Security
             : base(AuthenticationScheme.Guest)
         {
         }
+
+        public override void WriteJson(IJsonWriter writer)
+        {
+            
+        }
+
+        internal static GuestAuthentication FromJsonObject(JsonObject jsonObject)
+        {
+            var authentication = new GuestAuthentication();
+
+            return authentication;
+        }
+
     }
 }

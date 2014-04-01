@@ -96,7 +96,7 @@ namespace Lime.Protocol.Serialization
                 {
                     var tokenValue = reader.Value.ToString();
 
-                    return Identity.ParseIdentity(tokenValue);
+                    return Identity.Parse(tokenValue);
                 }
                 else
                 {
@@ -104,7 +104,7 @@ namespace Lime.Protocol.Serialization
                 }
             }
 
-            public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+            public override void WriteJson(Newtonsoft.Json.JsonWriter writer, object value, JsonSerializer serializer)
             {
                 if (value != null)
                 {
@@ -135,7 +135,7 @@ namespace Lime.Protocol.Serialization
                 {
                     var tokenValue = reader.Value.ToString();
 
-                    return Node.ParseNode(tokenValue);
+                    return Node.Parse(tokenValue);
                 }
                 else
                 {
@@ -143,7 +143,7 @@ namespace Lime.Protocol.Serialization
                 }
             }
 
-            public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+            public override void WriteJson(Newtonsoft.Json.JsonWriter writer, object value, JsonSerializer serializer)
             {
                 if (value != null)
                 {
@@ -173,7 +173,7 @@ namespace Lime.Protocol.Serialization
                 if (reader.TokenType == JsonToken.String)
                 {
                     var tokenValue = reader.Value.ToString();
-                    return new MediaType(tokenValue);
+                    return MediaType.Parse(tokenValue);
                 }
                 else
                 {
@@ -181,7 +181,7 @@ namespace Lime.Protocol.Serialization
                 }
             }
 
-            public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+            public override void WriteJson(Newtonsoft.Json.JsonWriter writer, object value, JsonSerializer serializer)
             {
                 if (value != null)
                 {
@@ -216,7 +216,7 @@ namespace Lime.Protocol.Serialization
                 return null;
             }
 
-            public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+            public override void WriteJson(Newtonsoft.Json.JsonWriter writer, object value, JsonSerializer serializer)
             {
                 throw new NotImplementedException();
             }
@@ -279,7 +279,7 @@ namespace Lime.Protocol.Serialization
                 return target;
             }
 
-            public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+            public override void WriteJson(Newtonsoft.Json.JsonWriter writer, object value, JsonSerializer serializer)
             {
                 throw new NotImplementedException();
             }
@@ -346,7 +346,7 @@ namespace Lime.Protocol.Serialization
                 return target;
             }
 
-            public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+            public override void WriteJson(Newtonsoft.Json.JsonWriter writer, object value, JsonSerializer serializer)
             {
                 throw new NotImplementedException();
             }
@@ -376,7 +376,7 @@ namespace Lime.Protocol.Serialization
                 return null;
             }
 
-            public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+            public override void WriteJson(Newtonsoft.Json.JsonWriter writer, object value, JsonSerializer serializer)
             {
                 throw new NotImplementedException();
             }

@@ -21,7 +21,7 @@ namespace Lime.Protocol.Resources
         public const string MIME_TYPE = "application/vnd.lime.presence+json";
 
         public Presence()
-            : base(new MediaType(MIME_TYPE))
+            : base(MediaType.Parse(MIME_TYPE))
         {
 
         }

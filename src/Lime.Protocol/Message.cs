@@ -1,4 +1,5 @@
 ﻿using Lime.Protocol.Contents;
+using Lime.Protocol.Serialization;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -34,5 +35,10 @@ namespace Lime.Protocol
         /// </summary>
         [DataMember(Name = "content", IsRequired = true)]
         public Document Content { get; set; }
+
+        internal static Envelope FromJsonObject(JsonObject jsonObject)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

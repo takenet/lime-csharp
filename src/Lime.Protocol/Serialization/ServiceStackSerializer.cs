@@ -24,18 +24,17 @@ namespace Lime.Protocol.Serialization
         {
             JsConfig.ExcludeTypeInfo = true;
             JsConfig.EmitCamelCaseNames = true;
-
             JsConfig<Message>.IncludeTypeInfo = false;
             JsConfig<Notification>.IncludeTypeInfo = false;
             JsConfig<Command>.IncludeTypeInfo = false;
             JsConfig<Session>.IncludeTypeInfo = false;
 
             JsConfig<MediaType>.SerializeFn = m => m.ToString();
-            JsConfig<MediaType>.DeSerializeFn = s => new MediaType(s);
+            JsConfig<MediaType>.DeSerializeFn = s => MediaType.Parse(s);
             JsConfig<Node>.SerializeFn = n => n.ToString();
-            JsConfig<Node>.DeSerializeFn = s => Node.ParseNode(s);
+            JsConfig<Node>.DeSerializeFn = s => Node.Parse(s);
             JsConfig<Identity>.SerializeFn = i => i.ToString();
-            JsConfig<Identity>.DeSerializeFn = s => Identity.ParseIdentity(s);
+            JsConfig<Identity>.DeSerializeFn = s => Identity.Parse(s);
             JsConfig<Guid?>.SerializeFn = g => { if (g.HasValue) return g.ToString(); else return null; };
             JsConfig<Guid?>.DeSerializeFn = s => { if (string.IsNullOrWhiteSpace(s)) return null; else return new Guid(s); }; 
         }
@@ -44,14 +43,27 @@ namespace Lime.Protocol.Serialization
 
         #region IEnvelopeSerializer Members
 
+        /// <summary>
+        /// Serialize an envelope
+        /// to a string
+        /// </summary>
+        /// <param name="envelope"></param>
+        /// <returns></returns>
         public string Serialize(Envelope envelope)
         {
             return JsonSerializer.SerializeToString(envelope);
         }
 
+        /// <summary>
+        /// Deserialize an envelope
+        /// from a string
+        /// </summary>
+        /// <param name="envelopeString"></param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentException">JSON string is not a valid envelope</exception>
         public Envelope Deserialize(string envelopeString)
         {
-            var jsonObject = JsonObject.Parse(envelopeString);
+            var jsonObject = ServiceStack.Text.JsonObject.Parse(envelopeString);
 
             if (jsonObject.ContainsKey("content"))
             {
@@ -79,7 +91,7 @@ namespace Lime.Protocol.Serialization
 
         #region Private methods
 
-        private static Session DeserializeAsSession(JsonObject jsonObject)
+        private static Session DeserializeAsSession(ServiceStack.Text.JsonObject jsonObject)
         {
             var session = CreateEnvelope<Session>(jsonObject);
             session.Mode = jsonObject.Get<SessionMode>("mode");
@@ -94,7 +106,7 @@ namespace Lime.Protocol.Serialization
             if (jsonObject.ContainsKey("authentication"))
             {
                 AuthenticationScheme scheme;
-                if (!Enum.TryParse<AuthenticationScheme>(jsonObject["scheme"], out scheme))
+                if (!Enum.TryParse<AuthenticationScheme>(jsonObject["scheme"], true, out scheme))
                 {
                     throw new ArgumentException("Invalid or unknown authentication scheme name");
                 }
@@ -112,14 +124,14 @@ namespace Lime.Protocol.Serialization
             return session;
         }
 
-        private static Message DeserializeAsMessage(JsonObject jsonObject)
+        private static Message DeserializeAsMessage(ServiceStack.Text.JsonObject jsonObject)
         {
             var message = CreateEnvelope<Message>(jsonObject);
             message.Content = GetDocument(jsonObject, "content");
             return message;
         }
 
-        private static Command DeserializeAsCommand(JsonObject jsonObject)
+        private static Command DeserializeAsCommand(ServiceStack.Text.JsonObject jsonObject)
         {
             var command = CreateEnvelope<Command>(jsonObject);
             command.Method = jsonObject.Get<CommandMethod>("method");
@@ -134,7 +146,7 @@ namespace Lime.Protocol.Serialization
             return command;
         }
 
-        private static Document GetDocument(JsonObject jsonObject, string documentPropertyName)
+        private static Document GetDocument(ServiceStack.Text.JsonObject jsonObject, string documentPropertyName)
         {
             if (!jsonObject.ContainsKey("type"))
             {
@@ -154,7 +166,7 @@ namespace Lime.Protocol.Serialization
                 jsonObject.GetUnescaped(documentPropertyName), documentType);
         }
 
-        private static TEnvelope CreateEnvelope<TEnvelope>(JsonObject j) where TEnvelope : Envelope, new()
+        private static TEnvelope CreateEnvelope<TEnvelope>(ServiceStack.Text.JsonObject j) where TEnvelope : Envelope, new()
         {
             return new TEnvelope()
             {
