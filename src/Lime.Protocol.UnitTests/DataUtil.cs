@@ -1,4 +1,5 @@
-﻿using Lime.Protocol.Resources;
+﻿using Lime.Protocol.Contents;
+using Lime.Protocol.Resources;
 using Lime.Protocol.Security;
 using System;
 using System.Collections.Generic;
@@ -103,6 +104,14 @@ namespace Lime.Protocol.UnitTests
             {
                 From = CreateNode(),
                 To = CreateNode()
+            };
+        }
+
+        public static TextContent CreateTextContent()
+        {
+            return new TextContent()
+            {
+                Text = CreateRandomString(150)
             };
         }
 

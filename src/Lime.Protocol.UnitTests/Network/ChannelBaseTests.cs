@@ -67,6 +67,54 @@ namespace Lime.Protocol.UnitTests.Network
 
         #endregion
 
+
+        #region SendMessageAsync
+
+        [TestMethod]
+        public async Task SendMessageAsync_EstablishedState_CallsTransport()
+        {
+            var target = GetTarget(SessionState.Established);
+
+            var message = DataUtil.CreateMessage();
+            message.Content = DataUtil.CreateTextContent();
+
+            await target.SendMessageAsync(message);
+
+            _transport.Verify(
+                t => t.SendAsync(It.Is<Message>(
+                        e => e.Id == message.Id &&
+                             e.From.Equals(message.From) &&
+                             e.To.Equals(message.To) &&
+                             e.Content == message.Content),
+                    It.IsAny<CancellationToken>()),
+                    Times.Once());
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(ArgumentNullException))]
+        public async Task SendMessageAsync_NullMessage_ThrowsArgumentNullException()
+        {
+            var target = GetTarget(SessionState.Established);
+
+            Message message = null;
+
+            await target.SendMessageAsync(message);
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(InvalidOperationException))]
+        public async Task SendMessageAsync_NewState_ThrowsInvalidOperationException()
+        {
+            var target = GetTarget(SessionState.New);
+
+            var message = DataUtil.CreateMessage();
+            message.Content = DataUtil.CreateTextContent();
+
+            await target.SendMessageAsync(message);
+        }
+
+        #endregion
+
         private class TestChannel : ChannelBase
         {
             public TestChannel(SessionState state, ITransport transport, TimeSpan sendTimeout)
