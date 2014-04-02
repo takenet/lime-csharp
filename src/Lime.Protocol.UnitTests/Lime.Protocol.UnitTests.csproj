@@ -55,6 +55,7 @@
   <ItemGroup>
     <Compile Include="Client\ClientChannelTests.cs" />
     <Compile Include="DataUtil.cs" />
+    <Compile Include="Network\ChannelBaseTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SetupExtensions.cs" />
   </ItemGroup>
