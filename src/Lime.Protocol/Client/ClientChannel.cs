@@ -183,7 +183,7 @@ namespace Lime.Protocol.Client
                 Event = Event.Received
             };
 
-            return this.SendNotificationAsync(notification);
+            return base.SendNotificationAsync(notification);
         }
 
         #endregion
@@ -224,6 +224,7 @@ namespace Lime.Protocol.Client
                 var pingCommandResponse = new Command()
                 {
                     Id = command.Id,
+                    To = command.From,
                     Status = CommandStatus.Success,
                     Method = CommandMethod.Get,
                     Resource = new Ping()

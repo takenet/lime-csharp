@@ -17,6 +17,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution items", "Solution 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lime.Protocol.Tcp", "Lime.Protocol.Tcp\Lime.Protocol.Tcp.csproj", "{0EE0DB06-832F-4D33-96A8-0D2703AF27A9}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lime.Protocol.UnitTests", "Lime.Protocol.UnitTests\Lime.Protocol.UnitTests.csproj", "{1C6D3DB7-ECF0-4013-80EE-76688AED4176}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{0EE0DB06-832F-4D33-96A8-0D2703AF27A9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0EE0DB06-832F-4D33-96A8-0D2703AF27A9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0EE0DB06-832F-4D33-96A8-0D2703AF27A9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1C6D3DB7-ECF0-4013-80EE-76688AED4176}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1C6D3DB7-ECF0-4013-80EE-76688AED4176}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1C6D3DB7-ECF0-4013-80EE-76688AED4176}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1C6D3DB7-ECF0-4013-80EE-76688AED4176}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

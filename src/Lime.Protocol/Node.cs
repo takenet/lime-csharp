@@ -69,5 +69,19 @@ namespace Lime.Protocol
                 return false;
             }
         }
+
+        /// <summary>
+        /// Creates an Identity instance
+        /// based on the Node identity
+        /// </summary>
+        /// <returns></returns>
+        public Identity ToIdentity()
+        {
+            return new Identity()
+            {
+                Name = this.Name,
+                Domain = this.Domain
+            };
+        }
     }
 }
