@@ -16,11 +16,15 @@ namespace Lime.Protocol.UnitTests.Client
         private Mock<ITransport> _transport;
         private TimeSpan _sendTimeout;
 
+        #region Constructor
+
         public ClientChannelTests()
         {
             _transport = new Mock<ITransport>();
             _sendTimeout = TimeSpan.FromSeconds(30);
         }
+
+        #endregion
 
         public ClientChannel GetTarget(bool autoReplyPings = true, bool autoNotifyReceipt = true)
         {
@@ -231,7 +235,6 @@ namespace Lime.Protocol.UnitTests.Client
                              n.Event == Event.Received),
                     It.IsAny<CancellationToken>()),
                     Times.Once());
-
         }
 
         [TestMethod]
@@ -250,7 +253,6 @@ namespace Lime.Protocol.UnitTests.Client
                              n.Event == Event.Received),
                     It.IsAny<CancellationToken>()),
                     Times.Never());
-
         }
 
         [TestMethod]
@@ -270,7 +272,6 @@ namespace Lime.Protocol.UnitTests.Client
                              n.Event == Event.Received),
                     It.IsAny<CancellationToken>()),
                     Times.Never());
-
         }
 
         #endregion
@@ -315,6 +316,92 @@ namespace Lime.Protocol.UnitTests.Client
                              c.Status == CommandStatus.Success),
                     It.IsAny<CancellationToken>()),
                     Times.Never());
+        }
+
+        [TestMethod]
+        public void OnCommandReceivedAsync_PingResponseCommandReceivedAndAutoReplyPingsTrue_DoNotSendsPingCommandToTransport()
+        {
+            var target = GetTarget();
+            target.SetState(_transport, SessionState.Established);
+
+            var ping = DataUtil.CreatePing();
+            var command = DataUtil.CreateCommand(ping, status: CommandStatus.Success);
+            _transport.ReceiveEnvelope(command);
+
+            _transport.Verify(
+                t => t.SendAsync(It.Is<Command>(
+                        c => c.Id == command.Id &&
+                             c.To.Equals(command.From) &&
+                             c.Resource is Ping &&
+                             c.Status == CommandStatus.Success),
+                    It.IsAny<CancellationToken>()),
+                    Times.Never());
+        }
+
+        #endregion
+
+        #region OnSessionReceivedAsync
+
+        [TestMethod]
+        public void OnSessionReceivedAsync_EstablishedSessionReceived_SetsStateAndNodePropertiesAndRaisesSessionEstablished()
+        {
+            bool sessionEstablishedRaised = false;
+
+            var target = GetTarget();            
+            target.SessionEstablished += (sender, e) => sessionEstablishedRaised = true;
+
+            Assert.IsTrue(target.State == SessionState.New);
+            
+            var session = DataUtil.CreateSession();
+            session.State = SessionState.Established;
+            _transport.ReceiveEnvelope(session);
+
+            Assert.IsTrue(target.State == session.State);
+            Assert.IsTrue(target.LocalNode.Equals(session.To));
+            Assert.IsTrue(target.RemoteNode.Equals(session.From));
+            Assert.IsTrue(sessionEstablishedRaised);
+        }
+
+        [TestMethod]
+        public void OnSessionReceivedAsync_FinishedSessionReceived_SetsStateAndRaisesSessionFinished()
+        {
+            bool sessionFinishedRaised = false;
+
+            var target = GetTarget();
+            target.SetState(_transport, SessionState.Established);
+            
+            target.SessionFinished += (sender, e) => sessionFinishedRaised = true;
+            
+            Assert.IsTrue(target.State == SessionState.Established);
+
+            var session = DataUtil.CreateSession();
+            session.State = SessionState.Finished;
+            _transport.ReceiveEnvelope(session);
+
+            Assert.IsTrue(target.State == session.State);
+            Assert.IsTrue(sessionFinishedRaised);
+        }
+
+        [TestMethod]
+        public void OnSessionReceivedAsync_FailedSessionReceived_SetsStateAndRaisesSessionFailed()
+        {
+            bool sessionFailedRaised = false;
+
+            var session = DataUtil.CreateSession();
+            session.State = SessionState.Failed;
+            session.Reason = DataUtil.CreateReason();
+
+            var target = GetTarget();
+            target.SetState(_transport, SessionState.Established);
+
+            target.SessionFailed += (sender, e) => sessionFailedRaised = e.Envelope == session;
+
+            Assert.IsTrue(target.State == SessionState.Established);
+
+            _transport.ReceiveEnvelope(session);
+
+            Assert.IsTrue(target.State == session.State);
+            Assert.IsTrue(sessionFailedRaised);
         }
 
         #endregion

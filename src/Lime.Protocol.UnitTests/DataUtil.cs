@@ -66,7 +66,18 @@ namespace Lime.Protocol.UnitTests
         {
             return new Session()
             {
-                Id = Guid.NewGuid()
+                Id = Guid.NewGuid(),
+                From = CreateNode(),
+                To = CreateNode()
+            };
+        }
+
+        public static Reason CreateReason()
+        {
+            return new Reason()
+            {
+                Code = CreateRandomInt(100),
+                Description = CreateRandomString(100)
             };
         }
 
