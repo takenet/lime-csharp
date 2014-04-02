@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Lime.Protocol.UnitTests.Network
@@ -36,7 +37,32 @@ namespace Lime.Protocol.UnitTests.Network
         public async Task SendNegotiatingSessionAsync_NegotiatingState_CallsTransport()
         {
             var target = GetTarget(SessionState.Negotiating);
+            
+            var compression = SessionCompression.GZip;
+            var encryption = SessionEncryption.TLS;
 
+            await target.SendNegotiatingSessionAsync(compression, encryption);
+
+            _transport.Verify(
+                t => t.SendAsync(It.Is<Session>(
+                        e => e.State == SessionState.Negotiating &&
+                             e.Id == target.SessionId &&
+                             e.Compression == compression &&
+                             e.Encryption == encryption),
+                    It.IsAny<CancellationToken>()),
+                    Times.Once());
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(InvalidOperationException))]
+        public async Task SendNegotiatingSessionAsync_NewState_ThrowsInvalidOperationException()
+        {
+            var target = GetTarget(SessionState.New);
+
+            var compression = SessionCompression.GZip;
+            var encryption = SessionEncryption.TLS;
+
+            await target.SendNegotiatingSessionAsync(compression, encryption);
         }
 
         #endregion
