@@ -355,7 +355,7 @@ namespace Lime.Protocol.UnitTests.Network
 
         [TestMethod]
         [TestCategory("Dispose")]
-        public void Dispose_DisposeTransport()
+        public void Dispose_Default_DisposeTransport()
         {
             var disposableTransport = _transport.As<IDisposable>();
 

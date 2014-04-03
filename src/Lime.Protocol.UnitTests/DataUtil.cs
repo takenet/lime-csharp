@@ -142,5 +142,10 @@ namespace Lime.Protocol.UnitTests
         {
             return new Ping();
         }
+
+        public static Exception CreateException()
+        {
+            return new Exception(CreateRandomString(50));
+        }
     }
 }
