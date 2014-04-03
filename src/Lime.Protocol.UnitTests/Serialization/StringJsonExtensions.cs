@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Lime.Protocol.Serialization;
+using System.Collections;
 
 namespace Lime.Protocol.UnitTests.Serialization
 {
@@ -48,6 +49,31 @@ namespace Lime.Protocol.UnitTests.Serialization
                     string.Format("\"{0}\":\"{1}\"",
                         key,
                         value.ToString().ToCamelCase()));
+            }
+            else if (value.GetType().IsArray)
+            {
+                var stringBuilder = new StringBuilder();
+                stringBuilder.AppendFormat("\"{0}\":[", key);
+
+                foreach (var v in (Array)value)
+                {
+                    if (v is int || v is long || v is bool)
+                    {
+                        stringBuilder.AppendFormat("{0},", v);
+                    }
+                    else if (v.GetType().IsEnum)
+                    {
+                        stringBuilder.AppendFormat("\"{0}\",", v.ToString().ToCamelCase());
+                    }
+                    else
+                    {
+                        stringBuilder.AppendFormat("\"{0}\",", v);
+                    }
+                }
+
+                stringBuilder.Append(']');
+
+                return json.Contains(stringBuilder.ToString().Replace(",]", "]"));
             }
             else
             {

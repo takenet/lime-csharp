@@ -155,6 +155,47 @@ namespace Lime.Protocol.UnitTests
             return new Ping();
         }
 
+        public static Presence CreatePresence()
+        {
+            return new Presence()
+            {
+                Message = CreateRandomString(50),
+                Priority = 1,
+                RoutingRule = RoutingRule.IdentityByPriority,
+                Status = PresenceStatus.Available
+            };
+        }
+
+
+        public static MediaType CreateMediaType()
+        {
+            return new MediaType(
+                "application",
+                CreateRandomString(10).ToLower(),
+                "json"
+                );
+
+        }
+
+        public static Capability CreateCapability()
+        {           
+            return new Capability()
+            {
+                ContentTypes = new[] 
+                { 
+                    CreateMediaType(),
+                    CreateMediaType(),
+                    CreateMediaType()
+                },
+                ResourceTypes = new[] 
+                { 
+                    CreateMediaType(),
+                    CreateMediaType(),
+                    CreateMediaType()
+                }
+            };
+        }
+
         public static Exception CreateException()
         {
             return new Exception(CreateRandomString(50));

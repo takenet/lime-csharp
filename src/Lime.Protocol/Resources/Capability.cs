@@ -16,6 +16,9 @@ namespace Lime.Protocol.Resources
     {
         public const string MIME_TYPE = "application/vnd.lime.capability+json";
 
+        public const string CONTENT_TYPES_KEY = "contentTypes";
+        public const string RESOURCE_TYPES_KEY = "resourceTypes";
+
         public Capability()
             : base(MediaType.Parse(MIME_TYPE))
         {
@@ -26,14 +29,14 @@ namespace Lime.Protocol.Resources
         /// Indicates the message content types
         /// that the session node is able to handle.
         /// </summary>
-        [DataMember(Name = "contentTypes")]
+        [DataMember(Name = CONTENT_TYPES_KEY)]
         public MediaType[] ContentTypes { get; set; }
 
         /// <summary>
         /// Indicates the command resource types 
         /// that the session node is able to handle.
         /// </summary>
-        [DataMember(Name = "resourceTypes")]
+        [DataMember(Name = RESOURCE_TYPES_KEY)]
         public MediaType[] ResourceTypes { get; set; }
     }
 }

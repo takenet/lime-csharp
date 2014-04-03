@@ -4,6 +4,7 @@ using Lime.Protocol.Serialization;
 using Lime.Protocol.Contents;
 using System.Collections.Generic;
 using Lime.Protocol.Security;
+using Lime.Protocol.Resources;
 
 namespace Lime.Protocol.UnitTests.Serialization
 {
@@ -15,13 +16,15 @@ namespace Lime.Protocol.UnitTests.Serialization
             return new JsonNetSerializer();
         }
 
+        #region Serialize
+
         [TestMethod]
         [TestCategory("Serialize")]
-        public void Serialize_PingRequestCommand_ReturnsValidJsonString()
+        public void Serialize_CapabilityRequestCommand_ReturnsValidJsonString()
         {
             var target = GetTarget();
 
-            var resource = DataUtil.CreatePing();
+            var resource = DataUtil.CreateCapability();
             var command = DataUtil.CreateCommand(resource);
             command.Pp = DataUtil.CreateNode();
 
@@ -47,6 +50,10 @@ namespace Lime.Protocol.UnitTests.Serialization
             Assert.IsTrue(resultString.ContainsJsonProperty(metadataKey1, metadataValue1));
             Assert.IsTrue(resultString.ContainsJsonProperty(metadataKey2, metadataValue2));
 
+            Assert.IsTrue(resultString.ContainsJsonProperty(Capability.CONTENT_TYPES_KEY, resource.ContentTypes));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Capability.RESOURCE_TYPES_KEY, resource.ResourceTypes));
+
+
             Assert.IsFalse(resultString.ContainsJsonKey(Command.STATUS_KEY));
             Assert.IsFalse(resultString.ContainsJsonKey(Command.REASON_KEY));
         }
@@ -56,8 +63,8 @@ namespace Lime.Protocol.UnitTests.Serialization
         public void Serialize_FailurePingResponseCommand_ReturnsValidJsonString()
         {
             var target = GetTarget();
-            
-            var command = DataUtil.CreateCommand(status: CommandStatus.Failure);            
+
+            var command = DataUtil.CreateCommand(status: CommandStatus.Failure);
             command.Reason = DataUtil.CreateReason();
 
             var resultString = target.Serialize(command);
@@ -74,7 +81,7 @@ namespace Lime.Protocol.UnitTests.Serialization
 
             Assert.IsFalse(resultString.ContainsJsonKey(Envelope.PP_KEY));
             Assert.IsFalse(resultString.ContainsJsonKey(Envelope.METADATA_KEY));
-            Assert.IsFalse(resultString.ContainsJsonKey(Command.RESOURCE_KEY));           
+            Assert.IsFalse(resultString.ContainsJsonKey(Command.RESOURCE_KEY));
         }
 
         [TestMethod]
@@ -123,7 +130,7 @@ namespace Lime.Protocol.UnitTests.Serialization
 
             Assert.IsTrue(resultString.HasValidJsonStackedBrackets());
 
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.FROM_KEY, message.From));            
+            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.FROM_KEY, message.From));
             Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.TO_KEY, message.To));
             Assert.IsTrue(resultString.ContainsJsonProperty(Message.TYPE_KEY, message.Content.GetMediaType()));
             Assert.IsTrue(resultString.ContainsJsonKey(Message.CONTENT_KEY));
@@ -198,9 +205,9 @@ namespace Lime.Protocol.UnitTests.Serialization
 
             var session = DataUtil.CreateSession();
             var plainAuthentication = DataUtil.CreatePlainAuthentication();
-            session.Authentication = plainAuthentication;            
+            session.Authentication = plainAuthentication;
             session.State = SessionState.Authenticating;
-                        
+
             var metadataKey1 = "randomString1";
             var metadataValue1 = DataUtil.CreateRandomString(50);
             var metadataKey2 = "randomString2";
@@ -222,7 +229,7 @@ namespace Lime.Protocol.UnitTests.Serialization
             Assert.IsTrue(resultString.ContainsJsonProperty(PlainAuthentication.PASSWORD_KEY, plainAuthentication.Password));
 
             Assert.IsFalse(resultString.ContainsJsonKey(Envelope.PP_KEY));
-            Assert.IsFalse(resultString.ContainsJsonKey(Session.REASON_KEY));            
+            Assert.IsFalse(resultString.ContainsJsonKey(Session.REASON_KEY));
         }
 
         [TestMethod]
@@ -249,6 +256,25 @@ namespace Lime.Protocol.UnitTests.Serialization
             Assert.IsFalse(resultString.ContainsJsonKey(Envelope.PP_KEY));
             Assert.IsFalse(resultString.ContainsJsonKey(Envelope.METADATA_KEY));
             Assert.IsFalse(resultString.ContainsJsonKey(Session.AUTHENTICATION_KEY));
+        }
+
+        #endregion
+
+        [TestMethod]
+        [TestCategory("Deserialize")]
+        public void Deserialize_CapabilityRequestCommand_ReturnsValidInstance()
+        {
+            var target = GetTarget();
+
+            string json = "{\"type\":\"application/vnd.lime.capability+json\",\"resource\":{\"contentTypes\":[\"application/hf8vc1srhz+json\",\"application/r28ymkwa9g+json\",\"application/zcbre2qp85+json\"],\"resourceTypes\":[\"application/wbu3p657d0+json\",\"application/3hobug1nvf+json\",\"application/a50d5fdqqk+json\"]},\"method\":\"get\",\"id\":\"c881a050-75ca-4a48-b340-af31a0be2d66\",\"from\":\"kdsldphf@limeprotocol.org/home\",\"pp\":\"xa78ad32@limeprotocol.org/home\",\"to\":\"iqpz6imr@limeprotocol.org/home\",\"metadata\":{\"randomString1\":\"50lr8k2oq3qzyd7e8wef0k9r0nrctrkgjzpme0h8xaic2x2ud2\",\"randomString2\":\"ao9xcu131u2z58tjq8xu9iofszc6zdu691r6hwx4vl8wf7fkts\"}}";
+
+            var envelope = target.Deserialize(json);
+
+            Assert.IsTrue(envelope is Command);
+
+            var command = (Command)envelope;
+
+            
         }
     }
 }

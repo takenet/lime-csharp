@@ -20,6 +20,11 @@ namespace Lime.Protocol.Resources
     {
         public const string MIME_TYPE = "application/vnd.lime.presence+json";
 
+        public const string STATUS_KEY = "status";
+        public const string MESSAGE_KEY = "message";
+        public const string ROUTING_RULE_KEY = "routingRule";
+        public const string PRIORITY_KEY = "priority";
+
         public Presence()
             : base(MediaType.Parse(MIME_TYPE))
         {
@@ -29,28 +34,28 @@ namespace Lime.Protocol.Resources
         /// <summary>
         /// The node presence status.
         /// </summary>
-        [DataMember(Name = "status")]
+        [DataMember(Name = STATUS_KEY)]
         public PresenceStatus Status { get; set; }
 
         /// <summary>
         /// A status message associated 
         /// to the presence status.
         /// </summary>
-        [DataMember(Name = "message")]
+        [DataMember(Name = MESSAGE_KEY)]
         public string Message { get; set; }
 
         /// <summary>
         /// Rule to the server route envelopes 
         /// addressed to the identity. 
         /// </summary>
-        [DataMember(Name = "routingRule")]
+        [DataMember(Name = ROUTING_RULE_KEY)]
         public RoutingRule RoutingRule { get; set; }
 
         /// <summary>
         /// The value of the priority for 
         /// the identityByPriority routing rule.
         /// </summary>
-        [DataMember(Name = "priority")]
+        [DataMember(Name = PRIORITY_KEY)]
         public int Priority { get; set; }
     }
 
