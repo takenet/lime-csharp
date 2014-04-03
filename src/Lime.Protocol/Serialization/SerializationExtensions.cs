@@ -13,7 +13,7 @@ namespace Lime.Protocol.Serialization
         private const int LowerCaseOffset = 'a' - 'A';
         internal static string ToCamelCase(this string value)
         {
-            if (String.IsNullOrEmpty(value)) return value;
+            if (string.IsNullOrEmpty(value)) return value;
 
             var len = value.Length;
             var newValue = new char[len];

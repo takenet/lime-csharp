@@ -87,16 +87,28 @@ namespace Lime.Protocol.UnitTests
             switch (scheme)
             {
                 case AuthenticationScheme.Guest:
-                    return new GuestAuthentication();
+                    return CreateGuestAuthentication();
                 case AuthenticationScheme.Plain:
-                    var authentication = new PlainAuthentication();
-                    authentication.SetToBase64Password(CreateRandomString(8));
-                    return authentication;
+                    return CreatePlainAuthentication();
                 default:
                     throw new ArgumentException("Unknown scheme");
             }
 
         }
+
+
+        public static GuestAuthentication CreateGuestAuthentication()
+        {
+            return new GuestAuthentication();
+        }
+
+        public static PlainAuthentication CreatePlainAuthentication()
+        {
+            var authentication = new PlainAuthentication();
+            authentication.SetToBase64Password(CreateRandomString(8));
+            return authentication;
+        }
+
 
         public static Message CreateMessage(Document content)
         {
@@ -126,7 +138,7 @@ namespace Lime.Protocol.UnitTests
             };
         }
 
-        public static Command CreateCommand(Document resource, CommandMethod method = CommandMethod.Get, CommandStatus status = CommandStatus.Pending)
+        public static Command CreateCommand(Document resource = null, CommandMethod method = CommandMethod.Get, CommandStatus status = CommandStatus.Pending)
         {
             return new Command()
             {

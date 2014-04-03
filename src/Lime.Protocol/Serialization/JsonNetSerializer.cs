@@ -12,26 +12,35 @@ namespace Lime.Protocol.Serialization
 {
     public class JsonNetSerializer : IEnvelopeSerializer
     {
-        private static JsonSerializerSettings _settings;
-
         static JsonNetSerializer()
         {
-            _settings = new JsonSerializerSettings();
-            _settings.NullValueHandling = NullValueHandling.Ignore;
-            _settings.ReferenceLoopHandling = ReferenceLoopHandling.Serialize;
-            
-            _settings.Converters.Add(new StringEnumConverter());
-            _settings.Converters.Add(new IdentityJsonConverter());
-            _settings.Converters.Add(new NodeJsonConverter());
-            _settings.Converters.Add(new MediaTypeJsonConverter());
-            _settings.Converters.Add(new SessionJsonConverter());
-            _settings.Converters.Add(new AuthenticationJsonConverter());
-            _settings.Converters.Add(new DocumentJsonConverter());
-            _settings.Converters.Add(new MessageJsonConverter());
-            
-            JsonConvert.DefaultSettings = () => _settings;
+            JsonConvert.DefaultSettings = () => JsonNetSerializer.Settings;
         }
 
+        private static JsonSerializerSettings _settings;
+        public static JsonSerializerSettings Settings
+        {
+            get
+            {
+                if (_settings == null)
+                {
+                    _settings = new JsonSerializerSettings();
+                    _settings.NullValueHandling = NullValueHandling.Ignore;
+                    _settings.ReferenceLoopHandling = ReferenceLoopHandling.Serialize;
+
+                    _settings.Converters.Add(new StringEnumConverter());
+                    _settings.Converters.Add(new IdentityJsonConverter());
+                    _settings.Converters.Add(new NodeJsonConverter());
+                    _settings.Converters.Add(new MediaTypeJsonConverter());
+                    _settings.Converters.Add(new SessionJsonConverter());
+                    _settings.Converters.Add(new AuthenticationJsonConverter());
+                    _settings.Converters.Add(new DocumentJsonConverter());
+                    _settings.Converters.Add(new MessageJsonConverter());
+                }
+
+                return _settings;
+            }
+        }
 
         #region IEnvelopeSerializer Members
 
@@ -43,7 +52,7 @@ namespace Lime.Protocol.Serialization
         /// <returns></returns>
         public string Serialize(Envelope envelope)
         {
-            return JsonConvert.SerializeObject(envelope, Formatting.None, _settings);
+            return JsonConvert.SerializeObject(envelope, Formatting.None, Settings);
         }
 
         /// <summary>
@@ -55,7 +64,7 @@ namespace Lime.Protocol.Serialization
         /// <exception cref="System.ArgumentException">JSON string is not a valid envelope</exception>
         public Envelope Deserialize(string envelopeString)
         {
-            var jsonObject = (JObject)JsonConvert.DeserializeObject(envelopeString, _settings);
+            var jsonObject = (JObject)JsonConvert.DeserializeObject(envelopeString, Settings);
 
             if (jsonObject.Property("content") != null)
             {

@@ -15,8 +15,11 @@ namespace Lime.Protocol
     [DataContract(Namespace = "http://limeprotocol.org/2014")]
     public class Notification : Envelope
     {
+        public const string EVENT_KEY = "event";
+        public const string REASON_KEY = "reason";
+
         public Notification()
-            : base(Guid.Empty)
+            : base(null)
         {
 
         }
@@ -24,7 +27,7 @@ namespace Lime.Protocol
         /// <summary>
         /// Related event to the notification
         /// </summary>
-        [DataMember(Name = "event")]
+        [DataMember(Name = EVENT_KEY)]
         public Event Event { get; set; }
 
         /// <summary>
@@ -32,7 +35,7 @@ namespace Lime.Protocol
         /// brings more details about 
         /// the problem.
         /// </summary>
-        [DataMember(Name = "reason")]
+        [DataMember(Name = REASON_KEY)]
         public Reason Reason { get; set; }
     }
 
@@ -85,6 +88,14 @@ namespace Lime.Protocol
         /// received the message.
         /// </summary>
         [EnumMember(Value = "received")]
-        Received
+        Received,
+
+        /// <summary>
+        /// The destination has 
+        /// consumed the content of
+        /// the message.
+        /// </summary>
+        [EnumMember(Value = "consumed")]
+        Consumed
     }
 }

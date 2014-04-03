@@ -112,7 +112,7 @@ namespace Lime.Protocol.Tcp
             _readTask = this.ReadAsync(CancellationToken.None)
                 .ContinueWith(t =>
                 {
-                    // In case of an uncatch exception
+                    // In case of an uncatched exception
                     if (t.Exception != null)
                     {
                         return OnFailedAsync(t.Exception.InnerException);
@@ -319,7 +319,8 @@ namespace Lime.Protocol.Tcp
 
         /// <summary>
         /// Try to extract a JSON document
-        /// from the buffer
+        /// from the buffer, based on the 
+        /// brackets
         /// </summary>
         /// <param name="json"></param>
         /// <returns></returns>
