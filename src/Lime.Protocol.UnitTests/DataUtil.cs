@@ -98,12 +98,13 @@ namespace Lime.Protocol.UnitTests
 
         }
 
-        public static Message CreateMessage()
+        public static Message CreateMessage(Document content)
         {
             return new Message()
             {
                 From = CreateNode(),
-                To = CreateNode()
+                To = CreateNode(),
+                Content = content
             };
         }
 
@@ -115,12 +116,13 @@ namespace Lime.Protocol.UnitTests
             };
         }
 
-        public static Notification CreateNotification()
+        public static Notification CreateNotification(Event @event)
         {
             return new Notification()
             {
                 From = CreateNode(),
-                To = CreateNode()
+                To = CreateNode(),
+                Event = @event
             };
         }
 
