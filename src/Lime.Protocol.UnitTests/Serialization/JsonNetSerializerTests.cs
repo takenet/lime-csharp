@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Lime.Protocol.Serialization;
 using Lime.Protocol.Contents;
@@ -260,21 +261,212 @@ namespace Lime.Protocol.UnitTests.Serialization
 
         #endregion
 
+        #region Deserialize
+
         [TestMethod]
         [TestCategory("Deserialize")]
         public void Deserialize_CapabilityRequestCommand_ReturnsValidInstance()
         {
             var target = GetTarget();
 
-            string json = "{\"type\":\"application/vnd.lime.capability+json\",\"resource\":{\"contentTypes\":[\"application/hf8vc1srhz+json\",\"application/r28ymkwa9g+json\",\"application/zcbre2qp85+json\"],\"resourceTypes\":[\"application/wbu3p657d0+json\",\"application/3hobug1nvf+json\",\"application/a50d5fdqqk+json\"]},\"method\":\"get\",\"id\":\"c881a050-75ca-4a48-b340-af31a0be2d66\",\"from\":\"kdsldphf@limeprotocol.org/home\",\"pp\":\"xa78ad32@limeprotocol.org/home\",\"to\":\"iqpz6imr@limeprotocol.org/home\",\"metadata\":{\"randomString1\":\"50lr8k2oq3qzyd7e8wef0k9r0nrctrkgjzpme0h8xaic2x2ud2\",\"randomString2\":\"ao9xcu131u2z58tjq8xu9iofszc6zdu691r6hwx4vl8wf7fkts\"}}";
+            var contentType1 = DataUtil.CreateMediaType();
+            var contentType2 = DataUtil.CreateMediaType();
+            var contentType3 = DataUtil.CreateMediaType();
+
+            var resourceType1 = DataUtil.CreateMediaType();
+            var resourceType2 = DataUtil.CreateMediaType();
+            var resourceType3 = DataUtil.CreateMediaType();
+
+            var method = CommandMethod.Get;
+
+            var id = Guid.NewGuid();
+
+            var from = DataUtil.CreateNode();
+            var pp = DataUtil.CreateNode();
+            var to = DataUtil.CreateNode();
+
+            string randomKey1 = "randomString1";
+            string randomKey2 = "randomString2";
+            string randomString1 = DataUtil.CreateRandomString(50);
+            string randomString2 = DataUtil.CreateRandomString(50);
+
+            string json = string.Format(
+                "{{\"type\":\"application/vnd.lime.capability+json\",\"resource\":{{\"contentTypes\":[\"{0}\",\"{1}\",\"{2}\"],\"resourceTypes\":[\"{3}\",\"{4}\",\"{5}\"]}},\"method\":\"{6}\",\"id\":\"{7}\",\"from\":\"{8}\",\"pp\":\"{9}\",\"to\":\"{10}\",\"metadata\":{{\"{11}\":\"{12}\",\"{13}\":\"{14}\"}}}}",
+                contentType1,
+                contentType2,
+                contentType3,
+                resourceType1,
+                resourceType2,
+                resourceType3,
+                method.ToString().ToCamelCase(),
+                id,
+                from,
+                pp,
+                to,
+                randomKey1,
+                randomString1,
+                randomKey2,
+                randomString2);
 
             var envelope = target.Deserialize(json);
 
             Assert.IsTrue(envelope is Command);
-
             var command = (Command)envelope;
+            Assert.AreEqual(id, command.Id);
+            Assert.AreEqual(from, command.From);
+            Assert.AreEqual(pp, command.Pp);
+            Assert.AreEqual(to, command.To);
 
-            
+            Assert.AreEqual(method, command.Method);
+            Assert.IsNotNull(command.Metadata);
+            Assert.IsTrue(command.Metadata.ContainsKey(randomKey1));
+            Assert.AreEqual(command.Metadata[randomKey1], randomString1);
+            Assert.IsTrue(command.Metadata.ContainsKey(randomKey2));
+            Assert.AreEqual(command.Metadata[randomKey2], randomString2);
+
+            Assert.IsTrue(command.Resource is Capability);
+
+            var capability = (Capability)command.Resource;
+
+            Assert.IsTrue(capability.ContentTypes.Any(c => c.Equals(contentType1)));
+            Assert.IsTrue(capability.ContentTypes.Any(c => c.Equals(contentType2)));
+            Assert.IsTrue(capability.ContentTypes.Any(c => c.Equals(contentType3)));
+
+            Assert.IsTrue(capability.ResourceTypes.Any(c => c.Equals(resourceType1)));
+            Assert.IsTrue(capability.ResourceTypes.Any(c => c.Equals(resourceType2)));
+            Assert.IsTrue(capability.ResourceTypes.Any(c => c.Equals(resourceType3)));
         }
+
+        [TestMethod]
+        [TestCategory("Deserialize")]
+        public void Deserialize_FailureCapabilityResponseCommand_ReturnsValidInstance()
+        {
+            var target = GetTarget();
+
+            var method = CommandMethod.Get;
+            var status = CommandStatus.Failure;
+            var reason = DataUtil.CreateReason();
+            var id = Guid.NewGuid();
+            var from = DataUtil.CreateNode();
+            var to = DataUtil.CreateNode();
+
+            string json = string.Format(
+                "{{\"method\":\"{0}\",\"id\":\"{1}\",\"from\":\"{2}\",\"to\":\"{3}\",\"status\":\"{4}\",\"reason\":{{\"code\":{5},\"description\":\"{6}\"}}}}",
+                method.ToString().ToCamelCase(),
+                id,
+                from,
+                to,
+                status,
+                reason.Code,
+                reason.Description);
+
+            var envelope = target.Deserialize(json);
+
+            Assert.IsTrue(envelope is Command);
+            var command = (Command)envelope;
+            Assert.AreEqual(id, command.Id);
+            Assert.AreEqual(from, command.From);
+            Assert.AreEqual(to, command.To);
+            Assert.AreEqual(method, command.Method);
+
+            Assert.IsNull(command.Pp);
+            Assert.IsNull(command.Metadata);
+            Assert.IsNull(command.Type);
+            Assert.IsNull(command.Resource);
+
+            Assert.IsNotNull(command.Reason);
+
+            Assert.AreEqual(reason.Code, command.Reason.Code);
+            Assert.AreEqual(reason.Description, command.Reason.Description);
+        }
+
+        [TestMethod]
+        [TestCategory("Deserialize")]
+        public void Deserialize_TextMessage_ReturnsValidInstance()
+        {
+            var target = GetTarget();
+
+            var id = Guid.NewGuid();
+            var from = DataUtil.CreateNode();
+            var pp = DataUtil.CreateNode();
+            var to = DataUtil.CreateNode();
+            
+            string randomKey1 = "randomString1";
+            string randomKey2 = "randomString2";
+            string randomString1 = DataUtil.CreateRandomString(50);
+            string randomString2 = DataUtil.CreateRandomString(50);
+
+            var text = DataUtil.CreateRandomString(50);
+
+            string json = string.Format(
+                "{{\"type\":\"application/vnd.lime.text+json\",\"content\":{{\"text\":\"{0}\"}},\"id\":\"{1}\",\"from\":\"{2}\",\"pp\":\"{3}\",\"to\":\"{4}\",\"metadata\":{{\"{5}\":\"{6}\",\"{7}\":\"{8}\"}}}}",
+                text,
+                id,
+                from,
+                pp,
+                to,
+                randomKey1,
+                randomString1,
+                randomKey2,
+                randomString2
+                );
+
+            var envelope = target.Deserialize(json);
+
+            Assert.IsTrue(envelope is Message);
+
+            var message = (Message)envelope;
+            Assert.AreEqual(id, message.Id);
+            Assert.AreEqual(from, message.From);
+            Assert.AreEqual(pp, message.Pp);
+            Assert.AreEqual(to, message.To);
+            Assert.IsNotNull(message.Metadata);
+            Assert.IsTrue(message.Metadata.ContainsKey(randomKey1));
+            Assert.AreEqual(message.Metadata[randomKey1], randomString1);
+            Assert.IsTrue(message.Metadata.ContainsKey(randomKey2));
+            Assert.AreEqual(message.Metadata[randomKey2], randomString2);
+
+            Assert.IsTrue(message.Content is TextContent);
+
+            var textContent = (TextContent)message.Content;
+            Assert.AreEqual(text, textContent.Text);
+        }
+
+        [TestMethod]
+        [TestCategory("Deserialize")]
+        public void Deserialize_FireAndForgetTextMessage_ReturnsValidInstance()
+        {
+            var target = GetTarget();
+
+            var from = DataUtil.CreateNode();
+            var to = DataUtil.CreateNode();
+
+            var text = DataUtil.CreateRandomString(50);
+
+            string json = string.Format(
+                "{{\"type\":\"application/vnd.lime.text+json\",\"content\":{{\"text\":\"{0}\"}},\"from\":\"{1}\",\"to\":\"{2}\"}}",
+                text,
+                from,
+                to
+                );
+
+            var envelope = target.Deserialize(json);
+
+            Assert.IsTrue(envelope is Message);
+
+            var message = (Message)envelope;
+            Assert.AreEqual(from, message.From);
+            Assert.AreEqual(to, message.To);
+
+            Assert.IsNull(message.Id);
+            Assert.IsNull(message.Pp);
+            Assert.IsNull(message.Metadata);
+
+            Assert.IsTrue(message.Content is TextContent);
+            var textContent = (TextContent)message.Content;
+            Assert.AreEqual(text, textContent.Text);            
+        }
+
+        #endregion
     }
 }

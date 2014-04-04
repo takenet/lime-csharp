@@ -59,25 +59,47 @@ namespace Lime.Protocol
         [DataMember(Name = "suffix")]
         public string Suffix { get; set; }
 
+        /// <summary>
+        /// Returns a <see cref="System.String" /> that represents this instance.
+        /// </summary>
+        /// <returns>
+        /// A <see cref="System.String" /> that represents this instance.
+        /// </returns>
         public override string ToString()
         {
             return string.Format("{0}/{1}+{2}", this.Type, this.Subtype, this.Suffix).TrimEnd('+');
         }
+        /// <summary>
+        /// Returns a hash code for this instance.
+        /// </summary>
+        /// <returns>
+        /// A hash code for this instance, suitable for use in hashing algorithms and data structures like a hash table. 
+        /// </returns>
         public override int GetHashCode()
         {
-            return ToString().GetHashCode();
+            return this.ToString().GetHashCode();
         }
 
+        /// <summary>
+        /// Determines whether the specified <see cref="System.Object" }, is equal to this instance.
+        /// </summary>
+        /// <param name="obj">The <see cref="System.Object" /> to compare with this instance.</param>
+        /// <returns>
+        ///   <c>true</c> if the specified <see cref="System.Object" /> is equal to this instance; otherwise, <c>false</c>.
+        /// </returns>
         public override bool Equals(object obj)
         {
-            if (obj == null)
+            var mediaType = obj as MediaType;
+
+            if (mediaType == null)
             {
-                throw new ArgumentNullException("obj");
+                return false;
             }
 
-            return obj.ToString().Equals(this.ToString(), StringComparison.CurrentCultureIgnoreCase);
+            return this.Type.Equals(mediaType.Type, StringComparison.CurrentCultureIgnoreCase) &&
+                   this.Subtype.Equals(mediaType.Subtype, StringComparison.CurrentCultureIgnoreCase) &&
+                   this.Suffix.Equals(mediaType.Suffix, StringComparison.CurrentCultureIgnoreCase);
         }
-
 
         /// <summary> 
         /// Parses the string to a MediaType object.
@@ -115,7 +137,6 @@ namespace Lime.Protocol
 
             return new MediaType(type, subtype, suffix);
         }
-
 
         /// <summary>
         /// Try parses the string to a MediaType object.

@@ -28,17 +28,17 @@ namespace Lime.Protocol.UnitTests
 
         public static string CreateDomainName()
         {
-            return "limeprotocol.org";
+            return string.Format("{0}.com", CreateRandomString(10));
         }
 
         public static string CreateSubdomainName()
         {
-            return "application";
+            return CreateRandomString(10);
         }
 
         public static string CreateInstanceName()
         {
-            return "home";
+            return CreateRandomString(5);
         }
 
 
@@ -171,7 +171,7 @@ namespace Lime.Protocol.UnitTests
         {
             return new MediaType(
                 "application",
-                CreateRandomString(10).ToLower(),
+                CreateRandomString(10),
                 "json"
                 );
 

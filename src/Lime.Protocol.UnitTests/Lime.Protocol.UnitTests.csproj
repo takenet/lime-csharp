@@ -61,6 +61,7 @@
     <Compile Include="Serialization\JsonNetSerializerTests.cs" />
     <Compile Include="Serialization\StringJsonExtensions.cs" />
     <Compile Include="SetupExtensions.cs" />
+    <Compile Include="IdentityTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Lime.Protocol\Lime.Protocol.csproj">

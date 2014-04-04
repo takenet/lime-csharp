@@ -107,7 +107,7 @@ namespace Lime.Protocol
         /// method MAY NOT have an id.
         /// </summary>
         [EnumMember(Value = "observe")]
-        Observe,
+        Observe
     }
 
     /// <summary>
