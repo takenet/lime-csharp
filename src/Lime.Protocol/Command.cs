@@ -56,7 +56,7 @@ namespace Lime.Protocol
         /// Action to be taken to the
         /// resource
         /// </summary>
-        [DataMember(Name = METHOD_KEY)]
+        [DataMember(Name = METHOD_KEY, EmitDefaultValue = true)]
         public CommandMethod Method { get; set; }
 
         /// <summary>

@@ -48,9 +48,9 @@ namespace Lime.Protocol
                 return false;
             }
 
-            return (this.Name != null || node.Name == null) || (this.Name != null && this.Name.Equals(node.Name, StringComparison.CurrentCultureIgnoreCase)) &&
-                   (this.Domain != null || node.Domain == null) || (this.Domain != null && this.Domain.Equals(node.Domain, StringComparison.CurrentCultureIgnoreCase)) &&
-                   (this.Instance != null || node.Instance == null) || (this.Instance != null && this.Instance.Equals(node.Instance, StringComparison.CurrentCultureIgnoreCase));
+            return ((this.Name == null && node.Name == null) || (this.Name != null && this.Name.Equals(node.Name, StringComparison.CurrentCultureIgnoreCase))) &&
+                   ((this.Domain == null && node.Domain == null) || (this.Domain != null && this.Domain.Equals(node.Domain, StringComparison.CurrentCultureIgnoreCase))) &&
+                   ((this.Instance == null && node.Instance == null) || (this.Instance != null && this.Instance.Equals(node.Instance, StringComparison.CurrentCultureIgnoreCase)));
         }
 
         /// <summary>
@@ -78,26 +78,15 @@ namespace Lime.Protocol
                 throw new ArgumentNullException("s");
             }
 
-            var splittedIdentity = s.Split('@');
+            var identity = Identity.Parse(s);
 
-            if (splittedIdentity.Length != 2)
-            {
-                throw new FormatException("Invalid Peer format");
-            }
-
-            var splittedDomain = splittedIdentity[1].Split('/');
-
-            string instance = null;
-            if (splittedDomain.Length >= 2)
-            {
-                instance = splittedDomain[1];
-            }
+            var splittedDomain = identity.Domain != null ? identity.Domain.Split('/') : null;
 
             return new Node()
             {
-                Name = splittedIdentity[0],
-                Domain = splittedDomain[0],
-                Instance = instance
+                Name = identity.Name,
+                Domain = splittedDomain != null ? splittedDomain[0] : null,
+                Instance = splittedDomain != null && splittedDomain.Length > 1 ? splittedDomain[1] : null
             };
         }
 

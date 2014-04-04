@@ -35,7 +35,14 @@ namespace Lime.Protocol
         /// </returns>
         public override string ToString()
         {
-            return string.Format("{0}@{1}", Name, Domain);
+            if (string.IsNullOrWhiteSpace(this.Domain))
+            {
+                return this.Name;
+            }
+            else
+            {
+                return string.Format("{0}@{1}", Name, Domain);
+            }            
         }
 
         /// <summary>
@@ -65,8 +72,8 @@ namespace Lime.Protocol
                 return false;
             }
 
-            return (this.Name != null || identity.Name == null) || (this.Name != null && this.Name.Equals(identity.Name, StringComparison.CurrentCultureIgnoreCase)) &&
-                   (this.Domain != null || identity.Domain == null) || (this.Domain != null && this.Domain.Equals(identity.Domain, StringComparison.CurrentCultureIgnoreCase));
+            return ((this.Name == null && identity.Name == null) || (this.Name != null && this.Name.Equals(identity.Name, StringComparison.CurrentCultureIgnoreCase))) &&
+                   ((this.Domain == null && identity.Domain == null) || (this.Domain != null && this.Domain.Equals(identity.Domain, StringComparison.CurrentCultureIgnoreCase)));
         }
 
         /// <summary>
@@ -85,15 +92,10 @@ namespace Lime.Protocol
 
             var splittedIdentity = s.Split('@');
 
-            if (splittedIdentity.Length != 2)
-            {
-                throw new FormatException("Invalid identity format");
-            }
-
             return new Identity()
             {
-                Name = splittedIdentity[0],
-                Domain = splittedIdentity[1].Split('/')[0]
+                Name = !string.IsNullOrWhiteSpace(splittedIdentity[0]) ? splittedIdentity[0] : null,
+                Domain = splittedIdentity.Length > 1 ? splittedIdentity[1] : null
             };
         }
 
