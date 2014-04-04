@@ -109,8 +109,7 @@ namespace Lime.Protocol.Security
             }
             else
             {
-                this.Password = Convert.ToBase64String(
-                    Encoding.UTF8.GetBytes(password));
+                this.Password = password.ToBase64();
             }
         }
 
@@ -127,12 +126,7 @@ namespace Lime.Protocol.Security
             }
             else
             {
-                var passwordBytes = Convert.FromBase64String(this.Password);
-
-                return Encoding.UTF8.GetString(
-                    passwordBytes,
-                    0,
-                    passwordBytes.Length);
+                return this.Password.ToFrom64();
             }
         }
 

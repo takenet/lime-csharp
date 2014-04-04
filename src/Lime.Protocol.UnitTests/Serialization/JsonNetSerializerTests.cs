@@ -6,6 +6,7 @@ using Lime.Protocol.Contents;
 using System.Collections.Generic;
 using Lime.Protocol.Security;
 using Lime.Protocol.Resources;
+using System.Text;
 
 namespace Lime.Protocol.UnitTests.Serialization
 {
@@ -467,6 +468,206 @@ namespace Lime.Protocol.UnitTests.Serialization
             Assert.AreEqual(text, textContent.Text);            
         }
 
+        [TestMethod]
+        [TestCategory("Deserialize")]
+        public void Deserialize_ReceivedNotification_ReturnsValidInstance()
+        {
+            var target = GetTarget();
+
+            var id = Guid.NewGuid();
+            var from = DataUtil.CreateNode();
+            var pp = DataUtil.CreateNode();
+            var to = DataUtil.CreateNode();
+
+            string randomKey1 = "randomString1";
+            string randomKey2 = "randomString2";
+            string randomString1 = DataUtil.CreateRandomString(50);
+            string randomString2 = DataUtil.CreateRandomString(50);
+
+            var @event = Event.Received;
+
+            string json = string.Format(
+                "{{\"type\":\"application/vnd.lime.text+json\",\"event\":\"{0}\",\"id\":\"{1}\",\"from\":\"{2}\",\"pp\":\"{3}\",\"to\":\"{4}\",\"metadata\":{{\"{5}\":\"{6}\",\"{7}\":\"{8}\"}}}}",
+                @event.ToString().ToCamelCase(),
+                id,
+                from,
+                pp,
+                to,
+                randomKey1,
+                randomString1,
+                randomKey2,
+                randomString2
+                );
+
+            var envelope = target.Deserialize(json);
+
+            Assert.IsTrue(envelope is Notification);
+
+            var notification = (Notification)envelope;
+            Assert.AreEqual(id, notification.Id);
+            Assert.AreEqual(from, notification.From);
+            Assert.AreEqual(pp, notification.Pp);
+            Assert.AreEqual(to, notification.To);
+            Assert.IsNotNull(notification.Metadata);
+            Assert.IsTrue(notification.Metadata.ContainsKey(randomKey1));
+            Assert.AreEqual(notification.Metadata[randomKey1], randomString1);
+            Assert.IsTrue(notification.Metadata.ContainsKey(randomKey2));
+            Assert.AreEqual(notification.Metadata[randomKey2], randomString2);
+
+            Assert.AreEqual(@event, notification.Event);
+
+            Assert.IsNull(notification.Reason);
+        }
+
+        [TestMethod]
+        [TestCategory("Deserialize")]
+        public void Deserialize_FailedNotification_ReturnsValidInstance()
+        {
+            var target = GetTarget();
+
+            var @event = Event.Received;
+
+            var reasonCode = DataUtil.CreateRandomInt(100);
+            var reasonDescription = DataUtil.CreateRandomString(100);
+
+            var id = Guid.NewGuid();
+            var from = DataUtil.CreateNode();
+            var to = DataUtil.CreateNode();
+
+            string json = string.Format(
+                "{{\"event\":\"{0}\",\"id\":\"{1}\",\"from\":\"{2}\",\"to\":\"{3}\",\"reason\":{{\"code\":{4},\"description\":\"{5}\"}}}}",
+                @event.ToString().ToCamelCase(),
+                id,
+                from,
+                to,
+                reasonCode,
+                reasonDescription);
+
+            var envelope = target.Deserialize(json);
+
+            Assert.IsTrue(envelope is Notification);
+            var notification = (Notification)envelope;
+            Assert.AreEqual(id, notification.Id);
+            Assert.AreEqual(from, notification.From);
+            Assert.AreEqual(to, notification.To);
+            Assert.AreEqual(@event, notification.Event);
+
+            Assert.IsNull(notification.Pp);
+            Assert.IsNull(notification.Metadata);
+
+            Assert.IsNotNull(notification.Reason);
+
+            Assert.AreEqual(reasonCode, notification.Reason.Code);
+            Assert.AreEqual(reasonDescription, notification.Reason.Description);
+        }
+
+        [TestMethod]
+        [TestCategory("Deserialize")]
+        public void Deserialize_AuthenticatingSession_ReturnsValidInstance()
+        {
+            var target = GetTarget();
+
+            var id = Guid.NewGuid();
+            var from = DataUtil.CreateNode();
+            var pp = DataUtil.CreateNode();
+            var to = DataUtil.CreateNode();
+
+            var password = DataUtil.CreateRandomString(10).ToBase64();
+
+            string randomKey1 = "randomString1";
+            string randomKey2 = "randomString2";
+            string randomString1 = DataUtil.CreateRandomString(50);
+            string randomString2 = DataUtil.CreateRandomString(50);
+
+            var state = SessionState.Authenticating;
+
+            string json = string.Format(
+                "{{\"state\":\"{0}\",\"scheme\":\"plain\",\"authentication\":{{\"password\":\"{1}\"}},\"id\":\"{2}\",\"from\":\"{3}\",\"to\":\"{4}\",\"metadata\":{{\"{5}\":\"{6}\",\"{7}\":\"{8}\"}}}}",
+                state.ToString().ToCamelCase(),
+                password,
+                id,
+                from,
+                to,
+                randomKey1,
+                randomString1,
+                randomKey2,
+                randomString2
+                );
+
+            var envelope = target.Deserialize(json);
+
+            Assert.IsTrue(envelope is Session);
+
+            var session = (Session)envelope;
+            Assert.AreEqual(id, session.Id);
+            Assert.AreEqual(from, session.From);
+            Assert.AreEqual(to, session.To);
+            Assert.IsNotNull(session.Metadata);
+            Assert.IsTrue(session.Metadata.ContainsKey(randomKey1));
+            Assert.AreEqual(session.Metadata[randomKey1], randomString1);
+            Assert.IsTrue(session.Metadata.ContainsKey(randomKey2));
+            Assert.AreEqual(session.Metadata[randomKey2], randomString2);
+
+            Assert.AreEqual(state, session.State);
+
+            Assert.IsNull(session.Pp);
+            Assert.IsNull(session.Reason);
+        }
+
+        [TestMethod]
+        [TestCategory("Deserialize")]
+        public void Deserialize_FailedSession_ReturnsValidInstance()
+        {
+            var target = GetTarget();
+
+            var id = Guid.NewGuid();
+            var from = DataUtil.CreateNode();
+            var pp = DataUtil.CreateNode();
+            var to = DataUtil.CreateNode();
+
+            var password = DataUtil.CreateRandomString(10).ToBase64();
+
+            string randomKey1 = "randomString1";
+            string randomKey2 = "randomString2";
+            string randomString1 = DataUtil.CreateRandomString(50);
+            string randomString2 = DataUtil.CreateRandomString(50);
+
+            var state = SessionState.Authenticating;
+
+            var reasonCode = DataUtil.CreateRandomInt(100);
+            var reasonDescription = DataUtil.CreateRandomString(100);
+
+            string json = string.Format(
+                "{{\"state\":\"{0}\",\"id\":\"{1}\",\"from\":\"{2}\",\"to\":\"{3}\",\"reason\":{{\"code\":{4},\"description\":\"{5}\"}}}}",
+                state.ToString().ToCamelCase(),
+                id,
+                from,
+                to,
+                reasonCode,
+                reasonDescription
+                );
+
+            var envelope = target.Deserialize(json);
+
+            Assert.IsTrue(envelope is Session);
+
+            var session = (Session)envelope;
+            Assert.AreEqual(id, session.Id);
+            Assert.AreEqual(from, session.From);
+            Assert.AreEqual(to, session.To);
+
+            Assert.AreEqual(state, session.State);
+
+            Assert.IsNotNull(session.Reason);
+            Assert.AreEqual(reasonCode, session.Reason.Code);
+            Assert.AreEqual(reasonDescription, session.Reason.Description);
+
+            Assert.IsNull(session.Pp);
+            Assert.IsNull(session.Metadata);
+        }
+
         #endregion
+
+
     }
 }
