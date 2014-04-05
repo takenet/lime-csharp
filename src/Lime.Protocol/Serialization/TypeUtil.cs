@@ -8,6 +8,10 @@ using System.Threading.Tasks;
 
 namespace Lime.Protocol.Serialization
 {
+    /// <summary>
+    /// Provides metadata information 
+    /// about the protocol types
+    /// </summary>
     public static class TypeUtil
     {
         private static Dictionary<MediaType, Type> _documentMediaTypeDictionary;

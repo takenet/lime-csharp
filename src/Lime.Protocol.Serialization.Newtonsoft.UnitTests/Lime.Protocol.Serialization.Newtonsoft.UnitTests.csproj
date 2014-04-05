@@ -3,11 +3,11 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{1C6D3DB7-ECF0-4013-80EE-76688AED4176}</ProjectGuid>
+    <ProjectGuid>{C51D26F4-E780-4BDE-84FC-AADC6AE63D5B}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Lime.Protocol.UnitTests</RootNamespace>
-    <AssemblyName>Lime.Protocol.UnitTests</AssemblyName>
+    <RootNamespace>Lime.Protocol.Serialization.Newtonsoft.UnitTests</RootNamespace>
+    <AssemblyName>Lime.Protocol.Serialization.Newtonsoft.UnitTests</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{3AC096D0-A1C2-E12C-1390-A8335801FDAB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
@@ -35,9 +35,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Moq">
-      <HintPath>..\packages\Moq.4.2.1402.2112\lib\net40\Moq.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
   </ItemGroup>
   <Choose>
@@ -53,25 +50,25 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
-    <Compile Include="Client\ClientChannelTests.cs" />
-    <Compile Include="DataUtil.cs" />
-    <Compile Include="Network\ChannelBaseTests.cs" />
-    <Compile Include="Network\TransportBaseTests.cs" />
+    <Compile Include="..\Lime.Protocol.UnitTests\DataUtil.cs">
+      <Link>DataUtil.cs</Link>
+    </Compile>
+    <Compile Include="..\Lime.Protocol.UnitTests\Serialization\StringJsonExtensions.cs">
+      <Link>StringJsonExtensions.cs</Link>
+    </Compile>
+    <Compile Include="JsonNetSerializerTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Serialization\StringJsonExtensions.cs" />
-    <Compile Include="SetupExtensions.cs" />
-    <Compile Include="IdentityTests.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Lime.Protocol.Serialization.Newtonsoft\Lime.Protocol.Serialization.Newtonsoft.csproj">
+      <Project>{07ef6707-b284-4068-9b2f-48998782bc9f}</Project>
+      <Name>Lime.Protocol.Serialization.Newtonsoft</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Lime.Protocol\Lime.Protocol.csproj">
       <Project>{bd98c983-6dad-4eb6-b728-4619c7aca6e9}</Project>
       <Name>Lime.Protocol</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup>
-    <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup />
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">
       <ItemGroup>

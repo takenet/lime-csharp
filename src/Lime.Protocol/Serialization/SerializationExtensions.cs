@@ -8,10 +8,10 @@ using System.Threading.Tasks;
 
 namespace Lime.Protocol.Serialization
 {
-    internal static class SerializationExtensions
+    public static class SerializationExtensions
     {
         private const int LowerCaseOffset = 'a' - 'A';
-        internal static string ToCamelCase(this string value)
+        public static string ToCamelCase(this string value)
         {
             if (string.IsNullOrEmpty(value)) return value;
 
@@ -37,8 +37,12 @@ namespace Lime.Protocol.Serialization
             return new string(newValue);
         }
 
-
-        internal static string ToBase64(this string value)
+        /// <summary>
+        /// Gets a Base64 representation of a string
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static string ToBase64(this string value)
         {
             if (string.IsNullOrEmpty(value))
             {
@@ -48,7 +52,12 @@ namespace Lime.Protocol.Serialization
             return Convert.ToBase64String(Encoding.UTF8.GetBytes(value));
         }
 
-        internal static string ToFrom64(this string value)
+        /// <summary>
+        /// Converts from a Base64 string 
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static string ToFrom64(this string value)
         {
             if (string.IsNullOrEmpty(value))
             {
