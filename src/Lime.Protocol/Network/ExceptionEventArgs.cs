@@ -14,6 +14,11 @@ namespace Lime.Protocol.Network
     {
         public ExceptionEventArgs(Exception exception)
         {
+            if (exception == null)
+            {
+                throw new ArgumentNullException("exception");
+            }
+
             this.Exception = exception;
         }
 

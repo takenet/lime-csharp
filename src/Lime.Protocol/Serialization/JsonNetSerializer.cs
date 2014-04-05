@@ -12,26 +12,37 @@ namespace Lime.Protocol.Serialization
 {
     public class JsonNetSerializer : IEnvelopeSerializer
     {
-        private static JsonSerializerSettings _settings;
-
         static JsonNetSerializer()
         {
-            _settings = new JsonSerializerSettings();
-            _settings.NullValueHandling = NullValueHandling.Ignore;
-            _settings.ReferenceLoopHandling = ReferenceLoopHandling.Serialize;
-            
-            _settings.Converters.Add(new StringEnumConverter());
-            _settings.Converters.Add(new IdentityJsonConverter());
-            _settings.Converters.Add(new NodeJsonConverter());
-            _settings.Converters.Add(new MediaTypeJsonConverter());
-            _settings.Converters.Add(new SessionJsonConverter());
-            _settings.Converters.Add(new AuthenticationJsonConverter());
-            _settings.Converters.Add(new DocumentJsonConverter());
-            _settings.Converters.Add(new MessageJsonConverter());
-            
-            JsonConvert.DefaultSettings = () => _settings;
+            JsonConvert.DefaultSettings = () => JsonNetSerializer.Settings;
         }
 
+        private static JsonSerializerSettings _settings;
+        public static JsonSerializerSettings Settings
+        {
+            get
+            {
+                if (_settings == null)
+                {
+                    _settings = new JsonSerializerSettings();
+                    _settings.NullValueHandling = NullValueHandling.Ignore;
+                    _settings.ReferenceLoopHandling = ReferenceLoopHandling.Serialize;
+
+                    _settings.Converters.Add(new StringEnumConverter());
+                    _settings.Converters.Add(new IdentityJsonConverter());
+                    _settings.Converters.Add(new NodeJsonConverter());
+                    _settings.Converters.Add(new MediaTypeJsonConverter());
+                    _settings.Converters.Add(new SessionJsonConverter());
+                    _settings.Converters.Add(new AuthenticationJsonConverter());
+                    _settings.Converters.Add(new MessageJsonConverter());
+                    _settings.Converters.Add(new CommandJsonConverter());
+
+                    _settings.Converters.Add(new DocumentJsonConverter());
+                }
+
+                return _settings;
+            }
+        }
 
         #region IEnvelopeSerializer Members
 
@@ -43,7 +54,7 @@ namespace Lime.Protocol.Serialization
         /// <returns></returns>
         public string Serialize(Envelope envelope)
         {
-            return JsonConvert.SerializeObject(envelope, Formatting.None, _settings);
+            return JsonConvert.SerializeObject(envelope, Formatting.None, Settings);
         }
 
         /// <summary>
@@ -55,7 +66,7 @@ namespace Lime.Protocol.Serialization
         /// <exception cref="System.ArgumentException">JSON string is not a valid envelope</exception>
         public Envelope Deserialize(string envelopeString)
         {
-            var jsonObject = (JObject)JsonConvert.DeserializeObject(envelopeString, _settings);
+            var jsonObject = (JObject)JsonConvert.DeserializeObject(envelopeString, Settings);
 
             if (jsonObject.Property("content") != null)
             {
@@ -322,7 +333,7 @@ namespace Lime.Protocol.Serialization
                     if (jObject["content"] != null &&
                         jObject["type"] != null)
                     {
-                        var message = new Message();
+                        var message = new Message(null);
                         serializer.Populate(jObject.CreateReader(), message);
                         
                         var contentMediaType = jObject["type"].ToObject<MediaType>();
@@ -341,6 +352,67 @@ namespace Lime.Protocol.Serialization
                     {
                         throw new ArgumentException("Invalid Message JSON");
                     }
+                }
+
+                return target;
+            }
+
+            public override void WriteJson(Newtonsoft.Json.JsonWriter writer, object value, JsonSerializer serializer)
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        #endregion
+
+        #region CommandJsonConverter
+
+        private class CommandJsonConverter : JsonConverter
+        {
+            public override bool CanWrite
+            {
+                get { return false; }
+            }
+
+            public override bool CanConvert(Type objectType)
+            {
+                return objectType == typeof(Command);
+            }
+
+            /// <summary>
+            /// Reads the JSON representation of the object.
+            /// </summary>
+            /// <param name="reader">The <see cref="T:Newtonsoft.Json.JsonReader" /> to read from.</param>
+            /// <param name="objectType">Type of the object.</param>
+            /// <param name="existingValue">The existing value of object being read.</param>
+            /// <param name="serializer">The calling serializer.</param>
+            /// <returns>
+            /// The object value.
+            /// </returns>
+            public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+            {
+                object target = null;
+                if (reader.TokenType != JsonToken.Null)
+                {
+                    JObject jObject = JObject.Load(reader);
+                    var command = new Command();
+                    serializer.Populate(jObject.CreateReader(), command);
+
+                    if (jObject[Command.RESOURCE_KEY] != null &&
+                        jObject[Command.TYPE_KEY] != null)
+                    {
+                        var contentMediaType = jObject[Command.TYPE_KEY].ToObject<MediaType>();
+
+                        Type documentType;
+
+                        if (TypeUtil.TryGetTypeForMediaType(contentMediaType, out documentType))
+                        {
+                            command.Resource = (Document)Activator.CreateInstance(documentType);
+                            serializer.Populate(jObject[Command.RESOURCE_KEY].CreateReader(), command.Resource);
+                        }
+                    }
+
+                    target = command;
                 }
 
                 return target;
@@ -373,6 +445,8 @@ namespace Lime.Protocol.Serialization
 
             public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
             {
+                // The serialization is made by the
+                // container class (Message or Command)
                 return null;
             }
 

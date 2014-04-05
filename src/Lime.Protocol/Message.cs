@@ -15,6 +15,19 @@ namespace Lime.Protocol
         public const string TYPE_KEY = "type";
         public const string CONTENT_KEY = "content";
 
+        #region Message
+
+        public Message()
+        {
+        }
+
+        public Message(Guid? id)
+            : base(id)
+        {
+        }
+
+        #endregion
+
         /// <summary>
         ///  MIME declaration of the content type of the message.
         /// </summary>

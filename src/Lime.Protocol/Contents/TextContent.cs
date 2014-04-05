@@ -14,6 +14,7 @@ namespace Lime.Protocol.Contents
     public class TextContent : Document
     {
         public const string MIME_TYPE = "application/vnd.lime.text+json";
+        public const string TEXT_KEY = "text";
 
         public TextContent()
             : base(MediaType.Parse(MIME_TYPE))
@@ -24,7 +25,7 @@ namespace Lime.Protocol.Contents
         /// <summary>
         /// Text of the message
         /// </summary>
-        [DataMember(Name = "text")]
+        [DataMember(Name = TEXT_KEY)]
         public string Text { get; set; }
     }
 }

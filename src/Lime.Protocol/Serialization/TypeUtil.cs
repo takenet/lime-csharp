@@ -117,5 +117,10 @@ namespace Lime.Protocol.Serialization
 
             return (TEnum)value;
         }
+
+        public static IEnumerable<Type> GetEnumTypes()
+        {
+            return _enumTypeValueDictionary.Keys;
+        }
     }
 }

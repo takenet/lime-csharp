@@ -13,7 +13,7 @@ namespace Lime.Protocol.Serialization
         private const int LowerCaseOffset = 'a' - 'A';
         internal static string ToCamelCase(this string value)
         {
-            if (String.IsNullOrEmpty(value)) return value;
+            if (string.IsNullOrEmpty(value)) return value;
 
             var len = value.Length;
             var newValue = new char[len];
@@ -35,6 +35,32 @@ namespace Lime.Protocol.Serialization
             }
 
             return new string(newValue);
+        }
+
+
+        internal static string ToBase64(this string value)
+        {
+            if (string.IsNullOrEmpty(value))
+            {
+                throw new ArgumentNullException("value");
+            }
+
+            return Convert.ToBase64String(Encoding.UTF8.GetBytes(value));
+        }
+
+        internal static string ToFrom64(this string value)
+        {
+            if (string.IsNullOrEmpty(value))
+            {
+                throw new ArgumentNullException("value");
+            }
+
+            var valueBytes = Convert.FromBase64String(value);
+
+            return Encoding.UTF8.GetString(
+                valueBytes,
+                0,
+                valueBytes.Length);
         }
     }
 }

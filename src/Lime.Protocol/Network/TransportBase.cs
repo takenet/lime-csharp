@@ -152,8 +152,6 @@ namespace Lime.Protocol.Network
         /// <returns></returns>
         protected abstract Task PerformCloseAsync(CancellationToken cancellationToken);
         
-
-
         #endregion
 
         /// <summary>
@@ -222,6 +220,5 @@ namespace Lime.Protocol.Network
         {
             this.EnvelopeReceived.RaiseEvent(this, new EnvelopeEventArgs<Envelope>(envelope));
         }
-
     }
 }

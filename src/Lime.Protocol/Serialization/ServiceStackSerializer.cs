@@ -24,6 +24,8 @@ namespace Lime.Protocol.Serialization
         {
             JsConfig.ExcludeTypeInfo = true;
             JsConfig.EmitCamelCaseNames = true;
+            
+
             JsConfig<Message>.IncludeTypeInfo = false;
             JsConfig<Notification>.IncludeTypeInfo = false;
             JsConfig<Command>.IncludeTypeInfo = false;
@@ -36,10 +38,31 @@ namespace Lime.Protocol.Serialization
             JsConfig<Identity>.SerializeFn = i => i.ToString();
             JsConfig<Identity>.DeSerializeFn = s => Identity.Parse(s);
             JsConfig<Guid?>.SerializeFn = g => { if (g.HasValue) return g.ToString(); else return null; };
-            JsConfig<Guid?>.DeSerializeFn = s => { if (string.IsNullOrWhiteSpace(s)) return null; else return new Guid(s); }; 
+            JsConfig<Guid?>.DeSerializeFn = s => { if (string.IsNullOrWhiteSpace(s)) return null; else return new Guid(s); };                      
+
+            foreach (var enumType in TypeUtil.GetEnumTypes())
+            {
+                var jsonConfigEnumType = typeof(JsConfig<>).MakeGenericType(enumType);
+                var serializeProperty = jsonConfigEnumType.GetProperty("SerializeFn");
+                var serializeFuncType = typeof(Func<,>).MakeGenericType(enumType, typeof(string));
+                var methodInfo = typeof(ServiceStackSerializer).GetMethod("ToCamelCase", BindingFlags.Static | BindingFlags.NonPublic);
+                var enumToCamelCaseMethod = methodInfo.MakeGenericMethod(enumType);
+                var serializeFunc = Delegate.CreateDelegate(serializeFuncType, enumToCamelCaseMethod);
+                serializeProperty.SetValue(null, serializeFunc, BindingFlags.Static, null, null, CultureInfo.InvariantCulture);
+            }
         }
 
         #endregion
+
+
+        private static string ToCamelCase<T>(T value)
+        {
+            if (value == null)
+            {
+                return null;
+            }
+            return value.ToString().ToCamelCase();
+        }
 
         #region IEnvelopeSerializer Members
 
@@ -50,7 +73,7 @@ namespace Lime.Protocol.Serialization
         /// <param name="envelope"></param>
         /// <returns></returns>
         public string Serialize(Envelope envelope)
-        {
+        {           
             return JsonSerializer.SerializeToString(envelope);
         }
 
@@ -179,3 +202,5 @@ namespace Lime.Protocol.Serialization
         #endregion
     }
 }
+
+
