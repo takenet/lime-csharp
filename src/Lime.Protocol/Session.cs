@@ -15,7 +15,7 @@ namespace Lime.Protocol
     /// server and its current state
     /// </summary>
     [DataContract(Namespace = "http://limeprotocol.org/2014")]
-    public class Session : Envelope
+    public partial class Session : Envelope
     {
         public const string STATE_KEY = "state";
         public const string MODE_KEY = "mode";

@@ -43,6 +43,21 @@
     <Compile Include="Client\IClientChannel.cs" />
     <Compile Include="Client\ClientChannel.cs" />
     <Compile Include="Client\IClientChannelExtensions.cs" />
+    <Compile Include="Command.Serialization.cs">
+      <DependentUpon>Command.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Contents\TextContent.Serialization.cs">
+      <DependentUpon>TextContent.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Document.Serialization.cs">
+      <DependentUpon>Document.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Envelope.Serialization.cs">
+      <DependentUpon>Envelope.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Message.Serialization.cs">
+      <DependentUpon>Message.cs</DependentUpon>
+    </Compile>
     <Compile Include="Network\AsyncCountdownEvent.cs" />
     <Compile Include="Network\ChannelBase.cs" />
     <Compile Include="Network\DeferralEventArgs.cs" />
@@ -59,6 +74,15 @@
     <Compile Include="Network\ITraceWriter.cs" />
     <Compile Include="Network\TransportBase.cs" />
     <Compile Include="Notification.cs" />
+    <Compile Include="Notification.Serialization.cs">
+      <DependentUpon>Notification.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Reason.Serialization.cs">
+      <DependentUpon>Reason.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Resources\Capability.Serialization.cs">
+      <DependentUpon>Capability.cs</DependentUpon>
+    </Compile>
     <Compile Include="Security\Authentication.cs" />
     <Compile Include="Command.cs" />
     <Compile Include="Contents\ChatState.cs" />
@@ -84,8 +108,24 @@
     <Compile Include="Resources\Quota.cs" />
     <Compile Include="Resources\Roster.cs" />
     <Compile Include="Resources\Subscription.cs" />
+    <Compile Include="Security\Authentication.Serialization.cs">
+      <DependentUpon>Authentication.cs</DependentUpon>
+    </Compile>
     <Compile Include="Security\GuestAuthentication.cs" />
+    <Compile Include="Security\GuestAuthentication.Serialization.cs">
+      <DependentUpon>GuestAuthentication.cs</DependentUpon>
+    </Compile>
     <Compile Include="Security\PlainAuthentication.cs" />
+    <Compile Include="Security\PlainAuthentication.Serialization.cs">
+      <DependentUpon>PlainAuthentication.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Serialization\EnvelopeSerializer.cs" />
+    <Compile Include="Serialization\FactoryAttribute.cs" />
+    <Compile Include="Serialization\IJsonSerializable.cs" />
+    <Compile Include="Serialization\IJsonWritable.cs" />
+    <Compile Include="Serialization\IJsonWriter.cs" />
+    <Compile Include="Serialization\JsonObject.cs" />
+    <Compile Include="Serialization\JsonWriter.cs" />
     <Compile Include="Serialization\SerializationExtensions.cs" />
     <Compile Include="Serialization\TypeUtil.cs" />
     <Compile Include="Serialization\IEnvelopeSerializer.cs" />
@@ -94,6 +134,9 @@
     <Compile Include="Server\ServerChannel.cs" />
     <Compile Include="Server\TransportEventArgs.cs" />
     <Compile Include="Session.cs" />
+    <Compile Include="Session.Serialization.cs">
+      <DependentUpon>Session.cs</DependentUpon>
+    </Compile>
     <Compile Include="UtilExtensions.cs" />
   </ItemGroup>
   <ItemGroup />

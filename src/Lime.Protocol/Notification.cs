@@ -13,7 +13,7 @@ namespace Lime.Protocol
     /// or by the message destination node.
     /// </summary>
     [DataContract(Namespace = "http://limeprotocol.org/2014")]
-    public class Notification : Envelope
+    public partial class Notification : Envelope
     {
         public const string EVENT_KEY = "event";
         public const string REASON_KEY = "reason";

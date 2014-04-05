@@ -58,6 +58,7 @@
     <Compile Include="Network\ChannelBaseTests.cs" />
     <Compile Include="Network\TransportBaseTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Serialization\EnvelopeSerializerTests.cs" />
     <Compile Include="Serialization\StringJsonExtensions.cs" />
     <Compile Include="SetupExtensions.cs" />
     <Compile Include="IdentityTests.cs" />

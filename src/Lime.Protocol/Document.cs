@@ -11,7 +11,7 @@ namespace Lime.Protocol
     /// Represents a document with a Media Type
     /// </summary>
     [DataContract(Namespace = "http://limeprotocol.org/2014")]
-    public abstract class Document : IDocument
+    public abstract partial class Document : IDocument
     {
         private MediaType _mediaType;
 

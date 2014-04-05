@@ -12,7 +12,7 @@ namespace Lime.Protocol
     /// communication documents
     /// </summary>
     [DataContract(Namespace = "http://limeprotocol.org/2014")]
-    public abstract class Envelope
+    public abstract partial class Envelope
     {
         public const string ID_KEY = "id";
         public const string FROM_KEY = "from";

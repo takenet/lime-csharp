@@ -12,7 +12,7 @@ namespace Lime.Protocol.Resources
     /// of the nodes of the network
     /// </summary>
     [DataContract(Namespace = "http://limeprotocol.org/2014")]
-    public class Capability : Document
+    public partial class Capability : Document
     {
         public const string MIME_TYPE = "application/vnd.lime.capability+json";
 

@@ -16,7 +16,7 @@ namespace Lime.Protocol.Security
     /// Should be used only with encrypted sessions.
     /// </summary>
     [DataContract(Namespace = "http://limeprotocol.org/2014")]
-    public class PlainAuthentication : Authentication, IDisposable
+    public partial class PlainAuthentication : Authentication, IDisposable
     {
         public const string PASSWORD_KEY = "password";
 

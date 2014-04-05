@@ -15,18 +15,26 @@ namespace Lime.Protocol
     /// definition change
     /// </summary>
     [DataContract(Namespace = "http://limeprotocol.org/2014")]
-    [KnownType(typeof(Account))]
-    [KnownType(typeof(Capability))]
-    //[KnownType(typeof(Presence))]
-    //[KnownType(typeof(Roster))]
-    //[KnownType(typeof(Subscription))]
-    public class Command : Envelope
+    public partial class Command : Envelope
     {
         public const string TYPE_KEY = "type";
         public const string RESOURCE_KEY = "resource";
         public const string METHOD_KEY = "method";
         public const string STATUS_KEY = "status";
         public const string REASON_KEY = "reason";
+
+        #region Constructor
+
+        public Command()
+        {
+        }
+
+        public Command(Guid? id)
+            : base(id)
+        {
+        }
+
+        #endregion
 
         /// <summary>
         ///  MIME declaration of the resource type of the command.

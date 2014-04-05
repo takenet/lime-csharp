@@ -19,14 +19,14 @@ namespace Lime.Protocol.Serialization
         
         private static Dictionary<Type, Dictionary<string, object>> _enumTypeValueDictionary;
 
-        private static Dictionary<Type, Delegate> _fromDictionaryMethodDictionary;
+        private static Dictionary<Type, Delegate> _factoryMethodDictionary;
         private static object _syncRoot = new object();
        
         static TypeUtil()
         {
             _documentMediaTypeDictionary = new Dictionary<MediaType, Type>();
             _authenticationSchemeDictionary = new Dictionary<AuthenticationScheme, Type>();
-            _fromDictionaryMethodDictionary = new Dictionary<Type, Delegate>();
+            _factoryMethodDictionary = new Dictionary<Type, Delegate>();
 
             _enumTypeValueDictionary = new Dictionary<Type, Dictionary<string, object>>();
 #if !PCL
@@ -125,6 +125,49 @@ namespace Lime.Protocol.Serialization
         public static IEnumerable<Type> GetEnumTypes()
         {
             return _enumTypeValueDictionary.Keys;
+        }
+
+        /// <summary>
+        /// Gets a delegate to the
+        /// static factory method of 
+        /// the type
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        public static Delegate GetFactoryDelegate(Type type)
+        {
+            Delegate factoryDelegate;
+
+
+#if !PCL
+            if (!_factoryMethodDictionary.TryGetValue(type, out factoryDelegate))
+            {
+                lock (_syncRoot)
+                {
+                    if (!_factoryMethodDictionary.TryGetValue(type, out factoryDelegate))
+                    {
+                        var fromDictionaryMethod = type
+                            .GetMethods(BindingFlags.Static | BindingFlags.Public)
+                            .Where(m => m.GetCustomAttribute<FactoryAttribute>() != null)
+                            .FirstOrDefault();
+
+                        if (fromDictionaryMethod == null)
+                        {
+                            throw new ArgumentException("Type doesn't contains a JsonObject factory method");
+                        }
+
+                        var delegateType = typeof(Func<JsonObject, object>);
+
+                        factoryDelegate = Delegate.CreateDelegate(delegateType, fromDictionaryMethod);
+                        _factoryMethodDictionary.Add(type, factoryDelegate);
+                    }
+                }
+            }
+#else
+            // TODO: Implements it to PCL
+            factoryDelegate = null;
+#endif
+            return factoryDelegate;
         }
     }
 }

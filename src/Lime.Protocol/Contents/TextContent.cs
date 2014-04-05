@@ -11,7 +11,7 @@ namespace Lime.Protocol.Contents
     /// Represents a flat text content
     /// </summary>
     [DataContract(Namespace = "http://limeprotocol.org/2014")]
-    public class TextContent : Document
+    public partial class TextContent : Document
     {
         public const string MIME_TYPE = "application/vnd.lime.text+json";
         public const string TEXT_KEY = "text";

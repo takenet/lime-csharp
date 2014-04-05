@@ -11,6 +11,13 @@ namespace Lime.Protocol.Serialization
     public static class SerializationExtensions
     {
         private const int LowerCaseOffset = 'a' - 'A';
+        
+        /// <summary>
+        /// Converts the string to the
+        /// camelCase representation
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
         public static string ToCamelCase(this string value)
         {
             if (string.IsNullOrEmpty(value)) return value;
