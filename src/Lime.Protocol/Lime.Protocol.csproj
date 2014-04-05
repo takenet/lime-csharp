@@ -46,6 +46,9 @@
     <Compile Include="Command.Serialization.cs">
       <DependentUpon>Command.cs</DependentUpon>
     </Compile>
+    <Compile Include="Contents\ChatState.Serialization.cs">
+      <DependentUpon>ChatState.cs</DependentUpon>
+    </Compile>
     <Compile Include="Contents\TextContent.Serialization.cs">
       <DependentUpon>TextContent.cs</DependentUpon>
     </Compile>

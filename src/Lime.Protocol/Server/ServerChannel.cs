@@ -76,7 +76,6 @@ namespace Lime.Protocol.Server
             {
                 Id = base.SessionId,
                 From = base.LocalNode,
-                To = base.RemoteNode,
                 State = base.State,
                 CompressionOptions = compressionOptions,
                 EncryptionOptions = encryptionOptions
@@ -96,10 +95,14 @@ namespace Lime.Protocol.Server
         /// <exception cref="System.ArgumentNullException">authentication</exception>
         public Task SendAuthenticatingSessionAsync(AuthenticationScheme[] schemeOptions)
         {
-            // It's a problem if both parameters are empty
-            if (schemeOptions == null || schemeOptions.Length == 0)
+            if (schemeOptions == null)
             {
                 throw new ArgumentNullException("authentication");
+            }
+
+            if (schemeOptions.Length == 0)
+            {
+                throw new ArgumentException("No available options for authentication");
             }
 
             base.State = SessionState.Authenticating;
@@ -108,7 +111,6 @@ namespace Lime.Protocol.Server
             {
                 Id = base.SessionId,
                 From = base.LocalNode,
-                To = base.RemoteNode,
                 State = base.State,
                 SchemeOptions = schemeOptions
             };
@@ -140,7 +142,6 @@ namespace Lime.Protocol.Server
             {
                 Id = base.SessionId,
                 From = base.LocalNode,
-                To = base.RemoteNode,
                 State = base.State,
                 Authentication = authenticationRoundtrip
             };

@@ -27,6 +27,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lime.Protocol.Serialization
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lime.Protocol.Serialization.ServiceStack.UnitTests", "Lime.Protocol.Serialization.ServiceStack.UnitTests\Lime.Protocol.Serialization.ServiceStack.UnitTests.csproj", "{65AF3FF1-3410-4F12-B798-206CE673BAD1}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Serialization", "Serialization", "{AFDCE25A-4480-4ED6-8C8F-A41E30ED6689}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -72,5 +74,11 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{07EF6707-B284-4068-9B2F-48998782BC9F} = {AFDCE25A-4480-4ED6-8C8F-A41E30ED6689}
+		{C51D26F4-E780-4BDE-84FC-AADC6AE63D5B} = {AFDCE25A-4480-4ED6-8C8F-A41E30ED6689}
+		{0BD5D84E-79C4-415F-A668-F57B5AF555FD} = {AFDCE25A-4480-4ED6-8C8F-A41E30ED6689}
+		{65AF3FF1-3410-4F12-B798-206CE673BAD1} = {AFDCE25A-4480-4ED6-8C8F-A41E30ED6689}
 	EndGlobalSection
 EndGlobal

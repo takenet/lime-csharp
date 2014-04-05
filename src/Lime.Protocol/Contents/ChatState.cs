@@ -12,16 +12,18 @@ namespace Lime.Protocol.Contents
     /// information about conversation events.
     /// </summary>
     [DataContract(Namespace = "http://limeprotocol.org/2014")]
-    public class ChatState : Document
+    public partial class ChatState : Document
     {
         public const string MIME_TYPE = "application/vnd.lime.chatstate+json";
+
+        public const string STATE_KEY = "state";
 
         public ChatState()
             : base(MediaType.Parse(MIME_TYPE))            
         {
         }
 
-        [DataMember(Name = "state")]
+        [DataMember(Name = STATE_KEY)]
         public ChatStateEvent State { get; set; }        
     }
 

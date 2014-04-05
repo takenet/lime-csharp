@@ -50,6 +50,14 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Lime.Protocol.Serialization.Newtonsoft\Lime.Protocol.Serialization.Newtonsoft.csproj">
+      <Project>{07ef6707-b284-4068-9b2f-48998782bc9f}</Project>
+      <Name>Lime.Protocol.Serialization.Newtonsoft</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Lime.Protocol.Serialization.ServiceStack\Lime.Protocol.Serialization.ServiceStack.csproj">
+      <Project>{0bd5d84e-79c4-415f-a668-f57b5af555fd}</Project>
+      <Name>Lime.Protocol.Serialization.ServiceStack</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Lime.Protocol.Tcp\Lime.Protocol.Tcp.csproj">
       <Project>{0ee0db06-832f-4d33-96a8-0d2703af27a9}</Project>
       <Name>Lime.Protocol.Tcp</Name>

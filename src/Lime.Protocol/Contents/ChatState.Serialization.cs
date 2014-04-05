@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Lime.Protocol.Contents
 {
-    public partial class TextContent
+    public partial class ChatState
     {
         /// <summary>
         /// Writes the json to the
@@ -21,7 +21,7 @@ namespace Lime.Protocol.Contents
                 throw new ArgumentNullException("writer");
             }
 
-            writer.WriteStringProperty(TEXT_KEY, this.Text);
+            writer.WriteProperty(STATE_KEY, this.State, true);
         }
 
         /// <summary>
@@ -38,8 +38,8 @@ namespace Lime.Protocol.Contents
                 throw new ArgumentNullException("jsonObject");
             }
         
-            var document = new TextContent();
-            document.Text = jsonObject.GetValueOrDefault(TEXT_KEY, v => (string)v);
+            var document = new ChatState();
+            document.State = jsonObject.GetEnumValueOrDefault<ChatStateEvent>(STATE_KEY);
             return document;
         }
     }

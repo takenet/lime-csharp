@@ -629,11 +629,6 @@ namespace Lime.Protocol.Serialization.Newtonsoft.UnitTests
 
             var password = DataUtil.CreateRandomString(10).ToBase64();
 
-            string randomKey1 = "randomString1";
-            string randomKey2 = "randomString2";
-            string randomString1 = DataUtil.CreateRandomString(50);
-            string randomString2 = DataUtil.CreateRandomString(50);
-
             var state = SessionState.Authenticating;
 
             var reasonCode = DataUtil.CreateRandomInt(100);

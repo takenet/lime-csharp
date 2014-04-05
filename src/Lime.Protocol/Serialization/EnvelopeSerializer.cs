@@ -8,15 +8,31 @@ using System.Threading.Tasks;
 
 namespace Lime.Protocol.Serialization
 {
+    /// <summary>
+    /// Default protocol serialization
+    /// </summary>
     public class EnvelopeSerializer : IEnvelopeSerializer
     {
         #region IEnvelopeSerializer Members
 
+        /// <summary>
+        /// Serialize an envelope
+        /// to a string
+        /// </summary>
+        /// <param name="envelope"></param>
+        /// <returns></returns>
         public string Serialize(Envelope envelope)
         {            
             return envelope.ToJson();
         }
 
+        /// <summary>
+        /// Deserialize an envelope
+        /// from a string
+        /// </summary>
+        /// <param name="envelopeString"></param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentException">JSON string is not a valid envelope</exception>
         public Envelope Deserialize(string envelopeString)
         {
             var jsonDictionary = ParseJson(envelopeString);
@@ -168,6 +184,9 @@ namespace Lime.Protocol.Serialization
                                 tokenBuilder.Length = 0;
                                 continue;
                             case ' ':
+                            case '\t':
+                            case '\r':
+                            case '\n':                            
                                 continue;
                         }
                     }
