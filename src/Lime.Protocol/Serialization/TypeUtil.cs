@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -14,12 +15,12 @@ namespace Lime.Protocol.Serialization
     /// </summary>
     public static class TypeUtil
     {
-        private static Dictionary<MediaType, Type> _documentMediaTypeDictionary;
-        private static Dictionary<AuthenticationScheme, Type> _authenticationSchemeDictionary;
-        
-        private static Dictionary<Type, Dictionary<string, object>> _enumTypeValueDictionary;
+        private static IDictionary<MediaType, Type> _documentMediaTypeDictionary;
+        private static IDictionary<AuthenticationScheme, Type> _authenticationSchemeDictionary;        
+        private static IDictionary<Type, Dictionary<string, object>> _enumTypeValueDictionary;
+        private static IDictionary<Type, Delegate> _factoryMethodDictionary;
+        private static IEnumerable<Type> _protocolTypes;
 
-        private static Dictionary<Type, Delegate> _factoryMethodDictionary;
         private static object _syncRoot = new object();
        
         static TypeUtil()
@@ -27,14 +28,15 @@ namespace Lime.Protocol.Serialization
             _documentMediaTypeDictionary = new Dictionary<MediaType, Type>();
             _authenticationSchemeDictionary = new Dictionary<AuthenticationScheme, Type>();
             _factoryMethodDictionary = new Dictionary<Type, Delegate>();
-
             _enumTypeValueDictionary = new Dictionary<Type, Dictionary<string, object>>();
+            _protocolTypes = null;
 #if !PCL
-            var assemblyTypes = Assembly
+            _protocolTypes = Assembly
                 .GetExecutingAssembly()
-                .GetTypes();
+                .GetTypes()
+                .Where(t => t.GetCustomAttribute<DataContractAttribute>() != null);
 
-            var documentTypes = assemblyTypes
+            var documentTypes = _protocolTypes
                 .Where(t => !t.IsAbstract && typeof(Document).IsAssignableFrom(t));
 
             foreach (var documentType in documentTypes)
@@ -47,7 +49,7 @@ namespace Lime.Protocol.Serialization
                 }
             }
 
-            var authenticationTypes = assemblyTypes
+            var authenticationTypes = _protocolTypes
                 .Where(t => !t.IsAbstract && typeof(Authentication).IsAssignableFrom(t));
 
             foreach (var authenticationType in authenticationTypes)
@@ -60,7 +62,7 @@ namespace Lime.Protocol.Serialization
                 }
             }
 
-            var enumTypes = assemblyTypes
+            var enumTypes = _protocolTypes
                 .Where(t => t.IsEnum);
 
             foreach (var enumType in enumTypes)
@@ -125,6 +127,11 @@ namespace Lime.Protocol.Serialization
         public static IEnumerable<Type> GetEnumTypes()
         {
             return _enumTypeValueDictionary.Keys;
+        }
+
+        public static IEnumerable<Type> GetProtocolTypes()
+        {
+            return _protocolTypes;
         }
 
         /// <summary>
