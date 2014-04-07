@@ -23,14 +23,32 @@ namespace Lime.Protocol.Tcp
         private bool _isListening;
         private Task _acceptTcpClientTask;
 
-        public TcpTransportListener(IEnvelopeSerializer envelopeSerializer, ITraceWriter traceWriter = null)
+        #region Constructor
+
+        public TcpTransportListener(X509Certificate sslCertificate, IEnvelopeSerializer envelopeSerializer, ITraceWriter traceWriter = null)
         {
+            _sslCertificate = sslCertificate;
             _envelopeSerializer = envelopeSerializer;
             _traceWriter = traceWriter;
         }
 
+        #endregion
+
         #region ITransportListener Members
 
+        /// <summary>
+        /// Start listening connections
+        /// at the specified URI
+        /// </summary>
+        /// <param name="listenerUri"></param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">listenerUri</exception>
+        /// <exception cref="System.ArgumentException">
+        /// Invalid URI scheme. The expected value is 'net.tcp'.
+        /// or
+        /// Could not resolve the IPAddress of the hostname
+        /// </exception>
+        /// <exception cref="System.InvalidOperationException">The listener is already active</exception>
         public async Task StartAsync(Uri listenerUri)
         {
             if (listenerUri == null)
@@ -58,9 +76,9 @@ namespace Lime.Protocol.Tcp
             {
                 var dnsEntry = await Dns.GetHostEntryAsync(listenerUri.Host);
 
-                if (dnsEntry.AddressList.Any())
+                if (dnsEntry.AddressList.Any(a => a.AddressFamily == AddressFamily.InterNetwork))
                 {
-                    listenerEndPoint = new IPEndPoint(dnsEntry.AddressList.First(), listenerUri.Port);
+                    listenerEndPoint = new IPEndPoint(dnsEntry.AddressList.First(a => a.AddressFamily == AddressFamily.InterNetwork), listenerUri.Port);
                 }
                 else
                 {
@@ -83,8 +101,16 @@ namespace Lime.Protocol.Tcp
                 });
         }
 
+        /// <summary>
+        /// Occurs when a new transport client is
+        /// connected to the listener
+        /// </summary>
         public event EventHandler<TransportEventArgs> Connected;
 
+        /// <summary>
+        /// Stops the tranport listener
+        /// </summary>
+        /// <returns></returns>
         public Task StopAsync()
         {
             _isListening = false;
@@ -109,7 +135,7 @@ namespace Lime.Protocol.Tcp
                 var transport = new TcpTransport(
                     new TcpClientAdapter(tcpClient),
                     _envelopeSerializer,
-                    sslCertificate: _sslCertificate,
+                    serverCertificate: _sslCertificate,
                     traceWriter: _traceWriter
                     );
 

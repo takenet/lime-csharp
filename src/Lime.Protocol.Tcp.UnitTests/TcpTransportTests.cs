@@ -41,13 +41,12 @@ namespace Lime.Protocol.Tcp.UnitTests
 
         #region Private methods
 
-        private TcpTransport GetTarget(X509Certificate certificate = null, string hostName = null, int bufferSize = TcpTransport.DEFAULT_BUFFER_SIZE)
+        private TcpTransport GetTarget(X509Certificate certificate = null, int bufferSize = TcpTransport.DEFAULT_BUFFER_SIZE)
         {
             return new TcpTransport(
                 _tcpClient.Object,
                 _envelopeSerializer.Object,
                 certificate,
-                hostName,
                 bufferSize,
                 _traceWriter.Object);
         }
@@ -381,6 +380,24 @@ namespace Lime.Protocol.Tcp.UnitTests
             await target.CloseAsync(cancellationToken);
 
             _tcpClient.Verify();
+        }
+
+        #endregion
+
+        #region GetSupportedEncryption
+
+        [TestMethod]
+        [TestCategory("GetSupportedEncryption")]
+        public void GetSupportedEncryption_Default_ReturnsNoneAndTLS()
+        {
+            var target = GetTarget();
+
+            var actual = target.GetSupportedEncryption();
+
+            Assert.IsTrue(actual.Length == 2);
+            Assert.IsTrue(actual.Contains(SessionEncryption.None));
+            Assert.IsTrue(actual.Contains(SessionEncryption.TLS));
+
         }
 
         #endregion

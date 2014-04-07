@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -40,9 +41,9 @@ namespace Lime.Console
             _serverConnectedNodesDictionary = new Dictionary<Guid, IServerChannel>();
             _serverNodeSessionIdDictionary = new Dictionary<Node, Guid>();
 
-            _listenerUri = new Uri("net.tcp://localhost:55321");
+            _listenerUri = new Uri("net.tcp://notebires.takenet.com.br:55321");
 
-            var listener = StartListenerAsync().Result;
+            var listener = StartServerAsync().Result;
 
             var clientChannel = StartClientAsync().Result;
 
@@ -161,9 +162,20 @@ namespace Lime.Console
 
         #region Start Methods
 
-        private static async Task<ITransportListener> StartListenerAsync()
+        private static async Task<ITransportListener> StartServerAsync()
         {
+            var store = new X509Store(StoreName.Root, StoreLocation.CurrentUser);
+            store.Open(OpenFlags.ReadOnly);
+
+            var certificates = store.Certificates.Find(X509FindType.FindByThumbprint, "10f422b0d59269ac13cb9ba73ba18f8ccbe58694", false);
+
+            if (certificates.Count == 0)
+            {
+                throw new InvalidOperationException("Server certificate not found");
+            }          
+
             ITransportListener listener = new TcpTransportListener(
+                certificates[0],
                 new EnvelopeSerializer(),
                 new DebugTraceWriter("Server")
                 );
@@ -182,7 +194,8 @@ namespace Lime.Console
             ITransport transport = new TcpTransport(
                 new TcpClientAdapter(tcpClient),
                 new EnvelopeSerializer(),
-                traceWriter: new DebugTraceWriter("Client")
+                traceWriter: new DebugTraceWriter("Client"),
+                hostName: _listenerUri.Host
                 );
 
             var clientChannel = new ClientChannel(transport, TimeSpan.FromSeconds(60));
@@ -214,18 +227,18 @@ namespace Lime.Console
             if (e.Envelope.CompressionOptions != null ||
                 e.Envelope.EncryptionOptions != null)
             {
-                await channel.SendNegotiatingSessionAsync(e.Envelope.CompressionOptions.First(), e.Envelope.EncryptionOptions.First());
+                await channel.SendNegotiatingSessionAsync(e.Envelope.CompressionOptions.First(), e.Envelope.EncryptionOptions.Last());
             }
             else if (e.Envelope.Encryption.HasValue && e.Envelope.Compression.HasValue)
             {
                 if (channel.Transport.Compression != e.Envelope.Compression.Value)
                 {
-                    await channel.Transport.SetEncryptionAsync(e.Envelope.Encryption.Value, CancellationToken.None);
+                    await channel.Transport.SetCompressionAsync(e.Envelope.Compression.Value, CancellationToken.None);                    
                 }
 
                 if (channel.Transport.Encryption != e.Envelope.Encryption.Value)
                 {
-                    await channel.Transport.SetCompressionAsync(e.Envelope.Compression.Value, CancellationToken.None);
+                    await channel.Transport.SetEncryptionAsync(e.Envelope.Encryption.Value, CancellationToken.None);
                 }
             }
         }
@@ -281,15 +294,7 @@ namespace Lime.Console
 
         }
 
-
-
-
-
-
-
-
         #endregion
-
 
         #region Server Event Handlers
 
@@ -341,12 +346,12 @@ namespace Lime.Console
 
             if (channel.Transport.Compression != e.Envelope.Compression.Value)
             {
-                await channel.Transport.SetEncryptionAsync(e.Envelope.Encryption.Value, CancellationToken.None);
+                await channel.Transport.SetCompressionAsync(e.Envelope.Compression.Value, CancellationToken.None);                
             }
 
             if (channel.Transport.Encryption != e.Envelope.Encryption.Value)
             {
-                await channel.Transport.SetCompressionAsync(e.Envelope.Compression.Value, CancellationToken.None);
+                await channel.Transport.SetEncryptionAsync(e.Envelope.Encryption.Value, CancellationToken.None);
             }
 
             await channel.SendAuthenticatingSessionAsync(

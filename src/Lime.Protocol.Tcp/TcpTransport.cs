@@ -28,7 +28,7 @@ namespace Lime.Protocol.Tcp
         private Stream _stream;
         private readonly IEnvelopeSerializer _envelopeSerializer;
         private readonly ITraceWriter _traceWriter;
-        private X509Certificate _sslCertificate;
+        private X509Certificate _serverCertificate;
         private string _hostName;
         private Task _readTask;
 
@@ -36,7 +36,28 @@ namespace Lime.Protocol.Tcp
 
         #region Constructor
 
-        public TcpTransport(ITcpClient tcpClient, IEnvelopeSerializer envelopeSerializer, X509Certificate sslCertificate = null, string hostName = null, int bufferSize = DEFAULT_BUFFER_SIZE, ITraceWriter traceWriter = null)
+        /// <summary>
+        /// Server constructor
+        /// </summary>
+        /// <param name="tcpClient"></param>
+        /// <param name="envelopeSerializer"></param>
+        /// <param name="serverCertificate"></param>
+        /// <param name="bufferSize"></param>
+        /// <param name="traceWriter"></param>
+        public TcpTransport(ITcpClient tcpClient, IEnvelopeSerializer envelopeSerializer, X509Certificate serverCertificate, int bufferSize = DEFAULT_BUFFER_SIZE, ITraceWriter traceWriter = null)
+            : this(tcpClient, envelopeSerializer, serverCertificate, null, bufferSize, traceWriter)
+        {
+
+        }
+
+        public TcpTransport(ITcpClient tcpClient, IEnvelopeSerializer envelopeSerializer, string hostName, int bufferSize = DEFAULT_BUFFER_SIZE, ITraceWriter traceWriter = null)
+            : this(tcpClient, envelopeSerializer, null, hostName, bufferSize, traceWriter)
+
+        {
+
+        }
+
+        private TcpTransport(ITcpClient tcpClient, IEnvelopeSerializer envelopeSerializer, X509Certificate serverCertificate, string hostName, int bufferSize, ITraceWriter traceWriter)
         {
             if (tcpClient == null)
             {
@@ -54,7 +75,7 @@ namespace Lime.Protocol.Tcp
             }
 
             _envelopeSerializer = envelopeSerializer;
-            _sslCertificate = sslCertificate;
+            _serverCertificate = serverCertificate;
             _hostName = hostName;
             _traceWriter = traceWriter;
         }
@@ -161,11 +182,23 @@ namespace Lime.Protocol.Tcp
         /// <returns></returns>
         public override SessionEncryption[] GetSupportedEncryption()
         {
-            return new SessionEncryption[]
+            // Server or client mode
+            if (_serverCertificate != null || 
+                string.IsNullOrWhiteSpace(_hostName))
             {
-                SessionEncryption.None,
-                SessionEncryption.TLS
-            };
+                return new SessionEncryption[]
+                {
+                    SessionEncryption.None,
+                    SessionEncryption.TLS
+                };
+            }
+            else
+            {
+                return new SessionEncryption[]
+                {
+                    SessionEncryption.None
+                };
+            }
         }
 
         /// <summary>
@@ -176,75 +209,61 @@ namespace Lime.Protocol.Tcp
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
         /// <exception cref="System.NotSupportedException"></exception>
-        public override Task SetEncryptionAsync(SessionEncryption encryption, CancellationToken cancellationToken)
+        public override async Task SetEncryptionAsync(SessionEncryption encryption, CancellationToken cancellationToken)
         {
-            this.Encryption = encryption;
-
             switch (encryption)
             {
                 case SessionEncryption.None:
                     _stream = _tcpClient.GetStream();
                     break;
                 case SessionEncryption.TLS:
-                    if (_sslCertificate != null)
-                    {
+                    if (_serverCertificate != null)
+                    {                       
                         // Server
                         var sslStream = new SslStream(
-                            _tcpClient.GetStream(),
+                            _stream,
                             false);
 
-                        return sslStream
+                        await sslStream
                             .AuthenticateAsServerAsync(
-                                _sslCertificate,
+                                _serverCertificate,
                                 false,
                                 SslProtocols.Tls,
                                 false)
-                            .ContinueWith(t => 
-                                {
-                                    if (t.Exception != null)
-                                    {
-                                        return OnFailedAsync(t.Exception.InnerException);
-                                    }
-                                    else
-                                    {
-                                        _stream = sslStream;
-                                        return Task.FromResult<object>(null);
-                                    }
-                                }).Unwrap();                        
+                            .ConfigureAwait(false);
+
+                        _stream = sslStream;
                     }
                     else
                     {
+                        if (string.IsNullOrWhiteSpace(_hostName))
+                        {
+                            throw new InvalidOperationException("The hostname is mandatory for TLS client encryption support");
+                        }
+
                         // Client
                         var sslStream = new SslStream(
-                            _tcpClient.GetStream(),
+                            _stream,
                             false,
                              new RemoteCertificateValidationCallback(ValidateServerCertificate),
                              null
                             );
 
-                        return sslStream
+                        await sslStream
                             .AuthenticateAsClientAsync(
-                                _hostName)                                
-                            .ContinueWith(t => 
-                            {
-                                if (t.Exception != null)
-                                {
-                                    return OnFailedAsync(t.Exception.InnerException);
-                                }
-                                else
-                                {
-                                    _stream = sslStream;
-                                    return Task.FromResult<object>(null);
-                                }
-                            }).Unwrap();    
+                                _hostName)
+                            .ConfigureAwait(false);
 
+                        _stream = sslStream;
                     }
+                    break;
 
                 default:
                     throw new NotSupportedException();
             }
 
-            return Task.FromResult<object>(null);
+            this.Encryption = encryption;
+
         }
 
         #endregion
