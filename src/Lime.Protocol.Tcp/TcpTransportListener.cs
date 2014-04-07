@@ -107,7 +107,7 @@ namespace Lime.Protocol.Tcp
                 var tcpClient = await _tcpListener.AcceptTcpClientAsync();
 
                 var transport = new TcpTransport(
-                    tcpClient,
+                    new TcpClientAdapter(tcpClient),
                     _envelopeSerializer,
                     sslCertificate: _sslCertificate,
                     traceWriter: _traceWriter

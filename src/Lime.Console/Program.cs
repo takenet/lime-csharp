@@ -27,87 +27,8 @@ namespace Lime.Console
 
         static void Main(string[] args)
         {
-            var json = "{\"state\":\"authenticating\",\"scheme\":\"plain\",\"authentication\":{\"password\":\"bXlwYXNzd29yZA==\"},\"id\":\"458f5c19-5655-47c9-8f67-a064c5f9f9d6\",\"from\":\"andreb@takenet.com.br/NOTEBIRES\"}";
-
-            var serializer1 = new EnvelopeSerializer();
-            var serializer2 = new Lime.Protocol.Serialization.Newtonsoft.JsonNetSerializer();
-            var serializer3 = new Lime.Protocol.Serialization.ServiceStack.ServiceStackSerializer();
-
-            Envelope envelope1 = null, envelope2 = null, envelope3 = null;
-
-            int count = 100000;
-
-            var sw1 = System.Diagnostics.Stopwatch.StartNew();
-
-            for (int i = 0; i < count; i++)
-            {
-                envelope1 = serializer1.Deserialize(json);
-            }
-            sw1.Stop();
-
-            var sw2 = System.Diagnostics.Stopwatch.StartNew();
-
-            for (int i = 0; i < count; i++)
-            {
-                envelope2 = serializer2.Deserialize(json);
-            }
-            sw2.Stop();
-
-            var sw3 = System.Diagnostics.Stopwatch.StartNew();
-
-            for (int i = 0; i < count; i++)
-            {
-                envelope3 = serializer3.Deserialize(json);
-            }
-            sw3.Stop();
-
-            System.Console.WriteLine("Deserialization:");
-            System.Console.WriteLine("Serializer 1: {0} ms", sw1.ElapsedMilliseconds);
-            System.Console.WriteLine("Serializer 2: {0} ms", sw2.ElapsedMilliseconds);
-            System.Console.WriteLine("Serializer 3: {0} ms", sw3.ElapsedMilliseconds);
-
-            var json1 = serializer2.Serialize(envelope1);
-            var json2 = serializer2.Serialize(envelope1);
-            var json3 = serializer2.Serialize(envelope1);
-
-            if (json1 == json2 && json2 == json3)
-            {
-                System.Console.WriteLine("All deserialized types are equals");
-            }
-
-            var envelope = envelope1;
-
-            sw1 = System.Diagnostics.Stopwatch.StartNew();
-            for (int i = 0; i < count; i++)
-            {
-                json1 = serializer1.Serialize(envelope);
-            }
-            sw1.Stop();
-
-            sw2 = System.Diagnostics.Stopwatch.StartNew();
-            for (int i = 0; i < count; i++)
-            {
-                json2 = serializer2.Serialize(envelope);
-            }
-            sw2.Stop();
-
-            sw3 = System.Diagnostics.Stopwatch.StartNew();
-            for (int i = 0; i < count; i++)
-            {
-                json3 = serializer3.Serialize(envelope);
-            }
-            sw3.Stop();
-
-            System.Console.WriteLine("Serialization:");
-            System.Console.WriteLine("Serializer 1: {0} ms", sw1.ElapsedMilliseconds);
-            System.Console.WriteLine("Serializer 2: {0} ms", sw2.ElapsedMilliseconds);
-            System.Console.WriteLine("Serializer 3: {0} ms", sw3.ElapsedMilliseconds);
-
-            System.Console.Read();
-
-
-            return;
-
+            //TestSerializers();
+            //return;
 
             _identityPasswordDictionary = new Dictionary<Identity, string>
             {
@@ -130,6 +51,116 @@ namespace Lime.Console
             clientChannel.SendFinishingSessionAsync().Wait();
         }
 
+        private static void TestSerializers()
+        {
+            var authenticatingJson = "{\"state\":\"authenticating\",\"scheme\":\"plain\",\"authentication\":{\"password\":\"bXlwYXNzd29yZA==\"},\"id\":\"458f5c19-5655-47c9-8f67-a064c5f9f9d6\",\"from\":\"andreb@takenet.com.br/NOTEBIRES\"}";
+
+            var json = authenticatingJson;
+
+            var serializer1 = new EnvelopeSerializer();
+            var serializer2 = new Lime.Protocol.Serialization.Newtonsoft.JsonNetSerializer();
+            var serializer3 = new Lime.Protocol.Serialization.ServiceStack.ServiceStackSerializer();
+
+            Envelope envelope1 = null, envelope2 = null, envelope3 = null;
+
+            int count = 100000;
+
+            System.Console.WriteLine("Deserialization:");
+
+
+            var sw1 = System.Diagnostics.Stopwatch.StartNew();
+
+            for (int i = 0; i < count; i++)
+            {
+                envelope1 = serializer1.Deserialize(json);
+            }
+            sw1.Stop();
+
+            System.Console.WriteLine("EnvelopeSerializer: {0} ms", sw1.ElapsedMilliseconds);
+
+
+            var sw2 = System.Diagnostics.Stopwatch.StartNew();
+
+            for (int i = 0; i < count; i++)
+            {
+                envelope2 = serializer2.Deserialize(json);
+            }
+            sw2.Stop();
+
+            System.Console.WriteLine("JsonNetSerializer: {0} ms", sw2.ElapsedMilliseconds);
+
+
+            var sw3 = System.Diagnostics.Stopwatch.StartNew();
+
+            for (int i = 0; i < count; i++)
+            {
+                envelope3 = serializer3.Deserialize(json);
+            }
+            sw3.Stop();
+
+            System.Console.WriteLine("ServiceStackSerializer: {0} ms", sw3.ElapsedMilliseconds);
+
+            var json1 = serializer2.Serialize(envelope1);
+            var json2 = serializer2.Serialize(envelope1);
+            var json3 = serializer2.Serialize(envelope1);
+
+            if (json1 == json2 && json2 == json3)
+            {
+                System.Console.WriteLine("All deserialized types are equals");
+            }
+            else
+            {
+                System.Console.WriteLine("Deserialized types NOT equals: ");
+            }
+
+            var envelope = envelope1;
+
+            System.Console.WriteLine("Serialization:");
+
+
+            sw1 = System.Diagnostics.Stopwatch.StartNew();
+            for (int i = 0; i < count; i++)
+            {
+                json1 = serializer1.Serialize(envelope);
+            }
+            sw1.Stop();
+
+            System.Console.WriteLine("EnvelopeSerializer: {0} ms", sw1.ElapsedMilliseconds);
+
+
+            sw2 = System.Diagnostics.Stopwatch.StartNew();
+            for (int i = 0; i < count; i++)
+            {
+                json2 = serializer2.Serialize(envelope);
+            }
+            sw2.Stop();
+
+            System.Console.WriteLine("JsonNetSerializer: {0} ms", sw2.ElapsedMilliseconds);
+
+
+            sw3 = System.Diagnostics.Stopwatch.StartNew();
+            for (int i = 0; i < count; i++)
+            {
+                json3 = serializer3.Serialize(envelope);
+            }
+            sw3.Stop();
+
+            System.Console.WriteLine("ServiceStackSerializer: {0} ms", sw3.ElapsedMilliseconds);
+
+            if (json1 == json2 && json2 == json3)
+            {
+                System.Console.WriteLine("All serialized types are equals");
+            }
+            else
+            {
+                System.Console.WriteLine("Serialized types NOT equals: ");
+            }
+
+            System.Console.Read();
+        }
+
+        #region Start Methods
+
         private static async Task<ITransportListener> StartListenerAsync()
         {
             ITransportListener listener = new TcpTransportListener(
@@ -149,14 +180,12 @@ namespace Lime.Console
             var tcpClient = new TcpClient();
 
             ITransport transport = new TcpTransport(
-                tcpClient,
+                new TcpClientAdapter(tcpClient),
                 new EnvelopeSerializer(),
                 traceWriter: new DebugTraceWriter("Client")
                 );
 
             var clientChannel = new ClientChannel(transport, TimeSpan.FromSeconds(60));
-            
-
             clientChannel.NegotiateSessionReceived += ClientChannel_NegotiateSessionReceived;
             clientChannel.AuthenticateSessionReceived += ClientChannel_AuthenticateSessionReceived;
             clientChannel.SessionEstablished += ClientChannel_SessionEstablished;
@@ -172,6 +201,8 @@ namespace Lime.Console
 
             return clientChannel;
         }
+
+        #endregion
 
         #region Client Event Handlers
 

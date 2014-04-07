@@ -39,6 +39,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ITcpClient.cs" />
+    <Compile Include="TcpClientAdapter.cs" />
     <Compile Include="TcpTransport.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TcpTransportListener.cs" />

@@ -41,7 +41,6 @@ namespace Lime.Protocol.UnitTests
             return CreateRandomString(5);
         }
 
-
         public static Identity CreateIdentity()
         {
             return new Identity()
@@ -96,7 +95,6 @@ namespace Lime.Protocol.UnitTests
 
         }
 
-
         public static GuestAuthentication CreateGuestAuthentication()
         {
             return new GuestAuthentication();
@@ -113,7 +111,6 @@ namespace Lime.Protocol.UnitTests
         {
             return new AuthenticationScheme[] { AuthenticationScheme.Guest, AuthenticationScheme.Plain };
         }
-
 
         public static Message CreateMessage(Document content)
         {
@@ -171,7 +168,6 @@ namespace Lime.Protocol.UnitTests
             };
         }
 
-
         public static MediaType CreateMediaType()
         {
             return new MediaType(
@@ -204,6 +200,18 @@ namespace Lime.Protocol.UnitTests
         public static Exception CreateException()
         {
             return new Exception(CreateRandomString(50));
+        }
+
+        public static Uri CreateUri(string scheme = "http", int? port = null)
+        {
+            if (!port.HasValue)
+            {
+                port = CreateRandomInt(9999);
+            }
+
+            return new Uri(
+                string.Format("{0}://{1}:{2}",
+                    scheme, CreateDomainName(), port));
         }
     }
 }

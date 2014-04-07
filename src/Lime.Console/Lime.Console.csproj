@@ -4,7 +4,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{5AFF125E-B540-41EA-9EE8-B5BF3B6EB12C}</ProjectGuid>
+    <ProjectGuid>{9CE8A3B9-5900-4D8B-81A6-C33513553E97}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Lime.Console</RootNamespace>

@@ -20,22 +20,23 @@ namespace Lime.Protocol.Tcp
     /// </summary>
     public class TcpTransport : TransportBase, ITransport
     {
+        public const int DEFAULT_BUFFER_SIZE = 8192;
+
+        #region Private fields
+
+        private ITcpClient _tcpClient;
+        private Stream _stream;
         private readonly IEnvelopeSerializer _envelopeSerializer;
         private readonly ITraceWriter _traceWriter;
-
-        private TcpClient _tcpClient;
-        private NetworkStream _networkStream;
-        private Stream _stream;
-
         private X509Certificate _sslCertificate;
         private string _hostName;
-
-
-        const int DEFAULT_BUFFER_SIZE = 8192;
-
         private Task _readTask;
 
-        public TcpTransport(TcpClient tcpClient, IEnvelopeSerializer envelopeSerializer, X509Certificate sslCertificate = null, string hostName = null, int bufferSize = DEFAULT_BUFFER_SIZE, ITraceWriter traceWriter = null)
+        #endregion
+
+        #region Constructor
+
+        public TcpTransport(ITcpClient tcpClient, IEnvelopeSerializer envelopeSerializer, X509Certificate sslCertificate = null, string hostName = null, int bufferSize = DEFAULT_BUFFER_SIZE, ITraceWriter traceWriter = null)
         {
             if (tcpClient == null)
             {
@@ -58,29 +59,9 @@ namespace Lime.Protocol.Tcp
             _traceWriter = traceWriter;
         }
 
+        #endregion
+
         #region TransportBase Members
-
-        /// <summary>
-        /// Sends an envelope to 
-        /// the connected node
-        /// </summary>
-        /// <param name="envelope">Envelope to be transported</param>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        /// <exception cref="System.NotImplementedException"></exception>
-        public override Task SendAsync(Envelope envelope, CancellationToken cancellationToken)
-        {
-            var envelopeJson = _envelopeSerializer.Serialize(envelope);
-
-            if (_traceWriter != null &&
-                _traceWriter.IsEnabled)
-            {
-                _traceWriter.TraceAsync(envelopeJson, DataOperation.Send);
-            }
-
-            var jsonBytes = Encoding.UTF8.GetBytes(envelopeJson);
-            return _stream.WriteAsync(jsonBytes, 0, jsonBytes.Length);
-        }
 
         /// <summary>
         /// Opens the transport connection with
@@ -97,17 +78,15 @@ namespace Lime.Protocol.Tcp
 
             if (!_tcpClient.Connected)
             {
+                if (uri.Scheme != Uri.UriSchemeNetTcp)
+                {
+                    throw new ArgumentException(string.Format("Invalid URI scheme. Expected is '{0}'.", Uri.UriSchemeNetTcp));
+                }
+
                 await _tcpClient.ConnectAsync(uri.Host, uri.Port).ConfigureAwait(false);
             }
 
-            _networkStream = _tcpClient.GetStream();
-
-            if (!_networkStream.CanRead || !_networkStream.CanWrite)
-            {
-                throw new ArgumentException("Invalid stream state");
-            }
-
-            _stream = _networkStream;
+            _stream = _tcpClient.GetStream();
 
             _readTask = this.ReadAsync(CancellationToken.None)
                 .ContinueWith(t =>
@@ -126,6 +105,39 @@ namespace Lime.Protocol.Tcp
         }
 
         /// <summary>
+        /// Sends an envelope to 
+        /// the connected node
+        /// </summary>
+        /// <param name="envelope">Envelope to be transported</param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        /// <exception cref="System.NotImplementedException"></exception>
+        public override async Task SendAsync(Envelope envelope, CancellationToken cancellationToken)
+        {
+            if (envelope == null)
+            {
+                throw new ArgumentNullException("envelope");
+            }
+
+            if (_stream == null ||
+                !_stream.CanWrite)
+            {
+                throw new InvalidOperationException("Invalid stream state. Call OpenAsync first.");
+            }
+
+            var envelopeJson = _envelopeSerializer.Serialize(envelope);
+
+            if (_traceWriter != null &&
+                _traceWriter.IsEnabled)
+            {
+                await _traceWriter.TraceAsync(envelopeJson, DataOperation.Send).ConfigureAwait(false);
+            }
+
+            var jsonBytes = Encoding.UTF8.GetBytes(envelopeJson);
+            await _stream.WriteAsync(jsonBytes, 0, jsonBytes.Length, cancellationToken).ConfigureAwait(false);
+        }
+
+        /// <summary>
         /// Closes the transport
         /// </summary>
         /// <param name="cancellationToken"></param>
@@ -133,7 +145,11 @@ namespace Lime.Protocol.Tcp
         /// <exception cref="System.NotImplementedException"></exception>
         protected override Task PerformCloseAsync(CancellationToken cancellationToken)
         {
-            _stream.Close();
+            if (_stream != null)
+            {
+                _stream.Close();
+            }
+
             _tcpClient.Close();
             return Task.FromResult<object>(null);
         }
@@ -167,14 +183,14 @@ namespace Lime.Protocol.Tcp
             switch (encryption)
             {
                 case SessionEncryption.None:
-                    _stream = _networkStream;
+                    _stream = _tcpClient.GetStream();
                     break;
                 case SessionEncryption.TLS:
                     if (_sslCertificate != null)
                     {
                         // Server
                         var sslStream = new SslStream(
-                            _networkStream,
+                            _tcpClient.GetStream(),
                             false);
 
                         return sslStream
@@ -200,7 +216,7 @@ namespace Lime.Protocol.Tcp
                     {
                         // Client
                         var sslStream = new SslStream(
-                            _networkStream,
+                            _tcpClient.GetStream(),
                             false,
                              new RemoteCertificateValidationCallback(ValidateServerCertificate),
                              null
@@ -252,7 +268,12 @@ namespace Lime.Protocol.Tcp
         /// <returns></returns>
         private async Task ReadAsync(CancellationToken cancellationToken)
         {
-            while (_stream.CanRead)
+            if (!_stream.CanRead)
+            {
+                throw new InvalidOperationException("Invalid stream state");
+            }
+
+            do
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
@@ -261,8 +282,8 @@ namespace Lime.Protocol.Tcp
                 if (envelope != null)
                 {
                     base.OnEnvelopeReceived(envelope);
-                }                
-            }            
+                }
+            } while (_stream.CanRead);           
         }
 
         /// <summary>
@@ -287,13 +308,14 @@ namespace Lime.Protocol.Tcp
                     if (_traceWriter != null &&
                         _traceWriter.IsEnabled)
                     {
-                        _traceWriter.TraceAsync(jsonString, DataOperation.Receive);
+                        await _traceWriter.TraceAsync(jsonString, DataOperation.Receive).ConfigureAwait(false);
                     }
 
                     envelope = _envelopeSerializer.Deserialize(jsonString);                    
                 }
 
-                if (envelope == null && _stream.CanRead)
+                if (envelope == null && 
+                    _stream.CanRead)
                 {
                     _bufferPos += await _stream.ReadAsync(_buffer, _bufferPos, _buffer.Length - _bufferPos, cancellationToken).ConfigureAwait(false);
 
@@ -310,6 +332,8 @@ namespace Lime.Protocol.Tcp
             return envelope;
         }
 
+        #region Buffer fields
+
         private int _bufferPos;
         private byte[] _buffer;
         private int _jsonStartPos;
@@ -317,10 +341,12 @@ namespace Lime.Protocol.Tcp
         private int _jsonStackedBrackets;
         private bool _jsonStarted = false;
 
+        #endregion
+
         /// <summary>
         /// Try to extract a JSON document
         /// from the buffer, based on the 
-        /// brackets
+        /// brackets count.
         /// </summary>
         /// <param name="json"></param>
         /// <returns></returns>
