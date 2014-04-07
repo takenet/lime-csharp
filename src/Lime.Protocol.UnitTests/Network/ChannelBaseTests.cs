@@ -238,7 +238,7 @@ namespace Lime.Protocol.UnitTests.Network
             var content = DataUtil.CreateTextContent();
             var message = DataUtil.CreateMessage(content);
 
-            target.MessageReceived += (sender, e) => messageReceivedRaised = e.Envelope == message;
+            target.MessageReceived += (sender, e) => messageReceivedRaised = !messageReceivedRaised && e.Envelope == message;
 
 
             _transport.ReceiveEnvelope(message);
@@ -260,7 +260,7 @@ namespace Lime.Protocol.UnitTests.Network
             var content = DataUtil.CreatePing();
             var command = DataUtil.CreateCommand(content);
 
-            target.CommandReceived += (sender, e) => commandReceivedRaised = e.Envelope == command;
+            target.CommandReceived += (sender, e) => commandReceivedRaised = !commandReceivedRaised && e.Envelope == command;
 
             _transport.ReceiveEnvelope(command);
 
@@ -279,8 +279,8 @@ namespace Lime.Protocol.UnitTests.Network
             bool notificationReceivedRaised = false;
 
             var notification = DataUtil.CreateNotification(Event.Accepted);
-            
-            target.NotificationReceived += (sender, e) => notificationReceivedRaised = e.Envelope == notification;
+
+            target.NotificationReceived += (sender, e) => notificationReceivedRaised = !notificationReceivedRaised && e.Envelope == notification;
 
             _transport.ReceiveEnvelope(notification);
 
@@ -301,7 +301,7 @@ namespace Lime.Protocol.UnitTests.Network
             var session = DataUtil.CreateSession();
             session.State = SessionState.Established;
 
-            target.SessionReceived += (sender, e) => sessionReceivedRaised = e.Envelope == session;
+            target.SessionReceived += (sender, e) => sessionReceivedRaised = !sessionReceivedRaised && e.Envelope == session;
 
             _transport.ReceiveEnvelope(session);
 

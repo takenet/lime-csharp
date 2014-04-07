@@ -210,7 +210,8 @@ namespace Lime.Protocol.Server
                 Id = base.SessionId,
                 From = base.LocalNode,
                 To = base.RemoteNode,
-                State = base.State
+                State = base.State,
+                Mode = base.Mode
             };
 
             await base.SendSessionAsync(session).ConfigureAwait(false);
@@ -263,7 +264,7 @@ namespace Lime.Protocol.Server
 
         #endregion
 
-        #region Event handlers
+        #region Event Handlers
 
         /// <summary>
         /// Raises the SessionReceived event

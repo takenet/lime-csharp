@@ -109,6 +109,11 @@ namespace Lime.Protocol.UnitTests
             return authentication;
         }
 
+        public static AuthenticationScheme[] CreateSchemeOptions()
+        {
+            return new AuthenticationScheme[] { AuthenticationScheme.Guest, AuthenticationScheme.Plain };
+        }
+
 
         public static Message CreateMessage(Document content)
         {
