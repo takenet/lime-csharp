@@ -227,17 +227,11 @@ namespace Lime.Protocol.Server
         /// <param name="reason"></param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">reason</exception>
-        /// <exception cref="System.InvalidOperationException"></exception>
         public async Task SendFailedSessionAsync(Reason reason)
         {
             if (reason == null)
             {
                 throw new ArgumentNullException("reason");
-            }
-
-            if (base.State != SessionState.Established)
-            {
-                throw new InvalidOperationException(string.Format("Cannot fail a session in the '{0}' state", this.State));
             }
 
             base.State = SessionState.Failed;
@@ -269,6 +263,8 @@ namespace Lime.Protocol.Server
 
         #endregion
 
+        #region Event handlers
+
         /// <summary>
         /// Raises the SessionReceived event
         /// </summary>
@@ -288,5 +284,77 @@ namespace Lime.Protocol.Server
                     break;
             }
         }
+
+        /// <summary>
+        /// Raises the MessageReceived event
+        /// </summary>
+        /// <param name="message"></param>
+        /// <returns></returns>
+        protected async override Task OnMessageReceivedAsync(Message message)
+        {
+            if (this.State == SessionState.Established)
+            {
+                await base.OnMessageReceivedAsync(message).ConfigureAwait(false);
+            }
+            else
+            {
+                var reason = new Reason()
+                {
+                    Code = ReasonCodes.SESSION_INVALID_ACTION_FOR_STATE,
+                    Description = "Invalid action for current session state"
+                };
+
+                await this.SendFailedSessionAsync(reason);
+            }
+        }
+
+        /// <summary>
+        /// Raises the CommandReceived event
+        /// </summary>
+        /// <param name="command"></param>
+        /// <returns></returns>
+        protected async override Task OnCommandReceivedAsync(Command command)
+        {
+            if (this.State == SessionState.Established)
+            {
+                await base.OnCommandReceivedAsync(command).ConfigureAwait(false);
+            }
+            else
+            {
+                var reason = new Reason()
+                {
+                    Code = ReasonCodes.SESSION_INVALID_ACTION_FOR_STATE,
+                    Description = "Invalid action for current session state"
+                };
+
+                await this.SendFailedSessionAsync(reason);
+            }
+        }
+
+        /// <summary>
+        /// Raises the NotificationReceived event
+        /// </summary>
+        /// <param name="notification"></param>
+        /// <returns></returns>
+        protected async override Task OnNotificationReceivedAsync(Notification notification)
+        {
+            if (this.State == SessionState.Established)
+            {
+                await base.OnNotificationReceivedAsync(notification).ConfigureAwait(false);
+            }
+            else
+            {
+                var reason = new Reason()
+                {
+                    Code = ReasonCodes.SESSION_INVALID_ACTION_FOR_STATE,
+                    Description = "Invalid action for current session state"
+                };
+
+                await this.SendFailedSessionAsync(reason);
+            }
+        }
+
+        #endregion
+
     }
 }

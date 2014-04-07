@@ -36,7 +36,7 @@ namespace Lime.Protocol
         /// The required action is invalid for
         /// current session state
         /// </summary>
-        public const int SESSION_INVALID_STATE_FOR_ACTION = 15;
+        public const int SESSION_INVALID_ACTION_FOR_STATE = 15;
         /// <summary>
         /// General validation error
         /// </summary>
