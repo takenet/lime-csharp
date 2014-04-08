@@ -15,7 +15,6 @@ namespace Lime.Protocol.Client
     /// </summary>
     public interface IClientChannel : IChannel
     {
-
         /// <summary>
         /// Sends a new session envelope
         /// to the server and awaits for
@@ -39,7 +38,7 @@ namespace Lime.Protocol.Client
         Task<Session> NegotiateSessionAsync(CancellationToken cancellationToken, SessionCompression sessionCompression, SessionEncryption sessionEncryption);
 
         /// <summary>
-        /// Send a authenticate session envelope
+        /// Sends a authenticate session envelope
         /// to the server to establish
         /// an authenticated session and awaits
         /// for the established session envelope.
@@ -52,14 +51,6 @@ namespace Lime.Protocol.Client
         Task<Session> AuthenticateSessionAsync(CancellationToken cancellationToken, Identity identity, Authentication authentication, string instance = null, SessionMode sessionMode = SessionMode.Node);
 
         /// <summary>
-        /// Sends a finish session envelope
-        /// to the server to finish the session
-        /// and awaits for the response.
-        /// </summary>
-        /// <returns>A finished session envelope or a failed session envelope.</returns>
-        Task<Session> FinishSessionAsync(CancellationToken cancellationToken);
-  
-        /// <summary>
         /// Notify to the server that
         /// the specified message was received
         /// by the peer
@@ -70,9 +61,17 @@ namespace Lime.Protocol.Client
         Task SendReceivedNotificationAsync(Guid messageId, Node to);
 
         /// <summary>
-        /// Occurs when the session fails
-        /// with the server
+        /// Sends a finishing session 
+        /// envelope to the server.
         /// </summary>
-        event EventHandler<EnvelopeEventArgs<Session>> SessionFailed;
+        Task SendFinishingSessionAsync();
+
+        /// <summary>
+        /// Receives a finished session envelope
+        /// from the server. 
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns>An finished session envelope or a failed session envelope.</returns>
+        Task<Session> ReceiveSessionFinishedAsync(CancellationToken cancellationToken); 
     }
 }

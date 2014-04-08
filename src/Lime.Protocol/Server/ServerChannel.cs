@@ -37,11 +37,11 @@ namespace Lime.Protocol.Server
         /// <exception cref="System.InvalidOperationException">
         /// Cannot await for a session response since there's already a listener.
         /// </exception>
-        public Task<Session> ReceiveNewSession(CancellationToken cancellationToken)
+        public Task<Session> ReceiveNewSessionAsync(CancellationToken cancellationToken)
         {
             if (base.State != SessionState.New)
             {
-                throw new InvalidOperationException(string.Format("Cannot receive a session in the '{0}' state", base.State));                
+                throw new InvalidOperationException(string.Format("Cannot receive a new session in the '{0}' state", base.State));                
             }
 
             if (base._sessionAsyncBuffer.HasPromises)
@@ -180,7 +180,20 @@ namespace Lime.Protocol.Server
             return base.SendSessionAsync(session);
         }
 
-
+        /// <summary>
+        /// Changes the session state and 
+        /// sends an authenticat envelope
+        /// to the node with the available options 
+        /// and awaits for the client authentication.
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <param name="schemeOptions"></param>
+        /// <returns>
+        /// A autheticating session envelope with the authentication information.
+        /// </returns>
+        /// <exception cref="System.ArgumentNullException">authentication</exception>
+        /// <exception cref="System.ArgumentException">No available options for authentication</exception>
+        /// <exception cref="System.InvalidOperationException">Cannot await for a session response since there's already a listener.</exception>
         public async Task<Session> AuthenticateSessionAsync(CancellationToken cancellationToken, AuthenticationScheme[] schemeOptions)
         {
             if (schemeOptions == null)
@@ -286,6 +299,30 @@ namespace Lime.Protocol.Server
         }
 
         /// <summary>
+        /// Receives a finishing session envelope
+        /// from the client node.
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        /// <exception cref="System.InvalidOperationException">
+        /// Cannot await for a session response since there's already a listener.
+        /// </exception>
+        public Task<Session> ReceiveFinishingSessionAsync(CancellationToken cancellationToken)
+        {
+            if (base.State != SessionState.Established)
+            {
+                throw new InvalidOperationException(string.Format("Cannot receive a new session in the '{0}' state", base.State));
+            }
+
+            if (base._sessionAsyncBuffer.HasPromises)
+            {
+                throw new InvalidOperationException("Cannot await for a session response since there's already a listener.");
+            }
+
+            return base.ReceiveSessionAsync(cancellationToken);
+        }
+
+        /// <summary>
         /// Changes the session state and 
         /// sends a finished session envelope
         /// to the node to comunicate the
@@ -348,18 +385,6 @@ namespace Lime.Protocol.Server
             await base.Transport.CloseAsync(CancellationToken.None).ConfigureAwait(false);
         }
 
-        /// <summary>
-        /// Occours when a new session 
-        /// request is received by the server
-        /// </summary>
-        public event EventHandler<EnvelopeEventArgs<Session>> NewSessionReceived;
-
-        /// <summary>
-        /// Occours when a finish session request
-        /// is received by the server
-        /// </summary>
-        public event EventHandler<EnvelopeEventArgs<Session>> FinishingSessionReceived;
-
         #endregion
 
         #region Event Handlers
@@ -372,16 +397,6 @@ namespace Lime.Protocol.Server
         protected async override Task OnSessionReceivedAsync(Session session)
         {
             await base.OnSessionReceivedAsync(session).ConfigureAwait(false);
-
-            switch (session.State)
-            {
-                case SessionState.New:
-                    this.NewSessionReceived.RaiseEvent(this, new EnvelopeEventArgs<Session>(session));
-                    break;
-                case SessionState.Finishing:
-                    this.FinishingSessionReceived.RaiseEvent(this, new EnvelopeEventArgs<Session>(session));
-                    break;
-            }
         }
 
         /// <summary>

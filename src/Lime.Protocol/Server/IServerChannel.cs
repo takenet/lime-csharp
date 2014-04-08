@@ -21,7 +21,7 @@ namespace Lime.Protocol.Server
         /// </summary>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        Task<Session> ReceiveNewSession(CancellationToken cancellationToken);
+        Task<Session> ReceiveNewSessionAsync(CancellationToken cancellationToken);
 
         /// <summary>
         /// Changes the session state and 
@@ -37,7 +37,6 @@ namespace Lime.Protocol.Server
         /// <summary>
         /// Send a negotiate session envelope
         /// to confirm the session negotiation options.
-        /// parameters.
         /// </summary>
         /// <param name="sessionCompression">The session compression option</param>
         /// <param name="sessionEncryption">The session encryption option</param>
@@ -72,6 +71,14 @@ namespace Lime.Protocol.Server
         Task SendEstablishedSessionAsync(Node node, SessionMode mode);
 
         /// <summary>
+        /// Receives a finishing session envelope
+        /// from the client node.
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        Task<Session> ReceiveFinishingSessionAsync(CancellationToken cancellationToken);
+                
+        /// <summary>
         /// Changes the session state and 
         /// sends a finished session envelope
         /// to the node to comunicate the
@@ -89,12 +96,5 @@ namespace Lime.Protocol.Server
         /// </summary>
         Task SendFailedSessionAsync(Reason reason);
        
-
-
-        /// <summary>
-        /// Occours when a finish session request
-        /// is received by the server
-        /// </summary>
-        event EventHandler<EnvelopeEventArgs<Session>> FinishingSessionReceived;
     }
 }

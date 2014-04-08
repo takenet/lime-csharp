@@ -174,44 +174,6 @@ namespace Lime.Protocol.Client
         }
 
         /// <summary>
-        /// Sends a finish session envelope
-        /// to the server to finish the session
-        /// and awaits for the response.
-        /// </summary>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        /// <exception cref="System.InvalidOperationException">
-        /// Cannot await for a session response since there's already a listener.
-        /// </exception>
-        public async Task<Session> FinishSessionAsync(CancellationToken cancellationToken)
-        {
-            if (base.State != SessionState.Established)
-            {
-                throw new InvalidOperationException(string.Format("Cannot finish a session in the '{0}' state", base.State));
-            }
-
-            if (base._sessionAsyncBuffer.HasPromises)
-            {
-                throw new InvalidOperationException("Cannot await for a session response since there's already a listener.");
-            }
-
-            var session = new Session()
-            {
-                Id = base.SessionId,
-                State = SessionState.Finishing
-            };
-
-            await base.SendSessionAsync(session).ConfigureAwait(false);
-            return await base.ReceiveSessionAsync(cancellationToken).ConfigureAwait(false);
-        }
-
-        /// <summary>
-        /// Occurs when the session fails
-        /// with the server
-        /// </summary>
-        public event EventHandler<EnvelopeEventArgs<Session>> SessionFailed;
-
-        /// <summary>
         /// Notify to the server that
         /// the specified message was received
         /// by the peer
@@ -236,6 +198,54 @@ namespace Lime.Protocol.Client
 
             return base.SendNotificationAsync(notification);
         }
+
+        /// <summary>
+        /// Sends a finishing session 
+        /// envelope to the server.
+        /// </summary>
+        /// <returns></returns>
+        /// <exception cref="System.InvalidOperationException"></exception>
+        public Task SendFinishingSessionAsync()
+        {
+            if (base.State != SessionState.Established)
+            {
+                throw new InvalidOperationException(string.Format("Cannot finish a session in the '{0}' state", base.State));
+            }
+
+            var session = new Session()
+            {
+                Id = base.SessionId,
+                State = SessionState.Finishing
+            };
+
+            return base.SendSessionAsync(session);
+        }
+
+        /// <summary>
+        /// Receives a finished session envelope
+        /// from the server.
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        /// <exception cref="System.InvalidOperationException">
+        /// Cannot await for a session response since there's already a listener.
+        /// </exception>
+        public Task<Session> ReceiveSessionFinishedAsync(CancellationToken cancellationToken)
+        {
+            if (base.State != SessionState.Established)
+            {
+                throw new InvalidOperationException(string.Format("Cannot receive a finished session in the '{0}' state", base.State));
+            }
+
+            if (base._sessionAsyncBuffer.HasPromises)
+            {
+                throw new InvalidOperationException("Cannot await for a session response since there's already a listener.");
+            }
+
+            return base.ReceiveSessionAsync(cancellationToken);
+        }
+
+
 
         #endregion
 
@@ -304,13 +314,6 @@ namespace Lime.Protocol.Client
             }
 
             await base.OnSessionReceivedAsync(session).ConfigureAwait(false);
-
-            switch (session.State)
-            {
-                case SessionState.Failed:
-                    this.SessionFailed.RaiseEvent(this, new EnvelopeEventArgs<Session>(session));
-                    break;
-            }
         }
 
         #endregion

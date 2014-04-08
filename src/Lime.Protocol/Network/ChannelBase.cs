@@ -12,7 +12,7 @@ namespace Lime.Protocol.Network
     /// Base class for the protocol
     /// communication channels
     /// </summary>
-    public abstract class ChannelBase : IChannel, IDisposable
+    public abstract class ChannelBase : IChannel, ISessionChannel, IDisposable
     {
         #region Fields
         
@@ -91,7 +91,6 @@ namespace Lime.Protocol.Network
         /// Current session mode
         /// </summary>
         public SessionMode Mode { get; protected set; }
-
 
         #endregion
 
@@ -259,13 +258,26 @@ namespace Lime.Protocol.Network
         #region ISessionChannel Members
 
         /// <summary>
+        /// Wraps the ISessionChannel.SendSessionAsync 
+        /// method for the derivated classes.
+        /// </summary>
+        /// <param name="session"></param>
+        /// <returns></returns>
+        protected Task SendSessionAsync(Session session)
+        {
+            return ((ISessionChannel)this).SendSessionAsync(session);
+        }
+
+        /// <summary>
         /// Sends a session change message to 
-        /// the remote node
+        /// the remote node. 
+        /// Avoid to use this method directly. Instead,
+        /// use the Server or Client channel methods.
         /// </summary>
         /// <param name="session"></param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">session</exception>
-        public Task SendSessionAsync(Session session)
+        Task ISessionChannel.SendSessionAsync(Session session)
         {
             if (session == null)
             {
@@ -276,13 +288,26 @@ namespace Lime.Protocol.Network
         }
 
         /// <summary>
+        /// Wraps the ISessionChannel.ReceiveSessionAsync 
+        /// method for the derivated classes.
+        /// </summary>
+        /// <param name="session"></param>
+        /// <returns></returns>
+        protected Task<Session> ReceiveSessionAsync(CancellationToken cancellationToken)
+        {
+            return ((ISessionChannel)this).ReceiveSessionAsync(cancellationToken);
+        }
+
+        /// <summary>
         /// Receives a session
         /// from the remote node.
+        /// Avoid to use this method directly. Instead,
+        /// use the Server or Client channel methods.
         /// </summary>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns></returns>
         /// <exception cref="System.NotImplementedException"></exception>
-        public Task<Session> ReceiveSessionAsync(CancellationToken cancellationToken)
+        Task<Session> ISessionChannel.ReceiveSessionAsync(CancellationToken cancellationToken)
         {
             if (this.State == SessionState.Finished)
             {
@@ -295,12 +320,6 @@ namespace Lime.Protocol.Network
 
             return _sessionAsyncBuffer.DequeueAsync(combinedCancellationTokenSource.Token);     
         }
-
-        /// <summary>
-        /// Occurs when the session state
-        /// is changed in the remote node
-        /// </summary>
-        public event EventHandler<EnvelopeEventArgs<Session>> SessionReceived;
 
         #endregion
 
