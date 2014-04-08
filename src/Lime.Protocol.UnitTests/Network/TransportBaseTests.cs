@@ -248,26 +248,6 @@ namespace Lime.Protocol.UnitTests.Network
 
         #endregion
 
-        #region OnEnvelopeReceived
-
-        //[TestMethod]
-        //[TestCategory("OnEnvelopeReceived")]
-        //public void OnEnvelopeReceived_AnyEnvelope_RaisesEnvelopeReceived()
-        //{
-        //    var target = GetTarget();
-        //    bool envelopeReceivedRaised = false;
-
-        //    var text = DataUtil.CreateTextContent();
-        //    var envelope = DataUtil.CreateMessage(text);
-
-        //    target.EnvelopeReceived += (sender, e) => envelopeReceivedRaised = true;
-        //    target.CallsOnEnvelopeReceived(envelope);
-
-        //    Assert.IsTrue(envelopeReceivedRaised);
-        //}
-
-        #endregion
-
         #region Private classes
 
         private class TestTransportBase : TransportBase

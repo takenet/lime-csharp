@@ -457,12 +457,8 @@ namespace Lime.Protocol.Network
         /// <param name="session"></param>
         /// <returns></returns>
         protected virtual Task OnSessionReceivedAsync(Session session)
-        {
-            if (this.State != SessionState.Finished)
-            {
-                _sessionAsyncBuffer.Enqueue(session);
-            }
-
+        {            
+            _sessionAsyncBuffer.Enqueue(session);
             return Task.FromResult<object>(null);
         }
 

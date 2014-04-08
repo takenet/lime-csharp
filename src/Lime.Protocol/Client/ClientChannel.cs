@@ -80,7 +80,7 @@ namespace Lime.Protocol.Client
         /// <summary>
         /// Sends a negotiate session envelope
         /// to accepts the session negotiation options
-        /// and awaits for the server confirmation
+        /// and awaits for the server confirmation.
         /// </summary>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <param name="sessionCompression">The session compression option</param>
@@ -244,8 +244,6 @@ namespace Lime.Protocol.Client
 
             return base.ReceiveSessionAsync(cancellationToken);
         }
-
-
 
         #endregion
 

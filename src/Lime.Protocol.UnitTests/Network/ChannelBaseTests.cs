@@ -590,23 +590,6 @@ namespace Lime.Protocol.UnitTests.Network
 
         #endregion
 
-        #region OnSessionReceivedAsync
-
-        [TestMethod]
-        [TestCategory("OnSessionReceivedAsync")]
-        public void OnSessionReceivedAsync_FinishedState_DoesNothing()
-        {
-            var target = (TestChannel)GetTarget(SessionState.Authenticating);
-
-            var session = DataUtil.CreateSession();
-
-            var receiveSessionTask = target.CallsOnSessionReceivedAsync(session);
-
-            Assert.IsTrue(receiveSessionTask.IsCompleted);
-        }
-
-        #endregion
-
         #region Dispose
 
         [TestMethod]

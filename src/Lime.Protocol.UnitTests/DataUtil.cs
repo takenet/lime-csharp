@@ -63,13 +63,14 @@ namespace Lime.Protocol.UnitTests
             };
         }
 
-        public static Session CreateSession()
+        public static Session CreateSession(SessionState state = SessionState.New)
         {
             return new Session()
             {
                 Id = Guid.NewGuid(),
                 From = CreateNode(),
-                To = CreateNode()
+                To = CreateNode(),
+                State = state
             };
         }
 
