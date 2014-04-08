@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Lime.Protocol.Util;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -36,6 +37,7 @@ namespace Lime.Protocol.Network
             }
 
             this.Transport = transport;
+            this.Transport.Closing += Transport_Closing;
 
             _sendTimeout = sendTimeout;
 
@@ -258,17 +260,6 @@ namespace Lime.Protocol.Network
         #region ISessionChannel Members
 
         /// <summary>
-        /// Wraps the ISessionChannel.SendSessionAsync 
-        /// method for the derivated classes.
-        /// </summary>
-        /// <param name="session"></param>
-        /// <returns></returns>
-        protected Task SendSessionAsync(Session session)
-        {
-            return ((ISessionChannel)this).SendSessionAsync(session);
-        }
-
-        /// <summary>
         /// Sends a session change message to 
         /// the remote node. 
         /// Avoid to use this method directly. Instead,
@@ -285,17 +276,6 @@ namespace Lime.Protocol.Network
             }
 
             return this.SendAsync(session);
-        }
-
-        /// <summary>
-        /// Wraps the ISessionChannel.ReceiveSessionAsync 
-        /// method for the derivated classes.
-        /// </summary>
-        /// <param name="session"></param>
-        /// <returns></returns>
-        protected Task<Session> ReceiveSessionAsync(CancellationToken cancellationToken)
-        {
-            return ((ISessionChannel)this).ReceiveSessionAsync(cancellationToken);
         }
 
         /// <summary>
@@ -323,6 +303,8 @@ namespace Lime.Protocol.Network
 
         #endregion
 
+        #region Private Methods
+
         /// <summary>
         /// Sends the envelope to the transport
         /// </summary>
@@ -332,9 +314,9 @@ namespace Lime.Protocol.Network
         {
             var timeoutCancellationTokenSource = new CancellationTokenSource(_sendTimeout);
             return this.Transport.SendAsync(
-                envelope, 
+                envelope,
                 CancellationTokenSource.CreateLinkedTokenSource(
-                    _channelCancellationTokenSource.Token, 
+                    _channelCancellationTokenSource.Token,
                     timeoutCancellationTokenSource.Token).Token);
         }
 
@@ -368,18 +350,21 @@ namespace Lime.Protocol.Network
                     }
                     else if (envelope is Command)
                     {
-                        await this.OnCommandReceivedAsync((Command)envelope).ConfigureAwait(false);                        
+                        await this.OnCommandReceivedAsync((Command)envelope).ConfigureAwait(false);
                     }
                     else if (envelope is Session)
                     {
                         await this.OnSessionReceivedAsync((Session)envelope).ConfigureAwait(false);
+                    }
+                    else
+                    {
+                        throw new InvalidProgramException("Invalid or unknown envelope received by the transport.");
                     }
                 }
             }
             catch
             {
                 this.Transport.CloseAsync(_channelCancellationTokenSource.Token).Wait();
-                _channelCancellationTokenSource.Cancel();
                 throw;
             }
             finally
@@ -388,7 +373,42 @@ namespace Lime.Protocol.Network
             }
         }
 
-        #region Protected Members
+        /// <summary>
+        /// Cancels the token that is associated to 
+        /// the channel send and receive tasks.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void Transport_Closing(object sender, DeferralEventArgs e)
+        {
+            _channelCancellationTokenSource.Cancel();
+        }
+
+        #endregion
+
+        #region Protected Methods
+
+        /// <summary>
+        /// Wraps the ISessionChannel.SendSessionAsync 
+        /// method for the derivated classes.
+        /// </summary>
+        /// <param name="session"></param>
+        /// <returns></returns>
+        protected Task SendSessionAsync(Session session)
+        {
+            return ((ISessionChannel)this).SendSessionAsync(session);
+        }
+
+        /// <summary>
+        /// Wraps the ISessionChannel.ReceiveSessionAsync 
+        /// method for the derivated classes.
+        /// </summary>
+        /// <param name="session"></param>
+        /// <returns></returns>
+        protected Task<Session> ReceiveSessionAsync(CancellationToken cancellationToken)
+        {
+            return ((ISessionChannel)this).ReceiveSessionAsync(cancellationToken);
+        }
 
         /// <summary>
         /// Raises the MessageReceived event
@@ -404,7 +424,6 @@ namespace Lime.Protocol.Network
             else
             {
                 await this.Transport.CloseAsync(_channelCancellationTokenSource.Token).ConfigureAwait(false);
-                _channelCancellationTokenSource.Cancel();
             }
         }
 
@@ -422,7 +441,6 @@ namespace Lime.Protocol.Network
             else
             {
                 await this.Transport.CloseAsync(_channelCancellationTokenSource.Token).ConfigureAwait(false);
-                _channelCancellationTokenSource.Cancel();
             }
         }
 
@@ -440,7 +458,6 @@ namespace Lime.Protocol.Network
             else
             {
                 await this.Transport.CloseAsync(_channelCancellationTokenSource.Token).ConfigureAwait(false);
-                _channelCancellationTokenSource.Cancel();
             }
         }
 
@@ -480,11 +497,7 @@ namespace Lime.Protocol.Network
         {
             if (disposing)
             {
-                if (!_channelCancellationTokenSource.IsCancellationRequested)
-                {
-                    _channelCancellationTokenSource.Cancel();
-                }
-
+                _channelCancellationTokenSource.Dispose();
                 this.Transport.DisposeIfDisposable();
             }
         }

@@ -63,14 +63,8 @@
     <Compile Include="..\Lime.Protocol\Message.cs">
       <Link>Message.cs</Link>
     </Compile>
-    <Compile Include="..\Lime.Protocol\Network\AsyncCountdownEvent.cs">
-      <Link>Network\AsyncCountdownEvent.cs</Link>
-    </Compile>
     <Compile Include="..\Lime.Protocol\Network\DeferralEventArgs.cs">
       <Link>Network\DeferralEventArgs.cs</Link>
-    </Compile>
-    <Compile Include="..\Lime.Protocol\Network\DeferralManager.cs">
-      <Link>Network\DeferralManager.cs</Link>
     </Compile>
     <Compile Include="..\Lime.Protocol\Network\EnvelopeEventArgs.cs">
       <Link>Network\EnvelopeEventArgs.cs</Link>
@@ -155,6 +149,12 @@
     </Compile>
     <Compile Include="..\Lime.Protocol\Session.cs">
       <Link>Session.cs</Link>
+    </Compile>
+    <Compile Include="..\Lime.Protocol\Util\AsyncCountdownEvent.cs">
+      <Link>Util\AsyncCountdownEvent.cs</Link>
+    </Compile>
+    <Compile Include="..\Lime.Protocol\Util\DeferralManager.cs">
+      <Link>Util\DeferralManager.cs</Link>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

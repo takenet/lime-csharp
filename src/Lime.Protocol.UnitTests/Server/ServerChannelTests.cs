@@ -43,87 +43,87 @@ namespace Lime.Protocol.UnitTests.Server
         #endregion
 
         #region SendNegotiatingSessionAsync
-        [TestMethod]
-        [TestCategory("SendNegotiatingSessionAsync")]
-        public async Task SendNegotiatingSessionAsync_ValidOptions_CallsTransport()
-        {
-            var target = GetTarget();
+        //[TestMethod]
+        //[TestCategory("SendNegotiatingSessionAsync")]
+        //public async Task SendNegotiatingSessionAsync_ValidOptions_CallsTransport()
+        //{
+        //    var target = GetTarget();
 
-            var compressionOptions = new SessionCompression[] { SessionCompression.None };
-            var encryptionOptions = new SessionEncryption[] { SessionEncryption.None, SessionEncryption.TLS };
+        //    var compressionOptions = new SessionCompression[] { SessionCompression.None };
+        //    var encryptionOptions = new SessionEncryption[] { SessionEncryption.None, SessionEncryption.TLS };
 
-            await target.SendNegotiatingSessionAsync(compressionOptions, encryptionOptions);
+        //    await target.SendNegotiatingSessionAsync(compressionOptions, encryptionOptions);
 
-            _transport.Verify(
-                t => t.SendAsync(
-                    It.Is<Session>(e => e.State == SessionState.Negotiating &&
-                                        e.CompressionOptions == compressionOptions &&
-                                        e.EncryptionOptions == encryptionOptions &&
-                                        e.From.Equals(target.LocalNode) &&
-                                        e.To == null &&
-                                        e.SchemeOptions == null &&
-                                        e.Compression == null &&
-                                        e.Encryption == null &&
-                                        e.Authentication == null &&
-                                        e.Mode == SessionMode.Node &&
-                                        e.Id == target.SessionId),
-                    It.IsAny<CancellationToken>()),
-                    Times.Once());
+        //    _transport.Verify(
+        //        t => t.SendAsync(
+        //            It.Is<Session>(e => e.State == SessionState.Negotiating &&
+        //                                e.CompressionOptions == compressionOptions &&
+        //                                e.EncryptionOptions == encryptionOptions &&
+        //                                e.From.Equals(target.LocalNode) &&
+        //                                e.To == null &&
+        //                                e.SchemeOptions == null &&
+        //                                e.Compression == null &&
+        //                                e.Encryption == null &&
+        //                                e.Authentication == null &&
+        //                                e.Mode == SessionMode.Node &&
+        //                                e.Id == target.SessionId),
+        //            It.IsAny<CancellationToken>()),
+        //            Times.Once());
 
-            Assert.AreEqual(target.State, SessionState.Negotiating);
-        }
+        //    Assert.AreEqual(target.State, SessionState.Negotiating);
+        //}
 
-        [TestMethod]
-        [ExpectedException(typeof(ArgumentNullException))]
-        [TestCategory("SendNegotiatingSessionAsync")]
-        public async Task SendNegotiatingSessionAsync_NullCompressionOptions_ThrowsArgumentNullException()
-        {
-            var target = GetTarget();
+        //[TestMethod]
+        //[ExpectedException(typeof(ArgumentNullException))]
+        //[TestCategory("SendNegotiatingSessionAsync")]
+        //public async Task SendNegotiatingSessionAsync_NullCompressionOptions_ThrowsArgumentNullException()
+        //{
+        //    var target = GetTarget();
 
-            SessionCompression[] compressionOptions = null;
-            var encryptionOptions = new SessionEncryption[] { SessionEncryption.None, SessionEncryption.TLS };
+        //    SessionCompression[] compressionOptions = null;
+        //    var encryptionOptions = new SessionEncryption[] { SessionEncryption.None, SessionEncryption.TLS };
 
-            await target.SendNegotiatingSessionAsync(compressionOptions, encryptionOptions);
-        }
+        //    await target.SendNegotiatingSessionAsync(compressionOptions, encryptionOptions);
+        //}
 
-        [TestMethod]
-        [ExpectedException(typeof(ArgumentException))]
-        [TestCategory("SendNegotiatingSessionAsync")]
-        public async Task SendNegotiatingSessionAsync_EmptyCompressionOptions_ThrowsArgumentException()
-        {
-            var target = GetTarget();
+        //[TestMethod]
+        //[ExpectedException(typeof(ArgumentException))]
+        //[TestCategory("SendNegotiatingSessionAsync")]
+        //public async Task SendNegotiatingSessionAsync_EmptyCompressionOptions_ThrowsArgumentException()
+        //{
+        //    var target = GetTarget();
 
-            var compressionOptions = new SessionCompression[0];
-            var encryptionOptions = new SessionEncryption[] { SessionEncryption.None, SessionEncryption.TLS };
+        //    var compressionOptions = new SessionCompression[0];
+        //    var encryptionOptions = new SessionEncryption[] { SessionEncryption.None, SessionEncryption.TLS };
 
-            await target.SendNegotiatingSessionAsync(compressionOptions, encryptionOptions);
-        }
+        //    await target.SendNegotiatingSessionAsync(compressionOptions, encryptionOptions);
+        //}
 
-        [TestMethod]
-        [ExpectedException(typeof(ArgumentNullException))]
-        [TestCategory("SendNegotiatingSessionAsync")]
-        public async Task SendNegotiatingSessionAsync_NullEncryptionOptions_ThrowsArgumentNullException()
-        {
-            var target = GetTarget();
+        //[TestMethod]
+        //[ExpectedException(typeof(ArgumentNullException))]
+        //[TestCategory("SendNegotiatingSessionAsync")]
+        //public async Task SendNegotiatingSessionAsync_NullEncryptionOptions_ThrowsArgumentNullException()
+        //{
+        //    var target = GetTarget();
 
-            var compressionOptions = new SessionCompression[] { SessionCompression.None };
-            SessionEncryption[] encryptionOptions = null;
+        //    var compressionOptions = new SessionCompression[] { SessionCompression.None };
+        //    SessionEncryption[] encryptionOptions = null;
 
-            await target.SendNegotiatingSessionAsync(compressionOptions, encryptionOptions);
-        }
+        //    await target.SendNegotiatingSessionAsync(compressionOptions, encryptionOptions);
+        //}
 
-        [TestMethod]
-        [ExpectedException(typeof(ArgumentException))]
-        [TestCategory("SendNegotiatingSessionAsync")]
-        public async Task SendNegotiatingSessionAsync_EmptyEncryptionOptions_ThrowsArgumentException()
-        {
-            var target = GetTarget();
+        //[TestMethod]
+        //[ExpectedException(typeof(ArgumentException))]
+        //[TestCategory("SendNegotiatingSessionAsync")]
+        //public async Task SendNegotiatingSessionAsync_EmptyEncryptionOptions_ThrowsArgumentException()
+        //{
+        //    var target = GetTarget();
 
-            var compressionOptions = new SessionCompression[] { SessionCompression.None };
-            var encryptionOptions = new SessionEncryption[0];
+        //    var compressionOptions = new SessionCompression[] { SessionCompression.None };
+        //    var encryptionOptions = new SessionEncryption[0];
 
-            await target.SendNegotiatingSessionAsync(compressionOptions, encryptionOptions);
-        } 
+        //    await target.SendNegotiatingSessionAsync(compressionOptions, encryptionOptions);
+        //} 
         #endregion
 
         #region SendAuthenticatingSessionAsync
@@ -181,65 +181,65 @@ namespace Lime.Protocol.UnitTests.Server
             await target.SendAuthenticatingSessionAsync(schemeOptions);
         }
 
-        [TestMethod]
-        [TestCategory("SendAuthenticatingSessionAsync")]
-        public async Task SendAuthenticatingSessionAsync_ValidRoundtrip_CallsTransport()
-        {
-            var target = GetTarget();
+        //[TestMethod]
+        //[TestCategory("SendAuthenticatingSessionAsync")]
+        //public async Task SendAuthenticatingSessionAsync_ValidRoundtrip_CallsTransport()
+        //{
+        //    var target = GetTarget();
 
-            // Sets the state to Authenticating
-            var schemeOptions = DataUtil.CreateSchemeOptions();
-            await target.SendAuthenticatingSessionAsync(schemeOptions);            
+        //    // Sets the state to Authenticating
+        //    var schemeOptions = DataUtil.CreateSchemeOptions();
+        //    await target.SendAuthenticatingSessionAsync(schemeOptions);            
 
-            var authenticationRoundtrip = DataUtil.CreatePlainAuthentication();
+        //    var authenticationRoundtrip = DataUtil.CreatePlainAuthentication();
 
-            await target.SendAuthenticatingSessionAsync(authenticationRoundtrip);
+        //    await target.SendAuthenticatingSessionAsync(authenticationRoundtrip);
 
-            _transport.Verify(
-                t => t.SendAsync(
-                    It.Is<Session>(e => e.State == SessionState.Authenticating &&
-                                        e.Authentication == authenticationRoundtrip &&
-                                        e.SchemeOptions == null &&
-                                        e.From.Equals(target.LocalNode) &&
-                                        e.To == null &&
-                                        e.CompressionOptions == null &&
-                                        e.Compression == null &&
-                                        e.EncryptionOptions == null &&
-                                        e.Encryption == null &&
-                                        e.Mode == SessionMode.Node &&
-                                        e.Id == target.SessionId),
-                    It.IsAny<CancellationToken>()),
-                    Times.Once());
-        }
+        //    _transport.Verify(
+        //        t => t.SendAsync(
+        //            It.Is<Session>(e => e.State == SessionState.Authenticating &&
+        //                                e.Authentication == authenticationRoundtrip &&
+        //                                e.SchemeOptions == null &&
+        //                                e.From.Equals(target.LocalNode) &&
+        //                                e.To == null &&
+        //                                e.CompressionOptions == null &&
+        //                                e.Compression == null &&
+        //                                e.EncryptionOptions == null &&
+        //                                e.Encryption == null &&
+        //                                e.Mode == SessionMode.Node &&
+        //                                e.Id == target.SessionId),
+        //            It.IsAny<CancellationToken>()),
+        //            Times.Once());
+        //}
 
-        [TestMethod]
-        [TestCategory("SendAuthenticatingSessionAsync")]
-        [ExpectedException(typeof(ArgumentNullException))]
-        public async Task SendAuthenticatingSessionAsync_NullRoundtrip_ThrowsArgumentNullException()
-        {
-            var target = GetTarget();
+        //[TestMethod]
+        //[TestCategory("SendAuthenticatingSessionAsync")]
+        //[ExpectedException(typeof(ArgumentNullException))]
+        //public async Task SendAuthenticatingSessionAsync_NullRoundtrip_ThrowsArgumentNullException()
+        //{
+        //    var target = GetTarget();
 
-            // Sets the state to Authenticating
-            var schemeOptions = DataUtil.CreateSchemeOptions();
-            await target.SendAuthenticatingSessionAsync(schemeOptions);
+        //    // Sets the state to Authenticating
+        //    var schemeOptions = DataUtil.CreateSchemeOptions();
+        //    await target.SendAuthenticatingSessionAsync(schemeOptions);
 
-            Authentication authenticationRoundtrip = null;
+        //    Authentication authenticationRoundtrip = null;
 
-            await target.SendAuthenticatingSessionAsync(authenticationRoundtrip);
-        }
+        //    await target.SendAuthenticatingSessionAsync(authenticationRoundtrip);
+        //}
 
-        [TestMethod]
-        [TestCategory("SendAuthenticatingSessionAsync")]
-        [ExpectedException(typeof(InvalidOperationException))]
-        public async Task SendAuthenticatingSessionAsync_ValidRoundtripNewState_ThrowsInvalidOperationException()
-        {
-            var target = GetTarget();
+        //[TestMethod]
+        //[TestCategory("SendAuthenticatingSessionAsync")]
+        //[ExpectedException(typeof(InvalidOperationException))]
+        //public async Task SendAuthenticatingSessionAsync_ValidRoundtripNewState_ThrowsInvalidOperationException()
+        //{
+        //    var target = GetTarget();
 
-            // Sets the state to Authenticating            
-            var authenticationRoundtrip = DataUtil.CreatePlainAuthentication();
+        //    // Sets the state to Authenticating            
+        //    var authenticationRoundtrip = DataUtil.CreatePlainAuthentication();
 
-            await target.SendAuthenticatingSessionAsync(authenticationRoundtrip);
-        }
+        //    await target.SendAuthenticatingSessionAsync(authenticationRoundtrip);
+        //}
 
         #endregion
 
@@ -357,39 +357,39 @@ namespace Lime.Protocol.UnitTests.Server
 
         #region OnSessionReceivedAsync
 
-        [TestMethod]
-        [TestCategory("OnSessionReceivedAsync")]
-        public void OnSessionReceivedAsync_NewSession_RaisesNewSessionReceived()
-        {
-            var target = GetTarget();
-            bool newSessionReceivedRaised = false;
+        //[TestMethod]
+        //[TestCategory("OnSessionReceivedAsync")]
+        //public void OnSessionReceivedAsync_NewSession_RaisesNewSessionReceived()
+        //{
+        //    var target = GetTarget();
+        //    bool newSessionReceivedRaised = false;
 
-            var session = DataUtil.CreateSession();
-            session.State = SessionState.New;
+        //    var session = DataUtil.CreateSession();
+        //    session.State = SessionState.New;
 
-            target.NewSessionReceived += (sender, e) => newSessionReceivedRaised = !newSessionReceivedRaised && e.Envelope == session;
+        //    target.NewSessionReceived += (sender, e) => newSessionReceivedRaised = !newSessionReceivedRaised && e.Envelope == session;
 
-            _transport.ReceiveEnvelope(session);
+        //    _transport.ReceiveEnvelope(session);
 
-            Assert.IsTrue(newSessionReceivedRaised);
-        }
+        //    Assert.IsTrue(newSessionReceivedRaised);
+        //}
 
-        [TestMethod]
-        [TestCategory("OnSessionReceivedAsync")]
-        public void OnSessionReceivedAsync_FinishingSession_RaisesFinishingSessionReceived()
-        {
-            var target = GetTarget();
-            bool finishingSessionReceivedRaised = false;
+        //[TestMethod]
+        //[TestCategory("OnSessionReceivedAsync")]
+        //public void OnSessionReceivedAsync_FinishingSession_RaisesFinishingSessionReceived()
+        //{
+        //    var target = GetTarget();
+        //    bool finishingSessionReceivedRaised = false;
 
-            var session = DataUtil.CreateSession();
-            session.State = SessionState.Finishing;
+        //    var session = DataUtil.CreateSession();
+        //    session.State = SessionState.Finishing;
 
-            target.FinishingSessionReceived += (sender, e) => finishingSessionReceivedRaised = !finishingSessionReceivedRaised && e.Envelope == session;
+        //    target.FinishingSessionReceived += (sender, e) => finishingSessionReceivedRaised = !finishingSessionReceivedRaised && e.Envelope == session;
 
-            _transport.ReceiveEnvelope(session);
+        //    _transport.ReceiveEnvelope(session);
 
-            Assert.IsTrue(finishingSessionReceivedRaised);
-        } 
+        //    Assert.IsTrue(finishingSessionReceivedRaised);
+        //} 
 
         #endregion
 

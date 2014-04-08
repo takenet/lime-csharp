@@ -204,18 +204,18 @@ namespace Lime.Console
                 );
 
             var clientChannel = new ClientChannel(transport, TimeSpan.FromSeconds(60));
-            clientChannel.NegotiateSessionReceived += ClientChannel_NegotiateSessionReceived;
-            clientChannel.AuthenticateSessionReceived += ClientChannel_AuthenticateSessionReceived;
-            clientChannel.SessionEstablished += ClientChannel_SessionEstablished;
-            clientChannel.SessionFinished += ClientChannel_SessionFinished;
-            clientChannel.SessionFailed += ClientChannel_SessionFailed;
-            clientChannel.MessageReceived += ClientChannel_MessageReceived;
-            clientChannel.CommandReceived += ClientChannel_CommandReceived;
-            clientChannel.NotificationReceived += ClientChannel_NotificationReceived;
+            //clientChannel.NegotiateSessionReceived += ClientChannel_NegotiateSessionReceived;
+            //clientChannel.AuthenticateSessionReceived += ClientChannel_AuthenticateSessionReceived;
+            //clientChannel.SessionEstablished += ClientChannel_SessionEstablished;
+            //clientChannel.SessionFinished += ClientChannel_SessionFinished;
+            //clientChannel.SessionFailed += ClientChannel_SessionFailed;
+            //clientChannel.MessageReceived += ClientChannel_MessageReceived;
+            //clientChannel.CommandReceived += ClientChannel_CommandReceived;
+            //clientChannel.NotificationReceived += ClientChannel_NotificationReceived;
 
             await clientChannel.Transport.OpenAsync(_listenerUri, CancellationToken.None);
 
-            await clientChannel.SendNewSessionAsync();
+            //await clientChannel.SendNewSessionAsync();
 
             return clientChannel;
         }
@@ -232,7 +232,7 @@ namespace Lime.Console
             if (e.Envelope.CompressionOptions != null ||
                 e.Envelope.EncryptionOptions != null)
             {
-                await channel.SendNegotiatingSessionAsync(e.Envelope.CompressionOptions.First(), e.Envelope.EncryptionOptions.Last());
+                //await channel.SendNegotiatingSessionAsync(e.Envelope.CompressionOptions.First(), e.Envelope.EncryptionOptions.Last());
             }
             else if (e.Envelope.Encryption.HasValue && e.Envelope.Compression.HasValue)
             {
@@ -253,11 +253,11 @@ namespace Lime.Console
         {
             IClientChannel channel = (IClientChannel)sender;
 
-            await channel.SendAuthenticatingSessionAsync(
-                new Identity() { Name = Environment.UserName, Domain = IPGlobalProperties.GetIPGlobalProperties().DomainName },
-                new PlainAuthentication() { Password = Convert.ToBase64String(Encoding.UTF8.GetBytes("mypassword")) },
-                instance: Environment.MachineName,
-                sessionMode: SessionMode.Node);
+            //await channel.SendAuthenticatingSessionAsync(
+            //    new Identity() { Name = Environment.UserName, Domain = IPGlobalProperties.GetIPGlobalProperties().DomainName },
+            //    new PlainAuthentication() { Password = Convert.ToBase64String(Encoding.UTF8.GetBytes("mypassword")) },
+            //    instance: Environment.MachineName,
+            //    sessionMode: SessionMode.Node);
         }
 
 
@@ -331,10 +331,10 @@ namespace Lime.Console
         {
             IServerChannel channel = (IServerChannel)sender;
 
-            await channel.SendNegotiatingSessionAsync(                
-                channel.Transport.GetSupportedCompression(),
-                channel.Transport.GetSupportedEncryption()
-                );
+            //await channel.SendNegotiatingSessionAsync(                
+            //    channel.Transport.GetSupportedCompression(),
+            //    channel.Transport.GetSupportedEncryption()
+            //    );
         }
 
         private async static void ServerChannel_NegotiateSessionReceived(object sender, EnvelopeEventArgs<Session> e)
@@ -356,8 +356,8 @@ namespace Lime.Console
                 await channel.Transport.SetEncryptionAsync(e.Envelope.Encryption.Value, CancellationToken.None);
             }
 
-            await channel.SendAuthenticatingSessionAsync(
-                new AuthenticationScheme[] { AuthenticationScheme.Guest, AuthenticationScheme.Plain });
+            //await channel.SendAuthenticatingSessionAsync(
+            //    new AuthenticationScheme[] { AuthenticationScheme.Guest, AuthenticationScheme.Plain });
         }
 
         private static async void ServerChannel_AuthenticateSessionReceived(object sender, EnvelopeEventArgs<Session> e)

@@ -14,9 +14,9 @@ namespace Lime.Protocol.UnitTests
     {
         public static void ReceiveEnvelope(this Mock<ITransport> transport, Envelope envelope)
         {
-            transport.Raise(
-                t => t.EnvelopeReceived += (sender, e) => { },
-                new EnvelopeEventArgs<Envelope>(envelope));
+            //transport.Raise(
+            //    t => t.EnvelopeReceived += (sender, e) => { },
+            //    new EnvelopeEventArgs<Envelope>(envelope));
         }
 
         public static void SetState(this IClientChannel channel, Mock<ITransport> transport, SessionState state)
@@ -28,21 +28,21 @@ namespace Lime.Protocol.UnitTests
 
         public static async Task SetStateAsync(this IServerChannel channel, SessionState state)
         {
-            if (state >= SessionState.Authenticating)
-            {
+            //if (state >= SessionState.Authenticating)
+            //{
 
-                // Sets the state to Authenticating
-                var schemeOptions = DataUtil.CreateSchemeOptions();
-                await channel.SendAuthenticatingSessionAsync(schemeOptions);
-            }
+            //    // Sets the state to Authenticating
+            //    var schemeOptions = DataUtil.CreateSchemeOptions();
+            //    await channel.SendAuthenticatingSessionAsync(schemeOptions);
+            //}
 
-            if (state >= SessionState.Established)
-            {
-                // Sets the state to Established
-                var node = DataUtil.CreateNode();
-                var mode = SessionMode.Server;
-                await channel.SendEstablishedSessionAsync(node, mode);
-            }
+            //if (state >= SessionState.Established)
+            //{
+            //    // Sets the state to Established
+            //    var node = DataUtil.CreateNode();
+            //    var mode = SessionMode.Server;
+            //    await channel.SendEstablishedSessionAsync(node, mode);
+            //}
         }
     }
 }

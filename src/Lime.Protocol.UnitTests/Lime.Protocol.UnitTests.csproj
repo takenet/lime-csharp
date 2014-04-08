@@ -63,6 +63,7 @@
     <Compile Include="Server\ServerChannelTests.cs" />
     <Compile Include="SetupExtensions.cs" />
     <Compile Include="IdentityTests.cs" />
+    <Compile Include="Util\AsyncQueueTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Lime.Protocol\Lime.Protocol.csproj">

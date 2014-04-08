@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Lime.Protocol.Network
+namespace Lime.Protocol.Util
 {
     /// <summary>
     /// <see cref="http://blog.stephencleary.com/2013/02/async-oop-5-events.html"/>

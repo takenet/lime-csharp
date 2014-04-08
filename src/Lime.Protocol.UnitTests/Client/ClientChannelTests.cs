@@ -38,124 +38,124 @@ namespace Lime.Protocol.UnitTests.Client
 
         #region SendNewSessionAsync
 
-        [TestMethod]
-        [TestCategory("SendNewSessionAsync")]
-        public async Task SendNewSessionAsync_NewState_CallsTransport()
-        {
-            var target = GetTarget();
+        //[TestMethod]
+        //[TestCategory("StartNewSessionAsync")]
+        //public async Task SendNewSessionAsync_NewState_CallsTransport()
+        //{
+        //    var target = GetTarget();
 
-            await target.SendNewSessionAsync();
+        //    await target.SendNewSessionAsync();
 
-            _transport.Verify(
-                t => t.SendAsync(It.Is<Session>(e => e.State == SessionState.New),
-                    It.IsAny<CancellationToken>()),
-                    Times.Once());
-        }
+        //    _transport.Verify(
+        //        t => t.SendAsync(It.Is<Session>(e => e.State == SessionState.New),
+        //            It.IsAny<CancellationToken>()),
+        //            Times.Once());
+        //}
 
-        [TestMethod]
-        [TestCategory("SendNewSessionAsync")]
-        [ExpectedException(typeof(InvalidOperationException))]
-        public async Task SendNewSessionAsync_EstablishedState_ThrowsInvalidOperationException()
-        {
-            var target = GetTarget();
+        //[TestMethod]
+        //[TestCategory("SendNewSessionAsync")]
+        //[ExpectedException(typeof(InvalidOperationException))]
+        //public async Task SendNewSessionAsync_EstablishedState_ThrowsInvalidOperationException()
+        //{
+        //    var target = GetTarget();
 
-            target.SetState(_transport, SessionState.Established);
+        //    target.SetState(_transport, SessionState.Established);
 
-            await target.SendNewSessionAsync();
-        }
+        //    await target.SendNewSessionAsync();
+        //}
 
         #endregion
 
         #region SendAuthenticatingSessionAsync
 
-        [TestMethod]
-        [TestCategory("SendAuthenticatingSessionAsync")]
-        public async Task SendAuthenticatingSessionAsync_AuthenticatingState_CallsTransport()
-        {
-            var target = GetTarget();
-            target.SetState(_transport, SessionState.Authenticating);
+        //[TestMethod]
+        //[TestCategory("SendAuthenticatingSessionAsync")]
+        //public async Task SendAuthenticatingSessionAsync_AuthenticatingState_CallsTransport()
+        //{
+        //    var target = GetTarget();
+        //    target.SetState(_transport, SessionState.Authenticating);
 
-            var localIdentity = DataUtil.CreateIdentity();
-            var localInstance = DataUtil.CreateInstanceName();
-            var authentication = DataUtil.CreateAuthentication(Security.AuthenticationScheme.Plain);
-            var sessionMode = SessionMode.Node;
+        //    var localIdentity = DataUtil.CreateIdentity();
+        //    var localInstance = DataUtil.CreateInstanceName();
+        //    var authentication = DataUtil.CreateAuthentication(Security.AuthenticationScheme.Plain);
+        //    var sessionMode = SessionMode.Node;
 
-            await target.SendAuthenticatingSessionAsync(
-                localIdentity,
-                authentication,
-                localInstance,
-                sessionMode);
+        //    await target.SendAuthenticatingSessionAsync(
+        //        localIdentity,
+        //        authentication,
+        //        localInstance,
+        //        sessionMode);
 
-            _transport.Verify(
-                t => t.SendAsync(It.Is<Session>(
-                        e => e.State == SessionState.Authenticating &&
-                             e.Id == target.SessionId &&
-                             e.From.ToIdentity().Equals(localIdentity) &&
-                             e.From.Instance.Equals(localInstance) &&
-                             e.Mode == sessionMode &&
-                             e.Authentication == authentication),
-                    It.IsAny<CancellationToken>()),
-                    Times.Once());
-        }
+        //    _transport.Verify(
+        //        t => t.SendAsync(It.Is<Session>(
+        //                e => e.State == SessionState.Authenticating &&
+        //                     e.Id == target.SessionId &&
+        //                     e.From.ToIdentity().Equals(localIdentity) &&
+        //                     e.From.Instance.Equals(localInstance) &&
+        //                     e.Mode == sessionMode &&
+        //                     e.Authentication == authentication),
+        //            It.IsAny<CancellationToken>()),
+        //            Times.Once());
+        //}
 
-        [TestMethod]
-        [TestCategory("SendAuthenticatingSessionAsync")]
-        [ExpectedException(typeof(InvalidOperationException))]
-        public async Task SendAuthenticatingSessionAsync_NewState_ThrowsInvalidOperationException()
-        {
-            var target = GetTarget();
+        //[TestMethod]
+        //[TestCategory("SendAuthenticatingSessionAsync")]
+        //[ExpectedException(typeof(InvalidOperationException))]
+        //public async Task SendAuthenticatingSessionAsync_NewState_ThrowsInvalidOperationException()
+        //{
+        //    var target = GetTarget();
 
-            var localIdentity = DataUtil.CreateIdentity();
-            var localInstance = DataUtil.CreateInstanceName();
-            var authentication = DataUtil.CreateAuthentication(Security.AuthenticationScheme.Plain);
-            var sessionMode = SessionMode.Node;
+        //    var localIdentity = DataUtil.CreateIdentity();
+        //    var localInstance = DataUtil.CreateInstanceName();
+        //    var authentication = DataUtil.CreateAuthentication(Security.AuthenticationScheme.Plain);
+        //    var sessionMode = SessionMode.Node;
 
-            await target.SendAuthenticatingSessionAsync(
-                localIdentity,
-                authentication,
-                localInstance,
-                sessionMode);
-        }
+        //    await target.SendAuthenticatingSessionAsync(
+        //        localIdentity,
+        //        authentication,
+        //        localInstance,
+        //        sessionMode);
+        //}
 
-        [TestMethod]
-        [TestCategory("SendAuthenticatingSessionAsync")]
-        [ExpectedException(typeof(ArgumentNullException))]
-        public async Task SendAuthenticatingSessionAsync_NullIdentity_ThrowsArgumentNullException()
-        {
-            var target = GetTarget();
-            target.SetState(_transport, SessionState.Authenticating);
+        //[TestMethod]
+        //[TestCategory("SendAuthenticatingSessionAsync")]
+        //[ExpectedException(typeof(ArgumentNullException))]
+        //public async Task SendAuthenticatingSessionAsync_NullIdentity_ThrowsArgumentNullException()
+        //{
+        //    var target = GetTarget();
+        //    target.SetState(_transport, SessionState.Authenticating);
 
-            Identity localIdentity = null;
-            var localInstance = DataUtil.CreateInstanceName();
-            var authentication = DataUtil.CreateAuthentication(Security.AuthenticationScheme.Plain);
-            var sessionMode = SessionMode.Node;
+        //    Identity localIdentity = null;
+        //    var localInstance = DataUtil.CreateInstanceName();
+        //    var authentication = DataUtil.CreateAuthentication(Security.AuthenticationScheme.Plain);
+        //    var sessionMode = SessionMode.Node;
 
-            await target.SendAuthenticatingSessionAsync(
-                localIdentity,
-                authentication,
-                localInstance,
-                sessionMode);
-        }
+        //    await target.SendAuthenticatingSessionAsync(
+        //        localIdentity,
+        //        authentication,
+        //        localInstance,
+        //        sessionMode);
+        //}
 
-        [TestMethod]
-        [TestCategory("SendAuthenticatingSessionAsync")]
-        [ExpectedException(typeof(ArgumentNullException))]
-        public async Task SendAuthenticatingSessionAsync_NullAuthentication_ThrowsArgumentNullException()
-        {
-            var target = GetTarget();
-            target.SetState(_transport, SessionState.Authenticating);
+        //[TestMethod]
+        //[TestCategory("SendAuthenticatingSessionAsync")]
+        //[ExpectedException(typeof(ArgumentNullException))]
+        //public async Task SendAuthenticatingSessionAsync_NullAuthentication_ThrowsArgumentNullException()
+        //{
+        //    var target = GetTarget();
+        //    target.SetState(_transport, SessionState.Authenticating);
 
-            var localIdentity = DataUtil.CreateIdentity();
-            var localInstance = DataUtil.CreateInstanceName();
-            Authentication authentication = null;
-            var sessionMode = SessionMode.Node;
+        //    var localIdentity = DataUtil.CreateIdentity();
+        //    var localInstance = DataUtil.CreateInstanceName();
+        //    Authentication authentication = null;
+        //    var sessionMode = SessionMode.Node;
 
-            await target.SendAuthenticatingSessionAsync(
-                localIdentity,
-                authentication,
-                localInstance,
-                sessionMode);
-        }
+        //    await target.SendAuthenticatingSessionAsync(
+        //        localIdentity,
+        //        authentication,
+        //        localInstance,
+        //        sessionMode);
+        //}
 
         #endregion
 
@@ -362,70 +362,70 @@ namespace Lime.Protocol.UnitTests.Client
 
         #region OnSessionReceivedAsync
 
-        [TestMethod]
-        [TestCategory("OnSessionReceivedAsync")]
-        public void OnSessionReceivedAsync_EstablishedSessionReceived_SetsStateAndNodePropertiesAndRaisesSessionEstablished()
-        {
-            bool sessionEstablishedRaised = false;
+        //[TestMethod]
+        //[TestCategory("OnSessionReceivedAsync")]
+        //public void OnSessionReceivedAsync_EstablishedSessionReceived_SetsStateAndNodePropertiesAndRaisesSessionEstablished()
+        //{
+        //    bool sessionEstablishedRaised = false;
 
-            var target = GetTarget();            
-            target.SessionEstablished += (sender, e) => sessionEstablishedRaised = true;
+        //    var target = GetTarget();            
+        //    target.SessionEstablished += (sender, e) => sessionEstablishedRaised = true;
 
-            Assert.IsTrue(target.State == SessionState.New);
+        //    Assert.IsTrue(target.State == SessionState.New);
             
-            var session = DataUtil.CreateSession();
-            session.State = SessionState.Established;
-            _transport.ReceiveEnvelope(session);
+        //    var session = DataUtil.CreateSession();
+        //    session.State = SessionState.Established;
+        //    _transport.ReceiveEnvelope(session);
 
-            Assert.IsTrue(target.State == session.State);
-            Assert.IsTrue(target.LocalNode.Equals(session.To));
-            Assert.IsTrue(target.RemoteNode.Equals(session.From));
-            Assert.IsTrue(sessionEstablishedRaised);
-        }
+        //    Assert.IsTrue(target.State == session.State);
+        //    Assert.IsTrue(target.LocalNode.Equals(session.To));
+        //    Assert.IsTrue(target.RemoteNode.Equals(session.From));
+        //    Assert.IsTrue(sessionEstablishedRaised);
+        //}
 
-        [TestMethod]
-        [TestCategory("OnSessionReceivedAsync")]
-        public void OnSessionReceivedAsync_FinishedSessionReceived_SetsStateAndRaisesSessionFinished()
-        {
-            bool sessionFinishedRaised = false;
+        //[TestMethod]
+        //[TestCategory("OnSessionReceivedAsync")]
+        //public void OnSessionReceivedAsync_FinishedSessionReceived_SetsStateAndRaisesSessionFinished()
+        //{
+        //    bool sessionFinishedRaised = false;
 
-            var target = GetTarget();
-            target.SetState(_transport, SessionState.Established);
+        //    var target = GetTarget();
+        //    target.SetState(_transport, SessionState.Established);
             
-            target.SessionFinished += (sender, e) => sessionFinishedRaised = true;
+        //    target.SessionFinished += (sender, e) => sessionFinishedRaised = true;
             
-            Assert.IsTrue(target.State == SessionState.Established);
+        //    Assert.IsTrue(target.State == SessionState.Established);
 
-            var session = DataUtil.CreateSession();
-            session.State = SessionState.Finished;
-            _transport.ReceiveEnvelope(session);
+        //    var session = DataUtil.CreateSession();
+        //    session.State = SessionState.Finished;
+        //    _transport.ReceiveEnvelope(session);
 
-            Assert.IsTrue(target.State == session.State);
-            Assert.IsTrue(sessionFinishedRaised);
-        }
+        //    Assert.IsTrue(target.State == session.State);
+        //    Assert.IsTrue(sessionFinishedRaised);
+        //}
 
-        [TestMethod]
-        [TestCategory("OnSessionReceivedAsync")]
-        public void OnSessionReceivedAsync_FailedSessionReceived_SetsStateAndRaisesSessionFailed()
-        {
-            bool sessionFailedRaised = false;
+        //[TestMethod]
+        //[TestCategory("OnSessionReceivedAsync")]
+        //public void OnSessionReceivedAsync_FailedSessionReceived_SetsStateAndRaisesSessionFailed()
+        //{
+        //    bool sessionFailedRaised = false;
 
-            var session = DataUtil.CreateSession();
-            session.State = SessionState.Failed;
-            session.Reason = DataUtil.CreateReason();
+        //    var session = DataUtil.CreateSession();
+        //    session.State = SessionState.Failed;
+        //    session.Reason = DataUtil.CreateReason();
 
-            var target = GetTarget();
-            target.SetState(_transport, SessionState.Established);
+        //    var target = GetTarget();
+        //    target.SetState(_transport, SessionState.Established);
 
-            target.SessionFailed += (sender, e) => sessionFailedRaised = e.Envelope == session;
+        //    target.SessionFailed += (sender, e) => sessionFailedRaised = e.Envelope == session;
 
-            Assert.IsTrue(target.State == SessionState.Established);
+        //    Assert.IsTrue(target.State == SessionState.Established);
 
-            _transport.ReceiveEnvelope(session);
+        //    _transport.ReceiveEnvelope(session);
 
-            Assert.IsTrue(target.State == session.State);
-            Assert.IsTrue(sessionFailedRaised);
-        }
+        //    Assert.IsTrue(target.State == session.State);
+        //    Assert.IsTrue(sessionFailedRaised);
+        //}
 
         #endregion
     }

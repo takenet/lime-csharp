@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Lime.Protocol.Network
+namespace Lime.Protocol.Util
 {
     /// <summary>
     /// An async-compatible countdown event.

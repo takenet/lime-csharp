@@ -61,8 +61,8 @@
     <Compile Include="Message.Serialization.cs">
       <DependentUpon>Message.cs</DependentUpon>
     </Compile>
-    <Compile Include="Network\AsyncCountdownEvent.cs" />
-    <Compile Include="Network\AsyncQueue.cs" />
+    <Compile Include="Util\AsyncCountdownEvent.cs" />
+    <Compile Include="Util\AsyncQueue.cs" />
     <Compile Include="Network\ChannelBase.cs" />
     <Compile Include="Network\DeferralEventArgs.cs" />
     <Compile Include="Network\EnvelopeEventArgs.cs" />
@@ -73,7 +73,7 @@
     <Compile Include="Network\IEnvelopeContainer.cs" />
     <Compile Include="Network\IMessageChannel.cs" />
     <Compile Include="Network\INotificationChannel.cs" />
-    <Compile Include="Network\DeferralManager.cs" />
+    <Compile Include="Util\DeferralManager.cs" />
     <Compile Include="Network\ISessionChannel.cs" />
     <Compile Include="Network\ITraceWriter.cs" />
     <Compile Include="Network\TransportBase.cs" />
@@ -142,6 +142,7 @@
       <DependentUpon>Session.cs</DependentUpon>
     </Compile>
     <Compile Include="UtilExtensions.cs" />
+    <Compile Include="Util\IAsyncQueue.cs" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

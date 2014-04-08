@@ -39,44 +39,6 @@ namespace Lime.Protocol.UnitTests.Network
                 );
         }
 
-        #region SendNegotiatingSessionAsync
-
-        [TestMethod]
-        [TestCategory("SendNegotiatingSessionAsync")]
-        public async Task SendNegotiatingSessionAsync_NegotiatingState_CallsTransport()
-        {
-            var target = GetTarget(SessionState.Negotiating);
-            
-            var compression = SessionCompression.GZip;
-            var encryption = SessionEncryption.TLS;
-
-            await target.SendNegotiatingSessionAsync(compression, encryption);
-
-            _transport.Verify(
-                t => t.SendAsync(It.Is<Session>(
-                        e => e.State == SessionState.Negotiating &&
-                             e.Id == target.SessionId &&
-                             e.Compression == compression &&
-                             e.Encryption == encryption),
-                    It.IsAny<CancellationToken>()),
-                    Times.Once());
-        }
-
-        [TestMethod]
-        [TestCategory("SendNegotiatingSessionAsync")]
-        [ExpectedException(typeof(InvalidOperationException))]
-        public async Task SendNegotiatingSessionAsync_NewState_ThrowsInvalidOperationException()
-        {
-            var target = GetTarget(SessionState.New);
-
-            var compression = SessionCompression.GZip;
-            var encryption = SessionEncryption.TLS;
-
-            await target.SendNegotiatingSessionAsync(compression, encryption);
-        }
-
-        #endregion
-
         #region SendMessageAsync
 
         [TestMethod]
@@ -87,7 +49,6 @@ namespace Lime.Protocol.UnitTests.Network
 
             var content = DataUtil.CreateTextContent();
             var message = DataUtil.CreateMessage(content);
-            
 
             await target.SendMessageAsync(message);
 
@@ -121,12 +82,94 @@ namespace Lime.Protocol.UnitTests.Network
             var target = GetTarget(SessionState.New);
 
             var content = DataUtil.CreateTextContent();
-            var message = DataUtil.CreateMessage(content);            
+            var message = DataUtil.CreateMessage(content);
 
             await target.SendMessageAsync(message);
         }
 
         #endregion
+
+
+        [TestMethod]
+        [TestCategory("ReceiveMessageAsync")]
+        public async Task ReceiveMessageAsync_EstablishedState_ReadsTransport()
+        {
+            var target = GetTarget(SessionState.Established);
+            
+            var content = DataUtil.CreateTextContent();
+            var message = DataUtil.CreateMessage(content);
+
+            var cancellationToken = DataUtil.CreateCancellationToken();
+
+            _transport
+                .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(() => Task.FromResult<Envelope>(message));
+
+            var actual = await target.ReceiveMessageAsync(cancellationToken);
+
+            Assert.AreEqual(message, actual);
+        }
+
+        [TestMethod]
+        [TestCategory("ReceiveMessageAsync")]
+        [ExpectedException(typeof(InvalidOperationException))]
+
+        public async Task ReceiveMessageAsync_NewState_ThrowsInvalidOperationException()
+        {
+            var target = GetTarget(SessionState.New);
+
+            var content = DataUtil.CreateTextContent();
+            var message = DataUtil.CreateMessage(content);
+
+            var cancellationToken = DataUtil.CreateCancellationToken();
+
+            _transport
+                .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(() => Task.FromResult<Envelope>(message));
+
+            var actual = await target.ReceiveMessageAsync(cancellationToken);
+        }
+
+
+        #region SendNegotiatingSessionAsync
+
+        //[TestMethod]
+        //[TestCategory("SendNegotiatingSessionAsync")]
+        //public async Task SendNegotiatingSessionAsync_NegotiatingState_CallsTransport()
+        //{
+        //    var target = GetTarget(SessionState.Negotiating);
+            
+        //    var compression = SessionCompression.GZip;
+        //    var encryption = SessionEncryption.TLS;
+
+        //    await target.SendNegotiatingSessionAsync(compression, encryption);
+
+        //    _transport.Verify(
+        //        t => t.SendAsync(It.Is<Session>(
+        //                e => e.State == SessionState.Negotiating &&
+        //                     e.Id == target.SessionId &&
+        //                     e.Compression == compression &&
+        //                     e.Encryption == encryption),
+        //            It.IsAny<CancellationToken>()),
+        //            Times.Once());
+        //}
+
+        //[TestMethod]
+        //[TestCategory("SendNegotiatingSessionAsync")]
+        //[ExpectedException(typeof(InvalidOperationException))]
+        //public async Task SendNegotiatingSessionAsync_NewState_ThrowsInvalidOperationException()
+        //{
+        //    var target = GetTarget(SessionState.New);
+
+        //    var compression = SessionCompression.GZip;
+        //    var encryption = SessionEncryption.TLS;
+
+        //    await target.SendNegotiatingSessionAsync(compression, encryption);
+        //}
+
+        #endregion
+
+
 
         #region SendCommandAsync
 
@@ -291,63 +334,63 @@ namespace Lime.Protocol.UnitTests.Network
 
         #region OnSessionReceivedAsync
 
-        [TestMethod]
-        [TestCategory("OnSessionReceivedAsync")]
-        public void OnSessionReceivedAsync_EstablishedSession_RaiseSessionReceived()
-        {
-            var target = GetTarget(SessionState.Authenticating);
-            bool sessionReceivedRaised = false;
+        //[TestMethod]
+        //[TestCategory("OnSessionReceivedAsync")]
+        //public void OnSessionReceivedAsync_EstablishedSession_RaiseSessionReceived()
+        //{
+        //    var target = GetTarget(SessionState.Authenticating);
+        //    bool sessionReceivedRaised = false;
 
-            var session = DataUtil.CreateSession();
-            session.State = SessionState.Established;
+        //    var session = DataUtil.CreateSession();
+        //    session.State = SessionState.Established;
 
-            target.SessionReceived += (sender, e) => sessionReceivedRaised = !sessionReceivedRaised && e.Envelope == session;
+        //    target.SessionReceived += (sender, e) => sessionReceivedRaised = !sessionReceivedRaised && e.Envelope == session;
 
-            _transport.ReceiveEnvelope(session);
+        //    _transport.ReceiveEnvelope(session);
 
-            Assert.IsTrue(sessionReceivedRaised);
-        }
+        //    Assert.IsTrue(sessionReceivedRaised);
+        //}
 
-        [TestMethod]
-        [TestCategory("OnSessionReceivedAsync")]
-        public void OnSessionReceivedAsync_NegotiatingSession_RaiseSessionReceivedAndNegotiatingSessionReceived()
-        {
-            var target = GetTarget(SessionState.Authenticating);
-            bool sessionReceivedRaised = false;
-            bool negotiatingSessionReceivedRaised = false;
+        //[TestMethod]
+        //[TestCategory("OnSessionReceivedAsync")]
+        //public void OnSessionReceivedAsync_NegotiatingSession_RaiseSessionReceivedAndNegotiatingSessionReceived()
+        //{
+        //    var target = GetTarget(SessionState.Authenticating);
+        //    bool sessionReceivedRaised = false;
+        //    bool negotiatingSessionReceivedRaised = false;
 
-            var session = DataUtil.CreateSession();
-            session.State = SessionState.Negotiating;
+        //    var session = DataUtil.CreateSession();
+        //    session.State = SessionState.Negotiating;
 
-            target.SessionReceived += (sender, e) => sessionReceivedRaised = e.Envelope == session;
-            target.NegotiateSessionReceived += (sender, e) => negotiatingSessionReceivedRaised = e.Envelope == session;
+        //    target.SessionReceived += (sender, e) => sessionReceivedRaised = e.Envelope == session;
+        //    target.NegotiateSessionReceived += (sender, e) => negotiatingSessionReceivedRaised = e.Envelope == session;
 
-            _transport.ReceiveEnvelope(session);
+        //    _transport.ReceiveEnvelope(session);
 
-            Assert.IsTrue(sessionReceivedRaised);
-            Assert.IsTrue(negotiatingSessionReceivedRaised);
-        }
+        //    Assert.IsTrue(sessionReceivedRaised);
+        //    Assert.IsTrue(negotiatingSessionReceivedRaised);
+        //}
 
 
-        [TestMethod]
-        [TestCategory("OnSessionReceivedAsync")]
-        public void OnSessionReceivedAsync_AuthenticatingSession_RaiseSessionReceivedAndAuthenticatingSessionReceived()
-        {
-            var target = GetTarget(SessionState.Authenticating);
-            bool sessionReceivedRaised = false;
-            bool authenticatingSessionReceivedRaised = false;
+        //[TestMethod]
+        //[TestCategory("OnSessionReceivedAsync")]
+        //public void OnSessionReceivedAsync_AuthenticatingSession_RaiseSessionReceivedAndAuthenticatingSessionReceived()
+        //{
+        //    var target = GetTarget(SessionState.Authenticating);
+        //    bool sessionReceivedRaised = false;
+        //    bool authenticatingSessionReceivedRaised = false;
 
-            var session = DataUtil.CreateSession();
-            session.State = SessionState.Authenticating;
+        //    var session = DataUtil.CreateSession();
+        //    session.State = SessionState.Authenticating;
 
-            target.SessionReceived += (sender, e) => sessionReceivedRaised = e.Envelope == session;
-            target.AuthenticateSessionReceived += (sender, e) => authenticatingSessionReceivedRaised = e.Envelope == session;
+        //    target.SessionReceived += (sender, e) => sessionReceivedRaised = e.Envelope == session;
+        //    target.AuthenticateSessionReceived += (sender, e) => authenticatingSessionReceivedRaised = e.Envelope == session;
 
-            _transport.ReceiveEnvelope(session);
+        //    _transport.ReceiveEnvelope(session);
 
-            Assert.IsTrue(sessionReceivedRaised);
-            Assert.IsTrue(authenticatingSessionReceivedRaised);
-        }
+        //    Assert.IsTrue(sessionReceivedRaised);
+        //    Assert.IsTrue(authenticatingSessionReceivedRaised);
+        //}
 
         #endregion
 

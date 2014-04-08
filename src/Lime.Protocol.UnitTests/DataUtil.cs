@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Lime.Protocol.UnitTests
@@ -110,6 +111,23 @@ namespace Lime.Protocol.UnitTests
         public static AuthenticationScheme[] CreateSchemeOptions()
         {
             return new AuthenticationScheme[] { AuthenticationScheme.Guest, AuthenticationScheme.Plain };
+        }
+
+        public static CancellationToken CreateCancellationToken()
+        {
+            return CancellationToken.None;
+        }
+
+        public static CancellationTokenSource CreateCancellationTokenSource()
+        {
+            return new CancellationTokenSource();
+        }
+
+        public static CancellationToken CreateCancellationToken(TimeSpan timeout)
+        {
+            var cts = CreateCancellationTokenSource();
+            cts.CancelAfter(timeout);
+            return cts.Token;
         }
 
         public static Message CreateMessage(Document content)
