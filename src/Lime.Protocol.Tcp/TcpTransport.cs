@@ -30,7 +30,6 @@ namespace Lime.Protocol.Tcp
         private readonly ITraceWriter _traceWriter;
         private X509Certificate _serverCertificate;
         private string _hostName;
-        private Task _readTask;
 
         #endregion
 
@@ -108,21 +107,6 @@ namespace Lime.Protocol.Tcp
             }
 
             _stream = _tcpClient.GetStream();
-
-            _readTask = this.ReadAsync(CancellationToken.None)
-                .ContinueWith(t =>
-                {
-                    // In case of an uncatched exception
-                    if (t.Exception != null)
-                    {
-                        return OnFailedAsync(t.Exception.InnerException);
-                    }
-                    else
-                    {
-                        return Task.FromResult<object>(null);
-                    }
-                })
-                .Unwrap();
         }
 
         /// <summary>
@@ -159,7 +143,7 @@ namespace Lime.Protocol.Tcp
         }
 
         private SemaphoreSlim _receiveSemaphore = new SemaphoreSlim(1);
-
+       
         /// <summary>
         /// Reads one envelope from the stream
         /// </summary>
@@ -335,34 +319,6 @@ namespace Lime.Protocol.Tcp
         {
             return true;
         }
-
-        /// <summary>
-        /// Reads from the stream while
-        /// connected
-        /// </summary>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        private async Task ReadAsync(CancellationToken cancellationToken)
-        {
-            if (!_stream.CanRead)
-            {
-                throw new InvalidOperationException("Invalid stream state");
-            }
-
-            do
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-
-                var envelope = await ReceiveAsync(cancellationToken).ConfigureAwait(false);
-
-                if (envelope != null)
-                {
-                    base.OnEnvelopeReceived(envelope);
-                }
-            } while (_stream.CanRead);           
-        }
-
-
 
         #region Buffer fields
 

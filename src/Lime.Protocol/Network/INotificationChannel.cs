@@ -26,11 +26,5 @@ namespace Lime.Protocol.Network
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns></returns>
         Task<Notification> ReceiveNotificationAsync(CancellationToken cancellationToken);
-
-        /// <summary>
-        /// Occurs when a notification is 
-        /// received by the node
-        /// </summary>
-        event EventHandler<EnvelopeEventArgs<Notification>> NotificationReceived;
     }
 }

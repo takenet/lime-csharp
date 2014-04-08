@@ -29,26 +29,54 @@ namespace Lime.Protocol.Server
         #region IServerChannel Members
 
         /// <summary>
+        /// Receives a new session envelope
+        /// from the client node.
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        /// <exception cref="System.InvalidOperationException">
+        /// Cannot await for a session response since there's already a listener.
+        /// </exception>
+        public Task<Session> ReceiveNewSession(CancellationToken cancellationToken)
+        {
+            if (base.State != SessionState.New)
+            {
+                throw new InvalidOperationException(string.Format("Cannot receive a session in the '{0}' state", base.State));                
+            }
+
+            if (base._sessionAsyncBuffer.HasPromises)
+            {
+                throw new InvalidOperationException("Cannot await for a session response since there's already a listener.");
+            }
+
+            return base.ReceiveSessionAsync(cancellationToken);
+        }
+
+        /// <summary>
         /// Changes the session state and 
         /// sends a negotiate session envelope
         /// to the node with the available 
-        /// options
-        /// parameters
+        /// options and awaits for the client
+        /// selected option.
         /// </summary>
+        /// <param name="cancellationToken"></param>
         /// <param name="compressionOptions">The session compression options.</param>
         /// <param name="encryptionOptions"></param>
-        /// <returns></returns>
+        /// <returns>
+        /// A negotiating session envelope with the client node selected options.
+        /// </returns>
         /// <exception cref="System.ArgumentNullException">
-        /// sessionCompressionOptions
+        /// compressionOptions
         /// or
-        /// sessionEncriptionOptions
+        /// encryptionOptions
         /// </exception>
         /// <exception cref="System.ArgumentException">
         /// No available options for compression negotiation
         /// or
         /// No available options for encryption negotiation
         /// </exception>
-        public Task SendNegotiatingSessionAsync(SessionCompression[] compressionOptions, SessionEncryption[] encryptionOptions)
+        /// <exception cref="System.InvalidOperationException">Cannot await for a session response since there's already a listener.</exception>
+        public async Task<Session> NegotiateSessionAsync(CancellationToken cancellationToken, SessionCompression[] compressionOptions, SessionEncryption[] encryptionOptions)
         {
             if (compressionOptions == null)
             {
@@ -70,6 +98,11 @@ namespace Lime.Protocol.Server
                 throw new ArgumentException("No available options for encryption negotiation");
             }
 
+            if (base._sessionAsyncBuffer.HasPromises)
+            {
+                throw new InvalidOperationException("Cannot await for a session response since there's already a listener.");
+            }
+
             base.State = SessionState.Negotiating;
 
             var session = new Session()
@@ -81,7 +114,36 @@ namespace Lime.Protocol.Server
                 EncryptionOptions = encryptionOptions
             };
 
-            return base.SendSessionAsync(session);
+            await base.SendSessionAsync(session).ConfigureAwait(false);
+            return await base.ReceiveSessionAsync(cancellationToken).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Send a negotiate session envelope
+        /// to the remote node to choose or
+        /// confirm the session negotiation options
+        /// parameters
+        /// </summary>
+        /// <param name="sessionCompression">The session compression option</param>
+        /// <param name="sessionEncryption">The session encryption option</param>
+        /// <returns></returns>
+        /// <exception cref="System.InvalidOperationException"></exception>
+        public Task SendNegotiatingSessionAsync(SessionCompression sessionCompression, SessionEncryption sessionEncryption)
+        {
+            if (this.State != SessionState.Negotiating)
+            {
+                throw new InvalidOperationException(string.Format("Cannot negotiate a session in the '{0}' state", this.State));
+            }
+
+            var session = new Session()
+            {
+                Id = this.SessionId,
+                State = SessionState.Negotiating,
+                Compression = sessionCompression,
+                Encryption = sessionEncryption
+            };
+
+            return this.SendSessionAsync(session);
         }
 
         /// <summary>
@@ -118,15 +180,50 @@ namespace Lime.Protocol.Server
             return base.SendSessionAsync(session);
         }
 
+
+        public async Task<Session> AuthenticateSessionAsync(CancellationToken cancellationToken, AuthenticationScheme[] schemeOptions)
+        {
+            if (schemeOptions == null)
+            {
+                throw new ArgumentNullException("authentication");
+            }
+
+            if (schemeOptions.Length == 0)
+            {
+                throw new ArgumentException("No available options for authentication");
+            }
+
+            if (base._sessionAsyncBuffer.HasPromises)
+            {
+                throw new InvalidOperationException("Cannot await for a session response since there's already a listener.");
+            }
+
+            base.State = SessionState.Authenticating;
+
+            var session = new Session()
+            {
+                Id = base.SessionId,
+                From = base.LocalNode,
+                State = base.State,
+                SchemeOptions = schemeOptions
+            };
+
+            await base.SendSessionAsync(session).ConfigureAwait(false);
+            return await base.ReceiveSessionAsync(cancellationToken).ConfigureAwait(false);
+        }
+
         /// <summary>
         /// Sends authentication roundtrip information
-        /// to the connected node
+        /// to the connected node and awaits
+        /// for the client authentication.
         /// </summary>
         /// <param name="authenticationRoundtrip">The authentication roundtrip data.</param>
-        /// <returns></returns>
+        /// <returns>
+        /// A autheticating session envelope with the authentication information.
+        /// </returns>
         /// <exception cref="System.ArgumentNullException">authenticationRoundtrip</exception>
-        /// <exception cref="System.InvalidOperationException">Invalid state for authentication roundtrip</exception>
-        public Task SendAuthenticatingSessionAsync(Authentication authenticationRoundtrip)
+        /// <exception cref="System.InvalidOperationException"></exception>
+        public async Task<Session> AuthenticateSessionAsync(CancellationToken cancellationToken, Authentication authenticationRoundtrip)
         {
             if (authenticationRoundtrip == null)
             {
@@ -146,7 +243,8 @@ namespace Lime.Protocol.Server
                 Authentication = authenticationRoundtrip
             };
 
-            return base.SendSessionAsync(session);
+            await base.SendSessionAsync(session).ConfigureAwait(false);
+            return await base.ReceiveSessionAsync(cancellationToken).ConfigureAwait(false);
         }
 
         /// <summary>

@@ -41,28 +41,5 @@ namespace Lime.Protocol.Network
         /// Current session mode
         /// </summary>
         SessionMode Mode { get; }
-
-        /// <summary>
-        /// Send a negotiate session envelope
-        /// to the remote node to choose or
-        /// confirm the session negotiation options
-        /// parameters
-        /// </summary>
-        /// <param name="sessionCompression">The session compression option</param>
-        /// <param name="sessionEncryption">The session encryption option</param>
-        /// <returns></returns>
-        Task SendNegotiatingSessionAsync(SessionCompression sessionCompression, SessionEncryption sessionEncryption);
-
-        /// <summary>
-        /// Occours when a session negotiation option
-        /// is received by the node or server
-        /// </summary>
-        event EventHandler<EnvelopeEventArgs<Session>> NegotiateSessionReceived;
-
-        /// <summary>
-        /// Occours when a session authentication option
-        /// is received by the node or server
-        /// </summary>
-        event EventHandler<EnvelopeEventArgs<Session>> AuthenticateSessionReceived;
     }
 }

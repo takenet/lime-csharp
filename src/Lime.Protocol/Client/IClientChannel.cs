@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Lime.Protocol.Client
@@ -14,32 +15,50 @@ namespace Lime.Protocol.Client
     /// </summary>
     public interface IClientChannel : IChannel
     {
+
         /// <summary>
         /// Sends a new session envelope
-        /// to the server to start a
-        /// session negotiation
+        /// to the server and awaits for
+        /// the response.
         /// </summary>
-        /// <returns></returns>
-        Task SendNewSessionAsync();
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>An negotiating session envelope, 
+        /// an authenticating session envelope (if there's no need for negotiation) 
+        /// or a failed session envelope.</returns>
+        Task<Session> StartNewSessionAsync(CancellationToken cancellationToken);
+
+        /// <summary>
+        /// Sends a negotiate session envelope
+        /// to accepts the session negotiation options
+        /// and awaits for the server confirmation.
+        /// </summary>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <param name="sessionCompression">The session compression option</param>
+        /// <param name="sessionEncryption">The session encryption option</param>
+        /// <returns>An negotiating session envelope or a failed session envelope.</returns>
+        Task<Session> NegotiateSessionAsync(CancellationToken cancellationToken, SessionCompression sessionCompression, SessionEncryption sessionEncryption);
 
         /// <summary>
         /// Send a authenticate session envelope
         /// to the server to establish
-        /// an authenticated session
+        /// an authenticated session and awaits
+        /// for the established session envelope.
         /// </summary>
         /// <param name="identity"></param>
-        /// <param name="authentication">Authentication information.</param>
+        /// <param name="authentication"></param>
         /// <param name="instance"></param>
         /// <param name="sessionMode"></param>
-        /// <returns></returns>
-        Task SendAuthenticatingSessionAsync(Identity identity, Authentication authentication, string instance = null, SessionMode sessionMode = SessionMode.Node);
+        /// <returns>An established session envelope or a failed session envelope.</returns>
+        Task<Session> AuthenticateSessionAsync(CancellationToken cancellationToken, Identity identity, Authentication authentication, string instance = null, SessionMode sessionMode = SessionMode.Node);
 
         /// <summary>
         /// Sends a finish session envelope
         /// to the server to finish the session
+        /// and awaits for the response.
         /// </summary>
-        Task SendFinishingSessionAsync();
-
+        /// <returns>A finished session envelope or a failed session envelope.</returns>
+        Task<Session> FinishSessionAsync(CancellationToken cancellationToken);
+  
         /// <summary>
         /// Notify to the server that
         /// the specified message was received
@@ -51,21 +70,9 @@ namespace Lime.Protocol.Client
         Task SendReceivedNotificationAsync(Guid messageId, Node to);
 
         /// <summary>
-        /// Occurs when the session is established
-        /// with the server
-        /// </summary>
-        event EventHandler<EnvelopeEventArgs<Session>> SessionEstablished;
-
-        /// <summary>
         /// Occurs when the session fails
         /// with the server
         /// </summary>
         event EventHandler<EnvelopeEventArgs<Session>> SessionFailed;
-
-        /// <summary>
-        /// Occurs when the session ends
-        /// with the server
-        /// </summary>
-        event EventHandler<EnvelopeEventArgs<Session>> SessionFinished;
     }
 }

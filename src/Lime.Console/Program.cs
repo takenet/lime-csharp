@@ -160,7 +160,11 @@ namespace Lime.Console
             System.Console.Read();
         }
 
+
+
         #region Start Methods
+
+        private static Task _listenerLoopTask;
 
         private static async Task<ITransportListener> StartServerAsync()
         {
@@ -180,9 +184,10 @@ namespace Lime.Console
                 new DebugTraceWriter("Server")
                 );
 
-            listener.Connected += Listener_Connected;
 
             await listener.StartAsync(_listenerUri);
+
+            _listenerLoopTask = ListenerLoopAsync(listener, CancellationToken.None);
 
             return listener;
         }
@@ -298,31 +303,28 @@ namespace Lime.Console
 
         #region Server Event Handlers
 
-        private static void Listener_Connected(object sender, TransportEventArgs e)
+        private async static Task ListenerLoopAsync(ITransportListener listener, CancellationToken cancellationToken)
         {
-            var serverChannel = new ServerChannel(
-                Guid.NewGuid(),
-                new Node() { Name = "server", Domain = IPGlobalProperties.GetIPGlobalProperties().DomainName, Instance = Environment.MachineName },
-                e.Transport,
-                TimeSpan.FromSeconds(60));
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
 
-            _serverConnectedNodesDictionary.Add(serverChannel.SessionId, serverChannel);
+                var transport = await listener.AcceptTransportAsync(cancellationToken);
 
-            serverChannel.NewSessionReceived += ServerChannel_NewSessionReceived;
-            serverChannel.AuthenticateSessionReceived += ServerChannel_AuthenticateSessionReceived;
-            serverChannel.NegotiateSessionReceived += ServerChannel_NegotiateSessionReceived;
-            serverChannel.MessageReceived += ServerChannel_MessageReceived;
-            serverChannel.CommandReceived += ServerChannel_CommandReceived;
-            serverChannel.NotificationReceived += ServerChannel_NotificationReceived;
-            serverChannel.FinishingSessionReceived += ServerChannel_FinishingSessionReceived;
+                var serverChannel = new ServerChannel(
+                    Guid.NewGuid(),
+                    new Node() { Name = "server", Domain = IPGlobalProperties.GetIPGlobalProperties().DomainName, Instance = Environment.MachineName },
+                    transport,
+                    TimeSpan.FromSeconds(60));
 
-            serverChannel.Transport.Failed += Transport_Failed;
-            serverChannel.Transport.Closing += Transport_Closing;
-            serverChannel.Transport.Closed += Transport_Closed;
+                _serverConnectedNodesDictionary.Add(serverChannel.SessionId, serverChannel);
 
-            serverChannel.Transport.OpenAsync(
-                _listenerUri,
-                CancellationToken.None);
+                serverChannel.Transport.Failed += Transport_Failed;
+                serverChannel.Transport.Closing += Transport_Closing;
+                serverChannel.Transport.Closed += Transport_Closed;
+
+                await serverChannel.Transport.OpenAsync(_listenerUri, cancellationToken);
+            }
         }
 
         private async static void ServerChannel_NewSessionReceived(object sender, EnvelopeEventArgs<Session> e)

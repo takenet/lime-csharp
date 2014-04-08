@@ -26,11 +26,5 @@ namespace Lime.Protocol.Network
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns></returns>
         Task<Session> ReceiveSessionAsync(CancellationToken cancellationToken);
-
-        /// <summary>
-        /// Occurs when the session state
-        /// is changed in the remote node
-        /// </summary>
-        event EventHandler<EnvelopeEventArgs<Session>> SessionReceived;
     }
 }

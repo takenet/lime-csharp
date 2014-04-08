@@ -41,12 +41,6 @@ namespace Lime.Protocol.Network
         public abstract Task<Envelope> ReceiveAsync(CancellationToken cancellationToken);
 
         /// <summary>
-        /// Occurs when an envelope
-        /// is received by the node
-        /// </summary>
-        public event EventHandler<EnvelopeEventArgs<Envelope>> EnvelopeReceived;
-
-        /// <summary>
         /// Opens the transport connection with
         /// the specified Uri
         /// </summary>
@@ -218,15 +212,5 @@ namespace Lime.Protocol.Network
                 }
             }
         }
-
-        /// <summary>
-        /// Raises the EnvelopeReceived event
-        /// </summary>
-        /// <param name="envelope"></param>
-        protected virtual void OnEnvelopeReceived(Envelope envelope)
-        {
-            this.EnvelopeReceived.RaiseEvent(this, new EnvelopeEventArgs<Envelope>(envelope));
-        }
-
     }
 }

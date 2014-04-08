@@ -62,6 +62,7 @@
       <DependentUpon>Message.cs</DependentUpon>
     </Compile>
     <Compile Include="Network\AsyncCountdownEvent.cs" />
+    <Compile Include="Network\AsyncQueue.cs" />
     <Compile Include="Network\ChannelBase.cs" />
     <Compile Include="Network\DeferralEventArgs.cs" />
     <Compile Include="Network\EnvelopeEventArgs.cs" />

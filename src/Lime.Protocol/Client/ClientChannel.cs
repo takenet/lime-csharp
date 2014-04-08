@@ -50,16 +50,22 @@ namespace Lime.Protocol.Client
 
         /// <summary>
         /// Sends a new session envelope
-        /// to the server to start a
-        /// session negotiation
+        /// to the server and awaits for
+        /// the response.
         /// </summary>
+        /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns></returns>
-        /// <exception cref="System.InvalidOperationException">Invalid session state</exception>
-        public Task SendNewSessionAsync()
+        /// <exception cref="System.InvalidOperationException">Cannot await for a session response since there's already a listener.</exception>
+        public async Task<Session> StartNewSessionAsync(CancellationToken cancellationToken)
         {
             if (base.State != SessionState.New)
             {
-                throw new InvalidOperationException(string.Format("Cannot start a session in the '{0}' state", base.State));
+                throw new InvalidOperationException(string.Format("Cannot start a session in the '{0}' state.", base.State));
+            }
+
+            if (base._sessionAsyncBuffer.HasPromises)
+            {
+                throw new InvalidOperationException("Cannot await for a session response since there's already a listener.");
             }
 
             var session = new Session()
@@ -67,26 +73,67 @@ namespace Lime.Protocol.Client
                 State = SessionState.New
             };
 
-            return base.SendSessionAsync(session);
+            await base.SendSessionAsync(session).ConfigureAwait(false);
+            return await base.ReceiveSessionAsync(cancellationToken).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Sends a negotiate session envelope
+        /// to accepts the session negotiation options
+        /// and awaits for the server confirmation
+        /// </summary>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <param name="sessionCompression">The session compression option</param>
+        /// <param name="sessionEncryption">The session encryption option</param>
+        /// <returns></returns>
+        /// <exception cref="System.InvalidOperationException">
+        /// Cannot await for a session response since there's already a listener.
+        /// </exception>
+        public async Task<Session> NegotiateSessionAsync(CancellationToken cancellationToken, SessionCompression sessionCompression, SessionEncryption sessionEncryption)
+        {
+            if (this.State != SessionState.Negotiating)
+            {
+                throw new InvalidOperationException(string.Format("Cannot negotiate a session in the '{0}' state", this.State));
+            }
+
+            if (base._sessionAsyncBuffer.HasPromises)
+            {
+                throw new InvalidOperationException("Cannot await for a session response since there's already a listener.");
+            }
+
+            var session = new Session()
+            {
+                Id = this.SessionId,
+                State = SessionState.Negotiating,
+                Compression = sessionCompression,
+                Encryption = sessionEncryption
+            };
+
+            await base.SendSessionAsync(session).ConfigureAwait(false);
+            return await base.ReceiveSessionAsync(cancellationToken).ConfigureAwait(false);
         }
 
         /// <summary>
         /// Send a authenticate session envelope
         /// to the server to establish
-        /// an authenticated session
+        /// an authenticated session and awaits
+        /// for the response.
         /// </summary>
+        /// <param name="cancellationToken"></param>
         /// <param name="identity"></param>
-        /// <param name="authentication">Authentication information.</param>
+        /// <param name="authentication"></param>
         /// <param name="instance"></param>
         /// <param name="sessionMode"></param>
         /// <returns></returns>
-        /// <exception cref="System.InvalidOperationException"></exception>
+        /// <exception cref="System.InvalidOperationException">
+        /// Cannot await for a session response since there's already a listener.
+        /// </exception>
         /// <exception cref="System.ArgumentNullException">
         /// identity
         /// or
         /// authentication
         /// </exception>
-        public Task SendAuthenticatingSessionAsync(Identity identity, Authentication authentication, string instance = null, SessionMode sessionMode = SessionMode.Node)
+        public async Task<Session> AuthenticateSessionAsync(CancellationToken cancellationToken, Identity identity, Authentication authentication, string instance = null, SessionMode sessionMode = SessionMode.Node)
         {
             if (base.State != SessionState.Authenticating)
             {
@@ -103,8 +150,13 @@ namespace Lime.Protocol.Client
                 throw new ArgumentNullException("authentication");
             }
 
+            if (base._sessionAsyncBuffer.HasPromises)
+            {
+                throw new InvalidOperationException("Cannot await for a session response since there's already a listener.");
+            }
+
             var session = new Session()
-            {                
+            {
                 Id = base.SessionId,
                 From = new Node()
                 {
@@ -117,20 +169,30 @@ namespace Lime.Protocol.Client
                 Authentication = authentication
             };
 
-            return base.SendSessionAsync(session);
+            await base.SendSessionAsync(session).ConfigureAwait(false);
+            return await base.ReceiveSessionAsync(cancellationToken).ConfigureAwait(false);
         }
 
         /// <summary>
         /// Sends a finish session envelope
         /// to the server to finish the session
+        /// and awaits for the response.
         /// </summary>
+        /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        /// <exception cref="System.InvalidOperationException"></exception>
-        public Task SendFinishingSessionAsync()
+        /// <exception cref="System.InvalidOperationException">
+        /// Cannot await for a session response since there's already a listener.
+        /// </exception>
+        public async Task<Session> FinishSessionAsync(CancellationToken cancellationToken)
         {
             if (base.State != SessionState.Established)
             {
                 throw new InvalidOperationException(string.Format("Cannot finish a session in the '{0}' state", base.State));
+            }
+
+            if (base._sessionAsyncBuffer.HasPromises)
+            {
+                throw new InvalidOperationException("Cannot await for a session response since there's already a listener.");
             }
 
             var session = new Session()
@@ -139,26 +201,15 @@ namespace Lime.Protocol.Client
                 State = SessionState.Finishing
             };
 
-            return base.SendSessionAsync(session);
+            await base.SendSessionAsync(session).ConfigureAwait(false);
+            return await base.ReceiveSessionAsync(cancellationToken).ConfigureAwait(false);
         }
-
-        /// <summary>
-        /// Occurs when the session is established
-        /// with the server
-        /// </summary>
-        public event EventHandler<EnvelopeEventArgs<Session>> SessionEstablished;
 
         /// <summary>
         /// Occurs when the session fails
         /// with the server
         /// </summary>
         public event EventHandler<EnvelopeEventArgs<Session>> SessionFailed;
-
-        /// <summary>
-        /// Occurs when the session ends
-        /// with the server
-        /// </summary>
-        public event EventHandler<EnvelopeEventArgs<Session>> SessionFinished;
 
         /// <summary>
         /// Notify to the server that
@@ -256,13 +307,6 @@ namespace Lime.Protocol.Client
 
             switch (session.State)
             {
-                case SessionState.Established:
-                    this.SessionEstablished.RaiseEvent(this, new EnvelopeEventArgs<Session>(session));
-                    break;
-                case SessionState.Finished:
-                    this.SessionFinished.RaiseEvent(this, new EnvelopeEventArgs<Session>(session));                    
-                    await this.Transport.CloseAsync(CancellationToken.None);
-                    break;
                 case SessionState.Failed:
                     this.SessionFailed.RaiseEvent(this, new EnvelopeEventArgs<Session>(session));
                     break;

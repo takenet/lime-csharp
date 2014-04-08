@@ -91,15 +91,36 @@ namespace Lime.Protocol.Tcp
 
             _isListening = true;
                 
-            _acceptTcpClientTask = this.ConnectAsync(CancellationToken.None)
-                .ContinueWith(t =>
-                {
-                    if (t.Exception != null)
-                    {
+            //_acceptTcpClientTask = this.ConnectAsync(CancellationToken.None)
+            //    .ContinueWith(t =>
+            //    {
+            //        if (t.Exception != null)
+            //        {
 
-                    }
-                });
+            //        }
+            //    });
         }
+
+
+        public async Task<ITransport> AcceptTransportAsync(CancellationToken cancellationToken)
+        {
+            if (!_isListening)
+            {
+                throw new InvalidOperationException("The listener was not started. Calls StartAsync first.");
+            }
+
+            cancellationToken.ThrowIfCancellationRequested();
+
+            var tcpClient = await _tcpListener.AcceptTcpClientAsync().ConfigureAwait(false);
+
+            return new TcpTransport(
+                new TcpClientAdapter(tcpClient),
+                _envelopeSerializer,
+                serverCertificate: _sslCertificate,
+                traceWriter: _traceWriter);            
+        }
+
+
 
         /// <summary>
         /// Occurs when a new transport client is
@@ -143,5 +164,7 @@ namespace Lime.Protocol.Tcp
             }
 
         }
+
+
     }
 }

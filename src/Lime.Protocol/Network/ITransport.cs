@@ -30,12 +30,6 @@ namespace Lime.Protocol.Network
         Task<Envelope> ReceiveAsync(CancellationToken cancellationToken);
 
         /// <summary>
-        /// Occurs when an envelope
-        /// is received by the node
-        /// </summary>
-        event EventHandler<EnvelopeEventArgs<Envelope>> EnvelopeReceived;
-
-        /// <summary>
         /// Opens the transport connection with
         /// the specified Uri
         /// </summary>
