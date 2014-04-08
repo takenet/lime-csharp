@@ -158,6 +158,63 @@ namespace Lime.Protocol.Tcp
             await _stream.WriteAsync(jsonBytes, 0, jsonBytes.Length, cancellationToken).ConfigureAwait(false);
         }
 
+        private SemaphoreSlim _receiveSemaphore = new SemaphoreSlim(1);
+
+        /// <summary>
+        /// Reads one envelope from the stream
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public override async Task<Envelope> ReceiveAsync(CancellationToken cancellationToken)
+        {
+            await _receiveSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+
+            try
+            {
+                Envelope envelope = null;
+
+                while (envelope == null && _stream.CanRead)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+
+                    byte[] json;
+
+                    if (this.TryExtractJsonFromBuffer(out json))
+                    {
+                        var jsonString = Encoding.UTF8.GetString(json);
+
+                        if (_traceWriter != null &&
+                            _traceWriter.IsEnabled)
+                        {
+                            await _traceWriter.TraceAsync(jsonString, DataOperation.Receive).ConfigureAwait(false);
+                        }
+
+                        envelope = _envelopeSerializer.Deserialize(jsonString);
+                    }
+
+                    if (envelope == null &&
+                        _stream.CanRead)
+                    {
+                        _bufferPos += await _stream.ReadAsync(_buffer, _bufferPos, _buffer.Length - _bufferPos, cancellationToken).ConfigureAwait(false);
+
+                        if (_bufferPos >= _buffer.Length)
+                        {
+                            _stream.Close();
+
+                            var exception = new InvalidOperationException("Maximum buffer size reached");
+                            await OnFailedAsync(exception).ConfigureAwait(false);
+                        }
+                    }
+                }
+
+                return envelope;
+            }
+            finally
+            {
+                _receiveSemaphore.Release();
+            }
+        }
+
         /// <summary>
         /// Closes the transport
         /// </summary>
@@ -296,7 +353,7 @@ namespace Lime.Protocol.Tcp
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                var envelope = await ReadEnvelopeAsync(cancellationToken).ConfigureAwait(false);
+                var envelope = await ReceiveAsync(cancellationToken).ConfigureAwait(false);
 
                 if (envelope != null)
                 {
@@ -305,51 +362,7 @@ namespace Lime.Protocol.Tcp
             } while (_stream.CanRead);           
         }
 
-        /// <summary>
-        /// Reads one envelope from the stream
-        /// </summary>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        private async Task<Envelope> ReadEnvelopeAsync(CancellationToken cancellationToken)
-        {
-            Envelope envelope = null;
 
-            while (envelope == null && _stream.CanRead)
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-
-                byte[] json;
-
-                if (this.TryExtractJsonFromBuffer(out json))
-                {
-                    var jsonString = Encoding.UTF8.GetString(json);
-
-                    if (_traceWriter != null &&
-                        _traceWriter.IsEnabled)
-                    {
-                        await _traceWriter.TraceAsync(jsonString, DataOperation.Receive).ConfigureAwait(false);
-                    }
-
-                    envelope = _envelopeSerializer.Deserialize(jsonString);                    
-                }
-
-                if (envelope == null && 
-                    _stream.CanRead)
-                {
-                    _bufferPos += await _stream.ReadAsync(_buffer, _bufferPos, _buffer.Length - _bufferPos, cancellationToken).ConfigureAwait(false);
-
-                    if (_bufferPos >= _buffer.Length)
-                    {
-                        _stream.Close();
-
-                        var exception = new InvalidOperationException("Maximum buffer size reached");
-                        await OnFailedAsync(exception).ConfigureAwait(false);
-                    }
-                }
-            }
-
-            return envelope;
-        }
 
         #region Buffer fields
 

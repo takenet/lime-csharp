@@ -33,11 +33,18 @@ namespace Lime.Protocol.Network
         public abstract Task SendAsync(Envelope envelope, CancellationToken cancellationToken);
 
         /// <summary>
+        /// Receives an envelope 
+        /// from the remote node.
+        /// </summary>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns></returns>
+        public abstract Task<Envelope> ReceiveAsync(CancellationToken cancellationToken);
+
+        /// <summary>
         /// Occurs when an envelope
         /// is received by the node
         /// </summary>
         public event EventHandler<EnvelopeEventArgs<Envelope>> EnvelopeReceived;
-
 
         /// <summary>
         /// Opens the transport connection with
@@ -220,5 +227,6 @@ namespace Lime.Protocol.Network
         {
             this.EnvelopeReceived.RaiseEvent(this, new EnvelopeEventArgs<Envelope>(envelope));
         }
+
     }
 }

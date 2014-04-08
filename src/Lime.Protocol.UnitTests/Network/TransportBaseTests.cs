@@ -5,6 +5,7 @@ using Lime.Protocol.Network;
 using Moq;
 using System.Threading.Tasks;
 using System.Threading;
+using System.Collections.Generic;
 
 namespace Lime.Protocol.UnitTests.Network
 {
@@ -271,9 +272,18 @@ namespace Lime.Protocol.UnitTests.Network
 
         private class TestTransportBase : TransportBase
         {
+            private Queue<Envelope> _buffer;
+
+            public TestTransportBase(Queue<Envelope> buffer = null)
+            {
+                _buffer = buffer;
+            }
+
             public bool SendAsyncInvoked { get; private set; }
 
             public bool OpenAsyncInvoked { get; private set; }
+
+            public bool ReceiveAsyncInvoked { get; private set; }
 
             public bool PerformCloseAsyncInvoked { get; private set; }
 
@@ -285,6 +295,13 @@ namespace Lime.Protocol.UnitTests.Network
                 this.SendAsyncInvoked = true;
                 return Task.FromResult<object>(null);
             }
+
+            public override Task<Envelope> ReceiveAsync(CancellationToken cancellationToken)
+            {
+                this.ReceiveAsyncInvoked = true;
+                return Task.FromResult(_buffer.Dequeue());
+            }
+
 
             public override Task OpenAsync(Uri uri, CancellationToken cancellationToken)
             {
@@ -318,6 +335,8 @@ namespace Lime.Protocol.UnitTests.Network
             {
                 base.OnEnvelopeReceived(envelope);
             }
+
+
         }
 
         #endregion

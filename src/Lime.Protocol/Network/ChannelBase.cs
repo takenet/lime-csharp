@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -139,6 +140,71 @@ namespace Lime.Protocol.Network
             return this.SendAsync(message);
         }
 
+        
+        
+        private ConcurrentQueue<Message> _messageBuffer = new ConcurrentQueue<Message>();
+        private ConcurrentQueue<Notification> _notificationBuffer = new ConcurrentQueue<Notification>();
+        private ConcurrentQueue<Command> _commandBuffer = new ConcurrentQueue<Command>();
+        private ConcurrentQueue<Session> _sessionBuffer = new ConcurrentQueue<Session>();
+        private SemaphoreSlim _receiveSemaphore = new SemaphoreSlim(1);
+
+        /// <summary>
+        /// Receives a message
+        /// from the remote node.
+        /// </summary>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns></returns>
+        public async Task<Message> ReceiveMessageAsync(CancellationToken cancellationToken)
+        {
+            Message message = null;
+
+            do
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                if (!_messageBuffer.TryDequeue(out message))
+                {
+                    await _receiveSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+
+                    try
+                    {
+                        if (!_messageBuffer.TryDequeue(out message))
+                        {
+                            var envelope = await this.Transport.ReceiveAsync(cancellationToken).ConfigureAwait(false);
+
+                            if (envelope is Message)
+                            {
+                                message = (Message)envelope;
+                            }
+                            else if (envelope is Notification)
+                            {
+                                _notificationBuffer.Enqueue((Notification)envelope);
+                            }
+                            else if (envelope is Command)
+                            {
+                                _commandBuffer.Enqueue((Command)envelope);
+                            }
+                            else if (envelope is Session)
+                            {
+                                _sessionBuffer.Enqueue((Session)envelope);
+                            }
+                            else
+                            {
+                                throw new InvalidOperationException("An unknown envelope type was received from the transport.");
+                            }
+                        }
+                    }
+                    finally
+                    {
+                        _receiveSemaphore.Release();
+                    }                  
+                }
+            }
+            while (message == null);
+
+            return message;
+        }      
+
         /// <summary>
         /// Occurs when a message is 
         /// received by the node
@@ -170,6 +236,64 @@ namespace Lime.Protocol.Network
             }
 
             return this.SendAsync(command);
+        }
+
+        /// <summary>
+        /// Receives a command
+        /// from the remote node.
+        /// </summary>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns></returns>
+        /// <exception cref="System.NotImplementedException"></exception>
+        public async Task<Command> ReceiveCommandAsync(CancellationToken cancellationToken)
+        {
+            Command command = null;
+
+            do
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                if (!_commandBuffer.TryDequeue(out command))
+                {
+                    await _receiveSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+
+                    try
+                    {
+                        if (!_commandBuffer.TryDequeue(out command))
+                        {
+                            var envelope = await this.Transport.ReceiveAsync(cancellationToken).ConfigureAwait(false);
+
+                            if (envelope is Command)
+                            {
+                                command = (Command)envelope;
+                            }
+                            else if (envelope is Notification)
+                            {
+                                _notificationBuffer.Enqueue((Notification)envelope);
+                            }
+                            else if (envelope is Message)
+                            {
+                                _messageBuffer.Enqueue((Message)envelope);
+                            }
+                            else if (envelope is Session)
+                            {
+                                _sessionBuffer.Enqueue((Session)envelope);
+                            }
+                            else
+                            {
+                                throw new InvalidOperationException("An unknown envelope type was received from the transport.");
+                            }
+                        }
+                    }
+                    finally
+                    {
+                        _receiveSemaphore.Release();
+                    }
+                }
+            }
+            while (command == null);
+
+            return command;
         }
 
         /// <summary>
@@ -206,6 +330,64 @@ namespace Lime.Protocol.Network
         }
 
         /// <summary>
+        /// Receives a notification
+        /// from the remote node.
+        /// </summary>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns></returns>
+        /// <exception cref="System.NotImplementedException"></exception>
+        public async Task<Notification> ReceiveNotificationAsync(CancellationToken cancellationToken)
+        {
+            Notification notification = null;
+
+            do
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                if (!_notificationBuffer.TryDequeue(out notification))
+                {
+                    await _receiveSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+
+                    try
+                    {
+                        if (!_notificationBuffer.TryDequeue(out notification))
+                        {
+                            var envelope = await this.Transport.ReceiveAsync(cancellationToken).ConfigureAwait(false);
+
+                            if (envelope is Notification)
+                            {
+                                notification = (Notification)envelope;
+                            }
+                            else if (envelope is Message)
+                            {
+                                _messageBuffer.Enqueue((Message)envelope);
+                            }
+                            else if (envelope is Command)
+                            {
+                                _commandBuffer.Enqueue((Command)envelope);
+                            }
+                            else if (envelope is Session)
+                            {
+                                _sessionBuffer.Enqueue((Session)envelope);
+                            }
+                            else
+                            {
+                                throw new InvalidOperationException("An unknown envelope type was received from the transport.");
+                            }
+                        }
+                    }
+                    finally
+                    {
+                        _receiveSemaphore.Release();
+                    }
+                }
+            }
+            while (notification == null);
+
+            return notification;        
+        }
+
+        /// <summary>
         /// Occurs when a notification is 
         /// received by the node
         /// </summary>
@@ -230,6 +412,64 @@ namespace Lime.Protocol.Network
             }
 
             return this.SendAsync(session);
+        }
+
+        /// <summary>
+        /// Receives a session
+        /// from the remote node.
+        /// </summary>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns></returns>
+        /// <exception cref="System.NotImplementedException"></exception>
+        public async Task<Session> ReceiveSessionAsync(CancellationToken cancellationToken)
+        {
+            Session session = null;
+
+            do
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                if (!_sessionBuffer.TryDequeue(out session))
+                {
+                    await _receiveSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+
+                    try
+                    {
+                        if (!_sessionBuffer.TryDequeue(out session))
+                        {
+                            var envelope = await this.Transport.ReceiveAsync(cancellationToken).ConfigureAwait(false);
+
+                            if (envelope is Session)
+                            {
+                                session = (Session)envelope;
+                            }
+                            else if (envelope is Notification)
+                            {
+                                _notificationBuffer.Enqueue((Notification)envelope);
+                            }
+                            else if (envelope is Message)
+                            {
+                                _messageBuffer.Enqueue((Message)envelope);
+                            }
+                            else if (envelope is Command)
+                            {
+                                _commandBuffer.Enqueue((Command)envelope);
+                            }
+                            else
+                            {
+                                throw new InvalidOperationException("An unknown envelope type was received from the transport.");
+                            }
+                        }
+                    }
+                    finally
+                    {
+                        _receiveSemaphore.Release();
+                    }
+                }
+            }
+            while (session == null);
+
+            return session;             
         }
 
         /// <summary>
@@ -359,5 +599,9 @@ namespace Lime.Protocol.Network
         }
 
         #endregion
+
+
+
+
     }
 }

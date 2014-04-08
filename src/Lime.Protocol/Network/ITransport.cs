@@ -15,11 +15,19 @@ namespace Lime.Protocol.Network
     {
         /// <summary>
         /// Sends an envelope to 
-        /// the connected node
+        /// the remote node.
         /// </summary>
         /// <param name="envelope">Envelope to be transported</param>
         /// <returns></returns>
         Task SendAsync(Envelope envelope, CancellationToken cancellationToken);
+
+        /// <summary>
+        /// Receives an envelope 
+        /// from the remote node.
+        /// </summary>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns></returns>
+        Task<Envelope> ReceiveAsync(CancellationToken cancellationToken);
 
         /// <summary>
         /// Occurs when an envelope
