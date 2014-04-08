@@ -89,13 +89,14 @@ namespace Lime.Protocol.UnitTests.Network
 
         #endregion
 
+        #region ReceiveMessageAsync
 
         [TestMethod]
         [TestCategory("ReceiveMessageAsync")]
         public async Task ReceiveMessageAsync_EstablishedState_ReadsTransport()
         {
             var target = GetTarget(SessionState.Established);
-            
+
             var content = DataUtil.CreateTextContent();
             var message = DataUtil.CreateMessage(content);
 
@@ -103,17 +104,18 @@ namespace Lime.Protocol.UnitTests.Network
 
             _transport
                 .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
-                .Returns(() => Task.FromResult<Envelope>(message));
+                .Returns(() => Task.FromResult<Envelope>(message))
+                .Verifiable();
 
             var actual = await target.ReceiveMessageAsync(cancellationToken);
 
             Assert.AreEqual(message, actual);
+            _transport.Verify();
         }
 
         [TestMethod]
         [TestCategory("ReceiveMessageAsync")]
         [ExpectedException(typeof(InvalidOperationException))]
-
         public async Task ReceiveMessageAsync_NewState_ThrowsInvalidOperationException()
         {
             var target = GetTarget(SessionState.New);
@@ -130,46 +132,7 @@ namespace Lime.Protocol.UnitTests.Network
             var actual = await target.ReceiveMessageAsync(cancellationToken);
         }
 
-
-        #region SendNegotiatingSessionAsync
-
-        //[TestMethod]
-        //[TestCategory("SendNegotiatingSessionAsync")]
-        //public async Task SendNegotiatingSessionAsync_NegotiatingState_CallsTransport()
-        //{
-        //    var target = GetTarget(SessionState.Negotiating);
-            
-        //    var compression = SessionCompression.GZip;
-        //    var encryption = SessionEncryption.TLS;
-
-        //    await target.SendNegotiatingSessionAsync(compression, encryption);
-
-        //    _transport.Verify(
-        //        t => t.SendAsync(It.Is<Session>(
-        //                e => e.State == SessionState.Negotiating &&
-        //                     e.Id == target.SessionId &&
-        //                     e.Compression == compression &&
-        //                     e.Encryption == encryption),
-        //            It.IsAny<CancellationToken>()),
-        //            Times.Once());
-        //}
-
-        //[TestMethod]
-        //[TestCategory("SendNegotiatingSessionAsync")]
-        //[ExpectedException(typeof(InvalidOperationException))]
-        //public async Task SendNegotiatingSessionAsync_NewState_ThrowsInvalidOperationException()
-        //{
-        //    var target = GetTarget(SessionState.New);
-
-        //    var compression = SessionCompression.GZip;
-        //    var encryption = SessionEncryption.TLS;
-
-        //    await target.SendNegotiatingSessionAsync(compression, encryption);
-        //}
-
         #endregion
-
-
 
         #region SendCommandAsync
 
@@ -217,6 +180,51 @@ namespace Lime.Protocol.UnitTests.Network
             var command = DataUtil.CreateCommand(content);
 
             await target.SendCommandAsync(command);
+        }
+
+        #endregion
+
+        #region ReceiveCommandAsync
+
+        [TestMethod]
+        [TestCategory("ReceiveCommandAsync")]
+        public async Task ReceiveCommandAsync_EstablishedState_ReadsTransport()
+        {
+            var target = GetTarget(SessionState.Established);
+
+            var content = DataUtil.CreateTextContent();
+            var command = DataUtil.CreateCommand(content);
+
+            var cancellationToken = DataUtil.CreateCancellationToken();
+
+            _transport
+                .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(() => Task.FromResult<Envelope>(command))
+                .Verifiable();
+
+            var actual = await target.ReceiveCommandAsync(cancellationToken);
+
+            Assert.AreEqual(command, actual);
+            _transport.Verify();
+        }
+
+        [TestMethod]
+        [TestCategory("ReceiveCommandAsync")]
+        [ExpectedException(typeof(InvalidOperationException))]
+        public async Task ReceiveCommandAsync_NewState_ThrowsInvalidOperationException()
+        {
+            var target = GetTarget(SessionState.New);
+
+            var content = DataUtil.CreateTextContent();
+            var command = DataUtil.CreateCommand(content);
+
+            var cancellationToken = DataUtil.CreateCancellationToken();
+
+            _transport
+                .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(() => Task.FromResult<Envelope>(command));
+
+            var actual = await target.ReceiveCommandAsync(cancellationToken);
         }
 
         #endregion
@@ -269,24 +277,276 @@ namespace Lime.Protocol.UnitTests.Network
 
         #endregion
 
-        #region OnMessageReceivedAsync
-        
+        #region ReceiveNotificationAsync
+
         [TestMethod]
-        [TestCategory("OnMessageReceivedAsync")]
-        public void OnMessageReceivedAsync_EstablishedState_RaiseMessageReceived()
+        [TestCategory("ReceiveNotificationAsync")]
+        public async Task ReceiveNotificationAsync_EstablishedState_ReadsTransport()
         {
             var target = GetTarget(SessionState.Established);
-            bool messageReceivedRaised = false;
+
+            var notification = DataUtil.CreateNotification(Event.Received);
+
+            var cancellationToken = DataUtil.CreateCancellationToken();
+
+            _transport
+                .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(() => Task.FromResult<Envelope>(notification))
+                .Verifiable();
+
+            var actual = await target.ReceiveNotificationAsync(cancellationToken);
+
+            Assert.AreEqual(notification, actual);
+            _transport.Verify();
+        }
+
+        [TestMethod]
+        [TestCategory("ReceiveNotificationAsync")]
+        [ExpectedException(typeof(InvalidOperationException))]
+        public async Task ReceiveNotificationAsync_NewState_ThrowsInvalidOperationException()
+        {
+            var target = GetTarget(SessionState.New);
+
+            var notification = DataUtil.CreateNotification(Event.Received);
+
+            var cancellationToken = DataUtil.CreateCancellationToken();
+
+            _transport
+                .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(() => Task.FromResult<Envelope>(notification));
+
+            var actual = await target.ReceiveNotificationAsync(cancellationToken);
+        }
+
+        #endregion
+
+        #region SendSessionAsync
+
+        [TestMethod]
+        [TestCategory("SendSessionAsync")]
+        public async Task SendSessionAsync_EstablishedState_CallsTransport()
+        {
+            var target = (ISessionChannel)GetTarget(SessionState.Established);
+
+            var session = DataUtil.CreateSession();
+
+            await target.SendSessionAsync(session);
+
+            _transport.Verify(
+                t => t.SendAsync(It.Is<Session>(
+                        e => e.Id == session.Id &&
+                             e.From.Equals(session.From) &&
+                             e.To.Equals(session.To) &&
+                             e.State == session.State),
+                    It.IsAny<CancellationToken>()),
+                    Times.Once());
+        }
+
+        [TestMethod]
+        [TestCategory("SendSessionAsync")]
+        [ExpectedException(typeof(ArgumentNullException))]
+        public async Task SendSessionAsync_NullSession_ThrowsArgumentNullException()
+        {
+            var target = (ISessionChannel)GetTarget(SessionState.Established);
+
+            Session session = null;
+
+            await target.SendSessionAsync(session);
+        }
+
+        [TestMethod]
+        [TestCategory("SendSessionAsync")]
+        [ExpectedException(typeof(InvalidOperationException))]
+        public async Task SendSessionAsync_FinishedState_ThrowsInvalidOperationException()
+        {
+            var target = (ISessionChannel)GetTarget(SessionState.Finished);
+            var session = DataUtil.CreateSession();
+
+            await target.SendSessionAsync(session);
+        }
+
+        #endregion
+
+        #region ReceiveSessionAsync
+
+        [TestMethod]
+        [TestCategory("ReceiveSessionAsync")]
+        public async Task ReceiveSessionAsync_EstablishedState_ReadsTransport()
+        {
+            var target = (ISessionChannel)GetTarget(SessionState.Established);
+
+            var session = DataUtil.CreateSession();
+
+            var cancellationToken = DataUtil.CreateCancellationToken();
+
+            _transport
+                .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(() => Task.FromResult<Envelope>(session))
+                .Verifiable();
+
+            var actual = await target.ReceiveSessionAsync(cancellationToken);
+
+            Assert.AreEqual(session, actual);
+            _transport.Verify();
+        }
+
+        [TestMethod]
+        [TestCategory("ReceiveSessionAsync")]
+        [ExpectedException(typeof(InvalidOperationException))]
+        public async Task ReceiveSessionAsync_FinishedState_ThrowsInvalidOperationException()
+        {
+            var target = (ISessionChannel)GetTarget(SessionState.Finished);
+
+            var session = DataUtil.CreateSession();
+
+            var cancellationToken = DataUtil.CreateCancellationToken();
+
+            _transport
+                .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(() => Task.FromResult<Envelope>(session));
+
+            var actual = await target.ReceiveSessionAsync(cancellationToken);
+        }
+
+        #endregion
+
+        #region EnvelopeAsyncBuffer_PromiseAdded
+
+        [TestMethod]
+        [TestCategory("EnvelopeAsyncBuffer_PromiseAdded")]
+        public void EnvelopeAsyncBuffer_PromiseAdded_TransportThrowsException_CallsTransportCloseAsyncAndCancelTasks()
+        {
+            var target = GetTarget(SessionState.Established);
+
+            var exception = DataUtil.CreateException();
+            var cancellationToken = DataUtil.CreateCancellationToken();
+
+            _transport
+                .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .ThrowsAsync(exception)
+                .Verifiable();
+
+            _transport
+                .Setup(t => t.CloseAsync(It.IsAny<CancellationToken>()))
+                .Callback(() => _transport.Raise(t => t.Closing += (sender, e) => { }, new DeferralEventArgs()));
+
+            var receiveTask = target.ReceiveMessageAsync(cancellationToken);
+
+            _transport.Verify();
+
+            _transport.Verify(
+                t => t.CloseAsync(It.IsAny<CancellationToken>()),
+                Times.Once());
+
+            Assert.IsTrue(receiveTask.IsCanceled);
+        }
+
+        [TestMethod]
+        [TestCategory("EnvelopeAsyncBuffer_PromiseAdded")]
+        public void EnvelopeAsyncBuffer_PromiseAdded_BufferHasPromises_ConsumersFromTransport()
+        {
+            var target = GetTarget(SessionState.Established);
+            var cancellationToken = DataUtil.CreateCancellationToken();
 
             var content = DataUtil.CreateTextContent();
             var message = DataUtil.CreateMessage(content);
+            var resource = DataUtil.CreatePing();
+            var command = DataUtil.CreateCommand(resource);
+            var notification = DataUtil.CreateNotification(Event.Received);
 
-            target.MessageReceived += (sender, e) => messageReceivedRaised = !messageReceivedRaised && e.Envelope == message;
+            var session = DataUtil.CreateSession();
 
+            _transport
+                .SetupSequence(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(Task.FromResult<Envelope>(message))
+                .Returns(Task.FromResult<Envelope>(command))
+                .Returns(Task.FromResult<Envelope>(notification))
+                .Returns(Task.FromResult<Envelope>(session))
+                .Returns(Task.FromResult<Envelope>(message));
 
-            _transport.ReceiveEnvelope(message);
+            var receiveMessageTask = target.ReceiveMessageAsync(cancellationToken);
+            var receiveCommandTask = target.ReceiveCommandAsync(cancellationToken);
+            var receiveNotificationTask = target.ReceiveNotificationAsync(cancellationToken);
+            var receiveSessionTask = ((ISessionChannel)target).ReceiveSessionAsync(cancellationToken);
+                                    
+            Assert.IsTrue(receiveSessionTask.IsCompleted);
+            Assert.IsTrue(receiveNotificationTask.IsCompleted);
+            Assert.IsTrue(receiveCommandTask.IsCompleted);
+            Assert.IsTrue(receiveMessageTask.IsCompleted);
 
-            Assert.IsTrue(messageReceivedRaised);
+            Assert.AreEqual(receiveSessionTask.Result, session);
+            Assert.AreEqual(receiveNotificationTask.Result, notification);
+            Assert.AreEqual(receiveCommandTask.Result, command);
+            Assert.AreEqual(receiveMessageTask.Result, message);
+
+            _transport.Verify(
+                t => t.ReceiveAsync(It.IsAny<CancellationToken>()),
+                Times.Exactly(4));
+
+        }
+
+        [TestMethod]
+        [TestCategory("EnvelopeAsyncBuffer_PromiseAdded")]
+        public void EnvelopeAsyncBuffer_PromiseAdded_BufferHasPromises_ConsumersFromTransportInverted()
+        {
+            var target = GetTarget(SessionState.Established);
+            var cancellationToken = DataUtil.CreateCancellationToken();
+
+            var content = DataUtil.CreateTextContent();
+            var message = DataUtil.CreateMessage(content);
+            var resource = DataUtil.CreatePing();
+            var command = DataUtil.CreateCommand(resource);
+            var notification = DataUtil.CreateNotification(Event.Received);
+
+            var session = DataUtil.CreateSession();
+
+            _transport
+                .SetupSequence(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(Task.FromResult<Envelope>(message))
+                .Returns(Task.FromResult<Envelope>(command))
+                .Returns(Task.FromResult<Envelope>(notification))
+                .Returns(Task.FromResult<Envelope>(session))
+                .Returns(Task.FromResult<Envelope>(message));
+
+            var receiveSessionTask = ((ISessionChannel)target).ReceiveSessionAsync(cancellationToken);
+            var receiveNotificationTask = target.ReceiveNotificationAsync(cancellationToken);
+            var receiveCommandTask = target.ReceiveCommandAsync(cancellationToken);
+            var receiveMessageTask = target.ReceiveMessageAsync(cancellationToken);
+
+            Assert.IsTrue(receiveSessionTask.IsCompleted);
+            Assert.IsTrue(receiveNotificationTask.IsCompleted);
+            Assert.IsTrue(receiveCommandTask.IsCompleted);
+            Assert.IsTrue(receiveMessageTask.IsCompleted);
+
+            Assert.AreEqual(receiveSessionTask.Result, session);
+            Assert.AreEqual(receiveNotificationTask.Result, notification);
+            Assert.AreEqual(receiveCommandTask.Result, command);
+            Assert.AreEqual(receiveMessageTask.Result, message);
+
+            _transport.Verify(
+                t => t.ReceiveAsync(It.IsAny<CancellationToken>()),
+                Times.Exactly(4));
+
+        }
+
+        #endregion
+
+        #region OnMessageReceivedAsync
+
+        [TestMethod]
+        [TestCategory("OnMessageReceivedAsync")]
+        public async Task OnMessageReceivedAsync_NotEstablishedState_ClosesTransport()
+        {
+            var target = (TestChannel)GetTarget(SessionState.Authenticating);
+
+            var content = DataUtil.CreateTextContent();
+            var message = DataUtil.CreateMessage(content);           
+
+            await target.CallsOnMessageReceivedAsync(message);
+            
+            _transport.Verify(
+                t => t.CloseAsync(It.IsAny<CancellationToken>()),
+                Times.Once());
         }
 
         #endregion
@@ -295,19 +555,18 @@ namespace Lime.Protocol.UnitTests.Network
 
         [TestMethod]
         [TestCategory("OnCommandReceivedAsync")]
-        public void OnCommandReceivedAsync_EstablishedState_RaiseCommandReceived()
+        public async Task OnCommandReceivedAsync_NotEstablishedState_ClosesTransport()
         {
-            var target = GetTarget(SessionState.Established);
-            bool commandReceivedRaised = false;
+            var target = (TestChannel)GetTarget(SessionState.Authenticating);
 
-            var content = DataUtil.CreatePing();
-            var command = DataUtil.CreateCommand(content);
+            var resource = DataUtil.CreatePing();
+            var command = DataUtil.CreateCommand(resource);
 
-            target.CommandReceived += (sender, e) => commandReceivedRaised = !commandReceivedRaised && e.Envelope == command;
+            await target.CallsOnCommandReceivedAsync(command);
 
-            _transport.ReceiveEnvelope(command);
-
-            Assert.IsTrue(commandReceivedRaised);
+            _transport.Verify(
+                t => t.CloseAsync(It.IsAny<CancellationToken>()),
+                Times.Once());
         }
 
         #endregion
@@ -316,81 +575,35 @@ namespace Lime.Protocol.UnitTests.Network
 
         [TestMethod]
         [TestCategory("OnNotificationReceivedAsync")]
-        public void OnNotificationReceivedAsync_EstablishedState_RaiseNotificationReceived()
+        public async Task OnNotificationReceivedAsync_NotEstablishedState_ClosesTransport()
         {
-            var target = GetTarget(SessionState.Established);
-            bool notificationReceivedRaised = false;
+            var target = (TestChannel)GetTarget(SessionState.Authenticating);
 
-            var notification = DataUtil.CreateNotification(Event.Accepted);
+            var notification = DataUtil.CreateNotification(Event.Received);
 
-            target.NotificationReceived += (sender, e) => notificationReceivedRaised = !notificationReceivedRaised && e.Envelope == notification;
+            await target.CallsOnNotificationReceivedAsync(notification);
 
-            _transport.ReceiveEnvelope(notification);
-
-            Assert.IsTrue(notificationReceivedRaised);
+            _transport.Verify(
+                t => t.CloseAsync(It.IsAny<CancellationToken>()),
+                Times.Once());
         }
 
         #endregion
 
         #region OnSessionReceivedAsync
 
-        //[TestMethod]
-        //[TestCategory("OnSessionReceivedAsync")]
-        //public void OnSessionReceivedAsync_EstablishedSession_RaiseSessionReceived()
-        //{
-        //    var target = GetTarget(SessionState.Authenticating);
-        //    bool sessionReceivedRaised = false;
+        [TestMethod]
+        [TestCategory("OnSessionReceivedAsync")]
+        public void OnSessionReceivedAsync_FinishedState_DoesNothing()
+        {
+            var target = (TestChannel)GetTarget(SessionState.Authenticating);
 
-        //    var session = DataUtil.CreateSession();
-        //    session.State = SessionState.Established;
+            var session = DataUtil.CreateSession();
 
-        //    target.SessionReceived += (sender, e) => sessionReceivedRaised = !sessionReceivedRaised && e.Envelope == session;
+            var receiveSessionTask = target.CallsOnSessionReceivedAsync(session);
 
-        //    _transport.ReceiveEnvelope(session);
-
-        //    Assert.IsTrue(sessionReceivedRaised);
-        //}
-
-        //[TestMethod]
-        //[TestCategory("OnSessionReceivedAsync")]
-        //public void OnSessionReceivedAsync_NegotiatingSession_RaiseSessionReceivedAndNegotiatingSessionReceived()
-        //{
-        //    var target = GetTarget(SessionState.Authenticating);
-        //    bool sessionReceivedRaised = false;
-        //    bool negotiatingSessionReceivedRaised = false;
-
-        //    var session = DataUtil.CreateSession();
-        //    session.State = SessionState.Negotiating;
-
-        //    target.SessionReceived += (sender, e) => sessionReceivedRaised = e.Envelope == session;
-        //    target.NegotiateSessionReceived += (sender, e) => negotiatingSessionReceivedRaised = e.Envelope == session;
-
-        //    _transport.ReceiveEnvelope(session);
-
-        //    Assert.IsTrue(sessionReceivedRaised);
-        //    Assert.IsTrue(negotiatingSessionReceivedRaised);
-        //}
-
-
-        //[TestMethod]
-        //[TestCategory("OnSessionReceivedAsync")]
-        //public void OnSessionReceivedAsync_AuthenticatingSession_RaiseSessionReceivedAndAuthenticatingSessionReceived()
-        //{
-        //    var target = GetTarget(SessionState.Authenticating);
-        //    bool sessionReceivedRaised = false;
-        //    bool authenticatingSessionReceivedRaised = false;
-
-        //    var session = DataUtil.CreateSession();
-        //    session.State = SessionState.Authenticating;
-
-        //    target.SessionReceived += (sender, e) => sessionReceivedRaised = e.Envelope == session;
-        //    target.AuthenticateSessionReceived += (sender, e) => authenticatingSessionReceivedRaised = e.Envelope == session;
-
-        //    _transport.ReceiveEnvelope(session);
-
-        //    Assert.IsTrue(sessionReceivedRaised);
-        //    Assert.IsTrue(authenticatingSessionReceivedRaised);
-        //}
+            Assert.IsTrue(receiveSessionTask.IsCompleted);
+        }
 
         #endregion
 
@@ -398,17 +611,27 @@ namespace Lime.Protocol.UnitTests.Network
 
         [TestMethod]
         [TestCategory("Dispose")]
-        public void Dispose_Default_DisposeTransport()
+        public void Dispose_Default_DisposeTransportAndCancelTasks()
         {
             var disposableTransport = _transport.As<IDisposable>();
 
-            var target = GetTarget(SessionState.New);
+            var target = GetTarget(SessionState.Established);
+            var cancellationToken = DataUtil.CreateCancellationToken();
+            var tcs = new TaskCompletionSource<Envelope>();
+
+            _transport
+                .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(() => tcs.Task);
+
+            var receiveMessageTask = target.ReceiveMessageAsync(cancellationToken);
 
             target.Dispose();
 
             disposableTransport.Verify(
                 t => t.Dispose(),
                 Times.Once());
+
+            Assert.IsTrue(receiveMessageTask.IsCanceled);
         }
 
         #endregion
@@ -421,6 +644,26 @@ namespace Lime.Protocol.UnitTests.Network
                 : base(transport, sendTimeout)
             {
                 base.State = state;
+            }
+
+            public Task CallsOnMessageReceivedAsync(Message message)
+            {
+                return base.OnMessageReceivedAsync(message);
+            }
+
+            public Task CallsOnCommandReceivedAsync(Command command)
+            {
+                return base.OnCommandReceivedAsync(command);
+            }
+
+            public Task CallsOnNotificationReceivedAsync(Notification notification)
+            {
+                return base.OnNotificationReceivedAsync(notification);
+            }
+
+            public Task CallsOnSessionReceivedAsync(Session session)
+            {
+                return base.OnSessionReceivedAsync(session);
             }
         }
 

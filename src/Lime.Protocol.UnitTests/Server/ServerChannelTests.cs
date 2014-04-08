@@ -395,159 +395,159 @@ namespace Lime.Protocol.UnitTests.Server
 
         #region OnMessageReceivedAsync
 
-        [TestMethod]
-        [TestCategory("OnMessageReceivedAsync")]
-        public async Task OnMessageReceivedAsync_EstablishedState_RaisesMessageReceived()
-        {
-            var target = GetTarget();
-            await target.SetStateAsync(SessionState.Established);
+        //[TestMethod]
+        //[TestCategory("OnMessageReceivedAsync")]
+        //public async Task OnMessageReceivedAsync_EstablishedState_RaisesMessageReceived()
+        //{
+        //    var target = GetTarget();
+        //    await target.SetStateAsync(SessionState.Established);
 
-            bool messageReceivedRaised = false;
+        //    bool messageReceivedRaised = false;
 
-            var content = DataUtil.CreateTextContent();
-            var message = DataUtil.CreateMessage(content);
+        //    var content = DataUtil.CreateTextContent();
+        //    var message = DataUtil.CreateMessage(content);
 
-            target.MessageReceived += (sender, e) => messageReceivedRaised = !messageReceivedRaised && e.Envelope == message;
-            _transport.ReceiveEnvelope(message);
+        //    target.MessageReceived += (sender, e) => messageReceivedRaised = !messageReceivedRaised && e.Envelope == message;
+        //    _transport.ReceiveEnvelope(message);
 
-            Assert.IsTrue(messageReceivedRaised);
-        }
+        //    Assert.IsTrue(messageReceivedRaised);
+        //}
 
-        [TestMethod]
-        [TestCategory("OnMessageReceivedAsync")]
-        public void OnMessageReceivedAsync_NewState_CallsSessionFailedAsyncAndClosesTransport()
-        {
-            var target = GetTarget();
+        //[TestMethod]
+        //[TestCategory("OnMessageReceivedAsync")]
+        //public void OnMessageReceivedAsync_NewState_CallsSessionFailedAsyncAndClosesTransport()
+        //{
+        //    var target = GetTarget();
 
-            bool messageReceivedRaised = false;
+        //    bool messageReceivedRaised = false;
 
-            var content = DataUtil.CreateTextContent();
-            var message = DataUtil.CreateMessage(content);
+        //    var content = DataUtil.CreateTextContent();
+        //    var message = DataUtil.CreateMessage(content);
 
-            target.MessageReceived += (sender, e) => messageReceivedRaised = !messageReceivedRaised && e.Envelope == message;
-            _transport.ReceiveEnvelope(message);
+        //    target.MessageReceived += (sender, e) => messageReceivedRaised = !messageReceivedRaised && e.Envelope == message;
+        //    _transport.ReceiveEnvelope(message);
 
-            Assert.IsFalse(messageReceivedRaised);
+        //    Assert.IsFalse(messageReceivedRaised);
 
-            _transport.Verify(
-                t => t.SendAsync(
-                    It.Is<Session>(e => e.State == SessionState.Failed &&
-                                        e.Reason != null &&
-                                        e.Reason.Code == ReasonCodes.SESSION_INVALID_ACTION_FOR_STATE &&
-                                        e.Id == target.SessionId),
-                    It.IsAny<CancellationToken>()),
-                    Times.Once());
+        //    _transport.Verify(
+        //        t => t.SendAsync(
+        //            It.Is<Session>(e => e.State == SessionState.Failed &&
+        //                                e.Reason != null &&
+        //                                e.Reason.Code == ReasonCodes.SESSION_INVALID_ACTION_FOR_STATE &&
+        //                                e.Id == target.SessionId),
+        //            It.IsAny<CancellationToken>()),
+        //            Times.Once());
 
-            _transport.Verify(
-                t => t.CloseAsync(
-                    It.IsAny<CancellationToken>()));
+        //    _transport.Verify(
+        //        t => t.CloseAsync(
+        //            It.IsAny<CancellationToken>()));
 
-        }
+        //}
 
         #endregion
 
         #region OnCommandReceivedAsync
 
-        [TestMethod]
-        [TestCategory("OnCommandReceivedAsync")]
-        public async Task OnCommandReceivedAsync_EstablishedState_RaisesCommandReceived()
-        {
-            var target = GetTarget();
-            await target.SetStateAsync(SessionState.Established);
+        //[TestMethod]
+        //[TestCategory("OnCommandReceivedAsync")]
+        //public async Task OnCommandReceivedAsync_EstablishedState_RaisesCommandReceived()
+        //{
+        //    var target = GetTarget();
+        //    await target.SetStateAsync(SessionState.Established);
 
-            bool commandReceivedRaised = false;
+        //    bool commandReceivedRaised = false;
 
-            var content = DataUtil.CreateTextContent();
-            var command = DataUtil.CreateCommand(content);
+        //    var content = DataUtil.CreateTextContent();
+        //    var command = DataUtil.CreateCommand(content);
 
-            target.CommandReceived += (sender, e) => commandReceivedRaised = !commandReceivedRaised && e.Envelope == command;
-            _transport.ReceiveEnvelope(command);
+        //    target.CommandReceived += (sender, e) => commandReceivedRaised = !commandReceivedRaised && e.Envelope == command;
+        //    _transport.ReceiveEnvelope(command);
 
-            Assert.IsTrue(commandReceivedRaised);
-        }
+        //    Assert.IsTrue(commandReceivedRaised);
+        //}
 
-        [TestMethod]
-        [TestCategory("OnCommandReceivedAsync")]
-        public void OnCommandReceivedAsync_NewState_CallsSessionFailedAsyncAndClosesTransport()
-        {
-            var target = GetTarget();
+        //[TestMethod]
+        //[TestCategory("OnCommandReceivedAsync")]
+        //public void OnCommandReceivedAsync_NewState_CallsSessionFailedAsyncAndClosesTransport()
+        //{
+        //    var target = GetTarget();
 
-            bool commandReceivedRaised = false;
+        //    bool commandReceivedRaised = false;
 
-            var content = DataUtil.CreateTextContent();
-            var command = DataUtil.CreateCommand(content);
+        //    var content = DataUtil.CreateTextContent();
+        //    var command = DataUtil.CreateCommand(content);
 
-            target.CommandReceived += (sender, e) => commandReceivedRaised = !commandReceivedRaised && e.Envelope == command;
-            _transport.ReceiveEnvelope(command);
+        //    target.CommandReceived += (sender, e) => commandReceivedRaised = !commandReceivedRaised && e.Envelope == command;
+        //    _transport.ReceiveEnvelope(command);
 
-            Assert.IsFalse(commandReceivedRaised);
+        //    Assert.IsFalse(commandReceivedRaised);
 
-            _transport.Verify(
-                t => t.SendAsync(
-                    It.Is<Session>(e => e.State == SessionState.Failed &&
-                                        e.Reason != null &&
-                                        e.Reason.Code == ReasonCodes.SESSION_INVALID_ACTION_FOR_STATE &&
-                                        e.Id == target.SessionId),
-                    It.IsAny<CancellationToken>()),
-                    Times.Once());
+        //    _transport.Verify(
+        //        t => t.SendAsync(
+        //            It.Is<Session>(e => e.State == SessionState.Failed &&
+        //                                e.Reason != null &&
+        //                                e.Reason.Code == ReasonCodes.SESSION_INVALID_ACTION_FOR_STATE &&
+        //                                e.Id == target.SessionId),
+        //            It.IsAny<CancellationToken>()),
+        //            Times.Once());
 
-            _transport.Verify(
-                t => t.CloseAsync(
-                    It.IsAny<CancellationToken>()));
+        //    _transport.Verify(
+        //        t => t.CloseAsync(
+        //            It.IsAny<CancellationToken>()));
 
-        }
+        //}
 
         #endregion
 
 
         #region OnNotificationReceivedAsync
 
-        [TestMethod]
-        [TestCategory("OnNotificationReceivedAsync")]
-        public async Task OnNotificationReceivedAsync_EstablishedState_RaisesNotificationReceived()
-        {
-            var target = GetTarget();
-            await target.SetStateAsync(SessionState.Established);
+        //[TestMethod]
+        //[TestCategory("OnNotificationReceivedAsync")]
+        //public async Task OnNotificationReceivedAsync_EstablishedState_RaisesNotificationReceived()
+        //{
+        //    var target = GetTarget();
+        //    await target.SetStateAsync(SessionState.Established);
 
-            bool notificationReceivedRaised = false;
+        //    bool notificationReceivedRaised = false;
 
-            var notification = DataUtil.CreateNotification(Event.Received);
+        //    var notification = DataUtil.CreateNotification(Event.Received);
 
-            target.NotificationReceived += (sender, e) => notificationReceivedRaised = !notificationReceivedRaised && e.Envelope == notification;
-            _transport.ReceiveEnvelope(notification);
+        //    target.NotificationReceived += (sender, e) => notificationReceivedRaised = !notificationReceivedRaised && e.Envelope == notification;
+        //    _transport.ReceiveEnvelope(notification);
 
-            Assert.IsTrue(notificationReceivedRaised);
-        }
+        //    Assert.IsTrue(notificationReceivedRaised);
+        //}
 
-        [TestMethod]
-        [TestCategory("OnNotificationReceivedAsync")]
-        public void OnNotificationReceivedAsync_NewState_CallsSessionFailedAsyncAndClosesTransport()
-        {
-            var target = GetTarget();
+        //[TestMethod]
+        //[TestCategory("OnNotificationReceivedAsync")]
+        //public void OnNotificationReceivedAsync_NewState_CallsSessionFailedAsyncAndClosesTransport()
+        //{
+        //    var target = GetTarget();
 
-            bool notificationReceivedRaised = false;
+        //    bool notificationReceivedRaised = false;
 
-            var notification = DataUtil.CreateNotification(Event.Received);
+        //    var notification = DataUtil.CreateNotification(Event.Received);
 
-            target.NotificationReceived += (sender, e) => notificationReceivedRaised = !notificationReceivedRaised && e.Envelope == notification;
-            _transport.ReceiveEnvelope(notification);
+        //    target.NotificationReceived += (sender, e) => notificationReceivedRaised = !notificationReceivedRaised && e.Envelope == notification;
+        //    _transport.ReceiveEnvelope(notification);
 
-            Assert.IsFalse(notificationReceivedRaised);
+        //    Assert.IsFalse(notificationReceivedRaised);
 
-            _transport.Verify(
-                t => t.SendAsync(
-                    It.Is<Session>(e => e.State == SessionState.Failed &&
-                                        e.Reason != null &&
-                                        e.Reason.Code == ReasonCodes.SESSION_INVALID_ACTION_FOR_STATE &&
-                                        e.Id == target.SessionId),
-                    It.IsAny<CancellationToken>()),
-                    Times.Once());
+        //    _transport.Verify(
+        //        t => t.SendAsync(
+        //            It.Is<Session>(e => e.State == SessionState.Failed &&
+        //                                e.Reason != null &&
+        //                                e.Reason.Code == ReasonCodes.SESSION_INVALID_ACTION_FOR_STATE &&
+        //                                e.Id == target.SessionId),
+        //            It.IsAny<CancellationToken>()),
+        //            Times.Once());
 
-            _transport.Verify(
-                t => t.CloseAsync(
-                    It.IsAny<CancellationToken>()));
+        //    _transport.Verify(
+        //        t => t.CloseAsync(
+        //            It.IsAny<CancellationToken>()));
 
-        }
+        //}
 
         #endregion
     }

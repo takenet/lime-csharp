@@ -141,12 +141,6 @@ namespace Lime.Protocol.Network
             return _messageAsyncBuffer.DequeueAsync(combinedCancellationTokenSource.Token);
         }      
 
-        /// <summary>
-        /// Occurs when a message is 
-        /// received by the node
-        /// </summary>
-        public event EventHandler<EnvelopeEventArgs<Message>> MessageReceived;
-
         #endregion
 
         #region ICommandChannel Members
@@ -194,12 +188,6 @@ namespace Lime.Protocol.Network
 
             return _commandAsyncBuffer.DequeueAsync(combinedCancellationTokenSource.Token);
         }
-
-        /// <summary>
-        /// Occurs when a command envelope 
-        /// is received by the node
-        /// </summary>
-        public event EventHandler<EnvelopeEventArgs<Command>> CommandReceived;
 
         #endregion
 
@@ -249,12 +237,6 @@ namespace Lime.Protocol.Network
             return _notificationAsyncBuffer.DequeueAsync(combinedCancellationTokenSource.Token);
         }
 
-        /// <summary>
-        /// Occurs when a notification is 
-        /// received by the node
-        /// </summary>
-        public event EventHandler<EnvelopeEventArgs<Notification>> NotificationReceived;
-
         #endregion
 
         #region ISessionChannel Members
@@ -275,6 +257,11 @@ namespace Lime.Protocol.Network
                 throw new ArgumentNullException("session");
             }
 
+            if (this.State == SessionState.Finished)
+            {
+                throw new InvalidOperationException(string.Format("Cannot receive a session in the '{0}' session state", this.State));
+            }
+
             return this.SendAsync(session);
         }
 
@@ -291,7 +278,7 @@ namespace Lime.Protocol.Network
         {
             if (this.State == SessionState.Finished)
             {
-                throw new InvalidOperationException(string.Format("Cannot receive a notification in the '{0}' session state", this.State));
+                throw new InvalidOperationException(string.Format("Cannot receive a session in the '{0}' session state", this.State));
             }
 
             var combinedCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(
@@ -381,7 +368,10 @@ namespace Lime.Protocol.Network
         /// <param name="e"></param>
         private void Transport_Closing(object sender, DeferralEventArgs e)
         {
-            _channelCancellationTokenSource.Cancel();
+            using (e.GetDeferral())
+            {
+                _channelCancellationTokenSource.Cancel();
+            }            
         }
 
         #endregion
@@ -497,6 +487,11 @@ namespace Lime.Protocol.Network
         {
             if (disposing)
             {
+                if (!_channelCancellationTokenSource.IsCancellationRequested)
+                {
+                    _channelCancellationTokenSource.Cancel();
+                }
+
                 _channelCancellationTokenSource.Dispose();
                 this.Transport.DisposeIfDisposable();
             }

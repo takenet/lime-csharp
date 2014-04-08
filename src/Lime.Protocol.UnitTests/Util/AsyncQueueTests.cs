@@ -177,7 +177,7 @@ namespace Lime.Protocol.UnitTests.Util
 
         [TestMethod]
         [TestCategory("DequeueAsync")]
-        public async Task DequeueAsync_EmptyBuffer_GetsPromiseAndRaisesPromiseAdded()
+        public void DequeueAsync_EmptyBuffer_GetsPromiseAndRaisesPromiseAdded()
         {
             var target = GetTarget<string>();
             bool promiseAddedRaised = false;
@@ -204,6 +204,45 @@ namespace Lime.Protocol.UnitTests.Util
             var promiseTask1 = target.DequeueAsync(cancellationToken);
             var promiseTask2 = target.DequeueAsync(cancellationToken);
             var promiseTask3 = target.DequeueAsync(cancellationToken);
+        }
+
+        [TestMethod]
+        [TestCategory("Dequeue")]
+        [TestCategory("Enqueue")]
+        public async Task DequeueEnqueue_ConcurrentAccess_CompletePromises()
+        {
+            var count = DataUtil.CreateRandomInt(1000);
+            var cancellationToken = DataUtil.CreateCancellationToken();
+
+            var target = GetTarget<string>(count, count);
+
+            var enqueueTasks = new Task[count];
+            var dequeueTasks = new Task<string>[count];           
+
+            var enqueueSetupTask = Task.Run(() =>
+                {
+                    for (int i = 0; i < count; i++)
+                    {
+                        var item = DataUtil.CreateRandomString(100);
+                        enqueueTasks[i] = Task.Run(() => target.Enqueue(item));
+                    }
+                });
+
+            var dequeueSetupTask = Task.Run(() =>
+            {
+                for (int i = 0; i < count; i++)
+                {
+                    var item = DataUtil.CreateRandomString(100);
+                    dequeueTasks[i] = target.DequeueAsync(cancellationToken);
+                }
+            });
+
+            await Task.WhenAll(enqueueSetupTask, dequeueSetupTask);
+            await Task.WhenAll(dequeueTasks);
+            await Task.WhenAll(enqueueTasks);
+
+            Assert.IsTrue(target.BufferCount == 0);
+            Assert.IsTrue(target.PromisesCount == 0);
         }
 
         #endregion

@@ -66,6 +66,45 @@ namespace Lime.Protocol.UnitTests.Client
 
         #endregion
 
+        #region SendNegotiatingSessionAsync
+
+        //[TestMethod]
+        //[TestCategory("SendNegotiatingSessionAsync")]
+        //public async Task SendNegotiatingSessionAsync_NegotiatingState_CallsTransport()
+        //{
+        //    var target = GetTarget(SessionState.Negotiating);
+
+        //    var compression = SessionCompression.GZip;
+        //    var encryption = SessionEncryption.TLS;
+
+        //    await target.SendNegotiatingSessionAsync(compression, encryption);
+
+        //    _transport.Verify(
+        //        t => t.SendAsync(It.Is<Session>(
+        //                e => e.State == SessionState.Negotiating &&
+        //                     e.Id == target.SessionId &&
+        //                     e.Compression == compression &&
+        //                     e.Encryption == encryption),
+        //            It.IsAny<CancellationToken>()),
+        //            Times.Once());
+        //}
+
+        //[TestMethod]
+        //[TestCategory("SendNegotiatingSessionAsync")]
+        //[ExpectedException(typeof(InvalidOperationException))]
+        //public async Task SendNegotiatingSessionAsync_NewState_ThrowsInvalidOperationException()
+        //{
+        //    var target = GetTarget(SessionState.New);
+
+        //    var compression = SessionCompression.GZip;
+        //    var encryption = SessionEncryption.TLS;
+
+        //    await target.SendNegotiatingSessionAsync(compression, encryption);
+        //}
+
+        #endregion
+
+
         #region SendAuthenticatingSessionAsync
 
         //[TestMethod]
