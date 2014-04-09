@@ -125,60 +125,6 @@ namespace Lime.Protocol.UnitTests.Network
 
         #endregion
 
-        #region OnFailedAsync
-
-        [TestMethod]
-        [TestCategory("OnFailedAsync")]
-        public async Task OnFailedAsync_AnyException_RaisesFailed()
-        {
-            var target = GetTarget();
-            bool failedRaised = false;
-
-            Exception exception = DataUtil.CreateException();
-
-            target.Failed += (sender, e) => failedRaised = e.Exception == exception;
-
-            await target.CallsOnFailedAsync(exception);
-
-            Assert.IsTrue(failedRaised);
-        }
-
-        [TestMethod]
-        [TestCategory("OnFailedAsync")]
-        public async Task OnFailedAsync_MultipleSubscribersOnFailedEvent_AwaitsForDeferral()
-        {
-            var target = GetTarget();
-            bool failedSubscriber1Raised = false;
-            bool failedSubscriber2Raised = false;
-
-            Exception exception = DataUtil.CreateException();
-
-            target.Failed += async (sender, e) =>
-                {
-                    using (e.GetDeferral())
-                    {
-                        await Task.Delay(100);
-                        failedSubscriber1Raised = true;
-                    }
-                };
-
-            target.Failed += async (sender, e) =>
-            {
-                using (e.GetDeferral())
-                {
-                    await Task.Delay(100);
-                    failedSubscriber2Raised = true;
-                }
-            };
-
-            await target.CallsOnFailedAsync(exception);
-
-            Assert.IsTrue(failedSubscriber1Raised);
-            Assert.IsTrue(failedSubscriber2Raised);
-        }
-
-        #endregion
-
         #region OnClosingAsync
 
         [TestMethod]
@@ -296,10 +242,6 @@ namespace Lime.Protocol.UnitTests.Network
                 return Task.FromResult<object>(null);
             }
 
-            public Task CallsOnFailedAsync(Exception ex)
-            {
-                return base.OnFailedAsync(ex);
-            }
 
             public Task CallsOnClosingAsync()
             {

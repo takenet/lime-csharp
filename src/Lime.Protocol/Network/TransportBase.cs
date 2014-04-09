@@ -131,11 +131,6 @@ namespace Lime.Protocol.Network
         }
 
         /// <summary>
-        /// Occurs when the connection fails
-        /// </summary>
-        public event EventHandler<ExceptionEventArgs> Failed;
-
-        /// <summary>
         /// Occurs when the channel is about
         /// to be closed
         /// </summary>
@@ -155,26 +150,6 @@ namespace Lime.Protocol.Network
         
         #endregion
 
-        /// <summary>
-        /// Raises the Failed event with
-        /// a deferral to wait the event handlers
-        /// to complete the execution.
-        /// </summary>
-        /// <param name="ex"></param>
-        /// <returns></returns>
-        protected virtual Task OnFailedAsync(Exception ex)
-        {
-            if (!_failedInvoked)
-            {
-                _failedInvoked = true;
-
-                var e = new ExceptionEventArgs(ex);
-                this.Failed.RaiseEvent(this, e);
-                return e.WaitForDeferralsAsync();
-            }
-
-            return Task.FromResult<object>(null);
-        }
 
         /// <summary>
         /// Raises the Closing event with

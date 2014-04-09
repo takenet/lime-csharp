@@ -343,13 +343,12 @@ namespace Lime.Protocol.Tcp.UnitTests
 
         [TestMethod]
         [TestCategory("ReceiveAsync")]
-        public async Task ReceiveAsync_SingleReadBiggerThenBuffer_RaisesFailedAndThrowsInternalBufferOverflowException()
+        public async Task ReceiveAsync_SingleReadBiggerThenBuffer_ClosesStreamAndThrowsInternalBufferOverflowException()
         {
             var content = DataUtil.CreateTextContent();
             var message = DataUtil.CreateMessage(content);
             var messageJson = DataUtil.CreateMessageJson();
             var cancelationToken = DataUtil.CreateCancellationToken();
-            bool failedRaised = false;
 
             byte[] messageBuffer = Encoding.UTF8.GetBytes(
                 messageJson);
@@ -363,8 +362,6 @@ namespace Lime.Protocol.Tcp.UnitTests
                 .Returns(message)
                 .Verifiable();
 
-
-            target.Failed += (sender, e) => failedRaised = !failedRaised;
 
             _envelopeSerializer
                 .Setup(e => e.Deserialize(messageJson))
@@ -381,7 +378,6 @@ namespace Lime.Protocol.Tcp.UnitTests
             {
                 Assert.IsTrue(ex is InternalBufferOverflowException);
                 Assert.IsTrue(stream.CloseInvoked);
-                Assert.IsTrue(failedRaised);
             }
 
         }
@@ -394,7 +390,6 @@ namespace Lime.Protocol.Tcp.UnitTests
             var message = DataUtil.CreateMessage(content);
             var messageJson = DataUtil.CreateMessageJson();
             var cancelationToken = DataUtil.CreateCancellationToken();
-            bool failedRaised = false;
 
             var bufferParts = DataUtil.CreateRandomInt(10) + 1;
 
@@ -426,7 +421,6 @@ namespace Lime.Protocol.Tcp.UnitTests
             var stream = new TestStream(messageBufferParts);
             var target = await GetTargetAndOpenAsync(bufferSize, stream);
 
-            target.Failed += (sender, e) => failedRaised = !failedRaised;
 
             _envelopeSerializer
                 .Setup(e => e.Deserialize(messageJson))
@@ -443,7 +437,6 @@ namespace Lime.Protocol.Tcp.UnitTests
             {
                 Assert.IsTrue(ex is InternalBufferOverflowException);
                 Assert.IsTrue(stream.CloseInvoked);
-                Assert.IsTrue(failedRaised);
             }
             
         }

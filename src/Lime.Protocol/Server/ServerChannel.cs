@@ -76,7 +76,7 @@ namespace Lime.Protocol.Server
         /// No available options for encryption negotiation
         /// </exception>
         /// <exception cref="System.InvalidOperationException">Cannot await for a session response since there's already a listener.</exception>
-        public async Task<Session> NegotiateSessionAsync(CancellationToken cancellationToken, SessionCompression[] compressionOptions, SessionEncryption[] encryptionOptions)
+        public async Task<Session> NegotiateSessionAsync(SessionCompression[] compressionOptions, SessionEncryption[] encryptionOptions, CancellationToken cancellationToken)
         {
             if (base.State != SessionState.New)
             {
@@ -165,7 +165,7 @@ namespace Lime.Protocol.Server
         /// <exception cref="System.ArgumentNullException">authentication</exception>
         /// <exception cref="System.ArgumentException">No available options for authentication</exception>
         /// <exception cref="System.InvalidOperationException">Cannot await for a session response since there's already a listener.</exception>
-        public async Task<Session> AuthenticateSessionAsync(CancellationToken cancellationToken, AuthenticationScheme[] schemeOptions)
+        public async Task<Session> AuthenticateSessionAsync(AuthenticationScheme[] schemeOptions, CancellationToken cancellationToken)
         {
             if (this.State != SessionState.New &&
                 this.State != SessionState.Negotiating)
@@ -213,7 +213,7 @@ namespace Lime.Protocol.Server
         /// </returns>
         /// <exception cref="System.ArgumentNullException">authenticationRoundtrip</exception>
         /// <exception cref="System.InvalidOperationException"></exception>
-        public async Task<Session> AuthenticateSessionAsync(CancellationToken cancellationToken, Authentication authenticationRoundtrip)
+        public async Task<Session> AuthenticateSessionAsync(Authentication authenticationRoundtrip, CancellationToken cancellationToken)
         {
             if (authenticationRoundtrip == null)
             {

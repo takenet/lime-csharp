@@ -89,7 +89,7 @@ namespace Lime.Protocol.Client
         /// <exception cref="System.InvalidOperationException">
         /// Cannot await for a session response since there's already a listener.
         /// </exception>
-        public async Task<Session> NegotiateSessionAsync(CancellationToken cancellationToken, SessionCompression sessionCompression, SessionEncryption sessionEncryption)
+        public async Task<Session> NegotiateSessionAsync(SessionCompression sessionCompression, SessionEncryption sessionEncryption, CancellationToken cancellationToken)
         {
             if (this.State != SessionState.Negotiating)
             {
@@ -114,6 +114,32 @@ namespace Lime.Protocol.Client
         }
 
         /// <summary>
+        /// Receives a authenticating session envelope
+        /// from the server, after a session negotiation.
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns>
+        /// An authenticating session envelope or a failed session envelope.
+        /// </returns>
+        /// <exception cref="System.InvalidOperationException">
+        /// Cannot await for a session response since there's already a listener.
+        /// </exception>
+        public Task<Session> ReceiveAuthenticatingSessionAsync(CancellationToken cancellationToken)
+        {
+            if (base.State != SessionState.Negotiating)
+            {
+                throw new InvalidOperationException(string.Format("Cannot receive a authenticating session in the '{0}' state", base.State));
+            }
+
+            if (base._sessionAsyncBuffer.HasPromises)
+            {
+                throw new InvalidOperationException("Cannot await for a session response since there's already a listener.");
+            }
+
+            return base.ReceiveSessionAsync(cancellationToken);
+        }
+
+        /// <summary>
         /// Send a authenticate session envelope
         /// to the server to establish
         /// an authenticated session and awaits
@@ -133,7 +159,7 @@ namespace Lime.Protocol.Client
         /// or
         /// authentication
         /// </exception>
-        public async Task<Session> AuthenticateSessionAsync(CancellationToken cancellationToken, Identity identity, Authentication authentication, string instance = null, SessionMode sessionMode = SessionMode.Node)
+        public async Task<Session> AuthenticateSessionAsync(Identity identity, Authentication authentication, string instance, SessionMode sessionMode, CancellationToken cancellationToken)
         {
             if (base.State != SessionState.Authenticating)
             {
@@ -230,7 +256,7 @@ namespace Lime.Protocol.Client
         /// <exception cref="System.InvalidOperationException">
         /// Cannot await for a session response since there's already a listener.
         /// </exception>
-        public Task<Session> ReceiveSessionFinishedAsync(CancellationToken cancellationToken)
+        public Task<Session> ReceiveFinishedSessionAsync(CancellationToken cancellationToken)
         {
             if (base.State != SessionState.Established)
             {
@@ -321,5 +347,6 @@ namespace Lime.Protocol.Client
         }
 
         #endregion
+
     }
 }

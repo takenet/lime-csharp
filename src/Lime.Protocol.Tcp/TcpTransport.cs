@@ -183,11 +183,8 @@ namespace Lime.Protocol.Tcp
 
                         if (_bufferPos >= _buffer.Length)
                         {
-                            _stream.Close();
-
-                            var ex = new InternalBufferOverflowException("Maximum buffer size reached");
-                            await OnFailedAsync(ex).ConfigureAwait(false);
-                            throw ex;
+                            await base.CloseAsync(CancellationToken.None).ConfigureAwait(false);
+                            throw new InternalBufferOverflowException("Maximum buffer size reached");
                         }
                     }
                 }

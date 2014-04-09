@@ -38,9 +38,8 @@ namespace Lime.Protocol.Network
 
             this.Transport = transport;
             this.Transport.Closing += Transport_Closing;
-            this.Transport.Failed += Transport_Failed;
 
-            _sendTimeout = sendTimeout;
+            _sendTimeout = sendTimeout;            
 
             _channelCancellationTokenSource = new CancellationTokenSource();
 
@@ -354,17 +353,6 @@ namespace Lime.Protocol.Network
             {
                 _receiveSemaphore.Release();
             }
-        }
-
-        /// <summary>
-        /// Closes the transport 
-        /// if it fails.
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private async void Transport_Failed(object sender, ExceptionEventArgs e)
-        {
-            await this.Transport.CloseAsync(CancellationToken.None).ConfigureAwait(false);
         }
 
         /// <summary>

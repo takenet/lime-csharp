@@ -116,7 +116,7 @@ namespace Lime.Protocol.UnitTests.Client
                 .Returns(() => Task.FromResult<Envelope>(session))
                 .Verifiable();
 
-            var actualSession = await target.NegotiateSessionAsync(cancellationToken, compression, encryption);
+            var actualSession = await target.NegotiateSessionAsync(compression, encryption, cancellationToken);
 
             _transport.Verify(
                 t => t.SendAsync(It.Is<Session>(
@@ -141,7 +141,7 @@ namespace Lime.Protocol.UnitTests.Client
             var compression = SessionCompression.GZip;
             var encryption = SessionEncryption.TLS;
 
-            var actualSession = await target.NegotiateSessionAsync(cancellationToken, compression, encryption);
+            var actualSession = await target.NegotiateSessionAsync(compression, encryption, cancellationToken);
         }
 
         [TestMethod]
@@ -164,9 +164,9 @@ namespace Lime.Protocol.UnitTests.Client
                 .Returns(() => tcs.Task)
                 .Verifiable();
 
-            var negotiateSessionTask = target.NegotiateSessionAsync(cancellationToken, compression, encryption);
+            var negotiateSessionTask = target.NegotiateSessionAsync(compression, encryption, cancellationToken);
 
-            var actualSession = await target.NegotiateSessionAsync(cancellationToken, compression, encryption);
+            var actualSession = await target.NegotiateSessionAsync(compression, encryption, cancellationToken);
         }
   
         #endregion
@@ -193,12 +193,7 @@ namespace Lime.Protocol.UnitTests.Client
                 .Returns(() => Task.FromResult<Envelope>(session))
                 .Verifiable();
 
-            var actualSession = await target.AuthenticateSessionAsync(
-                cancellationToken,
-                localIdentity,
-                authentication,
-                localInstance,
-                sessionMode);
+            var actualSession = await target.AuthenticateSessionAsync(localIdentity, authentication, localInstance, sessionMode, cancellationToken);
 
                 _transport.Verify(
                     t => t.SendAsync(It.Is<Session>(
@@ -227,12 +222,7 @@ namespace Lime.Protocol.UnitTests.Client
             var authentication = DataUtil.CreateAuthentication(Security.AuthenticationScheme.Plain);
             var sessionMode = SessionMode.Node;
 
-            var actualSession = await target.AuthenticateSessionAsync(
-                cancellationToken,
-                localIdentity,
-                authentication,
-                localInstance,
-                sessionMode);
+            var actualSession = await target.AuthenticateSessionAsync(localIdentity, authentication, localInstance, sessionMode, cancellationToken);
         }
 
         [TestMethod]
@@ -248,12 +238,7 @@ namespace Lime.Protocol.UnitTests.Client
             var authentication = DataUtil.CreateAuthentication(Security.AuthenticationScheme.Plain);
             var sessionMode = SessionMode.Node;
 
-            var actualSession = await target.AuthenticateSessionAsync(
-                cancellationToken,
-                localIdentity,
-                authentication,
-                localInstance,
-                sessionMode);
+            var actualSession = await target.AuthenticateSessionAsync(localIdentity, authentication, localInstance, sessionMode, cancellationToken);
         }
 
         [TestMethod]
@@ -269,12 +254,7 @@ namespace Lime.Protocol.UnitTests.Client
             Authentication authentication = null;
             var sessionMode = SessionMode.Node;
 
-            var actualSession = await target.AuthenticateSessionAsync(
-                cancellationToken,
-                localIdentity,
-                authentication,
-                localInstance,
-                sessionMode);
+            var actualSession = await target.AuthenticateSessionAsync(localIdentity, authentication, localInstance, sessionMode, cancellationToken);
         }
 
         [TestMethod]
@@ -299,19 +279,9 @@ namespace Lime.Protocol.UnitTests.Client
                 .Returns(() => tcs.Task)
                 .Verifiable();
 
-            var authenticateSessionTask = target.AuthenticateSessionAsync(
-                cancellationToken,
-                localIdentity,
-                authentication,
-                localInstance,
-                sessionMode);
+            var authenticateSessionTask = target.AuthenticateSessionAsync(localIdentity, authentication, localInstance, sessionMode, cancellationToken);
 
-            var actualSession = await target.AuthenticateSessionAsync(
-                cancellationToken,
-                localIdentity,
-                authentication,
-                localInstance,
-                sessionMode);
+            var actualSession = await target.AuthenticateSessionAsync(localIdentity, authentication, localInstance, sessionMode, cancellationToken);
         }
 
         #endregion
@@ -399,7 +369,7 @@ namespace Lime.Protocol.UnitTests.Client
                 .Returns(() => Task.FromResult<Envelope>(session))
                 .Verifiable();
 
-            var actual = await target.ReceiveSessionFinishedAsync(cancellationToken);
+            var actual = await target.ReceiveFinishedSessionAsync(cancellationToken);
 
             Assert.AreEqual(session, actual);
             _transport.Verify();
@@ -420,7 +390,7 @@ namespace Lime.Protocol.UnitTests.Client
                 .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
                 .Returns(() => Task.FromResult<Envelope>(session));
 
-            var actual = await target.ReceiveSessionFinishedAsync(cancellationToken);
+            var actual = await target.ReceiveFinishedSessionAsync(cancellationToken);
         }
 
         [TestMethod]
@@ -439,9 +409,9 @@ namespace Lime.Protocol.UnitTests.Client
                 .Returns(() => tcs.Task)
                 .Verifiable();
 
-            var receiveSessionFinishedTask = target.ReceiveSessionFinishedAsync(cancellationToken);
+            var receiveSessionFinishedTask = target.ReceiveFinishedSessionAsync(cancellationToken);
 
-            var actual = await target.ReceiveSessionFinishedAsync(cancellationToken);
+            var actual = await target.ReceiveFinishedSessionAsync(cancellationToken);
 
         }
 
@@ -636,10 +606,7 @@ namespace Lime.Protocol.UnitTests.Client
                 .Returns(() => Task.FromResult<Envelope>(session))
                 .Verifiable();
 
-            var actual = await target.AuthenticateSessionAsync(
-                cancellationToken,
-                identity,
-                authentication);
+            var actual = await target.AuthenticateSessionAsync(identity, authentication, null, SessionMode.Node, cancellationToken);
 
             Assert.IsTrue(target.State == session.State);
             Assert.IsTrue(target.LocalNode.Equals(session.To));
@@ -661,7 +628,7 @@ namespace Lime.Protocol.UnitTests.Client
                 .Returns(() => Task.FromResult<Envelope>(session))
                 .Verifiable();
 
-            var actual = await target.ReceiveSessionFinishedAsync(
+            var actual = await target.ReceiveFinishedSessionAsync(
                 cancellationToken);
 
             Assert.IsTrue(target.State == session.State);
@@ -687,7 +654,7 @@ namespace Lime.Protocol.UnitTests.Client
                 .Returns(() => Task.FromResult<Envelope>(session))
                 .Verifiable();
 
-            var actual = await target.ReceiveSessionFinishedAsync(
+            var actual = await target.ReceiveFinishedSessionAsync(
                 cancellationToken);
 
             Assert.IsTrue(target.State == session.State);
@@ -714,10 +681,7 @@ namespace Lime.Protocol.UnitTests.Client
                 .Returns(() => Task.FromResult<Envelope>(session))
                 .Verifiable();
 
-            var actual = await target.AuthenticateSessionAsync(
-                cancellationToken,
-                identity,
-                authentication);
+            var actual = await target.AuthenticateSessionAsync(identity, authentication, null, SessionMode.Node, cancellationToken);
 
             Assert.IsTrue(target.State == session.State);
 

@@ -31,11 +31,19 @@ namespace Lime.Protocol.Client
         /// to accepts the session negotiation options
         /// and awaits for the server confirmation.
         /// </summary>
-        /// <param name="cancellationToken">The cancellation token.</param>
         /// <param name="sessionCompression">The session compression option</param>
         /// <param name="sessionEncryption">The session encryption option</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>An negotiating session envelope or a failed session envelope.</returns>
-        Task<Session> NegotiateSessionAsync(CancellationToken cancellationToken, SessionCompression sessionCompression, SessionEncryption sessionEncryption);
+        Task<Session> NegotiateSessionAsync(SessionCompression sessionCompression, SessionEncryption sessionEncryption, CancellationToken cancellationToken);
+
+        /// <summary>
+        /// Receives a authenticating session envelope
+        /// from the server, after a session negotiation.
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns>An authenticating session envelope or a failed session envelope.</returns>
+        Task<Session> ReceiveAuthenticatingSessionAsync(CancellationToken cancellationToken); 
 
         /// <summary>
         /// Sends a authenticate session envelope
@@ -48,7 +56,7 @@ namespace Lime.Protocol.Client
         /// <param name="instance"></param>
         /// <param name="sessionMode"></param>
         /// <returns>An established session envelope or a failed session envelope.</returns>
-        Task<Session> AuthenticateSessionAsync(CancellationToken cancellationToken, Identity identity, Authentication authentication, string instance = null, SessionMode sessionMode = SessionMode.Node);
+        Task<Session> AuthenticateSessionAsync(Identity identity, Authentication authentication, string instance, SessionMode sessionMode, CancellationToken cancellationToken);
 
         /// <summary>
         /// Notify to the server that
@@ -72,6 +80,6 @@ namespace Lime.Protocol.Client
         /// </summary>
         /// <param name="cancellationToken"></param>
         /// <returns>An finished session envelope or a failed session envelope.</returns>
-        Task<Session> ReceiveSessionFinishedAsync(CancellationToken cancellationToken); 
+        Task<Session> ReceiveFinishedSessionAsync(CancellationToken cancellationToken); 
     }
 }

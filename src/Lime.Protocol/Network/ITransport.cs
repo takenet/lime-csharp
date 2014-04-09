@@ -85,11 +85,6 @@ namespace Lime.Protocol.Network
         Task SetEncryptionAsync(SessionEncryption encryption, CancellationToken cancellationToken);
 
         /// <summary>
-        /// Occurs when the connection fails
-        /// </summary>
-        event EventHandler<ExceptionEventArgs> Failed;
-
-        /// <summary>
         /// Occurs when the channel is about
         /// to be closed
         /// </summary>

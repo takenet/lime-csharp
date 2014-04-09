@@ -27,5 +27,16 @@ namespace Lime.Protocol.Contents
         /// </summary>
         [DataMember(Name = TEXT_KEY)]
         public string Text { get; set; }
+
+        /// <summary>
+        /// Returns a <see cref="System.String" /> that represents this instance.
+        /// </summary>
+        /// <returns>
+        /// A <see cref="System.String" /> that represents this instance.
+        /// </returns>
+        public override string ToString()
+        {
+            return this.Text;
+        }
     }
 }

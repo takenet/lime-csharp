@@ -32,7 +32,7 @@ namespace Lime.Protocol.Server
         /// </summary>
         /// <param name="compressionOptions">The session compression options.</param>
         /// <returns>A negotiating session envelope with the client node selected options.</returns>
-        Task<Session> NegotiateSessionAsync(CancellationToken cancellationToken, SessionCompression[] compressionOptions, SessionEncryption[] encryptionOptions);
+        Task<Session> NegotiateSessionAsync(SessionCompression[] compressionOptions, SessionEncryption[] encryptionOptions, CancellationToken cancellationToken);
 
         /// <summary>
         /// Send a negotiate session envelope
@@ -51,7 +51,7 @@ namespace Lime.Protocol.Server
         /// </summary>
         /// <param name="authentication">The authentication roundtrip data.</param>
         /// <returns>A autheticating session envelope with the authentication information.</returns>
-        Task<Session> AuthenticateSessionAsync(CancellationToken cancellationToken, AuthenticationScheme[] schemeOptions);
+        Task<Session> AuthenticateSessionAsync(AuthenticationScheme[] schemeOptions, CancellationToken cancellationToken);
 
         /// <summary>
         /// Sends authentication roundtrip information
@@ -60,7 +60,7 @@ namespace Lime.Protocol.Server
         /// </summary>
         /// <param name="authenticationRoundtrip">The authentication roundtrip data.</param>
         /// <returns>A autheticating session envelope with the authentication information.</returns>
-        Task<Session> AuthenticateSessionAsync(CancellationToken cancellationToken, Authentication authenticationRoundtrip);
+        Task<Session> AuthenticateSessionAsync(Authentication authenticationRoundtrip, CancellationToken cancellationToken);
 
         /// <summary>
         /// Changes the session state and 

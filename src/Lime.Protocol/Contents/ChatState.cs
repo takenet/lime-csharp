@@ -24,7 +24,18 @@ namespace Lime.Protocol.Contents
         }
 
         [DataMember(Name = STATE_KEY)]
-        public ChatStateEvent State { get; set; }        
+        public ChatStateEvent State { get; set; }
+
+        /// <summary>
+        /// Returns a <see cref="System.String" /> that represents this instance.
+        /// </summary>
+        /// <returns>
+        /// A <see cref="System.String" /> that represents this instance.
+        /// </returns>
+        public override string ToString()
+        {
+            return this.State.ToString();
+        }
     }
 
     /// <summary>
