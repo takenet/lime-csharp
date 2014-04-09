@@ -26,7 +26,9 @@ namespace Lime.Protocol.Util
         Task<T> DequeueAsync(CancellationToken cancellationToken);
 
         /// <summary>
-        /// Informs if 
+        /// Informs if theres any 
+        /// pending promise task in the
+        /// queue
         /// </summary>
         bool HasPromises { get; }        
 

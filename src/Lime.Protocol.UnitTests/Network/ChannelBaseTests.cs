@@ -535,7 +535,8 @@ namespace Lime.Protocol.UnitTests.Network
 
         [TestMethod]
         [TestCategory("OnMessageReceivedAsync")]
-        public async Task OnMessageReceivedAsync_NotEstablishedState_ClosesTransport()
+        [ExpectedException(typeof(InvalidOperationException))]
+        public async Task OnMessageReceivedAsync_NotEstablishedState_ThrowsInvalidOperationException()
         {
             var target = (TestChannel)GetTarget(SessionState.Authenticating);
 
@@ -543,10 +544,7 @@ namespace Lime.Protocol.UnitTests.Network
             var message = DataUtil.CreateMessage(content);           
 
             await target.CallsOnMessageReceivedAsync(message);
-            
-            _transport.Verify(
-                t => t.CloseAsync(It.IsAny<CancellationToken>()),
-                Times.Once());
+
         }
 
         #endregion
@@ -555,7 +553,8 @@ namespace Lime.Protocol.UnitTests.Network
 
         [TestMethod]
         [TestCategory("OnCommandReceivedAsync")]
-        public async Task OnCommandReceivedAsync_NotEstablishedState_ClosesTransport()
+        [ExpectedException(typeof(InvalidOperationException))]
+        public async Task OnCommandReceivedAsync_NotEstablishedState_ThrowsInvalidOperationException()
         {
             var target = (TestChannel)GetTarget(SessionState.Authenticating);
 
@@ -563,10 +562,6 @@ namespace Lime.Protocol.UnitTests.Network
             var command = DataUtil.CreateCommand(resource);
 
             await target.CallsOnCommandReceivedAsync(command);
-
-            _transport.Verify(
-                t => t.CloseAsync(It.IsAny<CancellationToken>()),
-                Times.Once());
         }
 
         #endregion
@@ -575,17 +570,14 @@ namespace Lime.Protocol.UnitTests.Network
 
         [TestMethod]
         [TestCategory("OnNotificationReceivedAsync")]
-        public async Task OnNotificationReceivedAsync_NotEstablishedState_ClosesTransport()
+        [ExpectedException(typeof(InvalidOperationException))]
+        public async Task OnNotificationReceivedAsync_NotEstablishedState_ThrowsInvalidOperationException()
         {
             var target = (TestChannel)GetTarget(SessionState.Authenticating);
 
             var notification = DataUtil.CreateNotification(Event.Received);
 
             await target.CallsOnNotificationReceivedAsync(notification);
-
-            _transport.Verify(
-                t => t.CloseAsync(It.IsAny<CancellationToken>()),
-                Times.Once());
         }
 
         #endregion

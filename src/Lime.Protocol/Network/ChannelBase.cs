@@ -405,15 +405,16 @@ namespace Lime.Protocol.Network
         /// </summary>
         /// <param name="message"></param>
         /// <returns></returns>
-        protected virtual async Task OnMessageReceivedAsync(Message message)
+        protected virtual Task OnMessageReceivedAsync(Message message)
         {
             if (this.State == SessionState.Established)
             {
                 _messageAsyncBuffer.Enqueue(message);
+                return Task.FromResult<object>(null);
             }
             else
             {
-                await this.Transport.CloseAsync(_channelCancellationTokenSource.Token).ConfigureAwait(false);
+                throw new InvalidOperationException("A message was received in a invalid channel state");
             }
         }
 
@@ -422,15 +423,16 @@ namespace Lime.Protocol.Network
         /// </summary>
         /// <param name="message"></param>
         /// <returns></returns>
-        protected virtual async Task OnCommandReceivedAsync(Command command)
+        protected virtual Task OnCommandReceivedAsync(Command command)
         {
             if (this.State == SessionState.Established)
             {
                 _commandAsyncBuffer.Enqueue(command);
+                return Task.FromResult<object>(null);
             }
             else
             {
-                await this.Transport.CloseAsync(_channelCancellationTokenSource.Token).ConfigureAwait(false);
+                throw new InvalidOperationException("A command was received in a invalid channel state");
             }
         }
 
@@ -439,15 +441,16 @@ namespace Lime.Protocol.Network
         /// </summary>
         /// <param name="message"></param>
         /// <returns></returns>
-        protected virtual async Task OnNotificationReceivedAsync(Notification notification)
+        protected virtual Task OnNotificationReceivedAsync(Notification notification)
         {
             if (this.State == SessionState.Established)
             {
                 _notificationAsyncBuffer.Enqueue(notification);
+                return Task.FromResult<object>(null);
             }
             else
             {
-                await this.Transport.CloseAsync(_channelCancellationTokenSource.Token).ConfigureAwait(false);
+                throw new InvalidOperationException("A notification was received in a invalid channel state");
             }
         }
 

@@ -535,138 +535,198 @@ namespace Lime.Protocol.UnitTests.Client
 
         #region OnCommandReceivedAsync
 
-        //[TestMethod]
-        //[TestCategory("OnCommandReceivedAsync")]
-        //public void OnCommandReceivedAsync_PingCommandReceivedAndAutoReplyPingsTrue_SendsPingCommandToTransport()
-        //{
-        //    var target = GetTarget();
-        //    //target.SetState(_transport, SessionState.Established);
+        [TestMethod]
+        [TestCategory("OnCommandReceivedAsync")]
+        public async Task OnCommandReceivedAsync_PingCommandReceivedAndAutoReplyPingsTrue_SendsPingCommandToTransport()
+        {
+            var target = GetTarget(state: SessionState.Established, autoReplyPings: true);
 
-        //    var ping = DataUtil.CreatePing();
-        //    var command = DataUtil.CreateCommand(ping);
-        //    _transport.ReceiveEnvelope(command);
+            var ping = DataUtil.CreatePing();
+            var command = DataUtil.CreateCommand(ping);
+            var cancellationToken = DataUtil.CreateCancellationToken();
 
-        //    _transport.Verify(
-        //        t => t.SendAsync(It.Is<Command>(
-        //                c => c.Id == command.Id &&
-        //                     c.To.Equals(command.From) &&
-        //                     c.Resource is Ping &&
-        //                     c.Status == CommandStatus.Success),
-        //            It.IsAny<CancellationToken>()),
-        //            Times.Once());
-        //}
+            _transport
+                .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(() => Task.FromResult<Envelope>(command))
+                .Verifiable();
 
-        //[TestMethod]
-        //[TestCategory("OnCommandReceivedAsync")]
-        //public void OnCommandReceivedAsync_PingCommandReceivedAndAutoReplyPingsFalse_DoNotSendsPingCommandToTransport()
-        //{
-        //    var target = GetTarget(autoReplyPings: false);
-        //    //target.SetState(_transport, SessionState.Established);
+            var actual = await target.ReceiveCommandAsync(cancellationToken);
 
-        //    var ping = DataUtil.CreatePing();
-        //    var command = DataUtil.CreateCommand(ping);
-        //    _transport.ReceiveEnvelope(command);
+            _transport.Verify(
+                t => t.SendAsync(It.Is<Command>(
+                        c => c.Id == command.Id &&
+                             c.To.Equals(command.From) &&
+                             c.Resource is Ping &&
+                             c.Status == CommandStatus.Success),
+                    It.IsAny<CancellationToken>()),
+                    Times.Once());
+        }
 
-        //    _transport.Verify(
-        //        t => t.SendAsync(It.Is<Command>(
-        //                c => c.Id == command.Id &&
-        //                     c.To.Equals(command.From) &&
-        //                     c.Resource is Ping &&
-        //                     c.Status == CommandStatus.Success),
-        //            It.IsAny<CancellationToken>()),
-        //            Times.Never());
-        //}
+        [TestMethod]
+        [TestCategory("OnCommandReceivedAsync")]
+        public async Task OnCommandReceivedAsync_PingCommandReceivedAndAutoReplyPingsFalse_DoNotSendsPingCommandToTransport()
+        {
+            var target = GetTarget(state: SessionState.Established, autoReplyPings: false);
 
-        //[TestMethod]
-        //[TestCategory("OnCommandReceivedAsync")]
-        //public void OnCommandReceivedAsync_PingResponseCommandReceivedAndAutoReplyPingsTrue_DoNotSendsPingCommandToTransport()
-        //{
-        //    var target = GetTarget();
-        //    //target.SetState(_transport, SessionState.Established);
+            var ping = DataUtil.CreatePing();
+            var command = DataUtil.CreateCommand(ping);
+            var cancellationToken = DataUtil.CreateCancellationToken();
 
-        //    var ping = DataUtil.CreatePing();
-        //    var command = DataUtil.CreateCommand(ping, status: CommandStatus.Success);
-        //    _transport.ReceiveEnvelope(command);
+            _transport
+                .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(() => Task.FromResult<Envelope>(command))
+                .Verifiable();
 
-        //    _transport.Verify(
-        //        t => t.SendAsync(It.Is<Command>(
-        //                c => c.Id == command.Id &&
-        //                     c.To.Equals(command.From) &&
-        //                     c.Resource is Ping &&
-        //                     c.Status == CommandStatus.Success),
-        //            It.IsAny<CancellationToken>()),
-        //            Times.Never());
-        //}
+            var actual = await target.ReceiveCommandAsync(cancellationToken);
+
+            _transport.Verify(
+                t => t.SendAsync(It.Is<Command>(
+                        c => c.Id == command.Id &&
+                             c.To.Equals(command.From) &&
+                             c.Resource is Ping &&
+                             c.Status == CommandStatus.Success),
+                    It.IsAny<CancellationToken>()),
+                    Times.Never());
+        }
+
+        [TestMethod]
+        [TestCategory("OnCommandReceivedAsync")]
+        public async Task OnCommandReceivedAsync_PingResponseCommandReceivedAndAutoReplyPingsTrue_DoNotSendsPingCommandToTransport()
+        {
+            var target = GetTarget(state: SessionState.Established, autoReplyPings: true);
+
+            var ping = DataUtil.CreatePing();
+            var command = DataUtil.CreateCommand(ping, status: CommandStatus.Success);
+            var cancellationToken = DataUtil.CreateCancellationToken();
+
+            _transport
+                .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(() => Task.FromResult<Envelope>(command))
+                .Verifiable();
+
+            var actual = await target.ReceiveCommandAsync(cancellationToken);
+
+            _transport.Verify(
+                t => t.SendAsync(It.Is<Command>(
+                        c => c.Id == command.Id &&
+                             c.To.Equals(command.From) &&
+                             c.Resource is Ping &&
+                             c.Status == CommandStatus.Success),
+                    It.IsAny<CancellationToken>()),
+                    Times.Never());
+        }
 
         #endregion
 
         #region OnSessionReceivedAsync
 
-        //[TestMethod]
-        //[TestCategory("OnSessionReceivedAsync")]
-        //public void OnSessionReceivedAsync_EstablishedSessionReceived_SetsStateAndNodePropertiesAndRaisesSessionEstablished()
-        //{
-        //    bool sessionEstablishedRaised = false;
+        [TestMethod]
+        [TestCategory("OnSessionReceivedAsync")]
+        public async Task OnSessionReceivedAsync_AuthenticatingStateEstablishedSessionReceived_SetsStateAndNodeProperties()
+        {
+            var target = GetTarget(state: SessionState.Authenticating, autoNotifyReceipt: true);
 
-        //    var target = GetTarget();            
-        //    target.SessionEstablished += (sender, e) => sessionEstablishedRaised = true;
+            var authentication = DataUtil.CreateAuthentication(AuthenticationScheme.Plain);
+            var identity = DataUtil.CreateIdentity();
+            var session = DataUtil.CreateSession(SessionState.Established);            
+            var cancellationToken = DataUtil.CreateCancellationToken();
 
-        //    Assert.IsTrue(target.State == SessionState.New);
+            _transport
+                .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(() => Task.FromResult<Envelope>(session))
+                .Verifiable();
+
+            var actual = await target.AuthenticateSessionAsync(
+                cancellationToken,
+                identity,
+                authentication);
+
+            Assert.IsTrue(target.State == session.State);
+            Assert.IsTrue(target.LocalNode.Equals(session.To));
+            Assert.IsTrue(target.RemoteNode.Equals(session.From));
+        }
+
+        [TestMethod]
+        [TestCategory("OnSessionReceivedAsync")]
+        public async Task OnSessionReceivedAsync_EstablishedStateFinishedSessionReceived_SetsStateAndClosesTransport()
+        {
+            var target = GetTarget(state: SessionState.Established, autoNotifyReceipt: true);
             
-        //    var session = DataUtil.CreateSession();
-        //    session.State = SessionState.Established;
-        //    _transport.ReceiveEnvelope(session);
-
-        //    Assert.IsTrue(target.State == session.State);
-        //    Assert.IsTrue(target.LocalNode.Equals(session.To));
-        //    Assert.IsTrue(target.RemoteNode.Equals(session.From));
-        //    Assert.IsTrue(sessionEstablishedRaised);
-        //}
-
-        //[TestMethod]
-        //[TestCategory("OnSessionReceivedAsync")]
-        //public void OnSessionReceivedAsync_FinishedSessionReceived_SetsStateAndRaisesSessionFinished()
-        //{
-        //    bool sessionFinishedRaised = false;
-
-        //    var target = GetTarget();
-        //    //target.SetState(_transport, SessionState.Established);
             
-        //    target.SessionFinished += (sender, e) => sessionFinishedRaised = true;
-            
-        //    Assert.IsTrue(target.State == SessionState.Established);
+            var session = DataUtil.CreateSession(SessionState.Finished);
+            var cancellationToken = DataUtil.CreateCancellationToken();
 
-        //    var session = DataUtil.CreateSession();
-        //    session.State = SessionState.Finished;
-        //    _transport.ReceiveEnvelope(session);
+            _transport
+                .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(() => Task.FromResult<Envelope>(session))
+                .Verifiable();
 
-        //    Assert.IsTrue(target.State == session.State);
-        //    Assert.IsTrue(sessionFinishedRaised);
-        //}
+            var actual = await target.ReceiveSessionFinishedAsync(
+                cancellationToken);
 
-        //[TestMethod]
-        //[TestCategory("OnSessionReceivedAsync")]
-        //public void OnSessionReceivedAsync_FailedSessionReceived_SetsStateAndRaisesSessionFailed()
-        //{
-        //    bool sessionFailedRaised = false;
+            Assert.IsTrue(target.State == session.State);
 
-        //    var session = DataUtil.CreateSession();
-        //    session.State = SessionState.Failed;
-        //    session.Reason = DataUtil.CreateReason();
+            _transport
+                .Verify(t =>
+                    t.CloseAsync(It.IsAny<CancellationToken>()),
+                    Times.Once());
+        }
 
-        //    var target = GetTarget();
-        //    //target.SetState(_transport, SessionState.Established);
+        [TestMethod]
+        [TestCategory("OnSessionReceivedAsync")]
+        public async Task OnSessionReceivedAsync_EstablishedStateFailedSessionReceived_SetsStateAndClosesTransport()
+        {
+            var target = GetTarget(state: SessionState.Established, autoNotifyReceipt: true);
 
-        //    target.SessionFailed += (sender, e) => sessionFailedRaised = e.Envelope == session;
 
-        //    Assert.IsTrue(target.State == SessionState.Established);
+            var session = DataUtil.CreateSession(SessionState.Failed);
+            var cancellationToken = DataUtil.CreateCancellationToken();
 
-        //    _transport.ReceiveEnvelope(session);
+            _transport
+                .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(() => Task.FromResult<Envelope>(session))
+                .Verifiable();
 
-        //    Assert.IsTrue(target.State == session.State);
-        //    Assert.IsTrue(sessionFailedRaised);
-        //}
+            var actual = await target.ReceiveSessionFinishedAsync(
+                cancellationToken);
 
+            Assert.IsTrue(target.State == session.State);
+
+            _transport
+                .Verify(t =>
+                    t.CloseAsync(It.IsAny<CancellationToken>()),
+                    Times.Once());
+        }
+
+        [TestMethod]
+        [TestCategory("OnSessionReceivedAsync")]
+        public async Task OnSessionReceivedAsync_AuthenticatingStateFailedSessionReceived_SetsStateAndClosesTransport()
+        {
+            var target = GetTarget(state: SessionState.Authenticating, autoNotifyReceipt: true);
+
+            var authentication = DataUtil.CreateAuthentication(AuthenticationScheme.Plain);
+            var identity = DataUtil.CreateIdentity();
+            var session = DataUtil.CreateSession(SessionState.Failed);
+            var cancellationToken = DataUtil.CreateCancellationToken();
+
+            _transport
+                .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(() => Task.FromResult<Envelope>(session))
+                .Verifiable();
+
+            var actual = await target.AuthenticateSessionAsync(
+                cancellationToken,
+                identity,
+                authentication);
+
+            Assert.IsTrue(target.State == session.State);
+
+            _transport
+                .Verify(t =>
+                    t.CloseAsync(It.IsAny<CancellationToken>()),
+                    Times.Once());
+        }
+    
         #endregion
 
         private class TestClientChannel : ClientChannel

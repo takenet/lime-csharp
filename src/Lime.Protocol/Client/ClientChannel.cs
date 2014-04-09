@@ -311,6 +311,12 @@ namespace Lime.Protocol.Client
                 this.RemoteNode = session.From;
             }
 
+            if (session.State == SessionState.Finished ||
+                session.State == SessionState.Failed)
+            {
+                await this.Transport.CloseAsync(_channelCancellationTokenSource.Token).ConfigureAwait(false);
+            }
+
             await base.OnSessionReceivedAsync(session).ConfigureAwait(false);
         }
 
