@@ -27,6 +27,34 @@ namespace Lime.Protocol.UnitTests
                           .ToArray());
         }
 
+        public static string CreateMessageJson()
+        {
+            var id = Guid.NewGuid();
+            var from = DataUtil.CreateNode();
+            var pp = DataUtil.CreateNode();
+            var to = DataUtil.CreateNode();
+
+            string randomKey1 = "randomString1";
+            string randomKey2 = "randomString2";
+            string randomString1 = DataUtil.CreateRandomString(50);
+            string randomString2 = DataUtil.CreateRandomString(50);
+
+            var text = DataUtil.CreateRandomString(50);
+
+            return string.Format(
+                "{{\"type\":\"application/vnd.lime.text+json\",\"content\":{{\"text\":\"{0}\"}},\"id\":\"{1}\",\"from\":\"{2}\",\"pp\":\"{3}\",\"to\":\"{4}\",\"metadata\":{{\"{5}\":\"{6}\",\"{7}\":\"{8}\"}}}}",
+                text,
+                id,
+                from,
+                pp,
+                to,
+                randomKey1,
+                randomString1,
+                randomKey2,
+                randomString2
+                );
+        }
+
         public static string CreateDomainName()
         {
             return string.Format("{0}.com", CreateRandomString(10));

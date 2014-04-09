@@ -50,8 +50,13 @@ namespace Lime.Protocol.Tcp.UnitTests
                 bufferSize,
                 _traceWriter.Object);
         }
-        private async Task<TcpTransport> GetTargetAndOpenAsync()
+        private async Task<TcpTransport> GetTargetAndOpenAsync(int bufferSize = TcpTransport.DEFAULT_BUFFER_SIZE, Stream stream = null)
         {
+            if (stream == null)
+            {
+                stream = _stream.Object;
+            }
+
             var uri = DataUtil.CreateUri(Uri.UriSchemeNetTcp);
             var cancellationToken = CancellationToken.None;
 
@@ -62,22 +67,11 @@ namespace Lime.Protocol.Tcp.UnitTests
                 .Returns(true)
                 .Verifiable();
 
-            _stream
-                .Setup(s => s.CanRead)
-                .Returns(true)
-                .Verifiable();
+            _tcpClient
+                .Setup(s => s.GetStream())
+                .Returns(stream);
 
-            _stream
-                .Setup(
-                    s => s.ReadAsync(
-                        It.IsAny<byte[]>(),
-                        It.IsAny<int>(),
-                        It.IsAny<int>(),
-                        It.IsAny<CancellationToken>()))
-                .Returns(readTcs.Task)
-                .Verifiable();
-
-            var target = GetTarget();
+            var target = GetTarget(bufferSize: bufferSize);
 
             await target.OpenAsync(uri, cancellationToken);
             return target;
@@ -89,11 +83,10 @@ namespace Lime.Protocol.Tcp.UnitTests
 
         [TestMethod]
         [TestCategory("OpenAsync")]
-        public async Task OpenAsync_NotConnectedValidUri_ConnectsClientAndCallsStreamReadAsync()
+        public async Task OpenAsync_NotConnectedValidUri_ConnectsClientAndCallsGetStream()
         {
             var uri = DataUtil.CreateUri(Uri.UriSchemeNetTcp);
             var cancellationToken = CancellationToken.None;
-            int offset = 0;
             int bufferSize = DataUtil.CreateRandomInt(10000);
 
             var readTcs = new TaskCompletionSource<int>();
@@ -101,21 +94,6 @@ namespace Lime.Protocol.Tcp.UnitTests
             _tcpClient
                 .Setup(c => c.Connected)
                 .Returns(false)
-                .Verifiable();
-
-            _stream
-                .Setup(s => s.CanRead)
-                .Returns(true)
-                .Verifiable();
-           
-            _stream
-                .Setup(
-                    s => s.ReadAsync(
-                        It.Is<byte[]>(b => b.Length == bufferSize), 
-                        offset, 
-                        bufferSize, 
-                        It.IsAny<CancellationToken>()))
-                .Returns(readTcs.Task)
                 .Verifiable();
 
             var target = GetTarget(bufferSize: bufferSize);
@@ -129,7 +107,11 @@ namespace Lime.Protocol.Tcp.UnitTests
                 c => c.ConnectAsync(
                     uri.Host,
                     uri.Port),
-                Times.Once());            
+                Times.Once());
+
+            _tcpClient.Verify(
+                c => c.GetStream(),
+                Times.Once());
         }
 
         [TestMethod]
@@ -152,11 +134,10 @@ namespace Lime.Protocol.Tcp.UnitTests
 
         [TestMethod]
         [TestCategory("OpenAsync")]
-        public async Task OpenAsync_AlreadyConnectedValidUri_CallsStreamReadAsync()
+        public async Task OpenAsync_AlreadyConnectedValidUri_CallsGetStream()
         {
             var uri = DataUtil.CreateUri(Uri.UriSchemeNetTcp);
             var cancellationToken = CancellationToken.None;
-            int offset = 0;
             int bufferSize = DataUtil.CreateRandomInt(10000);
 
             var readTcs = new TaskCompletionSource<int>();
@@ -164,21 +145,6 @@ namespace Lime.Protocol.Tcp.UnitTests
             _tcpClient
                 .Setup(c => c.Connected)
                 .Returns(true)
-                .Verifiable();
-
-            _stream
-                .Setup(s => s.CanRead)
-                .Returns(true)
-                .Verifiable();
-
-            _stream
-                .Setup(
-                    s => s.ReadAsync(
-                        It.Is<byte[]>(b => b.Length == bufferSize),
-                        offset,
-                        bufferSize,
-                        It.IsAny<CancellationToken>()))
-                .Returns(readTcs.Task)
                 .Verifiable();
 
             var target = GetTarget(bufferSize: bufferSize);
@@ -193,63 +159,12 @@ namespace Lime.Protocol.Tcp.UnitTests
                     It.IsAny<string>(),
                     It.IsAny<int>()),
                 Times.Never());
+
+            _tcpClient.Verify(
+                c => c.GetStream(),
+                Times.Once());
         }
-
-        [TestMethod]
-        [TestCategory("OpenAsync")]
-        public async Task OpenAsync_ReadAsyncThrowsException_RaisesFailed()
-        {
-            var uri = DataUtil.CreateUri(Uri.UriSchemeNetTcp);
-            var cancellationToken = CancellationToken.None;
-            int offset = 0;
-            int bufferSize = DataUtil.CreateRandomInt(10000);
-            var readTcs = new TaskCompletionSource<int>();
-            var exception = DataUtil.CreateException();
-            readTcs.SetException(exception);
-
-            bool failedRaised = false;
-
-            _tcpClient
-                .Setup(c => c.Connected)
-                .Returns(true)
-                .Verifiable();
-
-            _stream
-                .Setup(s => s.CanRead)
-                .Returns(true)
-                .Verifiable();
-
-            _stream
-                .Setup(
-                    s => s.ReadAsync(
-                        It.Is<byte[]>(b => b.Length == bufferSize),
-                        offset,
-                        bufferSize,
-                        It.IsAny<CancellationToken>()))
-                .Returns(readTcs.Task);
-
-            var setFailedTcs = new TaskCompletionSource<object>();
-            var timeoutCancellationTokenSource = new CancellationTokenSource(500);
-            timeoutCancellationTokenSource.Token.Register(() => setFailedTcs.TrySetCanceled());
-                       
-            var target = GetTarget(bufferSize: bufferSize);
-            target.Failed += (sender, e) =>
-            {
-                using (e.GetDeferral())
-                {
-                    failedRaised = !failedRaised && e.Exception == exception;
-                }
-
-                setFailedTcs.TrySetResult(null);
-            };
-
-
-            await target.OpenAsync(uri, cancellationToken);
-            await setFailedTcs.Task;
-
-            Assert.IsTrue(failedRaised);
-        }
-
+    
         #endregion
 
         #region SendAsync
@@ -340,6 +255,201 @@ namespace Lime.Protocol.Tcp.UnitTests
 
         #endregion
 
+        #region ReceiveAsync
+
+        [TestMethod]
+        [TestCategory("ReceiveAsync")]
+        public async Task ReceiveAsync_OneRead_ReadEnvelopeJsonFromStream()
+        {
+            var content = DataUtil.CreateTextContent();
+            var message = DataUtil.CreateMessage(content);
+            var messageJson = DataUtil.CreateMessageJson();
+            var cancelationToken = DataUtil.CreateCancellationToken();
+
+            byte[] messageBuffer = Encoding.UTF8.GetBytes(
+                messageJson);
+
+            int bufferSize = messageBuffer.Length + DataUtil.CreateRandomInt(1000);
+            var stream = new TestStream(messageBuffer);
+            var target = await GetTargetAndOpenAsync(bufferSize, stream);
+
+            _envelopeSerializer
+                .Setup(e => e.Deserialize(messageJson))
+                .Returns(message)
+                .Verifiable();
+
+            var actual = await target.ReceiveAsync(cancelationToken);
+
+            _stream.Verify();
+            _envelopeSerializer.Verify();
+
+            Assert.AreEqual(message, actual);
+
+            Assert.AreEqual(1, stream.ReadCount);
+        }
+
+        [TestMethod]
+        [TestCategory("ReceiveAsync")]
+        public async Task ReceiveAsync_MultipleReads_ReadEnvelopeJsonFromStream()
+        {
+            var content = DataUtil.CreateTextContent();
+            var message = DataUtil.CreateMessage(content);
+            var messageJson = DataUtil.CreateMessageJson();
+            var cancelationToken = DataUtil.CreateCancellationToken();
+
+            var bufferParts = DataUtil.CreateRandomInt(10) + 1;
+
+            byte[] messageBuffer = Encoding.UTF8.GetBytes(
+                messageJson);
+
+            var bufferPartSize = messageBuffer.Length / bufferParts;
+
+            byte[][] messageBufferParts = new byte[bufferParts][];
+
+            for (int i = 0; i < bufferParts; i++)
+            {
+                if (i + 1 == bufferParts)
+                {
+                    messageBufferParts[i] = messageBuffer
+                        .Skip(i * bufferPartSize)
+                        .ToArray();
+                }
+                else
+                {
+                    messageBufferParts[i] = messageBuffer
+                    .Skip(i * bufferPartSize)
+                    .Take(bufferPartSize)
+                    .ToArray();
+                }
+            }
+
+            int bufferSize = messageBuffer.Length + DataUtil.CreateRandomInt(1000);
+            var stream = new TestStream(messageBufferParts);
+            var target = await GetTargetAndOpenAsync(bufferSize, stream);
+
+            _envelopeSerializer
+                .Setup(e => e.Deserialize(messageJson))
+                .Returns(message)
+                .Verifiable();
+
+            var actual = await target.ReceiveAsync(cancelationToken);
+
+            _stream.Verify();
+            _envelopeSerializer.Verify();
+
+            Assert.AreEqual(message, actual);
+            Assert.AreEqual(messageBufferParts.Length, stream.ReadCount);
+        }
+
+        [TestMethod]
+        [TestCategory("ReceiveAsync")]
+        public async Task ReceiveAsync_SingleReadBiggerThenBuffer_RaisesFailedAndThrowsInternalBufferOverflowException()
+        {
+            var content = DataUtil.CreateTextContent();
+            var message = DataUtil.CreateMessage(content);
+            var messageJson = DataUtil.CreateMessageJson();
+            var cancelationToken = DataUtil.CreateCancellationToken();
+            bool failedRaised = false;
+
+            byte[] messageBuffer = Encoding.UTF8.GetBytes(
+                messageJson);
+
+            int bufferSize = messageBuffer.Length - 1;
+            var stream = new TestStream(messageBuffer);
+            var target = await GetTargetAndOpenAsync(bufferSize, stream);
+
+            _envelopeSerializer
+                .Setup(e => e.Deserialize(messageJson))
+                .Returns(message)
+                .Verifiable();
+
+
+            target.Failed += (sender, e) => failedRaised = !failedRaised;
+
+            _envelopeSerializer
+                .Setup(e => e.Deserialize(messageJson))
+                .Returns(message)
+                .Verifiable();
+
+            try
+            {
+                var actual = await target.ReceiveAsync(cancelationToken);
+
+                Assert.Fail();
+            }
+            catch (Exception ex)
+            {
+                Assert.IsTrue(ex is InternalBufferOverflowException);
+                Assert.IsTrue(stream.CloseInvoked);
+                Assert.IsTrue(failedRaised);
+            }
+
+        }
+
+        [TestMethod]
+        [TestCategory("ReceiveAsync")]
+        public async Task ReceiveAsync_MultipleReadsBiggerThenBuffer_RaisesFailedAndThrowsInternalBufferOverflowException()
+        {
+            var content = DataUtil.CreateTextContent();
+            var message = DataUtil.CreateMessage(content);
+            var messageJson = DataUtil.CreateMessageJson();
+            var cancelationToken = DataUtil.CreateCancellationToken();
+            bool failedRaised = false;
+
+            var bufferParts = DataUtil.CreateRandomInt(10) + 1;
+
+            byte[] messageBuffer = Encoding.UTF8.GetBytes(
+                messageJson);
+
+            var bufferPartSize = messageBuffer.Length / bufferParts;
+
+            byte[][] messageBufferParts = new byte[bufferParts][];
+
+            for (int i = 0; i < bufferParts; i++)
+            {
+                if (i + 1 == bufferParts)
+                {
+                    messageBufferParts[i] = messageBuffer
+                        .Skip(i * bufferPartSize)
+                        .ToArray();
+                }
+                else
+                {
+                    messageBufferParts[i] = messageBuffer
+                    .Skip(i * bufferPartSize)
+                    .Take(bufferPartSize)
+                    .ToArray();
+                }
+            }
+
+            int bufferSize = messageBuffer.Length - 1;
+            var stream = new TestStream(messageBufferParts);
+            var target = await GetTargetAndOpenAsync(bufferSize, stream);
+
+            target.Failed += (sender, e) => failedRaised = !failedRaised;
+
+            _envelopeSerializer
+                .Setup(e => e.Deserialize(messageJson))
+                .Returns(message)
+                .Verifiable();
+
+            try
+            {
+                var actual = await target.ReceiveAsync(cancelationToken);
+
+                Assert.Fail();
+            }
+            catch (Exception ex)
+            {
+                Assert.IsTrue(ex is InternalBufferOverflowException);
+                Assert.IsTrue(stream.CloseInvoked);
+                Assert.IsTrue(failedRaised);
+            }
+            
+        }
+        
+        #endregion
+
         #region PerformCloseAsync
 
         [TestMethod]
@@ -401,5 +511,84 @@ namespace Lime.Protocol.Tcp.UnitTests
         }
 
         #endregion
+
+        private class TestStream : Stream
+        {
+
+            private byte[][] _buffers;
+
+            public TestStream(params byte[][] buffers)
+            {
+                _buffers = buffers;
+            }
+
+            public override bool CanRead 
+            {
+                get { return true; }
+            }
+
+            public override bool CanSeek
+            {
+                get { throw new NotImplementedException(); }
+            }
+
+            public override bool CanWrite
+            {
+                get { throw new NotImplementedException(); }
+            }
+
+            public override void Flush()
+            {
+                throw new NotImplementedException();
+            }
+
+            public override long Length
+            {
+                get { throw new NotImplementedException(); }
+            }
+
+            public override long Position { get; set; }
+
+            public int ReadCount { get; set; }
+
+
+            public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+            {
+                var currentBuffer = _buffers[ReadCount++ % _buffers.Length];
+
+                Array.Copy(currentBuffer, 0, buffer, offset, currentBuffer.Length > count ? count : currentBuffer.Length);
+
+                Position += currentBuffer.Length;
+
+                return Task.FromResult(currentBuffer.Length);                
+            }
+
+            public bool CloseInvoked { get; set; }
+
+            public override void Close()
+            {
+                CloseInvoked = true;
+            }
+
+            public override int Read(byte[] buffer, int offset, int count)
+            {
+                throw new NotImplementedException();
+            }
+
+            public override long Seek(long offset, SeekOrigin origin)
+            {
+                throw new NotImplementedException();
+            }
+
+            public override void SetLength(long value)
+            {
+                throw new NotImplementedException();
+            }
+
+            public override void Write(byte[] buffer, int offset, int count)
+            {
+                throw new NotImplementedException();
+            }
+        }
     }
 }

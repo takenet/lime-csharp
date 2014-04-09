@@ -354,17 +354,6 @@ namespace Lime.Protocol.UnitTests.Network
             await target.SendSessionAsync(session);
         }
 
-        [TestMethod]
-        [TestCategory("SendSessionAsync")]
-        [ExpectedException(typeof(InvalidOperationException))]
-        public async Task SendSessionAsync_FinishedState_ThrowsInvalidOperationException()
-        {
-            var target = (ISessionChannel)GetTarget(SessionState.Finished);
-            var session = DataUtil.CreateSession();
-
-            await target.SendSessionAsync(session);
-        }
-
         #endregion
 
         #region ReceiveSessionAsync
