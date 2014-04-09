@@ -29,19 +29,27 @@ namespace Lime.Console
         private IDictionary<Node, Guid> _serverNodeSessionIdDictionary;
         private IDictionary<Identity, string> _identityPasswordDictionary;
 
+        private Node _serverNode;
+
         #region Constructor
         
         public ConsoleServer(Uri listenerUri)
         {
+            _serverNode = new Node() 
+            { 
+                Name = "server", 
+                Domain = "bb.com", 
+                Instance = Environment.MachineName 
+            };
+
             _listenerUri = listenerUri;
             _serverConnectedNodesDictionary = new Dictionary<Guid, IServerChannel>();
             _serverNodeSessionIdDictionary = new Dictionary<Node, Guid>();
 
             _identityPasswordDictionary = new Dictionary<Identity, string>
             {
-                { Identity.Parse("john@domain.com") , "123456" },
-                { Identity.Parse("paul@domain.com") , "abcdef" }
-
+                { Identity.Parse("ww@bb.com") , "123456" },
+                { Identity.Parse("skylar@bb.com") , "abcdef" }
             };
         }
 
@@ -85,7 +93,7 @@ namespace Lime.Console
 
                 var serverChannel = new ServerChannel(
                     Guid.NewGuid(),
-                    new Node() { Name = "server", Domain = IPGlobalProperties.GetIPGlobalProperties().DomainName, Instance = Environment.MachineName },
+                    _serverNode,
                     transport,
                     TimeSpan.FromSeconds(60));
 
@@ -137,10 +145,16 @@ namespace Lime.Console
                 await channel.Transport.SetEncryptionAsync(negotiatedSession.Encryption.Value, CancellationToken.None);
             }
 
-            var authenticatedSession = await channel.AuthenticateSessionAsync(new AuthenticationScheme[] { AuthenticationScheme.Guest, AuthenticationScheme.Plain }, cancellationToken);
+            var authenticatedSession = await channel.AuthenticateSessionAsync(new AuthenticationScheme[] { AuthenticationScheme.Plain }, cancellationToken);            
 
-            if (authenticatedSession.From != null &&
-                authenticatedSession.From.Name.Equals(Environment.UserName, StringComparison.CurrentCultureIgnoreCase))
+            var plainAuthentication = authenticatedSession.Authentication as PlainAuthentication;
+
+            string password;
+
+            if (plainAuthentication != null &&
+                authenticatedSession.From != null &&
+                _identityPasswordDictionary.TryGetValue(authenticatedSession.From.ToIdentity(), out password) &&
+                password.Equals(plainAuthentication.GetFromBase64Password()))
             {
                 _serverNodeSessionIdDictionary.Add(authenticatedSession.From, channel.SessionId);
 
