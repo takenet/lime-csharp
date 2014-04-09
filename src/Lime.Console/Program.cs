@@ -71,8 +71,39 @@ namespace Lime.Console
                     var cancellationTokenSource = new CancellationTokenSource();
                     var listenTask = client.ReceiveMessagesAsync(cancellationTokenSource.Token);
 
-                    System.Console.Write("Client started. Press any key to stop.");
-                    System.Console.ReadLine();
+                    System.Console.WriteLine("Client started. Type EXIT to quit.");
+
+                    while (true)
+                    {
+                        System.Console.Write("Destination: ");
+
+                        var toInput = System.Console.ReadLine();
+
+                        if (toInput.Equals("exit", StringComparison.InvariantCultureIgnoreCase))
+                        {
+                            break;
+                        }
+
+                        Node to = null;
+                        if (Node.TryParse(toInput, out to))
+                        {
+                            System.Console.Write("Message: ");
+
+                            var messageText = System.Console.ReadLine();
+
+                            var message = new Message()
+                            {
+                                To = to,
+                                Content = new TextContent()
+                                {
+                                    Text = messageText
+                                }
+                            };
+
+                            client.Channel.SendMessageAsync(message).Wait();
+                        }
+                    }                    
+                    
                     cancellationTokenSource.Cancel();
                     client.Disconnect(CancellationToken.None).Wait();
                 }
