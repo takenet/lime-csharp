@@ -78,6 +78,16 @@ namespace Lime.Protocol.Server
         /// <exception cref="System.InvalidOperationException">Cannot await for a session response since there's already a listener.</exception>
         public async Task<Session> NegotiateSessionAsync(CancellationToken cancellationToken, SessionCompression[] compressionOptions, SessionEncryption[] encryptionOptions)
         {
+            if (base.State != SessionState.New)
+            {
+                throw new InvalidOperationException(string.Format("Cannot start a session negotiating in the '{0}' state", this.State));
+            }
+
+            if (base._sessionAsyncBuffer.HasPromises)
+            {
+                throw new InvalidOperationException("Cannot await for a session response since there's already a listener.");
+            }
+
             if (compressionOptions == null)
             {
                 throw new ArgumentNullException("compressionOptions");
@@ -98,11 +108,6 @@ namespace Lime.Protocol.Server
                 throw new ArgumentException("No available options for encryption negotiation");
             }
 
-            if (base._sessionAsyncBuffer.HasPromises)
-            {
-                throw new InvalidOperationException("Cannot await for a session response since there's already a listener.");
-            }
-
             base.State = SessionState.Negotiating;
 
             var session = new Session()
@@ -120,9 +125,8 @@ namespace Lime.Protocol.Server
 
         /// <summary>
         /// Send a negotiate session envelope
-        /// to the remote node to choose or
-        /// confirm the session negotiation options
-        /// parameters
+        /// to the remote node to confirm the 
+        /// session negotiation options.
         /// </summary>
         /// <param name="sessionCompression">The session compression option</param>
         /// <param name="sessionEncryption">The session encryption option</param>
@@ -138,46 +142,13 @@ namespace Lime.Protocol.Server
             var session = new Session()
             {
                 Id = this.SessionId,
-                State = SessionState.Negotiating,
+                From = this.LocalNode,
+                State = base.State,
                 Compression = sessionCompression,
                 Encryption = sessionEncryption
             };
 
             return this.SendSessionAsync(session);
-        }
-
-        /// <summary>
-        /// Changes the session state and 
-        /// sends an authenticat envelope
-        /// to the node with the available options
-        /// </summary>
-        /// <param name="schemeOptions"></param>
-        /// <param name="authenticationRoundtrip">The authentication roundtrip data.</param>
-        /// <returns></returns>
-        /// <exception cref="System.ArgumentNullException">authentication</exception>
-        public Task SendAuthenticatingSessionAsync(AuthenticationScheme[] schemeOptions)
-        {
-            if (schemeOptions == null)
-            {
-                throw new ArgumentNullException("authentication");
-            }
-
-            if (schemeOptions.Length == 0)
-            {
-                throw new ArgumentException("No available options for authentication");
-            }
-
-            base.State = SessionState.Authenticating;
-
-            var session = new Session()
-            {
-                Id = base.SessionId,
-                From = base.LocalNode,
-                State = base.State,
-                SchemeOptions = schemeOptions
-            };
-
-            return base.SendSessionAsync(session);
         }
 
         /// <summary>
@@ -196,6 +167,12 @@ namespace Lime.Protocol.Server
         /// <exception cref="System.InvalidOperationException">Cannot await for a session response since there's already a listener.</exception>
         public async Task<Session> AuthenticateSessionAsync(CancellationToken cancellationToken, AuthenticationScheme[] schemeOptions)
         {
+            if (this.State != SessionState.New &&
+                this.State != SessionState.Negotiating)
+            {
+                throw new InvalidOperationException(string.Format("Cannot start the session authentication in the '{0}' state", this.State));
+            }
+
             if (schemeOptions == null)
             {
                 throw new ArgumentNullException("authentication");
@@ -248,6 +225,11 @@ namespace Lime.Protocol.Server
                 throw new InvalidOperationException(string.Format("Cannot send an authentication roundtrip for a session in the '{0}' state", this.State));
             }
 
+            if (base._sessionAsyncBuffer.HasPromises)
+            {
+                throw new InvalidOperationException("Cannot await for a session response since there's already a listener.");
+            }
+
             var session = new Session()
             {
                 Id = base.SessionId,
@@ -282,8 +264,8 @@ namespace Lime.Protocol.Server
                 throw new InvalidOperationException(string.Format("Cannot establish a session in the '{0}' state", this.State));
             }
 
-            base.RemoteNode = node;
             base.State = SessionState.Established;
+            base.RemoteNode = node;           
             base.Mode = mode;
 
             var session = new Session()
@@ -418,7 +400,7 @@ namespace Lime.Protocol.Server
                     Description = "Invalid action for current session state"
                 };
 
-                await this.SendFailedSessionAsync(reason);
+                await this.SendFailedSessionAsync(reason).ConfigureAwait(false);
             }
         }
 
@@ -441,7 +423,7 @@ namespace Lime.Protocol.Server
                     Description = "Invalid action for current session state"
                 };
 
-                await this.SendFailedSessionAsync(reason);
+                await this.SendFailedSessionAsync(reason).ConfigureAwait(false);
             }
         }
 
@@ -464,7 +446,7 @@ namespace Lime.Protocol.Server
                     Description = "Invalid action for current session state"
                 };
 
-                await this.SendFailedSessionAsync(reason);
+                await this.SendFailedSessionAsync(reason).ConfigureAwait(false);
             }
         }
 

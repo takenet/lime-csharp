@@ -221,6 +221,11 @@ namespace Lime.Protocol.UnitTests
             return new Exception(CreateRandomString(50));
         }
 
+        public static T CreateException<T>() where T : Exception, new()
+        {
+            return new T();
+        }
+
         public static Uri CreateUri(string scheme = "http", int? port = null)
         {
             if (!port.HasValue)

@@ -418,7 +418,7 @@ namespace Lime.Protocol.UnitTests.Network
         {
             var target = GetTarget(SessionState.Established);
 
-            var exception = DataUtil.CreateException();
+            var exception = DataUtil.CreateException<InvalidOperationException>();
             var cancellationToken = DataUtil.CreateCancellationToken();
 
             _transport

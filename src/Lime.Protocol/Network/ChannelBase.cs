@@ -38,6 +38,7 @@ namespace Lime.Protocol.Network
 
             this.Transport = transport;
             this.Transport.Closing += Transport_Closing;
+            this.Transport.Failed += Transport_Failed;
 
             _sendTimeout = sendTimeout;
 
@@ -257,11 +258,6 @@ namespace Lime.Protocol.Network
                 throw new ArgumentNullException("session");
             }
 
-            if (this.State == SessionState.Finished)
-            {
-                throw new InvalidOperationException(string.Format("Cannot receive a session in the '{0}' session state", this.State));
-            }
-
             return this.SendAsync(session);
         }
 
@@ -345,11 +341,11 @@ namespace Lime.Protocol.Network
                     }
                     else
                     {
-                        throw new InvalidProgramException("Invalid or unknown envelope received by the transport.");
+                        throw new InvalidOperationException("Invalid or unknown envelope received by the transport.");
                     }
                 }
             }
-            catch
+            catch (InvalidOperationException)
             {
                 this.Transport.CloseAsync(_channelCancellationTokenSource.Token).Wait();
                 throw;
@@ -358,6 +354,17 @@ namespace Lime.Protocol.Network
             {
                 _receiveSemaphore.Release();
             }
+        }
+
+        /// <summary>
+        /// Closes the transport 
+        /// if it fails.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private async void Transport_Failed(object sender, ExceptionEventArgs e)
+        {
+            await this.Transport.CloseAsync(CancellationToken.None).ConfigureAwait(false);
         }
 
         /// <summary>
