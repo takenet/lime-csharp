@@ -41,11 +41,22 @@ namespace Lime.Console
             _serverConnectedNodesDictionary = new Dictionary<Guid, IServerChannel>();
             _serverNodeSessionIdDictionary = new Dictionary<Node, Guid>();
 
-            _listenerUri = new Uri("net.tcp://notebires.takenet.com.br:55321");
+            _listenerUri = new Uri("net.tcp://andre-pc:55321");
 
             var listener = StartServerAsync().Result;
 
             var clientChannel = StartClientAsync().Result;
+
+            var session = clientChannel.StartNewSessionAsync(CancellationToken.None).Result;
+
+            session = clientChannel.NegotiateSessionAsync(CancellationToken.None, session.CompressionOptions.First(), session.EncryptionOptions.Last()).Result;
+
+
+            clientChannel.Transport.SetCompressionAsync(session.Compression.Value, CancellationToken.None).Wait();
+            clientChannel.Transport.SetEncryptionAsync(session.Encryption.Value, CancellationToken.None).Wait();
+
+            
+
 
             System.Console.ReadLine();
 
@@ -171,8 +182,9 @@ namespace Lime.Console
             var store = new X509Store(StoreName.Root, StoreLocation.CurrentUser);
             store.Open(OpenFlags.ReadOnly);
 
-            var certificates = store.Certificates.Find(X509FindType.FindByThumbprint, "10f422b0d59269ac13cb9ba73ba18f8ccbe58694", false);
-
+            var certificates = store.Certificates.Find(X509FindType.FindByThumbprint, "f864d23e92894c56df566b7ab7a9c6411d50d14d", false);
+            //var certificates = store.Certificates.Find(X509FindType.FindByThumbprint, "10f422b0d59269ac13cb9ba73ba18f8ccbe58694", false);
+            
             if (certificates.Count == 0)
             {
                 throw new InvalidOperationException("Server certificate not found");
@@ -204,19 +216,8 @@ namespace Lime.Console
                 );
 
             var clientChannel = new ClientChannel(transport, TimeSpan.FromSeconds(60));
-            //clientChannel.NegotiateSessionReceived += ClientChannel_NegotiateSessionReceived;
-            //clientChannel.AuthenticateSessionReceived += ClientChannel_AuthenticateSessionReceived;
-            //clientChannel.SessionEstablished += ClientChannel_SessionEstablished;
-            //clientChannel.SessionFinished += ClientChannel_SessionFinished;
-            //clientChannel.SessionFailed += ClientChannel_SessionFailed;
-            //clientChannel.MessageReceived += ClientChannel_MessageReceived;
-            //clientChannel.CommandReceived += ClientChannel_CommandReceived;
-            //clientChannel.NotificationReceived += ClientChannel_NotificationReceived;
-
             await clientChannel.Transport.OpenAsync(_listenerUri, CancellationToken.None);
-
-            //await clientChannel.SendNewSessionAsync();
-
+           
             return clientChannel;
         }
 
@@ -324,6 +325,34 @@ namespace Lime.Console
                 serverChannel.Transport.Closed += Transport_Closed;
 
                 await serverChannel.Transport.OpenAsync(_listenerUri, cancellationToken);
+
+
+                serverChannel
+                    .ReceiveNewSessionAsync(CancellationToken.None)
+                    .ContinueWith(s =>
+                    {
+                        return serverChannel.NegotiateSessionAsync(
+                            CancellationToken.None,
+                            serverChannel.Transport.GetSupportedCompression(),
+                            serverChannel.Transport.GetSupportedEncryption());
+                    })
+                    .Unwrap()
+                    .ContinueWith(t =>
+                    {
+                        return Task.WhenAll(                            
+                            serverChannel.SendNegotiatingSessionAsync(
+                                t.Result.Compression.Value,
+                                t.Result.Encryption.Value),
+                            serverChannel.Transport.SetCompressionAsync(t.Result.Compression.Value, CancellationToken.None),
+                            serverChannel.Transport.SetEncryptionAsync(t.Result.Encryption.Value, CancellationToken.None));
+                    })
+                    .Unwrap()
+                    .ContinueWith(t =>
+                    {
+                        return serverChannel.SendAuthenticatingSessionAsync(
+                            new AuthenticationScheme[] { AuthenticationScheme.Guest, AuthenticationScheme.Plain });
+                    });
+                    
             }
         }
 
