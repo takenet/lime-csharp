@@ -24,7 +24,6 @@ namespace Lime.Console
             _clientUri = clientUri;
         }
 
-
         public async Task<bool> ConnectAsync(Identity identity, string password, CancellationToken cancellationToken)
         {
             var tcpClient = new TcpClient();

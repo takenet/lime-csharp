@@ -13,7 +13,7 @@ namespace Lime.Protocol.Network
     /// Base class for the protocol
     /// communication channels
     /// </summary>
-    public abstract class ChannelBase : IChannel, ISessionChannel, IDisposable
+    public abstract class ChannelBase : IChannel, IDisposable
     {
         #region Fields
         
@@ -29,7 +29,7 @@ namespace Lime.Protocol.Network
 
         #region Constructors
 
-        public ChannelBase(ITransport transport, TimeSpan sendTimeout)
+        public ChannelBase(ITransport transport, TimeSpan sendTimeout, int buffersLimit)
         {
             if (transport == null)
             {
@@ -45,14 +45,14 @@ namespace Lime.Protocol.Network
 
             this.State = SessionState.New;
 
-            _messageAsyncBuffer = new AsyncQueue<Message>();
-            _messageAsyncBuffer.PromiseAdded += EnvelopeAsyncBuffer_PromiseAdded;
-            _commandAsyncBuffer = new AsyncQueue<Command>();
-            _commandAsyncBuffer.PromiseAdded += EnvelopeAsyncBuffer_PromiseAdded;
-            _notificationAsyncBuffer = new AsyncQueue<Notification>();
-            _notificationAsyncBuffer.PromiseAdded += EnvelopeAsyncBuffer_PromiseAdded;
+            _messageAsyncBuffer = new AsyncQueue<Message>(buffersLimit, buffersLimit);
+            _commandAsyncBuffer = new AsyncQueue<Command>(buffersLimit, buffersLimit);
+            _notificationAsyncBuffer = new AsyncQueue<Notification>(buffersLimit, buffersLimit);
             _sessionAsyncBuffer = new AsyncQueue<Session>(1, 0);
-            _sessionAsyncBuffer.PromiseAdded += EnvelopeAsyncBuffer_PromiseAdded;            
+            _messageAsyncBuffer.PromiseAdded += EnvelopeAsyncBuffer_PromiseAdded;
+            _commandAsyncBuffer.PromiseAdded += EnvelopeAsyncBuffer_PromiseAdded;
+            _notificationAsyncBuffer.PromiseAdded += EnvelopeAsyncBuffer_PromiseAdded;
+            _sessionAsyncBuffer.PromiseAdded += EnvelopeAsyncBuffer_PromiseAdded;
         }
 
         ~ChannelBase()
@@ -311,6 +311,11 @@ namespace Lime.Protocol.Network
         /// <param name="e"></param>
         private async void EnvelopeAsyncBuffer_PromiseAdded(object sender, EventArgs e)
         {
+            _messageAsyncBuffer.PromiseAdded -= EnvelopeAsyncBuffer_PromiseAdded;
+            _commandAsyncBuffer.PromiseAdded -= EnvelopeAsyncBuffer_PromiseAdded;
+            _notificationAsyncBuffer.PromiseAdded -= EnvelopeAsyncBuffer_PromiseAdded;
+            _sessionAsyncBuffer.PromiseAdded -= EnvelopeAsyncBuffer_PromiseAdded;        
+
             await _receiveSemaphore.WaitAsync(_channelCancellationTokenSource.Token).ConfigureAwait(false);
 
             try
@@ -352,6 +357,11 @@ namespace Lime.Protocol.Network
             finally
             {
                 _receiveSemaphore.Release();
+
+                _messageAsyncBuffer.PromiseAdded += EnvelopeAsyncBuffer_PromiseAdded;
+                _commandAsyncBuffer.PromiseAdded += EnvelopeAsyncBuffer_PromiseAdded;
+                _notificationAsyncBuffer.PromiseAdded += EnvelopeAsyncBuffer_PromiseAdded;
+                _sessionAsyncBuffer.PromiseAdded += EnvelopeAsyncBuffer_PromiseAdded;
             }
         }
 

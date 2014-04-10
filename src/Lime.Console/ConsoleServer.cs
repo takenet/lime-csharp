@@ -60,8 +60,8 @@ namespace Lime.Console
             var store = new X509Store(StoreName.Root, StoreLocation.CurrentUser);
             store.Open(OpenFlags.ReadOnly);
 
-            //var certificates = store.Certificates.Find(X509FindType.FindByThumbprint, "f864d23e92894c56df566b7ab7a9c6411d50d14d", false);
-            var certificates = store.Certificates.Find(X509FindType.FindByThumbprint, "10f422b0d59269ac13cb9ba73ba18f8ccbe58694", false);
+            var certificates = store.Certificates.Find(X509FindType.FindByThumbprint, "f864d23e92894c56df566b7ab7a9c6411d50d14d", false);
+            //var certificates = store.Certificates.Find(X509FindType.FindByThumbprint, "10f422b0d59269ac13cb9ba73ba18f8ccbe58694", false);
             
             if (certificates.Count == 0)
             {
@@ -163,6 +163,8 @@ namespace Lime.Console
                 var receiveMessageTask = this.ReceiveMessagesAsync(channel, cancellationToken);
 
                 await channel.ReceiveFinishingSessionAsync(cancellationToken);
+
+                await channel.SendFinishedSessionAsync();
             }
             else
             {

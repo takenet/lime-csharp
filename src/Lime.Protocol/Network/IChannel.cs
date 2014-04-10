@@ -10,7 +10,7 @@ namespace Lime.Protocol.Network
     /// Defines a communication channel 
     /// for the protocol
     /// </summary>
-    public interface IChannel : IMessageChannel, ICommandChannel, INotificationChannel
+    public interface IChannel : IMessageChannel, ICommandChannel, INotificationChannel, ISessionChannel
     {
         /// <summary>
         /// The current session transport

@@ -32,8 +32,8 @@ namespace Lime.Protocol.Client
         /// <param name="sendTimeout">The channel send timeout.</param>
         /// <param name="autoReplyPings">Indicates if the client should reply automatically to server ping commands.</param>
         /// <param name="autoNotifyReceipt">Indicates if the client should automatically send 'received' notifications for messages.</param>
-        public ClientChannel(ITransport transport, TimeSpan sendTimeout, bool autoReplyPings = true, bool autoNotifyReceipt = false)
-            : base(transport, sendTimeout)
+        public ClientChannel(ITransport transport, TimeSpan sendTimeout, int buffersLimit = 5, bool autoReplyPings = true, bool autoNotifyReceipt = false)
+            : base(transport, sendTimeout, buffersLimit)
         {
             _autoReplyPings = autoReplyPings;
             _autoNotifyReceipt = autoNotifyReceipt;
@@ -337,13 +337,13 @@ namespace Lime.Protocol.Client
                 this.RemoteNode = session.From;
             }
 
+            await base.OnSessionReceivedAsync(session).ConfigureAwait(false);
+
             if (session.State == SessionState.Finished ||
                 session.State == SessionState.Failed)
             {
                 await this.Transport.CloseAsync(_channelCancellationTokenSource.Token).ConfigureAwait(false);
-            }
-
-            await base.OnSessionReceivedAsync(session).ConfigureAwait(false);
+            }            
         }
 
         #endregion

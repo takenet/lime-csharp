@@ -30,12 +30,6 @@ namespace Lime.Protocol.Server
         Task<ITransport> AcceptTransportAsync(CancellationToken cancellationToken);
 
         /// <summary>
-        /// Occurs when a new transport client is
-        /// connected to the listener
-        /// </summary>
-        event EventHandler<TransportEventArgs> Connected;
-
-        /// <summary>
         /// Stops the tranport listener
         /// </summary>
         /// <returns></returns>

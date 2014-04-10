@@ -15,13 +15,15 @@ namespace Lime.Protocol.Tcp
 {
     public class TcpTransportListener : ITransportListener
     {
+        #region Private Fields
+
         private IEnvelopeSerializer _envelopeSerializer;
         private ITraceWriter _traceWriter;
-
         private TcpListener _tcpListener;
-        private X509Certificate _sslCertificate;        
+        private X509Certificate _sslCertificate;
         private bool _isListening;
-        private Task _acceptTcpClientTask;
+
+        #endregion
 
         #region Constructor
 
@@ -90,18 +92,14 @@ namespace Lime.Protocol.Tcp
             _tcpListener.Start();
 
             _isListening = true;
-                
-            //_acceptTcpClientTask = this.ConnectAsync(CancellationToken.None)
-            //    .ContinueWith(t =>
-            //    {
-            //        if (t.Exception != null)
-            //        {
-
-            //        }
-            //    });
         }
 
-
+        /// <summary>
+        /// Accepts a new transport connection
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        /// <exception cref="System.InvalidOperationException">The listener was not started. Calls StartAsync first.</exception>
         public async Task<ITransport> AcceptTransportAsync(CancellationToken cancellationToken)
         {
             if (!_isListening)
@@ -120,14 +118,6 @@ namespace Lime.Protocol.Tcp
                 traceWriter: _traceWriter);            
         }
 
-
-
-        /// <summary>
-        /// Occurs when a new transport client is
-        /// connected to the listener
-        /// </summary>
-        public event EventHandler<TransportEventArgs> Connected;
-
         /// <summary>
         /// Stops the tranport listener
         /// </summary>
@@ -143,28 +133,5 @@ namespace Lime.Protocol.Tcp
         }
 
         #endregion
-
-
-        private async Task ConnectAsync(CancellationToken cancellationToken)
-        {
-            while (_isListening)
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-
-                var tcpClient = await _tcpListener.AcceptTcpClientAsync();
-
-                var transport = new TcpTransport(
-                    new TcpClientAdapter(tcpClient),
-                    _envelopeSerializer,
-                    serverCertificate: _sslCertificate,
-                    traceWriter: _traceWriter
-                    );
-
-                this.Connected.RaiseEvent(this, new TransportEventArgs(transport));
-            }
-
-        }
-
-
     }
 }

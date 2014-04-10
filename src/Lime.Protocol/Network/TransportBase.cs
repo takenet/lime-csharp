@@ -15,7 +15,6 @@ namespace Lime.Protocol.Network
     {
         #region Private fields
 
-        private bool _failedInvoked;
         private bool _closingInvoked;
         private bool _closedInvoked;
 
