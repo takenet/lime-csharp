@@ -13,6 +13,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution items", "Solution 
 	ProjectSection(SolutionItems) = preProject
 		..\LICENSE = ..\LICENSE
 		..\README.md = ..\README.md
+		Takenet.Lime.Protocol.pfx = Takenet.Lime.Protocol.pfx
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lime.Protocol.Tcp", "Lime.Protocol.Tcp\Lime.Protocol.Tcp.csproj", "{0EE0DB06-832F-4D33-96A8-0D2703AF27A9}"
