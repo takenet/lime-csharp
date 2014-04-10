@@ -311,6 +311,7 @@ namespace Lime.Protocol.Network
         /// <param name="e"></param>
         private async void EnvelopeAsyncBuffer_PromiseAdded(object sender, EventArgs e)
         {
+            // Unsubscribe the event to avoid unnecessary overhead
             _messageAsyncBuffer.PromiseAdded -= EnvelopeAsyncBuffer_PromiseAdded;
             _commandAsyncBuffer.PromiseAdded -= EnvelopeAsyncBuffer_PromiseAdded;
             _notificationAsyncBuffer.PromiseAdded -= EnvelopeAsyncBuffer_PromiseAdded;

@@ -28,7 +28,6 @@ namespace Lime.Console
         private IDictionary<Guid, IServerChannel> _serverConnectedNodesDictionary;
         private IDictionary<Node, Guid> _serverNodeSessionIdDictionary;
         private IDictionary<Identity, string> _identityPasswordDictionary;
-
         private Node _serverNode;
 
         #region Constructor
@@ -49,7 +48,9 @@ namespace Lime.Console
             _identityPasswordDictionary = new Dictionary<Identity, string>
             {
                 { Identity.Parse("ww@bb.com") , "123456" },
-                { Identity.Parse("skylar@bb.com") , "abcdef" }
+                { Identity.Parse("skylar@bb.com") , "abcdef" },
+                { Identity.Parse("wjr@bb.com") , "654321" },
+                { Identity.Parse("hank@bb.com") , "minerals" },
             };
         }
 
@@ -60,8 +61,8 @@ namespace Lime.Console
             var store = new X509Store(StoreName.Root, StoreLocation.CurrentUser);
             store.Open(OpenFlags.ReadOnly);
 
-            var certificates = store.Certificates.Find(X509FindType.FindByThumbprint, "f864d23e92894c56df566b7ab7a9c6411d50d14d", false);
-            //var certificates = store.Certificates.Find(X509FindType.FindByThumbprint, "10f422b0d59269ac13cb9ba73ba18f8ccbe58694", false);
+            //var certificates = store.Certificates.Find(X509FindType.FindByThumbprint, "f864d23e92894c56df566b7ab7a9c6411d50d14d", false);
+            var certificates = store.Certificates.Find(X509FindType.FindByThumbprint, "10f422b0d59269ac13cb9ba73ba18f8ccbe58694", false);
             
             if (certificates.Count == 0)
             {
@@ -105,76 +106,92 @@ namespace Lime.Console
 
         private async Task EstablishSessionAsync(IServerChannel channel, CancellationToken cancellationToken)
         {
-            cancellationToken.ThrowIfCancellationRequested();
-
-            _serverConnectedNodesDictionary.Add(channel.SessionId, channel);
-
-            var newSession = await channel.ReceiveNewSessionAsync(cancellationToken);
-
-            var negotiatedSession = await channel.NegotiateSessionAsync(
-                channel.Transport.GetSupportedCompression(), 
-                channel.Transport.GetSupportedEncryption(), 
-                cancellationToken);
-
-            if (negotiatedSession.State != SessionState.Negotiating ||
-                negotiatedSession.Compression == null ||
-                negotiatedSession.Encryption == null)
+            try
             {
-                await channel.SendFailedSessionAsync(
-                    new Reason()
+                cancellationToken.ThrowIfCancellationRequested();
+
+                _serverConnectedNodesDictionary.Add(channel.SessionId, channel);
+
+                var timeoutToken = new CancellationTokenSource(TimeSpan.FromSeconds(60));
+
+                var newSession = await channel.ReceiveNewSessionAsync(
+                    CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutToken.Token).Token);
+
+                timeoutToken = new CancellationTokenSource(TimeSpan.FromSeconds(60));
+
+                var negotiatedSession = await channel.NegotiateSessionAsync(
+                    channel.Transport.GetSupportedCompression(),
+                    channel.Transport.GetSupportedEncryption(),
+                    CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutToken.Token).Token);
+
+                if (negotiatedSession.State == SessionState.Negotiating &&
+                    negotiatedSession.Compression != null &&
+                    negotiatedSession.Encryption != null)
+                {                    
+                    await channel.SendNegotiatingSessionAsync(
+                        negotiatedSession.Compression.Value,
+                        negotiatedSession.Encryption.Value
+                        );
+
+                    if (channel.Transport.Compression != negotiatedSession.Compression.Value)
                     {
-                        Code = 1,
-                        Description = "Invalid selected negotiation options"
-                    });
+                        await channel.Transport.SetCompressionAsync(negotiatedSession.Compression.Value, CancellationToken.None);
+                    }
 
-                return;
-            }
-
-            await channel.SendNegotiatingSessionAsync(
-                negotiatedSession.Compression.Value,
-                negotiatedSession.Encryption.Value
-                );
-
-            if (channel.Transport.Compression != negotiatedSession.Compression.Value)
-            {
-                await channel.Transport.SetCompressionAsync(negotiatedSession.Compression.Value, CancellationToken.None);                
-            }
-
-            if (channel.Transport.Encryption != negotiatedSession.Encryption.Value)
-            {
-                await channel.Transport.SetEncryptionAsync(negotiatedSession.Encryption.Value, CancellationToken.None);
-            }
-
-            var authenticatedSession = await channel.AuthenticateSessionAsync(new AuthenticationScheme[] { AuthenticationScheme.Plain }, cancellationToken);            
-
-            var plainAuthentication = authenticatedSession.Authentication as PlainAuthentication;
-
-            string password;
-
-            if (plainAuthentication != null &&
-                authenticatedSession.From != null &&
-                _identityPasswordDictionary.TryGetValue(authenticatedSession.From.ToIdentity(), out password) &&
-                password.Equals(plainAuthentication.GetFromBase64Password()))
-            {
-                _serverNodeSessionIdDictionary.Add(authenticatedSession.From, channel.SessionId);
-
-                await channel.SendEstablishedSessionAsync(authenticatedSession.From, SessionMode.Node);
-                
-                var receiveMessageTask = this.ReceiveMessagesAsync(channel, cancellationToken);
-
-                await channel.ReceiveFinishingSessionAsync(cancellationToken);
-
-                await channel.SendFinishedSessionAsync();
-            }
-            else
-            {
-                await channel.SendFailedSessionAsync(
-                    new Reason()
+                    if (channel.Transport.Encryption != negotiatedSession.Encryption.Value)
                     {
-                        Code = ReasonCodes.SESSION_AUTHENTICATION_FAILED,
-                        Description = "Invalid user"
-                    });
+                        await channel.Transport.SetEncryptionAsync(negotiatedSession.Encryption.Value, CancellationToken.None);
+                    }
+
+                    timeoutToken = new CancellationTokenSource(TimeSpan.FromSeconds(60));
+
+                    var authenticatedSession = await channel.AuthenticateSessionAsync(
+                        new AuthenticationScheme[] { AuthenticationScheme.Plain },
+                        CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutToken.Token).Token);
+
+                    var plainAuthentication = authenticatedSession.Authentication as PlainAuthentication;
+
+                    string password;
+
+                    if (plainAuthentication != null &&
+                        authenticatedSession.From != null &&
+                        _identityPasswordDictionary.TryGetValue(authenticatedSession.From.ToIdentity(), out password) &&
+                        password.Equals(plainAuthentication.GetFromBase64Password()))
+                    {
+                        _serverNodeSessionIdDictionary.Add(authenticatedSession.From, channel.SessionId);
+
+                        await channel.SendEstablishedSessionAsync(authenticatedSession.From, SessionMode.Node);
+
+                        var receiveMessageTask = this.ReceiveMessagesAsync(channel, cancellationToken);
+
+                        await channel.ReceiveFinishingSessionAsync(cancellationToken);
+
+                        await channel.SendFinishedSessionAsync();
+                    }
+                    else
+                    {
+                        await channel.SendFailedSessionAsync(
+                            new Reason()
+                            {
+                                Code = ReasonCodes.SESSION_AUTHENTICATION_FAILED,
+                                Description = "Invalid user"
+                            });
+                    }
+                }
+                else
+                {
+                    await channel.SendFailedSessionAsync(
+                        new Reason()
+                        {
+                            Code = 1,
+                            Description = "Invalid selected negotiation options"
+                        });
+                }
             }
+            finally
+            {
+                channel.DisposeIfDisposable();
+            }            
         }
 
         private async Task ReceiveMessagesAsync(IChannel channel, CancellationToken cancellationToken)

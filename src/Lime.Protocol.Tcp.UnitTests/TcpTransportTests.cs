@@ -343,7 +343,7 @@ namespace Lime.Protocol.Tcp.UnitTests
 
         [TestMethod]
         [TestCategory("ReceiveAsync")]
-        public async Task ReceiveAsync_SingleReadBiggerThenBuffer_ClosesStreamAndThrowsInternalBufferOverflowException()
+        public async Task ReceiveAsync_SingleReadBiggerThenBuffer_ClosesStreamAndThrowsInvalidOperationException()
         {
             var content = DataUtil.CreateTextContent();
             var message = DataUtil.CreateMessage(content);
@@ -376,7 +376,7 @@ namespace Lime.Protocol.Tcp.UnitTests
             }
             catch (Exception ex)
             {
-                Assert.IsTrue(ex is InternalBufferOverflowException);
+                Assert.IsTrue(ex is InvalidOperationException);
                 Assert.IsTrue(stream.CloseInvoked);
             }
 
@@ -384,7 +384,7 @@ namespace Lime.Protocol.Tcp.UnitTests
 
         [TestMethod]
         [TestCategory("ReceiveAsync")]
-        public async Task ReceiveAsync_MultipleReadsBiggerThenBuffer_RaisesFailedAndThrowsInternalBufferOverflowException()
+        public async Task ReceiveAsync_MultipleReadsBiggerThenBuffer_RaisesFailedAndThrowsInvalidOperationException()
         {
             var content = DataUtil.CreateTextContent();
             var message = DataUtil.CreateMessage(content);
@@ -435,7 +435,7 @@ namespace Lime.Protocol.Tcp.UnitTests
             }
             catch (Exception ex)
             {
-                Assert.IsTrue(ex is InternalBufferOverflowException);
+                Assert.IsTrue(ex is InvalidOperationException);
                 Assert.IsTrue(stream.CloseInvoked);
             }
             

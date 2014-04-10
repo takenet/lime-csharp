@@ -42,10 +42,9 @@ namespace Lime.Console
                 var listenTask = server.ListenAsync(cancellationTokenSource.Token);
 
                 System.Console.WriteLine("Server started. Press any key to stop.");
-                System.Console.ReadLine();
-                cancellationTokenSource.Cancel();
-
+                System.Console.ReadLine();                
                 server.StopServerAsync().Wait();
+                cancellationTokenSource.Cancel();
 
                 System.Console.WriteLine("Server stoped. Press any key to exit.");
                 System.Console.ReadLine();
@@ -103,9 +102,9 @@ namespace Lime.Console
                             client.Channel.SendMessageAsync(message).Wait();
                         }
                     }                    
-                    
-                    cancellationTokenSource.Cancel();
+                                        
                     client.Disconnect(CancellationToken.None).Wait();
+                    cancellationTokenSource.Cancel();
                 }
                 else
                 {

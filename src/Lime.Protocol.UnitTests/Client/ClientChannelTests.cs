@@ -696,7 +696,7 @@ namespace Lime.Protocol.UnitTests.Client
         private class TestClientChannel : ClientChannel
         {
             public TestClientChannel(Guid? sessionId, SessionState state, ITransport transport, TimeSpan sendTimeout, bool autoReplyPings = true, bool autoNotifyReceipt = false)
-                : base(transport, sendTimeout, autoReplyPings, autoNotifyReceipt)
+                : base(transport, sendTimeout, 5, autoReplyPings, autoNotifyReceipt)
             {
                 if (sessionId.HasValue)
                 {
