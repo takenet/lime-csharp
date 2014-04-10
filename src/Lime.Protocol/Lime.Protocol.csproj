@@ -153,7 +153,7 @@
     <Compile Include="Util\IAsyncQueue.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Lime.Protocol.0.1.0.0.nuspec" />
+    <None Include="Lime.Protocol.nuspec" />
     <None Include="Takenet.Lime.Protocol.pfx" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
