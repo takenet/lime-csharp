@@ -16,7 +16,7 @@ namespace Lime.Protocol.Resources
     /// the subscriber must have a get delegation for the resource in the publisher node.
     /// </summary>
     [DataContract(Namespace = "http://limeprotocol.org/2014")]
-    public class Subscription : Document
+    public partial class Subscription : Document
     {
         public const string MIME_TYPE = "application/vnd.lime.subscription+json";
 

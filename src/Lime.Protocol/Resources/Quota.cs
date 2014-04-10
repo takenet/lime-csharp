@@ -12,7 +12,7 @@ namespace Lime.Protocol.Resources
     /// session envelope quota configuration.
     /// </summary>
     [DataContract(Namespace = "http://limeprotocol.org/2014")]
-    public class Quota : Document
+    public partial class Quota : Document
     {
         public const string MIME_TYPE = "application/vnd.lime.quota+json";
 

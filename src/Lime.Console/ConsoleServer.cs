@@ -11,16 +11,11 @@ using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Reactive;
-using System.Reactive.Linq;
-using System.Reactive.Threading.Tasks;
 using Lime.Protocol.Security;
-
-using Notification = Lime.Protocol.Notification;
-using System.Reactive.Disposables;
 using System.Security.Cryptography;
 using System.Security.AccessControl;
 using System.Security.Principal;
+using Notification = Lime.Protocol.Notification;
 
 namespace Lime.Console
 {
@@ -29,7 +24,9 @@ namespace Lime.Console
         private static Uri _listenerUri;
         private ITransportListener _listener;
         private IDictionary<Guid, IServerChannel> _serverConnectedNodesDictionary;
-        private IDictionary<Node, Guid> _serverNodeSessionIdDictionary;
+
+        private IDictionary<Identity, IDictionary<string, Guid>> _identityInstanceSessionIdDictionary;
+
         private IDictionary<Identity, string> _identityPasswordDictionary;
         private Node _serverNode;
 
@@ -46,7 +43,7 @@ namespace Lime.Console
 
             _listenerUri = listenerUri;
             _serverConnectedNodesDictionary = new Dictionary<Guid, IServerChannel>();
-            _serverNodeSessionIdDictionary = new Dictionary<Node, Guid>();
+            _identityInstanceSessionIdDictionary = new Dictionary<Identity, IDictionary<string, Guid>>();
 
             _identityPasswordDictionary = new Dictionary<Identity, string>
             {
@@ -176,7 +173,15 @@ namespace Lime.Console
                         _identityPasswordDictionary.TryGetValue(authenticatedSession.From.ToIdentity(), out password) &&
                         password.Equals(plainAuthentication.GetFromBase64Password()))
                     {
-                        _serverNodeSessionIdDictionary.Add(authenticatedSession.From, channel.SessionId);
+                        IDictionary<string, Guid> instanceSessionDictionary;
+
+                        if (!_identityInstanceSessionIdDictionary.TryGetValue(authenticatedSession.From.ToIdentity(), out instanceSessionDictionary))
+                        {
+                            instanceSessionDictionary = new Dictionary<string, Guid>();
+                            _identityInstanceSessionIdDictionary.Add(authenticatedSession.From.ToIdentity(), instanceSessionDictionary);
+                        }
+
+                        instanceSessionDictionary.Add(authenticatedSession.From.Instance, channel.SessionId);
 
                         await channel.SendEstablishedSessionAsync(authenticatedSession.From, SessionMode.Node);
 
@@ -185,6 +190,13 @@ namespace Lime.Console
                         await channel.ReceiveFinishingSessionAsync(cancellationToken);
 
                         await channel.SendFinishedSessionAsync();
+
+                        instanceSessionDictionary.Remove(authenticatedSession.From.Instance);
+
+                        if (instanceSessionDictionary.Count == 0)
+                        {
+                            _identityInstanceSessionIdDictionary.Remove(authenticatedSession.From.ToIdentity());
+                        }
                     }
                     else
                     {
@@ -220,6 +232,8 @@ namespace Lime.Console
 
                 var message = await channel.ReceiveMessageAsync(cancellationToken);
 
+                IDictionary<string, Guid> instanceSessionDictionary;
+
                 if (message.To == null)
                 {
                     var notification = new Notification()
@@ -235,7 +249,8 @@ namespace Lime.Console
 
                     await channel.SendNotificationAsync(notification);
                 }
-                else if (!_serverNodeSessionIdDictionary.ContainsKey(message.To))
+                else if (!_identityInstanceSessionIdDictionary.TryGetValue(message.To.ToIdentity(), out instanceSessionDictionary) ||
+                         !instanceSessionDictionary.Any())
                 {
                     var notification = new Notification()
                     {
@@ -250,12 +265,22 @@ namespace Lime.Console
 
                     await channel.SendNotificationAsync(notification);
                 }
-                else
+                else 
                 {
-                    Guid destinationSessionId = _serverNodeSessionIdDictionary[message.To];
+                    Guid destinationSessionId;
+
+                    if (!instanceSessionDictionary.TryGetValue(message.To.Instance, out destinationSessionId))
+                    {
+                        destinationSessionId = instanceSessionDictionary.First().Value;
+                    }
+
                     IServerChannel destinationChannel;
 
-                    if (!_serverConnectedNodesDictionary.TryGetValue(destinationSessionId, out destinationChannel))
+                    if (_serverConnectedNodesDictionary.TryGetValue(destinationSessionId, out destinationChannel))
+                    {
+                        await destinationChannel.SendMessageAsync(message);
+                    }
+                    else
                     {
                         var notification = new Notification()
                         {
@@ -269,10 +294,6 @@ namespace Lime.Console
                         };
 
                         await channel.SendNotificationAsync(notification);
-                    }
-                    else
-                    {
-                        await destinationChannel.SendMessageAsync(message);
                     }
                 }
 

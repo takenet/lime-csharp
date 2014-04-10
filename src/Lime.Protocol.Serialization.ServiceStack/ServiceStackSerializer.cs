@@ -55,16 +55,6 @@ namespace Lime.Protocol.Serialization.ServiceStack
 
         #endregion
 
-
-        private static string ToCamelCase<T>(T value)
-        {            
-            if (value == null)
-            {
-                return null;
-            }
-            return value.ToString().ToCamelCase();
-        }
-
         #region IEnvelopeSerializer Members
 
         /// <summary>
@@ -114,6 +104,15 @@ namespace Lime.Protocol.Serialization.ServiceStack
         #endregion
 
         #region Private methods
+
+        private static string ToCamelCase<T>(T value)
+        {
+            if (value == null)
+            {
+                return null;
+            }
+            return value.ToString().ToCamelCase();
+        }
 
         private static Session DeserializeAsSession(global::ServiceStack.Text.JsonObject jsonObject)
         {
@@ -203,5 +202,3 @@ namespace Lime.Protocol.Serialization.ServiceStack
         #endregion
     }
 }
-
-

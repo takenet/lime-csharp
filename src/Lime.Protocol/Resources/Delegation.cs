@@ -15,7 +15,7 @@ namespace Lime.Protocol.Resources
     /// be revoked through a delete command.
     /// </summary>
     [DataContract(Namespace = "http://limeprotocol.org/2014")]
-    public class Delegation : Document
+    public partial class Delegation : Document
     {
         public const string MIME_TYPE = "application/vnd.lime.delegation+json";
 

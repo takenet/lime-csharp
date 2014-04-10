@@ -11,7 +11,7 @@ namespace Lime.Protocol.Resources
     /// Allows the nodes to manage the groups that they owns or participates.
     /// </summary>
     [DataContract(Namespace = "http://limeprotocol.org/2014")]
-    public class Group : Document
+    public partial class Group : Document
     {
         public const string MIME_TYPE = "application/vnd.lime.group+json";
 
@@ -30,7 +30,7 @@ namespace Lime.Protocol.Resources
     }
 
     [DataContract(Namespace = "http://limeprotocol.org/2014")]
-    public class GroupDefinition
+    public partial class GroupDefinition
     {
         /// <summary>
         /// Identity of the group, in the group-id@groups.domain.com format. 
@@ -85,7 +85,7 @@ namespace Lime.Protocol.Resources
     }
 
     [DataContract(Namespace = "http://limeprotocol.org/2014")]
-    public class GroupMember
+    public partial class GroupMember
     {
         /// <summary>
         /// The identity of the member, in the name@domain format. 

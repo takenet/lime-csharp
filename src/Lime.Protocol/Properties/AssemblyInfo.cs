@@ -32,6 +32,6 @@ using System.Runtime.InteropServices;
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("1.0.0.0")]
-[assembly: AssemblyFileVersion("1.0.0.0")]
-[assembly: InternalsVisibleTo("Lime.Protocol.UnitTests")]
+[assembly: AssemblyVersion("0.1.0.0")]
+[assembly: AssemblyFileVersion("0.1.0.0")]
+[assembly: InternalsVisibleTo("Lime.Protocol.UnitTests, PublicKey=0024000004800000940000000602000000240000525341310004000001000100b5afea3ce297629f4d69f4feee5b08741a08a656d20afa997bb92e961af03aef8680f91488ba71312116966609c8b9ba96b8284a502ba4cd9ed9afdac82b787571bb0e9100b1949e62e23194f50c019aeec9de45cbb6db4c3eeb1f3269d5ba415797440690187a40a67374cb857c7e21f5594c5cd3674df23089e742f50113d2")]

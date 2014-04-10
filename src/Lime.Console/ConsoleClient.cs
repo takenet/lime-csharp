@@ -110,7 +110,26 @@ namespace Lime.Console
                 System.Console.WriteLine("Message received from '{0}': {1}", message.From, message.Content);                
             }
         }
-        
+
+        public async Task ReceiveNotificationsAsync(CancellationToken cancellationToken)
+        {
+            while (Channel.State == SessionState.Established)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                var notification = await Channel.ReceiveNotificationAsync(cancellationToken);
+
+                if (notification.Reason != null)
+                {
+                    System.Console.WriteLine("Notification received from '{0}': {1} - Reason: {2}", notification.From, notification.Event, notification.Reason.Description);
+                }
+                else
+                {
+                    System.Console.WriteLine("Notification received from '{0}': {1}", notification.From, notification.Event);
+                }                
+            }
+        }
+
         public async Task Disconnect(CancellationToken cancellationToken)
         {
             await Channel.SendFinishingSessionAsync();

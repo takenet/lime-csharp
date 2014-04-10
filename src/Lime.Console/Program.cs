@@ -68,7 +68,25 @@ namespace Lime.Console
                 if (client.ConnectAsync(identity, password, CancellationToken.None).Result)
                 {
                     var cancellationTokenSource = new CancellationTokenSource();
-                    var listenTask = client.ReceiveMessagesAsync(cancellationTokenSource.Token);
+                    var listenMessagesTask = client.ReceiveMessagesAsync(cancellationTokenSource.Token);                   
+                    listenMessagesTask
+                        .ContinueWith(t =>
+                        {
+                            if (t.Exception != null)
+                            {
+                                System.Console.WriteLine("Exception: {0}", t.Exception);
+                            }
+                        });
+
+                    var listenNotificationsTask = client.ReceiveNotificationsAsync(cancellationTokenSource.Token);
+                    listenNotificationsTask
+                        .ContinueWith(t =>
+                        {
+                            if (t.Exception != null)
+                            {
+                                System.Console.WriteLine("Exception: {0}", t.Exception);
+                            }
+                        });
 
                     System.Console.WriteLine("Client started. Type EXIT to quit.");
 

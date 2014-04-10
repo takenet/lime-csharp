@@ -13,7 +13,7 @@ namespace Lime.Protocol.Resources
     /// the network connectivity.
     /// </summary>
     [DataContract(Namespace = "http://limeprotocol.org/2014")]
-    public class Roster : Document
+    public partial class Roster : Document
     {
         public const string MIME_TYPE = "application/vnd.lime.roster+json";
 
@@ -31,7 +31,7 @@ namespace Lime.Protocol.Resources
     }
 
     [DataContract(Namespace = "http://limeprotocol.org/2014")]
-    public class Contact : IIdentity
+    public partial class Contact : IIdentity
     {
         /// <summary>
         /// The identity of the contact, 
@@ -92,24 +92,48 @@ namespace Lime.Protocol.Resources
 
         #endregion
 
+        #region Object Members
+
+        /// <summary>
+        /// Returns a <see cref="System.String" /> that represents this instance.
+        /// </summary>
+        /// <returns>
+        /// A <see cref="System.String" /> that represents this instance.
+        /// </returns>
         public override string ToString()
         {
-            return Identity != null ? Identity.ToString() : null;
+            return this.Identity != null ? this.Identity.ToString() : string.Empty;
         }
 
+        /// <summary>
+        /// Determines whether the specified <see cref="System.Object" }, is equal to this instance.
+        /// </summary>
+        /// <param name="obj">The <see cref="System.Object" /> to compare with this instance.</param>
+        /// <returns>
+        ///   <c>true</c> if the specified <see cref="System.Object" /> is equal to this instance; otherwise, <c>false</c>.
+        /// </returns>
         public override bool Equals(object obj)
         {
             if (obj == null)
             {
-                throw new ArgumentNullException("obj");
+                return false;
             }
 
             return this.ToString().Equals(obj.ToString(), StringComparison.CurrentCultureIgnoreCase);
         }
 
+        /// <summary>
+        /// Returns a hash code for this instance.
+        /// </summary>
+        /// <returns>
+        /// A hash code for this instance, suitable for use in hashing algorithms and data structures like a hash table. 
+        /// </returns>
         public override int GetHashCode()
         {
-            return this.ToString().ToLower().GetHashCode();
+            return this.Identity != null ? this.Identity.GetHashCode() : 0;
         }
+
+        #endregion
+
     }
 }

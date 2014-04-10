@@ -16,7 +16,7 @@ namespace Lime.Protocol.Resources
     /// In a new session, the node starts with a unavailable status.
     /// </summary>
     [DataContract(Namespace = "http://limeprotocol.org/2014")]
-    public class Presence : Document
+    public partial class Presence : Document
     {
         public const string MIME_TYPE = "application/vnd.lime.presence+json";
 

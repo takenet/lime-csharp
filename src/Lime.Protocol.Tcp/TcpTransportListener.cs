@@ -35,7 +35,7 @@ namespace Lime.Protocol.Tcp
         {
             if (sslCertificate != null)
             {
-                if (!_sslCertificate.HasPrivateKey)
+                if (!sslCertificate.HasPrivateKey)
                 {
                     throw new ArgumentException("The certificate must have a private key");
                 }

@@ -12,7 +12,7 @@ namespace Lime.Protocol.Resources
     /// the network connectivity.
     /// </summary>
     [DataContract(Namespace = "http://limeprotocol.org/2014")]
-    public class Ping : Document
+    public partial class Ping : Document
     {
         public const string MIME_TYPE = "application/vnd.lime.ping+json";
 
