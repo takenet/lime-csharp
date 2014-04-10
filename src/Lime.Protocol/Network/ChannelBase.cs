@@ -350,6 +350,7 @@ namespace Lime.Protocol.Network
                     }
                 }
             }
+            catch (TaskCanceledException) { }
             catch (InvalidOperationException)
             {
                 this.Transport.CloseAsync(_channelCancellationTokenSource.Token).Wait();

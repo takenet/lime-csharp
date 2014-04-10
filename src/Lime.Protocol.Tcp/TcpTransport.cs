@@ -6,8 +6,12 @@ using System.IO;
 using System.Linq;
 using System.Net.Security;
 using System.Net.Sockets;
+using System.Security.AccessControl;
 using System.Security.Authentication;
+using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
+using System.Security.Permissions;
+using System.Security.Principal;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -28,8 +32,11 @@ namespace Lime.Protocol.Tcp
         private Stream _stream;
         private readonly IEnvelopeSerializer _envelopeSerializer;
         private readonly ITraceWriter _traceWriter;
-        private X509Certificate _serverCertificate;
+        private X509Certificate2 _serverCertificate;
         private string _hostName;
+
+        private SemaphoreSlim _receiveSemaphore;
+        private SemaphoreSlim _sendSemaphore;
 
         #endregion
 
@@ -43,7 +50,7 @@ namespace Lime.Protocol.Tcp
         /// <param name="serverCertificate"></param>
         /// <param name="bufferSize"></param>
         /// <param name="traceWriter"></param>
-        public TcpTransport(ITcpClient tcpClient, IEnvelopeSerializer envelopeSerializer, X509Certificate serverCertificate, int bufferSize = DEFAULT_BUFFER_SIZE, ITraceWriter traceWriter = null)
+        public TcpTransport(ITcpClient tcpClient, IEnvelopeSerializer envelopeSerializer, X509Certificate2 serverCertificate, int bufferSize = DEFAULT_BUFFER_SIZE, ITraceWriter traceWriter = null)
             : this(tcpClient, envelopeSerializer, serverCertificate, null, bufferSize, traceWriter)
         {
 
@@ -56,7 +63,7 @@ namespace Lime.Protocol.Tcp
 
         }
 
-        private TcpTransport(ITcpClient tcpClient, IEnvelopeSerializer envelopeSerializer, X509Certificate serverCertificate, string hostName, int bufferSize, ITraceWriter traceWriter)
+        private TcpTransport(ITcpClient tcpClient, IEnvelopeSerializer envelopeSerializer, X509Certificate2 serverCertificate, string hostName, int bufferSize, ITraceWriter traceWriter)
         {
             if (tcpClient == null)
             {
@@ -74,9 +81,14 @@ namespace Lime.Protocol.Tcp
             }
 
             _envelopeSerializer = envelopeSerializer;
-            _serverCertificate = serverCertificate;
+
             _hostName = hostName;
             _traceWriter = traceWriter;
+
+            _receiveSemaphore = new SemaphoreSlim(1);
+            _sendSemaphore = new SemaphoreSlim(1);
+
+            _serverCertificate = serverCertificate;
         }
 
         #endregion
@@ -139,10 +151,17 @@ namespace Lime.Protocol.Tcp
             }
 
             var jsonBytes = Encoding.UTF8.GetBytes(envelopeJson);
-            await _stream.WriteAsync(jsonBytes, 0, jsonBytes.Length, cancellationToken).ConfigureAwait(false);
-        }
+            await _sendSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
 
-        private SemaphoreSlim _receiveSemaphore = new SemaphoreSlim(1);
+            try
+            {
+                await _stream.WriteAsync(jsonBytes, 0, jsonBytes.Length, cancellationToken).ConfigureAwait(false);
+            }
+            finally
+            {
+                _sendSemaphore.Release();
+            }
+        }        
        
         /// <summary>
         /// Reads one envelope from the stream
@@ -247,62 +266,86 @@ namespace Lime.Protocol.Tcp
         /// <param name="encryption"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        /// <exception cref="System.NotSupportedException"></exception>
+        /// <exception cref="System.NotSupportedException"></exception>        
         public override async Task SetEncryptionAsync(SessionEncryption encryption, CancellationToken cancellationToken)
         {
-            switch (encryption)
+            if (_sendSemaphore.CurrentCount == 0)
             {
-                case SessionEncryption.None:
-                    _stream = _tcpClient.GetStream();
-                    break;
-                case SessionEncryption.TLS:
-                    if (_serverCertificate != null)
-                    {                       
-                        // Server
-                        var sslStream = new SslStream(
-                            _stream,
-                            false);
-
-                        await sslStream
-                            .AuthenticateAsServerAsync(
-                                _serverCertificate,
-                                false,
-                                SslProtocols.Tls,
-                                false)
-                            .ConfigureAwait(false);
-
-                        _stream = sslStream;
-                    }
-                    else
-                    {
-                        if (string.IsNullOrWhiteSpace(_hostName))
-                        {
-                            throw new InvalidOperationException("The hostname is mandatory for TLS client encryption support");
-                        }
-
-                        // Client
-                        var sslStream = new SslStream(
-                            _stream,
-                            false,
-                             new RemoteCertificateValidationCallback(ValidateServerCertificate),
-                             null
-                            );
-
-                        await sslStream
-                            .AuthenticateAsClientAsync(
-                                _hostName)
-                            .ConfigureAwait(false);
-
-                        _stream = sslStream;
-                    }
-                    break;
-
-                default:
-                    throw new NotSupportedException();
+                System.Console.WriteLine("Send semaphore being used");
             }
 
-            this.Encryption = encryption;
+            if (_receiveSemaphore.CurrentCount == 0)
+            {
+                System.Console.WriteLine("Receive semaphore being used");
+            }
 
+            await _sendSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+            try
+            {
+                await _receiveSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+                try
+                {
+                    switch (encryption)
+                    {
+                        case SessionEncryption.None:
+                            _stream = _tcpClient.GetStream();
+                            break;
+                        case SessionEncryption.TLS:
+                            var sslStream = new SslStream(
+                                _stream,
+                                false,
+                                 new RemoteCertificateValidationCallback(ValidateServerCertificate),
+                                 new LocalCertificateSelectionCallback(SelectLocalCertificate),
+                                 EncryptionPolicy.RequireEncryption
+                                );
+
+                            if (_serverCertificate != null)
+                            {                             
+                                // Server
+                                await sslStream
+                                    .AuthenticateAsServerAsync(
+                                        _serverCertificate,
+                                        false,
+                                        SslProtocols.Tls,
+                                        false)
+                                    .ConfigureAwait(false);
+                            }
+                            else
+                            {
+                                // Client
+                                if (string.IsNullOrWhiteSpace(_hostName))
+                                {
+                                    throw new InvalidOperationException("The hostname is mandatory for TLS client encryption support");
+                                }
+
+                                await sslStream
+                                    .AuthenticateAsClientAsync(
+                                        _hostName,
+                                        null,
+                                        SslProtocols.Tls,
+                                        false)
+                                    .ConfigureAwait(false);
+                            }
+
+                            _stream = sslStream;
+                            break;
+
+                        default:
+                            throw new NotSupportedException();
+                    }
+
+                    this.Encryption = encryption;
+                }
+                finally
+                {
+                    _receiveSemaphore.Release();                    
+                }
+
+            }
+            finally
+            {
+                _sendSemaphore.Release();
+            }
         }
 
         #endregion
@@ -316,6 +359,23 @@ namespace Lime.Protocol.Tcp
               SslPolicyErrors sslPolicyErrors)
         {
             return true;
+        }
+
+        private static X509Certificate SelectLocalCertificate(
+            object sender, 
+            string targetHost, 
+            X509CertificateCollection localCertificates, 
+            X509Certificate remoteCertificate, 
+            string[] acceptableIssuers)
+        {
+            if (localCertificates.Count > 0)
+            {
+                return localCertificates[0];
+            }
+            else
+            {
+                return null;
+            }
         }
 
         #region Buffer fields
@@ -393,5 +453,6 @@ namespace Lime.Protocol.Tcp
         }
 
         #endregion        
+
     }
 }

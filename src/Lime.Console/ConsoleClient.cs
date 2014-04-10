@@ -1,5 +1,6 @@
 ﻿using Lime.Protocol;
 using Lime.Protocol.Client;
+using Lime.Protocol.Network;
 using Lime.Protocol.Security;
 using Lime.Protocol.Serialization;
 using Lime.Protocol.Tcp;
@@ -28,11 +29,18 @@ namespace Lime.Console
         {
             var tcpClient = new TcpClient();
 
+#if DEBUG
+            ITraceWriter traceWriter = new DebugTraceWriter("Client"); 
+#else
+            ITraceWriter traceWriter = new FileTraceWriter("client.log");
+#endif
+
+
             var transport = new TcpTransport(
                 new TcpClientAdapter(tcpClient),
-                new EnvelopeSerializer(),
-                traceWriter: new DebugTraceWriter("Client"),
-                hostName: _clientUri.Host
+                new EnvelopeSerializer(),                
+                hostName: _clientUri.Host,
+                traceWriter: traceWriter
                 );
 
             Channel = new ClientChannel(transport, TimeSpan.FromSeconds(60));

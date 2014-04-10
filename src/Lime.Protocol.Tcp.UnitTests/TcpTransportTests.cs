@@ -41,7 +41,7 @@ namespace Lime.Protocol.Tcp.UnitTests
 
         #region Private methods
 
-        private TcpTransport GetTarget(X509Certificate certificate = null, int bufferSize = TcpTransport.DEFAULT_BUFFER_SIZE)
+        private TcpTransport GetTarget(X509Certificate2 certificate = null, int bufferSize = TcpTransport.DEFAULT_BUFFER_SIZE)
         {
             return new TcpTransport(
                 _tcpClient.Object,

@@ -6,7 +6,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Security;
+using System.Security.AccessControl;
+using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
+using System.Security.Principal;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -20,15 +24,33 @@ namespace Lime.Protocol.Tcp
         private IEnvelopeSerializer _envelopeSerializer;
         private ITraceWriter _traceWriter;
         private TcpListener _tcpListener;
-        private X509Certificate _sslCertificate;
+        private X509Certificate2 _sslCertificate;
         private bool _isListening;
 
         #endregion
 
         #region Constructor
 
-        public TcpTransportListener(X509Certificate sslCertificate, IEnvelopeSerializer envelopeSerializer, ITraceWriter traceWriter = null)
+        public TcpTransportListener(X509Certificate2 sslCertificate, IEnvelopeSerializer envelopeSerializer, ITraceWriter traceWriter = null)
         {
+            if (sslCertificate != null)
+            {
+                if (!_sslCertificate.HasPrivateKey)
+                {
+                    throw new ArgumentException("The certificate must have a private key");
+                }
+
+                try
+                {
+                    // Checks if the private key is available for the current user
+                    var key = sslCertificate.PrivateKey;
+                }
+                catch (CryptographicException ex)
+                {
+                    throw new SecurityException("The current user doesn't have access to the certificate private key. Use WinHttpCertCfg.exe to assign the necessary permissions.", ex);
+                }
+            }
+
             _sslCertificate = sslCertificate;
             _envelopeSerializer = envelopeSerializer;
             _traceWriter = traceWriter;

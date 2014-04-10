@@ -18,6 +18,9 @@ using Lime.Protocol.Security;
 
 using Notification = Lime.Protocol.Notification;
 using System.Reactive.Disposables;
+using System.Security.Cryptography;
+using System.Security.AccessControl;
+using System.Security.Principal;
 
 namespace Lime.Console
 {
@@ -58,6 +61,8 @@ namespace Lime.Console
 
         public async Task StartServerAsync()
         {
+
+
             var store = new X509Store(StoreName.Root, StoreLocation.CurrentUser);
             store.Open(OpenFlags.ReadOnly);
 
@@ -67,12 +72,19 @@ namespace Lime.Console
             if (certificates.Count == 0)
             {
                 throw new InvalidOperationException("Server certificate not found");
-            }          
+            }
+
+            store.Close();
+#if DEBUG
+            ITraceWriter traceWriter = new DebugTraceWriter("Server"); 
+#else
+            ITraceWriter traceWriter = new FileTraceWriter("server.log"); 
+#endif
 
             _listener = new TcpTransportListener(
                 certificates[0],
                 new EnvelopeSerializer(),
-                new DebugTraceWriter("Server")
+                traceWriter
                 );
 
 
@@ -133,14 +145,20 @@ namespace Lime.Console
                         negotiatedSession.Encryption.Value
                         );
 
+                    timeoutToken = new CancellationTokenSource(TimeSpan.FromSeconds(60));
+
                     if (channel.Transport.Compression != negotiatedSession.Compression.Value)
                     {
-                        await channel.Transport.SetCompressionAsync(negotiatedSession.Compression.Value, CancellationToken.None);
+                        await channel.Transport.SetCompressionAsync(
+                            negotiatedSession.Compression.Value,
+                            CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutToken.Token).Token);
                     }
 
                     if (channel.Transport.Encryption != negotiatedSession.Encryption.Value)
                     {
-                        await channel.Transport.SetEncryptionAsync(negotiatedSession.Encryption.Value, CancellationToken.None);
+                        await channel.Transport.SetEncryptionAsync(
+                            negotiatedSession.Encryption.Value,
+                            CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutToken.Token).Token);
                     }
 
                     timeoutToken = new CancellationTokenSource(TimeSpan.FromSeconds(60));
