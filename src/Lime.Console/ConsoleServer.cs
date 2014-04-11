@@ -79,13 +79,14 @@ namespace Lime.Console
 #endif
 
             _listener = new TcpTransportListener(
+                _listenerUri,
                 certificates[0],
                 new EnvelopeSerializer(),
                 traceWriter
                 );
 
 
-            await _listener.StartAsync(_listenerUri);
+            await _listener.StartAsync();
         }
 
         public async Task StopServerAsync()

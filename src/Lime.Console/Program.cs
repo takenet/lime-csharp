@@ -22,8 +22,8 @@ namespace Lime.Console
     class Program
     {
         static void Main(string[] args)
-        {           
-            var uri = new Uri(string.Format("net.tcp://{0}:55321", Dns.GetHostName()));
+        {
+           var uri = new Uri(string.Format("net.tcp://{0}:55321", Dns.GetHostName()));
 
             string option = null;
 

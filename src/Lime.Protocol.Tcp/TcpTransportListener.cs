@@ -21,18 +21,32 @@ namespace Lime.Protocol.Tcp
     {
         #region Private Fields
 
+        private Uri _listenerUri;
+        private X509Certificate2 _sslCertificate;
         private IEnvelopeSerializer _envelopeSerializer;
         private ITraceWriter _traceWriter;
         private TcpListener _tcpListener;
-        private X509Certificate2 _sslCertificate;
+        
         private bool _isListening;
 
         #endregion
 
         #region Constructor
 
-        public TcpTransportListener(X509Certificate2 sslCertificate, IEnvelopeSerializer envelopeSerializer, ITraceWriter traceWriter = null)
+        public TcpTransportListener(Uri listenerUri, X509Certificate2 sslCertificate, IEnvelopeSerializer envelopeSerializer, ITraceWriter traceWriter = null)
         {
+            if (listenerUri == null)
+            {
+                throw new ArgumentNullException("listenerUri");
+            }
+
+            if (listenerUri.Scheme != Uri.UriSchemeNetTcp)
+            {
+                throw new ArgumentException("Invalid URI scheme. The expected value is 'net.tcp'.");
+            }
+
+            _listenerUri = listenerUri;
+
             if (sslCertificate != null)
             {
                 if (!sslCertificate.HasPrivateKey)
@@ -61,8 +75,7 @@ namespace Lime.Protocol.Tcp
         #region ITransportListener Members
 
         /// <summary>
-        /// Start listening connections
-        /// at the specified URI
+        /// Start listening connections.
         /// </summary>
         /// <param name="listenerUri"></param>
         /// <returns></returns>
@@ -73,18 +86,8 @@ namespace Lime.Protocol.Tcp
         /// Could not resolve the IPAddress of the hostname
         /// </exception>
         /// <exception cref="System.InvalidOperationException">The listener is already active</exception>
-        public async Task StartAsync(Uri listenerUri)
+        public async Task StartAsync()
         {
-            if (listenerUri == null)
-            {
-                throw new ArgumentNullException("listenerUri");
-            }      
-
-            if (listenerUri.Scheme != Uri.UriSchemeNetTcp)
-            {
-                throw new ArgumentException("Invalid URI scheme. The expected value is 'net.tcp'.");
-            }
-
             if (_tcpListener != null)
             {
                 throw new InvalidOperationException("The listener is already active");
@@ -92,17 +95,17 @@ namespace Lime.Protocol.Tcp
 
             IPEndPoint listenerEndPoint;
 
-            if (listenerUri.IsLoopback)
+            if (_listenerUri.IsLoopback)
             {
-                listenerEndPoint = new IPEndPoint(IPAddress.Any, listenerUri.Port);
+                listenerEndPoint = new IPEndPoint(IPAddress.Any, _listenerUri.Port);
             }
             else
             {
-                var dnsEntry = await Dns.GetHostEntryAsync(listenerUri.Host);
+                var dnsEntry = await Dns.GetHostEntryAsync(_listenerUri.Host);
 
                 if (dnsEntry.AddressList.Any(a => a.AddressFamily == AddressFamily.InterNetwork))
                 {
-                    listenerEndPoint = new IPEndPoint(dnsEntry.AddressList.First(a => a.AddressFamily == AddressFamily.InterNetwork), listenerUri.Port);
+                    listenerEndPoint = new IPEndPoint(dnsEntry.AddressList.First(a => a.AddressFamily == AddressFamily.InterNetwork), _listenerUri.Port);
                 }
                 else
                 {

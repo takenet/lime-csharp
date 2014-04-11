@@ -15,12 +15,10 @@ namespace Lime.Protocol.Server
     public interface ITransportListener
     {
         /// <summary>
-        /// Start listening connections
-        /// at the specified URI
+        /// Start listening for connections.
         /// </summary>
-        /// <param name="listenerUri"></param>
         /// <returns></returns>
-        Task StartAsync(Uri listenerUri);
+        Task StartAsync();
 
         /// <summary>
         /// Accepts a new transport connection
