@@ -38,6 +38,14 @@ namespace Lime.Protocol
         /// </summary>
         public const int SESSION_INVALID_ACTION_FOR_STATE = 15;
         /// <summary>
+        /// The session negotiation has timed out
+        /// </summary>
+        public const int SESSION_NEGOTIATION_TIMEOUT = 16;
+        /// <summary>
+        /// Invalid selected negotiation options
+        /// </summary>
+        public const int SESSION_NEGOTIATION_INVALID_OPTIONS = 17;
+        /// <summary>
         /// General validation error
         /// </summary>
         public const int VALIDATION_ERROR = 21;

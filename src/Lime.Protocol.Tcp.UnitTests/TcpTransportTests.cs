@@ -290,6 +290,17 @@ namespace Lime.Protocol.Tcp.UnitTests
 
         [TestMethod]
         [TestCategory("ReceiveAsync")]
+        [ExpectedException(typeof(InvalidOperationException))]
+        public async Task ReceiveAsync_NotStarted_ThrowsInvalidOperationException()
+        {
+            var cancelationToken = DataUtil.CreateCancellationToken();
+            var target = GetTarget();
+
+            var actual = await target.ReceiveAsync(cancelationToken);
+        }
+
+        [TestMethod]
+        [TestCategory("ReceiveAsync")]
         public async Task ReceiveAsync_MultipleReads_ReadEnvelopeJsonFromStream()
         {
             var content = DataUtil.CreateTextContent();

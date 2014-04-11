@@ -170,6 +170,11 @@ namespace Lime.Protocol.Tcp
         /// <returns></returns>
         public override async Task<Envelope> ReceiveAsync(CancellationToken cancellationToken)
         {
+            if (_stream == null)
+            {
+                throw new InvalidOperationException("The stream was not initialized. Call StartAsync first.");
+            }
+
             await _receiveSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
 
             try
