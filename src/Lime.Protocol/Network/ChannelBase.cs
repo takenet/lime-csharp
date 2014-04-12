@@ -24,6 +24,7 @@ namespace Lime.Protocol.Network
         protected IAsyncQueue<Notification> _notificationAsyncBuffer;
         protected IAsyncQueue<Session> _sessionAsyncBuffer;        
         protected CancellationTokenSource _channelCancellationTokenSource;
+        private bool _isDisposing;
 
         #endregion
 
@@ -326,6 +327,11 @@ namespace Lime.Protocol.Network
                        _notificationAsyncBuffer.HasPromises ||
                        _sessionAsyncBuffer.HasPromises)
                 {
+                    if (_channelCancellationTokenSource.IsCancellationRequested)
+                    {
+                        break;
+                    }
+
                     var envelope = await this.Transport.ReceiveAsync(_channelCancellationTokenSource.Token).ConfigureAwait(false);
 
                     if (envelope is Notification)
@@ -350,10 +356,18 @@ namespace Lime.Protocol.Network
                     }
                 }
             }
-            catch (TaskCanceledException) { }
-            catch (InvalidOperationException)
+            catch (OperationCanceledException) { }
+            catch (ObjectDisposedException)
             {
-                this.Transport.CloseAsync(_channelCancellationTokenSource.Token).Wait();
+                if (!_isDisposing)
+                {
+                    throw;
+                }
+            }
+            catch (Exception)
+            {
+                var cts = new CancellationTokenSource(_sendTimeout);
+                this.Transport.CloseAsync(cts.Token).Wait();
                 throw;
             }
             finally
@@ -493,6 +507,8 @@ namespace Lime.Protocol.Network
         {
             if (disposing)
             {
+                _isDisposing = disposing;
+
                 if (!_channelCancellationTokenSource.IsCancellationRequested)
                 {
                     _channelCancellationTokenSource.Cancel();

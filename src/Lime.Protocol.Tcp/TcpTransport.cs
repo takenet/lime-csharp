@@ -234,6 +234,8 @@ namespace Lime.Protocol.Tcp
                 _stream.Close();
             }
 
+            cancellationToken.ThrowIfCancellationRequested();
+
             _tcpClient.Close();
             return Task.FromResult<object>(null);
         }

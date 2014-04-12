@@ -134,7 +134,10 @@ namespace Lime.Protocol.Tcp
 
             cancellationToken.ThrowIfCancellationRequested();
 
-            var tcpClient = await _tcpListener.AcceptTcpClientAsync().ConfigureAwait(false);
+            var tcpClient = await _tcpListener
+                .AcceptTcpClientAsync()
+                .WithCancellation(cancellationToken)
+                .ConfigureAwait(false);
 
             return new TcpTransport(
                 new TcpClientAdapter(tcpClient),
