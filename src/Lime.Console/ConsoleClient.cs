@@ -35,7 +35,6 @@ namespace Lime.Console
             ITraceWriter traceWriter = new FileTraceWriter("client.log");
 #endif
 
-
             var transport = new TcpTransport(
                 new TcpClientAdapter(tcpClient),
                 new EnvelopeSerializer(),                
@@ -47,51 +46,16 @@ namespace Lime.Console
             
             await Channel.Transport.OpenAsync(_clientUri, cancellationToken);
 
-            var negotiateOrAuthenticateSession = await Channel.StartNewSessionAsync(cancellationToken);
-
-            Session authenticatingSession;
-
-            if (negotiateOrAuthenticateSession.State == SessionState.Negotiating)
-            {
-                var confirmedNegotiateSession = await Channel.NegotiateSessionAsync(negotiateOrAuthenticateSession.CompressionOptions.First(), negotiateOrAuthenticateSession.EncryptionOptions.Last(), cancellationToken);
-
-                if (Channel.Transport.Compression != confirmedNegotiateSession.Compression.Value)
-                {
-                    await Channel.Transport.SetCompressionAsync(
-                        confirmedNegotiateSession.Compression.Value,
-                        cancellationToken);
-                }
-
-                if (Channel.Transport.Encryption != confirmedNegotiateSession.Encryption.Value)
-                {
-                    await Channel.Transport.SetEncryptionAsync(
-                        confirmedNegotiateSession.Encryption.Value, 
-                        cancellationToken);
-                }
-
-                authenticatingSession = await Channel.ReceiveAuthenticatingSessionAsync(cancellationToken);
-            }
-            else
-            {
-                authenticatingSession = negotiateOrAuthenticateSession;
-            }
-            
-            if (authenticatingSession.State != SessionState.Authenticating)
-            {
-                return false;
-            }
-
-            var authentication = new PlainAuthentication();
-            authentication.SetToBase64Password(password);
-
-            var authenticationResultSession = await Channel.AuthenticateSessionAsync(
-                new Identity() { Name = identity.Name, Domain = identity.Domain },
-                authentication,
+            var resultSession = await Channel.EstablishSessionAsync(
+                c => c.First(),
+                e => e.First(),
+                identity,
+                (s, r) => { var auth = new PlainAuthentication(); auth.SetToBase64Password(password); return auth; },
                 Environment.MachineName,
                 SessionMode.Node,
                 cancellationToken);
 
-            if (authenticationResultSession.State != SessionState.Established)            
+            if (resultSession.State != SessionState.Established)            
             {
                 return false;
             }
