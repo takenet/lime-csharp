@@ -111,6 +111,35 @@ namespace Lime.Protocol
         }
 
         /// <summary>
+        /// Fills an instance of target based
+        /// on a source
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="target"></param>
+        public static void Fill(Node source, ref Node target)
+        {
+            if (source == null)
+            {
+                throw new ArgumentNullException("source");
+            }
+
+            if (target == null)
+            {
+                target = source.Copy();
+            }
+
+            if (string.IsNullOrEmpty(target.Domain))
+            {
+                target.Domain = source.Domain;
+            }
+
+            if (string.IsNullOrEmpty(target.Instance))
+            {
+                target.Instance = source.Instance;
+            }
+        }
+
+        /// <summary>
         /// Creates an Identity instance
         /// based on the Node identity
         /// </summary>
@@ -124,5 +153,24 @@ namespace Lime.Protocol
             };
         }
 
+        #region ICloneable Members
+
+        /// <summary>
+        /// Creates a new object that is a copy of the current instance.
+        /// </summary>
+        /// <returns>
+        /// A new object that is a copy of this instance.
+        /// </returns>
+        public Node Copy()
+        {
+            return new Node()
+            {
+                Name = this.Name,
+                Domain = this.Domain,
+                Instance = this.Instance
+            };
+        }
+
+        #endregion
     }
 }

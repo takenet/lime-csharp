@@ -32,8 +32,8 @@ namespace Lime.Protocol.Client
         /// <param name="sendTimeout">The channel send timeout.</param>
         /// <param name="autoReplyPings">Indicates if the client should reply automatically to server ping commands.</param>
         /// <param name="autoNotifyReceipt">Indicates if the client should automatically send 'received' notifications for messages.</param>
-        public ClientChannel(ITransport transport, TimeSpan sendTimeout, int buffersLimit = 5, bool autoReplyPings = true, bool autoNotifyReceipt = false)
-            : base(transport, sendTimeout, buffersLimit)
+        public ClientChannel(ITransport transport, TimeSpan sendTimeout, int buffersLimit = 5, bool fillEnvelopeRecipients = false, bool autoReplyPings = true, bool autoNotifyReceipt = false)
+            : base(transport, sendTimeout, buffersLimit, fillEnvelopeRecipients)
         {
             _autoReplyPings = autoReplyPings;
             _autoNotifyReceipt = autoNotifyReceipt;

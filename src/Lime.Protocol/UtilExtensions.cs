@@ -52,7 +52,7 @@ namespace Lime.Protocol
         }
 
         /// <summary>
-        /// Allow to cancel non-cancellable tasks
+        /// Allow cancellation of non-cancellable tasks
         /// <see cref="http://blogs.msdn.com/b/pfxteam/archive/2012/10/05/how-do-i-cancel-non-cancelable-async-operations.aspx"/>
         /// </summary>
         /// <typeparam name="T"></typeparam>

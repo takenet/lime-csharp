@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Lime.Protocol.UnitTests
@@ -231,8 +232,8 @@ namespace Lime.Protocol.UnitTests
 
             var identity2 = new Identity()
             {
-                Name = DataUtil.CreateRandomString(10),
-                Domain = DataUtil.CreateRandomString(10)
+                Name = new string(identity1.Name.Reverse().ToArray()) + DataUtil.CreateRandomString(5),
+                Domain = new string(identity1.Domain.Reverse().ToArray()) + DataUtil.CreateRandomString(5),
             };
 
 

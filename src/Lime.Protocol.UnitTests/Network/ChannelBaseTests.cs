@@ -30,13 +30,16 @@ namespace Lime.Protocol.UnitTests.Network
 
         #endregion
 
-        public ChannelBase GetTarget(SessionState state, int buffersLimit = 5)
+        public ChannelBase GetTarget(SessionState state, int buffersLimit = 5, bool fillEnvelopeRecipients = false, Node remoteNode = null, Node localNode = null)
         {
             return new TestChannel(
                 state,
                 _transport.Object,
                 _sendTimeout,
-                buffersLimit
+                buffersLimit,
+                fillEnvelopeRecipients,
+                remoteNode, 
+                localNode
                 );
         }
 
@@ -154,6 +157,80 @@ namespace Lime.Protocol.UnitTests.Network
             {
                 var receiveMessageTask = target.ReceiveMessageAsync(cancellationToken);
             }
+        }
+
+        [TestMethod]
+        [TestCategory("ReceiveMessageAsync")]
+        public async Task ReceiveMessageAsync_NoRecipients_FillsFromTheSession()
+        {
+            var remoteNode = DataUtil.CreateNode();
+            var localNode = DataUtil.CreateNode();
+
+            var target = GetTarget(
+                SessionState.Established, 
+                fillEnvelopeRecipients: true,
+                remoteNode: remoteNode,
+                localNode: localNode);
+
+            var content = DataUtil.CreateTextContent();
+            var message = DataUtil.CreateMessage(content);
+            message.From = null;
+            message.To = null;
+
+            var cancellationToken = DataUtil.CreateCancellationToken();
+
+            _transport
+                .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(() => Task.FromResult<Envelope>(message))
+                .Verifiable();
+
+            var actual = await target.ReceiveMessageAsync(cancellationToken);
+
+            Assert.AreEqual(message, actual);
+
+            Assert.AreEqual(message.To, localNode);
+            Assert.AreEqual(message.From, remoteNode);
+
+            _transport.Verify();
+        }
+
+        [TestMethod]
+        [TestCategory("ReceiveMessageAsync")]
+        public async Task ReceiveMessageAsync_IncompleteRecipients_FillsFromTheSession()
+        {
+            var remoteNode = DataUtil.CreateNode();
+            var localNode = DataUtil.CreateNode();
+
+            var target = GetTarget(
+                SessionState.Established,
+                fillEnvelopeRecipients: true,
+                remoteNode: remoteNode,
+                localNode: localNode);
+
+            var content = DataUtil.CreateTextContent();
+            var message = DataUtil.CreateMessage(content);
+            message.From = remoteNode.Copy();
+            message.To = localNode.Copy();
+            message.From.Domain = null;
+            message.To.Domain = null;
+            message.From.Instance = null;
+            message.To.Instance = null;
+
+            var cancellationToken = DataUtil.CreateCancellationToken();
+
+            _transport
+                .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(() => Task.FromResult<Envelope>(message))
+                .Verifiable();
+
+            var actual = await target.ReceiveMessageAsync(cancellationToken);
+
+            Assert.AreEqual(message, actual);
+
+            Assert.AreEqual(message.To, localNode);
+            Assert.AreEqual(message.From, remoteNode);
+
+            _transport.Verify();
         }
 
         #endregion
@@ -698,10 +775,12 @@ namespace Lime.Protocol.UnitTests.Network
 
         private class TestChannel : ChannelBase
         {
-            public TestChannel(SessionState state, ITransport transport, TimeSpan sendTimeout, int buffersLimit)
-                : base(transport, sendTimeout, buffersLimit)
+            public TestChannel(SessionState state, ITransport transport, TimeSpan sendTimeout, int buffersLimit, bool fillEnvelopeRecipients, Node remoteNode = null, Node localNode = null)
+                : base(transport, sendTimeout, buffersLimit, fillEnvelopeRecipients)
             {
                 base.State = state;
+                base.RemoteNode = remoteNode;
+                base.LocalNode = localNode;
             }
 
             public Task CallsOnMessageReceivedAsync(Message message)

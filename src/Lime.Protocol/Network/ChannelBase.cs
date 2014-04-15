@@ -18,19 +18,27 @@ namespace Lime.Protocol.Network
         #region Fields
         
         private TimeSpan _sendTimeout;
+        private bool _fillEnvelopeRecipients;
         private SemaphoreSlim _receiveSemaphore = new SemaphoreSlim(1);
         protected IAsyncQueue<Message> _messageAsyncBuffer;
         protected IAsyncQueue<Command> _commandAsyncBuffer;
         protected IAsyncQueue<Notification> _notificationAsyncBuffer;
         protected IAsyncQueue<Session> _sessionAsyncBuffer;        
-        protected CancellationTokenSource _channelCancellationTokenSource;
+        protected CancellationTokenSource _channelCancellationTokenSource;                
         private bool _isDisposing;
 
         #endregion
 
         #region Constructors
 
-        public ChannelBase(ITransport transport, TimeSpan sendTimeout, int buffersLimit)
+        /// <summary>
+        /// Creates a new instance of ChannelBase
+        /// </summary>
+        /// <param name="transport"></param>
+        /// <param name="sendTimeout"></param>
+        /// <param name="buffersLimit"></param>
+        /// <param name="fillEnvelopeRecipients">Indicates if the from and to properties of sent and received envelopes should be filled with the session information if not defined.</param>
+        public ChannelBase(ITransport transport, TimeSpan sendTimeout, int buffersLimit, bool fillEnvelopeRecipients)
         {
             if (transport == null)
             {
@@ -40,7 +48,8 @@ namespace Lime.Protocol.Network
             this.Transport = transport;
             this.Transport.Closing += Transport_Closing;
 
-            _sendTimeout = sendTimeout;            
+            _sendTimeout = sendTimeout;
+            _fillEnvelopeRecipients = fillEnvelopeRecipients;
 
             _channelCancellationTokenSource = new CancellationTokenSource();
 
@@ -296,6 +305,12 @@ namespace Lime.Protocol.Network
         private Task SendAsync(Envelope envelope)
         {
             var timeoutCancellationTokenSource = new CancellationTokenSource(_sendTimeout);
+
+            if (_fillEnvelopeRecipients)
+            {
+                this.FillEnvelope(envelope);
+            }
+
             return this.Transport.SendAsync(
                 envelope,
                 CancellationTokenSource.CreateLinkedTokenSource(
@@ -333,27 +348,7 @@ namespace Lime.Protocol.Network
                     }
 
                     var envelope = await this.Transport.ReceiveAsync(_channelCancellationTokenSource.Token).ConfigureAwait(false);
-
-                    if (envelope is Notification)
-                    {
-                        await this.OnNotificationReceivedAsync((Notification)envelope).ConfigureAwait(false);
-                    }
-                    else if (envelope is Message)
-                    {
-                        await this.OnMessageReceivedAsync((Message)envelope).ConfigureAwait(false);
-                    }
-                    else if (envelope is Command)
-                    {
-                        await this.OnCommandReceivedAsync((Command)envelope).ConfigureAwait(false);
-                    }
-                    else if (envelope is Session)
-                    {
-                        await this.OnSessionReceivedAsync((Session)envelope).ConfigureAwait(false);
-                    }
-                    else
-                    {
-                        throw new InvalidOperationException("Invalid or unknown envelope received by the transport.");
-                    }
+                    await this.OnEnvelopeReceived(envelope);
                 }
             }
             catch (OperationCanceledException) { }
@@ -395,6 +390,29 @@ namespace Lime.Protocol.Network
             }            
         }
 
+
+        /// <summary>
+        /// Fills the envelope recipients
+        /// using the session information
+        /// </summary>
+        /// <param name="envelope"></param>
+        private void FillEnvelope(Envelope envelope)
+        {
+            if (this.RemoteNode != null)
+            {
+                var from = envelope.From;
+                Node.Fill(this.RemoteNode, ref from);
+                envelope.From = from;
+            }
+
+            if (this.LocalNode != null)
+            {
+                var to = envelope.To;
+                Node.Fill(this.LocalNode, ref to);
+                envelope.To = to;
+            }
+        }
+
         #endregion
 
         #region Protected Methods
@@ -422,7 +440,46 @@ namespace Lime.Protocol.Network
         }
 
         /// <summary>
-        /// Raises the MessageReceived event
+        /// Fills the buffer with the received envelope
+        /// </summary>
+        /// <param name="envelope"></param>
+        /// <returns></returns>
+        protected async virtual Task OnEnvelopeReceived(Envelope envelope)
+        {
+            if (envelope == null)
+            {
+                throw new ArgumentNullException("envelope");
+            }
+
+            if (_fillEnvelopeRecipients)
+            {
+                this.FillEnvelope(envelope);
+            }
+
+            if (envelope is Notification)
+            {
+                await this.OnNotificationReceivedAsync((Notification)envelope).ConfigureAwait(false);
+            }
+            else if (envelope is Message)
+            {
+                await this.OnMessageReceivedAsync((Message)envelope).ConfigureAwait(false);
+            }
+            else if (envelope is Command)
+            {
+                await this.OnCommandReceivedAsync((Command)envelope).ConfigureAwait(false);
+            }
+            else if (envelope is Session)
+            {
+                await this.OnSessionReceivedAsync((Session)envelope).ConfigureAwait(false);
+            }
+            else
+            {
+                throw new InvalidOperationException("Invalid or unknown envelope received by the transport.");
+            }
+        }
+
+        /// <summary>
+        /// Fills the buffer with the received envelope
         /// </summary>
         /// <param name="message"></param>
         /// <returns></returns>
@@ -440,9 +497,9 @@ namespace Lime.Protocol.Network
         }
 
         /// <summary>
-        /// Raises the CommandReceived event
+        /// Fills the buffer with the received envelope
         /// </summary>
-        /// <param name="message"></param>
+        /// <param name="command"></param>
         /// <returns></returns>
         protected virtual Task OnCommandReceivedAsync(Command command)
         {
@@ -458,9 +515,9 @@ namespace Lime.Protocol.Network
         }
 
         /// <summary>
-        /// Raises the NotificationReceived event
+        /// Fills the buffer with the received envelope
         /// </summary>
-        /// <param name="message"></param>
+        /// <param name="notification"></param>
         /// <returns></returns>
         protected virtual Task OnNotificationReceivedAsync(Notification notification)
         {
@@ -476,12 +533,12 @@ namespace Lime.Protocol.Network
         }
 
         /// <summary>
-        /// Raises the SessionReceived event 
+        /// Fills the buffer with the received envelope
         /// </summary>
         /// <param name="session"></param>
         /// <returns></returns>
         protected virtual Task OnSessionReceivedAsync(Session session)
-        {            
+        {
             _sessionAsyncBuffer.Enqueue(session);
             return Task.FromResult<object>(null);
         }

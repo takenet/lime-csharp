@@ -26,13 +26,14 @@ namespace Lime.Protocol.UnitTests.Client
 
         #endregion
 
-        public ClientChannel GetTarget(Guid? sessionId = null, SessionState state = SessionState.New, bool autoReplyPings = true, bool autoNotifyReceipt = true)
+        public ClientChannel GetTarget(Guid? sessionId = null, SessionState state = SessionState.New, bool fillReceivedEnvelopes = false, bool autoReplyPings = true, bool autoNotifyReceipt = true)
         {
             return new TestClientChannel(
                 sessionId,
                 state,
                 _transport.Object,
                 _sendTimeout,
+                fillReceivedEnvelopes,
                 autoReplyPings,
                 autoNotifyReceipt
                 );
@@ -695,8 +696,8 @@ namespace Lime.Protocol.UnitTests.Client
 
         private class TestClientChannel : ClientChannel
         {
-            public TestClientChannel(Guid? sessionId, SessionState state, ITransport transport, TimeSpan sendTimeout, bool autoReplyPings = true, bool autoNotifyReceipt = false)
-                : base(transport, sendTimeout, 5, autoReplyPings, autoNotifyReceipt)
+            public TestClientChannel(Guid? sessionId, SessionState state, ITransport transport, TimeSpan sendTimeout, bool fillReceivedEnvelopes = false, bool autoReplyPings = true, bool autoNotifyReceipt = false)
+                : base(transport, sendTimeout, 5, fillReceivedEnvelopes, autoReplyPings, autoNotifyReceipt)
             {
                 if (sessionId.HasValue)
                 {
