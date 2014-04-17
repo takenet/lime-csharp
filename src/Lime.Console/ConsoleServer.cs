@@ -259,7 +259,7 @@ namespace Lime.Console
                         Event = Event.Failed,
                         Reason = new Reason()
                         {
-                            Code = ReasonCodes.DISPATCHING_DESTINATION_NOT_FOUND,
+                            Code = ReasonCodes.ROUTING_DESTINATION_NOT_FOUND,
                             Description = "Destination not found"
                         }
                     };

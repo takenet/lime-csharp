@@ -68,5 +68,23 @@ namespace Lime.Protocol
                     throw new OperationCanceledException(cancellationToken);
             return await task;
         }
+
+        /// <summary>
+        /// Allow cancellation of non-cancellable tasks
+        /// <see cref="http://blogs.msdn.com/b/pfxteam/archive/2012/10/05/how-do-i-cancel-non-cancelable-async-operations.aspx"/>
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="task"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public static async Task WithCancellation(this Task task, CancellationToken cancellationToken)
+        {
+            var tcs = new TaskCompletionSource<bool>();
+            using (cancellationToken.Register(
+                        s => ((TaskCompletionSource<bool>)s).TrySetResult(true), tcs))
+                if (task != await Task.WhenAny(task, tcs.Task))
+                    throw new OperationCanceledException(cancellationToken);
+            await task;
+        }
     }
 }

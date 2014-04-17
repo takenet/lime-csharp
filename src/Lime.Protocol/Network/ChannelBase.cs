@@ -308,7 +308,7 @@ namespace Lime.Protocol.Network
 
             if (_fillEnvelopeRecipients)
             {
-                this.FillEnvelope(envelope);
+                this.FillEnvelope(envelope, true);
             }
 
             return this.Transport.SendAsync(
@@ -396,20 +396,45 @@ namespace Lime.Protocol.Network
         /// using the session information
         /// </summary>
         /// <param name="envelope"></param>
-        private void FillEnvelope(Envelope envelope)
+        private void FillEnvelope(Envelope envelope, bool isSending)
         {
-            if (this.RemoteNode != null)
+            Node from;
+            Node to;
+
+            if (isSending)
             {
-                var from = envelope.From;
-                Node.Fill(this.RemoteNode, ref from);
-                envelope.From = from;
+                from = this.LocalNode;
+                to = this.RemoteNode;
+            }
+            else
+            {
+                // Receiving
+                from = this.RemoteNode;
+                to = this.LocalNode;
             }
 
-            if (this.LocalNode != null)
+            if (from != null)
             {
-                var to = envelope.To;
-                Node.Fill(this.LocalNode, ref to);
-                envelope.To = to;
+                if (envelope.From == null)
+                {
+                    envelope.From = from.Copy();
+                }
+                else if (string.IsNullOrEmpty(envelope.From.Domain))
+                {
+                    envelope.From.Domain = from.Domain;
+                }
+            }
+
+            if (to != null)
+            {
+                if (envelope.To == null)
+                {
+                    envelope.To = to.Copy();
+                }
+                else if (string.IsNullOrEmpty(envelope.To.Domain))
+                {
+                    envelope.To.Domain = to.Domain;
+                }
             }
         }
 
@@ -453,7 +478,7 @@ namespace Lime.Protocol.Network
 
             if (_fillEnvelopeRecipients)
             {
-                this.FillEnvelope(envelope);
+                this.FillEnvelope(envelope, false);
             }
 
             if (envelope is Notification)

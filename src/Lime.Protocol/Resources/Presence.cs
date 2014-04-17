@@ -69,21 +69,30 @@ namespace Lime.Protocol.Resources
         [EnumMember(Value = "instance")]
         Instance,
         /// <summary>
+        /// Delivery envelopes addressed to the current session 
+        /// instance (name@domain/instance) and envelopes addressed 
+        /// to the identity (name@domain) if the distance from the 
+        /// origitator is the smallest among the available 
+        /// nodes of the identity with this setting.
+        /// </summary>
+        [EnumMember(Value = "identityByPriority")]
+        IdentityByDistance,
+        /// <summary>
+        /// Delivery envelopes addressed to the current session 
+        /// instance (name@domain/instance) and envelopes addressed 
+        /// to the identity (name@domain) if the value of the 
+        /// priority property is the largest among the available 
+        /// nodes of the identity with this setting.
+        /// </summary>
+        [EnumMember(Value = "identityByPriority")]
+        IdentityByPriority,
+        /// <summary>
         ///  Delivery envelopes addressed to the current 
         ///  session instance (name@domain/instance) 
         ///  and envelopes addressed to the identity (name@domain).
         /// </summary>
         [EnumMember(Value = "identity")]
         Identity,
-        /// <summary>
-        /// Delivery envelopes addressed to the current session 
-        /// instance (name@domain/instance) and envelopes addressed 
-        /// to the identity (name@domain) if the value of the 
-        /// priority property is the largest among the available 
-        /// nodes of the identity.
-        /// </summary>
-        [EnumMember(Value = "identityByPriority")]
-        IdentityByPriority,
         /// <summary>
         /// Delivery any envelopes addressed to the 
         /// identity (name@domain), including the 

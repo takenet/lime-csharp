@@ -227,8 +227,8 @@ namespace Lime.Protocol.UnitTests.Network
 
             Assert.AreEqual(message, actual);
 
-            Assert.AreEqual(message.To, localNode);
-            Assert.AreEqual(message.From, remoteNode);
+            Assert.AreEqual(message.To.ToIdentity(), localNode.ToIdentity());
+            Assert.AreEqual(message.From.ToIdentity(), remoteNode.ToIdentity());
 
             _transport.Verify();
         }

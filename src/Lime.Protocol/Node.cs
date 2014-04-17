@@ -110,34 +110,7 @@ namespace Lime.Protocol
             }
         }
 
-        /// <summary>
-        /// Fills an instance of target based
-        /// on a source
-        /// </summary>
-        /// <param name="source"></param>
-        /// <param name="target"></param>
-        public static void Fill(Node source, ref Node target)
-        {
-            if (source == null)
-            {
-                throw new ArgumentNullException("source");
-            }
 
-            if (target == null)
-            {
-                target = source.Copy();
-            }
-
-            if (string.IsNullOrEmpty(target.Domain))
-            {
-                target.Domain = source.Domain;
-            }
-
-            if (string.IsNullOrEmpty(target.Instance))
-            {
-                target.Instance = source.Instance;
-            }
-        }
 
         /// <summary>
         /// Creates an Identity instance

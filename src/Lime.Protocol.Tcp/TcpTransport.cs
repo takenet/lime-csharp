@@ -1,4 +1,5 @@
-﻿using Lime.Protocol.Network;
+﻿using Lime.Protocol;
+using Lime.Protocol.Network;
 using Lime.Protocol.Serialization;
 using System;
 using System.Collections.Generic;
@@ -303,8 +304,7 @@ namespace Lime.Protocol.Tcp
                                 false,
                                  new RemoteCertificateValidationCallback(ValidateServerCertificate),
                                  new LocalCertificateSelectionCallback(SelectLocalCertificate),
-                                 EncryptionPolicy.RequireEncryption
-                                );
+                                 EncryptionPolicy.RequireEncryption);
 
                             if (_serverCertificate != null)
                             {                             
@@ -315,7 +315,8 @@ namespace Lime.Protocol.Tcp
                                         false,
                                         SslProtocols.Tls,
                                         false)
-                                    .ConfigureAwait(false);
+                                    .WithCancellation(cancellationToken)
+                                    .ConfigureAwait(false);                                    
                             }
                             else
                             {
@@ -331,6 +332,7 @@ namespace Lime.Protocol.Tcp
                                         null,
                                         SslProtocols.Tls,
                                         false)
+                                    .WithCancellation(cancellationToken)
                                     .ConfigureAwait(false);
                             }
 

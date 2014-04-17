@@ -22,7 +22,7 @@ namespace Lime.Protocol
         /// <summary>
         /// The session resource is already registered
         /// </summary>
-        public const int SESSION_RESOURCE_ALREADY_REGISTERED = 12;
+        public const int SESSION_REGISTRATION_ERROR = 12;
         /// <summary>
         /// An authentication error occurred
         /// </summary>
@@ -50,9 +50,9 @@ namespace Lime.Protocol
         /// </summary>
         public const int VALIDATION_ERROR = 21;
         /// <summary>
-        /// The request envelope is null
+        /// The envelope document is null
         /// </summary>
-        public const int VALIDATION_NULL_REQUEST = 22;
+        public const int VALIDATION_EMPTY_DOCUMENT = 22;
         /// <summary>
         /// The request status is invalid
         /// </summary>
@@ -80,61 +80,65 @@ namespace Lime.Protocol
         /// </summary>
         public const int AUTHORIZATION_DESTINATION_ACCOUNT_NOT_FOUND = 32;
         /// <summary>
-        /// General dispatching error
+        /// General routing error
         /// </summary>
-        public const int DISPATCHING_ERROR = 41;
+        public const int ROUTING_ERROR = 41;
         /// <summary>
         /// The message destination was not found
         /// </summary>
-        public const int DISPATCHING_DESTINATION_NOT_FOUND = 42;
+        public const int ROUTING_DESTINATION_NOT_FOUND = 42;
         /// <summary>
         /// The message destination gateway was not found
         /// </summary>
-        public const int DISPATCHING_GATEWAY_NOT_FOUND = 43;
+        public const int ROUTING_GATEWAY_NOT_FOUND = 43;
+        /// <summary>
+        /// General dispatching error
+        /// </summary>
+        public const int DISPATCHING_ERROR = 51;
         /// <summary>
         /// General command processing error
         /// </summary>
-        public const int COMMAND_PROCESSING_ERROR = 51;
+        public const int COMMAND_PROCESSING_ERROR = 61;
         /// <summary>
         /// There's no command processor available 
         /// for process the request
         /// </summary>
-        public const int COMMAND_RESOURCE_NOT_SUPPORTED = 52;
+        public const int COMMAND_RESOURCE_NOT_SUPPORTED = 62;
         /// <summary>
         /// The command method is not supported
         /// </summary>
-        public const int COMMAND_METHOD_NOT_SUPPORTED = 53;
+        public const int COMMAND_METHOD_NOT_SUPPORTED = 63;
         /// <summary>
         /// The command method has an invalid argument value
         /// </summary>
-        public const int COMMAND_INVALID_ARGUMENT = 54;
+        public const int COMMAND_INVALID_ARGUMENT = 64;
         /// <summary>
         /// The requested command is not valid for current
         /// session mode
         /// </summary>
-        public const int COMMAND_INVALID_SESSION_MODE = 55;
+        public const int COMMAND_INVALID_SESSION_MODE = 65;
         /// <summary>
         /// The command method was not allowed
         /// </summary>
-        public const int COMMAND_NOT_ALLOWED = 56;
+        public const int COMMAND_NOT_ALLOWED = 66;
         /// <summary>
         /// General gateway processing error
         /// </summary>
-        public const int GATEWAY_ERROR = 61;
+        public const int GATEWAY_ERROR = 71;
         /// <summary>
         /// The content type is not supported
         /// by the gateway
         /// </summary>
-        public const int GATEWAY_CONTENT_TYPE_NOT_SUPPORTED = 62;
+        public const int GATEWAY_CONTENT_TYPE_NOT_SUPPORTED = 72;
         /// <summary>
         /// The message destination was not found
         /// on gateway
         /// </summary>
-        public const int GATEWAY_DESTINATION_NOT_FOUND = 63;
+        public const int GATEWAY_DESTINATION_NOT_FOUND = 73;
         /// <summary>
         /// The functionality is not supported 
         /// by the gateway
         /// </summary>
-        public const int GATEWAY_NOT_SUPPORTED = 64;
+        public const int GATEWAY_NOT_SUPPORTED = 74;
     }
 }
