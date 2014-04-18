@@ -94,7 +94,7 @@ namespace Lime.Protocol
         /// <summary>
         /// General dispatching error
         /// </summary>
-        public const int DISPATCHING_ERROR = 51;
+        public const int DISPATCH_ERROR = 51;
         /// <summary>
         /// General command processing error
         /// </summary>
