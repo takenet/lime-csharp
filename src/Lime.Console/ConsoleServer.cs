@@ -289,7 +289,7 @@ namespace Lime.Console
                             Event = Event.Failed,
                             Reason = new Reason()
                             {
-                                Code = ReasonCodes.DISPATCHING_ERROR,
+                                Code = ReasonCodes.DISPATCH_ERROR,
                                 Description = "Destination session is unavailable"
                             }
                         };

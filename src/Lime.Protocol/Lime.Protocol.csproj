@@ -32,7 +32,7 @@
     <DocumentationFile>bin\Release\Lime.Protocol.XML</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup>
-    <SignAssembly>true</SignAssembly>
+    <SignAssembly>false</SignAssembly>
   </PropertyGroup>
   <PropertyGroup>
     <AssemblyOriginatorKeyFile>..\Takenet.Lime.Protocol.pfx</AssemblyOriginatorKeyFile>
@@ -153,9 +153,6 @@
     <Compile Include="Util\IAsyncQueue.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\Takenet.Lime.Protocol.pfx">
-      <Link>Takenet.Lime.Protocol.pfx</Link>
-    </None>
     <None Include="Lime.Protocol.nuspec" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
