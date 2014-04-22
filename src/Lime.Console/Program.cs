@@ -2,6 +2,7 @@
 using Lime.Protocol.Client;
 using Lime.Protocol.Contents;
 using Lime.Protocol.Network;
+using Lime.Protocol.Resources;
 using Lime.Protocol.Security;
 using Lime.Protocol.Serialization;
 using Lime.Protocol.Server;
@@ -87,6 +88,22 @@ namespace Lime.Console
                                 System.Console.WriteLine("Exception: {0}", t.Exception);
                             }
                         });
+
+                    var presence = new Command()
+                    {
+                        Method = CommandMethod.Set,
+                        Resource = new Presence()
+                        {
+                            Status = PresenceStatus.Available,
+                            Message = "I'm here!"
+                        }
+                    };
+
+                    System.Console.WriteLine("Setting presence...");
+                    client.Channel.SendCommandAsync(presence).Wait();                    
+                    var presenceResult = client.Channel.ReceiveCommandAsync(cancellationTokenSource.Token).Result;                    
+                    System.Console.WriteLine("Presence result: {0} - Reason: {1}", presenceResult.Status, presenceResult.Reason != null ? presenceResult.Reason.Description : "None");
+
 
                     System.Console.WriteLine("Client started. Type EXIT to quit.");
 
