@@ -76,25 +76,6 @@ namespace Lime.Protocol.UnitTests.Client
             var actualSession = await target.StartNewSessionAsync(cancellationToken);
         }
 
-        [TestMethod]
-        [TestCategory("SendNewSessionAsync")]
-        [ExpectedException(typeof(InvalidOperationException))]
-        public async Task StartNewSessionAsync_NewStateHasSessionPromise_ThrowsInvalidOperationException()
-        {
-            var target = GetTarget(state: SessionState.New);
-
-            var cancellationToken = DataUtil.CreateCancellationToken();
-
-            var tcs = new TaskCompletionSource<Envelope>();
-            _transport
-                .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
-                .Returns(() => tcs.Task);
-
-            var startSessionTask = target.StartNewSessionAsync(cancellationToken);
-
-            var actualSession = await target.StartNewSessionAsync(cancellationToken);
-        }
-
         #endregion
 
         #region NegotiateSessionAsync
@@ -145,30 +126,7 @@ namespace Lime.Protocol.UnitTests.Client
             var actualSession = await target.NegotiateSessionAsync(compression, encryption, cancellationToken);
         }
 
-        [TestMethod]
-        [TestCategory("NegotiateSessionAsync")]
-        [ExpectedException(typeof(InvalidOperationException))]
-        public async Task NegotiateSessionAsync_NewStateHasSessionPromise_ThrowsInvalidOperationException()
-        {
-            var target = GetTarget(sessionId: Guid.NewGuid(), state: SessionState.Negotiating);
 
-            var cancellationToken = DataUtil.CreateCancellationToken();
-            var compression = SessionCompression.GZip;
-            var encryption = SessionEncryption.TLS;
-
-            var session = DataUtil.CreateSession(SessionState.Negotiating);
-            session.Id = target.SessionId;
-
-            var tcs = new TaskCompletionSource<Envelope>();
-            _transport
-                .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
-                .Returns(() => tcs.Task)
-                .Verifiable();
-
-            var negotiateSessionTask = target.NegotiateSessionAsync(compression, encryption, cancellationToken);
-
-            var actualSession = await target.NegotiateSessionAsync(compression, encryption, cancellationToken);
-        }
   
         #endregion
 
@@ -176,7 +134,7 @@ namespace Lime.Protocol.UnitTests.Client
 
         [TestMethod]
         [TestCategory("AuthenticateSessionAsync")]
-        public async Task AuthenticateSessionAsync_AuthenticatingState_CallsTransportAndReadsFromBuffer()
+        public async Task AuthenticateSessionAsync_AuthenticatingState_CallsTransportAndReadsFromTransport()
         {
             var target = GetTarget(sessionId: Guid.NewGuid(), state: SessionState.Authenticating);
 
@@ -196,16 +154,16 @@ namespace Lime.Protocol.UnitTests.Client
 
             var actualSession = await target.AuthenticateSessionAsync(localIdentity, authentication, localInstance, sessionMode, cancellationToken);
 
-                _transport.Verify(
-                    t => t.SendAsync(It.Is<Session>(
-                            e => e.State == SessionState.Authenticating &&
-                                 e.Id == target.SessionId &&
-                                 e.From.ToIdentity().Equals(localIdentity) &&
-                                 e.From.Instance.Equals(localInstance) &&
-                                 e.Mode == sessionMode &&
-                                 e.Authentication == authentication),
-                        It.IsAny<CancellationToken>()),
-                        Times.Once());            
+            _transport.Verify(
+                t => t.SendAsync(It.Is<Session>(
+                        e => e.State == SessionState.Authenticating &&
+                                e.Id == target.SessionId &&
+                                e.From.ToIdentity().Equals(localIdentity) &&
+                                e.From.Instance.Equals(localInstance) &&
+                                e.Mode == sessionMode &&
+                                e.Authentication == authentication),
+                    It.IsAny<CancellationToken>()),
+                    Times.Once());            
 
             Assert.AreEqual(session, actualSession);
         }
@@ -258,32 +216,6 @@ namespace Lime.Protocol.UnitTests.Client
             var actualSession = await target.AuthenticateSessionAsync(localIdentity, authentication, localInstance, sessionMode, cancellationToken);
         }
 
-        [TestMethod]
-        [TestCategory("AuthenticateSessionAsync")]
-        [ExpectedException(typeof(InvalidOperationException))]
-        public async Task AuthenticateSessionAsync_AuthenticatingStateHasSessionPromise_ThrowsInvalidOperationException()
-        {
-            var target = GetTarget(sessionId: Guid.NewGuid(), state: SessionState.Authenticating);
-
-            var cancellationToken = DataUtil.CreateCancellationToken();
-            var localIdentity = DataUtil.CreateIdentity();
-            var localInstance = DataUtil.CreateInstanceName();
-            var authentication = DataUtil.CreateAuthentication(Security.AuthenticationScheme.Plain);
-            var sessionMode = SessionMode.Node;
-
-            var session = DataUtil.CreateSession(SessionState.Authenticating);
-            session.Id = target.SessionId;
-
-            var tcs = new TaskCompletionSource<Envelope>();
-            _transport
-                .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
-                .Returns(() => tcs.Task)
-                .Verifiable();
-
-            var authenticateSessionTask = target.AuthenticateSessionAsync(localIdentity, authentication, localInstance, sessionMode, cancellationToken);
-
-            var actualSession = await target.AuthenticateSessionAsync(localIdentity, authentication, localInstance, sessionMode, cancellationToken);
-        }
 
         #endregion
 
@@ -392,28 +324,6 @@ namespace Lime.Protocol.UnitTests.Client
                 .Returns(() => Task.FromResult<Envelope>(session));
 
             var actual = await target.ReceiveFinishedSessionAsync(cancellationToken);
-        }
-
-        [TestMethod]
-        [TestCategory("ReceiveSessionFinishedAsync")]
-        [ExpectedException(typeof(InvalidOperationException))]
-        public async Task ReceiveSessionAsync_EstablishedStateHasSessionPromise_ThrowsInvalidOperationException()
-        {
-            var target = GetTarget(state: SessionState.Established);
-
-
-            var cancellationToken = DataUtil.CreateCancellationToken();
-
-            var tcs = new TaskCompletionSource<Envelope>();
-            _transport
-                .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
-                .Returns(() => tcs.Task)
-                .Verifiable();
-
-            var receiveSessionFinishedTask = target.ReceiveFinishedSessionAsync(cancellationToken);
-
-            var actual = await target.ReceiveFinishedSessionAsync(cancellationToken);
-
         }
 
         #endregion

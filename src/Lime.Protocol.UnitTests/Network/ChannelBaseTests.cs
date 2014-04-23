@@ -565,6 +565,11 @@ namespace Lime.Protocol.UnitTests.Network
             for (int i = 0; i < buffersLimit + 1; i++)
             {
                 var receiveSessionTask = target.ReceiveSessionAsync(cancellationToken);
+
+                if (receiveSessionTask.Exception != null)
+                {
+                    throw receiveSessionTask.Exception.InnerException;
+                }
             }
         }
 

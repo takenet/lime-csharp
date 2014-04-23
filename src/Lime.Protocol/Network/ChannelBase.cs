@@ -260,7 +260,7 @@ namespace Lime.Protocol.Network
         /// <param name="session"></param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">session</exception>
-        Task ISessionChannel.SendSessionAsync(Session session)
+        public Task SendSessionAsync(Session session)
         {
             if (session == null)
             {
@@ -279,7 +279,7 @@ namespace Lime.Protocol.Network
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns></returns>
         /// <exception cref="System.NotImplementedException"></exception>
-        Task<Session> ISessionChannel.ReceiveSessionAsync(CancellationToken cancellationToken)
+        public virtual async Task<Session> ReceiveSessionAsync(CancellationToken cancellationToken)
         {
             if (this.State == SessionState.Finished)
             {
@@ -290,33 +290,32 @@ namespace Lime.Protocol.Network
                 _channelCancellationTokenSource.Token,
                 cancellationToken);
 
-            return _sessionAsyncBuffer.DequeueAsync(combinedCancellationTokenSource.Token);     
+            if (_sessionAsyncBuffer.HasPromises)
+            {
+                throw new InvalidOperationException("Cannot receive a session since there's already a buffer listener.");
+            }
+
+            if (this.State == SessionState.Established)
+            {
+                return await _sessionAsyncBuffer.DequeueAsync(combinedCancellationTokenSource.Token).ConfigureAwait(false);
+            }
+            else
+            {
+                var result = await this.ReceiveAsync(cancellationToken).ConfigureAwait(false);
+
+                if (!(result is Session))
+                {
+                    await this.Transport.CloseAsync(_channelCancellationTokenSource.Token);
+                    throw new InvalidOperationException("An unexpected envelope type was received from the transport.");
+                }
+
+                return (Session)result;
+            }
         }
 
         #endregion
 
         #region Private Methods
-
-        /// <summary>
-        /// Sends the envelope to the transport
-        /// </summary>
-        /// <param name="envelope"></param>
-        /// <returns></returns>
-        private Task SendAsync(Envelope envelope)
-        {
-            var timeoutCancellationTokenSource = new CancellationTokenSource(_sendTimeout);
-
-            if (_fillEnvelopeRecipients)
-            {
-                this.FillEnvelope(envelope, true);
-            }
-
-            return this.Transport.SendAsync(
-                envelope,
-                CancellationTokenSource.CreateLinkedTokenSource(
-                    _channelCancellationTokenSource.Token,
-                    timeoutCancellationTokenSource.Token).Token);
-        }
 
         /// <summary>
         /// Consumes envelopes from the transport
@@ -327,16 +326,16 @@ namespace Lime.Protocol.Network
         /// <param name="e"></param>
         private async void EnvelopeAsyncBuffer_PromiseAdded(object sender, EventArgs e)
         {
-            // Unsubscribe the event to avoid unnecessary overhead
-            _messageAsyncBuffer.PromiseAdded -= EnvelopeAsyncBuffer_PromiseAdded;
-            _commandAsyncBuffer.PromiseAdded -= EnvelopeAsyncBuffer_PromiseAdded;
-            _notificationAsyncBuffer.PromiseAdded -= EnvelopeAsyncBuffer_PromiseAdded;
-            _sessionAsyncBuffer.PromiseAdded -= EnvelopeAsyncBuffer_PromiseAdded;        
-
             await _receiveSemaphore.WaitAsync(_channelCancellationTokenSource.Token).ConfigureAwait(false);
 
             try
             {
+                // Unsubscribe the event to avoid unnecessary overhead
+                _messageAsyncBuffer.PromiseAdded -= EnvelopeAsyncBuffer_PromiseAdded;
+                _commandAsyncBuffer.PromiseAdded -= EnvelopeAsyncBuffer_PromiseAdded;
+                _notificationAsyncBuffer.PromiseAdded -= EnvelopeAsyncBuffer_PromiseAdded;
+                _sessionAsyncBuffer.PromiseAdded -= EnvelopeAsyncBuffer_PromiseAdded;
+
                 while (_messageAsyncBuffer.HasPromises ||
                        _commandAsyncBuffer.HasPromises ||
                        _notificationAsyncBuffer.HasPromises ||
@@ -347,7 +346,7 @@ namespace Lime.Protocol.Network
                         break;
                     }
 
-                    var envelope = await this.Transport.ReceiveAsync(_channelCancellationTokenSource.Token).ConfigureAwait(false);
+                    var envelope = await this.ReceiveAsync(_channelCancellationTokenSource.Token).ConfigureAwait(false);
                     await this.OnEnvelopeReceived(envelope);
                 }
             }
@@ -366,13 +365,13 @@ namespace Lime.Protocol.Network
                 throw;
             }
             finally
-            {
-                _receiveSemaphore.Release();
-
+            {                
                 _messageAsyncBuffer.PromiseAdded += EnvelopeAsyncBuffer_PromiseAdded;
                 _commandAsyncBuffer.PromiseAdded += EnvelopeAsyncBuffer_PromiseAdded;
                 _notificationAsyncBuffer.PromiseAdded += EnvelopeAsyncBuffer_PromiseAdded;
                 _sessionAsyncBuffer.PromiseAdded += EnvelopeAsyncBuffer_PromiseAdded;
+
+                _receiveSemaphore.Release();
             }
         }
 
@@ -443,25 +442,41 @@ namespace Lime.Protocol.Network
         #region Protected Methods
 
         /// <summary>
-        /// Wraps the ISessionChannel.SendSessionAsync 
-        /// method for the derivated classes.
+        /// Sends the envelope to the transport
         /// </summary>
-        /// <param name="session"></param>
+        /// <param name="envelope"></param>
         /// <returns></returns>
-        protected Task SendSessionAsync(Session session)
+        protected Task SendAsync(Envelope envelope)
         {
-            return ((ISessionChannel)this).SendSessionAsync(session);
+            var timeoutCancellationTokenSource = new CancellationTokenSource(_sendTimeout);
+
+            if (_fillEnvelopeRecipients)
+            {
+                this.FillEnvelope(envelope, true);
+            }
+
+            return this.Transport.SendAsync(
+                envelope,
+                CancellationTokenSource.CreateLinkedTokenSource(
+                    _channelCancellationTokenSource.Token,
+                    timeoutCancellationTokenSource.Token).Token);
         }
 
         /// <summary>
-        /// Wraps the ISessionChannel.ReceiveSessionAsync 
-        /// method for the derivated classes.
+        /// Receives an envelope from the transport
         /// </summary>
-        /// <param name="session"></param>
+        /// <param name="envelope"></param>
         /// <returns></returns>
-        protected Task<Session> ReceiveSessionAsync(CancellationToken cancellationToken)
+        protected async Task<Envelope> ReceiveAsync(CancellationToken cancellationToken)
         {
-            return ((ISessionChannel)this).ReceiveSessionAsync(cancellationToken);
+            var envelope = await this.Transport.ReceiveAsync(cancellationToken);
+
+            if (_fillEnvelopeRecipients)
+            {
+                this.FillEnvelope(envelope, false);
+            }
+
+            return envelope;
         }
 
         /// <summary>
@@ -474,11 +489,6 @@ namespace Lime.Protocol.Network
             if (envelope == null)
             {
                 throw new ArgumentNullException("envelope");
-            }
-
-            if (_fillEnvelopeRecipients)
-            {
-                this.FillEnvelope(envelope, false);
             }
 
             if (envelope is Notification)
@@ -562,7 +572,7 @@ namespace Lime.Protocol.Network
         /// </summary>
         /// <param name="session"></param>
         /// <returns></returns>
-        protected virtual Task OnSessionReceivedAsync(Session session)
+        protected Task OnSessionReceivedAsync(Session session)
         {
             _sessionAsyncBuffer.Enqueue(session);
             return Task.FromResult<object>(null);

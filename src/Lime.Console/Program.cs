@@ -100,10 +100,9 @@ namespace Lime.Console
                     };
 
                     System.Console.WriteLine("Setting presence...");
-                    client.Channel.SendCommandAsync(presence).Wait();                    
-                    var presenceResult = client.Channel.ReceiveCommandAsync(cancellationTokenSource.Token).Result;                    
+                    client.Channel.SendCommandAsync(presence).Wait();
+                    var presenceResult = client.Channel.ReceiveCommandAsync(cancellationTokenSource.Token).Result;
                     System.Console.WriteLine("Presence result: {0} - Reason: {1}", presenceResult.Status, presenceResult.Reason != null ? presenceResult.Reason.Description : "None");
-
 
                     System.Console.WriteLine("Client started. Type EXIT to quit.");
 

@@ -37,19 +37,14 @@ namespace Lime.Protocol.Server
         /// <exception cref="System.InvalidOperationException">
         /// Cannot await for a session response since there's already a listener.
         /// </exception>
-        public Task<Session> ReceiveNewSessionAsync(CancellationToken cancellationToken)
+        public async Task<Session> ReceiveNewSessionAsync(CancellationToken cancellationToken)
         {
             if (base.State != SessionState.New)
             {
                 throw new InvalidOperationException(string.Format("Cannot receive a new session in the '{0}' state", base.State));                
             }
 
-            if (base._sessionAsyncBuffer.HasPromises)
-            {
-                throw new InvalidOperationException("Cannot await for a session response since there's already a listener.");
-            }
-
-            return base.ReceiveSessionAsync(cancellationToken);
+            return await base.ReceiveSessionAsync(cancellationToken).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -81,11 +76,6 @@ namespace Lime.Protocol.Server
             if (base.State != SessionState.New)
             {
                 throw new InvalidOperationException(string.Format("Cannot start a session negotiating in the '{0}' state", this.State));
-            }
-
-            if (base._sessionAsyncBuffer.HasPromises)
-            {
-                throw new InvalidOperationException("Cannot await for a session response since there's already a listener.");
             }
 
             if (compressionOptions == null)
@@ -183,11 +173,6 @@ namespace Lime.Protocol.Server
                 throw new ArgumentException("No available options for authentication");
             }
 
-            if (base._sessionAsyncBuffer.HasPromises)
-            {
-                throw new InvalidOperationException("Cannot await for a session response since there's already a listener.");
-            }
-
             base.State = SessionState.Authenticating;
 
             var session = new Session()
@@ -223,11 +208,6 @@ namespace Lime.Protocol.Server
             if (base.State != SessionState.Authenticating)
             {
                 throw new InvalidOperationException(string.Format("Cannot send an authentication roundtrip for a session in the '{0}' state", this.State));
-            }
-
-            if (base._sessionAsyncBuffer.HasPromises)
-            {
-                throw new InvalidOperationException("Cannot await for a session response since there's already a listener.");
             }
 
             var session = new Session()
@@ -289,19 +269,14 @@ namespace Lime.Protocol.Server
         /// <exception cref="System.InvalidOperationException">
         /// Cannot await for a session response since there's already a listener.
         /// </exception>
-        public Task<Session> ReceiveFinishingSessionAsync(CancellationToken cancellationToken)
+        public async Task<Session> ReceiveFinishingSessionAsync(CancellationToken cancellationToken)
         {
             if (base.State != SessionState.Established)
             {
                 throw new InvalidOperationException(string.Format("Cannot receive a new session in the '{0}' state", base.State));
             }
 
-            if (base._sessionAsyncBuffer.HasPromises)
-            {
-                throw new InvalidOperationException("Cannot await for a session response since there's already a listener.");
-            }
-
-            return base.ReceiveSessionAsync(cancellationToken);
+            return await base.ReceiveSessionAsync(cancellationToken).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -370,16 +345,6 @@ namespace Lime.Protocol.Server
         #endregion
 
         #region Event Handlers
-
-        /// <summary>
-        /// Raises the SessionReceived event
-        /// </summary>
-        /// <param name="session"></param>
-        /// <returns></returns>
-        protected async override Task OnSessionReceivedAsync(Session session)
-        {
-            await base.OnSessionReceivedAsync(session).ConfigureAwait(false);
-        }
 
         /// <summary>
         /// Raises the MessageReceived event
