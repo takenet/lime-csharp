@@ -147,10 +147,12 @@ namespace Lime.Protocol.UnitTests.Client
             var session = DataUtil.CreateSession(SessionState.Established);
             session.Id = target.SessionId;
 
+            var tcs = new TaskCompletionSource<Envelope>();
+
             _transport
-                .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
-                .Returns(() => Task.FromResult<Envelope>(session))
-                .Verifiable();
+                .SetupSequence(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(Task.FromResult<Envelope>(session))
+                .Returns(tcs.Task);
 
             var actualSession = await target.AuthenticateSessionAsync(localIdentity, authentication, localInstance, sessionMode, cancellationToken);
 
@@ -287,21 +289,21 @@ namespace Lime.Protocol.UnitTests.Client
         #region ReceiveSessionFinishedAsync
 
         [TestMethod]
-        [TestCategory("ReceiveSessionFinishedAsync")]
-        public async Task ReceiveSessionAsync_EstablishedState_ReadsTransport()
-        {
-            var target = GetTarget(state: SessionState.Established);
-
-            var session = DataUtil.CreateSession(SessionState.Finished);
-            session.Id = target.SessionId;
+        [TestCategory("ReceiveFinishedSessionAsync")]
+        public async Task ReceiveFinishedSessionAsync_EstablishedState_ReadsTransport()
+        {            
+            var session = DataUtil.CreateSession(SessionState.Finished);            
+            var tcs = new TaskCompletionSource<Envelope>();
 
             var cancellationToken = DataUtil.CreateCancellationToken();
 
             _transport
-                .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
-                .Returns(() => Task.FromResult<Envelope>(session))
-                .Verifiable();
+                .SetupSequence(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(Task.FromResult<Envelope>(session))
+                .Returns(tcs.Task);
 
+            var target = GetTarget(state: SessionState.Established);
+            session.Id = target.SessionId;
             var actual = await target.ReceiveFinishedSessionAsync(cancellationToken);
 
             Assert.AreEqual(session, actual);
@@ -309,9 +311,9 @@ namespace Lime.Protocol.UnitTests.Client
         }
 
         [TestMethod]
-        [TestCategory("ReceiveSessionAsync")]
+        [TestCategory("ReceiveFinishedSessionAsync")]
         [ExpectedException(typeof(InvalidOperationException))]
-        public async Task ReceiveSessionAsync_InvalidState_ThrowsInvalidOperationException()
+        public async Task ReceiveFinishedSessionAsync_InvalidState_ThrowsInvalidOperationException()
         {
             var target = GetTarget(state: SessionState.Finished);
 
@@ -328,24 +330,24 @@ namespace Lime.Protocol.UnitTests.Client
 
         #endregion
 
-        #region OnMessageReceivedAsync
+        #region ReceiveMessageAsync
 
         [TestMethod]
-        [TestCategory("OnMessageReceivedAsync")]
-        public async Task OnMessageReceivedAsync_MessageReceivedAndAutoNotifyReceiptTrue_SendsNotificationToTransport()
+        [TestCategory("ReceiveMessageAsync")]
+        public async Task ReceiveMessageAsync_MessageReceivedAndAutoNotifyReceiptTrue_SendsNotificationToTransport()
         {
-            var target = GetTarget(state: SessionState.Established, autoNotifyReceipt: true);
-
             var content = DataUtil.CreateTextContent();
             var message = DataUtil.CreateMessage(content);
 
-            var cancellationToken = DataUtil.CreateCancellationToken();
-
+            var cts = new TaskCompletionSource<Envelope>();
             _transport
-                .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
-                .Returns(() => Task.FromResult<Envelope>(message))
-                .Verifiable();
+                .SetupSequence(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(Task.FromResult<Envelope>(message))
+                .Returns(cts.Task);
 
+            var target = GetTarget(state: SessionState.Established, autoNotifyReceipt: true);
+
+            var cancellationToken = DataUtil.CreateCancellationToken();
             var actual = await target.ReceiveMessageAsync(cancellationToken);
 
             _transport.Verify(
@@ -358,21 +360,22 @@ namespace Lime.Protocol.UnitTests.Client
         }
 
         [TestMethod]
-        [TestCategory("OnMessageReceivedAsync")]
-        public async Task OnMessageReceivedAsync_MessageReceivedAndAutoNotifyReceiptFalse_DoNotSendsNotificationToTransport()
-        {
-            var target = GetTarget(state: SessionState.Established, autoNotifyReceipt: false);
-
+        [TestCategory("ReceiveMessageAsync")]
+        public async Task ReceiveMessageAsync_MessageReceivedAndAutoNotifyReceiptFalse_DoNotSendsNotificationToTransport()
+        {            
             var content = DataUtil.CreateTextContent();
             var message = DataUtil.CreateMessage(content);
 
             var cancellationToken = DataUtil.CreateCancellationToken();
 
-            _transport
-                .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
-                .Returns(() => Task.FromResult<Envelope>(message))
-                .Verifiable();
+            var tcs = new TaskCompletionSource<Envelope>();
 
+            _transport
+                .SetupSequence(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(Task.FromResult<Envelope>(message))
+                .Returns(tcs.Task);
+
+            var target = GetTarget(state: SessionState.Established, autoNotifyReceipt: false);
             var actual = await target.ReceiveMessageAsync(cancellationToken);
 
             _transport.Verify(
@@ -385,22 +388,23 @@ namespace Lime.Protocol.UnitTests.Client
         }
 
         [TestMethod]
-        [TestCategory("OnMessageReceivedAsync")]
-        public async Task OnMessageReceivedAsync_FireAndForgetMessageReceivedAndAutoNotifyReceiptTrue_DoNotSendsNotificationToTransport()
-        {
-            var target = GetTarget(state: SessionState.Established, autoNotifyReceipt: true);
-
+        [TestCategory("ReceiveMessageAsync")]
+        public async Task ReceiveMessageAsync_FireAndForgetMessageReceivedAndAutoNotifyReceiptTrue_DoNotSendsNotificationToTransport()
+        {            
             var content = DataUtil.CreateTextContent();
             var message = DataUtil.CreateMessage(content);
             message.Id = null;
 
             var cancellationToken = DataUtil.CreateCancellationToken();
 
-            _transport
-                .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
-                .Returns(() => Task.FromResult<Envelope>(message))
-                .Verifiable();
+            var tcs = new TaskCompletionSource<Envelope>();
 
+            _transport
+                .SetupSequence(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(Task.FromResult<Envelope>(message))
+                .Returns(tcs.Task);
+
+            var target = GetTarget(state: SessionState.Established, autoNotifyReceipt: true);
             var actual = await target.ReceiveMessageAsync(cancellationToken);
 
             _transport.Verify(
@@ -414,23 +418,24 @@ namespace Lime.Protocol.UnitTests.Client
 
         #endregion
 
-        #region OnCommandReceivedAsync
+        #region ReceiveCommandAsync
 
         [TestMethod]
-        [TestCategory("OnCommandReceivedAsync")]
-        public async Task OnCommandReceivedAsync_PingCommandReceivedAndAutoReplyPingsTrue_SendsPingCommandToTransport()
-        {
-            var target = GetTarget(state: SessionState.Established, autoReplyPings: true);
-
+        [TestCategory("ReceiveCommandAsync")]
+        public async Task ReceiveCommandAsync_PingCommandReceivedAndAutoReplyPingsTrue_SendsPingCommandToTransport()
+        {           
             var ping = DataUtil.CreatePing();
             var command = DataUtil.CreateCommand(ping);
             var cancellationToken = DataUtil.CreateCancellationToken();
 
-            _transport
-                .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
-                .Returns(() => Task.FromResult<Envelope>(command))
-                .Verifiable();
+            var tcs = new TaskCompletionSource<Envelope>();
 
+            _transport
+                .SetupSequence(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(Task.FromResult<Envelope>(command))
+                .Returns(tcs.Task);
+
+            var target = GetTarget(state: SessionState.Established, autoReplyPings: true);
             var actual = await target.ReceiveCommandAsync(cancellationToken);
 
             _transport.Verify(
@@ -444,20 +449,21 @@ namespace Lime.Protocol.UnitTests.Client
         }
 
         [TestMethod]
-        [TestCategory("OnCommandReceivedAsync")]
-        public async Task OnCommandReceivedAsync_PingCommandReceivedAndAutoReplyPingsFalse_DoNotSendsPingCommandToTransport()
-        {
-            var target = GetTarget(state: SessionState.Established, autoReplyPings: false);
-
+        [TestCategory("ReceiveCommandAsync")]
+        public async Task ReceiveCommandAsync_PingCommandReceivedAndAutoReplyPingsFalse_DoNotSendsPingCommandToTransport()
+        {           
             var ping = DataUtil.CreatePing();
             var command = DataUtil.CreateCommand(ping);
             var cancellationToken = DataUtil.CreateCancellationToken();
 
-            _transport
-                .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
-                .Returns(() => Task.FromResult<Envelope>(command))
-                .Verifiable();
+            var tcs = new TaskCompletionSource<Envelope>();
 
+            _transport
+                .SetupSequence(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(Task.FromResult<Envelope>(command))
+                .Returns(tcs.Task);
+
+            var target = GetTarget(state: SessionState.Established, autoReplyPings: false);
             var actual = await target.ReceiveCommandAsync(cancellationToken);
 
             _transport.Verify(
@@ -471,20 +477,20 @@ namespace Lime.Protocol.UnitTests.Client
         }
 
         [TestMethod]
-        [TestCategory("OnCommandReceivedAsync")]
-        public async Task OnCommandReceivedAsync_PingResponseCommandReceivedAndAutoReplyPingsTrue_DoNotSendsPingCommandToTransport()
-        {
-            var target = GetTarget(state: SessionState.Established, autoReplyPings: true);
-
+        [TestCategory("ReceiveCommandAsync")]
+        public async Task ReceiveCommandAsync_PingResponseCommandReceivedAndAutoReplyPingsTrue_DoNotSendsPingCommandToTransport()
+        {            
             var ping = DataUtil.CreatePing();
             var command = DataUtil.CreateCommand(ping, status: CommandStatus.Success);
             var cancellationToken = DataUtil.CreateCancellationToken();
 
+            var tcs = new TaskCompletionSource<Envelope>();
             _transport
-                .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
-                .Returns(() => Task.FromResult<Envelope>(command))
-                .Verifiable();
+                .SetupSequence(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(Task.FromResult<Envelope>(command))
+                .Returns(tcs.Task);
 
+            var target = GetTarget(state: SessionState.Established, autoReplyPings: true);
             var actual = await target.ReceiveCommandAsync(cancellationToken);
 
             _transport.Verify(
@@ -502,21 +508,21 @@ namespace Lime.Protocol.UnitTests.Client
         #region OnSessionReceivedAsync
 
         [TestMethod]
-        [TestCategory("OnSessionReceivedAsync")]
-        public async Task OnSessionReceivedAsync_AuthenticatingStateEstablishedSessionReceived_SetsStateAndNodeProperties()
+        [TestCategory("AuthenticateSessionAsync")]
+        public async Task AuthenticateSessionAsync_AuthenticatingStateEstablishedSessionReceived_SetsStateAndNodeProperties()
         {
-            var target = GetTarget(state: SessionState.Authenticating, autoNotifyReceipt: true);
 
             var authentication = DataUtil.CreateAuthentication(AuthenticationScheme.Plain);
             var identity = DataUtil.CreateIdentity();
             var session = DataUtil.CreateSession(SessionState.Established);            
             var cancellationToken = DataUtil.CreateCancellationToken();
-
+            var tcs = new TaskCompletionSource<Envelope>();
             _transport
-                .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
-                .Returns(() => Task.FromResult<Envelope>(session))
-                .Verifiable();
-
+                .SetupSequence(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(Task.FromResult<Envelope>(session))
+                .Returns(tcs.Task);
+            
+            var target = GetTarget(state: SessionState.Authenticating, autoNotifyReceipt: true);
             var actual = await target.AuthenticateSessionAsync(identity, authentication, null, SessionMode.Node, cancellationToken);
 
             Assert.IsTrue(target.State == session.State);
@@ -525,20 +531,19 @@ namespace Lime.Protocol.UnitTests.Client
         }
 
         [TestMethod]
-        [TestCategory("OnSessionReceivedAsync")]
-        public async Task OnSessionReceivedAsync_EstablishedStateFinishedSessionReceived_SetsStateAndClosesTransport()
-        {
-            var target = GetTarget(state: SessionState.Established, autoNotifyReceipt: true);
-            
-            
+        [TestCategory("ReceiveFinishedSessionAsync")]
+        public async Task ReceiveFinishedSessionAsync_EstablishedStateFinishedSessionReceived_SetsStateAndClosesTransport()
+        {                                    
             var session = DataUtil.CreateSession(SessionState.Finished);
             var cancellationToken = DataUtil.CreateCancellationToken();
 
+            var tcs = new TaskCompletionSource<Envelope>();
             _transport
-                .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
-                .Returns(() => Task.FromResult<Envelope>(session))
-                .Verifiable();
+                .SetupSequence(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(Task.FromResult<Envelope>(session))
+                .Returns(tcs.Task);
 
+            var target = GetTarget(state: SessionState.Established, autoNotifyReceipt: true);
             var actual = await target.ReceiveFinishedSessionAsync(
                 cancellationToken);
 
@@ -551,20 +556,21 @@ namespace Lime.Protocol.UnitTests.Client
         }
 
         [TestMethod]
-        [TestCategory("OnSessionReceivedAsync")]
-        public async Task OnSessionReceivedAsync_EstablishedStateFailedSessionReceived_SetsStateAndClosesTransport()
+        [TestCategory("ReceiveFinishedSessionAsync")]
+        public async Task ReceiveFinishedSessionAsync_EstablishedStateFailedSessionReceived_SetsStateAndClosesTransport()
         {
-            var target = GetTarget(state: SessionState.Established, autoNotifyReceipt: true);
-
-
+            
             var session = DataUtil.CreateSession(SessionState.Failed);
             var cancellationToken = DataUtil.CreateCancellationToken();
 
-            _transport
-                .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
-                .Returns(() => Task.FromResult<Envelope>(session))
-                .Verifiable();
+            var tcs = new TaskCompletionSource<Envelope>();
 
+            _transport
+                .SetupSequence(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(Task.FromResult<Envelope>(session))
+                .Returns(tcs.Task);
+            
+            var target = GetTarget(state: SessionState.Established, autoNotifyReceipt: true);
             var actual = await target.ReceiveFinishedSessionAsync(
                 cancellationToken);
 
@@ -577,11 +583,9 @@ namespace Lime.Protocol.UnitTests.Client
         }
 
         [TestMethod]
-        [TestCategory("OnSessionReceivedAsync")]
-        public async Task OnSessionReceivedAsync_AuthenticatingStateFailedSessionReceived_SetsStateAndClosesTransport()
-        {
-            var target = GetTarget(state: SessionState.Authenticating, autoNotifyReceipt: true);
-
+        [TestCategory("AuthenticateSessionAsync")]
+        public async Task AuthenticateSessionAsync_AuthenticatingStateFailedSessionReceived_SetsStateAndClosesTransport()
+        {            
             var authentication = DataUtil.CreateAuthentication(AuthenticationScheme.Plain);
             var identity = DataUtil.CreateIdentity();
             var session = DataUtil.CreateSession(SessionState.Failed);
@@ -592,6 +596,7 @@ namespace Lime.Protocol.UnitTests.Client
                 .Returns(() => Task.FromResult<Envelope>(session))
                 .Verifiable();
 
+            var target = GetTarget(state: SessionState.Authenticating, autoNotifyReceipt: true);
             var actual = await target.AuthenticateSessionAsync(identity, authentication, null, SessionMode.Node, cancellationToken);
 
             Assert.IsTrue(target.State == session.State);

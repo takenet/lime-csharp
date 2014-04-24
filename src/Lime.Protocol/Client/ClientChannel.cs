@@ -251,13 +251,14 @@ namespace Lime.Protocol.Client
         #region ChannelBase Members
 
         /// <summary>
-        /// Raises the MessageReceived event
+        /// Receives a message
+        /// from the remote node.
         /// </summary>
-        /// <param name="message"></param>
+        /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns></returns>
-        protected async override Task OnMessageReceivedAsync(Message message)
+        public override async Task<Message> ReceiveMessageAsync(CancellationToken cancellationToken)
         {
-            await base.OnMessageReceivedAsync(message).ConfigureAwait(false);
+            var message = await base.ReceiveMessageAsync(cancellationToken).ConfigureAwait(false);
 
             if (_autoNotifyReceipt &&
                 message.Id.HasValue &&
@@ -265,16 +266,19 @@ namespace Lime.Protocol.Client
             {
                 await SendReceivedNotificationAsync(message.Id.Value, message.From).ConfigureAwait(false);
             }
+
+            return message;
         }
 
         /// <summary>
-        /// Raises the CommandReceived event
+        /// Receives a command
+        /// from the remote node.
         /// </summary>
-        /// <param name="command"></param>
+        /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns></returns>
-        protected async override Task OnCommandReceivedAsync(Command command)
+        public override async Task<Command> ReceiveCommandAsync(CancellationToken cancellationToken)
         {
-            await base.OnCommandReceivedAsync(command).ConfigureAwait(false);
+            var command = await base.ReceiveCommandAsync(cancellationToken).ConfigureAwait(false);
 
             if (_autoReplyPings &&
                 command.Resource is Ping &&
@@ -292,6 +296,8 @@ namespace Lime.Protocol.Client
 
                 await SendCommandAsync(pingCommandResponse).ConfigureAwait(false);
             }
+
+            return command;
         }
 
         /// <summary>
@@ -304,7 +310,7 @@ namespace Lime.Protocol.Client
         /// <returns></returns>
         public override async Task<Session> ReceiveSessionAsync(CancellationToken cancellationToken)
         {
-            var session = await base.ReceiveSessionAsync(cancellationToken);
+            var session = await base.ReceiveSessionAsync(cancellationToken).ConfigureAwait(false);
 
             this.SessionId = session.Id.Value;
             this.State = session.State;
@@ -325,8 +331,6 @@ namespace Lime.Protocol.Client
             return session;
         }
 
-
         #endregion
-
     }
 }

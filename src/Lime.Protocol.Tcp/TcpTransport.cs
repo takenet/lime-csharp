@@ -414,7 +414,7 @@ namespace Lime.Protocol.Tcp
 
             int jsonLenght = 0;           
 
-            for (int i = _jsonPos; i < _bufferPos; i++)
+            for (int i = _jsonPos; i <= _bufferPos; i++)
             {
                 _jsonPos = i;
 

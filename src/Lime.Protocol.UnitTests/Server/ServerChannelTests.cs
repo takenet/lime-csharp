@@ -455,18 +455,20 @@ namespace Lime.Protocol.UnitTests.Server
         [TestMethod]
         [TestCategory("ReceiveFinishingSessionAsync")]
         public async Task ReceiveFinishingSessionAsync_EstablishedState_ReadsTransport()
-        {
-            var target = GetTarget(SessionState.Established);
-
+        {            
             var session = DataUtil.CreateSession(SessionState.Finishing);
-            session.Id = target.SessionId;
-
+            
             var cancellationToken = DataUtil.CreateCancellationToken();
 
+            var tcs = new TaskCompletionSource<Envelope>();
             _transport
-                .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
-                .Returns(() => Task.FromResult<Envelope>(session))
-                .Verifiable();
+                .SetupSequence(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(Task.FromResult<Envelope>(session))
+                .Returns(tcs.Task);
+
+
+            var target = GetTarget(SessionState.Established);
+            session.Id = target.SessionId;
 
             var actual = await target.ReceiveFinishingSessionAsync(cancellationToken);
 
@@ -482,28 +484,6 @@ namespace Lime.Protocol.UnitTests.Server
             var target = GetTarget(SessionState.Authenticating);
 
             var cancellationToken = DataUtil.CreateCancellationToken();
-
-            var actual = await target.ReceiveFinishingSessionAsync(cancellationToken);
-        }
-
-        [TestMethod]
-        [TestCategory("ReceiveFinishingSessionAsync")]
-        [ExpectedException(typeof(InvalidOperationException))]
-        public async Task ReceiveFinishingSessionAsync_EstablishedStateHasPromises_ReadsTransport()
-        {
-            var target = GetTarget(SessionState.Established);
-
-            var cancellationToken = DataUtil.CreateCancellationToken();
-
-            var tcs = new TaskCompletionSource<Envelope>();
-
-            _transport
-                .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
-                .Returns(() => tcs.Task)
-                .Verifiable();
-
-            var receiveSessionTask = ((ISessionChannel)target).ReceiveSessionAsync(
-                cancellationToken);
 
             var actual = await target.ReceiveFinishingSessionAsync(cancellationToken);
         }
@@ -606,153 +586,6 @@ namespace Lime.Protocol.UnitTests.Server
 
         #endregion
 
-        #region OnSessionReceivedAsync
-
-        [TestMethod]
-        [TestCategory("OnSessionReceivedAsync")]
-        public async Task OnSessionReceivedAsync_EstablishedState_SendsToBuffer()
-        {
-            var target = GetTarget(state: SessionState.Established) as TestServerChannel;
-
-            var session = DataUtil.CreateSession();
-            var cancellationToken = DataUtil.CreateCancellationToken();
-
-            await target.CallsOnSessionReceivedAsync(session);
-
-            var actual = await ((ISessionChannel)target).ReceiveSessionAsync(cancellationToken);
-
-            Assert.AreEqual(session, actual);
-        }
-
-        #endregion
-
-        #region OnMessageReceivedAsync
-
-        [TestMethod]
-        [TestCategory("OnMessageReceivedAsync")]
-        public async Task OnMessageReceivedAsync_EstablishedState_SendsToBuffer()
-        {
-            var target = GetTarget(state: SessionState.Established) as TestServerChannel;
-
-            var content = DataUtil.CreateTextContent();
-            var message = DataUtil.CreateMessage(content);
-            var cancellationToken = DataUtil.CreateCancellationToken();
-
-            await target.CallsOnMessageReceivedAsync(message);
-
-            var actual = await target.ReceiveMessageAsync(cancellationToken);
-
-            Assert.AreEqual(message, actual);
-        }
-
-        [TestMethod]
-        [TestCategory("OnMessageReceivedAsync")]
-        public async Task OnMessageReceivedAsync_InvalidState_SendsFailedSession()
-        {
-            var target = GetTarget(state: SessionState.Authenticating) as TestServerChannel;
-
-            var content = DataUtil.CreateTextContent();
-            var message = DataUtil.CreateMessage(content);
-            var cancellationToken = DataUtil.CreateCancellationToken();
-
-            await target.CallsOnMessageReceivedAsync(message);
-
-            _transport.Verify(
-                t => t.SendAsync(
-                    It.Is<Session>(e => e.State == SessionState.Failed &&
-                                        e.Reason != null &&
-                                        e.Reason.Code == ReasonCodes.SESSION_INVALID_ACTION_FOR_STATE &&
-                                        e.Id == target.SessionId),
-                    It.IsAny<CancellationToken>()),
-                    Times.Once());
-        }
-
-        #endregion
-
-        #region OnCommandReceivedAsync
-
-        [TestMethod]
-        [TestCategory("OnCommandReceivedAsync")]
-        public async Task OnCommandReceivedAsync_EstablishedState_SendsToBuffer()
-        {
-            var target = GetTarget(state: SessionState.Established) as TestServerChannel;
-
-            var resource = DataUtil.CreatePing();
-            var command = DataUtil.CreateCommand(resource);
-            var cancellationToken = DataUtil.CreateCancellationToken();
-
-            await target.CallsOnCommandReceivedAsync(command);
-
-            var actual = await target.ReceiveCommandAsync(cancellationToken);
-
-            Assert.AreEqual(command, actual);
-        }
-
-        [TestMethod]
-        [TestCategory("OnCommandReceivedAsync")]
-        public async Task OnCommandReceivedAsync_InvalidState_SendsFailedSession()
-        {
-            var target = GetTarget(state: SessionState.Authenticating) as TestServerChannel;
-
-            var resource = DataUtil.CreatePing();
-            var command = DataUtil.CreateCommand(resource);
-            var cancellationToken = DataUtil.CreateCancellationToken();
-
-            await target.CallsOnCommandReceivedAsync(command);
-
-            _transport.Verify(
-                t => t.SendAsync(
-                    It.Is<Session>(e => e.State == SessionState.Failed &&
-                                        e.Reason != null &&
-                                        e.Reason.Code == ReasonCodes.SESSION_INVALID_ACTION_FOR_STATE &&
-                                        e.Id == target.SessionId),
-                    It.IsAny<CancellationToken>()),
-                    Times.Once());
-        }
-
-        #endregion 
-
-        #region OnNotificationReceivedAsync
-
-        [TestMethod]
-        [TestCategory("OnNotificationReceivedAsync")]
-        public async Task OnNotificationReceivedAsync_EstablishedState_SendsToBuffer()
-        {
-            var target = GetTarget(state: SessionState.Established) as TestServerChannel;
-
-            var notification = DataUtil.CreateNotification(Event.Received);
-            var cancellationToken = DataUtil.CreateCancellationToken();
-
-            await target.CallsOnNotificationReceivedAsync(notification);
-
-            var actual = await target.ReceiveNotificationAsync(cancellationToken);
-
-            Assert.AreEqual(notification, actual);
-        }
-
-        [TestMethod]
-        [TestCategory("OnNotificationReceivedAsync")]
-        public async Task OnNotificationReceivedAsync_InvalidState_SendsFailedSession()
-        {
-            var target = GetTarget(state: SessionState.Authenticating) as TestServerChannel;
-
-            var notification = DataUtil.CreateNotification(Event.Received);
-            var cancellationToken = DataUtil.CreateCancellationToken();
-
-            await target.CallsOnNotificationReceivedAsync(notification);
-
-            _transport.Verify(
-                t => t.SendAsync(
-                    It.Is<Session>(e => e.State == SessionState.Failed &&
-                                        e.Reason != null &&
-                                        e.Reason.Code == ReasonCodes.SESSION_INVALID_ACTION_FOR_STATE &&
-                                        e.Id == target.SessionId),
-                    It.IsAny<CancellationToken>()),
-                    Times.Once());
-        }
-
-        #endregion
-
         private class TestServerChannel : ServerChannel
         {
             public TestServerChannel(SessionState state, Guid sessionId, Node serverNode, ITransport transport, TimeSpan sendTimeout, Node remoteNode)
@@ -761,27 +594,6 @@ namespace Lime.Protocol.UnitTests.Server
                 base.State = state;
                 base.RemoteNode = remoteNode;
             }
-
-            public Task CallsOnMessageReceivedAsync(Message message)
-            {
-                return base.OnMessageReceivedAsync(message);
-            }
-
-            public Task CallsOnCommandReceivedAsync(Command command)
-            {
-                return base.OnCommandReceivedAsync(command);
-            }
-
-            public Task CallsOnNotificationReceivedAsync(Notification notification)
-            {
-                return base.OnNotificationReceivedAsync(notification);
-            }
-
-            public Task CallsOnSessionReceivedAsync(Session session)
-            {
-                return base.OnSessionReceivedAsync(session);
-            }
-
         }
 
     }

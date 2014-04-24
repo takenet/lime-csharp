@@ -315,6 +315,8 @@ namespace Lime.Protocol.Tcp.UnitTests
 
             var bufferPartSize = messageBuffer.Length / bufferParts;
 
+            
+
             byte[][] messageBufferParts = new byte[bufferParts][];
 
             for (int i = 0; i < bufferParts; i++)
@@ -558,7 +560,10 @@ namespace Lime.Protocol.Tcp.UnitTests
 
             public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
             {
-                var currentBuffer = _buffers[ReadCount++ % _buffers.Length];
+                var pos = ReadCount % _buffers.Length;
+                var currentBuffer = _buffers[pos];
+
+                this.ReadCount++;
 
                 Array.Copy(currentBuffer, 0, buffer, offset, currentBuffer.Length > count ? count : currentBuffer.Length);
 

@@ -36,10 +36,10 @@ namespace Lime.Protocol.UnitTests
 
             string randomKey1 = "randomString1";
             string randomKey2 = "randomString2";
-            string randomString1 = DataUtil.CreateRandomString(50);
-            string randomString2 = DataUtil.CreateRandomString(50);
+            string randomString1 = DataUtil.CreateRandomString(DataUtil.CreateRandomInt(50));
+            string randomString2 = DataUtil.CreateRandomString(DataUtil.CreateRandomInt(50));
 
-            var text = DataUtil.CreateRandomString(50);
+            var text = DataUtil.CreateRandomString(DataUtil.CreateRandomInt(50));
 
             return string.Format(
                 "{{\"type\":\"application/vnd.lime.text+json\",\"content\":{{\"text\":\"{0}\"}},\"id\":\"{1}\",\"from\":\"{2}\",\"pp\":\"{3}\",\"to\":\"{4}\",\"metadata\":{{\"{5}\":\"{6}\",\"{7}\":\"{8}\"}}}}",

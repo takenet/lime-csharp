@@ -344,78 +344,11 @@ namespace Lime.Protocol.Server
 
         #endregion
 
-        #region Event Handlers
-
-        /// <summary>
-        /// Raises the MessageReceived event
-        /// </summary>
-        /// <param name="message"></param>
-        /// <returns></returns>
-        protected async override Task OnMessageReceivedAsync(Message message)
+        public override Task<Message> ReceiveMessageAsync(CancellationToken cancellationToken)
         {
-            if (this.State == SessionState.Established)
-            {
-                await base.OnMessageReceivedAsync(message).ConfigureAwait(false);
-            }
-            else
-            {
-                var reason = new Reason()
-                {
-                    Code = ReasonCodes.SESSION_INVALID_ACTION_FOR_STATE,
-                    Description = "Invalid action for current session state"
-                };
-
-                await this.SendFailedSessionAsync(reason).ConfigureAwait(false);
-            }
+            return base.ReceiveMessageAsync(cancellationToken);
         }
 
-        /// <summary>
-        /// Raises the CommandReceived event
-        /// </summary>
-        /// <param name="command"></param>
-        /// <returns></returns>
-        protected async override Task OnCommandReceivedAsync(Command command)
-        {
-            if (this.State == SessionState.Established)
-            {
-                await base.OnCommandReceivedAsync(command).ConfigureAwait(false);
-            }
-            else
-            {
-                var reason = new Reason()
-                {
-                    Code = ReasonCodes.SESSION_INVALID_ACTION_FOR_STATE,
-                    Description = "Invalid action for current session state"
-                };
-
-                await this.SendFailedSessionAsync(reason).ConfigureAwait(false);
-            }
-        }
-
-        /// <summary>
-        /// Raises the NotificationReceived event
-        /// </summary>
-        /// <param name="notification"></param>
-        /// <returns></returns>
-        protected async override Task OnNotificationReceivedAsync(Notification notification)
-        {
-            if (this.State == SessionState.Established)
-            {
-                await base.OnNotificationReceivedAsync(notification).ConfigureAwait(false);
-            }
-            else
-            {
-                var reason = new Reason()
-                {
-                    Code = ReasonCodes.SESSION_INVALID_ACTION_FOR_STATE,
-                    Description = "Invalid action for current session state"
-                };
-
-                await this.SendFailedSessionAsync(reason).ConfigureAwait(false);
-            }
-        }
-
-        #endregion
 
     }
 }
