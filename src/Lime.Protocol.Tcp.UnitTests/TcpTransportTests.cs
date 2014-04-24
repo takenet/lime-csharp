@@ -450,6 +450,97 @@ namespace Lime.Protocol.Tcp.UnitTests
 
         [TestMethod]
         [TestCategory("ReceiveAsync")]
+        public async Task ReceiveAsync_MultipleReadsMultipleEnvelopesWithInvalidCharsBetween_ReadEnvelopeJsonFromStream()
+        {
+            var content = DataUtil.CreateTextContent();
+            var message = DataUtil.CreateMessage(content);
+
+            int messagesCount = DataUtil.CreateRandomInt(100) + 1;
+
+            var messageJsonQueue = new Queue<string>();
+
+            for (int i = 0; i < messagesCount; i++)
+            {
+                string messageJson;
+
+                do
+                {
+                    messageJson = DataUtil.CreateMessageJson();
+                } while (messageJsonQueue.Contains(messageJson));
+
+                messageJsonQueue.Enqueue(messageJson);
+            }
+
+            var messagesJsons = "  asdlkajsdkaskdasjkld  " + string.Join(" asdasdas ", messageJsonQueue);
+
+            var cancelationToken = DataUtil.CreateCancellationToken();
+
+            var bufferParts = DataUtil.CreateRandomInt(1000) + 1;
+
+            byte[] messageBuffer = Encoding.UTF8.GetBytes(
+                messagesJsons);
+
+            var bufferPartSize = messageBuffer.Length / bufferParts;
+
+
+            byte[][] messageBufferParts = new byte[bufferParts][];
+
+            for (int i = 0; i < bufferParts; i++)
+            {
+                if (i + 1 == bufferParts)
+                {
+                    messageBufferParts[i] = messageBuffer
+                        .Skip(i * bufferPartSize)
+                        .ToArray();
+                }
+                else
+                {
+                    messageBufferParts[i] = messageBuffer
+                    .Skip(i * bufferPartSize)
+                    .Take(bufferPartSize)
+                    .ToArray();
+                }
+            }
+
+            int bufferSize = messageBuffer.Length + DataUtil.CreateRandomInt(1000);
+            var stream = new TestStream(messageBufferParts);
+            var target = await GetTargetAndOpenAsync(bufferSize, stream);
+
+            _envelopeSerializer
+                .Setup(e => e.Deserialize(It.Is<string>(s => messageJsonQueue.Contains(s))))
+                .Returns(message)
+                .Callback(() => messageJsonQueue.Dequeue())
+                .Verifiable();
+
+            try
+            {
+                for (int i = 0; i < messagesCount; i++)
+                {
+                    var actual = await target.ReceiveAsync(cancelationToken);
+                    Assert.AreEqual(message, actual);
+                }
+
+                _stream.Verify();
+                _envelopeSerializer.Verify();
+
+                Assert.AreEqual(messageBufferParts.Length, stream.ReadCount);
+                Assert.AreEqual(0, messageJsonQueue.Count);
+            }
+            catch (Exception)
+            {
+                Debug.WriteLine("Buffer parts: {0}", messageBuffer.Length);
+                Debug.WriteLine("Buffer part size: {0}", bufferPartSize);
+                Debug.WriteLine("Buffer: ");
+                Debug.Write(messagesJsons);
+                Debug.WriteLine("");
+                Debug.Flush();
+
+                throw;
+            }
+        }
+
+        [TestMethod]
+        [TestCategory("ReceiveAsync")]
         public async Task ReceiveAsync_SingleReadBiggerThenBuffer_ClosesStreamAndThrowsInvalidOperationException()
         {
             var content = DataUtil.CreateTextContent();
