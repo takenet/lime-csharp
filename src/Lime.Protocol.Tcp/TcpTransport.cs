@@ -74,7 +74,7 @@ namespace Lime.Protocol.Tcp
             _tcpClient = tcpClient;
 
             _buffer = new byte[bufferSize];
-            _bufferPos = 0;
+            _bufferCurPos = 0;
 
             if (envelopeSerializer == null)
             {
@@ -204,9 +204,9 @@ namespace Lime.Protocol.Tcp
                     if (envelope == null &&
                         _stream.CanRead)
                     {
-                        _bufferPos += await _stream.ReadAsync(_buffer, _bufferPos, _buffer.Length - _bufferPos, cancellationToken).ConfigureAwait(false);
+                        _bufferCurPos += await _stream.ReadAsync(_buffer, _bufferCurPos, _buffer.Length - _bufferCurPos, cancellationToken).ConfigureAwait(false);
 
-                        if (_bufferPos >= _buffer.Length)
+                        if (_bufferCurPos >= _buffer.Length)
                         {
                             await base.CloseAsync(CancellationToken.None).ConfigureAwait(false);
                             throw new InvalidOperationException("Maximum buffer size reached");
@@ -389,10 +389,11 @@ namespace Lime.Protocol.Tcp
 
         #region Buffer fields
 
-        private int _bufferPos;
         private byte[] _buffer;
+        private int _bufferCurPos;
+        
         private int _jsonStartPos;
-        private int _jsonPos;
+        private int _jsonCurPos;
         private int _jsonStackedBrackets;
         private bool _jsonStarted = false;
 
@@ -407,16 +408,17 @@ namespace Lime.Protocol.Tcp
         /// <returns></returns>
         private bool TryExtractJsonFromBuffer(out byte[] json)
         {
-            if (_bufferPos > _buffer.Length)
+            if (_bufferCurPos > _buffer.Length)
             {
-                throw new ArgumentException("Pos or length value is invalid");
+                throw new ArgumentException("Buffer current pos or length value is invalid");
             }
 
-            int jsonLenght = 0;           
+            json = null;
+            int jsonLenght = 0;
 
-            for (int i = _jsonPos; i <= _bufferPos; i++)
+            for (int i = _jsonCurPos; i < _bufferCurPos; i++)
             {
-                _jsonPos = i;
+                _jsonCurPos = i + 1;
 
                 if (_buffer[i] == '{')
                 {
@@ -437,10 +439,8 @@ namespace Lime.Protocol.Tcp
                 {
                     jsonLenght = i - _jsonStartPos + 1;
                     break;
-                }                
+                }
             }
-
-            json = null;
 
             if (jsonLenght > 1)
             {
@@ -448,10 +448,10 @@ namespace Lime.Protocol.Tcp
                 Array.Copy(_buffer, _jsonStartPos, json, 0, jsonLenght);
 
                 // Shifts the buffer to the left
-                _bufferPos -= (jsonLenght + _jsonStartPos);
-                Array.Copy(_buffer, jsonLenght + _jsonStartPos, _buffer, 0, _bufferPos);
+                _bufferCurPos -= (jsonLenght + _jsonStartPos);
+                Array.Copy(_buffer, jsonLenght + _jsonStartPos, _buffer, 0, _bufferCurPos);
 
-                _jsonPos = 0;
+                _jsonCurPos = 0;
                 _jsonStartPos = 0;
                 _jsonStarted = false;
 

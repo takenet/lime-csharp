@@ -11,6 +11,8 @@ using System.Threading;
 using System.Net.Sockets;
 using Lime.Protocol.Network;
 using System.Text;
+using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace Lime.Protocol.Tcp.UnitTests
 {
@@ -345,13 +347,105 @@ namespace Lime.Protocol.Tcp.UnitTests
                 .Returns(message)
                 .Verifiable();
 
-            var actual = await target.ReceiveAsync(cancelationToken);
+            var actual = await target.ReceiveAsync(cancelationToken);            
 
             _stream.Verify();
             _envelopeSerializer.Verify();
 
             Assert.AreEqual(message, actual);
             Assert.AreEqual(messageBufferParts.Length, stream.ReadCount);
+        }
+
+
+        [TestMethod]
+        [TestCategory("ReceiveAsync")]
+        public async Task ReceiveAsync_MultipleReadsMultipleEnvelopes_ReadEnvelopeJsonFromStream()
+        {
+            var content = DataUtil.CreateTextContent();
+            var message = DataUtil.CreateMessage(content);
+
+            int messagesCount = DataUtil.CreateRandomInt(100) + 1;
+
+            var messageJsonQueue = new Queue<string>();
+
+            for (int i = 0; i < messagesCount; i++)
+            {
+                string messageJson;
+
+                do
+                {
+                    messageJson = DataUtil.CreateMessageJson();
+                } while (messageJsonQueue.Contains(messageJson));
+              
+                messageJsonQueue.Enqueue(messageJson);
+            }
+
+            var messagesJsons = string.Join("", messageJsonQueue);
+                                    
+            var cancelationToken = DataUtil.CreateCancellationToken();
+
+            var bufferParts = DataUtil.CreateRandomInt(1000) + 1;
+
+            byte[] messageBuffer = Encoding.UTF8.GetBytes(
+                messagesJsons);
+
+            var bufferPartSize = messageBuffer.Length / bufferParts;
+
+
+            byte[][] messageBufferParts = new byte[bufferParts][];
+
+            for (int i = 0; i < bufferParts; i++)
+            {
+                if (i + 1 == bufferParts)
+                {
+                    messageBufferParts[i] = messageBuffer
+                        .Skip(i * bufferPartSize)
+                        .ToArray();
+                }
+                else
+                {
+                    messageBufferParts[i] = messageBuffer
+                    .Skip(i * bufferPartSize)
+                    .Take(bufferPartSize)
+                    .ToArray();
+                }
+            }            
+
+            int bufferSize = messageBuffer.Length + DataUtil.CreateRandomInt(1000);
+            var stream = new TestStream(messageBufferParts);
+            var target = await GetTargetAndOpenAsync(bufferSize, stream);
+
+            _envelopeSerializer
+                .Setup(e => e.Deserialize(It.Is<string>(s => messageJsonQueue.Contains(s))))
+                .Returns(message)
+                .Callback(() => messageJsonQueue.Dequeue())
+                .Verifiable();
+
+            try
+            {
+                for (int i = 0; i < messagesCount; i++)
+                {
+                    var actual = await target.ReceiveAsync(cancelationToken);
+                    Assert.AreEqual(message, actual);
+                }
+
+                _stream.Verify();
+                _envelopeSerializer.Verify();
+
+                Assert.AreEqual(messageBufferParts.Length, stream.ReadCount);
+                Assert.AreEqual(0, messageJsonQueue.Count);
+            }
+            catch (Exception)
+            {
+                Debug.WriteLine("Buffer parts: {0}", messageBuffer.Length);
+                Debug.WriteLine("Buffer part size: {0}", bufferPartSize);
+                Debug.WriteLine("Buffer: ");
+                Debug.Write(messagesJsons);
+                Debug.WriteLine("");
+                Debug.Flush();
+                                
+                throw;
+            }
         }
 
         [TestMethod]
@@ -526,6 +620,7 @@ namespace Lime.Protocol.Tcp.UnitTests
             public TestStream(params byte[][] buffers)
             {
                 _buffers = buffers;
+                this.ReadCount = 0;
             }
 
             public override bool CanRead 
@@ -555,21 +650,24 @@ namespace Lime.Protocol.Tcp.UnitTests
 
             public override long Position { get; set; }
 
-            public int ReadCount { get; set; }
+            public int ReadCount { get; private set; }
 
 
             public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
-            {
-                var pos = ReadCount % _buffers.Length;
-                var currentBuffer = _buffers[pos];
+            {                
+                if (this.ReadCount >= _buffers.Length)
+                {
+                    throw new InvalidOperationException("Buffer end reached");
+                }
 
+                var currentBuffer = _buffers[this.ReadCount];
                 this.ReadCount++;
 
                 Array.Copy(currentBuffer, 0, buffer, offset, currentBuffer.Length > count ? count : currentBuffer.Length);
 
-                Position += currentBuffer.Length;
+                this.Position += currentBuffer.Length;
 
-                return Task.FromResult(currentBuffer.Length);                
+                return Task.FromResult(currentBuffer.Length);  
             }
 
             public bool CloseInvoked { get; set; }

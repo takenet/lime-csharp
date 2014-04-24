@@ -44,7 +44,7 @@ namespace Lime.Protocol.Server
                 throw new InvalidOperationException(string.Format("Cannot receive a new session in the '{0}' state", base.State));                
             }
 
-            return await base.ReceiveSessionAsync(cancellationToken).ConfigureAwait(false);
+            return await this.ReceiveSessionAsync(cancellationToken).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -110,7 +110,7 @@ namespace Lime.Protocol.Server
             };
 
             await base.SendSessionAsync(session).ConfigureAwait(false);
-            return await base.ReceiveSessionAsync(cancellationToken).ConfigureAwait(false);
+            return await this.ReceiveSessionAsync(cancellationToken).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -184,7 +184,7 @@ namespace Lime.Protocol.Server
             };
 
             await base.SendSessionAsync(session).ConfigureAwait(false);
-            return await base.ReceiveSessionAsync(cancellationToken).ConfigureAwait(false);
+            return await this.ReceiveSessionAsync(cancellationToken).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -219,7 +219,7 @@ namespace Lime.Protocol.Server
             };
 
             await base.SendSessionAsync(session).ConfigureAwait(false);
-            return await base.ReceiveSessionAsync(cancellationToken).ConfigureAwait(false);
+            return await this.ReceiveSessionAsync(cancellationToken).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -276,7 +276,7 @@ namespace Lime.Protocol.Server
                 throw new InvalidOperationException(string.Format("Cannot receive a new session in the '{0}' state", base.State));
             }
 
-            return await base.ReceiveSessionAsync(cancellationToken).ConfigureAwait(false);
+            return await this.ReceiveSessionAsync(cancellationToken).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -343,12 +343,5 @@ namespace Lime.Protocol.Server
         }
 
         #endregion
-
-        public override Task<Message> ReceiveMessageAsync(CancellationToken cancellationToken)
-        {
-            return base.ReceiveMessageAsync(cancellationToken);
-        }
-
-
     }
 }

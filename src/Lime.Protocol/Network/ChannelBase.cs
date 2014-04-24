@@ -163,8 +163,7 @@ namespace Lime.Protocol.Network
                 throw new InvalidOperationException(string.Format("Cannot receive a message in the '{0}' session state", this.State));
             }
 
-            if (_consumeTransportTask != null &&
-                _consumeTransportTask.IsFaulted)
+            if (_consumeTransportTask.IsFaulted)
             {
                 throw _consumeTransportTask.Exception.InnerException;
             }
@@ -217,8 +216,7 @@ namespace Lime.Protocol.Network
                 throw new InvalidOperationException(string.Format("Cannot receive a command in the '{0}' session state", this.State));
             }
 
-            if (_consumeTransportTask != null &&
-                _consumeTransportTask.IsFaulted)
+            if (_consumeTransportTask.IsFaulted)
             {
                 throw _consumeTransportTask.Exception.InnerException;
             }
@@ -271,8 +269,7 @@ namespace Lime.Protocol.Network
                 throw new InvalidOperationException(string.Format("Cannot receive a notification in the '{0}' session state", this.State));
             }
 
-            if (_consumeTransportTask != null &&
-                _consumeTransportTask.IsFaulted)
+            if (_consumeTransportTask.IsFaulted)
             {
                 throw _consumeTransportTask.Exception.InnerException;
             }
@@ -329,8 +326,7 @@ namespace Lime.Protocol.Network
 
             if (this.State == SessionState.Established)
             {
-                if (_consumeTransportTask != null &&
-                    _consumeTransportTask.IsFaulted)
+                if (_consumeTransportTask.IsFaulted)
                 {
                     throw _consumeTransportTask.Exception.InnerException;
                 }
