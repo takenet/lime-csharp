@@ -24,6 +24,7 @@ namespace Lime.Protocol.Resources
             writer.WriteProperty(STATUS_KEY, this.Status, true);
             writer.WriteStringProperty(MESSAGE_KEY, this.Message);
             writer.WriteProperty(ROUTING_RULE_KEY, this.RoutingRule, true);
+            //writer.WriteDateTimeProperty(LAST_SEEN_KEY, this.LastSeen, true);
             writer.WriteIntProperty(PRIORITY_KEY, this.Priority);
         }
 
@@ -45,6 +46,7 @@ namespace Lime.Protocol.Resources
             document.Status = jsonObject.GetEnumValueOrDefault<PresenceStatus>(STATUS_KEY);
             document.Message = jsonObject.GetValueOrDefault<string>(MESSAGE_KEY);
             document.RoutingRule = jsonObject.GetEnumValueOrDefault<RoutingRule>(ROUTING_RULE_KEY);
+            //document.LastSeen = jsonObject.GetValueOrDefault<DateTimeOffset?>(LAST_SEEN_KEY);
             document.Priority = jsonObject.GetValueOrDefault<int>(PRIORITY_KEY);
 
             return document;

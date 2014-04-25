@@ -471,7 +471,7 @@ namespace Lime.Protocol.Tcp.UnitTests
                 messageJsonQueue.Enqueue(messageJson);
             }
 
-            var messagesJsons = "  asdlkajsdkaskdasjkld  " + string.Join(" asdasdas ", messageJsonQueue);
+            var messagesJsons = "  \t\t " + string.Join("\r\n   ", messageJsonQueue);
 
             var cancelationToken = DataUtil.CreateCancellationToken();
 

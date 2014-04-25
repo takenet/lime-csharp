@@ -95,7 +95,8 @@ namespace Lime.Console
                         Resource = new Presence()
                         {
                             Status = PresenceStatus.Available,
-                            Message = "I'm here!"
+                            Message = "I'm here!",
+                            RoutingRule = RoutingRule.IdentityByDistance
                         }
                     };
 

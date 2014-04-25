@@ -110,8 +110,6 @@ namespace Lime.Protocol
             }
         }
 
-
-
         /// <summary>
         /// Creates an Identity instance
         /// based on the Node identity
@@ -124,6 +122,22 @@ namespace Lime.Protocol
                 Name = this.Name,
                 Domain = this.Domain
             };
+        }
+
+        /// <summary>
+        /// Indicates if the node is
+        /// a complete representation, with
+        /// name, domain and instance.
+        /// </summary>
+        public bool IsComplete
+        {
+            get
+            {
+                return
+                    !string.IsNullOrEmpty(Name) &&
+                    !string.IsNullOrEmpty(Domain) &&
+                    !string.IsNullOrEmpty(Instance);
+            }
         }
 
         #region ICloneable Members

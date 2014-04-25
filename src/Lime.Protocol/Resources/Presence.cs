@@ -23,6 +23,7 @@ namespace Lime.Protocol.Resources
         public const string STATUS_KEY = "status";
         public const string MESSAGE_KEY = "message";
         public const string ROUTING_RULE_KEY = "routingRule";
+        public const string LAST_SEEN_KEY = "lastSeen";
         public const string PRIORITY_KEY = "priority";
 
         public Presence()
@@ -50,6 +51,9 @@ namespace Lime.Protocol.Resources
         /// </summary>
         [DataMember(Name = ROUTING_RULE_KEY)]
         public RoutingRule RoutingRule { get; set; }
+
+        [DataMember(Name = LAST_SEEN_KEY)]
+        public DateTimeOffset? LastSeen { get; set; }
 
         /// <summary>
         /// The value of the priority for 
@@ -85,21 +89,7 @@ namespace Lime.Protocol.Resources
         /// nodes of the identity with this setting.
         /// </summary>
         [EnumMember(Value = "identityByPriority")]
-        IdentityByPriority,
-        /// <summary>
-        ///  Delivery envelopes addressed to the current 
-        ///  session instance (name@domain/instance) 
-        ///  and envelopes addressed to the identity (name@domain).
-        /// </summary>
-        [EnumMember(Value = "identity")]
-        Identity,
-        /// <summary>
-        /// Delivery any envelopes addressed to the 
-        /// identity (name@domain), including the 
-        /// envelopes addressed to any specific instance.
-        /// </summary>
-        [EnumMember(Value = "promiscuous")]
-        Promiscuous 
+        IdentityByPriority
     }
 
     /// <summary>
