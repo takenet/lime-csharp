@@ -128,5 +128,17 @@ namespace Lime.Protocol.Serialization
 
             return value;
         }
+
+        public Nullable<T> GetValueOrNull<T>(string key) where T : struct
+        {
+            Nullable<T> value = null;
+
+            if (base.ContainsKey(key))
+            {
+                value = (T)base[key];
+            }
+
+            return value;
+        }
     }
 }

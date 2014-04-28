@@ -89,7 +89,25 @@ namespace Lime.Console
                             }
                         });
 
-                    var presence = new Command()
+
+                    System.Console.WriteLine("Getting account information...");
+                    var accountCommand = new Command
+                    {
+                        Method = CommandMethod.Set,
+                        Resource = new Account()
+                        {
+                            Email = "myemail@bb.com",
+                            City = "Albuquerque"
+                        }                        
+                    };
+
+                    client.Channel.SendCommandAsync(accountCommand).Wait();
+                    var accountCommandResult = client.Channel.ReceiveCommandAsync(cancellationTokenSource.Token).Result;
+                    System.Console.WriteLine("Account result: {0} - Reason: {1}", accountCommandResult.Status, accountCommandResult.Reason != null ? accountCommandResult.Reason.Description : "None");
+                   
+
+                    System.Console.WriteLine("Setting presence...");
+                    var presenceCommand = new Command()
                     {
                         Method = CommandMethod.Set,
                         Resource = new Presence()
@@ -99,11 +117,9 @@ namespace Lime.Console
                             RoutingRule = RoutingRule.IdentityByDistance
                         }
                     };
-
-                    System.Console.WriteLine("Setting presence...");
-                    client.Channel.SendCommandAsync(presence).Wait();
-                    var presenceResult = client.Channel.ReceiveCommandAsync(cancellationTokenSource.Token).Result;
-                    System.Console.WriteLine("Presence result: {0} - Reason: {1}", presenceResult.Status, presenceResult.Reason != null ? presenceResult.Reason.Description : "None");
+                    client.Channel.SendCommandAsync(presenceCommand).Wait();
+                    var presenceCommandResult = client.Channel.ReceiveCommandAsync(cancellationTokenSource.Token).Result;
+                    System.Console.WriteLine("Presence result: {0} - Reason: {1}", presenceCommandResult.Status, presenceCommandResult.Reason != null ? presenceCommandResult.Reason.Description : "None");
 
                     System.Console.WriteLine("Client started. Type EXIT to quit.");
 

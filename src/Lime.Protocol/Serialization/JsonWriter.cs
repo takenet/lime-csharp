@@ -186,23 +186,23 @@ namespace Lime.Protocol.Serialization
         {
             if (value != null)
             {
-                if (value is int)
+                if (value is int || value is int?)
                 {
                     WriteIntProperty(propertyName, (int)value);
                 }
-                else if (value is long)
+                else if (value is long || value is long?)
                 {
                     WriteLongProperty(propertyName, (long)value);
                 }
-                else if (value is bool)
+                else if (value is bool || value is bool?)
                 {
                     WriteBoolProperty(propertyName, (bool)value);
                 }
-                else if (value is DateTime)
+                else if (value is DateTime || value is DateTime?)
                 {
                     WriteDateTimeProperty(propertyName, (DateTime)value);
                 }
-                else if (value is DateTimeOffset)
+                else if (value is DateTimeOffset || value is DateTimeOffset?)
                 {
                     WriteDateTimeOffsetProperty(propertyName, (DateTimeOffset)value);
                 }
