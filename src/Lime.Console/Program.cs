@@ -93,18 +93,35 @@ namespace Lime.Console
                     System.Console.WriteLine("Getting account information...");
                     var accountCommand = new Command
                     {
-                        Method = CommandMethod.Set,
+                        Method = CommandMethod.Get,
                         Resource = new Account()
-                        {
-                            Email = "myemail@bb.com",
-                            City = "Albuquerque"
-                        }                        
                     };
 
                     client.Channel.SendCommandAsync(accountCommand).Wait();
                     var accountCommandResult = client.Channel.ReceiveCommandAsync(cancellationTokenSource.Token).Result;
                     System.Console.WriteLine("Account result: {0} - Reason: {1}", accountCommandResult.Status, accountCommandResult.Reason != null ? accountCommandResult.Reason.Description : "None");
-                   
+                    
+                    if (accountCommandResult.Status == CommandStatus.Failure &&
+                        accountCommandResult.Reason.Code == ReasonCodes.COMMAND_RESOURCE_NOT_FOUND)
+                    {
+                        System.Console.WriteLine("Setting account information...");
+
+                        accountCommand = new Command
+                        {
+                            Method = CommandMethod.Set,
+                            Resource = new Account()
+                            {
+                                Email = "myemail@bb.com",
+                                City = "Albuquerque",
+                                AllowAnonymousSender = false,
+                                InboxSize = 100
+                            }
+                        };
+
+                        client.Channel.SendCommandAsync(accountCommand).Wait();
+                        accountCommandResult = client.Channel.ReceiveCommandAsync(cancellationTokenSource.Token).Result;
+                        System.Console.WriteLine("Account result: {0} - Reason: {1}", accountCommandResult.Status, accountCommandResult.Reason != null ? accountCommandResult.Reason.Description : "None");
+                    }
 
                     System.Console.WriteLine("Setting presence...");
                     var presenceCommand = new Command()

@@ -22,7 +22,7 @@ namespace Lime.Protocol.Security
 
         public string ToJson()
         {
-            using (var writer = new JsonWriter())
+            using (var writer = new TextJsonWriter())
             {
                 WriteJson(writer);
                 return writer.ToString();

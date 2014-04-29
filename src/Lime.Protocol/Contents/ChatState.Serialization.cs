@@ -21,7 +21,7 @@ namespace Lime.Protocol.Contents
                 throw new ArgumentNullException("writer");
             }
 
-            writer.WriteProperty(STATE_KEY, this.State, true);
+            writer.WriteProperty(STATE_KEY, this.State);
         }
 
         /// <summary>

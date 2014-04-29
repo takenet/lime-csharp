@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Lime.Protocol.Serialization
 {
-    public class JsonWriter : IJsonWriter, IDisposable
+    public class TextJsonWriter : IJsonWriter, IDisposable
     {
         #region Private fields
 
@@ -21,19 +21,19 @@ namespace Lime.Protocol.Serialization
 
         #region Constructor
 
-        public JsonWriter()
+        public TextJsonWriter()
             : this(new StringWriter())
         {
         }
 
-        public JsonWriter(TextWriter writer)
+        public TextJsonWriter(TextWriter writer)
         {
             _writer = writer;
             WriteOpenBrackets();
         }
 
 
-        ~JsonWriter()
+        ~TextJsonWriter()
         {
             Dispose(false);
         }
@@ -152,8 +152,7 @@ namespace Lime.Protocol.Serialization
             WriteQuotation();
         }
 
-
-        public static void IntToHex(int intValue, char[] hex)
+        private static void IntToHex(int intValue, char[] hex)
         {
             for (var i = 0; i < 4; i++)
             {
@@ -168,21 +167,38 @@ namespace Lime.Protocol.Serialization
             }
         }
 
+        private void WriteValueProperty(string propertyName, string value)
+        {
+            if (_commaNeeded)
+            {
+                WriteComma();
+            }
+
+            WritePropertyName(propertyName);
+            WriteValue(value);
+
+            _commaNeeded = true;
+        }
+
         private void WriteValue(string value)
         {
             _writer.Write(value);
         }
 
-        private void WriteJson(IJsonSerializable json)
+        private void WriteJson(IJsonWritable json)
         {
-            _writer.Write(json.ToJson());
+            using (var writer = new TextJsonWriter())
+            {
+                json.WriteJson(writer);
+                _writer.Write(writer.ToString());
+            }            
         }
 
         #endregion
 
         #region IJsonWriter Members
 
-        public void WriteProperty(string propertyName, object value, bool stringToCamelCase = false)
+        public void WriteProperty(string propertyName, object value)
         {
             if (value != null)
             {
@@ -206,11 +222,11 @@ namespace Lime.Protocol.Serialization
                 {
                     WriteDateTimeOffsetProperty(propertyName, (DateTimeOffset)value);
                 }
-                else if (value is IJsonSerializable)
+                else if (value is IJsonWritable)
                 {
-                    WriteJsonProperty(propertyName, ((IJsonSerializable)value));
+                    WriteJsonProperty(propertyName, ((IJsonWritable)value));
                 }
-                else if (stringToCamelCase)
+                else if (value is Enum)
                 {
                     WriteStringProperty(propertyName, value.ToString().ToCamelCase());
                 }
@@ -267,20 +283,8 @@ namespace Lime.Protocol.Serialization
             WriteValueProperty(propertyName, value ? "true" : "false");
         }
 
-        public void WriteValueProperty(string propertyName, string value)
-        {
-            if (_commaNeeded)
-            {
-                WriteComma();
-            }
 
-            WritePropertyName(propertyName);
-            WriteValue(value);
-
-            _commaNeeded = true;
-        }
-
-        public void WriteJsonProperty(string propertyName, IJsonSerializable json)
+        public void WriteJsonProperty(string propertyName, IJsonWritable json)
         {
             if (json != null)
             {
@@ -320,7 +324,7 @@ namespace Lime.Protocol.Serialization
             }
         }
 
-        public void WriteArrayProperty(string propertyName, IEnumerable items, bool stringToCamelCase = false)
+        public void WriteArrayProperty(string propertyName, IEnumerable items)
         {
             if (items != null)
             {
@@ -348,11 +352,11 @@ namespace Lime.Protocol.Serialization
                         {
                             WriteValue(item.ToString());
                         }
-                        else if (item is IJsonSerializable)
+                        else if (item is IJsonWritable)
                         {
-                            WriteJson((IJsonSerializable)item);
+                            WriteJson((IJsonWritable)item);
                         }
-                        else if (stringToCamelCase)
+                        else if (item is Enum)
                         {
                             WriteStringValue(item.ToString().ToCamelCase());
                         }
@@ -371,7 +375,7 @@ namespace Lime.Protocol.Serialization
             }
         }
 
-        public void WriteJsonArrayProperty(string propertyName, IEnumerable<IJsonSerializable> jsonItems)
+        public void WriteJsonArrayProperty(string propertyName, IEnumerable<IJsonWritable> jsonItems)
         {
             if (jsonItems != null)
             {

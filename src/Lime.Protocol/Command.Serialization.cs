@@ -21,8 +21,8 @@ namespace Lime.Protocol
             base.WriteJson(writer);
             writer.WriteProperty(TYPE_KEY, this.Type);
             writer.WriteJsonProperty(RESOURCE_KEY, this.Resource);
-            writer.WriteProperty(METHOD_KEY, this.Method, true);
-            if (this.Status != CommandStatus.Pending) writer.WriteProperty(STATUS_KEY, this.Status, true);
+            writer.WriteProperty(METHOD_KEY, this.Method);
+            if (this.Status != CommandStatus.Pending) writer.WriteProperty(STATUS_KEY, this.Status);
             writer.WriteJsonProperty(REASON_KEY, this.Reason);
         }
 

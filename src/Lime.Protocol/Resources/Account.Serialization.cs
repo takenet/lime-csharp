@@ -61,7 +61,7 @@ namespace Lime.Protocol.Resources
             document.OldPassword = jsonObject.GetValueOrDefault<string>(OLD_PASSWORD_KEY);
             document.InboxSize = jsonObject.GetValueOrNull<int>(INBOX_SIZE_KEY);
             document.AllowAnonymousSender = jsonObject.GetValueOrNull<bool>(ALLOW_ANONYMOUS_SENDER_KEY);
-            document.AllowAnonymousSender = jsonObject.GetValueOrNull<bool>(ALLOW_UNKNOWN_SENDER_KEY);
+            document.AllowUnknownSender = jsonObject.GetValueOrNull<bool>(ALLOW_UNKNOWN_SENDER_KEY);
             document.StoreMessageContent = jsonObject.GetValueOrNull<bool>(STORE_MESSAGE_CONTENT_KEY);
            
             return document;

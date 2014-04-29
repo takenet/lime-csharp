@@ -21,9 +21,9 @@ namespace Lime.Protocol.Resources
                 throw new ArgumentNullException("writer");
             }
 
-            writer.WriteProperty(STATUS_KEY, this.Status, true);
+            writer.WriteProperty(STATUS_KEY, this.Status);
             writer.WriteStringProperty(MESSAGE_KEY, this.Message);
-            writer.WriteProperty(ROUTING_RULE_KEY, this.RoutingRule, true);
+            writer.WriteProperty(ROUTING_RULE_KEY, this.RoutingRule);
             //writer.WriteDateTimeProperty(LAST_SEEN_KEY, this.LastSeen, true);
             writer.WriteIntProperty(PRIORITY_KEY, this.Priority);
         }

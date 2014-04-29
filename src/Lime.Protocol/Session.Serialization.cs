@@ -21,15 +21,15 @@ namespace Lime.Protocol
         {
             base.WriteJson(writer);
             writer.WriteJsonProperty(AUTHENTICATION_KEY, this.Authentication);
-            writer.WriteProperty(COMPRESSION_KEY, this.Compression, true);
-            writer.WriteArrayProperty(COMPRESSION_OPTIONS_KEY, this.CompressionOptions, true);
-            writer.WriteProperty(ENCRYPTION_KEY, this.Encryption, true);
-            writer.WriteArrayProperty(ENCRYPTION_OPTIONS_KEY, this.EncryptionOptions, true);
-            if (this.Mode != SessionMode.Node) writer.WriteProperty(MODE_KEY, this.Mode, true);
+            writer.WriteProperty(COMPRESSION_KEY, this.Compression);
+            writer.WriteArrayProperty(COMPRESSION_OPTIONS_KEY, this.CompressionOptions);
+            writer.WriteProperty(ENCRYPTION_KEY, this.Encryption);
+            writer.WriteArrayProperty(ENCRYPTION_OPTIONS_KEY, this.EncryptionOptions);
+            if (this.Mode != SessionMode.Node) writer.WriteProperty(MODE_KEY, this.Mode);
             writer.WriteJsonProperty(REASON_KEY, this.Reason);
-            writer.WriteProperty(SCHEME_KEY, this.Scheme, true);
-            writer.WriteArrayProperty(SCHEME_OPTIONS_KEY, this.SchemeOptions, true);
-            writer.WriteProperty(STATE_KEY, this.State, true);
+            writer.WriteProperty(SCHEME_KEY, this.Scheme);
+            writer.WriteArrayProperty(SCHEME_OPTIONS_KEY, this.SchemeOptions);
+            writer.WriteProperty(STATE_KEY, this.State);
         }
 
         #endregion

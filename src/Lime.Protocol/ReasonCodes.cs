@@ -54,17 +54,21 @@ namespace Lime.Protocol
         /// </summary>
         public const int VALIDATION_EMPTY_DOCUMENT = 22;
         /// <summary>
+        /// The envelope document MIME type is invalid
+        /// </summary>
+        public const int VALIDATION_INVALID_MIME_TYPE = 23;
+        /// <summary>
         /// The request status is invalid
         /// </summary>
-        public const int VALIDATION_INVALID_STATUS = 23;
+        public const int VALIDATION_INVALID_STATUS = 24;
         /// <summary>
         /// The request identity is invalid
         /// </summary>
-        public const int VALIDATION_INVALID_IDENTITY = 24;
+        public const int VALIDATION_INVALID_IDENTITY = 25;
         /// <summary>
         /// The request destination is invalid
         /// </summary>
-        public const int VALIDATION_INVALID_DESTINATION = 25;
+        public const int VALIDATION_INVALID_DESTINATION = 26;
         /// <summary>
         /// General authorization error
         /// </summary>
@@ -121,6 +125,10 @@ namespace Lime.Protocol
         /// The command method was not allowed
         /// </summary>
         public const int COMMAND_NOT_ALLOWED = 66;
+        /// <summary>
+        /// The command resource was not found
+        /// </summary>
+        public const int COMMAND_RESOURCE_NOT_FOUND = 67;
         /// <summary>
         /// General gateway processing error
         /// </summary>

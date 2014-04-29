@@ -19,18 +19,16 @@ namespace Lime.Protocol.Serialization
 
         void WriteIntProperty(string propertyName, int value);
 
-        void WriteArrayProperty(string propertyName, IEnumerable items, bool stringToCamelCase = false);
+        void WriteArrayProperty(string propertyName, IEnumerable items);
 
-        void WriteJsonArrayProperty(string propertyName, IEnumerable<IJsonSerializable> jsonItems);
+        void WriteJsonArrayProperty(string propertyName, IEnumerable<IJsonWritable> jsonItems);
 
-        void WriteJsonProperty(string propertyName, IJsonSerializable json);
+        void WriteJsonProperty(string propertyName, IJsonWritable json);
 
         void WriteLongProperty(string propertyName, long value);
 
-        void WriteProperty(string propertyName, object value, bool stringToCamelCase = false);
+        void WriteProperty(string propertyName, object value);
 
         void WriteStringProperty(string propertyName, string value);
-
-        void WriteValueProperty(string propertyName, string value);
     }
 }

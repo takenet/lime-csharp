@@ -19,7 +19,7 @@ namespace Lime.Protocol
         public override void WriteJson(IJsonWriter writer)
         {
             base.WriteJson(writer);
-            writer.WriteProperty(EVENT_KEY, this.Event, true);
+            writer.WriteProperty(EVENT_KEY, this.Event);
             writer.WriteJsonProperty(REASON_KEY, this.Reason);
         }
 

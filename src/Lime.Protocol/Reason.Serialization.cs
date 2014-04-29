@@ -19,7 +19,7 @@ namespace Lime.Protocol
         /// <exception cref="System.NotImplementedException"></exception>
         public string ToJson()
         {
-            using (var writer = new JsonWriter())
+            using (var writer = new TextJsonWriter())
             {
                 this.WriteJson(writer);
                 return writer.ToString();

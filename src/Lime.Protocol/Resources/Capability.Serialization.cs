@@ -21,8 +21,8 @@ namespace Lime.Protocol.Resources
                 throw new ArgumentNullException("writer");
             }
 
-            writer.WriteArrayProperty(CONTENT_TYPES_KEY, this.ContentTypes, true);
-            writer.WriteArrayProperty(RESOURCE_TYPES_KEY, this.ResourceTypes, true);
+            writer.WriteArrayProperty(CONTENT_TYPES_KEY, this.ContentTypes);
+            writer.WriteArrayProperty(RESOURCE_TYPES_KEY, this.ResourceTypes);
         }
 
         /// <summary>
