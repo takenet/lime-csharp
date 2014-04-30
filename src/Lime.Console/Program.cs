@@ -24,7 +24,17 @@ namespace Lime.Console
     {
         static void Main(string[] args)
         {
-           var uri = new Uri(string.Format("net.tcp://{0}:55321", Dns.GetHostName()));
+            System.Console.Write("Port number (ENTER for default): ");
+
+            var portNumberString = System.Console.ReadLine();
+            int portNumber;
+
+            if (!int.TryParse(portNumberString, out portNumber))
+            {
+                portNumber = 55321;
+            }
+
+            var uri = new Uri(string.Format("net.tcp://{0}:{1}", Dns.GetHostName(), portNumber));
 
             string option = null;
 

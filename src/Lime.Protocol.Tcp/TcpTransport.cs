@@ -111,6 +111,11 @@ namespace Lime.Protocol.Tcp
 
             if (!_tcpClient.Connected)
             {
+                if (uri == null)
+                {
+                    throw new ArgumentNullException("uri");
+                }
+
                 if (uri.Scheme != Uri.UriSchemeNetTcp)
                 {
                     throw new ArgumentException(string.Format("Invalid URI scheme. Expected is '{0}'.", Uri.UriSchemeNetTcp));

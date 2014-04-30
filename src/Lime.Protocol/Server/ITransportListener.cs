@@ -15,6 +15,12 @@ namespace Lime.Protocol.Server
     public interface ITransportListener
     {
         /// <summary>
+        /// Gets the transport 
+        /// listener URIs.
+        /// </summary>
+        Uri[] ListenerUris { get; }
+
+        /// <summary>
         /// Start listening for connections.
         /// </summary>
         /// <returns></returns>

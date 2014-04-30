@@ -20,8 +20,7 @@ namespace Lime.Protocol.Tcp
     public class TcpTransportListener : ITransportListener
     {
         #region Private Fields
-
-        private Uri _listenerUri;
+        
         private X509Certificate2 _sslCertificate;
         private IEnvelopeSerializer _envelopeSerializer;
         private ITraceWriter _traceWriter;
@@ -45,7 +44,7 @@ namespace Lime.Protocol.Tcp
                 throw new ArgumentException("Invalid URI scheme. The expected value is 'net.tcp'.");
             }
 
-            _listenerUri = listenerUri;
+            this.ListenerUris = new Uri[] { listenerUri };
 
             if (sslCertificate != null)
             {
@@ -75,6 +74,12 @@ namespace Lime.Protocol.Tcp
         #region ITransportListener Members
 
         /// <summary>
+        /// Gets the transport 
+        /// listener URIs.
+        /// </summary>
+        public Uri[] ListenerUris { get; private set; }
+
+        /// <summary>
         /// Start listening connections.
         /// </summary>
         /// <param name="listenerUri"></param>
@@ -95,17 +100,17 @@ namespace Lime.Protocol.Tcp
 
             IPEndPoint listenerEndPoint;
 
-            if (_listenerUri.IsLoopback)
+            if (this.ListenerUris[0].IsLoopback)
             {
-                listenerEndPoint = new IPEndPoint(IPAddress.Any, _listenerUri.Port);
+                listenerEndPoint = new IPEndPoint(IPAddress.Any, this.ListenerUris[0].Port);
             }
             else
             {
-                var dnsEntry = await Dns.GetHostEntryAsync(_listenerUri.Host);
+                var dnsEntry = await Dns.GetHostEntryAsync(this.ListenerUris[0].Host);
 
                 if (dnsEntry.AddressList.Any(a => a.AddressFamily == AddressFamily.InterNetwork))
                 {
-                    listenerEndPoint = new IPEndPoint(dnsEntry.AddressList.First(a => a.AddressFamily == AddressFamily.InterNetwork), _listenerUri.Port);
+                    listenerEndPoint = new IPEndPoint(dnsEntry.AddressList.First(a => a.AddressFamily == AddressFamily.InterNetwork), this.ListenerUris[0].Port);
                 }
                 else
                 {
