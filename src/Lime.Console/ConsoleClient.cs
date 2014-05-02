@@ -42,7 +42,7 @@ namespace Lime.Console
                 traceWriter: traceWriter
                 );
 
-            Channel = new ClientChannel(transport, TimeSpan.FromSeconds(60));
+            Channel = new ClientChannel(transport, TimeSpan.FromSeconds(60), autoReplyPings: true, autoNotifyReceipt: true);
             
             await Channel.Transport.OpenAsync(_clientUri, cancellationToken);
 
