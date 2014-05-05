@@ -2,13 +2,15 @@
     ViewBag.Title = "Home";
 }
 
-<div class="col-md-10" role="main">
-    <h1 class="page-header anchor" id="introduction">Introduction</h1>
+<div class="col-md-10" role="main">    
+    <h1 class="page-header" id="introduction">Introduction</h1>
 
-    <h3>What is it?</h3>
+    <div class="alert alert-warning">This specification is a <strong>work in progress</strong> and is subject to change without notice.</div>
+
+    <h3 id="what">What is it?</h3>
     <p><strong>LIME Protocol</strong> (acronym for <em>Lightweight Messaging Protocol</em>) is a JSON based protocol for P2P messaging, inspired by the XMPP protocol. It aims to be simple but extensible, with little verbosity but yet providing good readability.</p>
 
-    <h3>And why not just use XMPP?</h3>
+    <h3 id="xmpp">And why not just use XMPP?</h3>
     <p>XMPP is a protocol widely used for real-time communication but is complex due to the number of features and extensions that it implements. Just take a look at its <a href="http://xmpp.org/xmpp-protocols/xmpp-core/">specification</a> to understand that XMPP goes far beyond what LIME proposes.</p>
     <p>The LIME protocol defines only a basic message structure and makes use of the MIME content type declarations to remain extensible, but is not mean to cover all the scenarios that XMPP supports.</p>
 
@@ -32,7 +34,7 @@
         </li>
     </ul>
 
-    <p>The nodes communicate with each other over duplex persistent connections, like TCP or Websockets. When connected, each node can have a different role with different capabilities. These roles and their capabilities are:</p>
+    <p>The nodes communicate with each other over duplex persistent connections, like TCP or Websockets. When connected, each node can have a different role with distinct capabilities. These roles and their capabilities are:</p>
     <ul>
         <li>
             <strong>Node</strong>
@@ -47,7 +49,7 @@
             <ul>
                 <li>Has the same capabilities of the nodes.</li>
                 <li>Can establish a session.</li>
-                <li>Can forward messages in behalf of a node to other servers.</li>
+                <li>Can forward messages in behalf of a node to other servers and nodes.</li>
                 <li>Can hold resources owned by other identities than the server identity.</li>
                 <li>Can manipulate a specific set of resources of the connected servers.</li>
             </ul>
@@ -85,7 +87,7 @@
             <strong>to</strong> - Identifier of the destination node of the envelope, in the same format of the sender. 
         </li>
         <li>
-            <strong>pp</strong> - Acronym for <em>per procurationem</em>. Identifier of a delegate node, in the <em>name@domain/instance</em> format. Allows a node to send an envelope on behalf of another identity. The sender must have been delegated by this identity through a <a href="#">delegate</a> command.
+            <strong>pp</strong> - Acronym for <em>per procurationem</em>. Identifier of a delegate node (a node that received a permission to send on behalf of another), in the <em>name@domain/instance</em> format. Allows a node to send an envelope on behalf of another identity. The sender must have been delegated by this identity through a <a href="#">delegate</a> command.
         </li>
         <li>
             <strong>id</strong> - Unique identifier of the envelope, in the <a href="http://www.ietf.org/rfc/rfc4122.txt">UUID</a> format. 
@@ -148,7 +150,7 @@
             <strong>from</strong> - OPTIONAL for the sender, since the value can be determined by the server in the session. MANDATORY in the destination.
         </li>
         <li>
-            <strong>to</strong> - MANDATORY for the sender, but he may ommit the value of the <em>instance</em>. OPTIONAL in the destination.
+            <strong>to</strong> - MANDATORY for the sender, but is allowed to ommit the value of the <em>instance</em> (the server will route the envelope according to the routing rule chosen by the destination) and/or <em>domain</em> (the server will assume that the destination is in the same domain of the sender) properties. OPTIONAL in the destination.
         </li>
         <li>
             <strong>pp</strong> - OPTIONAL for the sender, when is considered the identity of the session. Is MANDATORY in the destination if the identity of the originator is different of the identity of the <em>from</em> property.
@@ -185,13 +187,13 @@
 </code>
 </pre>
 
-    <p>Text message with metadata and notification support:</p>
+    <p>Text message with metadata and notification support, omitting the destination domain:</p>
 <pre>
 <code class="json">
 {
     "id": "48600604-ce09-479c-b985-1195b196fe8e",
     "from": "heisenberg@breakingbad.com/bedroom",
-    "to": "skyler@breakingbad.com",
+    "to": "skyler/bedroom",
     "type": "application/vnd.lime.text+json",
     "content": {
         "text": "I am the one who knocks!"
@@ -271,7 +273,7 @@
             <strong>from</strong> - OPTIONAL. If the value is not present in the destination, it means that the notification was generated by the connected node (server).
         </li>
         <li>
-            <strong>to</strong> - MANDATORY for the sender and OPTIONAL in the destination.
+            <strong>to</strong> - MANDATORY for the sender and OPTIONAL in the destination. The sender can ommit the value of the <em>domain</em>.
         </li>
         <li>
             <strong>pp</strong> - OPTIONAL for the sender, when is considered the identity of the session. Is MANDATORY in the destination if the identity of the originator is different of the identity of the <em>from</em> property.
@@ -904,30 +906,28 @@ S:
     <div id="sidebar">
         <ul class="nav nav-pills nav-stacked">
             <li>
-                <a href="#introduction">Introduction</a>
+                <a href="#what">What is it?</a>
             </li>
             <li>
-                <a href="#definitions">Definitions</a>
-                <ul class="nav">
-                    <li>
-                        <a href="#concepts">Concepts</a>
-                    </li>
-                    <li>
-                        <a href="#envelope">Envelope</a>
-                    </li>
-                    <li>
-                        <a href="#message">Message</a>
-                    </li>
-                    <li>
-                        <a href="#notification">Notification</a>
-                    </li>
-                    <li>
-                        <a href="#command">Command</a>
-                    </li>
-                    <li>
-                        <a href="#session">Session</a>
-                    </li>
-                </ul>
+                <a href="#xmpp">Why not XMPP?</a>
+            </li>
+            <li>
+                <a href="#concepts">Concepts</a>
+            </li>
+            <li>
+                <a href="#envelope">Envelope</a>
+            </li>
+            <li>
+                <a href="#message">Message</a>
+            </li>
+            <li>
+                <a href="#notification">Notification</a>
+            </li>
+            <li>
+                <a href="#command">Command</a>
+            </li>
+            <li>
+                <a href="#session">Session</a>
             </li>
         </ul>
     </div>

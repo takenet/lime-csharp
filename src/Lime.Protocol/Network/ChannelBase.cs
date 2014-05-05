@@ -432,21 +432,6 @@ namespace Lime.Protocol.Network
                 {
                     envelope.From.Domain = from.Domain;
                 }
-
-                if (this.Mode == SessionMode.Node)
-                {
-                    if (envelope.Pp == null)
-                    {
-                        if (!envelope.From.Equals(from))
-                        {
-                            envelope.Pp = from.Copy();
-                        }
-                    }
-                    else if (string.IsNullOrEmpty(envelope.Pp.Domain))
-                    {
-                        envelope.Pp.Domain = from.Domain;
-                    }
-                }
             }
 
             if (to != null)

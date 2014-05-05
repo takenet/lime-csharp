@@ -99,6 +99,18 @@ namespace Lime.Console
                             }
                         });
 
+                    System.Console.WriteLine("Setting the receipts...");
+                    var receiptCommand = new Command()
+                    {
+                        Method = CommandMethod.Set,
+                        Resource = new Receipt()
+                        {
+                            Events = new[] {  Event.Dispatched, Event.Received }
+                        }
+                    };
+                    client.Channel.SendCommandAsync(receiptCommand).Wait();
+                    var receiptCommandResult = client.Channel.ReceiveCommandAsync(cancellationTokenSource.Token).Result;
+                    System.Console.WriteLine("Receipt result: {0} - Reason: {1}", receiptCommandResult.Status, receiptCommandResult.Reason != null ? receiptCommandResult.Reason.Description : "None");
 
                     System.Console.WriteLine("Getting account information...");
                     var accountCommand = new Command

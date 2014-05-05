@@ -2,10 +2,12 @@
     ViewBag.Title = "Resource Types";
 }
 
-<div class="col-md-10" role="main">
+<div class="col-md-10" role="main">       
+    <h1 class="page-header">Resource Types</h1>
 
-    <h1>Resource Types</h1>
-    <p>Every connected node on a LIME network has its own set of resources that can be queried or changed by another nodes through commands, if they have the permissions for that. Besides that, the domain servers can hold resources in behalf of another identities, providing services like account and contact management.</p>
+    <div class="alert alert-warning">This specification is a <strong>work in progress</strong> and is subject to change without notice.</div>
+
+    <p>Every connected node on a LIME network has its own set of resources that can be queried or changed by another nodes through commands, if they have the permissions for that. Besides that, the domain servers can store resources for the domain identities, providing services like account and contact management.</p>
     <p>To improve the interoperability, the protocol defines some common resource types that SHOULD be available in all protocol implementations.</p>
 
     <h2 id="account">Account</h2>
@@ -473,7 +475,7 @@ S:
 {
     "from": "heisenberg@breakingbad.com",
     "pp": "saul@breakingbad.com/office",
-    "to": "jesse@breakingbad.com"        
+    "to": "jesse@breakingbad.com",
     "type": "application/vnd.lime.text+json",
     "content": {
         "text": "Let's meet at the office."
@@ -678,15 +680,31 @@ S:
                         "identity": "gaff@breakingbad.com"
                     }
                 ]
+            },
+            {
+                "identity": "police@groups.breakingbad.com",
+                "name": "Albuquerque Police Department officers and supporters",
+                "owner": "marshall@breakingbad.com",
+                "type": "public",
+                "members": [
+                    {
+                        "identity": "gus@breakingbad.com",
+                        "role": "listener"
+                    },
+                    {
+                        "identity": "officer1@breakingbad.com"
+                    },
+                    {
+                        "identity": "officer2@breakingbad.com"
+                    }
+                ]
             }
         ]
     }
 }
 </code>
 </pre>
-
     <hr />
-
 
     <h2 id="ping">Ping</h2>
     <p>Allows the nodes to test the network connectivity.</p>
@@ -888,9 +906,6 @@ S:
 
     <hr />
 
-
-
-
     <h2 id="quota">Quota</h2>
     <p>Allows the nodes to manage the session envelope quota configuration.</p>
 
@@ -974,10 +989,7 @@ S:
 }
 </code>
 </pre>
-
     <hr />
-
-
 
     <h2 id="roster">Roster</h2>
     <p>Allows the nodes to manage the contacts of their accounts.</p>

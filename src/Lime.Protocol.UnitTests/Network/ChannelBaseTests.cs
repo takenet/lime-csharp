@@ -98,38 +98,6 @@ namespace Lime.Protocol.UnitTests.Network
                     Times.Once());
         }
 
-        [TestMethod]
-        [TestCategory("SendMessageAsync")]
-        public async Task SendMessageAsync_DelegatedMessageNoPP_FillsFromTheSession()
-        {
-            var remoteNode = DataUtil.CreateNode();
-            var localNode = DataUtil.CreateNode();
-            var senderNode = DataUtil.CreateNode();
-
-            var target = GetTarget(
-                SessionState.Established,
-                fillEnvelopeRecipients: true,
-                localNode: localNode,
-                remoteNode: remoteNode);
-
-            var content = DataUtil.CreateTextContent();
-            var message = DataUtil.CreateMessage(content);
-            message.From = senderNode;
-            message.To = remoteNode;
-            message.Pp = null;
-
-            await target.SendMessageAsync(message);
-
-            _transport.Verify(
-                t => t.SendAsync(It.Is<Message>(
-                        e => e.Id == message.Id &&
-                             e.From.Equals(senderNode) &&
-                             e.To.Equals(remoteNode) &&
-                             e.Pp.Equals(localNode) &&
-                             e.Content == message.Content),
-                    It.IsAny<CancellationToken>()),
-                    Times.Once());
-        }
 
         [TestMethod]
         [TestCategory("SendMessageAsync")]
@@ -294,43 +262,6 @@ namespace Lime.Protocol.UnitTests.Network
             _transport.Verify();
         }
 
-        [TestMethod]
-        [TestCategory("ReceiveMessageAsync")]
-        public async Task ReceiveMessageAsync_DelegatedMessageNoPP_FillsFromTheSession()
-        {
-            var remoteNode = DataUtil.CreateNode();
-            var localNode = DataUtil.CreateNode();
-            var senderNode = DataUtil.CreateNode();
-
-            var content = DataUtil.CreateTextContent();
-            var message = DataUtil.CreateMessage(content);
-            message.From = senderNode;
-            message.To = null;
-
-            var cancellationToken = DataUtil.CreateCancellationToken();
-            var tcs = new TaskCompletionSource<Envelope>();
-
-            _transport
-                .SetupSequence(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
-                .Returns(Task.FromResult<Envelope>(message))
-                .Returns(tcs.Task);
-
-            var target = GetTarget(
-                SessionState.Established,
-                fillEnvelopeRecipients: true,
-                remoteNode: remoteNode,
-                localNode: localNode);
-
-            var actual = await target.ReceiveMessageAsync(cancellationToken);
-
-            Assert.AreEqual(message, actual);
-
-            Assert.AreEqual(message.To, localNode);
-            Assert.AreEqual(message.From, senderNode);
-            Assert.AreEqual(message.Pp, remoteNode);
-
-            _transport.Verify();
-        }
 
         [TestMethod]
         [TestCategory("ReceiveMessageAsync")]
