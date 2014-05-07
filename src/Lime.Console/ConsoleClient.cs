@@ -15,7 +15,7 @@ using System.Threading.Tasks;
 
 namespace Lime.Console
 {
-    public class ConsoleClient
+    public sealed class ConsoleClient : IDisposable
     {
         private static Uri _clientUri;
         public IClientChannel Channel { get; private set; }
@@ -23,6 +23,50 @@ namespace Lime.Console
         public ConsoleClient(Uri clientUri)
         {
             _clientUri = clientUri;
+        }
+
+        public async Task<bool> ConnectAsGuestAsync(string domain, CancellationToken cancellationToken)
+        {
+            var tcpClient = new TcpClient();
+
+#if DEBUG
+            ITraceWriter traceWriter = new DebugTraceWriter("Client");
+#else
+            ITraceWriter traceWriter = new FileTraceWriter("client.log");
+#endif
+
+            var transport = new TcpTransport(
+                new TcpClientAdapter(tcpClient),
+                new EnvelopeSerializer(),
+                hostName: _clientUri.Host,
+                traceWriter: traceWriter
+                );
+
+            Channel = new ClientChannel(transport, TimeSpan.FromSeconds(60), autoReplyPings: true, autoNotifyReceipt: true);
+
+            await Channel.Transport.OpenAsync(_clientUri, cancellationToken);
+
+            var identity = new Identity()
+            {
+                Name = Guid.NewGuid().ToString(),
+                Domain = domain
+            };
+
+            var resultSession = await Channel.EstablishSessionAsync(
+                c => c.First(),
+                e => e.First(),
+                identity,
+                (s, r) => new GuestAuthentication(),
+                Environment.MachineName,
+                SessionMode.Node,
+                cancellationToken);
+
+            if (resultSession.State != SessionState.Established)
+            {
+                return false;
+            }
+
+            return true;
         }
 
         public async Task<bool> ConnectAsync(Identity identity, string password, CancellationToken cancellationToken)
@@ -100,5 +144,17 @@ namespace Lime.Console
             await Channel.ReceiveFinishedSessionAsync(cancellationToken);
         }
 
+
+        #region IDisposable Members
+
+        public void Dispose()
+        {
+            if (this.Channel != null)
+            {
+                this.Channel.DisposeIfDisposable();
+            }
+        }
+
+        #endregion
     }
 }

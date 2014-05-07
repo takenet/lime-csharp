@@ -113,7 +113,7 @@ namespace Lime.Protocol.Security
             }
             else
             {
-                return this.Password.ToFrom64();
+                return this.Password.FromBase64();
             }
         }
 

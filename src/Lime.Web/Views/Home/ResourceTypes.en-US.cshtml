@@ -57,7 +57,7 @@
             "type": "integer",
             "minimum": 0
         },
-        "allowAnonymousSender": {
+        "allowGuestSender": {
             "type": "boolean"
         },   
         "allowUnknownSender": {
@@ -103,7 +103,7 @@
             <strong>inboxSize</strong> - Size of account inbox for storing offline messages. The default value is 0.
         </li>
         <li>
-            <strong>allowAnonymousSender</strong> - Indicates if this account allows receive messages from anonymous users.
+            <strong>allowGuestSender</strong> - Indicates if this account allows receive messages from users with guest sessions.
         </li>
         <li>
             <strong>allowUnknownSender</strong> - Indicates if this account allows receive messages from users that are not in the account contact list.
@@ -144,7 +144,7 @@ C:
         "phoneNumber": "+15055034455",
         "city": "Albuquerque",
         "password": "a2V2aW5jb3N0bmVy",
-        "allowAnonymousSender": false
+        "allowGuestSender": false
     }        
 }
 </code>
