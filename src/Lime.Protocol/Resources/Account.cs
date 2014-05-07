@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
+using System.Security;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -80,6 +81,75 @@ namespace Lime.Protocol.Resources
         [DataMember(Name = IS_TEMPORARY_KEY)]
         public bool? IsTemporary { get; set; }
 
+#if !PCL
+        [IgnoreDataMember]
+        public SecureString SecurePassword { get; private set; }
+
+        /// <summary>
+        /// Base64 representation of the 
+        /// account password
+        /// </summary>
+        [DataMember(Name = PASSWORD_KEY)]
+        public string Password
+        {
+            get
+            {
+                if (SecurePassword != null)
+                {
+                    return SecurePassword.ToUnsecureString();
+                }
+                return null;
+            }
+            set
+            {
+                if (SecurePassword != null)
+                {
+                    SecurePassword.Dispose();
+                    SecurePassword = null;
+                }
+
+                if (value != null)
+                {
+                    SecurePassword = value.ToSecureString();
+                }
+            }
+        }
+
+        [IgnoreDataMember]
+        public SecureString SecureOldPassword { get; private set; }
+
+        /// <summary>
+        /// Base64 representation of the 
+        /// account password. Mandatory
+        /// in case of updating account
+        /// password.
+        /// </summary>
+        [DataMember(Name = OLD_PASSWORD_KEY)]
+        public string OldPassword
+        {
+            get
+            {
+                if (SecureOldPassword != null)
+                {
+                    return SecureOldPassword.ToUnsecureString();
+                }
+                return null;
+            }
+            set
+            {
+                if (SecureOldPassword != null)
+                {
+                    SecureOldPassword.Dispose();
+                    SecureOldPassword = null;
+                }
+
+                if (value != null)
+                {
+                    SecureOldPassword = value.ToSecureString();
+                }
+            }
+        }  
+#else
         /// <summary>
         /// Base64 representation of the 
         /// account password
@@ -95,6 +165,7 @@ namespace Lime.Protocol.Resources
         /// </summary>
         [DataMember(Name = OLD_PASSWORD_KEY)]
         public string OldPassword { get; set; }
+#endif
 
         /// <summary>
         /// Size of account inbox

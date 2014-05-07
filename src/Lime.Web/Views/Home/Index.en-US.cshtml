@@ -8,7 +8,7 @@
     <div class="alert alert-warning">This specification is a <strong>work in progress</strong> and is subject to change without notice.</div>
 
     <h3 id="what">What is it?</h3>
-    <p><strong>LIME Protocol</strong> (acronym for <em>Lightweight Messaging Protocol</em>) is a JSON based protocol for P2P messaging, inspired by the XMPP protocol. It aims to be simple but extensible, with little verbosity but yet providing good readability.</p>
+    <p><strong>LIME Protocol</strong> (acronym for <em>Lightweight Messaging Protocol</em>) is a JSON based protocol for messaging, inspired by the XMPP protocol. It aims to be simple but extensible, with little verbosity but yet providing good readability.</p>
 
     <h3 id="xmpp">And why not just use XMPP?</h3>
     <p>XMPP is a protocol widely used for real-time communication but is complex due to the number of features and extensions that it implements. Just take a look at its <a href="http://xmpp.org/xmpp-protocols/xmpp-core/">specification</a> to understand that XMPP goes far beyond what LIME proposes.</p>
@@ -34,14 +34,14 @@
         </li>
     </ul>
 
-    <p>The nodes communicate with each other over duplex persistent connections, like TCP or Websockets. When connected, each node can have a different role with distinct capabilities. These roles and their capabilities are:</p>
+    <p>The nodes communicate with each other over persistent connections, like TCP or Websockets. The protocol is asynchronous, so there's no guarantee of delivery order of the envelopes, except during the session negotiation, where only session envelopes are allowed. When connected, each node can have a different role with distinct capabilities. These roles and their capabilities are:</p>
     <ul>
         <li>
             <strong>Node</strong>
             <ul>
                 <li>Can send and receive messages, commands and notifications.</li>
                 <li>Can connect to servers.</li>
-                <li>Can request the session establishment when connected to a server.</li>
+                <li>Can start the session establishment when connected to a server.</li>
             </ul>
         </li>
         <li>
@@ -50,8 +50,8 @@
                 <li>Has the same capabilities of the nodes.</li>
                 <li>Can establish a session.</li>
                 <li>Can forward messages in behalf of a node to other servers and nodes.</li>
-                <li>Can hold resources owned by other identities than the server identity.</li>
-                <li>Can manipulate a specific set of resources of the connected servers.</li>
+                <li>Can store resources owned by other identities than the server identity.</li>
+                <li>Can manipulate a specific set of resources of the domain servers.</li>
             </ul>
         </li>
         <li>
@@ -72,8 +72,8 @@
         </li>
     </ul>
 
-    <p>Every connected node must have an identity, presented in the format <em>name@domain</em>, as defined by the <a href="http://tools.ietf.org/html/rfc2822#section-3.4.1">RFC 2822, section 3.4.1</a>. The domain name SHOULD be a valid domain (i.e. can be resolved by a DNS server) and the name a valid user account identifier in the domain. The identity is authenticated by the server during the establishment of the session.</p>
-    <p>In addition to the identity, the connected node can provide a name to the particular connection using a identifier called <em>instance</em>. This identifier should appears after the identity, separated by a slash (/) symbol, during the session authentication process. Since one identity can have more than one active connection in a domain, the <em>instance</em> should be used to differentiate these connections. Normally is used the name of the device (John-Cellphone, John-PC) but can be any valid string. If not provided, the server will set a generic value.</p>
+    <p>Every connected node must have an identity, presented in the <em>name@domain</em> format, as defined by the <a href="http://tools.ietf.org/html/rfc2822#section-3.4.1">RFC 2822, section 3.4.1</a>. The domain name SHOULD be a valid domain (i.e. can be resolved by a DNS server) and the name a valid user account identifier in the domain. The identity is authenticated by the server during the establishment of the session.</p>
+    <p>In addition to the identity, the connected node can suggest a name to the particular connection using a identifier called <em>instance</em>. This identifier should appears after the identity, separated by a slash (/) symbol, during the session authentication process. Since one identity can have more than one active connection in a domain, the <em>instance</em> should be used to differentiate these connections. Normally is used the name of the device (John-Cellphone, John-PC) but can be any valid string. If not provided, the server will set a generic value.</p>
     <p>Therewith, the complete format of a node identifier is <em>name@domain/instance</em>, similar to the <a href="http://xmpp.org/rfcs/rfc3920.html#rfc.section.3">XMPP's Jabber ID</a> (the difference is that the identifier located after the slash is called <em>instance</em> instead of <em>resource</em>). The node identifier must be unique in a LIME network and a envelope addressed to a specific node should be delivered to a connection with that identifier (except for <a href="http://limeprotocol.org/resourcetypes#presence">promiscuous sessions</a>). envelopes addressed to a identity (<em>name@domain</em>) can be routed in different ways, according to the node presence configuration: A node can opt to always receive all messages sent to the identity, or to receive if it have the highest priority (like XMPP) or only receive if are addressed to the specific instance.</p>
 
     <h3 id="envelope">Envelope</h3>

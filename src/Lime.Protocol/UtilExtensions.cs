@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
+using System.Security;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -86,5 +88,51 @@ namespace Lime.Protocol
                     throw new OperationCanceledException(cancellationToken);
             await task;
         }
+
+        /// <summary>
+        /// Converts a SecureString to a regular, unsecure string.
+        /// <see cref="http://blogs.msdn.com/b/fpintos/archive/2009/06/12/how-to-properly-convert-securestring-to-string.aspx"/>
+        /// </summary>
+        /// <param name="securePassword"></param>
+        /// <returns></returns>
+        public static string ToUnsecureString(this SecureString securePassword)
+        {
+            if (securePassword == null)
+            {
+                throw new ArgumentNullException("securePassword");
+            }
+
+            IntPtr unmanagedString = IntPtr.Zero;
+            try
+            {
+                unmanagedString = Marshal.SecureStringToGlobalAllocUnicode(securePassword);
+                return Marshal.PtrToStringUni(unmanagedString);
+            }
+            finally
+            {
+                Marshal.ZeroFreeGlobalAllocUnicode(unmanagedString);
+            }
+        }
+
+        /// <summary>
+        /// Converts a regular string to a SecureString
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static SecureString ToSecureString(this string value)
+        {
+            if (value == null)
+            {
+                throw new ArgumentNullException("value");
+            }
+
+            var secureString = new SecureString();
+            foreach (var c in value)
+            {
+                secureString.AppendChar(c);
+            }
+            return secureString;
+        }
+
     }
 }

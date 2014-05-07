@@ -34,7 +34,7 @@ namespace Lime.Protocol.Security
 
 #if !PCL
         [IgnoreDataMember]
-        private SecureString _password;
+        public SecureString SecurePassword { get; private set; }
 
         /// <summary>
         /// Base64 representation of the 
@@ -45,36 +45,23 @@ namespace Lime.Protocol.Security
         {
             get
             {
-                if (_password != null)
+                if (SecurePassword != null)
                 {
-                    IntPtr unmanagedString = IntPtr.Zero;
-                    try
-                    {
-                        unmanagedString = Marshal.SecureStringToGlobalAllocUnicode(_password);
-                        return Marshal.PtrToStringUni(unmanagedString);
-                    }
-                    finally
-                    {
-                        Marshal.ZeroFreeGlobalAllocUnicode(unmanagedString);
-                    }
+                    return SecurePassword.ToUnsecureString();
                 }
                 return null;
             }
             set
             {
-                if (_password != null)
+                if (SecurePassword != null)
                 {
-                    _password.Dispose();
-                    _password = null;
+                    SecurePassword.Dispose();
+                    SecurePassword = null;
                 }
 
                 if (value != null)
                 {
-                    _password = new SecureString();
-                    foreach (var c in value)
-                    {
-                        _password.AppendChar(c);
-                    }
+                    SecurePassword = value.ToSecureString();
                 }
             }
         } 
@@ -150,9 +137,9 @@ namespace Lime.Protocol.Security
             if (disposing)
             {
 #if !PCL
-                if (_password != null)
+                if (SecurePassword != null)
                 {
-                    _password.Dispose();
+                    SecurePassword.Dispose();
                 } 
 #endif
             }
