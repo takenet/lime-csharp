@@ -11,7 +11,7 @@
     <AssemblyName>Lime.Protocol</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
-    <BuildPackage>true</BuildPackage>
+    <BuildPackage>false</BuildPackage>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
     <RestorePackages>true</RestorePackages>
   </PropertyGroup>
@@ -77,6 +77,12 @@
     </Compile>
     <Compile Include="Resources\Account.Serialization.cs">
       <DependentUpon>Account.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Resources\Delegation.Serialization.cs">
+      <DependentUpon>Delegation.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Resources\Group.Serialization.cs">
+      <DependentUpon>Group.cs</DependentUpon>
     </Compile>
     <Compile Include="Resources\Presence.Serialization.cs">
       <DependentUpon>Presence.cs</DependentUpon>

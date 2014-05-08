@@ -11,7 +11,7 @@
     <AssemblyName>Lime.Protocol.Tcp</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
-    <BuildPackage>true</BuildPackage>
+    <BuildPackage>false</BuildPackage>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>

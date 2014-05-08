@@ -4,6 +4,7 @@ using System.Linq;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
+using Lime.Protocol.Serialization;
 
 namespace Lime.Protocol.Resources
 {
@@ -19,6 +20,11 @@ namespace Lime.Protocol.Resources
     {
         public const string MIME_TYPE = "application/vnd.lime.delegation+json";
 
+        public const string TARGET_KEY = "target";
+        public const string DESTINATIONS_KEY = "destinations";
+        public const string COMMANDS_KEY = "commands";
+        public const string MESSAGES_KEY = "messages";
+
         public Delegation()
             : base(MediaType.Parse(MIME_TYPE))
         {
@@ -28,37 +34,40 @@ namespace Lime.Protocol.Resources
         /// <summary>
         /// 
         /// </summary>
-        [DataMember(Name = "target")]
+        [DataMember(Name = TARGET_KEY)]
         public Node Target { get; set; }
 
         /// <summary>
         /// Array of destinations that the delegated 
         /// identity can originate envelopes on behalf. 
         /// </summary>
-        [DataMember(Name = "destinations")]
+        [DataMember(Name = DESTINATIONS_KEY)]
         public Identity[] Destinations { get; set; }
 
         /// <summary>
         /// Command definitions for delegation. 
         /// </summary>
-        [DataMember(Name = "commands")]
+        [DataMember(Name = COMMANDS_KEY)]
         public DelegationCommand[] Commands { get; set; }
 
         /// <summary>
         /// Message definitions for delegation. 
         /// </summary>
-        [DataMember(Name = "messages")]
+        [DataMember(Name = MESSAGES_KEY)]
         public MediaType[] Messages { get; set; }
 
     }
 
     [DataContract]
-    public class DelegationCommand
+    public partial class DelegationCommand 
     {
-        [DataMember(Name = "type")]
+        public const string TYPE_KEY = "type";
+        public const string METHODS_KEY = "methods";
+
+        [DataMember(Name = TYPE_KEY)]
         public MediaType Type { get; set; }
 
-        [DataMember(Name = "methods")]
+        [DataMember(Name = METHODS_KEY)]
         public CommandMethod Methods { get; set; }
     }
 }
