@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Runtime.InteropServices;
 using System.Security;
 using System.Text;
@@ -132,6 +134,34 @@ namespace Lime.Protocol
                 secureString.AppendChar(c);
             }
             return secureString;
+        }
+
+
+
+
+        /// <summary>
+        /// Gets the default value of a Type
+        /// <see cref="http://stackoverflow.com/questions/325426/programmatic-equivalent-of-defaulttype"/>
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        public static object GetDefaultValue(this Type type)
+        {
+            // Validate parameters.
+            if (type == null) throw new ArgumentNullException("type");
+
+            // We want an Func<object> which returns the default.
+            // Create that expression here.
+            Expression<Func<object>> e = Expression.Lambda<Func<object>>(
+                // Have to convert to object.
+                Expression.Convert(
+                // The default value, always get what the *code* tells us.
+                    Expression.Default(type), typeof(object)
+                )
+            );
+
+            // Compile and return the value.
+            return e.Compile()();
         }
 
     }

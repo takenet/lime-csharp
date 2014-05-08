@@ -85,6 +85,9 @@
     <Compile Include="Resources\Receipt.Serialization.cs">
       <DependentUpon>Receipt.cs</DependentUpon>
     </Compile>
+    <Compile Include="Resources\Roster.Serialization.cs">
+      <DependentUpon>Roster.cs</DependentUpon>
+    </Compile>
     <Compile Include="Serialization\DictionaryJsonWriter.cs" />
     <Compile Include="Util\AsyncCountdownEvent.cs" />
     <Compile Include="Util\AsyncQueue.cs" />

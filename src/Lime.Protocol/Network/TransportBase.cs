@@ -178,12 +178,7 @@ namespace Lime.Protocol.Network
             if (!_closedInvoked)
             {
                 _closedInvoked = true;
-
-                var closedHandler = Closed;
-                if (closedHandler != null)
-                {
-                    closedHandler(this, EventArgs.Empty);
-                }
+                this.Closed.RaiseEvent(this, EventArgs.Empty);
             }
         }
     }

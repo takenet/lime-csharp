@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.Serialization;
 using System.Text;
@@ -132,6 +133,19 @@ namespace Lime.Protocol.Serialization
         public static IEnumerable<Type> GetProtocolTypes()
         {
             return _protocolTypes;
+        }
+
+        public static T GetDefaultValue<T>()
+        {
+            // We want an Func<T> which returns the default.
+            // Create that expression here.
+            Expression<Func<T>> e = Expression.Lambda<Func<T>>(
+                // The default value, always get what the *code* tells us.
+                Expression.Default(typeof(T))
+            );
+
+            // Compile and return the value.
+            return e.Compile()();
         }
 
         /// <summary>

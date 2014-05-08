@@ -12,15 +12,15 @@ namespace Lime.Protocol.Serialization
         #region Private Fields
 
         private IDictionary<string, object> _jsonDictionary;
-        private bool _writeNullValues;
+        private bool _writeDefaultValues;
 
         #endregion
 
         #region Constructor
 
-        public DictionaryJsonWriter(bool writeNullValues = false)
+        public DictionaryJsonWriter(bool writeDefaultValues = false)
         {
-            _writeNullValues = writeNullValues;
+            _writeDefaultValues = writeDefaultValues;
             _jsonDictionary = new Dictionary<string, object>();
         }
 
@@ -30,17 +30,25 @@ namespace Lime.Protocol.Serialization
 
         public void WriteBoolProperty(string propertyName, bool value)
         {
-            _jsonDictionary.Add(propertyName, value);
+            if (_writeDefaultValues || 
+                value != false)
+            {
+                _jsonDictionary.Add(propertyName, value);
+            }            
         }
 
         public void WriteDateTimeProperty(string propertyName, DateTime value)
         {
-            _jsonDictionary.Add(propertyName, value);
+            if (_writeDefaultValues ||
+                value != DateTime.MinValue)
+            {
+                _jsonDictionary.Add(propertyName, value);
+            }
         }
 
         public void WriteDictionaryProperty(string propertyName, IDictionary<string, string> dictionary)
         {
-            if (dictionary != null || _writeNullValues)
+            if (_writeDefaultValues || dictionary != null)
             {
                 _jsonDictionary.Add(propertyName, dictionary);
             }
@@ -48,12 +56,18 @@ namespace Lime.Protocol.Serialization
 
         public void WriteGuidProperty(string propertyName, Guid value)
         {
-            _jsonDictionary.Add(propertyName, value);
+            if (_writeDefaultValues || value != Guid.Empty)
+            {
+                _jsonDictionary.Add(propertyName, value);
+            }
         }
 
         public void WriteIntProperty(string propertyName, int value)
         {
-            _jsonDictionary.Add(propertyName, value);
+            if (_writeDefaultValues || value != 0)
+            {
+                _jsonDictionary.Add(propertyName, value);
+            }
         }
 
         public void WriteArrayProperty(string propertyName, IEnumerable items)
@@ -83,7 +97,7 @@ namespace Lime.Protocol.Serialization
 
                 _jsonDictionary.Add(propertyName, itemList);
             }
-            else if (_writeNullValues)
+            else if (_writeDefaultValues)
             {
                 _jsonDictionary.Add(propertyName, items);
             }
@@ -113,14 +127,17 @@ namespace Lime.Protocol.Serialization
 
         public void WriteLongProperty(string propertyName, long value)
         {
-            _jsonDictionary.Add(propertyName, value);
+            if (_writeDefaultValues || value != 0)
+            {
+                _jsonDictionary.Add(propertyName, value);
+            }
         }
 
         public void WriteProperty(string propertyName, object value)
         {
             if (value == null)                
             {
-                if (_writeNullValues)
+                if (_writeDefaultValues)
                 {
                     _jsonDictionary.Add(propertyName, value);
                 }
@@ -137,15 +154,40 @@ namespace Lime.Protocol.Serialization
             {
                 WriteJsonArrayProperty(propertyName, (IEnumerable<IJsonWritable>)value);
             }
+            else if (value is int || 
+                     value is int?)
+            {
+                WriteIntProperty(propertyName, (int)value);
+            }
+            else if (value is long ||
+                     value is long?)
+            {
+                WriteLongProperty(propertyName, (long)value);
+            }
+            else if (value is bool ||
+                     value is bool?)
+            {
+                WriteBoolProperty(propertyName, (bool)value);
+            }
+            else if (value is DateTime ||
+                     value is DateTime?)
+            {
+                WriteDateTimeProperty(propertyName, (DateTime)value);
+            }
+            else if (value is Guid ||
+                     value is Guid?)
+            {
+                WriteGuidProperty(propertyName, (Guid)value);
+            }
             else
             {
-                _jsonDictionary.Add(propertyName, value);
-            }                            
+                _jsonDictionary.Add(propertyName, value.ToString());
+            }
         }
 
         public void WriteStringProperty(string propertyName, string value)
         {
-            if (value != null || _writeNullValues)
+            if (value != null || _writeDefaultValues)
             {
                 _jsonDictionary.Add(propertyName, value);
             }            

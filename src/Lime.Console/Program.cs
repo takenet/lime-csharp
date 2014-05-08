@@ -185,11 +185,36 @@ namespace Lime.Console
                         Method = CommandMethod.Get,
                         Resource = new Account()
                     };
-
                     client.Channel.SendCommandAsync(accountCommand).Wait();
                     var accountCommandResult = client.Channel.ReceiveCommandAsync(cancellationTokenSource.Token).Result;
                     System.Console.WriteLine("Account result: {0} - Reason: {1}", accountCommandResult.Status, accountCommandResult.Reason != null ? accountCommandResult.Reason.Description : "None");
-                    
+
+
+
+                    System.Console.WriteLine("Getting the roster...");
+                    var rosterCommand = new Command
+                    {
+                        Method = CommandMethod.Get,
+                        Resource = new Roster()
+                    };
+                    client.Channel.SendCommandAsync(rosterCommand).Wait();
+                    var rosterCommandResult = client.Channel.ReceiveCommandAsync(cancellationTokenSource.Token).Result;
+
+                    if (rosterCommandResult.Status == CommandStatus.Success)
+                    {
+                        System.Console.WriteLine("Contacts:");
+
+                        var roster = rosterCommandResult.Resource as Roster;
+                        foreach (var contact in roster.Contacts)
+                        {
+                            System.Console.WriteLine("- {0}", contact.Identity);
+                        }
+                    }
+                    else
+                    {
+                        System.Console.WriteLine("Account result: {0} - Reason: {1}", rosterCommandResult.Status, rosterCommandResult.Reason != null ? rosterCommandResult.Reason.Description : "None");
+                    }
+
                     if (accountCommandResult.Status == CommandStatus.Failure &&
                         accountCommandResult.Reason.Code == ReasonCodes.COMMAND_RESOURCE_NOT_FOUND)
                     {
@@ -239,24 +264,61 @@ namespace Lime.Console
                         {
                             break;
                         }
-
-                        Node to = null;
-                        if (Node.TryParse(toInput, out to))
+                        else if (toInput.StartsWith("add"))
                         {
-                            System.Console.Write("Message: ");
+                            var commandIdentity = toInput.Split(' ');
 
-                            var messageText = System.Console.ReadLine();
+                            Identity contactIdentity;
 
-                            var message = new Message()
+                            if (commandIdentity.Length > 1 &&
+                                Identity.TryParse(commandIdentity[1], out contactIdentity))
                             {
-                                To = to,
-                                Content = new TextContent()
-                                {
-                                    Text = messageText
-                                }
-                            };
+                                System.Console.WriteLine("Adding contact...");
 
-                            client.Channel.SendMessageAsync(message).Wait();
+                                var contactCommand = new Command
+                                {
+                                    Method = CommandMethod.Set,
+                                    Resource = new Roster()
+                                    {
+                                        Contacts = new Contact[]
+                                        {
+                                            new Contact()
+                                            {
+                                                Identity = contactIdentity
+                                            }
+                                        }                                        
+                                    }
+                                };
+
+                                client.Channel.SendCommandAsync(contactCommand).Wait();
+                                var contactCommandResult = client.Channel.ReceiveCommandAsync(cancellationTokenSource.Token).Result;
+                                System.Console.WriteLine("Contact result: {0} - Reason: {1}", contactCommandResult.Status, contactCommandResult.Reason != null ? contactCommandResult.Reason.Description : "None");
+                            }
+                            else
+                            {
+                                System.Console.WriteLine("Invalid command. Try 'add name@domain.com'.");
+                            }
+                        }
+                        else
+                        {
+                            Node to = null;
+                            if (Node.TryParse(toInput, out to))
+                            {
+                                System.Console.Write("Message: ");
+
+                                var messageText = System.Console.ReadLine();
+
+                                var message = new Message()
+                                {
+                                    To = to,
+                                    Content = new TextContent()
+                                    {
+                                        Text = messageText
+                                    }
+                                };
+
+                                client.Channel.SendMessageAsync(message).Wait();
+                            }
                         }
                     }                    
                                         

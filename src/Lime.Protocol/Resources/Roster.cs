@@ -17,6 +17,8 @@ namespace Lime.Protocol.Resources
     {
         public const string MIME_TYPE = "application/vnd.lime.roster+json";
 
+        public const string CONTACTS_KEY = "contacts";
+
         public Roster()
             : base(MediaType.Parse(MIME_TYPE))
         {
@@ -26,25 +28,31 @@ namespace Lime.Protocol.Resources
         /// <summary>
         /// Members of the roster
         /// </summary>
-        [DataMember(Name = "contacts")]
+        [DataMember(Name = CONTACTS_KEY)]
         public Contact[] Contacts { get; set; }
     }
 
     [DataContract(Namespace = "http://limeprotocol.org/2014")]
     public partial class Contact : IIdentity
     {
+        public const string IDENTITY_KEY = "identity";
+        public const string NAME_KEY = "name";
+        public const string IS_PENDING_KEY = "isPending";
+        public const string SHARE_PRESENCE_KEY = "sharePresence";
+        public const string SHARE_ACCOUNT_INFO_KEY = "shareAccountInfo";
+
         /// <summary>
         /// The identity of the contact, 
         /// in the name@domain format.
         /// </summary>
-        [DataMember(Name = "identity")]
+        [DataMember(Name = IDENTITY_KEY)]
         public Identity Identity { get; set; }
 
         /// <summary>
         /// The name of the contact. 
         /// This information is only visible by the roster owner.
         /// </summary>
-        [DataMember(Name = "name")]
+        [DataMember(Name = NAME_KEY)]
         public string Name { get; set; }
 
         /// <summary>
@@ -52,7 +60,7 @@ namespace Lime.Protocol.Resources
         /// acceptance by the roster owner. 
         /// The default value is false.
         /// </summary>
-        [DataMember(Name = "isPending", EmitDefaultValue = false)]
+        [DataMember(Name = IS_PENDING_KEY, EmitDefaultValue = false)]
         public bool IsPending { get; set; }
 
         /// <summary>
@@ -62,7 +70,7 @@ namespace Lime.Protocol.Resources
         /// to the contact identity into the roster owner 
         /// presence resource. The default value is true.
         /// </summary>
-        [DataMember(Name = "sharePresence", EmitDefaultValue = false)]
+        [DataMember(Name = SHARE_PRESENCE_KEY, EmitDefaultValue = false)]
         [DefaultValue(true)]
         public bool SharePresence { get; set; }
 
@@ -73,7 +81,7 @@ namespace Lime.Protocol.Resources
         /// into the roster owner account resource. 
         /// The default value is true.
         /// </summary>
-        [DataMember(Name = "shareAccountInfo", EmitDefaultValue = false)]
+        [DataMember(Name = SHARE_ACCOUNT_INFO_KEY, EmitDefaultValue = false)]
         [DefaultValue(true)]
         public bool ShareAccountInfo { get; set; }
 
