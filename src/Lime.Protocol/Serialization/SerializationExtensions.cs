@@ -64,7 +64,7 @@ namespace Lime.Protocol.Serialization
         /// </summary>
         /// <param name="value"></param>
         /// <returns></returns>
-        public static string ToFrom64(this string value)
+        public static string FromBase64(this string value)
         {
             if (string.IsNullOrEmpty(value))
             {

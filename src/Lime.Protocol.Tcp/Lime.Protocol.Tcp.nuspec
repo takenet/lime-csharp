@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
+    <metadata>
+        <id>Lime.Protocol.Tcp</id>
+        <version>0.1.0.0</version>
+        <title>Lime.Protocol.Tcp</title>
+        <authors>takenet</authors>
+        <owners>takenet,andrebires</owners>
+        <licenseUrl>https://raw.githubusercontent.com/takenet/lime/master/LICENSE</licenseUrl>
+        <projectUrl>http://limeprotocol.org</projectUrl>
+        <requireLicenseAcceptance>false</requireLicenseAcceptance>
+        <description>C# Lime protocol TCP transport.</description>
+        <copyright>Copyright ©  2014 Curupira S/A</copyright>
+        <tags>lime</tags>
+        <dependencies>
+            <dependency id="Lime.Protocol" version="0.1.1.0" />
+        </dependencies>
+    </metadata>
+    <files>
+        <file src="bin\Release\Lime.Protocol.Tcp.dll" target="lib\net45\Lime.Protocol.Tcp.dll" />
+        <file src="bin\Release\Lime.Protocol.Tcp.xml" target="lib\net45\Lime.Protocol.Tcp.xml" />
+    </files>
+</package>

@@ -629,9 +629,6 @@ namespace Lime.Protocol.UnitTests.Network
         [ExpectedException(typeof(InvalidOperationException))]
         public async Task ReceiveSessionAsync_LimitedBuffers_ThrowsInvalidOperationException()
         {
-            // The session buffer is always 1
-            int buffersLimit = 1 + 1;
-
             var session = DataUtil.CreateSession(SessionState.Finished);
 
             var cancellationToken = DataUtil.CreateCancellationToken();
