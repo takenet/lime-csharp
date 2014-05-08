@@ -78,6 +78,12 @@
     <Compile Include="Resources\Account.Serialization.cs">
       <DependentUpon>Account.cs</DependentUpon>
     </Compile>
+    <Compile Include="Resources\Delegation.Serialization.cs">
+      <DependentUpon>Delegation.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Resources\Group.Serialization.cs">
+      <DependentUpon>Group.cs</DependentUpon>
+    </Compile>
     <Compile Include="Resources\Presence.Serialization.cs">
       <DependentUpon>Presence.cs</DependentUpon>
     </Compile>

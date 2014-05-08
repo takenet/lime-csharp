@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Shouldly;
 
 namespace Lime.Protocol.UnitTests.Network
 {
@@ -804,7 +805,7 @@ namespace Lime.Protocol.UnitTests.Network
                 t => t.Dispose(),
                 Times.Once());
 
-            Assert.IsTrue(receiveMessageTask.IsCanceled);
+            receiveMessageTask.IsCanceled.ShouldBe(true);
         }
 
         #endregion
