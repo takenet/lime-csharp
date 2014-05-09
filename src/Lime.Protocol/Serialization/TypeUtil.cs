@@ -111,7 +111,6 @@ namespace Lime.Protocol.Serialization
             return (Func<string, T>)Delegate.CreateDelegate(parseFuncType, parseMethod);
         }
         
-
         public static Func<string, object> GetParseFuncForType(Type type)
         {
             if (type == null)
@@ -123,18 +122,25 @@ namespace Lime.Protocol.Serialization
 
             if (!_typeParseFuncDictionary.TryGetValue(type, out parseFunc))
             {
-                var getParseFuncMethod = typeof(TypeUtil)
-                    .GetMethod("GetParseFunc", BindingFlags.Static | BindingFlags.Public)
-                    .MakeGenericMethod(type);
+                try
+                {
+                    var getParseFuncMethod = typeof(TypeUtil)
+                .GetMethod("GetParseFunc", BindingFlags.Static | BindingFlags.Public)
+                .MakeGenericMethod(type);
 
-                var genericGetParseFunc = getParseFuncMethod.Invoke(null, null);
+                    var genericGetParseFunc = getParseFuncMethod.Invoke(null, null);
 
-                var parseFuncAdapterMethod = typeof(TypeUtil)
-                    .GetMethod("ParseFuncAdapter", BindingFlags.Static | BindingFlags.NonPublic)
-                    .MakeGenericMethod(type);
+                    var parseFuncAdapterMethod = typeof(TypeUtil)
+                        .GetMethod("ParseFuncAdapter", BindingFlags.Static | BindingFlags.NonPublic)
+                        .MakeGenericMethod(type);
 
-                parseFunc = (Func<string, object>)parseFuncAdapterMethod.Invoke(null, new[] { genericGetParseFunc });
-                _typeParseFuncDictionary.TryAdd(type, parseFunc);
+                    parseFunc = (Func<string, object>)parseFuncAdapterMethod.Invoke(null, new[] { genericGetParseFunc });
+                    _typeParseFuncDictionary.TryAdd(type, parseFunc);
+                }
+                catch (TargetInvocationException ex)
+                {
+                    throw ex.InnerException;
+                }
             }
 
             return parseFunc; 
