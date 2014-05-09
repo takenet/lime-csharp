@@ -21,7 +21,7 @@ namespace Lime.Protocol
         {
             base.WriteJson(writer);
             writer.WriteProperty(TYPE_KEY, this.Type);
-            writer.WriteJsonProperty(CONTENT_KEY, this.Content);            
+            writer.WriteProperty(CONTENT_KEY, this.Content);            
         }
 
         #endregion

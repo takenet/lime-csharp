@@ -18,53 +18,36 @@ namespace Lime.Console
             var json = authenticatingJson;
 
             var serializer1 = new EnvelopeSerializer();
-            var serializer2 = new Lime.Protocol.Serialization.Newtonsoft.JsonNetSerializer();
-            var serializer3 = new Lime.Protocol.Serialization.ServiceStack.ServiceStackSerializer();
+            var serializer2 = new EnvelopeSerializer2();
+            var serializer3 = new Lime.Protocol.Serialization.Newtonsoft.JsonNetSerializer();
+            var serializer4 = new Lime.Protocol.Serialization.ServiceStack.ServiceStackSerializer();
 
-            Envelope envelope1 = null, envelope2 = null, envelope3 = null;
 
-            int count = 100000;
+            Envelope envelope1 = null, envelope2 = null, envelope3 = null, envelope4 = null;
+
+            int count;
+
+            do
+            {
+                System.Console.Write("Serialization count: ");
+            } while (!int.TryParse(System.Console.ReadLine(), out count));
+
+                        
 
             System.Console.WriteLine("Deserialization:");
 
+            envelope1 = ExecuteDeserialization(serializer1, json, count);
+            envelope2 = ExecuteDeserialization(serializer2, json, count);
+            envelope3 = ExecuteDeserialization(serializer3, json, count);
+            envelope4 = ExecuteDeserialization(serializer4, json, count);
 
-            var sw1 = System.Diagnostics.Stopwatch.StartNew();
+            // netwonsoft is the reference serializer
+            var json1 = serializer3.Serialize(envelope1);
+            var json2 = serializer3.Serialize(envelope2);
+            var json3 = serializer3.Serialize(envelope3);
+            var json4 = serializer3.Serialize(envelope4);
 
-            for (int i = 0; i < count; i++)
-            {
-                envelope1 = serializer1.Deserialize(json);
-            }
-            sw1.Stop();
-
-            System.Console.WriteLine("EnvelopeSerializer: {0} ms", sw1.ElapsedMilliseconds);
-
-
-            var sw2 = System.Diagnostics.Stopwatch.StartNew();
-
-            for (int i = 0; i < count; i++)
-            {
-                envelope2 = serializer2.Deserialize(json);
-            }
-            sw2.Stop();
-
-            System.Console.WriteLine("JsonNetSerializer: {0} ms", sw2.ElapsedMilliseconds);
-
-
-            var sw3 = System.Diagnostics.Stopwatch.StartNew();
-
-            for (int i = 0; i < count; i++)
-            {
-                envelope3 = serializer3.Deserialize(json);
-            }
-            sw3.Stop();
-
-            System.Console.WriteLine("ServiceStackSerializer: {0} ms", sw3.ElapsedMilliseconds);
-
-            var json1 = serializer2.Serialize(envelope1);
-            var json2 = serializer2.Serialize(envelope1);
-            var json3 = serializer2.Serialize(envelope1);
-
-            if (json1 == json2 && json2 == json3)
+            if (json1 == json2 && json2 == json3 && json3 == json4)
             {
                 System.Console.WriteLine("All deserialized types are equals");
             }
@@ -77,46 +60,55 @@ namespace Lime.Console
 
             System.Console.WriteLine("Serialization:");
 
+            json1 = ExecuteSerialization(serializer1, envelope, count);
+            json2 = ExecuteSerialization(serializer2, envelope, count);
+            json3 = ExecuteSerialization(serializer3, envelope, count);
+            json4 = ExecuteSerialization(serializer4, envelope, count);
 
-            sw1 = System.Diagnostics.Stopwatch.StartNew();
-            for (int i = 0; i < count; i++)
-            {
-                json1 = serializer1.Serialize(envelope);
-            }
-            sw1.Stop();
-
-            System.Console.WriteLine("EnvelopeSerializer: {0} ms", sw1.ElapsedMilliseconds);
-
-
-            sw2 = System.Diagnostics.Stopwatch.StartNew();
-            for (int i = 0; i < count; i++)
-            {
-                json2 = serializer2.Serialize(envelope);
-            }
-            sw2.Stop();
-
-            System.Console.WriteLine("JsonNetSerializer: {0} ms", sw2.ElapsedMilliseconds);
-
-
-            sw3 = System.Diagnostics.Stopwatch.StartNew();
-            for (int i = 0; i < count; i++)
-            {
-                json3 = serializer3.Serialize(envelope);
-            }
-            sw3.Stop();
-
-            System.Console.WriteLine("ServiceStackSerializer: {0} ms", sw3.ElapsedMilliseconds);
-
-            if (json1 == json2 && json2 == json3)
+            if (json1 == json2 && json2 == json3 && json3 == json4)
             {
                 System.Console.WriteLine("All serialized types are equals");
             }
             else
             {
-                System.Console.WriteLine("Serialized types NOT equals: ");
+                System.Console.WriteLine("Serialized types are NOT equals: ");
             }
 
             System.Console.Read();
+        }
+
+        public static string ExecuteSerialization(IEnvelopeSerializer serializer, Envelope envelope, int count)
+        {
+            string json = null;
+
+            var sw = System.Diagnostics.Stopwatch.StartNew();
+            for (int i = 0; i < count; i++)
+            {
+                json = serializer.Serialize(envelope);
+            }
+            sw.Stop();
+
+            System.Console.WriteLine("{0}: {1} ms", serializer.GetType().Name, sw.ElapsedMilliseconds);
+
+            return json;
+        }
+
+        public static Envelope ExecuteDeserialization(IEnvelopeSerializer serializer, string json, int count)
+        {
+            var sw = System.Diagnostics.Stopwatch.StartNew();
+
+            Envelope envelope = null;
+
+            for (int i = 0; i < count; i++)
+            {
+                envelope = serializer.Deserialize(json);
+            }
+            sw.Stop();
+
+            System.Console.WriteLine("{0}: {1} ms", serializer.GetType().Name, sw.ElapsedMilliseconds);
+
+            return envelope;
+
         }
     }
 }

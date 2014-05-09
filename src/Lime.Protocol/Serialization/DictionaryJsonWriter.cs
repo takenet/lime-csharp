@@ -103,28 +103,6 @@ namespace Lime.Protocol.Serialization
             }
         }
 
-        public void WriteJsonArrayProperty(string propertyName, IEnumerable<IJsonWritable> jsonItems)
-        {
-            List<IDictionary<string, object>> dictionaryList = new List<IDictionary<string, object>>();
-
-            foreach (var jsonItem in jsonItems)
-            {
-                var writer = new DictionaryJsonWriter();
-                jsonItem.WriteJson(writer);
-
-                dictionaryList.Add(writer.ToDictionary());                
-            }
-
-            _jsonDictionary.Add(propertyName, dictionaryList);
-        }
-
-        public void WriteJsonProperty(string propertyName, IJsonWritable json)
-        {
-            var writer = new DictionaryJsonWriter();
-            json.WriteJson(writer);
-            _jsonDictionary.Add(propertyName, writer.ToDictionary());
-        }
-
         public void WriteLongProperty(string propertyName, long value)
         {
             if (_writeDefaultValues || value != 0)
@@ -195,6 +173,27 @@ namespace Lime.Protocol.Serialization
 
         #endregion
 
+        private void WriteJsonArrayProperty(string propertyName, IEnumerable<IJsonWritable> jsonItems)
+        {
+            List<IDictionary<string, object>> dictionaryList = new List<IDictionary<string, object>>();
+
+            foreach (var jsonItem in jsonItems)
+            {
+                var writer = new DictionaryJsonWriter();
+                jsonItem.WriteJson(writer);
+
+                dictionaryList.Add(writer.ToDictionary());
+            }
+
+            _jsonDictionary.Add(propertyName, dictionaryList);
+        }
+
+        private void WriteJsonProperty(string propertyName, IJsonWritable json)
+        {
+            var writer = new DictionaryJsonWriter();
+            json.WriteJson(writer);
+            _jsonDictionary.Add(propertyName, writer.ToDictionary());
+        }
 
         public IDictionary<string, object> ToDictionary()
         {

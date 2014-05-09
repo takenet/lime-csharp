@@ -20,13 +20,13 @@ namespace Lime.Protocol
         public override void WriteJson(IJsonWriter writer)
         {
             base.WriteJson(writer);
-            writer.WriteJsonProperty(AUTHENTICATION_KEY, this.Authentication);
+            writer.WriteProperty(AUTHENTICATION_KEY, this.Authentication);
             writer.WriteProperty(COMPRESSION_KEY, this.Compression);
             writer.WriteArrayProperty(COMPRESSION_OPTIONS_KEY, this.CompressionOptions);
             writer.WriteProperty(ENCRYPTION_KEY, this.Encryption);
             writer.WriteArrayProperty(ENCRYPTION_OPTIONS_KEY, this.EncryptionOptions);
             if (this.Mode != SessionMode.Node) writer.WriteProperty(MODE_KEY, this.Mode);
-            writer.WriteJsonProperty(REASON_KEY, this.Reason);
+            writer.WriteProperty(REASON_KEY, this.Reason);
             writer.WriteProperty(SCHEME_KEY, this.Scheme);
             writer.WriteArrayProperty(SCHEME_OPTIONS_KEY, this.SchemeOptions);
             writer.WriteProperty(STATE_KEY, this.State);

@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Lime.Protocol.Serialization
 {
-    public class TextJsonWriter : IJsonWriter, IDisposable
+    public class TextJsonWriter2 : IJsonWriter, IDisposable
     {
         #region Private fields
 
@@ -21,19 +21,18 @@ namespace Lime.Protocol.Serialization
 
         #region Constructor
 
-        public TextJsonWriter()
+        public TextJsonWriter2()
             : this(new StringWriter())
         {
         }
 
-        public TextJsonWriter(TextWriter writer)
+        public TextJsonWriter2(TextWriter writer)
         {
             _writer = writer;
             WriteOpenBrackets();
         }
 
-
-        ~TextJsonWriter()
+        ~TextJsonWriter2()
         {
             Dispose(false);
         }
@@ -189,9 +188,7 @@ namespace Lime.Protocol.Serialization
         {
             using (var writer = new TextJsonWriter())
             {
-                var jsonWritable = (IJsonWritable)json;
-
-                jsonWritable.WriteJson(writer);
+                TypeSerializer.Write(json, writer);
                 _writer.Write(writer.ToString());
             }            
         }
@@ -207,6 +204,39 @@ namespace Lime.Protocol.Serialization
 
                 WritePropertyName(propertyName);
                 WriteJson(json);
+
+                _commaNeeded = true;
+            }
+        }
+
+        private void WriteJsonArrayProperty(string propertyName, IEnumerable jsonItems)
+        {
+            if (jsonItems != null)
+            {
+                if (_commaNeeded)
+                {
+                    WriteComma();
+                }
+
+                WritePropertyName(propertyName);
+
+                WriteOpenArray();
+
+                foreach (var json in jsonItems)
+                {
+                    if (json != null)
+                    {
+                        if (_commaNeeded)
+                        {
+                            WriteComma();
+                        }
+
+                        WriteJson(json);
+                        _commaNeeded = true;
+                    }
+                }
+
+                WriteCloseArray();
 
                 _commaNeeded = true;
             }
@@ -232,6 +262,18 @@ namespace Lime.Protocol.Serialization
                 {
                     WriteBoolProperty(propertyName, (bool)value);
                 }
+                else if (value is Enum)
+                {
+                    WriteStringProperty(propertyName, value.ToString().ToCamelCase());
+                }
+                else if (TypeUtil.IsProtocolType(value.GetType()))
+                {
+                    WriteJsonProperty(propertyName, value);
+                }
+                else if (value is IDictionary<string,string>)
+                {
+                    WriteDictionaryProperty(propertyName, (IDictionary<string, string>)value);
+                }
                 else if (value is DateTime || value is DateTime?)
                 {
                     WriteDateTimeProperty(propertyName, (DateTime)value);
@@ -239,14 +281,6 @@ namespace Lime.Protocol.Serialization
                 else if (value is DateTimeOffset || value is DateTimeOffset?)
                 {
                     WriteDateTimeOffsetProperty(propertyName, (DateTimeOffset)value);
-                }
-                else if (value is Enum)
-                {
-                    WriteStringProperty(propertyName, value.ToString().ToCamelCase());
-                }
-                else if (value is IJsonWritable)
-                {
-                    WriteJsonProperty(propertyName, value);
                 }
                 else
                 {
@@ -357,10 +391,11 @@ namespace Lime.Protocol.Serialization
                         {
                             WriteStringValue(item.ToString().ToCamelCase());
                         }
-                        else if (item is IJsonWritable)                        
+                        else if (TypeUtil.IsProtocolType(item.GetType()))
                         {
                             WriteJson(item);
                         }
+
                         else
                         {
                             WriteStringValue(item.ToString());

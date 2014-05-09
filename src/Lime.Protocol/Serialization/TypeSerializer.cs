@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.Serialization;
 using System.Text;
@@ -12,23 +13,28 @@ namespace Lime.Protocol.Serialization
 {
     public static class TypeSerializer<T> where T : class, new()
     {
-        private static Dictionary<string, Action<T, IJsonWriter>> _writePropertyActionDictionary;
+        private static readonly Action<T, IJsonWriter>[] _serializePropertyActions;
+        private static readonly Action<T, JsonObject>[] _deserializePropertyActions;
 
         static TypeSerializer()
-        {
-            _writePropertyActionDictionary = new Dictionary<string, Action<T, IJsonWriter>>();
-
+        {           
             var type = typeof(T);
 
             var properties = type
                 .GetProperties()
-                .Where(p => p.GetCustomAttribute<DataMemberAttribute>() != null);
+                .Where(p => p.GetCustomAttribute<DataMemberAttribute>() != null)
+                .ToArray();
 
+            _serializePropertyActions = new Action<T, IJsonWriter>[properties.Length];
 
-            foreach (var property in properties)
+            for (int i = 0; i < properties.Length; i++)
             {
+                var property = properties[i];
                 var dataMember = property.GetCustomAttribute<DataMemberAttribute>();
                 var memberName = dataMember.Name;
+                var emitDefaultValue = dataMember.EmitDefaultValue;
+                var defaultValue = property.PropertyType.GetDefaultValue();
+                var getValueFunc = TypeUtil.BuildGetAccessor(property.GetGetMethod());
 
                 Action<T, IJsonWriter> writePropertyAction = null;
 
@@ -36,19 +42,26 @@ namespace Lime.Protocol.Serialization
                 {                    
                     writePropertyAction = (v, w) =>
                         {
-                            var value = property.GetValue(v);
+                            var value = getValueFunc(v);
                             if (value != null)
                             {
                                 w.WriteArrayProperty(memberName, (IEnumerable)value);
                             }
-                        };
+                        };                    
                 }
                 else
                 {
-                    writePropertyAction = (v, w) => w.WriteProperty(memberName, property.GetValue(v));
+                    writePropertyAction = (v, w) =>
+                    {
+                        var value = getValueFunc(v);
+                        if (emitDefaultValue || (value != null && !value.Equals(defaultValue)))
+                        {
+                            w.WriteProperty(memberName, value);
+                        }
+                    };
                 }
-                _writePropertyActionDictionary.Add(memberName, writePropertyAction);
-                
+
+                _serializePropertyActions[i] = writePropertyAction;                
             }
         }
 
@@ -59,7 +72,7 @@ namespace Lime.Protocol.Serialization
                 throw new ArgumentNullException("value");
             }
 
-            using (var writer = new TextJsonWriter())
+            using (var writer = new TextJsonWriter2())
             {
                 Write(value, writer);
                 return writer.ToString();
@@ -78,12 +91,11 @@ namespace Lime.Protocol.Serialization
                 throw new ArgumentNullException("writer");
             }
 
-            foreach (var writePropertyActionPar in _writePropertyActionDictionary)
+            for (int i = 0; i < _serializePropertyActions.Length; i++)
             {
-                writePropertyActionPar.Value(value, writer);
+                _serializePropertyActions[i](value, writer);
             }            
         }
-
 
         public static T Deserialize(string json)
         {
@@ -99,10 +111,11 @@ namespace Lime.Protocol.Serialization
 
     public static class TypeSerializer
     {
-        private static ConcurrentDictionary<Type, MethodInfo> _typeSerializeMethodDictionary = new ConcurrentDictionary<Type, MethodInfo>();
+        private static ConcurrentDictionary<Type, Func<object, string>> _serializeFuncDictionary = new ConcurrentDictionary<Type, Func<object, string>>();
+        private static ConcurrentDictionary<Type, Action<object, IJsonWriter>> _writeActionDictionary = new ConcurrentDictionary<Type, Action<object, IJsonWriter>>();
 
         public static string Serialize(object value)
-        {
+        {            
             if (value == null)
             {
                 throw new ArgumentNullException("value");
@@ -110,16 +123,61 @@ namespace Lime.Protocol.Serialization
 
             var type = value.GetType();
 
-            MethodInfo serializeMethod;
+            Func<object, string> serializeFunc;
 
-            if (!_typeSerializeMethodDictionary.TryGetValue(type, out serializeMethod))
+            if (!_serializeFuncDictionary.TryGetValue(type, out serializeFunc))
             {
                 var serializer = typeof(TypeSerializer<>).MakeGenericType(type);
-                serializeMethod = serializer.GetMethod("Serialize", BindingFlags.Static | BindingFlags.Public);
-                _typeSerializeMethodDictionary.TryAdd(type, serializeMethod);
+                var serializeFuncType = typeof(Func<,>).MakeGenericType(type, typeof(string));
+                var method = serializer.GetMethod("Serialize", BindingFlags.Static | BindingFlags.Public);
+                var genericSerializeFunc = Delegate.CreateDelegate(serializeFuncType, method);
+                var convertSerializeDelegateMethod = typeof(TypeSerializer)
+                    .GetMethod("ConvertSerializeDelegate", BindingFlags.Static | BindingFlags.NonPublic)
+                    .MakeGenericMethod(type);
+
+                serializeFunc = (Func<object, string>)convertSerializeDelegateMethod.Invoke(null, new[] { genericSerializeFunc });
+                _serializeFuncDictionary.TryAdd(type, serializeFunc);
             }
 
-            return (string)serializeMethod.Invoke(null, new[] { value });
+            return serializeFunc(value);
+        }       
+
+        public static void Write(object value, IJsonWriter writer)
+        {
+            if (value == null)
+            {
+                throw new ArgumentNullException("value");
+            }
+
+            var type = value.GetType();
+            
+            Action<object, IJsonWriter> writeAction;
+            if (!_writeActionDictionary.TryGetValue(type, out writeAction))
+            {
+                var serializer = typeof(TypeSerializer<>).MakeGenericType(type);
+                var writeActionType = typeof(Action<,>).MakeGenericType(type, typeof(IJsonWriter));
+                var method = serializer.GetMethod("Write", BindingFlags.Static | BindingFlags.Public);
+                var genericWriteAction = Delegate.CreateDelegate(writeActionType, method);
+                var convertWriteDelegateMethod = typeof(TypeSerializer)
+                    .GetMethod("ConvertWriteDelegate", BindingFlags.Static | BindingFlags.NonPublic)
+                    .MakeGenericMethod(type);
+                writeAction = (Action<object, IJsonWriter>)convertWriteDelegateMethod.Invoke(null, new[] { genericWriteAction });
+                _writeActionDictionary.TryAdd(type, writeAction);
+            }
+
+            writeAction(value, writer);
         }
+
+        private static Func<object, string> ConvertSerializeDelegate<T>(Func<T, string> func)
+        {
+            return (object p) => func((T)p);
+        }
+
+        private static Action<object, IJsonWriter> ConvertWriteDelegate<T>(Action<T, IJsonWriter> action)
+        {
+            return (object p1, IJsonWriter p2) => action((T)p1, p2);
+        }
+
+
     }
 }

@@ -20,7 +20,7 @@ namespace Lime.Protocol
         {
             base.WriteJson(writer);
             writer.WriteProperty(EVENT_KEY, this.Event);
-            writer.WriteJsonProperty(REASON_KEY, this.Reason);
+            writer.WriteProperty(REASON_KEY, this.Reason);
         }
 
         #endregion

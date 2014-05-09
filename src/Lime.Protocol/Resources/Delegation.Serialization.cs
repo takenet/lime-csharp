@@ -24,7 +24,7 @@ namespace Lime.Protocol.Resources
 
             writer.WriteProperty(TARGET_KEY, this.Target);
             writer.WriteArrayProperty(DESTINATIONS_KEY, this.Destinations);
-            writer.WriteJsonArrayProperty(COMMANDS_KEY, this.Commands);
+            writer.WriteArrayProperty(COMMANDS_KEY, this.Commands);
             writer.WriteArrayProperty(MESSAGES_KEY, this.Messages);
         }
 

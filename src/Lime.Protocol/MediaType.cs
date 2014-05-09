@@ -10,7 +10,6 @@ namespace Lime.Protocol
     /// <summary>
     /// MIME media type representation
     /// </summary>
-    [DataContract(Namespace = "http://limeprotocol.org/2014")]
     public class MediaType
     {
         #region Constructor
@@ -46,17 +45,14 @@ namespace Lime.Protocol
 
         #endregion
 
-        [DataMember(Name = "type")]
         public string Type { get; set; }
 
-        [DataMember(Name = "subtype")]
         public string Subtype { get; set; }
 
         /// <summary>
         /// Media type suffix
         /// <seealso cref="http://trac.tools.ietf.org/html/draft-ietf-appsawg-media-type-regs-14#section-6"/>
         /// </summary>
-        [DataMember(Name = "suffix")]
         public string Suffix { get; set; }
 
         /// <summary>

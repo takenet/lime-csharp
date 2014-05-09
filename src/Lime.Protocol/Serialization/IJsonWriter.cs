@@ -21,10 +21,6 @@ namespace Lime.Protocol.Serialization
 
         void WriteArrayProperty(string propertyName, IEnumerable items);
 
-        void WriteJsonArrayProperty(string propertyName, IEnumerable<IJsonWritable> jsonItems);
-
-        void WriteJsonProperty(string propertyName, IJsonWritable json);
-
         void WriteLongProperty(string propertyName, long value);
 
         void WriteProperty(string propertyName, object value);

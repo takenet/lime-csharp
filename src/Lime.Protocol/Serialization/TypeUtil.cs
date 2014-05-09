@@ -20,7 +20,7 @@ namespace Lime.Protocol.Serialization
         private static IDictionary<AuthenticationScheme, Type> _authenticationSchemeDictionary;        
         private static IDictionary<Type, Dictionary<string, object>> _enumTypeValueDictionary;
         private static IDictionary<Type, Delegate> _factoryMethodDictionary;
-        private static IEnumerable<Type> _protocolTypes;
+        private static HashSet<Type> _protocolTypes;
 
         private static object _syncRoot = new object();
        
@@ -32,10 +32,12 @@ namespace Lime.Protocol.Serialization
             _enumTypeValueDictionary = new Dictionary<Type, Dictionary<string, object>>();
             _protocolTypes = null;
 #if !PCL
-            _protocolTypes = Assembly
-                .GetExecutingAssembly()
-                .GetTypes()
-                .Where(t => t.GetCustomAttribute<DataContractAttribute>() != null);
+            _protocolTypes = new HashSet<Type>();            
+            foreach (var protocolType in Assembly.GetExecutingAssembly().GetTypes().Where(t => t.GetCustomAttribute<DataContractAttribute>() != null))
+            {
+                _protocolTypes.Add(protocolType);
+            }
+                
 
             var documentTypes = _protocolTypes
                 .Where(t => !t.IsAbstract && typeof(Document).IsAssignableFrom(t));
@@ -130,6 +132,18 @@ namespace Lime.Protocol.Serialization
             return _enumTypeValueDictionary.Keys;
         }
 
+        /// <summary>
+        /// Indicates if the type is a
+        /// protocol JSON type, decorated
+        /// with the DataContract attribute
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        public static bool IsProtocolType(Type type)
+        {
+            return _protocolTypes.Contains(type);
+        }
+
         public static IEnumerable<Type> GetProtocolTypes()
         {
             return _protocolTypes;
@@ -190,5 +204,60 @@ namespace Lime.Protocol.Serialization
 #endif
             return factoryDelegate;
         }
+
+        /// <summary>
+        /// http://stackoverflow.com/questions/10820453/reflection-performance-create-delegate-properties-c
+        /// </summary>
+        /// <param name="method"></param>
+        /// <returns></returns>
+        public static Func<object, object> BuildGetAccessor(MethodInfo method)
+        {
+            var obj = Expression.Parameter(typeof(object), "o");
+
+            Expression<Func<object, object>> expr =
+                Expression.Lambda<Func<object, object>>(
+                    Expression.Convert(
+                        Expression.Call(
+                            Expression.Convert(obj, method.DeclaringType),
+                            method),
+                        typeof(object)),
+                    obj);
+
+            return expr.Compile();
+        }
+
+        public static Func<object, object> BuildAccessor(MethodInfo method)
+        {
+            ParameterExpression obj = Expression.Parameter(typeof(object), "obj");
+
+            Expression<Func<object, object>> expr =
+                Expression.Lambda<Func<object, object>>(
+                    Expression.Convert(
+                        Expression.Call(
+                            Expression.Convert(obj, method.DeclaringType),
+                            method),
+                        typeof(object)),
+                    obj);
+
+            return expr.Compile();
+        }
+
+        public static Action<object, object> BuildSetAccessor(MethodInfo method)
+        {
+            var obj = Expression.Parameter(typeof(object), "o");
+            var value = Expression.Parameter(typeof(object));
+
+            Expression<Action<object, object>> expr =
+                Expression.Lambda<Action<object, object>>(
+                    Expression.Call(
+                        Expression.Convert(obj, method.DeclaringType),
+                        method,
+                        Expression.Convert(value, method.GetParameters()[0].ParameterType)),
+                    obj,
+                    value);
+
+            return expr.Compile();
+        }
+
     }
 }

@@ -16,7 +16,7 @@ namespace Lime.Protocol.Resources
                 throw new ArgumentNullException("writer");
             }
 
-            writer.WriteJsonArrayProperty(CONTACTS_KEY, this.Contacts);
+            writer.WriteArrayProperty(CONTACTS_KEY, this.Contacts);
         }       
 
         [Factory]

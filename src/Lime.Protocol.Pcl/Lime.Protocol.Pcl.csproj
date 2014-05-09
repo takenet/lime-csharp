@@ -144,9 +144,6 @@
     <Compile Include="..\Lime.Protocol\Serialization\SerializationExtensions.cs">
       <Link>Serialization\SerializationExtensions.cs</Link>
     </Compile>
-    <Compile Include="..\Lime.Protocol\Serialization\TypeUtil.cs">
-      <Link>Serialization\TypeUtil.cs</Link>
-    </Compile>
     <Compile Include="..\Lime.Protocol\Session.cs">
       <Link>Session.cs</Link>
     </Compile>

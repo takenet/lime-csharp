@@ -15,9 +15,9 @@ namespace Lime.Protocol.Serialization.ServiceStack.UnitTests
     [TestClass]
     public class EnvelopeSerializerTests
     {
-        public EnvelopeSerializer GetTarget()
+        public EnvelopeSerializer2 GetTarget()
         {
-            return new EnvelopeSerializer();
+            return new EnvelopeSerializer2();
         }
 
         #region Serialize
