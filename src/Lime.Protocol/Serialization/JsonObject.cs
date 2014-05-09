@@ -54,17 +54,42 @@ namespace Lime.Protocol.Serialization
 
                 array = new TEnum[list.Count];
 
-                var valueType = typeof(TEnum);
-
                 for (int i = 0; i < list.Count; i++)
                 {
                     var item = list[i];
-                    array[i] = TypeUtil.GetEnumValue<TEnum>(item.ToString());
+                    array[i] = TypeUtil.GetEnumValue<TEnum>((string)item);
                 }
             }
 
             return array;
         }
+
+        public Array GetEnumArrayOrNull(Type enumType, string key)
+        {
+            Array array = null;
+
+            if (base.ContainsKey(key))
+            {
+                var list = base[key] as IList;
+
+                if (list == null)
+                {
+                    throw new ArgumentException(string.Format("The dictionary value for key '{0}' is not IList", key));
+                }
+                 
+                array = Array.CreateInstance(enumType, list.Count);
+
+                for (int i = 0; i < list.Count; i++)
+                {
+                    var item = (string)list[i];                    
+                    var itemValue = TypeUtil.GetEnumValue(enumType, item);
+                    array.SetValue(itemValue, i);
+                }
+            }
+
+            return array;
+        }
+
 
         public T[] GetArrayOrNull<T>(string key, Func<object, T> castFunc = null)
         {
@@ -108,13 +133,51 @@ namespace Lime.Protocol.Serialization
             return array;
         }
 
+        public Array GetArrayOrNull(Type type, string key, Func<string, object> castFunc)
+        {
+            Array array = null;
+
+            if (base.ContainsKey(key))
+            {
+                var list = base[key] as IList;
+
+                if (list == null)
+                {
+                    throw new ArgumentException(string.Format("The dictionary value for key '{0}' is not IList", key));
+                }
+
+                array = Array.CreateInstance(type, list.Count);
+
+                for (int i = 0; i < list.Count; i++)
+                {
+                    var item = list[i].ToString();
+
+                    array.SetValue(castFunc(item), i);                    
+                }
+            }
+
+            return array;
+        }
+
         public Nullable<TEnum> GetEnumValueOrNull<TEnum>(string key) where TEnum : struct
         {
             Nullable<TEnum> value = null;
 
             if (base.ContainsKey(key))
             {
-                value = TypeUtil.GetEnumValue<TEnum>(base[key].ToString());
+                value = TypeUtil.GetEnumValue<TEnum>((string)base[key]);
+            }
+
+            return value;
+        }
+
+        public object GetEnumValueOrNull(Type enumType, string key)
+        {
+            object value = null;
+
+            if (base.ContainsKey(key))
+            {
+                value = TypeUtil.GetEnumValue(enumType, (string)base[key]);
             }
 
             return value;
@@ -126,7 +189,23 @@ namespace Lime.Protocol.Serialization
 
             if (base.ContainsKey(key))
             {
-                value = TypeUtil.GetEnumValue<TEnum>(base[key].ToString());
+                value = TypeUtil.GetEnumValue<TEnum>((string)base[key]);
+            }
+
+            return value;
+        }
+
+        public object GetEnumValueOrDefault(Type enumType, string key) 
+        {
+            object value;
+
+            if (base.ContainsKey(key))
+            {
+                value = TypeUtil.GetEnumValue(enumType, (string)base[key]);
+            }
+            else
+            {
+                value = enumType.GetDefaultValue();
             }
 
             return value;
@@ -151,6 +230,19 @@ namespace Lime.Protocol.Serialization
             if (base.ContainsKey(key))
             {
                 value = castFunc(base[key]);
+            }
+
+            return value;
+        }
+
+        public object GetValueOrNull(string key, Func<string, object> castFunc)
+        {
+            object value = null;
+
+            if (base.ContainsKey(key) &&
+                base[key] is string)
+            {
+                value = castFunc((string)base[key]);
             }
 
             return value;

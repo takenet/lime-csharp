@@ -1,5 +1,6 @@
 ﻿using Lime.Protocol.Security;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -20,6 +21,7 @@ namespace Lime.Protocol.Serialization
         private static IDictionary<AuthenticationScheme, Type> _authenticationSchemeDictionary;        
         private static IDictionary<Type, Dictionary<string, object>> _enumTypeValueDictionary;
         private static IDictionary<Type, Delegate> _factoryMethodDictionary;
+        private static ConcurrentDictionary<Type, Func<string, object>> _typeParseFuncDictionary;
         private static HashSet<Type> _protocolTypes;
 
         private static object _syncRoot = new object();
@@ -30,6 +32,7 @@ namespace Lime.Protocol.Serialization
             _authenticationSchemeDictionary = new Dictionary<AuthenticationScheme, Type>();
             _factoryMethodDictionary = new Dictionary<Type, Delegate>();
             _enumTypeValueDictionary = new Dictionary<Type, Dictionary<string, object>>();
+            _typeParseFuncDictionary = new ConcurrentDictionary<Type, Func<string, object>>();
             _protocolTypes = null;
 #if !PCL
             _protocolTypes = new HashSet<Type>();            
@@ -86,6 +89,61 @@ namespace Lime.Protocol.Serialization
 #endif
         }
 
+        public static Func<string, T> GetParseFunc<T>()
+        {
+            var type = typeof(T);
+
+            var parseMethod = typeof(T)
+                .GetMethod("Parse", BindingFlags.Static | BindingFlags.Public, null, new[] { typeof(string) }, null);
+
+            if (parseMethod == null)
+            {
+                throw new ArgumentException(string.Format("The type '{0}' doesn't contains a static 'Parse' method", type));
+            }
+
+            if (parseMethod.ReturnType != type)
+            {
+                throw new ArgumentException("The Parse method has an invalid return type");
+            }
+
+            var parseFuncType = typeof(Func<,>).MakeGenericType(typeof(string), type);
+
+            return (Func<string, T>)Delegate.CreateDelegate(parseFuncType, parseMethod);
+        }
+        
+
+        public static Func<string, object> GetParseFuncForType(Type type)
+        {
+            if (type == null)
+            {
+                throw new ArgumentNullException("type");
+            }
+
+            Func<string, object> parseFunc;
+
+            if (!_typeParseFuncDictionary.TryGetValue(type, out parseFunc))
+            {
+                var getParseFuncMethod = typeof(TypeUtil)
+                    .GetMethod("GetParseFunc", BindingFlags.Static | BindingFlags.Public)
+                    .MakeGenericMethod(type);
+
+                var genericGetParseFunc = getParseFuncMethod.Invoke(null, null);
+
+                var parseFuncAdapterMethod = typeof(TypeUtil)
+                    .GetMethod("ParseFuncAdapter", BindingFlags.Static | BindingFlags.NonPublic)
+                    .MakeGenericMethod(type);
+
+                parseFunc = (Func<string, object>)parseFuncAdapterMethod.Invoke(null, new[] { genericGetParseFunc });
+                _typeParseFuncDictionary.TryAdd(type, parseFunc);
+            }
+
+            return parseFunc; 
+        }
+
+        private static Func<string, object> ParseFuncAdapter<T>(Func<string, T> parseFunc)
+        {
+            return (s) => (object)parseFunc(s);
+        }
 
         public static bool TryGetTypeForMediaType(MediaType mediaType, out Type type)
         {
@@ -100,7 +158,7 @@ namespace Lime.Protocol.Serialization
         public static TEnum GetEnumValue<TEnum>(string enumName) where TEnum : struct
         {
             var enumType = typeof(TEnum); 
-            Dictionary<string,object> memberValueDictionary;
+            Dictionary<string, object> memberValueDictionary;
 
             if (!_enumTypeValueDictionary.TryGetValue(enumType, out memberValueDictionary))
             {
@@ -125,6 +183,25 @@ namespace Lime.Protocol.Serialization
             }            
 
             return (TEnum)value;
+        }
+
+        public static object GetEnumValue(Type enumType, string enumName)
+        {
+            Dictionary<string, object> memberValueDictionary;
+
+            if (!_enumTypeValueDictionary.TryGetValue(enumType, out memberValueDictionary))
+            {                
+                throw new ArgumentException("Unknown enum type");                
+            }
+
+            object value;
+
+            if (!memberValueDictionary.TryGetValue(enumName.ToLowerInvariant(), out value))
+            {
+                throw new ArgumentException("Invalid enum member name");
+            }
+
+            return value;
         }
 
         public static IEnumerable<Type> GetEnumTypes()
@@ -226,21 +303,6 @@ namespace Lime.Protocol.Serialization
             return expr.Compile();
         }
 
-        public static Func<object, object> BuildAccessor(MethodInfo method)
-        {
-            ParameterExpression obj = Expression.Parameter(typeof(object), "obj");
-
-            Expression<Func<object, object>> expr =
-                Expression.Lambda<Func<object, object>>(
-                    Expression.Convert(
-                        Expression.Call(
-                            Expression.Convert(obj, method.DeclaringType),
-                            method),
-                        typeof(object)),
-                    obj);
-
-            return expr.Compile();
-        }
 
         public static Action<object, object> BuildSetAccessor(MethodInfo method)
         {
