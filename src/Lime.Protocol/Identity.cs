@@ -10,21 +10,18 @@ namespace Lime.Protocol
     /// <summary>
     /// Represents an element in a network
     /// </summary>
-    [DataContract(Namespace = "http://limeprotocol.org")]
     public class Identity : IIdentity
     {
         /// <summary>
         /// Identity unique name 
         /// on his domain
         /// </summary>
-        [DataMember(Name = "name")]
         public string Name { get; set; }
 
         /// <summary>
         /// Network domain name 
         /// of the identity
         /// </summary>
-        [DataMember(Name = "domain")]
         public string Domain { get; set; }
 
         /// <summary>

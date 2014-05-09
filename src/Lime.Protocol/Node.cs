@@ -11,14 +11,12 @@ namespace Lime.Protocol
     /// Represents an element 
     /// of a network
     /// </summary>
-    [DataContract(Namespace = "http://limeprotocol.org")]
     public class Node : Identity
     {
         /// <summary>
         /// The name of the instance used
         /// by the node to connect to the network
         /// </summary>
-        [DataMember(Name = "instance")]
         public string Instance { get; set; }
 
         /// <summary>

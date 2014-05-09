@@ -24,6 +24,28 @@ namespace Lime.Console
     {
         static void Main(string[] args)
         {
+
+            var notification = new Notification()
+            {
+                From = Node.Parse("andreb@takenet.com.br/casa"),
+                To = Node.Parse("joao@takenet.com.br/trab"),
+                Id = Guid.NewGuid(),
+                Event = Event.Failed,
+                Reason = new Reason()
+                {
+                    Code = 1,
+                    Description = "Fudeu"
+                }
+            };
+
+            var serialized = TypeSerializer.Serialize(notification);
+
+            System.Console.WriteLine(serialized);
+            System.Console.ReadLine();
+
+
+            return;
+
             System.Console.Write("Port number (ENTER for default): ");
 
             var portNumberString = System.Console.ReadLine();

@@ -95,6 +95,7 @@
       <DependentUpon>Roster.cs</DependentUpon>
     </Compile>
     <Compile Include="Serialization\DictionaryJsonWriter.cs" />
+    <Compile Include="Serialization\TypeSerializer.cs" />
     <Compile Include="Util\AsyncCountdownEvent.cs" />
     <Compile Include="Util\AsyncQueue.cs" />
     <Compile Include="Network\ChannelBase.cs" />
