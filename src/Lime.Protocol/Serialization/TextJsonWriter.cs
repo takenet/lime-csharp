@@ -188,7 +188,7 @@ namespace Lime.Protocol.Serialization
         {
             using (var writer = new TextJsonWriter())
             {
-                TypeSerializer.Write(json, writer);
+                JsonSerializer.Write(json, writer);
                 _writer.Write(writer.ToString());
             }            
         }

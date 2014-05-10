@@ -89,6 +89,14 @@ namespace Lime.Protocol.Serialization
         }
 
         #endregion
+
+        /// <summary>
+        /// Gets the Parse static 
+        /// method of a Type as 
+        /// a func
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
         public static Func<string, T> GetParseFunc<T>()
         {
             var type = typeof(T);
@@ -110,7 +118,14 @@ namespace Lime.Protocol.Serialization
 
             return (Func<string, T>)Delegate.CreateDelegate(parseFuncType, parseMethod);
         }
-        
+
+        /// <summary>
+        /// Gets the Parse static 
+        /// method of a Type as 
+        /// a func
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns></returns>
         public static Func<string, object> GetParseFuncForType(Type type)
         {
             if (type == null)

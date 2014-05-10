@@ -29,19 +29,19 @@ namespace Lime.Protocol.Serialization
 
             if (envelope is Notification)
             {
-                return TypeSerializer<Notification>.Serialize((Notification)envelope);
+                return JsonSerializer<Notification>.Serialize((Notification)envelope);
             }
             else if (envelope is Message)
             {
-                return TypeSerializer<Message>.Serialize((Message)envelope);
+                return JsonSerializer<Message>.Serialize((Message)envelope);
             }
             else if (envelope is Command)
             {
-                return TypeSerializer<Command>.Serialize((Command)envelope);
+                return JsonSerializer<Command>.Serialize((Command)envelope);
             }
             else if (envelope is Session)
             {
-                return TypeSerializer<Session>.Serialize((Session)envelope);
+                return JsonSerializer<Session>.Serialize((Session)envelope);
             }
             else
             {
@@ -62,19 +62,19 @@ namespace Lime.Protocol.Serialization
 
             if (jsonObject.ContainsKey("content"))
             {
-                return TypeSerializer<Message>.ParseJson(jsonObject);
+                return JsonSerializer<Message>.ParseJson(jsonObject);
             }
             else if (jsonObject.ContainsKey("event"))
             {
-                return TypeSerializer<Notification>.ParseJson(jsonObject);
+                return JsonSerializer<Notification>.ParseJson(jsonObject);
             }
             else if (jsonObject.ContainsKey("method"))
             {
-                return TypeSerializer<Command>.ParseJson(jsonObject);
+                return JsonSerializer<Command>.ParseJson(jsonObject);
             }
             else if (jsonObject.ContainsKey("state"))
             {
-                return TypeSerializer<Session>.ParseJson(jsonObject);
+                return JsonSerializer<Session>.ParseJson(jsonObject);
             }
             else
             {

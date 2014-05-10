@@ -17,14 +17,14 @@ namespace Lime.Protocol.Serialization.Newtonsoft
             JsonConvert.DefaultSettings = () => JsonNetSerializer.Settings;
         }
 
-        private static JsonSerializerSettings _settings;
-        public static JsonSerializerSettings Settings
+        private static global::Newtonsoft.Json.JsonSerializerSettings _settings;
+        public static global::Newtonsoft.Json.JsonSerializerSettings Settings
         {
             get
             {
                 if (_settings == null)
                 {
-                    _settings = new JsonSerializerSettings();
+                    _settings = new global::Newtonsoft.Json.JsonSerializerSettings();
                     _settings.NullValueHandling = NullValueHandling.Ignore;
                     _settings.ReferenceLoopHandling = ReferenceLoopHandling.Serialize;
 
@@ -101,7 +101,7 @@ namespace Lime.Protocol.Serialization.Newtonsoft
                 return objectType == typeof(Identity);
             }
 
-            public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+            public override object ReadJson(JsonReader reader, Type objectType, object existingValue, global::Newtonsoft.Json.JsonSerializer serializer)
             {
                 if (reader.TokenType == JsonToken.String)
                 {
@@ -115,7 +115,7 @@ namespace Lime.Protocol.Serialization.Newtonsoft
                 }
             }
 
-            public override void WriteJson(global::Newtonsoft.Json.JsonWriter writer, object value, JsonSerializer serializer)
+            public override void WriteJson(global::Newtonsoft.Json.JsonWriter writer, object value, global::Newtonsoft.Json.JsonSerializer serializer)
             {
                 if (value != null)
                 {
@@ -140,7 +140,7 @@ namespace Lime.Protocol.Serialization.Newtonsoft
                 return objectType == typeof(Node);
             }
 
-            public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+            public override object ReadJson(JsonReader reader, Type objectType, object existingValue, global::Newtonsoft.Json.JsonSerializer serializer)
             {
                 if (reader.TokenType == JsonToken.String)
                 {
@@ -154,7 +154,7 @@ namespace Lime.Protocol.Serialization.Newtonsoft
                 }
             }
 
-            public override void WriteJson(global::Newtonsoft.Json.JsonWriter writer, object value, JsonSerializer serializer)
+            public override void WriteJson(global::Newtonsoft.Json.JsonWriter writer, object value, global::Newtonsoft.Json.JsonSerializer serializer)
             {
                 if (value != null)
                 {
@@ -179,7 +179,7 @@ namespace Lime.Protocol.Serialization.Newtonsoft
                 return objectType == typeof(MediaType);
             }
 
-            public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+            public override object ReadJson(JsonReader reader, Type objectType, object existingValue, global::Newtonsoft.Json.JsonSerializer serializer)
             {
                 if (reader.TokenType == JsonToken.String)
                 {
@@ -192,7 +192,7 @@ namespace Lime.Protocol.Serialization.Newtonsoft
                 }
             }
 
-            public override void WriteJson(global::Newtonsoft.Json.JsonWriter writer, object value, JsonSerializer serializer)
+            public override void WriteJson(global::Newtonsoft.Json.JsonWriter writer, object value, global::Newtonsoft.Json.JsonSerializer serializer)
             {
                 if (value != null)
                 {
@@ -222,12 +222,12 @@ namespace Lime.Protocol.Serialization.Newtonsoft
                 return typeof(Authentication).IsAssignableFrom(objectType);
             }
 
-            public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+            public override object ReadJson(JsonReader reader, Type objectType, object existingValue, global::Newtonsoft.Json.JsonSerializer serializer)
             {
                 return null;
             }
 
-            public override void WriteJson(global::Newtonsoft.Json.JsonWriter writer, object value, JsonSerializer serializer)
+            public override void WriteJson(global::Newtonsoft.Json.JsonWriter writer, object value, global::Newtonsoft.Json.JsonSerializer serializer)
             {
                 throw new NotImplementedException();
             }
@@ -259,7 +259,7 @@ namespace Lime.Protocol.Serialization.Newtonsoft
             /// <returns>
             /// The object value.
             /// </returns>
-            public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+            public override object ReadJson(JsonReader reader, Type objectType, object existingValue, global::Newtonsoft.Json.JsonSerializer serializer)
             {
                 object target = null;
                 if (reader.TokenType != JsonToken.Null)
@@ -290,7 +290,7 @@ namespace Lime.Protocol.Serialization.Newtonsoft
                 return target;
             }
 
-            public override void WriteJson(global::Newtonsoft.Json.JsonWriter writer, object value, JsonSerializer serializer)
+            public override void WriteJson(global::Newtonsoft.Json.JsonWriter writer, object value, global::Newtonsoft.Json.JsonSerializer serializer)
             {
                 throw new NotImplementedException();
             }
@@ -323,7 +323,7 @@ namespace Lime.Protocol.Serialization.Newtonsoft
             /// <returns>
             /// The object value.
             /// </returns>
-            public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+            public override object ReadJson(JsonReader reader, Type objectType, object existingValue, global::Newtonsoft.Json.JsonSerializer serializer)
             {
                 object target = null;
                 if (reader.TokenType != JsonToken.Null)
@@ -357,7 +357,7 @@ namespace Lime.Protocol.Serialization.Newtonsoft
                 return target;
             }
 
-            public override void WriteJson(global::Newtonsoft.Json.JsonWriter writer, object value, JsonSerializer serializer)
+            public override void WriteJson(global::Newtonsoft.Json.JsonWriter writer, object value, global::Newtonsoft.Json.JsonSerializer serializer)
             {
                 throw new NotImplementedException();
             }
@@ -389,7 +389,7 @@ namespace Lime.Protocol.Serialization.Newtonsoft
             /// <returns>
             /// The object value.
             /// </returns>
-            public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+            public override object ReadJson(JsonReader reader, Type objectType, object existingValue, global::Newtonsoft.Json.JsonSerializer serializer)
             {
                 object target = null;
                 if (reader.TokenType != JsonToken.Null)
@@ -418,7 +418,7 @@ namespace Lime.Protocol.Serialization.Newtonsoft
                 return target;
             }
 
-            public override void WriteJson(global::Newtonsoft.Json.JsonWriter writer, object value, JsonSerializer serializer)
+            public override void WriteJson(global::Newtonsoft.Json.JsonWriter writer, object value, global::Newtonsoft.Json.JsonSerializer serializer)
             {
                 throw new NotImplementedException();
             }
@@ -443,14 +443,14 @@ namespace Lime.Protocol.Serialization.Newtonsoft
                 return typeof(Document).IsAssignableFrom(objectType);
             }
 
-            public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+            public override object ReadJson(JsonReader reader, Type objectType, object existingValue, global::Newtonsoft.Json.JsonSerializer serializer)
             {
                 // The serialization is made by the
                 // container class (Message or Command)
                 return null;
             }
 
-            public override void WriteJson(global::Newtonsoft.Json.JsonWriter writer, object value, JsonSerializer serializer)
+            public override void WriteJson(global::Newtonsoft.Json.JsonWriter writer, object value, global::Newtonsoft.Json.JsonSerializer serializer)
             {
                 throw new NotImplementedException();
             }

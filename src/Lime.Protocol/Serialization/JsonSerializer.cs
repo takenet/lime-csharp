@@ -13,14 +13,22 @@ using System.Threading.Tasks;
 
 namespace Lime.Protocol.Serialization
 {
-    public static class TypeSerializer<T> where T : class, new()
+    /// <summary>
+    /// Provides JSON serialization support
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    public static class JsonSerializer<T> where T : class, new()
     {
+        #region Private Fields
+
         private static readonly Action<T, IJsonWriter>[] _serializePropertyActions;
         private static readonly Action<T, JsonObject>[] _deserializePropertyActions;
-        
+
+        #endregion
+
         #region Constructor
 
-        static TypeSerializer()
+        static JsonSerializer()
         {
             var type = typeof(T);
 
@@ -48,9 +56,7 @@ namespace Lime.Protocol.Serialization
                 else
                 {
                     defaultValue = property.PropertyType.GetDefaultValue();
-                }
-
-                
+                }                
                 var propertyType = property.PropertyType;
 
                 // Serialization
@@ -142,7 +148,7 @@ namespace Lime.Protocol.Serialization
                         if (j.ContainsKey(memberName) &&
                             j[memberName] is IEnumerable)
                         {
-                            var value = j.GetArrayOrNull(propertyType, memberName, i => TypeSerializer.ParseJson(propertyType, (JsonObject)i));
+                            var value = j.GetArrayOrNull(propertyType, memberName, i => JsonSerializer.ParseJson(propertyType, (JsonObject)i));
 
                             if (value != null)
                             {
@@ -263,7 +269,7 @@ namespace Lime.Protocol.Serialization
 
                                 if (TypeUtil.TryGetTypeForMediaType(mediaType, out concreteType))
                                 {
-                                    var value = TypeSerializer.ParseJson(concreteType, propertyJsonObject);
+                                    var value = JsonSerializer.ParseJson(concreteType, propertyJsonObject);
                                     if (value != null)
                                     {
                                         setFunc(v, value);
@@ -289,7 +295,7 @@ namespace Lime.Protocol.Serialization
 
                                 if (TypeUtil.TryGetTypeForAuthenticationScheme(scheme, out concreteType))
                                 {
-                                    var value = TypeSerializer.ParseJson(concreteType, propertyJsonObject);
+                                    var value = JsonSerializer.ParseJson(concreteType, propertyJsonObject);
                                     if (value != null)
                                     {
                                         setFunc(v, value);
@@ -313,7 +319,7 @@ namespace Lime.Protocol.Serialization
                             j[memberName] is JsonObject)
                         {
                             var propertyJsonObject = (JsonObject)j[memberName];
-                            var value = TypeSerializer.ParseJson(propertyType, propertyJsonObject) ?? defaultValue;
+                            var value = JsonSerializer.ParseJson(propertyType, propertyJsonObject) ?? defaultValue;
                             if (isNullable || value != null)
                             {
                                 setFunc(v, value);
@@ -453,7 +459,10 @@ namespace Lime.Protocol.Serialization
         #endregion
     }
 
-    public static class TypeSerializer
+    /// <summary>
+    /// Provides JSON serialization support
+    /// </summary>
+    public static class JsonSerializer
     {
         #region Private Fields
 
@@ -466,7 +475,7 @@ namespace Lime.Protocol.Serialization
 
         #region Constructor
 
-        static TypeSerializer()
+        static JsonSerializer()
         {
             _serializeFuncDictionary = new ConcurrentDictionary<Type, Func<object, string>>();
             _writeActionDictionary = new ConcurrentDictionary<Type, Action<object, IJsonWriter>>();
@@ -497,11 +506,11 @@ namespace Lime.Protocol.Serialization
 
             if (!_serializeFuncDictionary.TryGetValue(type, out serializeFunc))
             {
-                var serializer = typeof(TypeSerializer<>).MakeGenericType(type);
+                var serializer = typeof(JsonSerializer<>).MakeGenericType(type);
                 var serializeFuncType = typeof(Func<,>).MakeGenericType(type, typeof(string));
                 var method = serializer.GetMethod("Serialize", BindingFlags.Static | BindingFlags.Public);
                 var genericSerializeFunc = Delegate.CreateDelegate(serializeFuncType, method);
-                var serializeFuncAdapterMethod = typeof(TypeSerializer)
+                var serializeFuncAdapterMethod = typeof(JsonSerializer)
                     .GetMethod("SerializeFuncAdapter", BindingFlags.Static | BindingFlags.NonPublic)
                     .MakeGenericMethod(type);
 
@@ -538,11 +547,11 @@ namespace Lime.Protocol.Serialization
             Action<object, IJsonWriter> writeAction;
             if (!_writeActionDictionary.TryGetValue(type, out writeAction))
             {
-                var serializer = typeof(TypeSerializer<>).MakeGenericType(type);
+                var serializer = typeof(JsonSerializer<>).MakeGenericType(type);
                 var writeActionType = typeof(Action<,>).MakeGenericType(type, typeof(IJsonWriter));
                 var method = serializer.GetMethod("Write", BindingFlags.Static | BindingFlags.Public);
                 var genericWriteAction = Delegate.CreateDelegate(writeActionType, method);
-                var writeFuncAdapterMethod = typeof(TypeSerializer)
+                var writeFuncAdapterMethod = typeof(JsonSerializer)
                     .GetMethod("WriteFuncAdapter", BindingFlags.Static | BindingFlags.NonPublic)
                     .MakeGenericMethod(type);
                 try
@@ -611,11 +620,11 @@ namespace Lime.Protocol.Serialization
             Func<JsonObject, object> parseJsonFunc;
             if (!_parseJsonFuncDictionary.TryGetValue(type, out parseJsonFunc))
             {
-                var serializer = typeof(TypeSerializer<>).MakeGenericType(type);
+                var serializer = typeof(JsonSerializer<>).MakeGenericType(type);
                 var parseJsonFuncType = typeof(Func<,>).MakeGenericType(typeof(JsonObject), type);
                 var method = serializer.GetMethod("ParseJson", BindingFlags.Static | BindingFlags.Public);
                 var genericParseJsonFunc = Delegate.CreateDelegate(parseJsonFuncType, method);
-                var parseJsonAdapterMethod = typeof(TypeSerializer)
+                var parseJsonAdapterMethod = typeof(JsonSerializer)
                     .GetMethod("ParseJsonFuncAdapter", BindingFlags.Static | BindingFlags.NonPublic)
                     .MakeGenericMethod(type);
                 try

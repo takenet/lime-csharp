@@ -61,8 +61,8 @@ namespace Lime.Protocol.Serialization.ServiceStack
         /// <param name="envelope"></param>
         /// <returns></returns>
         public string Serialize(Envelope envelope)
-        {           
-            return JsonSerializer.SerializeToString(envelope);
+        {
+            return global::ServiceStack.Text.JsonSerializer.SerializeToString(envelope);
         }
 
         /// <summary>
@@ -82,7 +82,7 @@ namespace Lime.Protocol.Serialization.ServiceStack
             }
             else if (jsonObject.ContainsKey("event"))
             {
-                return JsonSerializer.DeserializeFromString<Notification>(envelopeString);
+                return global::ServiceStack.Text.JsonSerializer.DeserializeFromString<Notification>(envelopeString);
             }
             else if (jsonObject.ContainsKey("method"))
             {
@@ -137,7 +137,7 @@ namespace Lime.Protocol.Serialization.ServiceStack
                     throw new ArgumentException("Unknown authentication mechanism");
                 }
 
-                session.Authentication = (Authentication)JsonSerializer.DeserializeFromString(
+                session.Authentication = (Authentication)global::ServiceStack.Text.JsonSerializer.DeserializeFromString(
                     jsonObject.GetUnescaped(Session.AUTHENTICATION_KEY), authenticationType);
             }
 
@@ -189,7 +189,7 @@ namespace Lime.Protocol.Serialization.ServiceStack
                     throw new ArgumentException("Unknown document type");
                 }
 
-                document = (Document)JsonSerializer.DeserializeFromString(
+                document = (Document)global::ServiceStack.Text.JsonSerializer.DeserializeFromString(
                     jsonObject.GetUnescaped(documentPropertyName), documentType);
             }
 

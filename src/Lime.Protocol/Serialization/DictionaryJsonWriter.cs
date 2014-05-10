@@ -73,7 +73,7 @@ namespace Lime.Protocol.Serialization
                     if (TypeUtil.IsKnownType(item.GetType()))
                     {                        
                         var writer = new DictionaryJsonWriter();
-                        TypeSerializer.Write(item, writer);
+                        JsonSerializer.Write(item, writer);
                         itemList.Add(writer.ToDictionary());
                     }
                     else if (item is Enum)
@@ -175,7 +175,7 @@ namespace Lime.Protocol.Serialization
         private void WriteJsonProperty(string propertyName, object json)
         {
             var writer = new DictionaryJsonWriter();
-            TypeSerializer.Write(json, writer);
+            JsonSerializer.Write(json, writer);
             _jsonDictionary.Add(propertyName, writer.ToDictionary());
         }
 

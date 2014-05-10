@@ -61,7 +61,7 @@
     <Compile Include="Serialization\DictionaryJsonWriter.cs" />
     <Compile Include="Serialization\EnvelopeSerializer.cs" />
     <Compile Include="Serialization\TextJsonWriter.cs" />
-    <Compile Include="Serialization\TypeSerializer.cs" />
+    <Compile Include="Serialization\JsonSerializer.cs" />
     <Compile Include="Util\AsyncCountdownEvent.cs" />
     <Compile Include="Util\AsyncQueue.cs" />
     <Compile Include="Network\ChannelBase.cs" />
