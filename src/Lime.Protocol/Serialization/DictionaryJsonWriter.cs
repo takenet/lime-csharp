@@ -28,7 +28,7 @@ namespace Lime.Protocol.Serialization
 
         #region IJsonWriter Members
 
-        public void WriteBoolProperty(string propertyName, bool value)
+        public void WriteBooleanProperty(string propertyName, bool value)
         {
             if (_writeDefaultValues || 
                 value != false)
@@ -54,15 +54,7 @@ namespace Lime.Protocol.Serialization
             }
         }
 
-        public void WriteGuidProperty(string propertyName, Guid value)
-        {
-            if (_writeDefaultValues || value != Guid.Empty)
-            {
-                _jsonDictionary.Add(propertyName, value);
-            }
-        }
-
-        public void WriteIntProperty(string propertyName, int value)
+        public void WriteIntegerProperty(string propertyName, int value)
         {
             if (_writeDefaultValues || value != 0)
             {
@@ -75,14 +67,13 @@ namespace Lime.Protocol.Serialization
             if (items != null)
             {
                 List<object> itemList = new List<object>();
-
+                
                 foreach (var item in items)
-                {
-                    if (item is IJsonWritable)
-                    {
-                        var jsonWritable = (IJsonWritable)item;
+                {                    
+                    if (TypeUtil.IsKnownType(item.GetType()))
+                    {                        
                         var writer = new DictionaryJsonWriter();
-                        jsonWritable.WriteJson(writer);
+                        TypeSerializer.Write(item, writer);
                         itemList.Add(writer.ToDictionary());
                     }
                     else if (item is Enum)
@@ -124,18 +115,18 @@ namespace Lime.Protocol.Serialization
             {
                 _jsonDictionary.Add(propertyName, value.ToString().ToCamelCase());
             }
-            else if (value is IJsonWritable)
+            else if (value is IEnumerable)
             {
-                WriteJsonProperty(propertyName, (IJsonWritable)value);
+                WriteArrayProperty(propertyName, (IEnumerable)value);
             }
-            else if (value is IEnumerable<IJsonWritable>)
+            else if (TypeUtil.IsKnownType(value.GetType()))
             {
-                WriteJsonArrayProperty(propertyName, (IEnumerable<IJsonWritable>)value);
+                WriteJsonProperty(propertyName, value);
             }
             else if (value is int || 
                      value is int?)
             {
-                WriteIntProperty(propertyName, (int)value);
+                WriteIntegerProperty(propertyName, (int)value);
             }
             else if (value is long ||
                      value is long?)
@@ -145,7 +136,7 @@ namespace Lime.Protocol.Serialization
             else if (value is bool ||
                      value is bool?)
             {
-                WriteBoolProperty(propertyName, (bool)value);
+                WriteBooleanProperty(propertyName, (bool)value);
             }
             else if (value is DateTime ||
                      value is DateTime?)
@@ -173,25 +164,18 @@ namespace Lime.Protocol.Serialization
 
         #endregion
 
-        private void WriteJsonArrayProperty(string propertyName, IEnumerable<IJsonWritable> jsonItems)
+        private void WriteGuidProperty(string propertyName, Guid value)
         {
-            List<IDictionary<string, object>> dictionaryList = new List<IDictionary<string, object>>();
-
-            foreach (var jsonItem in jsonItems)
+            if (_writeDefaultValues || value != Guid.Empty)
             {
-                var writer = new DictionaryJsonWriter();
-                jsonItem.WriteJson(writer);
-
-                dictionaryList.Add(writer.ToDictionary());
+                _jsonDictionary.Add(propertyName, value);
             }
-
-            _jsonDictionary.Add(propertyName, dictionaryList);
         }
 
-        private void WriteJsonProperty(string propertyName, IJsonWritable json)
+        private void WriteJsonProperty(string propertyName, object json)
         {
             var writer = new DictionaryJsonWriter();
-            json.WriteJson(writer);
+            TypeSerializer.Write(json, writer);
             _jsonDictionary.Add(propertyName, writer.ToDictionary());
         }
 

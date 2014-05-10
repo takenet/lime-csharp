@@ -50,16 +50,16 @@ namespace Lime.Protocol
         public string Subtype { get; set; }
 
         /// <summary>
-        /// Media type suffix
-        /// <seealso cref="http://trac.tools.ietf.org/html/draft-ietf-appsawg-media-type-regs-14#section-6"/>
+        /// Media type suffix        
         /// </summary>
+        /// <a href="http://trac.tools.ietf.org/html/draft-ietf-appsawg-media-type-regs-14#section-6"/>
         public string Suffix { get; set; }
 
         /// <summary>
         /// Returns a <see cref="System.String" /> that represents this instance.
         /// </summary>
         /// <returns>
-        /// A <see cref="System.String" /> that represents this instance.
+        /// A <c cref="System.String" /> that represents this instance.
         /// </returns>
         public override string ToString()
         {

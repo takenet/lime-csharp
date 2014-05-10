@@ -13,7 +13,7 @@ namespace Lime.Protocol.Network
     /// only continue the execution after
     /// the all the associated handlers 
     /// finishes they execution.
-    /// <see cref="http://blog.stephencleary.com/2013/02/async-oop-5-events.html"/>
+    /// <a href="http://blog.stephencleary.com/2013/02/async-oop-5-events.html"/>
     /// </summary>
     public class DeferralEventArgs : EventArgs
     {

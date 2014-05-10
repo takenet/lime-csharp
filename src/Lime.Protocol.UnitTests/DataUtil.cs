@@ -244,6 +244,41 @@ namespace Lime.Protocol.UnitTests
             };
         }
 
+        public static Roster CreateRoster()
+        {
+            return new Roster()
+            {
+                Contacts = new[]
+                {
+                    new Contact()
+                    {
+                        Identity = CreateIdentity(),
+                        Name = CreateRandomString(50),
+                        IsPending = true,
+                        ShareAccountInfo = false,
+                        SharePresence = true
+                    },
+                    new Contact()
+                    {
+                        Identity = CreateIdentity(),
+                        Name = CreateRandomString(50),
+                        IsPending = false,
+                        ShareAccountInfo = true,
+                        SharePresence = false
+                    },
+                    new Contact()
+                    {
+                        Identity = CreateIdentity(),
+                        Name = CreateRandomString(50),
+                        IsPending = true,
+                        ShareAccountInfo = true,
+                        SharePresence = false
+                    },
+                }
+
+            };
+        }
+
         public static Exception CreateException()
         {
             return new Exception(CreateRandomString(50));

@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace Lime.Protocol.Util
 {
     /// <summary>
-    /// <see cref="http://blog.stephencleary.com/2013/02/async-oop-5-events.html"/>
+    /// <a href="http://blog.stephencleary.com/2013/02/async-oop-5-events.html"/>
     /// </summary>
     public sealed class DeferralManager
     {

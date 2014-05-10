@@ -105,7 +105,7 @@ namespace Lime.Protocol.Util
         }
 
         /// <summary>
-        /// Attempts to add the specified value to the current count. This method returns <c>false</c> if the count is already at zero or if the new count would be greater than <see cref="Int32.MaxValue"/>.
+        /// Attempts to add the specified value to the current count. This method returns <c>false</c> if the count is already at zero or if the new count would be greater than <a href="Int32.MaxValue"/>.
         /// </summary>
         /// <param name="signalCount">The amount to change the current count. This must be greater than zero.</param>
         public bool TryAddCount(int signalCount)
@@ -114,7 +114,7 @@ namespace Lime.Protocol.Util
         }
 
         /// <summary>
-        /// Attempts to add one to the current count. This method returns <c>false</c> if the count is already at zero or if the new count would be greater than <see cref="Int32.MaxValue"/>.
+        /// Attempts to add one to the current count. This method returns <c>false</c> if the count is already at zero or if the new count would be greater than <a href="Int32.MaxValue"/>.
         /// </summary>
         public bool TryAddCount()
         {
@@ -139,7 +139,7 @@ namespace Lime.Protocol.Util
         }
 
         /// <summary>
-        /// Attempts to add the specified value to the current count. This method throws <see cref="InvalidOperationException"/> if the count is already at zero or if the new count would be greater than <see cref="Int32.MaxValue"/>.
+        /// Attempts to add the specified value to the current count. This method throws <a href="InvalidOperationException"/> if the count is already at zero or if the new count would be greater than <a href="Int32.MaxValue"/>.
         /// </summary>
         /// <param name="signalCount">The amount to change the current count. This must be greater than zero.</param>
         public void AddCount(int signalCount)
@@ -149,7 +149,7 @@ namespace Lime.Protocol.Util
         }
 
         /// <summary>
-        /// Attempts to add one to the current count. This method throws <see cref="InvalidOperationException"/> if the count is already at zero or if the new count would be greater than <see cref="Int32.MaxValue"/>.
+        /// Attempts to add one to the current count. This method throws <a href="InvalidOperationException"/> if the count is already at zero or if the new count would be greater than <a href="Int32.MaxValue"/>.
         /// </summary>
         public void AddCount()
         {
@@ -157,7 +157,7 @@ namespace Lime.Protocol.Util
         }
 
         /// <summary>
-        /// Attempts to subtract the specified value from the current count. This method throws <see cref="InvalidOperationException"/> if the count is already at zero or if the new count would be less than zero.
+        /// Attempts to subtract the specified value from the current count. This method throws <a href="InvalidOperationException"/> if the count is already at zero or if the new count would be less than zero.
         /// </summary>
         /// <param name="signalCount">The amount to change the current count. This must be greater than zero.</param>
         public void Signal(int signalCount)
@@ -167,7 +167,7 @@ namespace Lime.Protocol.Util
         }
 
         /// <summary>
-        /// Attempts to subtract one from the current count. This method throws <see cref="InvalidOperationException"/> if the count is already at zero or if the new count would be less than zero.
+        /// Attempts to subtract one from the current count. This method throws <a href="InvalidOperationException"/> if the count is already at zero or if the new count would be less than zero.
         /// </summary>
         public void Signal()
         {

@@ -7,24 +7,70 @@ using System.Threading.Tasks;
 
 namespace Lime.Protocol.Serialization
 {
+    /// <summary>
+    /// Provides the writing 
+    /// of JSON documents.
+    /// </summary>
     public interface IJsonWriter
     {
-        void WriteBoolProperty(string propertyName, bool value);
+        /// <summary>
+        /// Writes a boolean property
+        /// to the document.
+        /// </summary>
+        /// <param name="propertyName">Name of the property.</param>
+        /// <param name="value">The property value.</param>
+        void WriteBooleanProperty(string propertyName, bool value);
 
+        /// <summary>
+        /// Writes adate time property
+        /// to the document.
+        /// </summary>
+        /// <param name="propertyName">Name of the property.</param>
+        /// <param name="value">The value.</param>
         void WriteDateTimeProperty(string propertyName, DateTime value);
 
         void WriteDictionaryProperty(string propertyName, IDictionary<string, string> dictionary);
 
-        void WriteGuidProperty(string propertyName, Guid value);
+        /// <summary>
+        /// Writes a integer property
+        /// to the document.
+        /// </summary>
+        /// <param name="propertyName">Name of the property.</param>
+        /// <param name="value">The value.</param>
+        void WriteIntegerProperty(string propertyName, int value);
 
-        void WriteIntProperty(string propertyName, int value);
-
+        /// <summary>
+        /// Writes an array property
+        /// to the document.
+        /// </summary>
+        /// <param name="propertyName">Name of the property.</param>
+        /// <param name="items">The items.</param>
         void WriteArrayProperty(string propertyName, IEnumerable items);
 
+        /// <summary>
+        /// Writes a long property
+        /// to the document.
+        /// </summary>
+        /// <param name="propertyName">Name of the property.</param>
+        /// <param name="value">The value.</param>
         void WriteLongProperty(string propertyName, long value);
 
+        /// <summary>
+        /// Writes a generic property
+        /// to the document, using the most
+        /// appropriate method accordingly to 
+        /// the property type.
+        /// </summary>
+        /// <param name="propertyName">Name of the property.</param>
+        /// <param name="value">The value.</param>
         void WriteProperty(string propertyName, object value);
 
+        /// <summary>
+        /// Writes a string property
+        /// to the document.
+        /// </summary>
+        /// <param name="propertyName">Name of the property.</param>
+        /// <param name="value">The value.</param>
         void WriteStringProperty(string propertyName, string value);
     }
 }

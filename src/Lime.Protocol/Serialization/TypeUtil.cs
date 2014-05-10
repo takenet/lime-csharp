@@ -17,32 +17,34 @@ namespace Lime.Protocol.Serialization
     /// </summary>
     public static class TypeUtil
     {
-        private static IDictionary<MediaType, Type> _documentMediaTypeDictionary;
-        private static IDictionary<AuthenticationScheme, Type> _authenticationSchemeDictionary;        
-        private static IDictionary<Type, Dictionary<string, object>> _enumTypeValueDictionary;
-        private static IDictionary<Type, Delegate> _factoryMethodDictionary;
-        private static ConcurrentDictionary<Type, Func<string, object>> _typeParseFuncDictionary;
-        private static HashSet<Type> _protocolTypes;
+        #region Private Fields
 
-        private static object _syncRoot = new object();
-       
+        private static IDictionary<MediaType, Type> _documentMediaTypeDictionary;
+        private static IDictionary<AuthenticationScheme, Type> _authenticationSchemeDictionary;
+        private static IDictionary<Type, IDictionary<string, object>> _enumTypeValueDictionary;
+        private static ConcurrentDictionary<Type, Func<string, object>> _typeParseFuncDictionary;
+        private static HashSet<Type> _knownTypes;
+
+        #endregion
+        
+        #region Constructor
+
         static TypeUtil()
         {
             _documentMediaTypeDictionary = new Dictionary<MediaType, Type>();
             _authenticationSchemeDictionary = new Dictionary<AuthenticationScheme, Type>();
-            _factoryMethodDictionary = new Dictionary<Type, Delegate>();
-            _enumTypeValueDictionary = new Dictionary<Type, Dictionary<string, object>>();
+            _enumTypeValueDictionary = new Dictionary<Type, IDictionary<string, object>>();
             _typeParseFuncDictionary = new ConcurrentDictionary<Type, Func<string, object>>();
-            _protocolTypes = null;
-#if !PCL
-            _protocolTypes = new HashSet<Type>();            
-            foreach (var protocolType in Assembly.GetExecutingAssembly().GetTypes().Where(t => t.GetCustomAttribute<DataContractAttribute>() != null))
-            {
-                _protocolTypes.Add(protocolType);
-            }
-                
+            _knownTypes = new HashSet<Type>();
 
-            var documentTypes = _protocolTypes
+            // Caches the known type (types decorated with DataContract in the current assembly)
+            foreach (var knownType in Assembly.GetExecutingAssembly().GetTypes().Where(t => t.GetCustomAttribute<DataContractAttribute>() != null))
+            {
+                _knownTypes.Add(knownType);
+            }
+
+            // Caches the documents (contents and resources)
+            var documentTypes = _knownTypes
                 .Where(t => !t.IsAbstract && typeof(Document).IsAssignableFrom(t));
 
             foreach (var documentType in documentTypes)
@@ -55,7 +57,8 @@ namespace Lime.Protocol.Serialization
                 }
             }
 
-            var authenticationTypes = _protocolTypes
+            // Caches the Authentication schemes
+            var authenticationTypes = _knownTypes
                 .Where(t => !t.IsAbstract && typeof(Authentication).IsAssignableFrom(t));
 
             foreach (var authenticationType in authenticationTypes)
@@ -68,13 +71,13 @@ namespace Lime.Protocol.Serialization
                 }
             }
 
-            var enumTypes = _protocolTypes
+            // Caches the enums
+            var enumTypes = _knownTypes
                 .Where(t => t.IsEnum);
 
             foreach (var enumType in enumTypes)
             {
                 var enumNames = Enum.GetNames(enumType);
-
                 var memberValueDictionary = new Dictionary<string, object>();
 
                 foreach (var enumName in enumNames)
@@ -83,12 +86,9 @@ namespace Lime.Protocol.Serialization
                 }
                 _enumTypeValueDictionary.Add(enumType, memberValueDictionary);
             }
-
-#else
-            // TODO: Load types
-#endif
         }
 
+        #endregion
         public static Func<string, T> GetParseFunc<T>()
         {
             var type = typeof(T);
@@ -125,8 +125,8 @@ namespace Lime.Protocol.Serialization
                 try
                 {
                     var getParseFuncMethod = typeof(TypeUtil)
-                .GetMethod("GetParseFunc", BindingFlags.Static | BindingFlags.Public)
-                .MakeGenericMethod(type);
+                        .GetMethod("GetParseFunc", BindingFlags.Static | BindingFlags.Public)
+                        .MakeGenericMethod(type);
 
                     var genericGetParseFunc = getParseFuncMethod.Invoke(null, null);
 
@@ -161,10 +161,17 @@ namespace Lime.Protocol.Serialization
             return _authenticationSchemeDictionary.TryGetValue(scheme, out type);
         }
 
+        /// <summary>
+        /// Gets a cached value 
+        /// for a enum item
+        /// </summary>
+        /// <typeparam name="TEnum"></typeparam>
+        /// <param name="enumName"></param>
+        /// <returns></returns>
         public static TEnum GetEnumValue<TEnum>(string enumName) where TEnum : struct
         {
             var enumType = typeof(TEnum); 
-            Dictionary<string, object> memberValueDictionary;
+            IDictionary<string, object> memberValueDictionary;
 
             if (!_enumTypeValueDictionary.TryGetValue(enumType, out memberValueDictionary))
             {
@@ -191,9 +198,16 @@ namespace Lime.Protocol.Serialization
             return (TEnum)value;
         }
 
+        /// <summary>
+        /// Gets a cached value 
+        /// for a enum item
+        /// </summary>
+        /// <param name="enumType"></param>
+        /// <param name="enumName"></param>
+        /// <returns></returns>
         public static object GetEnumValue(Type enumType, string enumName)
         {
-            Dictionary<string, object> memberValueDictionary;
+            IDictionary<string, object> memberValueDictionary;
 
             if (!_enumTypeValueDictionary.TryGetValue(enumType, out memberValueDictionary))
             {                
@@ -210,6 +224,11 @@ namespace Lime.Protocol.Serialization
             return value;
         }
 
+        /// <summary>
+        /// Gets the assembly enums decorated
+        /// with the DataContract attribute
+        /// </summary>
+        /// <returns></returns>
         public static IEnumerable<Type> GetEnumTypes()
         {
             return _enumTypeValueDictionary.Keys;
@@ -222,16 +241,17 @@ namespace Lime.Protocol.Serialization
         /// </summary>
         /// <param name="type"></param>
         /// <returns></returns>
-        public static bool IsProtocolType(Type type)
+        public static bool IsKnownType(Type type)
         {
-            return _protocolTypes.Contains(type);
+            return _knownTypes.Contains(type);
         }
 
-        public static IEnumerable<Type> GetProtocolTypes()
-        {
-            return _protocolTypes;
-        }
-
+        /// <summary>
+        /// Gets the default value for 
+        /// the Type
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
         public static T GetDefaultValue<T>()
         {
             // We want an Func<T> which returns the default.
@@ -246,86 +266,62 @@ namespace Lime.Protocol.Serialization
         }
 
         /// <summary>
-        /// Gets a delegate to the
-        /// static factory method of 
-        /// the type
+        /// Build a delegate to
+        /// get a property value
+        /// of a class
         /// </summary>
-        /// <param name="type"></param>
+        /// <a href="http://stackoverflow.com/questions/10820453/reflection-performance-create-delegate-properties-c"/>
+        /// <param name="methodInfo"></param>
         /// <returns></returns>
-        public static Delegate GetFactoryDelegate(Type type)
+        public static Func<object, object> BuildGetAccessor(MethodInfo methodInfo)
         {
-            Delegate factoryDelegate;
-
-
-#if !PCL
-            if (!_factoryMethodDictionary.TryGetValue(type, out factoryDelegate))
+            if (methodInfo == null)
             {
-                lock (_syncRoot)
-                {
-                    if (!_factoryMethodDictionary.TryGetValue(type, out factoryDelegate))
-                    {
-                        var fromDictionaryMethod = type
-                            .GetMethods(BindingFlags.Static | BindingFlags.Public)
-                            .Where(m => m.GetCustomAttribute<FactoryAttribute>() != null)
-                            .FirstOrDefault();
-
-                        if (fromDictionaryMethod == null)
-                        {
-                            throw new ArgumentException("Type doesn't contains a JsonObject factory method");
-                        }
-
-                        var delegateType = typeof(Func<JsonObject, object>);
-
-                        factoryDelegate = Delegate.CreateDelegate(delegateType, fromDictionaryMethod);
-                        _factoryMethodDictionary.Add(type, factoryDelegate);
-                    }
-                }
+                throw new ArgumentNullException("methodInfo");
             }
-#else
-            // TODO: Implements it to PCL
-            factoryDelegate = null;
-#endif
-            return factoryDelegate;
-        }
 
-        /// <summary>
-        /// http://stackoverflow.com/questions/10820453/reflection-performance-create-delegate-properties-c
-        /// </summary>
-        /// <param name="method"></param>
-        /// <returns></returns>
-        public static Func<object, object> BuildGetAccessor(MethodInfo method)
-        {
             var obj = Expression.Parameter(typeof(object), "o");
 
             Expression<Func<object, object>> expr =
                 Expression.Lambda<Func<object, object>>(
                     Expression.Convert(
                         Expression.Call(
-                            Expression.Convert(obj, method.DeclaringType),
-                            method),
+                            Expression.Convert(obj, methodInfo.DeclaringType),
+                            methodInfo),
                         typeof(object)),
                     obj);
 
             return expr.Compile();
         }
 
-
-        public static Action<object, object> BuildSetAccessor(MethodInfo method)
+        /// <summary>
+        /// Build a delegate to
+        /// set a property value
+        /// of a class
+        /// </summary>
+        /// <a href="http://stackoverflow.com/questions/10820453/reflection-performance-create-delegate-properties-c"/>
+        /// <param name="methodInfo"></param>
+        /// <returns></returns>
+        public static Action<object, object> BuildSetAccessor(MethodInfo methodInfo)
         {
+            if (methodInfo == null)
+            {
+                throw new ArgumentNullException("methodInfo");
+            }
+
             var obj = Expression.Parameter(typeof(object), "o");
             var value = Expression.Parameter(typeof(object));
 
             Expression<Action<object, object>> expr =
                 Expression.Lambda<Action<object, object>>(
                     Expression.Call(
-                        Expression.Convert(obj, method.DeclaringType),
-                        method,
-                        Expression.Convert(value, method.GetParameters()[0].ParameterType)),
+                        Expression.Convert(obj, methodInfo.DeclaringType),
+                        methodInfo,
+                        Expression.Convert(value, methodInfo.GetParameters()[0].ParameterType)),
                     obj,
                     value);
 
             return expr.Compile();
         }
-
     }
 }

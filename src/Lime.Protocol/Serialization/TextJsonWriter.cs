@@ -32,7 +32,6 @@ namespace Lime.Protocol.Serialization
             WriteOpenBrackets();
         }
 
-
         ~TextJsonWriter()
         {
             Dispose(false);
@@ -189,9 +188,7 @@ namespace Lime.Protocol.Serialization
         {
             using (var writer = new TextJsonWriter())
             {
-                var jsonWritable = (IJsonWritable)json;
-
-                jsonWritable.WriteJson(writer);
+                TypeSerializer.Write(json, writer);
                 _writer.Write(writer.ToString());
             }            
         }
@@ -212,6 +209,39 @@ namespace Lime.Protocol.Serialization
             }
         }
 
+        private void WriteJsonArrayProperty(string propertyName, IEnumerable jsonItems)
+        {
+            if (jsonItems != null)
+            {
+                if (_commaNeeded)
+                {
+                    WriteComma();
+                }
+
+                WritePropertyName(propertyName);
+
+                WriteOpenArray();
+
+                foreach (var json in jsonItems)
+                {
+                    if (json != null)
+                    {
+                        if (_commaNeeded)
+                        {
+                            WriteComma();
+                        }
+
+                        WriteJson(json);
+                        _commaNeeded = true;
+                    }
+                }
+
+                WriteCloseArray();
+
+                _commaNeeded = true;
+            }
+        }
+
         #endregion
 
         #region IJsonWriter Members
@@ -222,7 +252,7 @@ namespace Lime.Protocol.Serialization
             {
                 if (value is int || value is int?)
                 {
-                    WriteIntProperty(propertyName, (int)value);
+                    WriteIntegerProperty(propertyName, (int)value);
                 }
                 else if (value is long || value is long?)
                 {
@@ -230,7 +260,19 @@ namespace Lime.Protocol.Serialization
                 }
                 else if (value is bool || value is bool?)
                 {
-                    WriteBoolProperty(propertyName, (bool)value);
+                    WriteBooleanProperty(propertyName, (bool)value);
+                }
+                else if (value is Enum)
+                {
+                    WriteStringProperty(propertyName, value.ToString().ToCamelCase());
+                }
+                else if (TypeUtil.IsKnownType(value.GetType()))
+                {
+                    WriteJsonProperty(propertyName, value);
+                }
+                else if (value is IDictionary<string,string>)
+                {
+                    WriteDictionaryProperty(propertyName, (IDictionary<string, string>)value);
                 }
                 else if (value is DateTime || value is DateTime?)
                 {
@@ -240,24 +282,11 @@ namespace Lime.Protocol.Serialization
                 {
                     WriteDateTimeOffsetProperty(propertyName, (DateTimeOffset)value);
                 }
-                else if (value is Enum)
-                {
-                    WriteStringProperty(propertyName, value.ToString().ToCamelCase());
-                }
-                else if (value is IJsonWritable)
-                {
-                    WriteJsonProperty(propertyName, value);
-                }
                 else
                 {
                     WriteStringProperty(propertyName, value.ToString());
                 }
             }
-        }
-
-        public void WriteGuidProperty(string propertyName, Guid value)
-        {
-            WriteStringProperty(propertyName, value.ToString());
         }
 
         public void WriteDateTimeProperty(string propertyName, DateTime value)
@@ -291,12 +320,12 @@ namespace Lime.Protocol.Serialization
             WriteValueProperty(propertyName, value.ToString(CultureInfo.InvariantCulture));
         }
 
-        public void WriteIntProperty(string propertyName, int value)
+        public void WriteIntegerProperty(string propertyName, int value)
         {
             WriteValueProperty(propertyName, value.ToString(CultureInfo.InvariantCulture));
         }
 
-        public void WriteBoolProperty(string propertyName, bool value)
+        public void WriteBooleanProperty(string propertyName, bool value)
         {
             WriteValueProperty(propertyName, value ? "true" : "false");
         }
@@ -357,10 +386,11 @@ namespace Lime.Protocol.Serialization
                         {
                             WriteStringValue(item.ToString().ToCamelCase());
                         }
-                        else if (item is IJsonWritable)                        
+                        else if (TypeUtil.IsKnownType(item.GetType()))
                         {
                             WriteJson(item);
                         }
+
                         else
                         {
                             WriteStringValue(item.ToString());

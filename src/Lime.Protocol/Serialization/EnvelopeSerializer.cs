@@ -22,7 +22,31 @@ namespace Lime.Protocol.Serialization
         /// <returns></returns>
         public string Serialize(Envelope envelope)
         {            
-            return envelope.ToJson();
+            if (envelope == null)
+            {
+                throw new ArgumentNullException("envelope");
+            }
+
+            if (envelope is Notification)
+            {
+                return TypeSerializer<Notification>.Serialize((Notification)envelope);
+            }
+            else if (envelope is Message)
+            {
+                return TypeSerializer<Message>.Serialize((Message)envelope);
+            }
+            else if (envelope is Command)
+            {
+                return TypeSerializer<Command>.Serialize((Command)envelope);
+            }
+            else if (envelope is Session)
+            {
+                return TypeSerializer<Session>.Serialize((Session)envelope);
+            }
+            else
+            {
+                throw new ArgumentException("The envelope type is unknown");
+            }
         }
 
         /// <summary>
@@ -33,24 +57,24 @@ namespace Lime.Protocol.Serialization
         /// <returns></returns>
         /// <exception cref="System.ArgumentException">JSON string is not a valid envelope</exception>
         public Envelope Deserialize(string envelopeString)
-        {
-            var jsonDictionary = JsonObject.ParseJson(envelopeString);
+        {            
+            var jsonObject = JsonObject.ParseJson(envelopeString);
 
-            if (jsonDictionary.ContainsKey("content"))
+            if (jsonObject.ContainsKey("content"))
             {
-                return Message.FromJsonObject(jsonDictionary);
+                return TypeSerializer<Message>.ParseJson(jsonObject);
             }
-            else if (jsonDictionary.ContainsKey("event"))
+            else if (jsonObject.ContainsKey("event"))
             {
-                return Notification.FromJsonObject(jsonDictionary);
+                return TypeSerializer<Notification>.ParseJson(jsonObject);
             }
-            else if (jsonDictionary.ContainsKey("method"))
+            else if (jsonObject.ContainsKey("method"))
             {
-                return Command.FromJsonObject(jsonDictionary);
+                return TypeSerializer<Command>.ParseJson(jsonObject);
             }
-            else if (jsonDictionary.ContainsKey("state"))
+            else if (jsonObject.ContainsKey("state"))
             {
-                return Session.FromJsonObject(jsonDictionary);
+                return TypeSerializer<Session>.ParseJson(jsonObject);
             }
             else
             {

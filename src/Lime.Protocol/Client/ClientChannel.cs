@@ -26,7 +26,7 @@ namespace Lime.Protocol.Client
         #region Constructor
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ClientChannel"/> class.
+        /// Initializes a new instance of the <a href="ClientChannel"/> class.
         /// </summary>
         /// <param name="transport">The transport to be used by the channel.</param>
         /// <param name="sendTimeout">The channel send timeout.</param>

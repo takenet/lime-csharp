@@ -23,10 +23,7 @@ namespace Lime.Protocol.Serialization.ServiceStack
         static ServiceStackSerializer()
         {
             JsConfig.ExcludeTypeInfo = true;
-            JsConfig.EmitCamelCaseNames = true;
-            
-            
-
+            JsConfig.EmitCamelCaseNames = true;                       
             JsConfig<Message>.IncludeTypeInfo = false;
             JsConfig<Notification>.IncludeTypeInfo = false;
             JsConfig<Command>.IncludeTypeInfo = false;

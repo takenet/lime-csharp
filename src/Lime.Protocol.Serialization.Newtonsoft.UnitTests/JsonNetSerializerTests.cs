@@ -64,6 +64,55 @@ namespace Lime.Protocol.Serialization.Newtonsoft.UnitTests
 
         [TestMethod]
         [TestCategory("Serialize")]
+        public void Serialize_RosterResponseCommand_ReturnsValidJsonString()
+        {
+            var target = GetTarget();
+
+            var resource = DataUtil.CreateRoster();
+            var command = DataUtil.CreateCommand(resource);
+            command.Pp = DataUtil.CreateNode();
+            command.Method = CommandMethod.Get;
+            command.Status = CommandStatus.Success;
+
+            var metadataKey1 = "randomString1";
+            var metadataValue1 = DataUtil.CreateRandomString(50);
+            var metadataKey2 = "randomString2";
+            var metadataValue2 = DataUtil.CreateRandomString(50);
+            command.Metadata = new Dictionary<string, string>();
+            command.Metadata.Add(metadataKey1, metadataValue1);
+            command.Metadata.Add(metadataKey2, metadataValue2);
+
+            var resultString = target.Serialize(command);
+
+            Assert.IsTrue(resultString.HasValidJsonStackedBrackets());
+            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.ID_KEY, command.Id));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.FROM_KEY, command.From));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.PP_KEY, command.Pp));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.TO_KEY, command.To));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Command.METHOD_KEY, command.Method));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Command.TYPE_KEY, command.Resource.GetMediaType()));
+            Assert.IsTrue(resultString.ContainsJsonKey(Command.RESOURCE_KEY));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Command.METHOD_KEY, command.Method));
+            Assert.IsTrue(resultString.ContainsJsonProperty(metadataKey1, metadataValue1));
+            Assert.IsTrue(resultString.ContainsJsonProperty(metadataKey2, metadataValue2));
+
+            Assert.IsTrue(resultString.ContainsJsonKey(Roster.CONTACTS_KEY));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Contact.IDENTITY_KEY, resource.Contacts[0].Identity));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Contact.NAME_KEY, resource.Contacts[0].Name));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Contact.IS_PENDING_KEY, resource.Contacts[0].IsPending));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Contact.SHARE_ACCOUNT_INFO_KEY, resource.Contacts[0].ShareAccountInfo));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Contact.IDENTITY_KEY, resource.Contacts[1].Identity));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Contact.NAME_KEY, resource.Contacts[1].Name));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Contact.SHARE_PRESENCE_KEY, resource.Contacts[1].SharePresence));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Contact.IDENTITY_KEY, resource.Contacts[2].Identity));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Contact.NAME_KEY, resource.Contacts[2].Name));
+
+            Assert.IsTrue(resultString.ContainsJsonKey(Command.STATUS_KEY));
+            Assert.IsFalse(resultString.ContainsJsonKey(Command.REASON_KEY));
+        }
+
+        [TestMethod]
+        [TestCategory("Serialize")]
         public void Serialize_FailurePingResponseCommand_ReturnsValidJsonString()
         {
             var target = GetTarget();
@@ -339,6 +388,7 @@ namespace Lime.Protocol.Serialization.Newtonsoft.UnitTests
             Assert.IsTrue(capability.ResourceTypes.Any(c => c.Equals(resourceType2)));
             Assert.IsTrue(capability.ResourceTypes.Any(c => c.Equals(resourceType3)));
         }
+
 
         [TestMethod]
         [TestCategory("Deserialize")]

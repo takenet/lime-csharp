@@ -41,7 +41,7 @@ namespace Lime.Protocol.UnitTests.Serialization
                 return json.Contains(
                     string.Format("\"{0}\":{1}",
                         key,
-                        value));
+                        value.ToString().ToLower()));
             }
             else if (value.GetType().IsEnum)
             {

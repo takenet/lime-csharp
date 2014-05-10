@@ -56,9 +56,9 @@ namespace Lime.Protocol
         }
 
         /// <summary>
-        /// Allow cancellation of non-cancellable tasks
-        /// <see cref="http://blogs.msdn.com/b/pfxteam/archive/2012/10/05/how-do-i-cancel-non-cancelable-async-operations.aspx"/>
+        /// Allow cancellation of non-cancellable tasks        
         /// </summary>
+        /// <a href="http://blogs.msdn.com/b/pfxteam/archive/2012/10/05/how-do-i-cancel-non-cancelable-async-operations.aspx"/>
         /// <typeparam name="T"></typeparam>
         /// <param name="task"></param>
         /// <param name="cancellationToken"></param>
@@ -74,9 +74,9 @@ namespace Lime.Protocol
         }
 
         /// <summary>
-        /// Allow cancellation of non-cancellable tasks
-        /// <see cref="http://blogs.msdn.com/b/pfxteam/archive/2012/10/05/how-do-i-cancel-non-cancelable-async-operations.aspx"/>
+        /// Allow cancellation of non-cancellable tasks        
         /// </summary>
+        /// <a href="http://blogs.msdn.com/b/pfxteam/archive/2012/10/05/how-do-i-cancel-non-cancelable-async-operations.aspx"/>
         /// <typeparam name="T"></typeparam>
         /// <param name="task"></param>
         /// <param name="cancellationToken"></param>
@@ -92,9 +92,9 @@ namespace Lime.Protocol
         }
 
         /// <summary>
-        /// Converts a SecureString to a regular, unsecure string.
-        /// <see cref="http://blogs.msdn.com/b/fpintos/archive/2009/06/12/how-to-properly-convert-securestring-to-string.aspx"/>
+        /// Converts a SecureString to a regular, unsecure string.        
         /// </summary>
+        /// <a href="http://blogs.msdn.com/b/fpintos/archive/2009/06/12/how-to-properly-convert-securestring-to-string.aspx"/>
         /// <param name="securePassword"></param>
         /// <returns></returns>
         public static string ToUnsecureString(this SecureString securePassword)
@@ -136,13 +136,10 @@ namespace Lime.Protocol
             return secureString;
         }
 
-
-
-
         /// <summary>
-        /// Gets the default value of a Type
-        /// <see cref="http://stackoverflow.com/questions/325426/programmatic-equivalent-of-defaulttype"/>
+        /// Gets the default value of a Type        
         /// </summary>
+        /// <a href="http://stackoverflow.com/questions/325426/programmatic-equivalent-of-defaulttype"/>
         /// <param name="type"></param>
         /// <returns></returns>
         public static object GetDefaultValue(this Type type)

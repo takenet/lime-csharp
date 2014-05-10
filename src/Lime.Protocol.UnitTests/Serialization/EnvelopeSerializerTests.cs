@@ -15,9 +15,9 @@ namespace Lime.Protocol.Serialization.ServiceStack.UnitTests
     [TestClass]
     public class EnvelopeSerializerTests
     {
-        public EnvelopeSerializer2 GetTarget()
+        public EnvelopeSerializer GetTarget()
         {
-            return new EnvelopeSerializer2();
+            return new EnvelopeSerializer();
         }
 
         #region Serialize
@@ -59,6 +59,55 @@ namespace Lime.Protocol.Serialization.ServiceStack.UnitTests
             Assert.IsTrue(resultString.ContainsJsonProperty(Capability.RESOURCE_TYPES_KEY, resource.ResourceTypes));
 
             Assert.IsFalse(resultString.ContainsJsonKey(Command.STATUS_KEY));
+            Assert.IsFalse(resultString.ContainsJsonKey(Command.REASON_KEY));
+        }
+
+        [TestMethod]
+        [TestCategory("Serialize")]
+        public void Serialize_RosterResponseCommand_ReturnsValidJsonString()
+        {
+            var target = GetTarget();
+
+            var resource = DataUtil.CreateRoster();
+            var command = DataUtil.CreateCommand(resource);
+            command.Pp = DataUtil.CreateNode();
+            command.Method = CommandMethod.Get;
+            command.Status = CommandStatus.Success;
+
+            var metadataKey1 = "randomString1";
+            var metadataValue1 = DataUtil.CreateRandomString(50);
+            var metadataKey2 = "randomString2";
+            var metadataValue2 = DataUtil.CreateRandomString(50);
+            command.Metadata = new Dictionary<string, string>();
+            command.Metadata.Add(metadataKey1, metadataValue1);
+            command.Metadata.Add(metadataKey2, metadataValue2);
+
+            var resultString = target.Serialize(command);
+
+            Assert.IsTrue(resultString.HasValidJsonStackedBrackets());
+            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.ID_KEY, command.Id));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.FROM_KEY, command.From));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.PP_KEY, command.Pp));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.TO_KEY, command.To));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Command.METHOD_KEY, command.Method));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Command.TYPE_KEY, command.Resource.GetMediaType()));
+            Assert.IsTrue(resultString.ContainsJsonKey(Command.RESOURCE_KEY));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Command.METHOD_KEY, command.Method));
+            Assert.IsTrue(resultString.ContainsJsonProperty(metadataKey1, metadataValue1));
+            Assert.IsTrue(resultString.ContainsJsonProperty(metadataKey2, metadataValue2));
+
+            Assert.IsTrue(resultString.ContainsJsonKey(Roster.CONTACTS_KEY));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Contact.IDENTITY_KEY, resource.Contacts[0].Identity));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Contact.NAME_KEY, resource.Contacts[0].Name));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Contact.IS_PENDING_KEY, resource.Contacts[0].IsPending));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Contact.SHARE_ACCOUNT_INFO_KEY, resource.Contacts[0].ShareAccountInfo));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Contact.IDENTITY_KEY, resource.Contacts[1].Identity));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Contact.NAME_KEY, resource.Contacts[1].Name));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Contact.SHARE_PRESENCE_KEY, resource.Contacts[1].SharePresence));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Contact.IDENTITY_KEY, resource.Contacts[2].Identity));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Contact.NAME_KEY, resource.Contacts[2].Name));
+
+            Assert.IsTrue(resultString.ContainsJsonKey(Command.STATUS_KEY));
             Assert.IsFalse(resultString.ContainsJsonKey(Command.REASON_KEY));
         }
 
@@ -338,6 +387,93 @@ namespace Lime.Protocol.Serialization.ServiceStack.UnitTests
             Assert.IsTrue(capability.ResourceTypes.Any(c => c.Equals(resourceType1)));
             Assert.IsTrue(capability.ResourceTypes.Any(c => c.Equals(resourceType2)));
             Assert.IsTrue(capability.ResourceTypes.Any(c => c.Equals(resourceType3)));
+        }
+
+        [TestMethod]
+        [TestCategory("Deserialize")]
+        public void Deserialize_RosterResponseCommand_ReturnsValidInstance()
+        {
+            var target = GetTarget();
+
+            var identity1 = DataUtil.CreateIdentity();
+            var name1 = DataUtil.CreateRandomString(50);
+            var identity2 = DataUtil.CreateIdentity();
+            var name2 = DataUtil.CreateRandomString(50);
+            var identity3 = DataUtil.CreateIdentity();
+            var name3 = DataUtil.CreateRandomString(50);
+
+            var method = CommandMethod.Get;
+
+            var id = Guid.NewGuid();
+
+            var from = DataUtil.CreateNode();
+            var pp = DataUtil.CreateNode();
+            var to = DataUtil.CreateNode();
+
+            string randomKey1 = "randomString1";
+            string randomKey2 = "randomString2";
+            string randomString1 = DataUtil.CreateRandomString(50);
+            string randomString2 = DataUtil.CreateRandomString(50);
+
+            string json = string.Format(
+                "{{\"type\":\"application/vnd.lime.roster+json\",\"resource\":{{\"contacts\":[{{\"identity\":\"{0}\",\"name\":\"{1}\",\"isPending\":true,\"shareAccountInfo\":false}},{{\"identity\":\"{2}\",\"name\":\"{3}\",\"sharePresence\":false}},{{\"identity\":\"{4}\",\"name\":\"{5}\",\"isPending\":true,\"sharePresence\":false}}]}},\"method\":\"get\",\"status\":\"success\",\"id\":\"{6}\",\"from\":\"{7}\",\"pp\":\"{8}\",\"to\":\"{9}\",\"metadata\":{{\"{10}\":\"{11}\",\"{12}\":\"{13}\"}}}}",
+                identity1,
+                name1,
+                identity2,
+                name2,
+                identity3,
+                name3,
+                id,
+                from,
+                pp,
+                to,
+                randomKey1,
+                randomString1,
+                randomKey2,
+                randomString2);
+
+            var envelope = target.Deserialize(json);
+
+            Assert.IsTrue(envelope is Command);
+            var command = (Command)envelope;
+            Assert.AreEqual(id, command.Id);
+            Assert.AreEqual(from, command.From);
+            Assert.AreEqual(pp, command.Pp);
+            Assert.AreEqual(to, command.To);
+
+            Assert.AreEqual(method, command.Method);
+            Assert.IsNotNull(command.Metadata);
+            Assert.IsTrue(command.Metadata.ContainsKey(randomKey1));
+            Assert.AreEqual(command.Metadata[randomKey1], randomString1);
+            Assert.IsTrue(command.Metadata.ContainsKey(randomKey2));
+            Assert.AreEqual(command.Metadata[randomKey2], randomString2);
+
+            Assert.IsTrue(command.Resource is Roster);
+
+            var roster = (Roster)command.Resource;
+
+            Assert.IsNotNull(roster.Contacts, "Contacts is null");
+            Assert.AreEqual(roster.Contacts.Length, 3);
+
+            Assert.IsTrue(roster.Contacts[0].Identity.Equals(identity1));
+            Assert.IsTrue(roster.Contacts[0].Name.Equals(name1));
+            Assert.IsTrue(roster.Contacts[0].IsPending);
+            Assert.IsFalse(roster.Contacts[0].ShareAccountInfo);
+            Assert.IsTrue(roster.Contacts[0].SharePresence);
+
+            Assert.IsTrue(roster.Contacts[1].Identity.Equals(identity2));
+            Assert.IsTrue(roster.Contacts[1].Name.Equals(name2));
+            Assert.IsFalse(roster.Contacts[1].IsPending);
+            Assert.IsTrue(roster.Contacts[1].ShareAccountInfo);
+            Assert.IsFalse(roster.Contacts[1].SharePresence);
+
+            Assert.IsTrue(roster.Contacts[2].Identity.Equals(identity3));
+            Assert.IsTrue(roster.Contacts[2].Name.Equals(name3));
+            Assert.IsTrue(roster.Contacts[2].IsPending);
+            Assert.IsTrue(roster.Contacts[2].ShareAccountInfo);
+            Assert.IsFalse(roster.Contacts[2].SharePresence);
+
+            
         }
 
         [TestMethod]

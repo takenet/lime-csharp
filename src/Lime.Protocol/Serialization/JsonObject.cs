@@ -17,11 +17,19 @@ namespace Lime.Protocol.Serialization
 
         #region Constructor
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="JsonObject"/> class.
+        /// </summary>
         public JsonObject()
         {
 
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="JsonObject"/> class.
+        /// </summary>
+        /// <param name="dictionary">The dictionary.</param>
+        /// <exception cref="System.ArgumentNullException">dictionary</exception>
         public JsonObject(IDictionary<string, object> dictionary)
         {
             if (dictionary == null)
@@ -39,9 +47,9 @@ namespace Lime.Protocol.Serialization
 
         #region Public Methods
 
-        public TEnum[] GetEnumArrayOrNull<TEnum>(string key) where TEnum : struct
+        public Array GetArrayOrNull(Type itemType, string key, Func<object, object> castFunc)
         {
-            TEnum[] array = null;
+            Array array = null;
 
             if (base.ContainsKey(key))
             {
@@ -52,12 +60,13 @@ namespace Lime.Protocol.Serialization
                     throw new ArgumentException(string.Format("The dictionary value for key '{0}' is not IList", key));
                 }
 
-                array = new TEnum[list.Count];
+                array = Array.CreateInstance(itemType, list.Count);
 
                 for (int i = 0; i < list.Count; i++)
                 {
                     var item = list[i];
-                    array[i] = TypeUtil.GetEnumValue<TEnum>((string)item);
+
+                    array.SetValue(castFunc(item), i);
                 }
             }
 
@@ -90,87 +99,6 @@ namespace Lime.Protocol.Serialization
             return array;
         }
 
-
-        public T[] GetArrayOrNull<T>(string key, Func<object, T> castFunc = null)
-        {
-            T[] array = null;
-
-            if (base.ContainsKey(key))
-            {
-                var list = base[key] as IList;
-
-                if (list == null)
-                {
-                    throw new ArgumentException(string.Format("The dictionary value for key '{0}' is not IList", key));
-                }
-
-                array = new T[list.Count];
-
-                var valueType = typeof(T);
-
-                for (int i = 0; i < list.Count; i++)
-                {
-                    var item = list[i];
-
-                    if (castFunc == null)
-                    {
-                        if (item is T)
-                        {
-                            array[i] = (T)item;
-                        }
-                        else
-                        {
-                            throw new ArgumentException("Item type not supported for conversion");
-                        }
-                    }
-                    else
-                    {
-                        array[i] = castFunc(item);
-                    }
-                }
-            }
-
-            return array;
-        }
-
-        public Array GetArrayOrNull(Type type, string key, Func<string, object> castFunc)
-        {
-            Array array = null;
-
-            if (base.ContainsKey(key))
-            {
-                var list = base[key] as IList;
-
-                if (list == null)
-                {
-                    throw new ArgumentException(string.Format("The dictionary value for key '{0}' is not IList", key));
-                }
-
-                array = Array.CreateInstance(type, list.Count);
-
-                for (int i = 0; i < list.Count; i++)
-                {
-                    var item = list[i].ToString();
-
-                    array.SetValue(castFunc(item), i);                    
-                }
-            }
-
-            return array;
-        }
-
-        public Nullable<TEnum> GetEnumValueOrNull<TEnum>(string key) where TEnum : struct
-        {
-            Nullable<TEnum> value = null;
-
-            if (base.ContainsKey(key))
-            {
-                value = TypeUtil.GetEnumValue<TEnum>((string)base[key]);
-            }
-
-            return value;
-        }
-
         public object GetEnumValueOrNull(Type enumType, string key)
         {
             object value = null;
@@ -183,52 +111,35 @@ namespace Lime.Protocol.Serialization
             return value;
         }
 
-        public TEnum GetEnumValueOrDefault<TEnum>(string key) where TEnum : struct
-        {
-            TEnum value = default(TEnum);
-
-            if (base.ContainsKey(key))
-            {
-                value = TypeUtil.GetEnumValue<TEnum>((string)base[key]);
-            }
-
-            return value;
-        }
-
-        public object GetEnumValueOrDefault(Type enumType, string key) 
-        {
-            object value;
-
-            if (base.ContainsKey(key))
-            {
-                value = TypeUtil.GetEnumValue(enumType, (string)base[key]);
-            }
-            else
-            {
-                value = enumType.GetDefaultValue();
-            }
-
-            return value;
-        }
-
-        public T GetValueOrDefault<T>(string key)
+        public T GetValueOrDefault<T>(string key, Func<object, T> castFunc = null)
         {
             T value = default(T);
 
             if (base.ContainsKey(key))
             {
-                value = (T)base[key];
+                if (castFunc == null)
+                {
+                    castFunc = (i) => (T)i;
+                }
+
+                value = castFunc(base[key]);
             }
 
             return value;
         }
 
-        public T GetValueOrDefault<T>(string key, Func<object, T> castFunc)
+        public Nullable<T> GetValueOrNull<T>(string key, Func<object, T> castFunc = null) where T : struct
         {
-            T value = default(T);
+            Nullable<T> value = null;
 
-            if (base.ContainsKey(key))
+            if (base.ContainsKey(key) &&
+                base[key] != null)
             {
+                if (castFunc == null)
+                {
+                    castFunc = (v) => (T)v;
+                }
+
                 value = castFunc(base[key]);
             }
 
@@ -248,25 +159,12 @@ namespace Lime.Protocol.Serialization
             return value;
         }
 
-        public Nullable<T> GetValueOrNull<T>(string key) where T : struct
-        {
-            Nullable<T> value = null;
-
-            if (base.ContainsKey(key) &&
-                base[key] != null)
-            {
-                value = (T)base[key];
-            }
-
-            return value;
-        }
-
         #endregion
 
         #region Static Methods
 
         /// <summary>
-        /// <see cref="http://stackoverflow.com/questions/1207731/how-can-i-deserialize-json-to-a-simple-dictionarystring-string-in-asp-net"/>
+        /// <a href="http://stackoverflow.com/questions/1207731/how-can-i-deserialize-json-to-a-simple-dictionarystring-string-in-asp-net"/>
         /// </summary>
         /// <param name="jsonString"></param>
         /// <returns></returns>
