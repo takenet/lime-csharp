@@ -28,6 +28,11 @@ namespace Lime.Protocol.Serialization
 
         #region IJsonWriter Members
 
+        public bool IsEmpty
+        {
+            get { return _jsonDictionary.Count == 0; }
+        }
+
         public void WriteBooleanProperty(string propertyName, bool value)
         {
             if (_writeDefaultValues || 
@@ -119,10 +124,6 @@ namespace Lime.Protocol.Serialization
             {
                 WriteArrayProperty(propertyName, (IEnumerable)value);
             }
-            else if (TypeUtil.IsKnownType(value.GetType()))
-            {
-                WriteJsonProperty(propertyName, value);
-            }
             else if (value is int || 
                      value is int?)
             {
@@ -147,6 +148,10 @@ namespace Lime.Protocol.Serialization
                      value is Guid?)
             {
                 WriteGuidProperty(propertyName, (Guid)value);
+            }
+            else if (TypeUtil.IsKnownType(value.GetType()))
+            {
+                WriteJsonProperty(propertyName, value);
             }
             else
             {
@@ -183,5 +188,7 @@ namespace Lime.Protocol.Serialization
         {
             return _jsonDictionary;
         }
+
+
     }
 }

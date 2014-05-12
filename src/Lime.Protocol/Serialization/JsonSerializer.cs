@@ -258,18 +258,28 @@ namespace Lime.Protocol.Serialization
                         // envelope content/resource Mime Type
                         deserializePropertyAction = (v, j) =>
                         {
-                            if (j.ContainsKey(memberName) &&
-                                j[memberName] is JsonObject &&
-                                j.ContainsKey(Message.TYPE_KEY) &&
+                            if (j.ContainsKey(Message.TYPE_KEY) &&
                                 j[Message.TYPE_KEY] is string)
                             {
-                                var propertyJsonObject = (JsonObject)j[memberName];
                                 var mediaType = MediaType.Parse((string)j[Message.TYPE_KEY]);
+
                                 Type concreteType;
 
                                 if (TypeUtil.TryGetTypeForMediaType(mediaType, out concreteType))
                                 {
-                                    var value = JsonSerializer.ParseJson(concreteType, propertyJsonObject);
+                                    object value;
+
+                                    if (j.ContainsKey(memberName) &&
+                                        j[memberName] is JsonObject)
+                                    {
+                                        var propertyJsonObject = (JsonObject)j[memberName];
+                                        value = JsonSerializer.ParseJson(concreteType, propertyJsonObject);
+                                    }
+                                    else
+                                    {
+                                        value = TypeUtil.CreateInstance(concreteType);
+                                    }
+
                                     if (value != null)
                                     {
                                         setFunc(v, value);

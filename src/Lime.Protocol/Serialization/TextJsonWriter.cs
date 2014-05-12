@@ -16,6 +16,7 @@ namespace Lime.Protocol.Serialization
         private TextWriter _writer;
         private short _stackedBrackets;
         private bool _commaNeeded;
+        private bool _isEmpty;
 
         #endregion
 
@@ -28,6 +29,7 @@ namespace Lime.Protocol.Serialization
 
         public TextJsonWriter(TextWriter writer)
         {
+            _isEmpty = true;
             _writer = writer;
             WriteOpenBrackets();
         }
@@ -40,6 +42,15 @@ namespace Lime.Protocol.Serialization
         #endregion
 
         #region Private methods
+
+        /// <summary>
+        /// Indicates if the writer
+        /// is empty (no property has been written)
+        /// </summary>
+        public bool IsEmpty
+        {
+            get { return _isEmpty; }
+        }
 
         private void WriteOpenBrackets()
         {
@@ -83,11 +94,16 @@ namespace Lime.Protocol.Serialization
         }
 
         private void WritePropertyName(string propertyName)
-        {
+        {            
             WriteQuotation();
             _writer.Write(propertyName);
             WriteQuotation();
             WriteCollon();
+            
+            if (_isEmpty)
+            {
+                _isEmpty = false;
+            }
         }
 
         private void WriteStringValue(string value)
@@ -189,23 +205,42 @@ namespace Lime.Protocol.Serialization
             using (var writer = new TextJsonWriter())
             {
                 JsonSerializer.Write(json, writer);
-                _writer.Write(writer.ToString());
+                WriteJsonString(writer.ToString());
             }            
+        }
+
+        private void WriteJsonString(string jsonString)
+        {
+            _writer.Write(jsonString);
         }
 
         private void WriteJsonProperty(string propertyName, object json)
         {
             if (json != null)
             {
-                if (_commaNeeded)
+                string jsonString = null;
+
+                using (var writer = new TextJsonWriter())
                 {
-                    WriteComma();
+                    JsonSerializer.Write(json, writer);
+                    if (!writer.IsEmpty)
+                    {
+                        jsonString = writer.ToString();
+                    }
                 }
 
-                WritePropertyName(propertyName);
-                WriteJson(json);
+                if (!string.IsNullOrWhiteSpace(jsonString))
+                {
+                    if (_commaNeeded)
+                    {
+                        WriteComma();
+                    }
 
-                _commaNeeded = true;
+                    WritePropertyName(propertyName);
+                    WriteJsonString(jsonString);
+
+                    _commaNeeded = true;
+                }
             }
         }
 

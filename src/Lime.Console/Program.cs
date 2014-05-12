@@ -24,15 +24,6 @@ namespace Lime.Console
     {
         static void Main(string[] args)
         {
-
-            SerializerBenchmark.TestSerializers();
-
-
-            System.Console.ReadLine();
-
-
-            return;
-
             System.Console.Write("Port number (ENTER for default): ");
 
             var portNumberString = System.Console.ReadLine();

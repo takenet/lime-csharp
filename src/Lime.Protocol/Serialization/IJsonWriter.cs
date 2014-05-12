@@ -14,6 +14,12 @@ namespace Lime.Protocol.Serialization
     public interface IJsonWriter
     {
         /// <summary>
+        /// Indicates if the writer
+        /// is empty (no property has been written)
+        /// </summary>
+        bool IsEmpty { get; }
+
+        /// <summary>
         /// Writes a boolean property
         /// to the document.
         /// </summary>

@@ -338,5 +338,22 @@ namespace Lime.Protocol.Serialization
 
             return expr.Compile();
         }
+
+
+        /// <summary>
+        /// Creates an instance
+        /// of the type
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        public static object CreateInstance(Type type)
+        {
+            if (type == null)
+            {
+                throw new ArgumentNullException("type");
+            }
+
+            return Activator.CreateInstance(type);
+        }
     }
 }

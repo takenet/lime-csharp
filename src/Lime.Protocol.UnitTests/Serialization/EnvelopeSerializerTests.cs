@@ -391,6 +391,86 @@ namespace Lime.Protocol.Serialization.ServiceStack.UnitTests
 
         [TestMethod]
         [TestCategory("Deserialize")]
+        public void Deserialize_RosterRequestCommand_ReturnsValidInstance()
+        {
+            var target = GetTarget();
+
+            var method = CommandMethod.Get;
+
+            var id = Guid.NewGuid();
+
+            var from = DataUtil.CreateNode();
+            var pp = DataUtil.CreateNode();
+            var to = DataUtil.CreateNode();
+
+            string randomKey1 = "randomString1";
+            string randomKey2 = "randomString2";
+            string randomString1 = DataUtil.CreateRandomString(50);
+            string randomString2 = DataUtil.CreateRandomString(50);
+
+            string json = string.Format(
+                "{{\"type\":\"application/vnd.lime.roster+json\",\"method\":\"get\",\"id\":\"{0}\",\"from\":\"{1}\",\"pp\":\"{2}\",\"to\":\"{3}\",\"metadata\":{{\"{4}\":\"{5}\",\"{6}\":\"{7}\"}}}}",
+                id,
+                from,
+                pp,
+                to,
+                randomKey1,
+                randomString1,
+                randomKey2,
+                randomString2);
+
+            var envelope = target.Deserialize(json);
+
+            Assert.IsTrue(envelope is Command);
+            var command = (Command)envelope;
+            Assert.AreEqual(id, command.Id);
+            Assert.AreEqual(from, command.From);
+            Assert.AreEqual(pp, command.Pp);
+            Assert.AreEqual(to, command.To);
+
+            Assert.AreEqual(method, command.Method);
+            Assert.IsNotNull(command.Metadata);
+            Assert.IsTrue(command.Metadata.ContainsKey(randomKey1));
+            Assert.AreEqual(command.Metadata[randomKey1], randomString1);
+            Assert.IsTrue(command.Metadata.ContainsKey(randomKey2));
+            Assert.AreEqual(command.Metadata[randomKey2], randomString2);
+
+            Assert.AreEqual(command.Type.ToString(),  Roster.MIME_TYPE);
+
+        }
+
+        [TestMethod]
+        [TestCategory("Deserialize")]
+        public void Deserialize_ReceiptRequestCommand_ReturnsValidInstance()
+        {
+            var target = GetTarget();
+
+            var method = CommandMethod.Set;
+            var id = Guid.NewGuid();
+
+            string json = string.Format(
+                "{{\"type\":\"application/vnd.lime.receipt+json\",\"resource\":{{\"events\":[\"dispatched\",\"received\"]}},\"method\":\"{0}\",\"id\":\"{1}\"}}",
+                method.ToString().ToCamelCase(),
+                id);
+
+            var envelope = target.Deserialize(json);
+
+            Assert.IsTrue(envelope is Command);
+            var command = (Command)envelope;
+            Assert.AreEqual(id, command.Id);
+            Assert.IsNull(command.From);
+            Assert.IsNull(command.Pp);
+            Assert.IsNull(command.To);
+
+            Assert.AreEqual(method, command.Method);
+            Assert.IsNull(command.Metadata);
+            Assert.AreEqual(command.Type.ToString(), Receipt.MIME_TYPE);
+            Assert.IsNotNull(command.Resource);
+            Assert.IsTrue(command.Resource is Receipt);
+        }
+
+        [TestMethod]
+        [TestCategory("Deserialize")]
         public void Deserialize_RosterResponseCommand_ReturnsValidInstance()
         {
             var target = GetTarget();
