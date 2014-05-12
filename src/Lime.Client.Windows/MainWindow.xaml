@@ -1,0 +1,24 @@
+﻿<mui:ModernWindow  x:Class="Lime.Client.Windows.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mui="http://firstfloorsoftware.com/ModernUI"  
+        xmlns:i="clr-namespace:System.Windows.Interactivity;assembly=System.Windows.Interactivity"
+        DataContext="{StaticResource MainViewModel}"
+        Title="LIME Messenger" 
+        Icon="/Images/appbar.message.smiley.blue.ico"
+        LogoData="{StaticResource Logo}"
+        IsTitleVisible="True"  
+        IsBackButtonVisible="False"
+        Style="{StaticResource NoMenuWindow}"
+        ContentSource="{Binding ContentSource, Mode=OneWay}"                   
+        Height="600" 
+        Width="350">
+    <i:Interaction.Triggers>
+        <i:EventTrigger EventName="Closing">
+            <i:InvokeCommandAction Command="{Binding ClosingCommand}" />
+        </i:EventTrigger>
+        <i:EventTrigger EventName="Closed">
+            <i:InvokeCommandAction Command="{Binding ClosedCommand}" />
+        </i:EventTrigger>
+    </i:Interaction.Triggers>    
+</mui:ModernWindow>

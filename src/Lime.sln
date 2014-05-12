@@ -39,6 +39,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{073E3A
 		.nuget\NuGet.targets = .nuget\NuGet.targets
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lime.Client.Windows", "Lime.Client.Windows\Lime.Client.Windows.csproj", "{1847098B-FE9E-4E40-AA69-9E70FAF5D06E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -85,6 +87,10 @@ Global
 		{690CB13D-5BFC-4D2E-B23C-64BD00B7AF6F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{690CB13D-5BFC-4D2E-B23C-64BD00B7AF6F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{690CB13D-5BFC-4D2E-B23C-64BD00B7AF6F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1847098B-FE9E-4E40-AA69-9E70FAF5D06E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1847098B-FE9E-4E40-AA69-9E70FAF5D06E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1847098B-FE9E-4E40-AA69-9E70FAF5D06E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1847098B-FE9E-4E40-AA69-9E70FAF5D06E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

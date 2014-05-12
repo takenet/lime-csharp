@@ -1,0 +1,12 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:converters="clr-namespace:Lime.Client.Windows.Converters">
+    <converters:PresenceToColorConverter x:Key="PresenceToColorConverter" />
+    <converters:PresenceToDescriptionConverter x:Key="PresenceToDescriptionConverter" />
+    <converters:BooleanToBrushConverter x:Key="BooleanToBrushConverter" />
+    <converters:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+    <converters:BooleanToTextDecorationConverter x:Key="BooleanToTextDecorationConverter" />
+    <converters:ChatStateToDescriptionConverter x:Key="ChatStateToDescriptionConverter" />
+    <converters:EventToColorConverter x:Key="EventToColorConverter" />
+    <converters:DataOperationToBrushConverter x:Key="DataOperationToBrushConverter" />       
+</ResourceDictionary>

@@ -188,7 +188,5 @@ namespace Lime.Protocol.Serialization
         {
             return _jsonDictionary;
         }
-
-
     }
 }
