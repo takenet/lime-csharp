@@ -1,4 +1,5 @@
 ﻿using FirstFloor.ModernUI.Windows;
+using FirstFloor.ModernUI.Windows.Navigation;
 using Lime.Client.Windows.ViewModels;
 using System;
 using System.Collections.Generic;
@@ -12,7 +13,6 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
 using System.Windows.Shapes;
 
 namespace Lime.Client.Windows.Pages
@@ -20,7 +20,7 @@ namespace Lime.Client.Windows.Pages
     /// <summary>
     /// Interaction logic for Login.xaml
     /// </summary>
-    public partial class Login : UserControl, IContent
+    public partial class Login : UserControl
     {
         public Login()
         {
@@ -47,27 +47,5 @@ namespace Lime.Client.Windows.Pages
                 viewModel.Password = ((PasswordBox)sender).Password;
             }
         }
-
-
-        #region IContent Members
-
-        public void OnFragmentNavigation(FirstFloor.ModernUI.Windows.Navigation.FragmentNavigationEventArgs e)
-        {
-        }
-
-        public void OnNavigatedFrom(FirstFloor.ModernUI.Windows.Navigation.NavigationEventArgs e)
-        {
-        }
-
-        public void OnNavigatedTo(FirstFloor.ModernUI.Windows.Navigation.NavigationEventArgs e)
-        {
-            
-        }
-
-        public void OnNavigatingFrom(FirstFloor.ModernUI.Windows.Navigation.NavigatingCancelEventArgs e)
-        {
-        }
-
-        #endregion
     }
 }

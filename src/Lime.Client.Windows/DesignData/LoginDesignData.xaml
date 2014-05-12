@@ -1,4 +1,7 @@
-﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+﻿<vm:LoginViewModel xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                   xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                   xmlns:vm="clr-namespace:Lime.Client.Windows.ViewModels"
+                   IsBusy="True"
+                   ErrorMessage="Sample error message">
     
-</ResourceDictionary>
+</vm:LoginViewModel>

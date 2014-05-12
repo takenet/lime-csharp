@@ -1,0 +1,66 @@
+﻿<UserControl x:Class="Lime.Client.Windows.Pages.Roster"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+        xmlns:i="clr-namespace:System.Windows.Interactivity;assembly=System.Windows.Interactivity"
+        xmlns:uc="clr-namespace:Lime.Client.Windows.UserControls"
+        xmlns:mui="http://firstfloorsoftware.com/ModernUI"
+        xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
+        DataContext="{Binding ContentViewModel}"
+        mc:Ignorable="d" 
+        d:DataContext="{d:DesignData /DesignData/RosterDesignData.xaml }"
+        Height="600" 
+        Width="300">
+    <i:Interaction.Triggers>
+        <i:EventTrigger EventName="Loaded">
+            <i:InvokeCommandAction Command="{Binding LoadedCommand}" />
+        </i:EventTrigger>
+    </i:Interaction.Triggers>
+    <UserControl.Resources>
+        <Style TargetType="TextBox" x:Key="TransparentTextBox">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="0" />
+        </Style>
+    </UserControl.Resources>
+    <Grid Style="{StaticResource ContentRootNoMargin}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <StackPanel>
+            <ProgressBar Minimum="0" 
+                     Maximum="1" 
+                     Height="5" 
+                     IsIndeterminate="{Binding IsBusy}" 
+                     Background="Transparent" 
+                     Margin="0,0,0,0" />
+            <TextBlock Text="{Binding ErrorMessage}" 
+                   Style="{StaticResource EmphasisRed}" 
+                   Margin="0,0,0,5"
+                   TextWrapping="NoWrap"/>
+            <StackPanel Orientation="Horizontal">
+                <Image Width="72" Height="72" Source="../Images/placeholder.png" />
+                <StackPanel Margin="5,0,0,0">
+                    <TextBlock Style="{StaticResource Title}"                            
+                               Text="{Binding Name}" />
+                    <TextBlock Style="{StaticResource Small}"                            
+                               Text="{Binding IdentityName}" />
+                    <xctk:WatermarkTextBox Margin="0,5,0,0"                          
+                                           Style="{StaticResource TransparentTextBox}"                          
+                                           Watermark="Como está se sentindo?"                         
+                                           Text="{Binding PresenceMessage, UpdateSourceTrigger=LostFocus}" />
+                </StackPanel>
+            </StackPanel>
+
+            <uc:PresenceComboBox Margin="0,5,0,0" />
+
+            <xctk:WatermarkTextBox Watermark="Procurar ou adicionar contato" 
+                               Margin="0,10,0,0"
+                               Text="{Binding SearchOrAddContactText, UpdateSourceTrigger=PropertyChanged}" />
+            <uc:RosterToolbar Margin="0,10,0,0" />
+        </StackPanel>
+        <uc:ContactList Grid.Row="1" />
+    </Grid>
+</UserControl>

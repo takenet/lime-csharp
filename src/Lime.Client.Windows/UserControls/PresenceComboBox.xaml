@@ -1,0 +1,24 @@
+﻿<UserControl x:Class="Lime.Client.Windows.UserControls.PresenceComboBox"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" 
+             d:DataContext="{d:DesignData /DesignData/RosterDesignData.xaml }">
+    <ComboBox ItemsSource="{Binding PresenceStatusValues, Mode=OneTime}" 
+              SelectedItem="{Binding PresenceStatus}">
+        <ComboBox.ItemTemplate>
+            <DataTemplate>
+                <StackPanel Orientation="Horizontal">
+                    <Rectangle Width="15" Height="15" Margin="0,0,10,0">
+                        <Rectangle.Fill>
+                            <SolidColorBrush x:Name="Brush" 
+                                                 Color="{Binding Converter={StaticResource PresenceToColorConverter}}" />
+                        </Rectangle.Fill>
+                    </Rectangle>
+                    <TextBlock Text="{Binding Converter={StaticResource PresenceToDescriptionConverter}}" />
+                </StackPanel>
+            </DataTemplate>
+        </ComboBox.ItemTemplate>
+    </ComboBox>
+</UserControl>

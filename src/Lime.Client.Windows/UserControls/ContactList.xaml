@@ -1,0 +1,106 @@
+﻿<UserControl x:Class="Lime.Client.Windows.UserControls.ContactList"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"             
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:i="clr-namespace:System.Windows.Interactivity;assembly=System.Windows.Interactivity"    
+             xmlns:mui="http://firstfloorsoftware.com/ModernUI"                          
+             xmlns:uc="clr-namespace:Lime.Client.Windows.UserControls" 
+             mc:Ignorable="d" 
+             d:DataContext="{d:DesignData /DesignData/RosterDesignData.xaml}"                          
+             d:DesignHeight="400" d:DesignWidth="300">
+    <UserControl.Resources>
+        <Style x:Key="EmpashisStrikeThrough" BasedOn="{StaticResource Emphasis}" TargetType="{x:Type TextBlock}">
+            <Setter Property="TextDecorations" Value="StrikeThrough" />
+        </Style>
+    </UserControl.Resources>
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <ListBox ItemsSource="{Binding ContactsView}" 
+                 x:Name="ContactsListBox"
+            Margin="0,10,0,0" 
+            SelectedItem="{Binding SelectedContact}">
+            <i:Interaction.Triggers>
+                <i:EventTrigger EventName="MouseDoubleClick">
+                    <i:InvokeCommandAction Command="{Binding OpenConversationCommand}" />
+                </i:EventTrigger>
+            </i:Interaction.Triggers>
+            <ListBox.ItemContainerStyle>
+                <Style TargetType="{x:Type ListBoxItem}">
+                    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                </Style>
+            </ListBox.ItemContainerStyle>
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <StackPanel Orientation="Horizontal" 
+                        ToolTip="{Binding IdentityName}"
+                        Background="{Binding HasUnreadMessage, Converter={StaticResource BooleanToBrushConverter}}">
+                        <Rectangle Width="15" Height="15" Margin="0,0,10,0">
+                            <Rectangle.Fill>
+                                <SolidColorBrush x:Name="Brush" 
+                                    Color="{Binding PresenceStatus, Converter={StaticResource PresenceToColorConverter}}" />
+                            </Rectangle.Fill>
+                        </Rectangle>
+                        <StackPanel Margin="0,5,0,5">
+                            <TextBlock Text="{Binding Name}"
+                                TextDecorations="{Binding SharePresence, Converter={StaticResource BooleanToTextDecorationConverter}}"
+                                Style="{StaticResource Emphasis}" />
+                            <StackPanel Visibility="{Binding IsPending, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                <TextBlock Text="Aceitar pedido de contato?"
+                                    Style="{StaticResource EmphasisRed}"/>
+                                <StackPanel Orientation="Horizontal">
+                                    <mui:ModernButton EllipseDiameter="25" 
+                                        IconWidth="15"
+                                        IconHeight="15"
+                                        ToolTip="Aceitar contato"
+                                        Command="{Binding ElementName=ContactsListBox, Path=DataContext.AcceptPendingContactCommand}"
+                                        IconData="{StaticResource AcceptPendingContactIcon}" />
+                                    <mui:ModernButton EllipseDiameter="25" 
+                                        IconWidth="15"
+                                        IconHeight="15"
+                                        ToolTip="Rejeitar contato"
+                                        Command="{Binding ElementName=ContactsListBox, Path=DataContext.RejectPendingContactCommand}"
+                                        IconData="{StaticResource RejectPendingContactIcon}" />
+                                </StackPanel>
+
+                            </StackPanel>
+
+                            <TextBlock Text="{Binding PresenceMessage}" 
+                                Style="{StaticResource Small}"
+                                Visibility="{Binding IsNotPending, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+
+                        </StackPanel>
+                    </StackPanel>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+            <ListBox.ContextMenu>
+                <ContextMenu>
+                    <MenuItem Header="_Abrir conversa" FontWeight="Bold" Command="{Binding OpenConversationCommand}" />
+                    <Separator />
+                    <MenuItem Header="Apagar _contato"                               
+                        Command="{Binding RemoveContactCommand}"/>
+                    <MenuItem Header="_Bloquear contato" 
+                        Visibility="{Binding CanUnsharePresence, Converter={StaticResource BooleanToVisibilityConverter}}"
+                        Command="{Binding UnsharePresenceCommand}"/>
+                    <MenuItem Header="_Desbloquear contato" 
+                        Visibility="{Binding CanSharePresence, Converter={StaticResource BooleanToVisibilityConverter}}"
+                        Command="{Binding SharePresenceCommand}"/>
+                    <MenuItem Header="Bloquear _informações pessoais" 
+                        Visibility="{Binding CanUnshareAccountInfo, Converter={StaticResource BooleanToVisibilityConverter}}"
+                        Command="{Binding UnshareAccountInfoCommand}"/>
+                    <MenuItem Header="_Compartilhar informações pessoais" 
+                        Visibility="{Binding CanShareAccountInfo, Converter={StaticResource BooleanToVisibilityConverter}}"
+                        Command="{Binding ShareAccountInfoCommand}"/>
+                </ContextMenu>
+            </ListBox.ContextMenu>
+            <ListBox.GroupStyle>
+                <GroupStyle>
+                    <GroupStyle.HeaderTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Name, Converter={StaticResource PresenceToDescriptionConverter}}" />
+                        </DataTemplate>
+                    </GroupStyle.HeaderTemplate>
+                </GroupStyle>
+            </ListBox.GroupStyle>
+        </ListBox>
+    </ScrollViewer>
+</UserControl>

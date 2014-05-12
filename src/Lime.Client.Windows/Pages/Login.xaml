@@ -4,10 +4,17 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:p="clr-namespace:Lime.Client.Windows.Properties"
+             xmlns:i="clr-namespace:System.Windows.Interactivity;assembly=System.Windows.Interactivity"             
              mc:Ignorable="d" 
+             d:DataContext="{d:DesignData /DesignData/LoginDesignData.xaml }"
              DataContext="{Binding ContentViewModel}"
              d:DesignHeight="300" d:DesignWidth="300"
              xml:lang="en-US">
+    <i:Interaction.Triggers>
+        <i:EventTrigger EventName="Loaded">
+            <i:InvokeCommandAction Command="{Binding LoadedCommand}" />
+        </i:EventTrigger>
+    </i:Interaction.Triggers>    
     <StackPanel Style="{StaticResource ContentRootNoMargin}">
         <ProgressBar Minimum="0" Maximum="1" Height="5" IsIndeterminate="{Binding IsBusy}" Background="Transparent" />
         <TextBlock Text="{x:Static p:Resources.Welcome}" Style="{StaticResource Title}" />

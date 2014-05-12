@@ -15,24 +15,41 @@ namespace Lime.Client.Windows.Mvvm
     {
         #region Fields
 
-        protected readonly Func<object, bool> _canExecute;
-        protected Func<object, Task> _asyncExecute;
+        protected readonly Func<object, bool> _canExecuteFunc;
+        protected readonly Func<object, Task> _executeFunc;
 
         #endregion
 
         #region Constructor
 
-        public AsyncCommand(Func<object, Task> execute)
-            : this(execute, null)
+        public AsyncCommand(Func<Task> executeFunc)
+            : this(p => executeFunc())
         {
-
 
         }
 
-        public AsyncCommand(Func<object, Task> asyncExecute, Func<object, bool> canExecute)
+        public AsyncCommand(Func<object, Task> executeFunc)
+            : this(executeFunc, () => true)
         {
-            _asyncExecute = asyncExecute;
-            _canExecute = canExecute;
+
+        }
+
+        public AsyncCommand(Func<Task> executeFunc, Func<bool> canExecuteFunc)
+            : this(p => executeFunc(), p => canExecuteFunc())
+        {
+
+        }
+
+        public AsyncCommand(Func<object, Task> executeFunc, Func<bool> canExecuteFunc)
+            : this(executeFunc, p => canExecuteFunc())
+        {
+            
+        }
+
+        public AsyncCommand(Func<object, Task> executeFunc, Func<object, bool> canExecuteFunc)           
+        {
+            _executeFunc = executeFunc;
+            _canExecuteFunc = canExecuteFunc;
         }
 
         #endregion
@@ -54,12 +71,7 @@ namespace Lime.Client.Windows.Mvvm
         /// </returns>
         public bool CanExecute(object parameter)
         {
-            if (_canExecute == null)
-            {
-                return true;
-            }
-
-            return _canExecute(parameter);
+            return _canExecuteFunc(parameter);
         }
 
         /// <summary>
@@ -73,14 +85,14 @@ namespace Lime.Client.Windows.Mvvm
 
         #endregion
 
-        protected virtual async Task ExecuteAsync(object parameter)
+        protected virtual Task ExecuteAsync(object parameter)
         {
-            await _asyncExecute(parameter).ConfigureAwait(false);
+            return _executeFunc(parameter);
         }
 
         public void RaiseCanExecuteChanged()
         {
-            CanExecuteChanged.RaiseEvent(this, EventArgs.Empty);
+            this.CanExecuteChanged.RaiseEvent(this, EventArgs.Empty);
         }
     }
 }

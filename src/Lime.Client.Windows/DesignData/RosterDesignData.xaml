@@ -1,0 +1,106 @@
+﻿<vm:RosterViewModel xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:vm="clr-namespace:Lime.Client.Windows.ViewModels"
+                    xmlns:c="clr-namespace:Lime.Protocol;assembly=Lime.Protocol"
+                    xmlns:r="clr-namespace:Lime.Protocol.Resources;assembly=Lime.Protocol"
+                    IsBusy="True"
+                    ErrorMessage="Sample error message"
+                    PresenceStatus="Available"
+                    PresenceMessage="I'm here!">
+    <vm:RosterViewModel.Identity>
+        <c:Identity Name="andreb"
+                    Domain="takenet.com.br" />
+    </vm:RosterViewModel.Identity>
+    <vm:RosterViewModel.Account>
+        <r:Account FullName="André Bires Fonseca" />
+    </vm:RosterViewModel.Account>
+    <vm:RosterViewModel.Contacts>
+        <vm:ContactViewModel>
+            <vm:ContactViewModel.Contact>
+                <r:Contact SharePresence="True"
+                           ShareAccountInfo="True">
+                    <r:Contact.Identity>
+                        <c:Identity Name="andre"
+                                    Domain="takenet.com.br" />                        
+                    </r:Contact.Identity> 
+                </r:Contact>
+            </vm:ContactViewModel.Contact>
+            <vm:ContactViewModel.Presence>
+                <r:Presence Status="Available"
+                            Message="Hello world!" />
+            </vm:ContactViewModel.Presence>
+        </vm:ContactViewModel>
+        <vm:ContactViewModel HasUnreadMessage="True">
+            <vm:ContactViewModel.Contact>
+                <r:Contact ShareAccountInfo="True">
+                    <r:Contact.Identity>
+                        <c:Identity Name="john"
+                                    Domain="takenet.com.br" />
+                    </r:Contact.Identity>
+                </r:Contact>
+            </vm:ContactViewModel.Contact>
+            <vm:ContactViewModel.Presence>
+                <r:Presence Status="Busy"
+                            Message="Whazup!" />
+            </vm:ContactViewModel.Presence>
+            <vm:ContactViewModel.Account>
+                <r:Account FullName="John" />
+            </vm:ContactViewModel.Account>
+        </vm:ContactViewModel>
+        <vm:ContactViewModel>
+            <vm:ContactViewModel.Contact>
+                <r:Contact SharePresence="True"
+                           ShareAccountInfo="True">
+                    <r:Contact.Identity>
+                        <c:Identity Name="paul"
+                                    Domain="takenet.com.br" />
+                    </r:Contact.Identity>
+                </r:Contact>
+            </vm:ContactViewModel.Contact>
+        </vm:ContactViewModel>
+        <vm:ContactViewModel>
+            <vm:ContactViewModel.Contact>
+                <r:Contact ShareAccountInfo="False">
+                    <r:Contact.Identity>
+                        <c:Identity Name="paul"
+                                    Domain="takenet.com.br" />
+                    </r:Contact.Identity>
+                </r:Contact>                    
+            </vm:ContactViewModel.Contact>
+            <vm:ContactViewModel.Presence>
+                <r:Presence Status="Available"
+                            Message="Fala comigo" />
+            </vm:ContactViewModel.Presence>
+        </vm:ContactViewModel>
+        <vm:ContactViewModel>
+            <vm:ContactViewModel.Contact>
+                <r:Contact SharePresence="True"
+                           ShareAccountInfo="True">
+                    <r:Contact.Identity>
+                        <c:Identity Name="carl"
+                                    Domain="takenet.com.br" />
+                    </r:Contact.Identity>
+                </r:Contact>                    
+            </vm:ContactViewModel.Contact>
+            <vm:ContactViewModel.Presence>
+                <r:Presence Status="Busy"
+                            Message="É nóis na fita" />
+            </vm:ContactViewModel.Presence>
+            <vm:ContactViewModel.Account>
+                <r:Account FullName="Joao da Silva" />
+            </vm:ContactViewModel.Account>
+        </vm:ContactViewModel>
+        <vm:ContactViewModel>
+            <vm:ContactViewModel.Contact>
+                <r:Contact SharePresence="True"
+                           IsPending="True">
+                    <r:Contact.Identity>
+                        <c:Identity Name="mary"
+                                    Domain="takenet.com.br" />
+                    </r:Contact.Identity>
+                </r:Contact>                    
+            </vm:ContactViewModel.Contact>
+        </vm:ContactViewModel>
+
+    </vm:RosterViewModel.Contacts>
+</vm:RosterViewModel>

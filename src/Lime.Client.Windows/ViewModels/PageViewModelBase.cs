@@ -1,4 +1,5 @@
-﻿using GalaSoft.MvvmLight;
+﻿using FirstFloor.ModernUI.Windows.Navigation;
+using GalaSoft.MvvmLight;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -44,7 +45,7 @@ namespace Lime.Client.Windows.ViewModels
 
 
         private bool _isBusy;
-        public bool IsBusy
+        public virtual bool IsBusy
         {
             get { return _isBusy; }
             set
@@ -55,13 +56,13 @@ namespace Lime.Client.Windows.ViewModels
             }
         }
 
-        public bool IsIdle
+        public virtual bool IsIdle
         {
             get { return !_isBusy; }
         }
 
         private string _errorMessage;
-        public string ErrorMessage
+        public virtual string ErrorMessage
         {
             get { return _errorMessage; }
             set
@@ -74,6 +75,16 @@ namespace Lime.Client.Windows.ViewModels
         #endregion
 
         #region Public Methods
+
+        public virtual Task OnActivatedAsync()
+        {
+            return Task.FromResult<object>(null);
+        }
+
+        public virtual Task OnDeactivatedAsync()
+        {
+            return Task.FromResult<object>(null);
+        }
 
         public virtual Task OnWindowClosingAsync()
         {

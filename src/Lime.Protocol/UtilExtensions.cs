@@ -161,5 +161,17 @@ namespace Lime.Protocol
             return e.Compile()();
         }
 
+        /// <summary>
+        /// Creates a CancellationToken
+        /// with the specified delay
+        /// </summary>
+        /// <param name="delay">The delay.</param>
+        /// <returns></returns>
+        public static CancellationToken ToCancellationToken(this TimeSpan delay)
+        {
+            var cts = new CancellationTokenSource(delay);
+            return cts.Token;
+        }
+
     }
 }

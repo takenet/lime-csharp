@@ -20,7 +20,7 @@ using System.Threading.Tasks;
 namespace Lime.Protocol.Tcp
 {
     /// <summary>
-    /// Provides the messaging protocol 
+    /// Provides the messaging protocol
     /// transport for TCP connections
     /// </summary>
     public class TcpTransport : TransportBase, ITransport
@@ -44,22 +44,59 @@ namespace Lime.Protocol.Tcp
         #region Constructor
 
         /// <summary>
-        /// Server constructor
+        /// Initializes a new instance of the <see cref="TcpTransport"/> class.
         /// </summary>
-        /// <param name="tcpClient"></param>
-        /// <param name="envelopeSerializer"></param>
-        /// <param name="serverCertificate"></param>
-        /// <param name="bufferSize"></param>
-        /// <param name="traceWriter"></param>
-        public TcpTransport(ITcpClient tcpClient, IEnvelopeSerializer envelopeSerializer, X509Certificate2 serverCertificate, int bufferSize = DEFAULT_BUFFER_SIZE, ITraceWriter traceWriter = null)
-            : this(tcpClient, envelopeSerializer, serverCertificate, null, bufferSize, traceWriter)
+        /// <param name="tcpClient">The TCP client.</param>
+        /// <param name="envelopeSerializer">The envelope serializer.</param>
+        /// <param name="hostName">Name of the host.</param>
+        /// <param name="bufferSize">Size of the buffer.</param>
+        /// <param name="traceWriter">The trace writer.</param>
+        public TcpTransport(int bufferSize = DEFAULT_BUFFER_SIZE, ITraceWriter traceWriter = null)
+            : this(new EnvelopeSerializer(), bufferSize, traceWriter)
         {
 
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="TcpTransport"/> class.
+        /// </summary>
+        /// <param name="tcpClient">The TCP client.</param>
+        /// <param name="envelopeSerializer">The envelope serializer.</param>
+        /// <param name="hostName">Name of the host.</param>
+        /// <param name="bufferSize">Size of the buffer.</param>
+        /// <param name="traceWriter">The trace writer.</param>
+        public TcpTransport(IEnvelopeSerializer envelopeSerializer, int bufferSize = DEFAULT_BUFFER_SIZE, ITraceWriter traceWriter = null)
+            : this(new TcpClientAdapter(new TcpClient()), envelopeSerializer, null, null, bufferSize, traceWriter)
+        {
+
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="TcpTransport"/> class.
+        /// </summary>
+        /// <param name="tcpClient">The TCP client.</param>
+        /// <param name="envelopeSerializer">The envelope serializer.</param>
+        /// <param name="hostName">Name of the host.</param>
+        /// <param name="bufferSize">Size of the buffer.</param>
+        /// <param name="traceWriter">The trace writer.</param>
         public TcpTransport(ITcpClient tcpClient, IEnvelopeSerializer envelopeSerializer, string hostName, int bufferSize = DEFAULT_BUFFER_SIZE, ITraceWriter traceWriter = null)
             : this(tcpClient, envelopeSerializer, null, hostName, bufferSize, traceWriter)
 
+        {
+
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="TcpTransport"/> class.
+        /// This constructor is used by the <see cref="TcpTransportListener"/> class.
+        /// </summary>
+        /// <param name="tcpClient">The TCP client.</param>
+        /// <param name="envelopeSerializer">The envelope serializer.</param>
+        /// <param name="serverCertificate">The server certificate.</param>
+        /// <param name="bufferSize">Size of the buffer.</param>
+        /// <param name="traceWriter">The trace writer.</param>
+        internal TcpTransport(ITcpClient tcpClient, IEnvelopeSerializer envelopeSerializer, X509Certificate2 serverCertificate, int bufferSize = DEFAULT_BUFFER_SIZE, ITraceWriter traceWriter = null)
+            : this(tcpClient, envelopeSerializer, serverCertificate, null, bufferSize, traceWriter)
         {
 
         }
@@ -119,6 +156,11 @@ namespace Lime.Protocol.Tcp
                 if (uri.Scheme != Uri.UriSchemeNetTcp)
                 {
                     throw new ArgumentException(string.Format("Invalid URI scheme. Expected is '{0}'.", Uri.UriSchemeNetTcp));
+                }
+
+                if (string.IsNullOrWhiteSpace(_hostName))
+                {
+                    _hostName = uri.Host;
                 }
 
                 await _tcpClient.ConnectAsync(uri.Host, uri.Port).ConfigureAwait(false);
@@ -467,6 +509,5 @@ namespace Lime.Protocol.Tcp
         }
 
         #endregion        
-
     }
 }

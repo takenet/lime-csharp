@@ -1,10 +1,14 @@
 ﻿using Lime.Client.Windows.Mvvm;
 using Lime.Protocol;
+using Lime.Protocol.Client;
+using Lime.Protocol.Security;
+using Lime.Protocol.Tcp;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Net;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -12,12 +16,20 @@ namespace Lime.Client.Windows.ViewModels
 {
     public class LoginViewModel : PageViewModelBase, IDataErrorInfo
     {
+        #region Private Fields
+
+        private static TimeSpan _loginTimeout = TimeSpan.FromSeconds(30);
+        private static TimeSpan _sendTimeout = TimeSpan.FromSeconds(30);
+
+        #endregion
+
         #region Constructor
 
         public LoginViewModel()
             : base(new Uri("/Pages/Login.xaml", UriKind.Relative))
         {
-            LoginCommand = new AsyncCommand(p => LoginAsync(), p => CanLogin());
+            LoadedCommand = new AsyncCommand(LoadedAsync);
+            LoginCommand = new AsyncCommand(LoginAsync, CanLogin);
 
 #if DEBUG
             ServerAddress = string.Format("net.tcp://{0}:55321", Dns.GetHostEntry("localhost").HostName); 
@@ -60,6 +72,7 @@ namespace Lime.Client.Windows.ViewModels
             }
         }
 
+        private Uri _serverAddressUri;
 
         private string _serverAddress;
         public string ServerAddress
@@ -84,27 +97,89 @@ namespace Lime.Client.Windows.ViewModels
             }
         }
 
+        public override bool IsBusy
+        {
+            get
+            {
+                return base.IsBusy;
+            }
+            set
+            {
+                base.IsBusy = value;
+                LoginCommand.RaiseCanExecuteChanged();
+            }
+        }
+
         #endregion
 
         #region Commands
+
+        public AsyncCommand LoadedCommand { get; private set; }
+
+        private async Task LoadedAsync()
+        {
+
+        }
+
         public AsyncCommand LoginCommand { get; set; } 
 
         public async Task LoginAsync()
         {
             IsBusy = true;
+            this.ErrorMessage = string.Empty;
 
-            await Task.Delay(5000);
+            try
+            {
+                var cancellationToken = _loginTimeout.ToCancellationToken();
 
-            IsBusy = false;
+                var transport = new TcpTransport();
+                await transport.OpenAsync(_serverAddressUri, cancellationToken);
+
+                var client = new ClientChannel(transport, _sendTimeout);
+
+                var authentication = new PlainAuthentication();
+                authentication.SetToBase64Password(this.Password);
+
+                var sessionResult = await client.EstablishSessionAsync(
+                    compressionOptions => compressionOptions.First(),
+                    encryptionOptions => SessionEncryption.TLS,
+                    new Identity() { Name = _userNameNode.Name, Domain = _userNameNode.Domain },
+                    (schemeOptions, roundtrip) => authentication,
+                    _userNameNode.Instance,
+                    SessionMode.Node,
+                    cancellationToken);
+
+                
+                if (sessionResult.State == SessionState.Established)
+                {
+                    var rosterViewModel = new RosterViewModel(client, this);
+                    base.Owner.ContentViewModel = rosterViewModel;
+                }
+                else if (sessionResult.Reason != null)
+                {
+                    this.ErrorMessage = sessionResult.Reason.Description;
+                }
+                else
+                {
+                    this.ErrorMessage = "Could not connect to the server";
+                }
+            }
+            catch (Exception ex)
+            {
+                ErrorMessage = ex.Message;
+            }
+            finally
+            {
+                IsBusy = false;
+            }            
         }
 
         public bool CanLogin()
-        {
-            Uri uri;
-
-            return Node.TryParse(UserName, out _userNameNode) &&
+        {            
+            return !IsBusy && 
+                   Node.TryParse(UserName, out _userNameNode) &&
                    !string.IsNullOrWhiteSpace(Password) &&
-                   Uri.TryCreate(_serverAddress, UriKind.Absolute, out uri);
+                   Uri.TryCreate(_serverAddress, UriKind.Absolute, out _serverAddressUri);
         }
 
         #endregion

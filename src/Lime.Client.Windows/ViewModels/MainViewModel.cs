@@ -4,7 +4,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Threading;
 
 namespace Lime.Client.Windows.ViewModels
 {
@@ -31,7 +33,7 @@ namespace Lime.Client.Windows.ViewModels
             set
             {
                 _contentViewModel = value;
-                _contentViewModel.Owner = this;
+                _contentViewModel.Owner = this;              
                 RaisePropertyChanged(() => ContentViewModel);
                 RaisePropertyChanged(() => ContentSource);
             }
