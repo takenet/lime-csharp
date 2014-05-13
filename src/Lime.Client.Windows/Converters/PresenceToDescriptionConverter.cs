@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Data;
 using Lime.Protocol.Resources;
+using Lime.Client.Windows.Properties;
 
 namespace Lime.Client.Windows.Converters
 {
@@ -21,20 +22,20 @@ namespace Lime.Client.Windows.Converters
                 switch (presenceStatus)
                 {
                     case PresenceStatus.Unavailable:
-                        return "Indisponível";
+                        return Resources.Unavailable;
                     case PresenceStatus.Available:
-                        return "Disponível";
+                        return Resources.Available;
                     case PresenceStatus.Busy:
-                        return "Ocupado";
+                        return Resources.Busy;
                     case PresenceStatus.Away:
-                        return "Ausente";
+                        return Resources.Away;
                     default:
-                        return "Indisponível";
+                        return Resources.Unavailable;
                 }
             }
             else
             {
-                return "Indisponível";
+                return Resources.Unavailable;
             }
         }
 

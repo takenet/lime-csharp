@@ -117,14 +117,50 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="Available" xml:space="preserve">
+    <value>Available</value>
+  </data>
+  <data name="Away" xml:space="preserve">
+    <value>Away</value>
+  </data>
+  <data name="BlockContact" xml:space="preserve">
+    <value>Block contact</value>
+  </data>
+  <data name="Busy" xml:space="preserve">
+    <value>Busy</value>
+  </data>
+  <data name="DeleteContact" xml:space="preserve">
+    <value>Delete contact</value>
+  </data>
+  <data name="HowAreYouFeelingToday" xml:space="preserve">
+    <value>How are you feeling today?</value>
+  </data>
+  <data name="NewContact" xml:space="preserve">
+    <value>New contact</value>
+  </data>
   <data name="Password" xml:space="preserve">
     <value>password</value>
+  </data>
+  <data name="SearchOrAddContact" xml:space="preserve">
+    <value>Search or add a contact</value>
   </data>
   <data name="Server" xml:space="preserve">
     <value>server</value>
   </data>
+  <data name="SharePersonalData" xml:space="preserve">
+    <value>Share personal data</value>
+  </data>
   <data name="ShowTrace" xml:space="preserve">
     <value>Show trace window</value>
+  </data>
+  <data name="Unavailable" xml:space="preserve">
+    <value>Unavailable</value>
+  </data>
+  <data name="UnblockContact" xml:space="preserve">
+    <value>Unblock contact</value>
+  </data>
+  <data name="UnsharePersonalData" xml:space="preserve">
+    <value>Do not share personal data</value>
   </data>
   <data name="User" xml:space="preserve">
     <value>user</value>

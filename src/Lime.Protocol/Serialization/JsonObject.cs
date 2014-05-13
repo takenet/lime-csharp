@@ -79,20 +79,24 @@ namespace Lime.Protocol.Serialization
 
             if (base.ContainsKey(key))
             {
-                var list = base[key] as IList;
-
-                if (list == null)
+                var value = base[key];
+                if (value != null)
                 {
-                    throw new ArgumentException(string.Format("The dictionary value for key '{0}' is not IList", key));
-                }
-                 
-                array = Array.CreateInstance(enumType, list.Count);
+                    var list = base[key] as IList;
 
-                for (int i = 0; i < list.Count; i++)
-                {
-                    var item = (string)list[i];                    
-                    var itemValue = TypeUtil.GetEnumValue(enumType, item);
-                    array.SetValue(itemValue, i);
+                    if (list == null)
+                    {
+                        throw new ArgumentException(string.Format("The dictionary value for key '{0}' is not IList", key));
+                    }
+
+                    array = Array.CreateInstance(enumType, list.Count);
+
+                    for (int i = 0; i < list.Count; i++)
+                    {
+                        var item = (string)list[i];
+                        var itemValue = TypeUtil.GetEnumValue(enumType, item);
+                        array.SetValue(itemValue, i);
+                    }
                 }
             }
 
@@ -101,14 +105,18 @@ namespace Lime.Protocol.Serialization
 
         public object GetEnumValueOrNull(Type enumType, string key)
         {
-            object value = null;
+            object enumValue = null;
 
             if (base.ContainsKey(key))
             {
-                value = TypeUtil.GetEnumValue(enumType, (string)base[key]);
+                var value = base[key];
+                if (value != null)
+                {
+                    enumValue = TypeUtil.GetEnumValue(enumType, (string)value);
+                }
             }
 
-            return value;
+            return enumValue;
         }
 
         public T GetValueOrDefault<T>(string key, Func<object, T> castFunc = null)

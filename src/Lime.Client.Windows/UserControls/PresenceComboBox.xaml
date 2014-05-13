@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              mc:Ignorable="d" 
+             xml:lang="en-US"
              d:DataContext="{d:DesignData /DesignData/RosterDesignData.xaml }">
     <ComboBox ItemsSource="{Binding PresenceStatusValues, Mode=OneTime}" 
               SelectedItem="{Binding PresenceStatus}">

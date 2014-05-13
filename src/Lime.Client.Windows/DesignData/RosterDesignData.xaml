@@ -3,6 +3,7 @@
                     xmlns:vm="clr-namespace:Lime.Client.Windows.ViewModels"
                     xmlns:c="clr-namespace:Lime.Protocol;assembly=Lime.Protocol"
                     xmlns:r="clr-namespace:Lime.Protocol.Resources;assembly=Lime.Protocol"
+                    xml:lang="en-US"
                     IsBusy="True"
                     ErrorMessage="Sample error message"
                     PresenceStatus="Available"

@@ -89,6 +89,5 @@ namespace Lime.Protocol.UnitTests.Serialization
             return json.Contains(
                 string.Format("\"{0}\":", key));
         }
-
     }
 }

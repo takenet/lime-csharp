@@ -834,7 +834,7 @@ namespace Lime.Protocol.Serialization.ServiceStack.UnitTests
 
         [TestMethod]
         [TestCategory("Deserialize")]
-        public void Deserialize_FailedSession_ReturnsValidInstance()
+        public void Deserialize_FailedSessionNullProperties_ReturnsValidInstance()
         {
             var target = GetTarget();
 
@@ -851,7 +851,7 @@ namespace Lime.Protocol.Serialization.ServiceStack.UnitTests
             var reasonDescription = DataUtil.CreateRandomString(100);
 
             string json = string.Format(
-                "{{\"state\":\"{0}\",\"id\":\"{1}\",\"from\":\"{2}\",\"to\":\"{3}\",\"reason\":{{\"code\":{4},\"description\":\"{5}\"}}}}",
+                "{{\"state\":\"{0}\",\"id\":\"{1}\",\"from\":\"{2}\",\"to\":\"{3}\",\"reason\":{{\"code\":{4},\"description\":\"{5}\"}},\"encryptionOptions\":null,\"compressionOptions\":null,\"compression\":null,\"encryption\":null}}",
                 state.ToString().ToCamelCase(),
                 id,
                 from,

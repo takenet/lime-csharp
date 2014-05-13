@@ -1,0 +1,16 @@
+﻿<vm:ConversationViewModel xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:vm="clr-namespace:Lime.Client.Windows.ViewModels"
+                    Name="André Bires Fonseca" 
+                    PresenceStatus="Available"
+                    ChatState="Composing">
+    <vm:ConversationViewModel.Messages>
+        <vm:MessageViewModel Direction="Input" Text="Opa" Timestamp="2013-09-13 00:00:00" />
+        <vm:MessageViewModel Direction="Output" Text="Beleza?" Timestamp="2013-09-13 00:00:30" LastEvent="Received" />
+        <vm:MessageViewModel Direction="Input" Text="Bao e vc?" Timestamp="2013-09-13 00:00:00" />
+        <vm:MessageViewModel Direction="Output" Text="Bacana" Timestamp="2013-09-13 00:00:30" LastEvent="Dispatched" />
+        <vm:MessageViewModel Direction="Input" Text="Que bom entao" Timestamp="2013-09-13 00:00:00" />
+        <vm:MessageViewModel Direction="Output" Text="Hehehe" Timestamp="2013-09-13 00:00:30" LastEvent="Accepted" />
+        <vm:MessageViewModel Direction="Output" Text="Hehehe" Timestamp="2013-09-13 00:00:30" LastEvent="Failed" />
+    </vm:ConversationViewModel.Messages>    
+</vm:ConversationViewModel>

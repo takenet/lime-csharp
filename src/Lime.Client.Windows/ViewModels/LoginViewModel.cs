@@ -1,6 +1,7 @@
 ﻿using Lime.Client.Windows.Mvvm;
 using Lime.Protocol;
 using Lime.Protocol.Client;
+using Lime.Protocol.Network;
 using Lime.Protocol.Security;
 using Lime.Protocol.Tcp;
 using System;
@@ -28,7 +29,6 @@ namespace Lime.Client.Windows.ViewModels
         public LoginViewModel()
             : base(new Uri("/Pages/Login.xaml", UriKind.Relative))
         {
-            LoadedCommand = new AsyncCommand(LoadedAsync);
             LoginCommand = new AsyncCommand(LoginAsync, CanLogin);
 
 #if DEBUG
@@ -113,18 +113,25 @@ namespace Lime.Client.Windows.ViewModels
         #endregion
 
         #region Commands
-
-        public AsyncCommand LoadedCommand { get; private set; }
-
-        private async Task LoadedAsync()
-        {
-
-        }
-
+       
         public AsyncCommand LoginCommand { get; set; } 
 
         public async Task LoginAsync()
         {
+            ITraceWriter traceWriter = null;
+
+            if (ShowTraceWindow)
+            {
+                traceWriter = Owner.TraceViewModel;
+
+                base.MessengerInstance.Send<OpenWindowMessage>(
+                    new OpenWindowMessage()
+                    {
+                        WindowName = "Trace",
+                        DataContext = Owner.TraceViewModel
+                    });
+            }
+
             IsBusy = true;
             this.ErrorMessage = string.Empty;
 
@@ -132,7 +139,7 @@ namespace Lime.Client.Windows.ViewModels
             {
                 var cancellationToken = _loginTimeout.ToCancellationToken();
 
-                var transport = new TcpTransport();
+                var transport = new TcpTransport(traceWriter: traceWriter);
                 await transport.OpenAsync(_serverAddressUri, cancellationToken);
 
                 var client = new ClientChannel(transport, _sendTimeout);
@@ -148,7 +155,6 @@ namespace Lime.Client.Windows.ViewModels
                     _userNameNode.Instance,
                     SessionMode.Node,
                     cancellationToken);
-
                 
                 if (sessionResult.State == SessionState.Established)
                 {

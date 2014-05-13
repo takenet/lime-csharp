@@ -10,11 +10,6 @@
              DataContext="{Binding ContentViewModel}"
              d:DesignHeight="300" d:DesignWidth="300"
              xml:lang="en-US">
-    <i:Interaction.Triggers>
-        <i:EventTrigger EventName="Loaded">
-            <i:InvokeCommandAction Command="{Binding LoadedCommand}" />
-        </i:EventTrigger>
-    </i:Interaction.Triggers>    
     <StackPanel Style="{StaticResource ContentRootNoMargin}">
         <ProgressBar Minimum="0" Maximum="1" Height="5" IsIndeterminate="{Binding IsBusy}" Background="Transparent" />
         <TextBlock Text="{x:Static p:Resources.Welcome}" Style="{StaticResource Title}" />

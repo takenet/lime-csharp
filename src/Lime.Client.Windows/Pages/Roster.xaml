@@ -7,6 +7,7 @@
         xmlns:uc="clr-namespace:Lime.Client.Windows.UserControls"
         xmlns:mui="http://firstfloorsoftware.com/ModernUI"
         xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
+        xmlns:p="clr-namespace:Lime.Client.Windows.Properties"
         DataContext="{Binding ContentViewModel}"
         mc:Ignorable="d" 
         d:DataContext="{d:DesignData /DesignData/RosterDesignData.xaml }"
@@ -49,14 +50,14 @@
                                Text="{Binding IdentityName}" />
                     <xctk:WatermarkTextBox Margin="0,5,0,0"                          
                                            Style="{StaticResource TransparentTextBox}"                          
-                                           Watermark="Como está se sentindo?"                         
+                                           Watermark="{x:Static p:Resources.HowAreYouFeelingToday}"                         
                                            Text="{Binding PresenceMessage, UpdateSourceTrigger=LostFocus}" />
                 </StackPanel>
             </StackPanel>
 
             <uc:PresenceComboBox Margin="0,5,0,0" />
 
-            <xctk:WatermarkTextBox Watermark="Procurar ou adicionar contato" 
+            <xctk:WatermarkTextBox Watermark="{x:Static p:Resources.SearchOrAddContact}" 
                                Margin="0,10,0,0"
                                Text="{Binding SearchOrAddContactText, UpdateSourceTrigger=PropertyChanged}" />
             <uc:RosterToolbar Margin="0,10,0,0" />

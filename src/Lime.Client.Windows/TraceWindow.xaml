@@ -1,14 +1,11 @@
-﻿<mui:ModernWindow x:Class="Lime.Client.Windows.ConversationWindow"
+﻿<mui:ModernWindow x:Class="Lime.Client.Windows.TraceWindow"
+        xmlns:mui="http://firstfloorsoftware.com/ModernUI"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:mui="http://firstfloorsoftware.com/ModernUI"
         xmlns:i="clr-namespace:System.Windows.Interactivity;assembly=System.Windows.Interactivity"
         xmlns:pages="clr-namespace:Lime.Client.Windows.Pages"    
         Style="{StaticResource EmptyWindow}"
-        Icon="/Images/appbar.message.smiley.ico"
-        Title="{Binding Title}"  
-        Height="500" 
-        Width="600">
+        Title="TraceWindow" Height="300" Width="300">
     <i:Interaction.Triggers>
         <i:EventTrigger EventName="Loaded">
             <i:InvokeCommandAction Command="{Binding LoadedCommand}" />
@@ -20,5 +17,5 @@
             <i:InvokeCommandAction Command="{Binding ClosedCommand}" />
         </i:EventTrigger>
     </i:Interaction.Triggers>
-    <pages:Conversation />
+    <pages:Trace />
 </mui:ModernWindow>

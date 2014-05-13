@@ -61,11 +61,83 @@ namespace Lime.Client.Windows.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Available.
+        /// </summary>
+        public static string Available {
+            get {
+                return ResourceManager.GetString("Available", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Away.
+        /// </summary>
+        public static string Away {
+            get {
+                return ResourceManager.GetString("Away", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Block contact.
+        /// </summary>
+        public static string BlockContact {
+            get {
+                return ResourceManager.GetString("BlockContact", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Busy.
+        /// </summary>
+        public static string Busy {
+            get {
+                return ResourceManager.GetString("Busy", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Delete contact.
+        /// </summary>
+        public static string DeleteContact {
+            get {
+                return ResourceManager.GetString("DeleteContact", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to How are you feeling today?.
+        /// </summary>
+        public static string HowAreYouFeelingToday {
+            get {
+                return ResourceManager.GetString("HowAreYouFeelingToday", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to New contact.
+        /// </summary>
+        public static string NewContact {
+            get {
+                return ResourceManager.GetString("NewContact", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to password.
         /// </summary>
         public static string Password {
             get {
                 return ResourceManager.GetString("Password", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Search or add a contact.
+        /// </summary>
+        public static string SearchOrAddContact {
+            get {
+                return ResourceManager.GetString("SearchOrAddContact", resourceCulture);
             }
         }
         
@@ -79,11 +151,47 @@ namespace Lime.Client.Windows.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Share personal data.
+        /// </summary>
+        public static string SharePersonalData {
+            get {
+                return ResourceManager.GetString("SharePersonalData", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Show trace window.
         /// </summary>
         public static string ShowTrace {
             get {
                 return ResourceManager.GetString("ShowTrace", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unavailable.
+        /// </summary>
+        public static string Unavailable {
+            get {
+                return ResourceManager.GetString("Unavailable", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unblock contact.
+        /// </summary>
+        public static string UnblockContact {
+            get {
+                return ResourceManager.GetString("UnblockContact", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Do not share personal data.
+        /// </summary>
+        public static string UnsharePersonalData {
+            get {
+                return ResourceManager.GetString("UnsharePersonalData", resourceCulture);
             }
         }
         

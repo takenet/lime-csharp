@@ -4,17 +4,23 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Threading;
 
 namespace Lime.Client.Windows.ViewModels
 {
     public class PageViewModelBase : ViewModelBase
     {
+        private SemaphoreSlim _executeSemaphore;
+        private DispatcherTimer _errorMessageTimer;
+
         #region Constructor
 
         public PageViewModelBase(Uri pageUri)
         {
             PageUri = pageUri;
+            _executeSemaphore = new SemaphoreSlim(1);
         }
 
         #endregion
@@ -69,6 +75,20 @@ namespace Lime.Client.Windows.ViewModels
             {
                 _errorMessage = value;
                 RaisePropertyChanged(() => ErrorMessage);
+
+                if (!string.IsNullOrWhiteSpace(_errorMessage))
+                {
+                    _errorMessageTimer = new DispatcherTimer(
+                        TimeSpan.FromSeconds(5),
+                        DispatcherPriority.DataBind,
+                        (sender, e) => ErrorMessage = null,
+                        Dispatcher.CurrentDispatcher);
+                }
+                else if (_errorMessageTimer != null)
+                {
+                    _errorMessageTimer.Stop();
+                    _errorMessageTimer = null;
+                }
             }
         } 
 
@@ -97,5 +117,39 @@ namespace Lime.Client.Windows.ViewModels
         }
 
         #endregion
+
+        
+
+        /// <summary>
+        /// Executes the specified func,
+        /// synchronizing the access and 
+        /// setting the window as busy.
+        /// </summary>
+        /// <param name="func"></param>
+        /// <returns></returns>
+        protected async Task ExecuteAsync(Func<Task> func)
+        {
+            if (func == null)
+            {
+                throw new ArgumentNullException("func");
+            }
+
+            await _executeSemaphore.WaitAsync();
+            
+            try
+            {
+                IsBusy = true;
+                await func();
+            }
+            catch (Exception ex)
+            {
+                ErrorMessage = ex.Message;
+            }
+            finally
+            {
+                _executeSemaphore.Release();
+                IsBusy = false;
+            }
+        }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using GalaSoft.MvvmLight;
 using Lime.Protocol;
+using Lime.Protocol.Contents;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,8 +10,40 @@ namespace Lime.Client.Windows.ViewModels
 {
     public class MessageViewModel : ViewModelBase
     {
-        private Guid _id;
-        public Guid Id
+        #region Constructor
+
+        public MessageViewModel(Message message, MessageDirection direction)
+            : this()
+        {
+            if (message == null)
+            {
+                throw new ArgumentNullException("message");
+            }
+
+            Id = message.Id;
+            Direction = direction;
+
+            if (message.Content is TextContent)
+            {
+                Text = ((TextContent)message.Content).Text;
+            }
+            else
+            {
+                Text = "(Not supported content type)";
+            }
+        }
+
+        public MessageViewModel()
+        {
+            Timestamp = DateTime.Now;
+            Id = Guid.NewGuid();
+        }
+
+        #endregion
+
+
+        private Guid? _id;
+        public Guid? Id
         {
             get { return _id; }
             set

@@ -59,7 +59,7 @@ namespace Lime.Protocol.Resources
         /// The value of the priority for 
         /// the identityByPriority routing rule.
         /// </summary>
-        [DataMember(Name = PRIORITY_KEY)]
+        [DataMember(Name = PRIORITY_KEY, EmitDefaultValue = false)]
         public int Priority { get; set; }
     }
 

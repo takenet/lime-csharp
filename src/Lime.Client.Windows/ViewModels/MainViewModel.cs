@@ -17,6 +17,7 @@ namespace Lime.Client.Windows.ViewModels
         public MainViewModel()
         {
             this.ContentViewModel = new LoginViewModel();
+            this.TraceViewModel = new TraceViewModel();
 
             this.ClosingCommand = new AsyncCommand(p => ClosingAsync());
             this.ClosedCommand = new AsyncCommand(p => ClosedAsync());
@@ -49,6 +50,17 @@ namespace Lime.Client.Windows.ViewModels
                 }
 
                 return null;
+            }
+        }
+
+        private TraceViewModel _traceViewModel;
+        public TraceViewModel TraceViewModel
+        {
+            get { return _traceViewModel; }
+            set
+            {
+                _traceViewModel = value;
+                RaisePropertyChanged(() => TraceViewModel);
             }
         }
 

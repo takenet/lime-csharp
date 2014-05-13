@@ -1,4 +1,6 @@
-﻿using Lime.Client.Windows.Shared;
+﻿using FirstFloor.ModernUI.Windows.Controls;
+using GalaSoft.MvvmLight.Messaging;
+using Lime.Client.Windows.Shared;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,11 +20,25 @@ namespace Lime.Client.Windows
     /// <summary>
     /// Interaction logic for ConversationWindow.xaml
     /// </summary>
-    public partial class ConversationWindow : Window
+    public partial class ConversationWindow : ModernWindow
     {
         public ConversationWindow()
         {
             InitializeComponent();
+            Messenger.Default.Register<FlashWindowMessage>(this, FlashWindow);
+        }
+
+        private void FlashWindow(FlashWindowMessage message)
+        {
+            if (message == null)
+            {
+                throw new ArgumentNullException("message");
+            }
+
+            if (message.DataContext == base.DataContext)
+            {
+                WindowsUtils.FlashWindow(this, message.Mode);
+            }
         }
     }
 

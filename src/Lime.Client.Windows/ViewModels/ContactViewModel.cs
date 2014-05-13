@@ -1,6 +1,8 @@
 ﻿using FirstFloor.ModernUI;
 using GalaSoft.MvvmLight;
+using Lime.Protocol;
 using Lime.Protocol.Client;
+using Lime.Protocol.Contents;
 using Lime.Protocol.Resources;
 using System;
 using System.Collections.Generic;
@@ -12,7 +14,11 @@ namespace Lime.Client.Windows.ViewModels
 {
     public class ContactViewModel : ViewModelBase
     {
+        #region Private Fields
+
         private readonly IClientChannel _clientChannel;
+
+        #endregion
 
         #region Constructors
 
@@ -213,25 +219,24 @@ namespace Lime.Client.Windows.ViewModels
             {
                 if (e.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Add)
                 {
-                    //foreach (var messageViewModel in e.NewItems.Cast<MessageViewModel>().Where(m => m.Direction == MessageDirection.Output))
-                    //{
-                    //    var message = new Message()
-                    //    {
-                    //        Id = messageViewModel.Id,
-                    //        To = new Peer()
-                    //        {
-                    //            Name = this.Contact.Identity.Name,
-                    //            Domain = this.Contact.Identity.Domain,
-                    //            Instance = this.Presence != null ? this.Presence.Peer.Instance : null
-                    //        },
-                    //        Content = new TextContent()
-                    //        {
-                    //            Text = messageViewModel.Text
-                    //        }
-                    //    };
+                    foreach (var messageViewModel in e.NewItems.Cast<MessageViewModel>().Where(m => m.Direction == MessageDirection.Output))
+                    {
+                        var message = new Message()
+                        {
+                            Id = messageViewModel.Id,
+                            To = new Node()
+                            {
+                                Name = this.Contact.Identity.Name,
+                                Domain = this.Contact.Identity.Domain
+                            },
+                            Content = new TextContent()
+                            {
+                                Text = messageViewModel.Text
+                            }
+                        };
 
-                    //    await _client.SendMessageAsync(message);
-                    //}
+                        await _clientChannel.SendMessageAsync(message);
+                    }
                 }
             }
         }
@@ -240,22 +245,21 @@ namespace Lime.Client.Windows.ViewModels
         {
             if (!ModernUIHelper.IsInDesignMode)
             {
-                //var message = new Message()
-                //{
-                //    Id = Guid.Empty, // Fire and Forget mode
-                //    To = new Peer()
-                //    {
-                //        Name = Contact.Identity.Name,
-                //        Domain = Contact.Identity.Domain,
-                //        Instance = Presence != null ? Presence.Peer.Instance : null,
-                //    },
-                //    Content = new ChatStateContent()
-                //    {
-                //        State = e.ChatState
-                //    }
-                //};
+                var message = new Message()
+                {
+                    Id = Guid.Empty, // Fire and Forget mode
+                    To = new Node()
+                    {
+                        Name = Contact.Identity.Name,
+                        Domain = Contact.Identity.Domain                        
+                    },
+                    Content = new ChatState()
+                    {
+                        State = e.ChatState
+                    }
+                };
 
-                //await _client.SendMessageAsync(message);
+                await _clientChannel.SendMessageAsync(message);
             }
         }
 

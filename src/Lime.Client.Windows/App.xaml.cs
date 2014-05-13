@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Lime.Client.Windows.Properties;
+using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
@@ -13,5 +14,9 @@ namespace Lime.Client.Windows
     /// </summary>
     public partial class App : Application
     {
+        public App()
+        {
+   
+        }
     }
 }

@@ -66,9 +66,9 @@ namespace Lime.Protocol
         /// </summary>
         public const int VALIDATION_INVALID_IDENTITY = 25;
         /// <summary>
-        /// The request destination is invalid
+        /// The envelope originator or destination is invalid
         /// </summary>
-        public const int VALIDATION_INVALID_DESTINATION = 26;
+        public const int VALIDATION_INVALID_RECIPIENTS = 26;
         /// <summary>
         /// General authorization error
         /// </summary>

@@ -1,0 +1,171 @@
+﻿<UserControl x:Class="Lime.Client.Windows.Pages.Conversation"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"              
+             xmlns:i="clr-namespace:System.Windows.Interactivity;assembly=System.Windows.Interactivity"
+             xmlns:local="clr-namespace:Lime.Client.Windows.Pages"
+             xmlns:uc="clr-namespace:Lime.Client.Windows.UserControls"
+             xmlns:p="clr-namespace:Lime.Client.Windows.Properties"
+             xmlns:cmd="clr-namespace:GalaSoft.MvvmLight.Command;assembly=GalaSoft.MvvmLight.Extras"
+             xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"   
+             xmlns:mui="http://firstfloorsoftware.com/ModernUI"
+             d:DataContext="{d:DesignData /DesignData/ConversationDesignData.xaml }"             
+             DataContext="{Binding ContentViewModel}"
+             mc:Ignorable="d" 
+             d:DesignHeight="800" 
+             d:DesignWidth="600">
+    <UserControl.Resources>
+        <Style x:Key="NormalWhite" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="White" />
+        </Style>
+        <Style x:Key="SmallWhite" BasedOn="{StaticResource Small}" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="White" />
+        </Style>
+        <Style x:Key="SmallItalic" BasedOn="{StaticResource Small}" TargetType="TextBlock">
+            <Setter Property="FontStyle" Value="Italic" />
+        </Style>
+        <SolidColorBrush x:Key="AccentLight" Color="LightSkyBlue"/>
+        <local:MessageItemTemplateSelector x:Key="MessageItemTemplateSelector">
+            <local:MessageItemTemplateSelector.OutputMessage>
+                <DataTemplate>
+                    <Grid Margin="120,0,0,0">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="16" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="16" />
+                        </Grid.RowDefinitions>
+                        <StackPanel Grid.Row="1" Background="{DynamicResource AccentLight}">
+                            <TextBlock Text="{Binding Text}"                                       
+                                       TextWrapping="Wrap"
+                                       Margin="6,12,6,6"
+                                       HorizontalAlignment="Left"
+                                       VerticalAlignment="Top" />
+                            <StackPanel Orientation="Horizontal"                                            
+                                        HorizontalAlignment="Right">
+                                <Rectangle Width="9" 
+                                           Height="9"                                           
+                                           Margin="2,0,0,9" 
+                                           VerticalAlignment="Bottom">
+                                    <Rectangle.Fill>
+                                        <SolidColorBrush Color="{Binding LastEvent, Converter={StaticResource EventToColorConverter}}"  />
+                                    </Rectangle.Fill>
+                                </Rectangle>
+                                <TextBlock Text="{Binding Timestamp}"                                           
+                                           Margin="6,0,6,6"        
+                                           VerticalAlignment="Bottom"
+                                           FontFamily="Segoe WP SemiLight" />
+                            </StackPanel>
+                        </StackPanel>
+                        <Path Grid.Row="2"
+                              Data="m 0,0 l 16,0 l 0,16 l -16,-16"
+                              Fill="{DynamicResource AccentLight}"
+                              HorizontalAlignment="Right"
+                              Margin="0,0,12,0"
+                              UseLayoutRounding="False"
+                              VerticalAlignment="Top"/>
+                    </Grid>
+                </DataTemplate>
+            </local:MessageItemTemplateSelector.OutputMessage>
+            <local:MessageItemTemplateSelector.InputMessage>
+                <DataTemplate>
+                    <Grid Margin="0,0,120,0">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="16" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="16" />
+                        </Grid.RowDefinitions>
+                        <Path Data="m 0,0 l 0,16 l 16,0 l -16,-16"
+                              Fill="{DynamicResource Accent}"
+                              HorizontalAlignment="Left"
+                              Margin="12,0,0,0"
+                              UseLayoutRounding="False"
+                              VerticalAlignment="Top"/>
+                        <StackPanel Grid.Row="1" Background="{DynamicResource Accent}">
+                            <TextBlock Text="{Binding Text}"                                       
+                                       Style="{StaticResource NormalWhite}"
+                                       TextWrapping="Wrap"
+                                       Margin="6,12,6,6"
+                                       HorizontalAlignment="Left"
+                                       VerticalAlignment="Top" />
+                            <TextBlock Text="{Binding Timestamp}"
+                                       Style="{StaticResource SmallWhite}"
+                                       HorizontalAlignment="Right"
+                                       VerticalAlignment="Top"
+                                       Margin="6,0,6,6"                                       
+                                       FontFamily="Segoe WP SemiLight" />
+                        </StackPanel>
+                    </Grid>
+                </DataTemplate>
+            </local:MessageItemTemplateSelector.InputMessage>
+        </local:MessageItemTemplateSelector>
+
+    </UserControl.Resources>
+    <Grid Style="{StaticResource ContentRoot}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Orientation="Horizontal">
+            <Image Width="72" Height="72" Source="../Images/placeholder.png" />
+            <StackPanel Margin="10,0,0,0">
+                <TextBlock Style="{StaticResource Title}" 
+                           Text="{Binding Name}" />
+                <StackPanel Orientation="Horizontal">
+                    <Rectangle Width="5" Height="5" Margin="0,0,10,0">
+                        <Rectangle.Fill>
+                            <SolidColorBrush x:Name="Brush" 
+                                             Color="{Binding PresenceStatus, Converter={StaticResource PresenceToColorConverter}}" />
+                        </Rectangle.Fill>
+                    </Rectangle>
+                    <TextBlock Style="{StaticResource Emphasis}" 
+                               Text="{Binding PresenceStatus, Converter={StaticResource PresenceToDescriptionConverter}}" />
+                </StackPanel>
+                <TextBlock Style="{StaticResource SmallItalic}" 
+                           Margin="0,5,0,0" 
+                           Text="{Binding ChatState, Converter={StaticResource ChatStateToDescriptionConverter}}" />
+            </StackPanel>
+        </StackPanel>
+
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" ScrollChanged="ScrollViewer_ScrollChanged" PreviewMouseWheel="ScrollViewer_PreviewMouseWheel">
+            <ItemsControl ItemsSource="{Binding Messages}" 
+                          TabIndex="2"
+                          ItemTemplateSelector="{StaticResource MessageItemTemplateSelector}">
+            </ItemsControl>
+        </ScrollViewer>
+
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <xctk:WatermarkTextBox Watermark="Digite sua mensagem e pressione ENTER para enviar"
+                                   TextWrapping="Wrap"
+                                   TabIndex="0"
+                                   Text="{Binding MessageText, UpdateSourceTrigger=PropertyChanged}">
+                <i:Interaction.Triggers>
+                    <i:EventTrigger EventName="GotKeyboardFocus">
+                        <i:InvokeCommandAction Command="{Binding GotKeyboardFocusCommand}" />
+                    </i:EventTrigger>
+                    <i:EventTrigger EventName="LostKeyboardFocus">
+                        <i:InvokeCommandAction Command="{Binding LostKeyboardFocusCommand}" />
+                    </i:EventTrigger>
+                    <i:EventTrigger EventName="PreviewKeyDown">
+                        <cmd:EventToCommand Command="{Binding PreviewKeyDownCommand}" PassEventArgsToCommand="True" />
+                    </i:EventTrigger>
+                </i:Interaction.Triggers>
+            </xctk:WatermarkTextBox>
+            <mui:ModernButton Grid.Column="1"                         
+                              x:Name="sendMessageButton"                    
+                              ToolTip="Enviar mensagem"
+                              EllipseDiameter="32" 
+                              IconWidth="20" 
+                              IconHeight="20" 
+                              TabIndex="1"
+                              IconData="{StaticResource SendMessageIcon}"
+                              Command="{Binding SendMessageCommand}"/>
+        </Grid>
+    </Grid>
+</UserControl>
