@@ -177,6 +177,18 @@ namespace Lime.Protocol.UnitTests
             };
         }
 
+        public static JsonDocument CreateJsonDocument()
+        {
+            return new JsonDocument(                
+                new Dictionary<string, object>
+                {
+                    { CreateRandomString(10), CreateRandomString(50) },
+                    { CreateRandomString(10), CreateRandomInt(50) }
+                },
+                CreateMediaType());
+        }
+
+
         public static Notification CreateNotification(Event @event)
         {
             return new Notification()

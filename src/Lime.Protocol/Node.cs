@@ -141,7 +141,8 @@ namespace Lime.Protocol
         #region ICloneable Members
 
         /// <summary>
-        /// Creates a new object that is a copy of the current instance.
+        /// Creates a new object that 
+        /// is a copy of the current instance.
         /// </summary>
         /// <returns>
         /// A new object that is a copy of this instance.

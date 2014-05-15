@@ -175,9 +175,10 @@ namespace Lime.Client.Windows.ViewModels
         {
             get 
             { 
-                if (Presence != null)
+                if (Presence != null &&
+                    Presence.Status.HasValue)
                 {
-                    return Presence.Status;
+                    return Presence.Status.Value;
                 }
 
                 return PresenceStatus.Unavailable; 
@@ -376,7 +377,8 @@ namespace Lime.Client.Windows.ViewModels
                         // Sets the presence
                         this.Presence = new Presence()
                         {
-                            Status = Protocol.Resources.PresenceStatus.Available
+                            Status = PresenceStatus.Available,
+                            RoutingRule = RoutingRule.IdentityByDistance
                         };
 
                         await SetPresenceAsync();
@@ -830,17 +832,23 @@ namespace Lime.Client.Windows.ViewModels
                 {
                     var addedContacts = e.NewItems.Cast<ContactViewModel>();
 
+                    var cancellationToken = _receiveTimeout.ToCancellationToken();
+
                     foreach (var contactViewModel in addedContacts)
                     {
                         try
                         {
-                            contactViewModel.Presence = await _clientChannel.GetResourceAsync<Presence>(
-                                new Node() 
-                                { 
-                                    Name = contactViewModel.Contact.Identity.Name, 
-                                    Domain = contactViewModel.Contact.Identity.Domain 
-                                },
-                                _receiveTimeout.ToCancellationToken());
+                            await base.ExecuteAsync(async () =>
+                                {
+                                    contactViewModel.Presence = await _clientChannel.GetResourceAsync<Presence>(
+                                        new Node()
+                                        {
+                                            Name = contactViewModel.Contact.Identity.Name,
+                                            Domain = contactViewModel.Contact.Identity.Domain
+                                        },
+                                        cancellationToken
+                                    );
+                                });
                         }
                         catch (LimeException ex)
                         {

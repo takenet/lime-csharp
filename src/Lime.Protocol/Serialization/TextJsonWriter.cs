@@ -305,9 +305,13 @@ namespace Lime.Protocol.Serialization
                 {
                     WriteJsonProperty(propertyName, value);
                 }
-                else if (value is IDictionary<string,string>)
+                else if (value is IDictionary<string, object>)
                 {
-                    WriteDictionaryProperty(propertyName, (IDictionary<string, string>)value);
+                    WriteDictionaryProperty(propertyName, (IDictionary<string, object>)value);
+                }
+                else if (value is IDictionary<string, string>)
+                {
+                    WriteDictionaryProperty(propertyName, ((IDictionary<string, string>)value).ToDictionary(tkey => tkey.Key, tvalue => (object)tvalue.Value));
                 }
                 else if (value is DateTime || value is DateTime?)
                 {
@@ -365,8 +369,8 @@ namespace Lime.Protocol.Serialization
             WriteValueProperty(propertyName, value ? "true" : "false");
         }
 
-        public void WriteDictionaryProperty(string propertyName, IDictionary<string, string> dictionary)
-        {
+        public void WriteDictionaryProperty(string propertyName, IDictionary<string, object> dictionary)
+        {            
             if (dictionary != null)
             {
                 if (_commaNeeded)
@@ -380,7 +384,7 @@ namespace Lime.Protocol.Serialization
 
                 foreach (var item in dictionary)
                 {
-                    WriteStringProperty(item.Key, item.Value);
+                    WriteProperty(item.Key, item.Value);
                 }
 
                 WriteCloseBrackets();

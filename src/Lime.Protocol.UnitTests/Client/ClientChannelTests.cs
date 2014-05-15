@@ -232,7 +232,7 @@ namespace Lime.Protocol.UnitTests.Client
             var content = DataUtil.CreateTextContent();
             var message = DataUtil.CreateMessage(content);
 
-            await target.SendReceivedNotificationAsync(message.Id.Value, message.From);
+            await target.SendReceivedNotificationAsync(message.Id, message.From);
 
             _transport.Verify(
                 t => t.SendAsync(It.Is<Notification>(
@@ -252,7 +252,7 @@ namespace Lime.Protocol.UnitTests.Client
 
             var message = DataUtil.CreateMessage(content: null);
 
-            await target.SendReceivedNotificationAsync(message.Id.Value, null);
+            await target.SendReceivedNotificationAsync(message.Id, null);
         }
 
         #endregion
@@ -393,7 +393,7 @@ namespace Lime.Protocol.UnitTests.Client
         {            
             var content = DataUtil.CreateTextContent();
             var message = DataUtil.CreateMessage(content);
-            message.Id = null;
+            message.Id = Guid.Empty;
 
             var cancellationToken = DataUtil.CreateCancellationToken();
 

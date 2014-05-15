@@ -57,6 +57,7 @@
     <Compile Include="Client\IClientChannel.cs" />
     <Compile Include="Client\ClientChannel.cs" />
     <Compile Include="Client\IClientChannelExtensions.cs" />
+    <Compile Include="JsonDocument.cs" />
     <Compile Include="Network\LimeException.cs" />
     <Compile Include="Resources\Receipt.cs" />
     <Compile Include="Serialization\DictionaryJsonWriter.cs" />

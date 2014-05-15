@@ -19,7 +19,7 @@ namespace Lime.Protocol
         public const string REASON_KEY = "reason";
 
         public Notification()
-            : base(null)
+            : base(Guid.Empty)
         {
 
         }

@@ -432,6 +432,19 @@ namespace Lime.Protocol.Network
                 {
                     envelope.From.Domain = from.Domain;
                 }
+
+                if (envelope.Pp == null)
+                {
+                    if (this.Mode != SessionMode.Server &&
+                        !envelope.From.ToIdentity().Equals(from.ToIdentity()))
+                    {
+                        envelope.Pp = from.Copy();
+                    }
+                }
+                else if (string.IsNullOrWhiteSpace(envelope.Pp.Domain))
+                {
+                    envelope.Pp.Domain = from.Domain;
+                }
             }
 
             if (to != null)
@@ -443,7 +456,7 @@ namespace Lime.Protocol.Network
                 else if (string.IsNullOrEmpty(envelope.To.Domain))
                 {
                     envelope.To.Domain = to.Domain;
-                }
+                }                
             }
         }
 

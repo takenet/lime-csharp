@@ -23,5 +23,10 @@ namespace Lime.Protocol
 
         [DataMember(Name = DESCRIPTION_KEY)]
         public string Description { get; set; }
+
+        public override string ToString()
+        {
+            return string.Format("{0} (Code {1})", Description, Code);
+        }
     }
 }

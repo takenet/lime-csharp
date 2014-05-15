@@ -245,98 +245,104 @@ namespace Lime.Protocol.Serialization
                     }
                 };
             }
-            else if (TypeUtil.IsKnownType(propertyType))
+            else if (propertyType.IsAbstract)
             {
-                // In this case, the dictionary has a JsonObject entry
-                // for the property, so it must be parsed
-                if (propertyType.IsAbstract)
+                if (propertyType == typeof(Document))
                 {
-                    if (typeof(T) == typeof(Message) ||
-                        typeof(T) == typeof(Command))
-                    {
-                        // Determine the type of the property using the
-                        // envelope content/resource Mime Type
-                        deserializePropertyAction = (v, j) =>
-                        {
-                            if (j.ContainsKey(Message.TYPE_KEY) &&
-                                j[Message.TYPE_KEY] is string)
-                            {
-                                var mediaType = MediaType.Parse((string)j[Message.TYPE_KEY]);
-
-                                Type concreteType;
-
-                                if (TypeUtil.TryGetTypeForMediaType(mediaType, out concreteType))
-                                {
-                                    object value;
-
-                                    if (j.ContainsKey(memberName) &&
-                                        j[memberName] is JsonObject)
-                                    {
-                                        var propertyJsonObject = (JsonObject)j[memberName];
-                                        value = JsonSerializer.ParseJson(concreteType, propertyJsonObject);
-                                    }
-                                    else
-                                    {
-                                        value = TypeUtil.CreateInstance(concreteType);
-                                    }
-
-                                    if (value != null)
-                                    {
-                                        setFunc(v, value);
-                                    }
-                                }
-                            }
-                        };
-                    }
-                    else if (typeof(T) == typeof(Session))
-                    {
-                        // Determine the type of the property using the
-                        // session Authentication property
-                        deserializePropertyAction = (v, j) =>
-                        {
-                            if (j.ContainsKey(memberName) &&
-                                j[memberName] is JsonObject &&
-                                j.ContainsKey(Session.SCHEME_KEY) &&
-                                j[Session.SCHEME_KEY] is string)
-                            {
-                                var propertyJsonObject = (JsonObject)j[memberName];
-                                var scheme = TypeUtil.GetEnumValue<AuthenticationScheme>((string)j[Session.SCHEME_KEY]);
-                                Type concreteType;
-
-                                if (TypeUtil.TryGetTypeForAuthenticationScheme(scheme, out concreteType))
-                                {
-                                    var value = JsonSerializer.ParseJson(concreteType, propertyJsonObject);
-                                    if (value != null)
-                                    {
-                                        setFunc(v, value);
-                                    }
-                                }
-                            }
-                        };
-                    }
-                    else
-                    {
-                        throw new NotSupportedException(string.Format("The type '{0}' of the property '{1}' is not supported", propertyType, memberName));
-                    }
-                }
-                else
-                {
-                    // In this case, the dictionary has a JsonObject entry
-                    // for the property, so it must be parsed
+                    // Determine the type of the property using the
+                    // envelope content/resource Mime Type
                     deserializePropertyAction = (v, j) =>
                     {
-                        if (j.ContainsKey(memberName) &&
-                            j[memberName] is JsonObject)
+                        if (j.ContainsKey(Message.TYPE_KEY) &&
+                            j[Message.TYPE_KEY] is string)
                         {
-                            var propertyJsonObject = (JsonObject)j[memberName];
-                            var value = JsonSerializer.ParseJson(propertyType, propertyJsonObject) ?? defaultValue;
-                            if (isNullable || value != null)
+                            var mediaType = MediaType.Parse((string)j[Message.TYPE_KEY]);                            
+
+                            JsonObject propertyJsonObject = null;
+                            if (j.ContainsKey(memberName) &&
+                                j[memberName] is JsonObject)
+                            {
+                                propertyJsonObject = (JsonObject)j[memberName];
+                            }
+                            
+                            object value;
+                            Type concreteType;                            
+
+                            if (TypeUtil.TryGetTypeForMediaType(mediaType, out concreteType))
+                            {                                
+                                if (propertyJsonObject != null)
+                                {
+                                    value = JsonSerializer.ParseJson(concreteType, propertyJsonObject);
+                                }
+                                else
+                                {
+                                    value = TypeUtil.CreateInstance(concreteType);
+                                }
+                            }
+                            else if (propertyJsonObject != null)
+                            {
+                                value = new JsonDocument(propertyJsonObject, mediaType);
+                            }
+                            else
+                            {
+                                value = new JsonDocument(mediaType);
+                            }
+
+                            if (value != null)
                             {
                                 setFunc(v, value);
                             }
                         }
                     };
                 }
+                else if (propertyType == typeof(Authentication))
+                {
+                    // Determine the type of the property using the
+                    // session Authentication property
+                    deserializePropertyAction = (v, j) =>
+                    {
+                        if (j.ContainsKey(memberName) &&
+                            j[memberName] is JsonObject &&
+                            j.ContainsKey(Session.SCHEME_KEY) &&
+                            j[Session.SCHEME_KEY] is string)
+                        {
+                            var propertyJsonObject = (JsonObject)j[memberName];
+                            var scheme = TypeUtil.GetEnumValue<AuthenticationScheme>((string)j[Session.SCHEME_KEY]);
+                            Type concreteType;
+
+                            if (TypeUtil.TryGetTypeForAuthenticationScheme(scheme, out concreteType))
+                            {
+                                var value = JsonSerializer.ParseJson(concreteType, propertyJsonObject);
+                                if (value != null)
+                                {
+                                    setFunc(v, value);
+                                }
+                            }
+                        }
+                    };
+                }
+                else
+                {
+                    throw new NotSupportedException(string.Format("The type '{0}' of the property '{1}' is not supported", propertyType, memberName));
+                }
+            }
+            else if (TypeUtil.IsKnownType(propertyType))
+            {
+                // In this case, the dictionary has a JsonObject entry
+                // for the property, so it must be parsed
+                deserializePropertyAction = (v, j) =>
+                {
+                    if (j.ContainsKey(memberName) &&
+                        j[memberName] is JsonObject)
+                    {
+                        var propertyJsonObject = (JsonObject)j[memberName];
+                        var value = JsonSerializer.ParseJson(propertyType, propertyJsonObject) ?? defaultValue;
+                        if (isNullable || value != null)
+                        {
+                            setFunc(v, value);
+                        }
+                    }
+                };                
             }
             else
             {

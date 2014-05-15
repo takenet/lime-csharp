@@ -261,10 +261,10 @@ namespace Lime.Protocol.Client
             var message = await base.ReceiveMessageAsync(cancellationToken).ConfigureAwait(false);
 
             if (_autoNotifyReceipt &&
-                message.Id.HasValue &&
+                message.Id != Guid.Empty &&
                 message.From != null)
             {
-                await SendReceivedNotificationAsync(message.Id.Value, message.From).ConfigureAwait(false);
+                await SendReceivedNotificationAsync(message.Id, message.From).ConfigureAwait(false);
             }
 
             return message;
@@ -312,11 +312,11 @@ namespace Lime.Protocol.Client
         {
             var session = await base.ReceiveSessionAsync(cancellationToken).ConfigureAwait(false);
 
-            this.SessionId = session.Id.Value;
+            this.SessionId = session.Id;
             this.State = session.State;
 
             if (session.State == SessionState.Established &&
-                session.Id.HasValue)
+                session.Id != Guid.Empty)
             {
                 this.LocalNode = session.To;
                 this.RemoteNode = session.From;

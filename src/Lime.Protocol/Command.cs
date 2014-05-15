@@ -29,7 +29,7 @@ namespace Lime.Protocol
         {
         }
 
-        public Command(Guid? id)
+        public Command(Guid id)
             : base(id)
         {
         }

@@ -28,15 +28,15 @@ namespace Lime.Protocol.Serialization.ServiceStack
             JsConfig<Notification>.IncludeTypeInfo = false;
             JsConfig<Command>.IncludeTypeInfo = false;
             JsConfig<Session>.IncludeTypeInfo = false;
-
+            
             JsConfig<MediaType>.SerializeFn = m => m.ToString();
             JsConfig<MediaType>.DeSerializeFn = s => MediaType.Parse(s);
             JsConfig<Node>.SerializeFn = n => n.ToString();
             JsConfig<Node>.DeSerializeFn = s => Node.Parse(s);
             JsConfig<Identity>.SerializeFn = i => i.ToString();
             JsConfig<Identity>.DeSerializeFn = s => Identity.Parse(s);
-            JsConfig<Guid?>.SerializeFn = g => { if (g.HasValue) return g.ToString(); else return null; };
-            JsConfig<Guid?>.DeSerializeFn = s => { if (string.IsNullOrWhiteSpace(s)) return null; else return new Guid(s); };                      
+            JsConfig<Guid>.SerializeFn = g => g.ToString();
+            JsConfig<Guid>.DeSerializeFn = s => Guid.Parse(s);
 
             foreach (var enumType in TypeUtil.GetEnumTypes())
             {
@@ -166,7 +166,7 @@ namespace Lime.Protocol.Serialization.ServiceStack
         {
             return new TEnvelope()
             {
-                Id = j.Get<Guid?>(Envelope.ID_KEY),
+                Id = j.Get<Guid>(Envelope.ID_KEY),
                 From = j.Get<Node>(Envelope.FROM_KEY),
                 Pp = j.Get<Node>(Envelope.PP_KEY),
                 To = j.Get<Node>(Envelope.TO_KEY),

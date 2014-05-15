@@ -10,8 +10,7 @@
              xmlns:cmd="clr-namespace:GalaSoft.MvvmLight.Command;assembly=GalaSoft.MvvmLight.Extras"
              xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"   
              xmlns:mui="http://firstfloorsoftware.com/ModernUI"
-             d:DataContext="{d:DesignData /DesignData/ConversationDesignData.xaml }"             
-             DataContext="{Binding ContentViewModel}"
+             d:DataContext="{d:DesignData /DesignData/ConversationDesignData.xaml }"
              mc:Ignorable="d" 
              d:DesignHeight="800" 
              d:DesignWidth="600">

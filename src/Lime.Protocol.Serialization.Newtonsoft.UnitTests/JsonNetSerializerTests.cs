@@ -177,7 +177,7 @@ namespace Lime.Protocol.Serialization.Newtonsoft.UnitTests
 
             var content = DataUtil.CreateTextContent();
             var message = DataUtil.CreateMessage(content);
-            message.Id = null;
+            message.Id = Guid.Empty;
 
             var resultString = target.Serialize(message);
 
@@ -511,7 +511,7 @@ namespace Lime.Protocol.Serialization.Newtonsoft.UnitTests
             Assert.AreEqual(from, message.From);
             Assert.AreEqual(to, message.To);
 
-            Assert.IsNull(message.Id);
+            Assert.AreEqual(message.Id, Guid.Empty);
             Assert.IsNull(message.Pp);
             Assert.IsNull(message.Metadata);
 

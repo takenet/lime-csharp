@@ -301,6 +301,7 @@ namespace Lime.Protocol.UnitTests.Network
 
             Assert.AreEqual(localNode.ToIdentity(), actual.To.ToIdentity());
             Assert.AreEqual(remoteNode.ToIdentity(), actual.From.ToIdentity());
+            Assert.IsNull(actual.Pp);
 
             _transport.Verify();
         }

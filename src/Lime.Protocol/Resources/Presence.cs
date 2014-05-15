@@ -36,7 +36,7 @@ namespace Lime.Protocol.Resources
         /// The node presence status.
         /// </summary>
         [DataMember(Name = STATUS_KEY)]
-        public PresenceStatus Status { get; set; }
+        public PresenceStatus? Status { get; set; }
 
         /// <summary>
         /// A status message associated 
@@ -50,7 +50,7 @@ namespace Lime.Protocol.Resources
         /// addressed to the identity. 
         /// </summary>
         [DataMember(Name = ROUTING_RULE_KEY)]
-        public RoutingRule RoutingRule { get; set; }
+        public RoutingRule? RoutingRule { get; set; }
 
         [DataMember(Name = LAST_SEEN_KEY)]
         public DateTimeOffset? LastSeen { get; set; }

@@ -27,7 +27,7 @@ namespace Lime.Protocol
         {
         }
 
-        protected Envelope(Guid? id)
+        protected Envelope(Guid id)
         {
             this.Id = id;
         }
@@ -37,8 +37,8 @@ namespace Lime.Protocol
         /// <summary>
         /// Unique identifier of the envelope
         /// </summary>
-        [DataMember(Name = ID_KEY)]
-        public Guid? Id { get; set; }
+        [DataMember(Name = ID_KEY, EmitDefaultValue = false)]
+        public Guid Id { get; set; }
 
         /// <summary>
         /// Sender of the envelope

@@ -28,14 +28,19 @@ namespace Lime.Protocol.Serialization
         void WriteBooleanProperty(string propertyName, bool value);
 
         /// <summary>
-        /// Writes adate time property
+        /// Writes a date time property
         /// to the document.
         /// </summary>
         /// <param name="propertyName">Name of the property.</param>
         /// <param name="value">The value.</param>
         void WriteDateTimeProperty(string propertyName, DateTime value);
 
-        void WriteDictionaryProperty(string propertyName, IDictionary<string, string> dictionary);
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="propertyName"></param>
+        /// <param name="dictionary"></param>
+        void WriteDictionaryProperty(string propertyName, IDictionary<string, object> dictionary);
 
         /// <summary>
         /// Writes a integer property

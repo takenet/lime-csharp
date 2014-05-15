@@ -51,7 +51,7 @@ namespace Lime.Protocol.Serialization
             }
         }
 
-        public void WriteDictionaryProperty(string propertyName, IDictionary<string, string> dictionary)
+        public void WriteDictionaryProperty(string propertyName, IDictionary<string, object> dictionary)
         {
             if (_writeDefaultValues || dictionary != null)
             {

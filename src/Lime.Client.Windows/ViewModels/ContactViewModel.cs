@@ -153,9 +153,10 @@ namespace Lime.Client.Windows.ViewModels
         {
             get
             {
-                if (_presence != null)
+                if (_presence != null &&
+                    _presence.Status.HasValue)
                 {
-                    return _presence.Status;
+                    return _presence.Status.Value;
                 }
 
                 return PresenceStatus.Unavailable;

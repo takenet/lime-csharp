@@ -42,8 +42,8 @@ namespace Lime.Client.Windows.ViewModels
         #endregion
 
 
-        private Guid? _id;
-        public Guid? Id
+        private Guid _id;
+        public Guid Id
         {
             get { return _id; }
             set

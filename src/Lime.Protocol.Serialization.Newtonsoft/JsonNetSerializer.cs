@@ -333,7 +333,7 @@ namespace Lime.Protocol.Serialization.Newtonsoft
                     if (jObject["content"] != null &&
                         jObject["type"] != null)
                     {
-                        var message = new Message(null);
+                        var message = new Message(Guid.Empty);
                         serializer.Populate(jObject.CreateReader(), message);
                         
                         var contentMediaType = jObject["type"].ToObject<MediaType>();
