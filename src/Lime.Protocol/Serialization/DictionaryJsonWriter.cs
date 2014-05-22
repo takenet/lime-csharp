@@ -53,7 +53,8 @@ namespace Lime.Protocol.Serialization
 
         public void WriteDictionaryProperty(string propertyName, IDictionary<string, object> dictionary)
         {
-            if (_writeDefaultValues || dictionary != null)
+            if (_writeDefaultValues || 
+                dictionary != null)
             {
                 _jsonDictionary.Add(propertyName, dictionary);
             }
@@ -61,7 +62,8 @@ namespace Lime.Protocol.Serialization
 
         public void WriteIntegerProperty(string propertyName, int value)
         {
-            if (_writeDefaultValues || value != 0)
+            if (_writeDefaultValues || 
+                value != 0)
             {
                 _jsonDictionary.Add(propertyName, value);
             }
@@ -101,7 +103,8 @@ namespace Lime.Protocol.Serialization
 
         public void WriteLongProperty(string propertyName, long value)
         {
-            if (_writeDefaultValues || value != 0)
+            if (_writeDefaultValues || 
+                value != 0)
             {
                 _jsonDictionary.Add(propertyName, value);
             }
