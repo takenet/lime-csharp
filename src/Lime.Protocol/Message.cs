@@ -9,7 +9,6 @@ using System.Text;
 namespace Lime.Protocol
 {
     [DataContract(Namespace = "http://limeprotocol.org/2014")]
-    [KnownType(typeof(TextContent))]
     public partial class Message : Envelope
     {
         public const string TYPE_KEY = "type";
