@@ -301,22 +301,36 @@ namespace Lime.Protocol.Serialization
                     // session Authentication property
                     deserializePropertyAction = (v, j) =>
                     {
-                        if (j.ContainsKey(memberName) &&
-                            j[memberName] is JsonObject &&
-                            j.ContainsKey(Session.SCHEME_KEY) &&
+                        if (j.ContainsKey(Session.SCHEME_KEY) &&
                             j[Session.SCHEME_KEY] is string)
                         {
-                            var propertyJsonObject = (JsonObject)j[memberName];
                             var scheme = TypeUtil.GetEnumValue<AuthenticationScheme>((string)j[Session.SCHEME_KEY]);
+
+                            JsonObject propertyJsonObject = null;
+                            if (j.ContainsKey(memberName) &&
+                                j[memberName] is JsonObject)
+                            {
+                                propertyJsonObject = (JsonObject)j[memberName];
+                            }
+
+                            object value = null;
                             Type concreteType;
 
                             if (TypeUtil.TryGetTypeForAuthenticationScheme(scheme, out concreteType))
                             {
-                                var value = JsonSerializer.ParseJson(concreteType, propertyJsonObject);
-                                if (value != null)
+                                if (propertyJsonObject != null)
                                 {
-                                    setFunc(v, value);
+                                    value = JsonSerializer.ParseJson(concreteType, propertyJsonObject);
                                 }
+                                else
+                                {
+                                    value = TypeUtil.CreateInstance(concreteType);
+                                }
+                            }
+
+                            if (value != null)
+                            {
+                                setFunc(v, value);
                             }
                         }
                     };

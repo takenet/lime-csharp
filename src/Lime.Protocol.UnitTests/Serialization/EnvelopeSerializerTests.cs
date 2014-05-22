@@ -1,14 +1,15 @@
-﻿using System;
-using System.Linq;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Lime.Protocol.Serialization;
-using Lime.Protocol.UnitTests.Serialization;
-using Lime.Protocol.Contents;
-using System.Collections.Generic;
-using Lime.Protocol.Security;
+﻿using Lime.Protocol.Contents;
 using Lime.Protocol.Resources;
-using System.Text;
+using Lime.Protocol.Security;
+using Lime.Protocol.Serialization;
 using Lime.Protocol.UnitTests;
+using Lime.Protocol.UnitTests.Serialization;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Shouldly;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 
 namespace Lime.Protocol.Serialization.ServiceStack.UnitTests
 {
@@ -169,42 +170,42 @@ namespace Lime.Protocol.Serialization.ServiceStack.UnitTests
 			Assert.IsTrue(resultString.ContainsJsonProperty(metadataKey2, metadataValue2));
 		}
 
-        [TestMethod]
-        [TestCategory("Serialize")]
-        public void Serialize_UnknownContentMessage_ReturnsValidJsonString()
-        {
-            var target = GetTarget();
+		[TestMethod]
+		[TestCategory("Serialize")]
+		public void Serialize_UnknownContentMessage_ReturnsValidJsonString()
+		{
+			var target = GetTarget();
 
-            var content = DataUtil.CreateJsonDocument();
-            var message = DataUtil.CreateMessage(content);
-            message.Pp = DataUtil.CreateNode();
+			var content = DataUtil.CreateJsonDocument();
+			var message = DataUtil.CreateMessage(content);
+			message.Pp = DataUtil.CreateNode();
 
-            var metadataKey1 = "randomString1";
-            var metadataValue1 = DataUtil.CreateRandomString(50);
-            var metadataKey2 = "randomString2";
-            var metadataValue2 = DataUtil.CreateRandomString(50);
-            message.Metadata = new Dictionary<string, string>();
-            message.Metadata.Add(metadataKey1, metadataValue1);
-            message.Metadata.Add(metadataKey2, metadataValue2);
+			var metadataKey1 = "randomString1";
+			var metadataValue1 = DataUtil.CreateRandomString(50);
+			var metadataKey2 = "randomString2";
+			var metadataValue2 = DataUtil.CreateRandomString(50);
+			message.Metadata = new Dictionary<string, string>();
+			message.Metadata.Add(metadataKey1, metadataValue1);
+			message.Metadata.Add(metadataKey2, metadataValue2);
 
-            var resultString = target.Serialize(message);
+			var resultString = target.Serialize(message);
 
-            Assert.IsTrue(resultString.HasValidJsonStackedBrackets());
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.ID_KEY, message.Id));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.FROM_KEY, message.From));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.PP_KEY, message.Pp));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.TO_KEY, message.To));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Message.TYPE_KEY, message.Content.GetMediaType()));
-            Assert.IsTrue(resultString.ContainsJsonKey(Message.CONTENT_KEY));
-            
-            foreach (var keyValuePair in content)
-            {
-                Assert.IsTrue(resultString.ContainsJsonProperty(keyValuePair.Key, keyValuePair.Value));
-            }            
-            
-            Assert.IsTrue(resultString.ContainsJsonProperty(metadataKey1, metadataValue1));
-            Assert.IsTrue(resultString.ContainsJsonProperty(metadataKey2, metadataValue2));
-        }
+			Assert.IsTrue(resultString.HasValidJsonStackedBrackets());
+			Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.ID_KEY, message.Id));
+			Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.FROM_KEY, message.From));
+			Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.PP_KEY, message.Pp));
+			Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.TO_KEY, message.To));
+			Assert.IsTrue(resultString.ContainsJsonProperty(Message.TYPE_KEY, message.Content.GetMediaType()));
+			Assert.IsTrue(resultString.ContainsJsonKey(Message.CONTENT_KEY));
+			
+			foreach (var keyValuePair in content)
+			{
+				Assert.IsTrue(resultString.ContainsJsonProperty(keyValuePair.Key, keyValuePair.Value));
+			}            
+			
+			Assert.IsTrue(resultString.ContainsJsonProperty(metadataKey1, metadataValue1));
+			Assert.IsTrue(resultString.ContainsJsonProperty(metadataKey2, metadataValue2));
+		}
 
 		[TestMethod]
 		[TestCategory("Serialize")]
@@ -746,8 +747,8 @@ namespace Lime.Protocol.Serialization.ServiceStack.UnitTests
 			Assert.IsTrue(message.Metadata.ContainsKey(randomKey2));
 			Assert.AreEqual(message.Metadata[randomKey2], randomString2);
 
-            Assert.IsNotNull(message.Type);
-            Assert.AreEqual(message.Type, type);
+			Assert.IsNotNull(message.Type);
+			Assert.AreEqual(message.Type, type);
 
 			Assert.IsTrue(message.Content is JsonDocument);
 
@@ -988,6 +989,40 @@ namespace Lime.Protocol.Serialization.ServiceStack.UnitTests
 			Assert.IsNull(session.Metadata);
 		}
 
+		[TestMethod]
+		[TestCategory("Deserialize")]
+		public void Deserialize_SessionAuthenticatingWithPlainAuthentication_ReturnsValidInstance()
+		{
+			// Arrange
+			var serializer = GetTarget();
+			var json = "{\"state\":\"authenticating\",\"scheme\":\"plain\",\"authentication\":{\"password\":\"Zg==\"},\"id\":\"ec9c196c-da09-43b0-923b-8ec162705c32\",\"from\":\"andre@takenet.com.br/MINELLI-NOTE\"}";
+
+			// Act
+			var envelope = serializer.Deserialize(json);
+
+			// Assert
+			var session = envelope.ShouldBeOfType<Session>();
+			session.Scheme.ShouldBe(AuthenticationScheme.Plain);
+			var plainAuthentication = session.Authentication.ShouldBeOfType<PlainAuthentication>();
+			plainAuthentication.Password.ShouldNotBeEmpty();
+		}
+
+		[TestMethod]
+		[TestCategory("Deserialize")]
+		public void Deserialize_SessionAuthenticatingWithGuestAuthentication_ReturnsValidInstance()
+		{
+			// Arrange
+			var serializer = GetTarget();
+			var json = "{\"state\":\"authenticating\",\"scheme\":\"guest\",\"id\":\"feeb88e2-c209-40cd-b8ab-e14aeebe57ab\",\"from\":\"ca6829ff-1ac8-4dad-ad78-c25a3e4f8f7b@takenet.com.br/MINELLI-NOTE\"}";
+
+			// Act
+			var envelope = serializer.Deserialize(json);
+
+			// Assert
+			var session = envelope.ShouldBeOfType<Session>();
+			session.Scheme.ShouldBe(AuthenticationScheme.Guest);
+			session.Authentication.ShouldBeOfType<GuestAuthentication>();
+		}
 		#endregion
 	}
 }
