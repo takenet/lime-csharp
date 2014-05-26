@@ -98,24 +98,40 @@ namespace Lime.Protocol.Tcp
                 throw new InvalidOperationException("The listener is already active");
             }
 
-            IPEndPoint listenerEndPoint;
+            if (this.ListenerUris.Length == 0)
+            {
+                throw new InvalidOperationException("The listener URIs list is empty");
+            }
 
-            if (this.ListenerUris[0].IsLoopback)
+            var listenerUri = this.ListenerUris[0];
+
+            IPEndPoint listenerEndPoint;                       
+
+            if (listenerUri.IsLoopback)
             {
                 listenerEndPoint = new IPEndPoint(IPAddress.Any, this.ListenerUris[0].Port);
             }
-            else
+            else if (listenerUri.HostNameType == UriHostNameType.Dns)
             {
-                var dnsEntry = await Dns.GetHostEntryAsync(this.ListenerUris[0].Host);
+                var dnsEntry = await Dns.GetHostEntryAsync(listenerUri.Host);
 
                 if (dnsEntry.AddressList.Any(a => a.AddressFamily == AddressFamily.InterNetwork))
                 {
-                    listenerEndPoint = new IPEndPoint(dnsEntry.AddressList.First(a => a.AddressFamily == AddressFamily.InterNetwork), this.ListenerUris[0].Port);
+                    listenerEndPoint = new IPEndPoint(dnsEntry.AddressList.First(a => a.AddressFamily == AddressFamily.InterNetwork), listenerUri.Port);
                 }
                 else
                 {
-                    throw new ArgumentException("Could not resolve the IPAddress of the hostname");
+                    throw new ArgumentException(string.Format("Could not resolve the IPAddress for the host '{0}'", listenerUri.Host));
                 }                
+            }
+            else if (listenerUri.HostNameType == UriHostNameType.IPv4 || 
+                     listenerUri.HostNameType == UriHostNameType.IPv6)
+            {
+                listenerEndPoint = new IPEndPoint(IPAddress.Parse(listenerUri.Host), listenerUri.Port);
+            }
+            else
+            {
+                throw new ArgumentException(string.Format("The host name type for '{0}' is not supported", listenerUri.Host));
             }
             
             _tcpListener = new TcpListener(listenerEndPoint);

@@ -73,7 +73,6 @@ namespace Lime.Client.Windows.ViewModels
             GotKeyboardFocusCommand = new RelayCommand(GotKeyboardFocus);
             LostKeyboardFocusCommand = new RelayCommand(LostKeyboardFocus);
             PreviewKeyDownCommand = new RelayCommand<KeyEventArgs>(c => PreviewKeyDown(c));
-
         }
 
         #endregion
