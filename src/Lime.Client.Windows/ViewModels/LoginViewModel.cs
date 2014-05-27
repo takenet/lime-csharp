@@ -2,7 +2,9 @@
 using Lime.Protocol;
 using Lime.Protocol.Client;
 using Lime.Protocol.Network;
+using Lime.Protocol.Resources;
 using Lime.Protocol.Security;
+using Lime.Protocol.Serialization;
 using Lime.Protocol.Tcp;
 using System;
 using System.Collections.Generic;
@@ -72,6 +74,17 @@ namespace Lime.Client.Windows.ViewModels
             }
         }
 
+        private bool _registerUser;
+        public bool RegisterUser
+        {
+            get { return _registerUser; }
+            set
+            {
+                _registerUser = value;
+                RaisePropertyChanged(() => RegisterUser);
+            }
+        }
+
         private Uri _serverAddressUri;
 
         private string _serverAddress;
@@ -118,6 +131,8 @@ namespace Lime.Client.Windows.ViewModels
 
         public async Task LoginAsync()
         {
+            IClientChannel client = null;
+
             ITraceWriter traceWriter = null;
 
             if (ShowTraceWindow)
@@ -142,7 +157,59 @@ namespace Lime.Client.Windows.ViewModels
                 var transport = new TcpTransport(traceWriter: traceWriter);
                 await transport.OpenAsync(_serverAddressUri, cancellationToken);
 
-                var client = new ClientChannel(transport, _sendTimeout);
+                client = new ClientChannel(
+                    transport, 
+                    _sendTimeout,
+                    fillEnvelopeRecipients: true,
+                    autoReplyPings: true,
+                    autoNotifyReceipt: true);
+
+                if (RegisterUser)
+                {
+                    var guestSessionResult = await client.EstablishSessionAsync(
+                        compressionOptions => compressionOptions.First(),
+                        encryptionOptions => SessionEncryption.TLS,
+                        new Identity() { Name = Guid.NewGuid().ToString(), Domain = _userNameNode.Domain },
+                        (schemeOptions, roundtrip) => new GuestAuthentication(),
+                        null,
+                        SessionMode.Node,
+                        cancellationToken
+                        );
+
+                    if (guestSessionResult.State == SessionState.Established)
+                    {
+                        // Creates the account
+                        var account = new Account()
+                        {
+                            Password = this.Password.ToBase64()
+                        };
+
+                        await client.SetResourceAsync<Account>(account, _userNameNode, cancellationToken);
+
+                        await client.SendFinishingSessionAsync();
+                        await client.ReceiveFinishedSessionAsync(cancellationToken);
+
+                        client.DisposeIfDisposable();
+
+                        transport = new TcpTransport(traceWriter: traceWriter);
+                        await transport.OpenAsync(_serverAddressUri, cancellationToken);
+                        client = new ClientChannel(
+                            transport,
+                            _sendTimeout,
+                            fillEnvelopeRecipients: true,
+                            autoReplyPings: true,
+                            autoNotifyReceipt: true);
+
+                    }
+                    else if (guestSessionResult.Reason != null)
+                    {
+                        this.ErrorMessage = guestSessionResult.Reason.Description;
+                    }
+                    else
+                    {
+                        this.ErrorMessage = "Could not establish a guest session with the server";
+                    }
+                }
 
                 var authentication = new PlainAuthentication();
                 authentication.SetToBase64Password(this.Password);
@@ -173,6 +240,7 @@ namespace Lime.Client.Windows.ViewModels
             catch (Exception ex)
             {
                 ErrorMessage = ex.Message;
+                client.DisposeIfDisposable();
             }
             finally
             {

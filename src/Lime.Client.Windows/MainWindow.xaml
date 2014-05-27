@@ -20,5 +20,5 @@
         <i:EventTrigger EventName="Closed">
             <i:InvokeCommandAction Command="{Binding ClosedCommand}" />
         </i:EventTrigger>
-    </i:Interaction.Triggers>    
+    </i:Interaction.Triggers>
 </mui:ModernWindow>

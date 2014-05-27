@@ -367,9 +367,34 @@ namespace Lime.Client.Windows.ViewModels
                             },
                             _receiveTimeout.ToCancellationToken());
 
-                        // Gets the user account
-                        this.Account = await _clientChannel.GetResourceAsync<Account>(
-                            _receiveTimeout.ToCancellationToken());
+                        try
+                        {
+                            // Gets the user account
+                            this.Account = await _clientChannel.GetResourceAsync<Account>(
+                                _receiveTimeout.ToCancellationToken());
+                        }
+                        catch (LimeException ex)
+                        {
+                            if (ex.Reason.Code != ReasonCodes.COMMAND_RESOURCE_NOT_FOUND)
+                            {
+                                throw;
+                            }
+                        }
+
+                        // Creates the account if doesn't exists
+                        if (this.Account == null)
+                        {
+                            this.Account = new Account()
+                            {
+                                IsTemporary = false,
+                                AllowAnonymousSender = false,
+                                AllowUnknownSender = false
+                            };
+                                
+                            await _clientChannel.SetResourceAsync<Account>(
+                                this.Account,
+                                _receiveTimeout.ToCancellationToken());
+                        }                       
 
                         // Gets the roster
                         await GetRosterAsync();

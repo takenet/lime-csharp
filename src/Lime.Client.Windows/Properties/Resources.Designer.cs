@@ -61,7 +61,7 @@ namespace Lime.Client.Windows.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Available.
+        ///   Looks up a localized string similar to .
         /// </summary>
         public static string Available {
             get {
@@ -70,7 +70,7 @@ namespace Lime.Client.Windows.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Away.
+        ///   Looks up a localized string similar to .
         /// </summary>
         public static string Away {
             get {
@@ -79,7 +79,7 @@ namespace Lime.Client.Windows.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Block contact.
+        ///   Looks up a localized string similar to .
         /// </summary>
         public static string BlockContact {
             get {
@@ -88,7 +88,7 @@ namespace Lime.Client.Windows.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Busy.
+        ///   Looks up a localized string similar to .
         /// </summary>
         public static string Busy {
             get {
@@ -97,7 +97,7 @@ namespace Lime.Client.Windows.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Delete contact.
+        ///   Looks up a localized string similar to .
         /// </summary>
         public static string DeleteContact {
             get {
@@ -106,7 +106,7 @@ namespace Lime.Client.Windows.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to How are you feeling today?.
+        ///   Looks up a localized string similar to .
         /// </summary>
         public static string HowAreYouFeelingToday {
             get {
@@ -115,7 +115,7 @@ namespace Lime.Client.Windows.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to New contact.
+        ///   Looks up a localized string similar to .
         /// </summary>
         public static string NewContact {
             get {
@@ -124,7 +124,7 @@ namespace Lime.Client.Windows.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to password.
+        ///   Looks up a localized string similar to .
         /// </summary>
         public static string Password {
             get {
@@ -133,7 +133,16 @@ namespace Lime.Client.Windows.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Search or add a contact.
+        ///   Looks up a localized string similar to .
+        /// </summary>
+        public static string Register {
+            get {
+                return ResourceManager.GetString("Register", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to .
         /// </summary>
         public static string SearchOrAddContact {
             get {
@@ -142,7 +151,7 @@ namespace Lime.Client.Windows.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to server.
+        ///   Looks up a localized string similar to .
         /// </summary>
         public static string Server {
             get {
@@ -151,7 +160,7 @@ namespace Lime.Client.Windows.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Share personal data.
+        ///   Looks up a localized string similar to .
         /// </summary>
         public static string SharePersonalData {
             get {
@@ -160,7 +169,7 @@ namespace Lime.Client.Windows.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Show trace window.
+        ///   Looks up a localized string similar to .
         /// </summary>
         public static string ShowTrace {
             get {
@@ -169,7 +178,7 @@ namespace Lime.Client.Windows.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Unavailable.
+        ///   Looks up a localized string similar to .
         /// </summary>
         public static string Unavailable {
             get {
@@ -178,7 +187,7 @@ namespace Lime.Client.Windows.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Unblock contact.
+        ///   Looks up a localized string similar to .
         /// </summary>
         public static string UnblockContact {
             get {
@@ -187,7 +196,7 @@ namespace Lime.Client.Windows.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Do not share personal data.
+        ///   Looks up a localized string similar to .
         /// </summary>
         public static string UnsharePersonalData {
             get {
@@ -196,7 +205,7 @@ namespace Lime.Client.Windows.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to user.
+        ///   Looks up a localized string similar to .
         /// </summary>
         public static string User {
             get {
@@ -205,7 +214,7 @@ namespace Lime.Client.Windows.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to welcome to lime messenger!.
+        ///   Looks up a localized string similar to .
         /// </summary>
         public static string Welcome {
             get {
@@ -214,7 +223,7 @@ namespace Lime.Client.Windows.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to inform your login data to begin.
+        ///   Looks up a localized string similar to .
         /// </summary>
         public static string WelcomeLogin {
             get {

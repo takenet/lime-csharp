@@ -5,11 +5,11 @@ using Lime.Protocol.Serialization;
 using Lime.Protocol.UnitTests;
 using Lime.Protocol.UnitTests.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Shouldly;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Shouldly;
 
 namespace Lime.Protocol.Serialization.ServiceStack.UnitTests
 {

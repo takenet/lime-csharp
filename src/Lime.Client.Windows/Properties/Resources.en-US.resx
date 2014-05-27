@@ -141,6 +141,9 @@
   <data name="Password" xml:space="preserve">
     <value>password</value>
   </data>
+  <data name="Register" xml:space="preserve">
+    <value>register a new user</value>
+  </data>
   <data name="SearchOrAddContact" xml:space="preserve">
     <value>Search or add a contact</value>
   </data>
@@ -151,7 +154,7 @@
     <value>Share personal data</value>
   </data>
   <data name="ShowTrace" xml:space="preserve">
-    <value>Show trace window</value>
+    <value>show trace window</value>
   </data>
   <data name="Unavailable" xml:space="preserve">
     <value>Unavailable</value>
