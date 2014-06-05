@@ -414,7 +414,7 @@ namespace Lime.Protocol.Tcp
               X509Chain chain,
               SslPolicyErrors sslPolicyErrors)
         {
-            return true;
+            return sslPolicyErrors == SslPolicyErrors.None;
         }
 
         private static X509Certificate SelectLocalCertificate(
