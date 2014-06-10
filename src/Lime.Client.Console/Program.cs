@@ -18,7 +18,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Lime.Console
+namespace Lime.Client.Console
 {
     class Program
     {

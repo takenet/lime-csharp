@@ -35,11 +35,6 @@ namespace Lime.Protocol
 
             this.Subtype = subtype;
 
-            if (string.IsNullOrWhiteSpace(suffix))
-            {
-                throw new ArgumentNullException("suffix");
-            }
-
             this.Suffix = suffix;
         }
 
@@ -63,7 +58,14 @@ namespace Lime.Protocol
         /// </returns>
         public override string ToString()
         {
-            return string.Format("{0}/{1}+{2}", this.Type, this.Subtype, this.Suffix).TrimEnd('+');
+            if (string.IsNullOrWhiteSpace(this.Suffix))
+            {
+                return string.Format("{0}/{1}", this.Type, this.Subtype);
+            }
+            else
+            {
+                return string.Format("{0}/{1}+{2}", this.Type, this.Subtype, this.Suffix);
+            }
         }
         /// <summary>
         /// Returns a hash code for this instance.
@@ -94,7 +96,7 @@ namespace Lime.Protocol
 
             return this.Type.Equals(mediaType.Type, StringComparison.CurrentCultureIgnoreCase) &&
                    this.Subtype.Equals(mediaType.Subtype, StringComparison.CurrentCultureIgnoreCase) &&
-                   this.Suffix.Equals(mediaType.Suffix, StringComparison.CurrentCultureIgnoreCase);
+                   (this.Suffix == null && mediaType.Suffix == null || (this.Suffix != null && mediaType.Suffix != null && this.Suffix.Equals(mediaType.Suffix, StringComparison.CurrentCultureIgnoreCase)));
         }
 
         /// <summary> 

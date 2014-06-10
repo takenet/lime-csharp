@@ -17,7 +17,7 @@ using System.Security.AccessControl;
 using System.Security.Principal;
 using Notification = Lime.Protocol.Notification;
 
-namespace Lime.Console
+namespace Lime.Client.Console
 {
     public class ConsoleServer
     {

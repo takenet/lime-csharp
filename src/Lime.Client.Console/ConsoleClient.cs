@@ -13,7 +13,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Lime.Console
+namespace Lime.Client.Console
 {
     public sealed class ConsoleClient : IDisposable
     {

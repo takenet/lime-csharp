@@ -1,28 +1,27 @@
 ﻿using Lime.Protocol.Network;
 using System;
 using System.Collections.Generic;
-using System.IO;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Lime.Console
+namespace Lime.Client.Console
 {
-    public class FileTraceWriter : ITraceWriter
+    public class DebugTraceWriter : ITraceWriter
     {
-        private string _fileName;
+        private string _id;
 
-
-        public FileTraceWriter(string fileName)
+        public DebugTraceWriter(string id)
         {
-            _fileName = fileName;
+            _id = id;
         }
 
         #region ITraceWriter Members
 
         public Task TraceAsync(string data, DataOperation operation)
         {
-            File.AppendAllLines(_fileName, new[] { string.Format("{0} - Operation: {1} - Data: {2}", DateTime.UtcNow, operation, data) });
+            Debug.WriteLine("Id: {0} - Operation: {1} - Data: {2}", _id, operation, data);
             return Task.FromResult<object>(null);
         }
 

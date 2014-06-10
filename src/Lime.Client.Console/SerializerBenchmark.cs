@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Lime.Console
+namespace Lime.Client.Console
 {
     public static class SerializerBenchmark
     {

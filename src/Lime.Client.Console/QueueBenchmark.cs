@@ -8,7 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 
-namespace Lime.Console
+namespace Lime.Client.Console
 {
     public class QueueBenchmark
     {
