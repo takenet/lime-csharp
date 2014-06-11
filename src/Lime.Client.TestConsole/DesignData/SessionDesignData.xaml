@@ -1,7 +1,9 @@
 ﻿<vm:SessionViewModel xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                   xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                   xmlns:vm="clr-namespace:Lime.Client.TestConsole.ViewModels"
-                     InputJson="{}{&quot;state&quot;:&quot;new&quot;}">
+                  InputJson="{}{&quot;state&quot;:&quot;new&quot;}"
+                  IsBusy="True"
+                  StatusMessage="Connecting...">
     <vm:SessionViewModel.Envelopes>
         <vm:EnvelopeViewModel Direction="Send"
                               Json="{}{&quot;state&quot;:&quot;new&quot;}" />

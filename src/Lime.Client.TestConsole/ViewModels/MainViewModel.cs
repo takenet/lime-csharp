@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -14,6 +15,24 @@ namespace Lime.Client.TestConsole.ViewModels
         public MainViewModel()
         {
             this.SelectedSession = new SessionViewModel();
+
+            this.Title = string.Format(
+                "Lime Test Console v{0}",
+                Assembly.GetEntryAssembly().GetName().Version);
+        }
+
+
+
+        private string _title;
+
+        public string Title
+        {
+            get { return _title; }
+            set 
+            { 
+                _title = value;
+                RaisePropertyChanged(() => Title);
+            }
         }
 
 

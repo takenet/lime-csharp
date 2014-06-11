@@ -1,7 +1,7 @@
 ﻿using GalaSoft.MvvmLight;
+using Lime.Protocol;
 using Lime.Protocol.Network;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+using Lime.Protocol.Serialization;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,26 +12,98 @@ namespace Lime.Client.TestConsole.ViewModels
 {
     public class EnvelopeViewModel : ViewModelBase
     {
+        private static IEnvelopeSerializer _serializer;
 
+
+        static EnvelopeViewModel()
+        {
+            _serializer = new EnvelopeSerializer();
+        }
+
+
+
+
+        #region Data Properties
+
+        
         private string _json;
+        private bool _isSettingJson;
 
         public string Json
         {
-            get { return _json; }
-            set 
+            get  { return _json; }
+            set
             {
+                _isSettingJson = true;
+
                 try
                 {
-                    var json = JObject.Parse(value);
-                    _json = json.ToString(Formatting.Indented);
-                }
-                catch
-                {
+                    // Json indentation
+                    try
+                    {
+                        _json = value.IndentJson();
+                    }
+                    catch
+                    {
+                        _json = value;
+                    }
 
-                    _json = value;    
+                    RaisePropertyChanged(() => Json);
+
+                    // Updates the Envelope property
+                    // if it is not the caller
+                    if (!_isSettingEnvelope)
+                    {
+                        try
+                        {
+                            Envelope = _serializer.Deserialize(_json);
+                        }
+                        catch 
+                        {
+                            Envelope = null;
+                        }
+                    }
                 }
-                
-                RaisePropertyChanged(() => Json);
+                finally
+                {
+                    _isSettingJson = false;
+                }
+            }
+        }
+
+        private Envelope _envelope;
+        private bool _isSettingEnvelope;
+
+        public Envelope Envelope
+        {
+            get { return _envelope;  }
+            set 
+            {
+                _isSettingEnvelope = true;
+
+                try
+                {
+                    _envelope = value;
+                    RaisePropertyChanged(() => Envelope);
+
+                    // Updates the Json property
+                    // if it is not the caller
+                    if (!_isSettingJson)
+                    {
+                        try
+                        {
+                            Json = _serializer.Serialize(_envelope);
+                        }
+                        catch
+                        {
+                            Json = null;
+                        }
+                    }
+                }
+                finally
+                {
+                    _isSettingEnvelope = false;
+                }
             }
         }
 
@@ -40,8 +112,8 @@ namespace Lime.Client.TestConsole.ViewModels
         public DataOperation Direction
         {
             get { return _direction; }
-            set 
-            { 
+            set
+            {
                 _direction = value;
                 RaisePropertyChanged(() => Direction);
             }
@@ -58,12 +130,15 @@ namespace Lime.Client.TestConsole.ViewModels
         public bool IsRaw
         {
             get { return _isRaw; }
-            set 
-            { 
+            set
+            {
                 _isRaw = value;
                 RaisePropertyChanged(() => IsRaw);
             }
         }
+
+        #endregion
+
 
 
     }
