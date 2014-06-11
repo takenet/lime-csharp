@@ -29,5 +29,19 @@
     &quot;compression&quot;: &quot;none&quot;
 }" />
     </vm:SessionViewModel.Envelopes>
+    <vm:SessionViewModel.Variables>
+        <vm:VariableViewModel Name="from" Value="source@domain.com/instance" />
+        <vm:VariableViewModel Name="to" Value="destination@domain.com/instance" />
+    </vm:SessionViewModel.Variables>
+    <vm:SessionViewModel.Templates>
+
+        <vm:TemplateViewModel Name="Negotiating TLS/None" Category="Session" JsonTemplate="{}{
+    &quot;id&quot;: &quot;$sessionId&quot;,    
+    &quot;state&quot;: &quot;negotiating&quot;,
+    &quot;encryption&quot;: &quot;tls&quot;, 
+    &quot;compression&quot;: &quot;none&quot;
+}" />
+        
+    </vm:SessionViewModel.Templates>
     
 </vm:SessionViewModel>

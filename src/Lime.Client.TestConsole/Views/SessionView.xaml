@@ -4,59 +4,135 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:vw="clr-namespace:Lime.Client.TestConsole.Views"
+             xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
              mc:Ignorable="d" 
              d:DataContext="{d:DesignData /DesignData/SessionDesignData.xaml}"   
              d:DesignHeight="700" 
-             d:DesignWidth="500">
-
+             d:DesignWidth="700">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-            <RowDefinition Height="150" />
+            <RowDefinition Height="300*" />
+            <RowDefinition Height="5" />
+            <RowDefinition Height="150*" />
         </Grid.RowDefinitions>
 
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="200*" />
+            <ColumnDefinition Width="5" />
+            <ColumnDefinition Width="100*" />
+        </Grid.ColumnDefinitions>
 
         <Grid Grid.Row="0" Margin="0,0,0,5">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="73*" />
-                <ColumnDefinition Width="20*"/>
+                <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
 
-            <Label Content="Host" />
-            <TextBox Grid.Column="1" Text="{Binding HostUri}" Grid.ColumnSpan="2" />
+            <Label Grid.Row="0" Content="Transport" />
+            <ComboBox Grid.Row="0" Grid.Column="1" Margin="0,5" ItemsSource="{Binding AvailableTransports}" SelectedValue="{Binding SelectedTransport}" />
 
-            <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" Grid.ColumnSpan="2">
-                <Button Content="_Open" Margin="0,5,5,5" Padding="15,0" Command="{Binding OpenTransportCommand}" />
-                <Button Content="_Close" Margin="5" Padding="15,0" Command="{Binding CloseTransportCommand}" />
+            <Label Grid.Row="1" Content="Host" />
+            <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding HostUri}" Grid.ColumnSpan="2" />
+
+            <StackPanel Grid.Row="2" Grid.Column="0"  Margin="0,5" Orientation="Horizontal" Grid.ColumnSpan="2">
+                <Button Content="_Open" Margin="0,0,5,0" Padding="15,2" Command="{Binding OpenTransportCommand}" />
+                <Button Content="_Close" Margin="0,0,5,0" Padding="15,2" Command="{Binding CloseTransportCommand}" />
             </StackPanel>
         </Grid>
 
-        
-        <ScrollViewer Grid.Row="1" Margin="0,5">
-            <ListBox ItemsSource="{Binding Envelopes}">
-                <ListBox.ItemTemplate>
-                    <DataTemplate>
-                        <vw:EnvelopeView />
-                    </DataTemplate>
-                </ListBox.ItemTemplate>
-            </ListBox>
-        </ScrollViewer>
+        <Grid Grid.Row="1" Margin="0,5">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
 
-        <Grid Grid.Row="2" Margin="0,5">
+            <ScrollViewer>
+                <ListBox ItemsSource="{Binding Envelopes}">
+                    <ListBox.ItemContainerStyle>
+                        <Style TargetType="ListBoxItem">
+                            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                        </Style>
+                    </ListBox.ItemContainerStyle>
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <vw:EnvelopeView />
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </ScrollViewer>
+            <CheckBox Grid.Row="1" Margin="0,5" Content="Show raw values" IsChecked="{Binding ShowRawValues}" />
+        </Grid>
+
+        <GridSplitter Grid.Row="2" Height="5" HorizontalAlignment="Stretch"  />
+
+        <Grid Grid.Row="3" Margin="0,5">
             <Grid.RowDefinitions>
                 <RowDefinition Height="*" />
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
             <TextBox FontFamily="Courier New" Text="{Binding InputJson}" />
-            <Button Grid.Row="1" Content="_Send" />
+            <StackPanel Grid.Row="1" Margin="0,5" Orientation="Horizontal">
+                <Button Padding="15,2" Margin="0,0,5,0" Content="_Indent" Command="{Binding IndentCommand}" />
+                <Button Padding="15,2" Margin="0,0,5,0" Content="_Validate" Command="{Binding ValidateCommand}" />
+                <Button Padding="15,2" Margin="0,0,5,0" Content="_Send" Command="{Binding SendCommand}" />
+                <CheckBox VerticalAlignment="Center" Content="Send as raw" IsChecked="{Binding SendAsRaw}" />
+            </StackPanel>
         </Grid>
 
+        <GridSplitter Grid.Column="1" Grid.RowSpan="4" Width="5" VerticalAlignment="Stretch" />
+
+        <Grid Grid.Row="0" Grid.RowSpan="4" Grid.Column="2" Margin="10,0">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="200*" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="200*" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="200*" />
+                </Grid.RowDefinitions>
+
+                <Label Grid.Row="0" Content="Variables" />                
+                <ScrollViewer Grid.Row="1">
+                    <DataGrid AutoGenerateColumns="False" ItemsSource="{Binding Variables}">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="50*" />
+                            <DataGridTextColumn Header="Value" Binding="{Binding Value}" Width="50*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </ScrollViewer>
+
+                <Label Grid.Row="2" Content="Templates" />
+                <ScrollViewer Grid.Row="3">
+                    <ListBox ItemsSource="{Binding TemplatesView}">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Name}" />
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                        <ListBox.GroupStyle>
+                            <GroupStyle>
+                                <GroupStyle.HeaderTemplate>
+                                    <DataTemplate>
+                                        <TextBlock FontWeight="Bold"  Text="{Binding Name}" />
+                                    </DataTemplate>
+                                </GroupStyle.HeaderTemplate>
+                            </GroupStyle>
+                        </ListBox.GroupStyle>
+                    </ListBox>
+                </ScrollViewer>
+
+                <Label Grid.Row="4" Content="Triggers" />
+                <ScrollViewer Grid.Row="5">
+                </ScrollViewer>
+            </Grid>
+        </Grid>
     </Grid>
 </UserControl>
