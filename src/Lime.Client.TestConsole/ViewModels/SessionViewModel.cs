@@ -9,8 +9,10 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -34,26 +36,28 @@ namespace Lime.Client.TestConsole.ViewModels
         {
             _operationTimeout = TimeSpan.FromSeconds(60);
 
-
+            // Collections
             this.Envelopes = new ObservableCollectionEx<EnvelopeViewModel>();
-
-
             this.Envelopes.CollectionChanged += Envelopes_CollectionChanged;
-
             this.Variables = new ObservableCollectionEx<VariableViewModel>();
             this.Templates = new ObservableCollectionEx<TemplateViewModel>();
 
+            // Commands
             this.OpenTransportCommand = new AsyncCommand(OpenTransportAsync, CanOpenTransport);
             this.CloseTransportCommand = new AsyncCommand(CloseTransportAsync, CanCloseTransport);
-
             this.SendCommand = new AsyncCommand(SendAsync, CanSend);
             this.IndentCommand = new RelayCommand(Indent, CanIndent);
             this.ValidateCommand = new RelayCommand(Validate, CanValidate);
+            this.GetTemplateCommand = new RelayCommand(GetTemplate, CanGetTemplate);
+
 
             this.AvailableTransports = new[] { "Tcp" };
             this.SelectedTransport = AvailableTransports.First();
 
-            this.Host = "net.tcp://localhost:55321";
+            this.Host = "net.tcp://iris.limeprotocol.org:55321";
+
+            LoadVariables();
+            LoadTemplates();
         }
 
         #endregion
@@ -232,6 +236,21 @@ namespace Lime.Client.TestConsole.ViewModels
 
         public ICollectionView TemplatesView { get; private set; }
 
+
+        private TemplateViewModel _selectedTemplate;
+
+        public TemplateViewModel SelectedTemplate
+        {
+            get { return _selectedTemplate; }
+            set 
+            { 
+                _selectedTemplate = value;
+                RaisePropertyChanged(() => SelectedTemplate);
+
+                GetTemplateCommand.RaiseCanExecuteChanged();
+            }
+        }
+
         #endregion
 
         #region Commands
@@ -359,6 +378,22 @@ namespace Lime.Client.TestConsole.ViewModels
                     {
                         StatusMessage = "The input is a valid JSON document, but is not an Envelope";
                     }
+
+                    var variables = GetVariables(InputJson);
+
+                    foreach (var variable in variables)
+                    {
+                        if (!this.Variables.Any(v => v.Name.Equals(variable, StringComparison.OrdinalIgnoreCase)))
+                        {
+                            var variableViewModel = new VariableViewModel()
+                            {
+                                Name = variable
+                            };
+
+                            this.Variables.Add(variableViewModel);
+                        }
+                    }
+
                 }
                 else
                 {
@@ -400,6 +435,21 @@ namespace Lime.Client.TestConsole.ViewModels
         private bool CanSend()
         {
             return IsConnected && !string.IsNullOrWhiteSpace(InputJson);
+        }
+
+
+        public RelayCommand GetTemplateCommand { get; private set; }
+
+        private void GetTemplate()
+        {
+            this.InputJson = SelectedTemplate.JsonTemplate.IndentJson();
+
+            // Search for variables
+        }
+
+        private bool CanGetTemplate()
+        {
+            return SelectedTemplate != null;
         }
 
         #endregion
@@ -450,6 +500,78 @@ namespace Lime.Client.TestConsole.ViewModels
         private async void Envelopes_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
             
+        }
+
+        public const string TEMPLATES_FILE_NAME = "Templates.txt";
+        public const char TEMPLATES_FILE_SEPARATOR = '\t';
+
+        private void LoadTemplates()
+        {
+            foreach (var lineValues in GetFileLines(TEMPLATES_FILE_NAME, TEMPLATES_FILE_SEPARATOR))
+            {
+                if (lineValues.Length >= 3)
+                {
+                    var templateViewModel = new TemplateViewModel()
+                    {
+                        Name = lineValues[0],
+                        Category = lineValues[1],
+                        JsonTemplate = lineValues[2]
+                    };
+
+                    this.Templates.Add(templateViewModel);
+                }
+            }
+
+        }
+
+        public const string VARIABLES_FILE_NAME = "Variables.txt";
+        public const char VARIABLES_FILE_SEPARATOR = '\t';
+
+        private void LoadVariables()
+        {
+            foreach (var lineValues in GetFileLines(VARIABLES_FILE_NAME, VARIABLES_FILE_SEPARATOR))
+            {
+                if (lineValues.Length >= 2)
+                {
+                    var variableViewModel = new VariableViewModel()
+                    {
+                        Name = lineValues[0],
+                        Value = lineValues[1]
+                    };
+
+                    this.Variables.Add(variableViewModel);
+                }
+            }
+        }
+
+        private IEnumerable<string[]> GetFileLines(string fileName, char separator)
+        {
+            using (var fileStream = File.Open(fileName, FileMode.OpenOrCreate, FileAccess.Read))
+            {
+                using (var streamReader = new StreamReader(fileStream))
+                {
+                    while (!streamReader.EndOfStream)
+                    {
+                        var line = streamReader.ReadLine();
+
+                        if (!string.IsNullOrWhiteSpace(line))
+                        {
+                            yield return line.Split(separator);
+                        }
+                    }
+                }
+            }
+        }
+
+        private Regex _variableRegex = new Regex(@"(?:\$)(\w+)", RegexOptions.Compiled);
+
+        private IEnumerable<string> GetVariables(string input)
+        {
+            foreach (Match match in _variableRegex.Matches(input))
+	        {
+                yield return match.Value;
+	        }                
+                
         }
 
         #endregion
