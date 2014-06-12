@@ -56,6 +56,7 @@ namespace Lime.Client.TestConsole.ViewModels
 
             this.Host = "net.tcp://iris.limeprotocol.org:55321";
             this.ClearAfterSent = true;
+            this.ParseBeforeSend = true;
 
             LoadVariables();
             LoadTemplates();
@@ -74,6 +75,10 @@ namespace Lime.Client.TestConsole.ViewModels
             { 
                 _isBusy = value;
                 RaisePropertyChanged(() => IsBusy);
+
+                OpenTransportCommand.RaiseCanExecuteChanged();
+                CloseTransportCommand.RaiseCanExecuteChanged();
+                SendCommand.RaiseCanExecuteChanged();
             }
         }
 
@@ -201,6 +206,18 @@ namespace Lime.Client.TestConsole.ViewModels
             }
         }
 
+        private bool _parseBeforeSend;
+
+        public bool ParseBeforeSend
+        {
+            get { return _parseBeforeSend; }
+            set 
+            { 
+                _parseBeforeSend = value;
+                RaisePropertyChanged(() => ParseBeforeSend);
+            }
+        }
+
         private bool _clearAfterSent;
 
         public bool ClearAfterSent
@@ -271,11 +288,12 @@ namespace Lime.Client.TestConsole.ViewModels
 
         public AsyncCommand OpenTransportCommand { get; private set; }
 
-
         private async Task OpenTransportAsync()
         {
             await ExecuteAsync(async () =>
                 {
+                    StatusMessage = "Connecting...";
+
                     if (_transport != null)
                     {
                         _transport.DisposeIfDisposable();
@@ -305,15 +323,19 @@ namespace Lime.Client.TestConsole.ViewModels
                         },
                         _connectionCts.Token)
                     .ContinueWith(t => 
-                    {
+                    {                        
                         IsConnected = false;
 
                         if (t.Exception != null)
                         {
                             this.StatusMessage = t.Exception.Message.RemoveCrLf();
                         }
-                    },
-                    TaskScheduler.FromCurrentSynchronizationContext());
+                        else
+                        {
+                            StatusMessage = "Disconnected";
+                        }
+
+                    }, TaskScheduler.FromCurrentSynchronizationContext());
 
                     IsConnected = true;
 
@@ -324,9 +346,11 @@ namespace Lime.Client.TestConsole.ViewModels
 
         private bool CanOpenTransport()
         {
-            return !IsConnected &&
-                   SelectedTransport != null && 
-                   Uri.TryCreate(_host, UriKind.Absolute, out _hostUri);
+            return 
+                !IsBusy &&
+                !IsConnected &&
+                SelectedTransport != null && 
+                Uri.TryCreate(_host, UriKind.Absolute, out _hostUri);
         }
 
         public AsyncCommand CloseTransportCommand { get; private set; }
@@ -335,24 +359,23 @@ namespace Lime.Client.TestConsole.ViewModels
         {
             await ExecuteAsync(async () =>
                 {
+                    StatusMessage = "Disconnecting...";
+
                     var timeoutCancellationToken = _operationTimeout.ToCancellationToken();
 
-                    _connectionCts.Cancel();
+                    _connectionCts.Cancel();                    
 
-                    await _receiveTask;
-
-                    // Closes the transport. The IsConnected property
-                    // should be changed by the action attached to the
-                    // transport Closing event
+                    // Closes the transport
                     await _transport.CloseAsync(timeoutCancellationToken);
-
-                    StatusMessage = "Disconnected";
+                    await _receiveTask.WithCancellation(timeoutCancellationToken);
                 });
         }
 
         private bool CanCloseTransport()
         {
-            return IsConnected;
+            return 
+                !IsBusy && 
+                IsConnected;
         }
 
 
@@ -360,14 +383,10 @@ namespace Lime.Client.TestConsole.ViewModels
 
         private void Indent()
         {
-            try 
-	        {
-                InputJson = InputJson.IndentJson();                 
-	        }
-	        catch (Exception ex)
-	        {
-                StatusMessage = ex.Message;
-	        }
+            Execute(() =>
+                {
+                    InputJson = InputJson.IndentJson();
+                });
         }
 
         private bool CanIndent()
@@ -433,10 +452,12 @@ namespace Lime.Client.TestConsole.ViewModels
 
         private void Parse()
         {
-            var variableValues = this.Variables.ToDictionary(t => t.Name, t => t.Value);
-            InputJson = InputJson.ReplaceVariables(variableValues);
+            Execute(() =>
+                {
+                    InputJson = ParseInput(InputJson, Variables);
+                });
         }
-
+      
         private bool CanParse()
         {
             return !string.IsNullOrWhiteSpace(InputJson);
@@ -449,7 +470,10 @@ namespace Lime.Client.TestConsole.ViewModels
         {
             await ExecuteAsync(async () =>
                 {
-                    this.Parse();
+                    if (ParseBeforeSend)
+                    {
+                        this.InputJson = ParseInput(this.InputJson, this.Variables);
+                    }
 
                     var timeoutCancellationToken = _operationTimeout.ToCancellationToken();
 
@@ -471,7 +495,10 @@ namespace Lime.Client.TestConsole.ViewModels
 
         private bool CanSend()
         {
-            return IsConnected && !string.IsNullOrWhiteSpace(InputJson);
+            return 
+                !IsBusy &&
+                IsConnected && 
+                !string.IsNullOrWhiteSpace(InputJson);
         }
 
 
@@ -492,6 +519,24 @@ namespace Lime.Client.TestConsole.ViewModels
         #endregion
 
         #region Private Methods
+
+        private void Execute(Action action)
+        {
+            IsBusy = true;
+
+            try
+            {
+                action();
+            }
+            catch (Exception ex)
+            {
+                StatusMessage = ex.Message.RemoveCrLf();
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
 
         private async Task ExecuteAsync(Func<Task> func)
         {
@@ -532,8 +577,6 @@ namespace Lime.Client.TestConsole.ViewModels
             }
             catch (OperationCanceledException) { }            
         }
-
-
         private async void Envelopes_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
             
@@ -601,6 +644,13 @@ namespace Lime.Client.TestConsole.ViewModels
         }
 
 
+        private static string ParseInput(string input, IEnumerable<VariableViewModel> variables)
+        {
+            var variableValues = variables.ToDictionary(t => t.Name, t => t.Value);
+            variableValues.Add("newGuid", Guid.NewGuid().ToString());
+            return input.ReplaceVariables(variableValues);
+        }
+
 
         #endregion
 
@@ -624,7 +674,7 @@ namespace Lime.Client.TestConsole.ViewModels
             }
         }
 
-        public static string ReplaceVariables(this string input, IDictionary<string, string> variableValues)
+        public static string ReplaceVariables(this string input, Dictionary<string, string> variableValues)
         {
             if (string.IsNullOrWhiteSpace(input))
             {
@@ -636,23 +686,42 @@ namespace Lime.Client.TestConsole.ViewModels
                 throw new ArgumentNullException("variableValues");
             }
 
-            var variables = input.GetVariables();
+            var variableNames = input.GetVariables();
 
-            foreach (var variable in variables)
+            foreach (var variableName in variableNames)
             {
                 string variableValue;
 
-                if (!variableValues.TryGetValue(variable, out variableValue))
+                if (!variableValues.TryGetValue(variableName, out variableValue))
                 {
-                    throw new ArgumentException(string.Format("The variable '{0}' is not present", variable));
+                    throw new ArgumentException(string.Format("The variable '{0}' is not present", variableName));
                 }
 
                 if (string.IsNullOrWhiteSpace(variableValue))
                 {
-                    throw new ArgumentException(string.Format("The value of the variable '{0}' is empty", variable));
+                    throw new ArgumentException(string.Format("The value of the variable '{0}' is empty", variableName));
                 }
 
-                var variableRegex = new Regex(string.Format(_variablePatternFormat, variable));
+                int deepth = 0;
+
+                while (variableValue.StartsWith("$"))
+                {
+                    var innerVariableName = variableValue.TrimStart('$');
+
+                    if (!variableValues.TryGetValue(innerVariableName, out variableValue))
+                    {
+                        throw new ArgumentException(string.Format("The variable '{0}' is not present", innerVariableName));
+                    }
+
+                    deepth++;
+
+                    if (deepth > 10)
+                    {
+                        throw new ArgumentException("Deepth variable limit reached");
+                    }
+                }
+
+                var variableRegex = new Regex(string.Format(_variablePatternFormat, variableName));
                 input = variableRegex.Replace(input, variableValue);                
             }
 

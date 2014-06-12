@@ -100,6 +100,7 @@
                     <Button Content="_Validate" ToolTip="Validates the JSON input" Command="{Binding ValidateCommand}" />
                     <Button Content="_Parse" ToolTip="Parse the input variables" Command="{Binding ParseCommand}" />
                     <Button Content="_Send" ToolTip="Sends the JSON through the transport" Command="{Binding SendCommand}" />
+                    <CheckBox Margin="0,0,5,0" VerticalAlignment="Center" Content="Parse before send" IsChecked="{Binding ParseBeforeSend}" />
                     <CheckBox Margin="0,0,5,0" VerticalAlignment="Center" Content="Clear after sent" IsChecked="{Binding ClearAfterSent}" />
                     <CheckBox VerticalAlignment="Center" Content="Send as raw" IsChecked="{Binding SendAsRaw}" />
                 </StackPanel>

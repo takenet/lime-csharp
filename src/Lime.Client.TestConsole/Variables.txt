@@ -1,2 +1,6 @@
 ﻿from	andre@limeprotocol.org
+to	$from
 password	MTIzNDU2
+text	Hello world!
+messageId	$newGuid
+commandId	$newGuid

@@ -7,7 +7,7 @@
         mc:Ignorable="d" 
         DataContext="{StaticResource MainViewModel}"
         d:DataContext="{d:DesignData /DesignData/MainDesignData.xaml}"   
-        Title="{Binding Title}" Height="600" Width="800">
+        Title="{Binding Title}" Height="600" Width="800" Icon="lime.ico">
 
     <vw:SessionView DataContext="{Binding SelectedSession}" />
     
