@@ -48,13 +48,14 @@ namespace Lime.Client.TestConsole.ViewModels
             this.SendCommand = new AsyncCommand(SendAsync, CanSend);
             this.IndentCommand = new RelayCommand(Indent, CanIndent);
             this.ValidateCommand = new RelayCommand(Validate, CanValidate);
-            this.GetTemplateCommand = new RelayCommand(GetTemplate, CanGetTemplate);
-
+            this.LoadTemplateCommand = new RelayCommand(LoadTemplate, CanLoadTemplate);
+            this.ParseCommand = new RelayCommand(Parse, CanParse);
 
             this.AvailableTransports = new[] { "Tcp" };
             this.SelectedTransport = AvailableTransports.First();
 
             this.Host = "net.tcp://iris.limeprotocol.org:55321";
+            this.ClearAfterSent = true;
 
             LoadVariables();
             LoadTemplates();
@@ -127,6 +128,7 @@ namespace Lime.Client.TestConsole.ViewModels
                 SendCommand.RaiseCanExecuteChanged();
                 IndentCommand.RaiseCanExecuteChanged();
                 ValidateCommand.RaiseCanExecuteChanged();
+                ParseCommand.RaiseCanExecuteChanged();
             }
         }
 
@@ -199,6 +201,18 @@ namespace Lime.Client.TestConsole.ViewModels
             }
         }
 
+        private bool _clearAfterSent;
+
+        public bool ClearAfterSent
+        {
+            get { return _clearAfterSent; }
+            set 
+            { 
+                _clearAfterSent = value;
+                RaisePropertyChanged(() => ClearAfterSent);
+            }
+        }
+
         private ObservableCollectionEx<VariableViewModel> _variables;
 
         public ObservableCollectionEx<VariableViewModel> Variables
@@ -247,7 +261,7 @@ namespace Lime.Client.TestConsole.ViewModels
                 _selectedTemplate = value;
                 RaisePropertyChanged(() => SelectedTemplate);
 
-                GetTemplateCommand.RaiseCanExecuteChanged();
+                LoadTemplateCommand.RaiseCanExecuteChanged();
             }
         }
 
@@ -272,11 +286,6 @@ namespace Lime.Client.TestConsole.ViewModels
 
                     _transport = new TcpTransport();                    
 
-                    _transport.Closed += (sender, e) =>
-                        {
-                            Dispatcher.CurrentDispatcher.Invoke(() => IsConnected = false);
-                        };
-
                     await _transport.OpenAsync(_hostUri, timeoutCancellationToken);
 
                     _connectionCts = new CancellationTokenSource();
@@ -294,7 +303,17 @@ namespace Lime.Client.TestConsole.ViewModels
                                     this.Envelopes.Add(envelopeViewModel);                                    
                                 });
                         },
-                        _connectionCts.Token);
+                        _connectionCts.Token)
+                    .ContinueWith(t => 
+                    {
+                        IsConnected = false;
+
+                        if (t.Exception != null)
+                        {
+                            this.StatusMessage = t.Exception.Message.RemoveCrLf();
+                        }
+                    },
+                    TaskScheduler.FromCurrentSynchronizationContext());
 
                     IsConnected = true;
 
@@ -379,7 +398,7 @@ namespace Lime.Client.TestConsole.ViewModels
                         StatusMessage = "The input is a valid JSON document, but is not an Envelope";
                     }
 
-                    var variables = GetVariables(InputJson);
+                    var variables = InputJson.GetVariables();
 
                     foreach (var variable in variables)
                     {
@@ -393,7 +412,6 @@ namespace Lime.Client.TestConsole.ViewModels
                             this.Variables.Add(variableViewModel);
                         }
                     }
-
                 }
                 else
                 {
@@ -411,6 +429,19 @@ namespace Lime.Client.TestConsole.ViewModels
             return !string.IsNullOrWhiteSpace(InputJson);
         }
 
+        public RelayCommand ParseCommand { get; private set; }
+
+        private void Parse()
+        {
+            var variableValues = this.Variables.ToDictionary(t => t.Name, t => t.Value);
+            InputJson = InputJson.ReplaceVariables(variableValues);
+        }
+
+        private bool CanParse()
+        {
+            return !string.IsNullOrWhiteSpace(InputJson);
+        }
+
         public AsyncCommand SendCommand { get; private set; }
 
 
@@ -418,8 +449,9 @@ namespace Lime.Client.TestConsole.ViewModels
         {
             await ExecuteAsync(async () =>
                 {
-                    var timeoutCancellationToken = _operationTimeout.ToCancellationToken();
+                    this.Parse();
 
+                    var timeoutCancellationToken = _operationTimeout.ToCancellationToken();
 
                     var envelopeViewModel = new EnvelopeViewModel();
                     envelopeViewModel.Json = InputJson;
@@ -429,6 +461,11 @@ namespace Lime.Client.TestConsole.ViewModels
                     await _transport.SendAsync(envelope, timeoutCancellationToken);
 
                     this.Envelopes.Add(envelopeViewModel);
+
+                    if (this.ClearAfterSent)
+                    {
+                        this.InputJson = string.Empty;
+                    }
                 });
         }
 
@@ -438,16 +475,16 @@ namespace Lime.Client.TestConsole.ViewModels
         }
 
 
-        public RelayCommand GetTemplateCommand { get; private set; }
+        public RelayCommand LoadTemplateCommand { get; private set; }
 
-        private void GetTemplate()
+        private void LoadTemplate()
         {
             this.InputJson = SelectedTemplate.JsonTemplate.IndentJson();
-
-            // Search for variables
+            this.Validate();
+            this.StatusMessage = "Template loaded";
         }
 
-        private bool CanGetTemplate()
+        private bool CanLoadTemplate()
         {
             return SelectedTemplate != null;
         }
@@ -493,7 +530,7 @@ namespace Lime.Client.TestConsole.ViewModels
                     processAction(envelope);
                 }
             }
-            catch (OperationCanceledException) { }
+            catch (OperationCanceledException) { }            
         }
 
 
@@ -563,18 +600,63 @@ namespace Lime.Client.TestConsole.ViewModels
             }
         }
 
-        private Regex _variableRegex = new Regex(@"(?:\$)(\w+)", RegexOptions.Compiled);
 
-        private IEnumerable<string> GetVariables(string input)
-        {
-            foreach (Match match in _variableRegex.Matches(input))
-	        {
-                yield return match.Value;
-	        }                
-                
-        }
 
         #endregion
 
+    }
+
+    public static class VariablesExtensions
+    {
+        private static Regex _variablesRegex = new Regex(@"(?<=\$)(\w+)", RegexOptions.Compiled);
+        private static string _variablePatternFormat = @"\B\${0}\b";
+
+        public static IEnumerable<string> GetVariables(this string input)
+        {
+            if (string.IsNullOrWhiteSpace(input))
+            {
+                throw new ArgumentNullException("input");
+            }
+
+            foreach (Match match in _variablesRegex.Matches(input))
+            {
+                yield return match.Value;
+            }
+        }
+
+        public static string ReplaceVariables(this string input, IDictionary<string, string> variableValues)
+        {
+            if (string.IsNullOrWhiteSpace(input))
+            {
+                throw new ArgumentNullException("input");
+            }
+
+            if (variableValues == null)
+            {
+                throw new ArgumentNullException("variableValues");
+            }
+
+            var variables = input.GetVariables();
+
+            foreach (var variable in variables)
+            {
+                string variableValue;
+
+                if (!variableValues.TryGetValue(variable, out variableValue))
+                {
+                    throw new ArgumentException(string.Format("The variable '{0}' is not present", variable));
+                }
+
+                if (string.IsNullOrWhiteSpace(variableValue))
+                {
+                    throw new ArgumentException(string.Format("The value of the variable '{0}' is empty", variable));
+                }
+
+                var variableRegex = new Regex(string.Format(_variablePatternFormat, variable));
+                input = variableRegex.Replace(input, variableValue);                
+            }
+
+            return input;
+        }
     }
 }

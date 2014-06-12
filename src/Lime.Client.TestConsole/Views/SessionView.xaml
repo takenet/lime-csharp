@@ -7,6 +7,7 @@
              xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
              xmlns:xcad="http://schemas.xceed.com/wpf/xaml/avalondock"
              mc:Ignorable="d" 
+             xmlns:i="clr-namespace:System.Windows.Interactivity;assembly=System.Windows.Interactivity"                 
              d:DataContext="{d:DesignData /DesignData/SessionDesignData.xaml}"   
              d:DesignHeight="700" 
              d:DesignWidth="700">
@@ -62,7 +63,7 @@
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
 
-                <ScrollViewer>
+                <ScrollViewer ScrollChanged="ScrollViewer_ScrollChanged" PreviewMouseWheel="ScrollViewer_PreviewMouseWheel">
                     <ListBox ItemsSource="{Binding Envelopes}">
                         <ListBox.ItemContainerStyle>
                             <Style TargetType="ListBoxItem">
@@ -95,9 +96,11 @@
                          AcceptsTab="True"                          
                          Text="{Binding InputJson, UpdateSourceTrigger=PropertyChanged}" />
                 <StackPanel Grid.Row="1" Margin="0,5" Orientation="Horizontal">
-                    <Button Content="_Indent" Command="{Binding IndentCommand}" />
-                    <Button Content="_Validate" Command="{Binding ValidateCommand}" />
-                    <Button Content="_Send" Command="{Binding SendCommand}" />
+                    <Button Content="_Indent" ToolTip="Indent the JSON input" Command="{Binding IndentCommand}" />
+                    <Button Content="_Validate" ToolTip="Validates the JSON input" Command="{Binding ValidateCommand}" />
+                    <Button Content="_Parse" ToolTip="Parse the input variables" Command="{Binding ParseCommand}" />
+                    <Button Content="_Send" ToolTip="Sends the JSON through the transport" Command="{Binding SendCommand}" />
+                    <CheckBox Margin="0,0,5,0" VerticalAlignment="Center" Content="Clear after sent" IsChecked="{Binding ClearAfterSent}" />
                     <CheckBox VerticalAlignment="Center" Content="Send as raw" IsChecked="{Binding SendAsRaw}" />
                 </StackPanel>
             </Grid>
@@ -144,6 +147,11 @@
                         <Label Grid.Row="0" Content="Templates" />
                         <ScrollViewer Grid.Row="1">
                             <ListBox ItemsSource="{Binding TemplatesView}" SelectedValue="{Binding SelectedTemplate}">
+                                <i:Interaction.Triggers>
+                                    <i:EventTrigger EventName="MouseDoubleClick">
+                                        <i:InvokeCommandAction Command="{Binding LoadTemplateCommand}" />
+                                    </i:EventTrigger>
+                                </i:Interaction.Triggers>
                                 <ListBox.ItemTemplate>
                                     <DataTemplate>
                                         <TextBlock Text="{Binding Name}" />
@@ -161,7 +169,7 @@
                             </ListBox>
                         </ScrollViewer>
                         <StackPanel Grid.Row="2" Orientation="Horizontal">
-                            <Button Content="Get" Command="{Binding GetTemplateCommand }" />
+                            <Button Content="_Load" ToolTip="Load the selected template to the input" Command="{Binding LoadTemplateCommand }" />
                             <Button Content="New" Command="{Binding NewTemplateCommand }" />
                             <Button Content="Remove" Command="{Binding RemoveTemplateCommand }" />
                         </StackPanel>

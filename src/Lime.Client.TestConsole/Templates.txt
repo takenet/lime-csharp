@@ -1,5 +1,5 @@
 ﻿New	Session	{"state":"new"}
 Negotiating none/none	Session	{"id":"$sessionId","state":"negotiating","encryption":"none","compression":"none"}
-Authenticating plain	Session	{"id":"$sessionId","from":"$localNode","state":"authenticating","scheme":"plain","authentication":{"password":"$password"}}
+Authenticating plain	Session	{"id":"$sessionId","from":"$from","state":"authenticating","scheme":"plain","authentication":{"password":"$password"}}
 Finishing	Session	{"id":"$sessionId","state": "finishing"}
 Text message	Message	{"from":"$from","to":"$to","type":"application/vnd.lime.text+json","content":{"text":"$text"}}
