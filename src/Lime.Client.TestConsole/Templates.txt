@@ -3,7 +3,8 @@ Negotiating none/none	Session	{"id":"$sessionId","state":"negotiating","encrypti
 Authenticating plain	Session	{"id":"$sessionId","from":"$from","state":"authenticating","scheme":"plain","authentication":{"password":"$password"}}
 Finishing	Session	{"id":"$sessionId","state": "finishing"}
 Text message	Message	{"id":"$messageId","from":"$from","to":"$to","type":"application/vnd.lime.text+json","content":{"text":"$text"}}
-Available presence	Command	{"id":"$commandId","from":"$from","method":"set","type":"application/vnd.lime.presence+json","resource":{"status": "available"}}
-Unavailable presence	Command	{"id":"$commandId","from":"$from","method":"set","type":"application/vnd.lime.presence+json","resource":{"status": "unavailable"}}
+Set presence available	Command	{"id":"$commandId","method":"set","type":"application/vnd.lime.presence+json","resource":{"status": "available"}}
+Set presence unavailable	Command	{"id":"$commandId","method":"set","type":"application/vnd.lime.presence+json","resource":{"status": "unavailable"}}
+Get presence	Command	{"id":"$commandId","from":"$from","method":"get","type":"application/vnd.lime.presence+json"}
 Get account	Command	{"id":"$commandId","from":"$from","method":"get","type":"application/vnd.lime.account+json"}
-Set account	Command	{"id":"$commandId","from":"$from","method":"set","type":"application/vnd.lime.account+json","resource": {"fullName":"$fullName","phoneNumber":"$phoneNumber","city":"$city","password":"$newPassword"}}
+Set account	Command	{"id":"$commandId","method":"set","type":"application/vnd.lime.account+json","resource": {"fullName":"$fullName","phoneNumber":"$phoneNumber","city":"$city","password":"$newPassword"}}
