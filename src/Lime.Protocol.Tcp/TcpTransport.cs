@@ -346,16 +346,18 @@ namespace Lime.Protocol.Tcp
                             _stream = _tcpClient.GetStream();
                             break;
                         case SessionEncryption.TLS:
-                            var sslStream = new SslStream(
-                                _stream,
-                                false,
-                                 new RemoteCertificateValidationCallback(ValidateServerCertificate),
-                                 new LocalCertificateSelectionCallback(SelectLocalCertificate),
-                                 EncryptionPolicy.RequireEncryption);
+                            SslStream sslStream;
 
                             if (_serverCertificate != null)
                             {                             
                                 // Server
+                                sslStream = new SslStream(
+                                    _stream,
+                                    false,
+                                    null,
+                                    null,
+                                    EncryptionPolicy.RequireEncryption);
+
                                 await sslStream
                                     .AuthenticateAsServerAsync(
                                         _serverCertificate,
@@ -372,6 +374,10 @@ namespace Lime.Protocol.Tcp
                                 {
                                     throw new InvalidOperationException("The hostname is mandatory for TLS client encryption support");
                                 }
+
+                                sslStream = new SslStream(_stream,
+                                    false,
+                                     new RemoteCertificateValidationCallback(ValidateServerCertificate));
 
                                 await sslStream
                                     .AuthenticateAsClientAsync(
@@ -415,23 +421,6 @@ namespace Lime.Protocol.Tcp
               SslPolicyErrors sslPolicyErrors)
         {
             return sslPolicyErrors == SslPolicyErrors.None;
-        }
-
-        private static X509Certificate SelectLocalCertificate(
-            object sender, 
-            string targetHost, 
-            X509CertificateCollection localCertificates, 
-            X509Certificate remoteCertificate, 
-            string[] acceptableIssuers)
-        {
-            if (localCertificates.Count > 0)
-            {
-                return localCertificates[0];
-            }
-            else
-            {
-                return null;
-            }
         }
 
         #region Buffer fields
