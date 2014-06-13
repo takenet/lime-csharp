@@ -85,7 +85,7 @@ namespace Lime.Client.TestConsole.Mvvm
 
         #endregion
 
-        protected virtual Task ExecuteAsync(object parameter)
+        public virtual Task ExecuteAsync(object parameter)
         {
             return _executeFunc(parameter);
         }

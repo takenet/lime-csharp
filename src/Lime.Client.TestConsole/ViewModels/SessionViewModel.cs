@@ -1,5 +1,6 @@
 ﻿using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
+using Lime.Client.TestConsole.Macros;
 using Lime.Client.TestConsole.Mvvm;
 using Lime.Protocol;
 using Lime.Protocol.Network;
@@ -11,6 +12,7 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -26,7 +28,6 @@ namespace Lime.Client.TestConsole.ViewModels
         #region Private Fields
 
         private readonly TimeSpan _operationTimeout;
-        private ITransport _transport;
 
         #endregion
 
@@ -38,9 +39,9 @@ namespace Lime.Client.TestConsole.ViewModels
 
             // Collections
             this.Envelopes = new ObservableCollectionEx<EnvelopeViewModel>();
-            this.Envelopes.CollectionChanged += Envelopes_CollectionChanged;
             this.Variables = new ObservableCollectionEx<VariableViewModel>();
             this.Templates = new ObservableCollectionEx<TemplateViewModel>();
+            this.Macros = new ObservableCollectionEx<MacroViewModel>();
 
             // Commands
             this.OpenTransportCommand = new AsyncCommand(OpenTransportAsync, CanOpenTransport);
@@ -58,13 +59,29 @@ namespace Lime.Client.TestConsole.ViewModels
             this.ClearAfterSent = true;
             this.ParseBeforeSend = true;
 
-            LoadVariables();
-            LoadTemplates();
+            if (!IsInDesignMode)
+            {
+                LoadVariables();
+                LoadTemplates();
+                LoadMacros();
+            }
         }
 
         #endregion
 
         #region Data Properties
+
+        private ITransport _transport;
+
+        public ITransport Transport
+        {
+            get { return _transport; }
+            set 
+            { 
+                _transport = value;
+                RaisePropertyChanged(() => Transport);
+            }
+        }
 
 
         private bool _isBusy;
@@ -282,6 +299,43 @@ namespace Lime.Client.TestConsole.ViewModels
             }
         }
 
+
+        private ObservableCollectionEx<MacroViewModel> _macros;
+
+        public ObservableCollectionEx<MacroViewModel> Macros
+        {
+            get { return _macros; }
+            set 
+            { 
+                _macros = value;
+                RaisePropertyChanged(() => Macros);
+
+                if (_macros != null)
+                {
+                    MacrosView = CollectionViewSource.GetDefaultView(_macros);
+                    MacrosView.GroupDescriptions.Add(new PropertyGroupDescription("Category"));
+                    MacrosView.SortDescriptions.Add(new SortDescription("Name", ListSortDirection.Ascending));
+
+                    RaisePropertyChanged(() => TemplatesView);
+                }
+            }
+        }
+
+        public ICollectionView MacrosView { get; private set; }
+
+
+        private MacroViewModel _selectedMacro;
+
+        public MacroViewModel SelectedMacro
+        {
+            get { return _selectedMacro; }
+            set 
+            { 
+                _selectedMacro = value;
+                RaisePropertyChanged(() => SelectedMacro);
+            }
+        }
+
         #endregion
 
         #region Commands
@@ -294,33 +348,25 @@ namespace Lime.Client.TestConsole.ViewModels
                 {
                     StatusMessage = "Connecting...";
 
-                    if (_transport != null)
+                    if (Transport != null)
                     {
-                        _transport.DisposeIfDisposable();
-                        _transport = null;
+                        Transport.DisposeIfDisposable();
+                        Transport = null;
                     }
 
                     var timeoutCancellationToken = _operationTimeout.ToCancellationToken();
 
-                    _transport = new TcpTransport();                    
+                    Transport = new TcpTransport();
 
-                    await _transport.OpenAsync(_hostUri, timeoutCancellationToken);
+                    await Transport.OpenAsync(_hostUri, timeoutCancellationToken);
 
                     _connectionCts = new CancellationTokenSource();
 
-                    _receiveTask = ReceiveAsync(
-                        _transport,
-                        e =>
-                        {
-                            var envelopeViewModel = new EnvelopeViewModel();
-                            envelopeViewModel.Envelope = e;
-                            envelopeViewModel.Direction = DataOperation.Receive;
+                    var dispatcher = Dispatcher.CurrentDispatcher;
 
-                            Dispatcher.CurrentDispatcher.Invoke(() => 
-                                {
-                                    this.Envelopes.Add(envelopeViewModel);                                    
-                                });
-                        },
+                    _receiveTask = ReceiveAsync(
+                        Transport,
+                        (e) => ReceiveEnvelopeAsync(e, dispatcher),
                         _connectionCts.Token)
                     .ContinueWith(t => 
                     {                        
@@ -366,7 +412,7 @@ namespace Lime.Client.TestConsole.ViewModels
                     _connectionCts.Cancel();                    
 
                     // Closes the transport
-                    await _transport.CloseAsync(timeoutCancellationToken);
+                    await Transport.CloseAsync(timeoutCancellationToken);
                     await _receiveTask.WithCancellation(timeoutCancellationToken);
                 });
         }
@@ -482,7 +528,7 @@ namespace Lime.Client.TestConsole.ViewModels
                     var envelope = envelopeViewModel.Envelope;
                     envelopeViewModel.Direction = DataOperation.Send;
 
-                    await _transport.SendAsync(envelope, timeoutCancellationToken);
+                    await Transport.SendAsync(envelope, timeoutCancellationToken);
 
                     this.Envelopes.Add(envelopeViewModel);
 
@@ -556,11 +602,10 @@ namespace Lime.Client.TestConsole.ViewModels
             }
         }
 
-
         private Task _receiveTask;
         private CancellationTokenSource _connectionCts;
 
-        private static async Task ReceiveAsync(ITransport transport, Action<Envelope> processAction, CancellationToken cancellationToken)
+        private static async Task ReceiveAsync(ITransport transport, Func<Envelope, Task> processFunc, CancellationToken cancellationToken)
         {
             if (transport == null)
             {
@@ -572,14 +617,10 @@ namespace Lime.Client.TestConsole.ViewModels
                 while (!cancellationToken.IsCancellationRequested)
                 {
                     var envelope = await transport.ReceiveAsync(cancellationToken);
-                    processAction(envelope);
+                    await processFunc(envelope);
                 }
             }
             catch (OperationCanceledException) { }            
-        }
-        private async void Envelopes_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
-        {
-            
         }
 
         public const string TEMPLATES_FILE_NAME = "Templates.txt";
@@ -587,7 +628,7 @@ namespace Lime.Client.TestConsole.ViewModels
 
         private void LoadTemplates()
         {
-            foreach (var lineValues in GetFileLines(TEMPLATES_FILE_NAME, TEMPLATES_FILE_SEPARATOR))
+            foreach (var lineValues in FileUtil.GetFileLines(TEMPLATES_FILE_NAME, TEMPLATES_FILE_SEPARATOR))
             {
                 if (lineValues.Length >= 3)
                 {
@@ -609,7 +650,7 @@ namespace Lime.Client.TestConsole.ViewModels
 
         private void LoadVariables()
         {
-            foreach (var lineValues in GetFileLines(VARIABLES_FILE_NAME, VARIABLES_FILE_SEPARATOR))
+            foreach (var lineValues in FileUtil.GetFileLines(VARIABLES_FILE_NAME, VARIABLES_FILE_SEPARATOR))
             {
                 if (lineValues.Length >= 2)
                 {
@@ -624,26 +665,6 @@ namespace Lime.Client.TestConsole.ViewModels
             }
         }
 
-        private IEnumerable<string[]> GetFileLines(string fileName, char separator)
-        {
-            using (var fileStream = File.Open(fileName, FileMode.OpenOrCreate, FileAccess.Read))
-            {
-                using (var streamReader = new StreamReader(fileStream))
-                {
-                    while (!streamReader.EndOfStream)
-                    {
-                        var line = streamReader.ReadLine();
-
-                        if (!string.IsNullOrWhiteSpace(line))
-                        {
-                            yield return line.Split(separator);
-                        }
-                    }
-                }
-            }
-        }
-
-
         private static string ParseInput(string input, IEnumerable<VariableViewModel> variables)
         {
             var variableValues = variables.ToDictionary(t => t.Name, t => t.Value);
@@ -651,6 +672,40 @@ namespace Lime.Client.TestConsole.ViewModels
             return input.ReplaceVariables(variableValues);
         }
 
+        private void LoadMacros()
+        {
+            var macroTypes = Assembly
+                .GetExecutingAssembly()
+                .GetTypes()
+                .Where(t => typeof(IMacro).IsAssignableFrom(t) && t.IsClass && !t.IsAbstract);
+
+            foreach (var type in macroTypes)
+            {
+                var macroViewModel = new MacroViewModel()
+                {
+                    Type = type
+                };
+
+                this.Macros.Add(macroViewModel);
+            }
+        }
+
+        private async Task ReceiveEnvelopeAsync(Envelope envelope, Dispatcher dispatcher)
+        {
+            var envelopeViewModel = new EnvelopeViewModel();
+            envelopeViewModel.Envelope = envelope;
+            envelopeViewModel.Direction = DataOperation.Receive;
+
+            await dispatcher.InvokeAsync(async () => 
+                {
+                    this.Envelopes.Add(envelopeViewModel);
+
+                    foreach (var macro in Macros.Where(m => m.IsActive))
+                    {
+                        await macro.Macro.ProcessAsync(envelopeViewModel, this);
+                    }
+                });
+        }
 
         #endregion
 

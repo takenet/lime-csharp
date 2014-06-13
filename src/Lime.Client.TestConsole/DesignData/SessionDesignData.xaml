@@ -45,5 +45,8 @@
 }" />
         
     </vm:SessionViewModel.Templates>
-    
+    <vm:SessionViewModel.Macros>
+        <vm:MacroViewModel Name="Close session" Category="Session" IsActive="True" />        
+        <vm:MacroViewModel Name="MyMacro" Category="Undefined" IsActive="False" />
+    </vm:SessionViewModel.Macros>
 </vm:SessionViewModel>

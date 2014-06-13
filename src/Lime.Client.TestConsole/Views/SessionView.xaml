@@ -183,6 +183,30 @@
                         </Grid.RowDefinitions>
                         <Label Grid.Row="0" Content="Macros" />
                         <ScrollViewer Grid.Row="1">
+                            <ListBox ItemsSource="{Binding MacrosView}" SelectedValue="{Binding SelectedMacro}">
+                                <i:Interaction.Triggers>
+                                    <i:EventTrigger EventName="MouseDoubleClick">
+                                        <i:InvokeCommandAction Command="{Binding LoadTemplateCommand}" />
+                                    </i:EventTrigger>
+                                </i:Interaction.Triggers>
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal">
+                                            <CheckBox IsChecked="{Binding IsActive, UpdateSourceTrigger=PropertyChanged}" />
+                                            <TextBlock Margin="5,0,0,0" Text="{Binding Name}" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                                <ListBox.GroupStyle>
+                                    <GroupStyle>
+                                        <GroupStyle.HeaderTemplate>
+                                            <DataTemplate>
+                                                <TextBlock FontWeight="Bold"  Text="{Binding Name}" />
+                                            </DataTemplate>
+                                        </GroupStyle.HeaderTemplate>
+                                    </GroupStyle>
+                                </ListBox.GroupStyle>
+                            </ListBox>                            
                         </ScrollViewer>
                     </Grid>
                 </Grid>

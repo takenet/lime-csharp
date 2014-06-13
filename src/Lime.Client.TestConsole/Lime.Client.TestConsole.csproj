@@ -130,6 +130,10 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="Converters\DataOperationToBrushConverter.cs" />
+    <Compile Include="FileUtil.cs" />
+    <Compile Include="Macros\ApplyTransportOptionsMacro.cs" />
+    <Compile Include="Macros\CloseTransportMacro.cs" />
+    <Compile Include="Macros\IMacro.cs" />
     <Compile Include="Mvvm\AsyncCommand.cs" />
     <Compile Include="Mvvm\ObservableCollectionEx.cs" />
     <Compile Include="ViewModels\EnvelopeViewModel.cs" />
