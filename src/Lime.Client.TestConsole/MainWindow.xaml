@@ -5,9 +5,10 @@
         xmlns:vw="clr-namespace:Lime.Client.TestConsole.Views"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"         
         mc:Ignorable="d" 
+        DataContext="{StaticResource MainViewModel}"
         d:DataContext="{d:DesignData /DesignData/MainDesignData.xaml}"   
-        Title="MainWindow" Height="350" Width="525">
+        Title="{Binding Title}" Height="600" Width="800" Icon="lime.ico">
 
-    <vw:SessionView />
+    <vw:SessionView DataContext="{Binding SelectedSession}" />
     
 </Window>

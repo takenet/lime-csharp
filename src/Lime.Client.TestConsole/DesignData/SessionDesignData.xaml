@@ -1,7 +1,9 @@
 ﻿<vm:SessionViewModel xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                   xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                   xmlns:vm="clr-namespace:Lime.Client.TestConsole.ViewModels"
-                     InputJson="{}{&quot;state&quot;:&quot;new&quot;}">
+                  InputJson="{}{&quot;state&quot;:&quot;new&quot;}"
+                  IsBusy="True"
+                  StatusMessage="Connecting...">
     <vm:SessionViewModel.Envelopes>
         <vm:EnvelopeViewModel Direction="Send"
                               Json="{}{&quot;state&quot;:&quot;new&quot;}" />
@@ -29,5 +31,19 @@
     &quot;compression&quot;: &quot;none&quot;
 }" />
     </vm:SessionViewModel.Envelopes>
+    <vm:SessionViewModel.Variables>
+        <vm:VariableViewModel Name="from" Value="source@domain.com/instance" />
+        <vm:VariableViewModel Name="to" Value="destination@domain.com/instance" />
+    </vm:SessionViewModel.Variables>
+    <vm:SessionViewModel.Templates>
+
+        <vm:TemplateViewModel Name="Negotiating TLS/None" Category="Session" JsonTemplate="{}{
+    &quot;id&quot;: &quot;$sessionId&quot;,    
+    &quot;state&quot;: &quot;negotiating&quot;,
+    &quot;encryption&quot;: &quot;tls&quot;, 
+    &quot;compression&quot;: &quot;none&quot;
+}" />
+        
+    </vm:SessionViewModel.Templates>
     
 </vm:SessionViewModel>
