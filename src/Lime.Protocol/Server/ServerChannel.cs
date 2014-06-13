@@ -341,6 +341,20 @@ namespace Lime.Protocol.Server
             await base.SendSessionAsync(session).ConfigureAwait(false);
             await base.Transport.CloseAsync(CancellationToken.None).ConfigureAwait(false);
         }
+        public override async Task<Session> ReceiveSessionAsync(CancellationToken cancellationToken)
+        {
+            var session = await base.ReceiveSessionAsync(cancellationToken).ConfigureAwait(false);
+            if(session.State != SessionState.New && session.Id != this.SessionId)
+            {
+                await this.SendFailedSessionAsync(new Reason()
+                {
+                    Code = ReasonCodes.SESSION_ERROR,
+                    Description = "Invalid session id"
+                });
+            }
+            return session;
+
+        }
 
         #endregion
     }
