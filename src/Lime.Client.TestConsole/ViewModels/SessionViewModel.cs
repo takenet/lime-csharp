@@ -35,25 +35,24 @@ namespace Lime.Client.TestConsole.ViewModels
 
         public SessionViewModel()
         {
-            _operationTimeout = TimeSpan.FromSeconds(60);
+            _operationTimeout = TimeSpan.FromSeconds(15);
 
             // Collections
             this.Envelopes = new ObservableCollectionEx<EnvelopeViewModel>();
             this.Variables = new ObservableCollectionEx<VariableViewModel>();
             this.Templates = new ObservableCollectionEx<TemplateViewModel>();
             this.Macros = new ObservableCollectionEx<MacroViewModel>();
+            this.StatusMessages = new ObservableCollectionEx<StatusMessageViewModel>();
 
             // Commands
             this.OpenTransportCommand = new AsyncCommand(OpenTransportAsync, CanOpenTransport);
             this.CloseTransportCommand = new AsyncCommand(CloseTransportAsync, CanCloseTransport);
             this.SendCommand = new AsyncCommand(SendAsync, CanSend);
+            this.ClearTraceCommand = new RelayCommand(ClearTrace);
             this.IndentCommand = new RelayCommand(Indent, CanIndent);
             this.ValidateCommand = new RelayCommand(Validate, CanValidate);
             this.LoadTemplateCommand = new RelayCommand(LoadTemplate, CanLoadTemplate);
             this.ParseCommand = new RelayCommand(Parse, CanParse);
-
-            this.AvailableTransports = new[] { "Tcp" };
-            this.SelectedTransport = AvailableTransports.First();
 
             this.Host = "net.tcp://iris.limeprotocol.org:55321";
             this.ClearAfterSent = true;
@@ -111,29 +110,15 @@ namespace Lime.Client.TestConsole.ViewModels
             }
         }
 
+        private ObservableCollectionEx<StatusMessageViewModel> _statusMessages;
 
-        private IEnumerable<string> _availableTransports;
-
-        public IEnumerable<string> AvailableTransports
+        public ObservableCollectionEx<StatusMessageViewModel> StatusMessages
         {
-            get { return _availableTransports; }
+            get { return _statusMessages; }
             set 
             { 
-                _availableTransports = value;
-                RaisePropertyChanged(() => AvailableTransports);
-            }
-        }
-
-        private string _selectedTransport;
-
-        public string SelectedTransport
-        {
-            get { return _selectedTransport; }
-            set 
-            { 
-                _selectedTransport = value;
-                RaisePropertyChanged(() => SelectedTransport);               
-                OpenTransportCommand.RaiseCanExecuteChanged();
+                _statusMessages = value;
+                RaisePropertyChanged(() => StatusMessages);
             }
         }
 
@@ -346,13 +331,7 @@ namespace Lime.Client.TestConsole.ViewModels
         {
             await ExecuteAsync(async () =>
                 {
-                    StatusMessage = "Connecting...";
-
-                    if (Transport != null)
-                    {
-                        Transport.DisposeIfDisposable();
-                        Transport = null;
-                    }
+                    AddStatusMessage("Connecting...");
 
                     var timeoutCancellationToken = _operationTimeout.ToCancellationToken();
 
@@ -363,29 +342,29 @@ namespace Lime.Client.TestConsole.ViewModels
                     _connectionCts = new CancellationTokenSource();
 
                     var dispatcher = Dispatcher.CurrentDispatcher;
-
+                    
                     _receiveTask = ReceiveAsync(
                         Transport,
                         (e) => ReceiveEnvelopeAsync(e, dispatcher),
                         _connectionCts.Token)
                     .ContinueWith(t => 
-                    {                        
+                    {
                         IsConnected = false;
 
                         if (t.Exception != null)
                         {
-                            this.StatusMessage = t.Exception.Message.RemoveCrLf();
+                            AddStatusMessage(t.Exception.InnerException.Message.RemoveCrLf(), true);
                         }
                         else
                         {
-                            StatusMessage = "Disconnected";
+                            AddStatusMessage("Disconnected");
                         }
 
                     }, TaskScheduler.FromCurrentSynchronizationContext());
 
                     IsConnected = true;
 
-                    StatusMessage = "Connected";
+                    AddStatusMessage("Connected");
 
                 });
         }
@@ -395,7 +374,6 @@ namespace Lime.Client.TestConsole.ViewModels
             return 
                 !IsBusy &&
                 !IsConnected &&
-                SelectedTransport != null && 
                 Uri.TryCreate(_host, UriKind.Absolute, out _hostUri);
         }
 
@@ -405,7 +383,7 @@ namespace Lime.Client.TestConsole.ViewModels
         {
             await ExecuteAsync(async () =>
                 {
-                    StatusMessage = "Disconnecting...";
+                    AddStatusMessage("Disconnecting...");
 
                     var timeoutCancellationToken = _operationTimeout.ToCancellationToken();
 
@@ -414,6 +392,9 @@ namespace Lime.Client.TestConsole.ViewModels
                     // Closes the transport
                     await Transport.CloseAsync(timeoutCancellationToken);
                     await _receiveTask.WithCancellation(timeoutCancellationToken);
+                    
+                    Transport.DisposeIfDisposable();
+                    Transport = null;                    
                 });
         }
 
@@ -456,11 +437,11 @@ namespace Lime.Client.TestConsole.ViewModels
 
                     if (envelopeViewModel.Envelope != null)
                     {
-                        StatusMessage = string.Format("The input is a valid {0} JSON Envelope", envelopeViewModel.Envelope.GetType().Name);
+                        AddStatusMessage(string.Format("The input is a valid {0} JSON Envelope", envelopeViewModel.Envelope.GetType().Name));
                     }
                     else
                     {
-                        StatusMessage = "The input is a valid JSON document, but is not an Envelope";
+                        AddStatusMessage("The input is a valid JSON document, but is not an Envelope", true);
                     }
 
                     var variables = InputJson.GetVariables();
@@ -480,12 +461,12 @@ namespace Lime.Client.TestConsole.ViewModels
                 }
                 else
                 {
-                    StatusMessage = "The input is a invalid or empty JSON document";
+                    AddStatusMessage("The input is a invalid or empty JSON document", true);
                 }
             }
             catch (ArgumentException)
             {
-                StatusMessage = "The input is a invalid JSON document";
+                AddStatusMessage("The input is a invalid JSON document", true);
             }
         }
 
@@ -516,6 +497,8 @@ namespace Lime.Client.TestConsole.ViewModels
         {
             await ExecuteAsync(async () =>
                 {
+                    AddStatusMessage("Sending...");
+
                     if (ParseBeforeSend)
                     {
                         this.InputJson = ParseInput(this.InputJson, this.Variables);
@@ -536,6 +519,8 @@ namespace Lime.Client.TestConsole.ViewModels
                     {
                         this.InputJson = string.Empty;
                     }
+
+                    AddStatusMessage(string.Format("{0} envelope sent", envelope.GetType().Name));
                 });
         }
 
@@ -547,6 +532,13 @@ namespace Lime.Client.TestConsole.ViewModels
                 !string.IsNullOrWhiteSpace(InputJson);
         }
 
+        public RelayCommand ClearTraceCommand { get; private set; }
+        
+        private void ClearTrace()
+        {
+            this.Envelopes.Clear();
+        }
+
 
         public RelayCommand LoadTemplateCommand { get; private set; }
 
@@ -554,7 +546,7 @@ namespace Lime.Client.TestConsole.ViewModels
         {
             this.InputJson = SelectedTemplate.JsonTemplate.IndentJson();
             this.Validate();
-            this.StatusMessage = "Template loaded";
+            AddStatusMessage("Template loaded");
         }
 
         private bool CanLoadTemplate()
@@ -576,7 +568,7 @@ namespace Lime.Client.TestConsole.ViewModels
             }
             catch (Exception ex)
             {
-                StatusMessage = ex.Message.RemoveCrLf();
+                AddStatusMessage(ex.Message.RemoveCrLf());
             }
             finally
             {
@@ -594,7 +586,7 @@ namespace Lime.Client.TestConsole.ViewModels
             }
             catch (Exception ex)
             {
-                StatusMessage = ex.Message.RemoveCrLf();
+                AddStatusMessage(ex.Message.RemoveCrLf(), true);
             }
             finally
             {
@@ -696,7 +688,7 @@ namespace Lime.Client.TestConsole.ViewModels
             envelopeViewModel.Envelope = envelope;
             envelopeViewModel.Direction = DataOperation.Receive;
 
-            await dispatcher.InvokeAsync(async () => 
+            await await dispatcher.InvokeAsync(async () => 
                 {
                     this.Envelopes.Add(envelopeViewModel);
 
@@ -705,6 +697,20 @@ namespace Lime.Client.TestConsole.ViewModels
                         await macro.Macro.ProcessAsync(envelopeViewModel, this);
                     }
                 });
+        }
+
+        private void AddStatusMessage(string message, bool isError = false)
+        {
+            this.StatusMessage = message;
+
+            var statusMessageViewModel = new StatusMessageViewModel()
+            {
+                Timestamp = DateTimeOffset.Now,
+                Message = message,
+                IsError  = isError
+            };
+
+            this.StatusMessages.Add(statusMessageViewModel);
         }
 
         #endregion

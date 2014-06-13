@@ -27,14 +27,15 @@
     <UpdatePeriodically>false</UpdatePeriodically>
     <UpdateRequired>false</UpdateRequired>
     <MapFileExtensions>true</MapFileExtensions>
+    <InstallUrl>\\smc2\Departamentos\Tecnologia\Binarios\Plataformas\Iris\Lime.Client.TestConsole\</InstallUrl>
     <ProductName>Lime Test Console</ProductName>
     <PublisherName>Take.net</PublisherName>
     <SuiteName>Lime</SuiteName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
     <OpenBrowserOnPublish>false</OpenBrowserOnPublish>
-    <ApplicationRevision>0</ApplicationRevision>
-    <ApplicationVersion>0.1.2.%2a</ApplicationVersion>
+    <ApplicationRevision>1</ApplicationRevision>
+    <ApplicationVersion>0.1.3.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -129,6 +130,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Converters\IsErrorToBrushConverter.cs" />
     <Compile Include="Converters\DataOperationToBrushConverter.cs" />
     <Compile Include="FileUtil.cs" />
     <Compile Include="Macros\ApplyTransportOptionsMacro.cs" />
@@ -141,6 +143,7 @@
     <Compile Include="ViewModels\MacroViewModel.cs" />
     <Compile Include="ViewModels\MainViewModel.cs" />
     <Compile Include="ViewModels\SessionViewModel.cs" />
+    <Compile Include="ViewModels\StatusMessageViewModel.cs" />
     <Compile Include="ViewModels\TemplateViewModel.cs" />
     <Compile Include="ViewModels\VariableViewModel.cs" />
     <Compile Include="Views\EnvelopeView.xaml.cs">

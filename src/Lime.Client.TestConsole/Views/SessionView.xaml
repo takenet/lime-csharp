@@ -11,13 +11,11 @@
              d:DataContext="{d:DesignData /DesignData/SessionDesignData.xaml}"   
              d:DesignHeight="700" 
              d:DesignWidth="700">
-
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="*" />
+            <RowDefinition Height="300*" />            
             <RowDefinition Height="25" />
         </Grid.RowDefinitions>
-
 
         <Grid Margin="10">
             <Grid.RowDefinitions>
@@ -25,7 +23,8 @@
                 <RowDefinition Height="300*" />
                 <RowDefinition Height="5" />
                 <RowDefinition Height="150*" />
-                <RowDefinition Height="Auto" />
+                <RowDefinition Height="5" />
+                <RowDefinition Height="100" />
             </Grid.RowDefinitions>
 
             <Grid.ColumnDefinitions>
@@ -38,20 +37,16 @@
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
 
-                <Label Grid.Row="0" Content="Transport" />
-                <ComboBox Grid.Row="0" Grid.Column="1" VerticalAlignment="Center" ItemsSource="{Binding AvailableTransports}" SelectedValue="{Binding SelectedTransport}" />
+                <Label Grid.Row="0" Content="Host" />
+                <TextBox Grid.Row="0" Grid.Column="1" VerticalAlignment="Center" Text="{Binding Host, UpdateSourceTrigger=PropertyChanged}" Grid.ColumnSpan="2" />
 
-                <Label Grid.Row="1" Content="Host" />
-                <TextBox Grid.Row="1" Grid.Column="1" VerticalAlignment="Center" Text="{Binding Host, UpdateSourceTrigger=PropertyChanged}" Grid.ColumnSpan="2" />
-
-                <StackPanel Grid.Row="2" Grid.Column="0"  Margin="0,5" Orientation="Horizontal" Grid.ColumnSpan="2">
+                <StackPanel Grid.Row="1" Grid.Column="0"  Margin="0,5" Orientation="Horizontal" Grid.ColumnSpan="2">
                     <Button Content="_Open" Command="{Binding OpenTransportCommand}" />
                     <Button Content="_Close" Command="{Binding CloseTransportCommand}" />
                 </StackPanel>
@@ -77,7 +72,10 @@
                         </ListBox.ItemTemplate>
                     </ListBox>
                 </ScrollViewer>
-                <CheckBox Grid.Row="1" Margin="0,5" Content="Show raw values" IsChecked="{Binding ShowRawValues}" />
+                <StackPanel Margin="0,5" Orientation="Horizontal" Grid.Row="1">
+                    <Button Content="Clear" Command="{Binding ClearTraceCommand}" />
+                    <CheckBox Margin="0,5" Content="Show raw values" IsChecked="{Binding ShowRawValues}" />
+                </StackPanel>
             </Grid>
 
             <GridSplitter Grid.Row="2" Height="5" HorizontalAlignment="Stretch"  />
@@ -106,7 +104,22 @@
                 </StackPanel>
             </Grid>
 
-            <GridSplitter Grid.Column="1" Grid.RowSpan="4" Width="5" VerticalAlignment="Stretch" />
+            <GridSplitter Grid.Row="4" Height="5" HorizontalAlignment="Stretch"  />
+
+            <ScrollViewer Grid.Row="5" Grid.ColumnSpan="3" ScrollChanged="ScrollViewer_ScrollChanged" PreviewMouseWheel="ScrollViewer_PreviewMouseWheel">
+                <ListBox ItemsSource="{Binding StatusMessages}" SelectionMode="Extended">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBox Style="{StaticResource ReadOnlyTextBox}" Text="{Binding TimestampFormat, Mode=OneWay}" />
+                                <TextBox Style="{StaticResource ReadOnlyTextBox}" Margin="5,0,0,0" Text="{Binding Message}" Foreground="{Binding IsError, Converter={StaticResource IsErrorToBrushConverter}}" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </ScrollViewer>
+
+            <GridSplitter Grid.Column="1" Grid.RowSpan="4" Width="5" HorizontalAlignment="Left" VerticalAlignment="Stretch" />
 
             <Grid Grid.Row="0" Grid.RowSpan="4" Grid.Column="2" Margin="10,0">
                 <Grid>
@@ -120,10 +133,9 @@
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="*" />
-                            <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
 
-                        <Label Grid.Row="0" Content="Variables" />
+                        <Label Grid.Row="0" Content="Variables" FontWeight="Bold" />
                         <ScrollViewer Grid.Row="1">
                             <DataGrid AutoGenerateColumns="False" ItemsSource="{Binding Variables}">
                                 <DataGrid.Columns>
@@ -131,11 +143,7 @@
                                     <DataGridTextColumn Header="Value" Binding="{Binding Value}" Width="50*"/>
                                 </DataGrid.Columns>
                             </DataGrid>
-                        </ScrollViewer>
-                        <StackPanel Grid.Row="2" Orientation="Horizontal">
-                            <Button Content="Add" />
-                            <Button Content="Remove" />
-                        </StackPanel>                        
+                        </ScrollViewer>                     
                     </Grid>
 
                     <Grid Grid.Row="1">
@@ -144,8 +152,8 @@
                             <RowDefinition Height="*" />
                             <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
-                        
-                        <Label Grid.Row="0" Content="Templates" />
+
+                        <Label Grid.Row="0" Content="Templates" FontWeight="Bold"  />
                         <ScrollViewer Grid.Row="1">
                             <ListBox ItemsSource="{Binding TemplatesView}" SelectedValue="{Binding SelectedTemplate}">
                                 <i:Interaction.Triggers>
@@ -171,8 +179,6 @@
                         </ScrollViewer>
                         <StackPanel Grid.Row="2" Orientation="Horizontal">
                             <Button Content="_Load" ToolTip="Load the selected template to the input" Command="{Binding LoadTemplateCommand }" />
-                            <Button Content="New" Command="{Binding NewTemplateCommand }" />
-                            <Button Content="Remove" Command="{Binding RemoveTemplateCommand }" />
                         </StackPanel>
                     </Grid>
 
@@ -181,7 +187,7 @@
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="*" />
                         </Grid.RowDefinitions>
-                        <Label Grid.Row="0" Content="Macros" />
+                        <Label Grid.Row="0" Content="Macros" FontWeight="Bold"  />
                         <ScrollViewer Grid.Row="1">
                             <ListBox ItemsSource="{Binding MacrosView}" SelectedValue="{Binding SelectedMacro}">
                                 <i:Interaction.Triggers>
@@ -212,7 +218,7 @@
                 </Grid>
             </Grid>
         </Grid>
-
+                       
         <StatusBar Grid.Row="1">
             <StatusBarItem>
                 <ProgressBar Width="100" Height="16" IsIndeterminate="{Binding IsBusy}"  />

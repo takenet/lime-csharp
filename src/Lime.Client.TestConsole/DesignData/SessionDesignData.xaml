@@ -49,4 +49,8 @@
         <vm:MacroViewModel Name="Close session" Category="Session" IsActive="True" />        
         <vm:MacroViewModel Name="MyMacro" Category="Undefined" IsActive="False" />
     </vm:SessionViewModel.Macros>
+    <vm:SessionViewModel.StatusMessages>
+        <vm:StatusMessageViewModel Message="Connecting" Timestamp="2014-06-06 14:55:00" IsError="False" />
+        <vm:StatusMessageViewModel Message="Could not connect to the remote server" Timestamp="2014-06-06 14:56:00" IsError="True" />
+    </vm:SessionViewModel.StatusMessages>
 </vm:SessionViewModel>

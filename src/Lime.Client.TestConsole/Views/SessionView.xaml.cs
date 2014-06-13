@@ -60,5 +60,7 @@ namespace Lime.Client.TestConsole.Views
             scv.ScrollToVerticalOffset(scv.VerticalOffset - e.Delta);
             e.Handled = true;
         }
+
+
     }
 }
