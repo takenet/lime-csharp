@@ -353,7 +353,7 @@ namespace Lime.Client.TestConsole.ViewModels
 
                         if (t.Exception != null)
                         {
-                            AddStatusMessage(t.Exception.InnerException.Message.RemoveCrLf(), true);
+                            AddStatusMessage(string.Format("Disconnected with errors: {0}", t.Exception.InnerException.Message.RemoveCrLf()), true);
                         }
                         else
                         {
