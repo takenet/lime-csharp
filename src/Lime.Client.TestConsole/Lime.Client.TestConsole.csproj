@@ -33,8 +33,8 @@
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
     <OpenBrowserOnPublish>false</OpenBrowserOnPublish>
-    <ApplicationRevision>8</ApplicationRevision>
-    <ApplicationVersion>0.1.1.%2a</ApplicationVersion>
+    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationVersion>0.1.2.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -132,6 +132,7 @@
     <Compile Include="Converters\DataOperationToBrushConverter.cs" />
     <Compile Include="FileUtil.cs" />
     <Compile Include="Macros\ApplyTransportOptionsMacro.cs" />
+    <Compile Include="Macros\SetSessionIdMacro.cs" />
     <Compile Include="Macros\CloseTransportMacro.cs" />
     <Compile Include="Macros\IMacro.cs" />
     <Compile Include="Mvvm\AsyncCommand.cs" />
