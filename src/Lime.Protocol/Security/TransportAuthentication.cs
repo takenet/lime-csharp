@@ -8,7 +8,8 @@ using System.Threading.Tasks;
 namespace Lime.Protocol.Security
 {
     /// <summary>
-    /// Defines a guest authentication scheme
+    /// Defines a transport layer 
+    /// authentication scheme. 
     /// </summary>
     [DataContract(Namespace = "http://limeprotocol.org/2014")]
     public partial class TransportAuthentication : Authentication

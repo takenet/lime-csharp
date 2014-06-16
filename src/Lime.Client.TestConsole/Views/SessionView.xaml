@@ -49,6 +49,7 @@
                 <StackPanel Grid.Row="1" Grid.Column="0"  Margin="0,5" Orientation="Horizontal" Grid.ColumnSpan="2">
                     <Button Content="_Open" Command="{Binding OpenTransportCommand}" />
                     <Button Content="_Close" Command="{Binding CloseTransportCommand}" />
+                    <xctk:WatermarkTextBox VerticalAlignment="Center" Watermark="Client certificate thumbprint" Width="180" Text="{Binding ClientCertificateThumbprint, UpdateSourceTrigger=PropertyChanged}" />
                 </StackPanel>
             </Grid>
 
@@ -86,13 +87,14 @@
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
 
-                <TextBox FontFamily="Courier New" 
-                         TextWrapping="NoWrap" 
-                         VerticalScrollBarVisibility="Visible"
-                         HorizontalScrollBarVisibility="Auto"
-                         AcceptsReturn="True" 
-                         AcceptsTab="True"                          
-                         Text="{Binding InputJson, UpdateSourceTrigger=PropertyChanged}" />
+                <xctk:WatermarkTextBox FontFamily="Courier New" 
+                                       Watermark="JSON input"                         
+                                       TextWrapping="NoWrap"                          
+                                       VerticalScrollBarVisibility="Visible"                         
+                                       HorizontalScrollBarVisibility="Auto"                         
+                                       AcceptsReturn="True"                          
+                                       AcceptsTab="True"                                                   
+                                       Text="{Binding InputJson, UpdateSourceTrigger=PropertyChanged}" />
                 <StackPanel Grid.Row="1" Margin="0,5" Orientation="Horizontal">
                     <Button Content="_Indent" ToolTip="Indent the JSON input" Command="{Binding IndentCommand}" />
                     <Button Content="_Validate" ToolTip="Validates the JSON input" Command="{Binding ValidateCommand}" />

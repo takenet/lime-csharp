@@ -13,6 +13,7 @@ using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -121,6 +122,19 @@ namespace Lime.Client.TestConsole.ViewModels
                 RaisePropertyChanged(() => StatusMessages);
             }
         }
+
+        private string _clientCertificateThumbprint;
+
+        public string ClientCertificateThumbprint
+        {
+            get { return _clientCertificateThumbprint; }
+            set 
+            { 
+                _clientCertificateThumbprint = value;
+                RaisePropertyChanged(() => ClientCertificateThumbprint);
+            }
+        }
+
 
         private string _inputJson;
 
@@ -335,7 +349,33 @@ namespace Lime.Client.TestConsole.ViewModels
 
                     var timeoutCancellationToken = _operationTimeout.ToCancellationToken();
 
-                    Transport = new TcpTransport();
+                    X509Certificate2 clientCertificate = null;
+
+                    if (!string.IsNullOrWhiteSpace(ClientCertificateThumbprint))
+                    {
+                        var store = new X509Store(StoreName.My, StoreLocation.CurrentUser);
+
+                        try
+                        {
+                            store.Open(OpenFlags.ReadOnly);
+
+                            var certificates = store.Certificates.Find(X509FindType.FindByThumbprint, ClientCertificateThumbprint, false);
+                            if (certificates.Count > 0)
+                            {
+                                clientCertificate = certificates[0];
+                            }
+                            else
+                            {
+                                AddStatusMessage("The specified certificate was not found", true);
+                            }
+                        }
+                        finally
+                        {
+                            store.Close();
+                        }                        
+                    }
+
+                    Transport = new TcpTransport(clientCertificate: clientCertificate);
 
                     await Transport.OpenAsync(_hostUri, timeoutCancellationToken);
 

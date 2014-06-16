@@ -1,7 +1,9 @@
 ﻿New	Session	{"state":"new"}
 Negotiating none/none	Session	{"id":"$sessionId","state":"negotiating","encryption":"none","compression":"none"}
 Negotiating none/tls	Session	{"id":"$sessionId","state":"negotiating","encryption":"tls","compression":"none"}
+Authenticating guest	Session	{"id":"$sessionId","from":"$from","state":"authenticating","scheme":"guest"}
 Authenticating plain	Session	{"id":"$sessionId","from":"$from","state":"authenticating","scheme":"plain","authentication":{"password":"$password"}}
+Authenticating transport	Session	{"id":"$sessionId","from":"$from","state":"authenticating","scheme":"transport"}
 Finishing	Session	{"id":"$sessionId","state": "finishing"}
 Text message	Message	{"id":"$messageId","from":"$from","to":"$to","type":"application/vnd.lime.text+json","content":{"text":"$text"}}
 Received notification	Notification	{"id":"$messageId","from":"$from","to":"$to","event":"received"}
