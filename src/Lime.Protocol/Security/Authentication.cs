@@ -47,6 +47,12 @@ namespace Lime.Protocol.Security
         /// Username and password authentication.
         /// </summary>
         [EnumMember(Value = "plain")]
-        Plain
+        Plain,
+
+        /// <summary>
+        /// Transport layer authentication.
+        /// </summary>
+        [EnumMember(Value = "transport")]
+        Transport
     }
 }

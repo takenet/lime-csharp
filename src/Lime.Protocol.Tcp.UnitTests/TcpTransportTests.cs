@@ -19,13 +19,16 @@ namespace Lime.Protocol.Tcp.UnitTests
     [TestClass]
     public class TcpTransportTests
     {
+        #region Private Fields
+
         private Mock<ITcpClient> _tcpClient;
         private Mock<IEnvelopeSerializer> _envelopeSerializer;
         private Mock<ITraceWriter> _traceWriter;
-
         private Mock<Stream> _stream;
 
-        #region Private fields
+        #endregion
+
+        #region Constructor
 
         public TcpTransportTests()
         {

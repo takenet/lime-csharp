@@ -37,7 +37,7 @@ namespace Lime.Client.Console
             _serverNode = new Node() 
             { 
                 Name = "server", 
-                Domain = "bb.com", 
+                Domain = "limeprotocol.org", 
                 Instance = Environment.MachineName 
             };
 
@@ -47,10 +47,10 @@ namespace Lime.Client.Console
 
             _identityPasswordDictionary = new Dictionary<Identity, string>
             {
-                { Identity.Parse("ww@bb.com") , "123456" },
-                { Identity.Parse("skylar@bb.com") , "abcdef" },
-                { Identity.Parse("wjr@bb.com") , "654321" },
-                { Identity.Parse("hank@bb.com") , "minerals" },
+                { Identity.Parse("ww@limeprotocol.org") , "123456" },
+                { Identity.Parse("skylar@limeprotocol.org") , "abcdef" },
+                { Identity.Parse("wjr@limeprotocol.org") , "654321" },
+                { Identity.Parse("hank@limeprotocol.org") , "minerals" },
             };
         }
 
@@ -58,13 +58,11 @@ namespace Lime.Client.Console
 
         public async Task StartServerAsync()
         {
-
-
-            var store = new X509Store(StoreName.Root, StoreLocation.CurrentUser);
+            var store = new X509Store(StoreName.My, StoreLocation.LocalMachine);
             store.Open(OpenFlags.ReadOnly);
 
             //var certificates = store.Certificates.Find(X509FindType.FindByThumbprint, "f864d23e92894c56df566b7ab7a9c6411d50d14d", false);
-            var certificates = store.Certificates.Find(X509FindType.FindByThumbprint, "10f422b0d59269ac13cb9ba73ba18f8ccbe58694", false);
+            var certificates = store.Certificates.Find(X509FindType.FindByThumbprint, "3fd0b5f28dc32f5f0bb9f44cf1f6816846e44cbe", false);
             
             if (certificates.Count == 0)
             {
@@ -162,41 +160,77 @@ namespace Lime.Client.Console
                     timeoutToken = new CancellationTokenSource(TimeSpan.FromSeconds(60));
 
                     var authenticatedSession = await channel.AuthenticateSessionAsync(
-                        new AuthenticationScheme[] { AuthenticationScheme.Plain },
+                        new AuthenticationScheme[] { AuthenticationScheme.Plain, AuthenticationScheme.Transport },
                         CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutToken.Token).Token);
 
-                    var plainAuthentication = authenticatedSession.Authentication as PlainAuthentication;
-
-                    string password;
-
-                    if (plainAuthentication != null &&
+                    if (authenticatedSession.Authentication != null &&
                         authenticatedSession.From != null &&
-                        _identityPasswordDictionary.TryGetValue(authenticatedSession.From.ToIdentity(), out password) &&
-                        password.Equals(plainAuthentication.GetFromBase64Password()))
+                        authenticatedSession.From.Domain.Equals(_serverNode.Domain, StringComparison.OrdinalIgnoreCase))
                     {
-                        IDictionary<string, Guid> instanceSessionDictionary;
-
-                        if (!_identityInstanceSessionIdDictionary.TryGetValue(authenticatedSession.From.ToIdentity(), out instanceSessionDictionary))
+                        if (authenticatedSession.Authentication is PlainAuthentication)
                         {
-                            instanceSessionDictionary = new Dictionary<string, Guid>();
-                            _identityInstanceSessionIdDictionary.Add(authenticatedSession.From.ToIdentity(), instanceSessionDictionary);
+                            var plainAuthentication = authenticatedSession.Authentication as PlainAuthentication;
+
+                            string password;
+
+                            if (_identityPasswordDictionary.TryGetValue(authenticatedSession.From.ToIdentity(), out password) &&
+                                password.Equals(plainAuthentication.GetFromBase64Password()))
+                            {
+                                await RegisterChannel(channel, cancellationToken, authenticatedSession.From);
+                            }
+                            else
+                            {
+                                await channel.SendFailedSessionAsync(
+                                    new Reason()
+                                    {
+                                        Code = ReasonCodes.SESSION_AUTHENTICATION_FAILED,
+                                        Description = "Invalid username or password"
+                                    });
+                            }
+
                         }
-
-                        instanceSessionDictionary.Add(authenticatedSession.From.Instance, channel.SessionId);
-
-                        await channel.SendEstablishedSessionAsync(authenticatedSession.From, SessionMode.Node);
-
-                        var receiveMessageTask = this.ReceiveMessagesAsync(channel, cancellationToken);
-
-                        await channel.ReceiveFinishingSessionAsync(cancellationToken);
-
-                        await channel.SendFinishedSessionAsync();
-
-                        instanceSessionDictionary.Remove(authenticatedSession.From.Instance);
-
-                        if (instanceSessionDictionary.Count == 0)
+                        else if (authenticatedSession.Authentication is TransportAuthentication)
                         {
-                            _identityInstanceSessionIdDictionary.Remove(authenticatedSession.From.ToIdentity());
+                            var transportAuthentication = authenticatedSession.Authentication as PlainAuthentication;
+
+                            if (channel.Transport is IAuthenticatableTransport)
+                            {
+                                var authenticableTransport = channel.Transport as IAuthenticatableTransport;
+
+                                if ( await authenticableTransport.AuthenticateAsync(authenticatedSession.From.ToIdentity()))
+                                {
+                                    await RegisterChannel(channel, cancellationToken, authenticatedSession.From);
+                                }
+                                else
+                                {
+                                    await channel.SendFailedSessionAsync(
+                                        new Reason()
+                                        {
+                                            Code = ReasonCodes.SESSION_AUTHENTICATION_FAILED,
+                                            Description = "The authentication failed"
+                                        });
+                                }
+
+                            }
+                            else
+                            {
+                                await channel.SendFailedSessionAsync(
+                                    new Reason()
+                                    {
+                                        Code = ReasonCodes.SESSION_AUTHENTICATION_FAILED,
+                                        Description = "The current transport doesn't support authentication"
+                                    });
+                            }
+
+                        }
+                        else
+                        {
+                            await channel.SendFailedSessionAsync(
+                                new Reason()
+                                {
+                                    Code = ReasonCodes.SESSION_AUTHENTICATION_FAILED,
+                                    Description = "Unsupported authenticaiton scheme"
+                                });
                         }
                     }
                     else
@@ -223,6 +257,34 @@ namespace Lime.Client.Console
             {
                 channel.DisposeIfDisposable();
             }            
+        }
+
+        private async Task RegisterChannel(IServerChannel channel, CancellationToken cancellationToken, Node node)
+        {
+            IDictionary<string, Guid> instanceSessionDictionary;
+
+            if (!_identityInstanceSessionIdDictionary.TryGetValue(node.ToIdentity(), out instanceSessionDictionary))
+            {
+                instanceSessionDictionary = new Dictionary<string, Guid>();
+                _identityInstanceSessionIdDictionary.Add(node.ToIdentity(), instanceSessionDictionary);
+            }
+
+            instanceSessionDictionary.Add(node.Instance, channel.SessionId);
+
+            await channel.SendEstablishedSessionAsync(node, SessionMode.Node);
+
+            var receiveMessageTask = this.ReceiveMessagesAsync(channel, cancellationToken);
+
+            await channel.ReceiveFinishingSessionAsync(cancellationToken);
+
+            await channel.SendFinishedSessionAsync();
+
+            instanceSessionDictionary.Remove(node.Instance);
+
+            if (instanceSessionDictionary.Count == 0)
+            {
+                _identityInstanceSessionIdDictionary.Remove(node.ToIdentity());
+            }
         }
 
         private async Task ReceiveMessagesAsync(IChannel channel, CancellationToken cancellationToken)

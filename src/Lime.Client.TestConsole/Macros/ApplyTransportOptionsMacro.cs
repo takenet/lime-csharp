@@ -34,7 +34,7 @@ namespace Lime.Client.TestConsole.Macros
                 session.Encryption.HasValue &&
                 transport != null)
             {
-                var cancellationToken = TimeSpan.FromSeconds(60).ToCancellationToken();
+                var cancellationToken = TimeSpan.FromSeconds(15).ToCancellationToken();
 
                 if (transport.Compression != session.Compression.Value)
                 {

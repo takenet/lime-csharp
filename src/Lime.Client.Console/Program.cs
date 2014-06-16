@@ -77,76 +77,106 @@ namespace Lime.Client.Console
 	                System.Console.Write("Enter the identity (name@domain): ");
                     identityInput = System.Console.ReadLine();
 	            }
-                
-                System.Console.Write("Enter the password: ");
-                var password = System.Console.ReadLine();
 
+                System.Console.Write("Use (P)assword or (C)ertificate? ");
+                var authenticationScheme = System.Console.ReadLine();
 
-                System.Console.Write("New (N) or Existing (E) account (Enter for E): ");
-                var createAccount = System.Console.ReadLine();
-
+                X509Certificate2 clientCertificate = null;
+                string password = null;
                 bool accountExists = false;
 
-                if (createAccount.ToUpper().Equals("N"))
+                if (authenticationScheme.Equals("c", StringComparison.OrdinalIgnoreCase))
                 {
-                    System.Console.WriteLine("Connecting in Guest mode...");
+                    // Finds the certificate for the identity
+                    var store = new X509Store(StoreName.My, StoreLocation.CurrentUser);
+                    store.Open(OpenFlags.ReadOnly);
 
-                    if (client.ConnectAsGuestAsync(identity.Domain, CancellationToken.None).Result)
+                    var certificates = store.Certificates.Find(X509FindType.FindBySubjectName, identity.ToString(), true);
+
+                    if (certificates.Count > 0)
                     {
-                        System.Console.WriteLine("Connected. Creating the account...");
-
-                        // Creates the account
-                        var account = new Account()
-                        {
-                            Password = password.ToBase64()
-                        };
-
-                        var createAccountCommand = new Command()
-                        {
-                            From = new Node() 
-                            { 
-                                Name = identity.Name, 
-                                Domain = identity.Domain 
-                            },
-                            Pp = client.Channel.LocalNode,
-                            Method = CommandMethod.Set,
-                            Resource = new Account()
-                            {
-                                Password = password.ToBase64()
-                            }
-                        };
-
-                        client.Channel.SendCommandAsync(createAccountCommand).Wait();
-                        var createAccountCommandResult = client.Channel.ReceiveCommandAsync(cancellationTokenSource.Token).Result;
-                        
-                        if (createAccountCommandResult.Status == CommandStatus.Success)
-                        {
-                            System.Console.WriteLine("Account created. Closing the session...");
-
-                            client.Channel.SendFinishingSessionAsync().Wait();
-                            client.Dispose();
-
-                            client = new ConsoleClient(uri);
-                            accountExists = true;                                                        
-                        }
-                        else
-                        {
-                            System.Console.WriteLine("Account creation failed: {0} - Reason: {1}", createAccountCommandResult.Status, createAccountCommandResult.Reason != null ? createAccountCommandResult.Reason.Description : "None");
-                        }
+                        clientCertificate = certificates[0];
+                        accountExists = true;
                     }
                     else
                     {
-                        System.Console.Write("Could not connect as a guest.");
+                        System.Console.Write(string.Format("Client certificate not found for '{0}'", identity.ToString()));
+                        password = System.Console.ReadLine();
                     }
-
                 }
                 else
                 {
-                    accountExists = true;
+                    System.Console.Write("Enter the password: ");
+                    password = System.Console.ReadLine();
+
+
+                    System.Console.Write("New (N) or Existing (E) account (Enter for E): ");
+                    var createAccount = System.Console.ReadLine();
+
+
+                    if (createAccount.ToUpper().Equals("N"))
+                    {
+                        System.Console.WriteLine("Connecting in Guest mode...");
+
+                        if (client.ConnectAsGuestAsync(identity.Domain, CancellationToken.None).Result)
+                        {
+                            System.Console.WriteLine("Connected. Creating the account...");
+
+                            // Creates the account
+                            var account = new Account()
+                            {
+                                Password = password.ToBase64()
+                            };
+
+                            var createAccountCommand = new Command()
+                            {
+                                From = new Node()
+                                {
+                                    Name = identity.Name,
+                                    Domain = identity.Domain
+                                },
+                                Pp = client.Channel.LocalNode,
+                                Method = CommandMethod.Set,
+                                Resource = new Account()
+                                {
+                                    Password = password.ToBase64()
+                                }
+                            };
+
+                            client.Channel.SendCommandAsync(createAccountCommand).Wait();
+                            var createAccountCommandResult = client.Channel.ReceiveCommandAsync(cancellationTokenSource.Token).Result;
+
+                            if (createAccountCommandResult.Status == CommandStatus.Success)
+                            {
+                                System.Console.WriteLine("Account created. Closing the session...");
+
+                                client.Channel.SendFinishingSessionAsync().Wait();
+                                client.Dispose();
+
+                                client = new ConsoleClient(uri);
+                                accountExists = true;
+                            }
+                            else
+                            {
+                                System.Console.WriteLine("Account creation failed: {0} - Reason: {1}", createAccountCommandResult.Status, createAccountCommandResult.Reason != null ? createAccountCommandResult.Reason.Description : "None");
+                            }
+                        }
+                        else
+                        {
+                            System.Console.Write("Could not connect as a guest.");
+                        }
+
+                    }
+                    else
+                    {
+                        accountExists = true;
+                    }
                 }
+
                 
-                if (accountExists && 
-                    client.ConnectAsync(identity, password, CancellationToken.None).Result)
+                if (accountExists &&
+                    ((password != null && client.ConnectWithPasswordAsync(identity, password, CancellationToken.None).Result) || 
+                    (clientCertificate != null && client.ConnectWithCertificateAsync(identity, clientCertificate, CancellationToken.None).Result)))
                 {
                     var listenMessagesTask = client.ReceiveMessagesAsync(cancellationTokenSource.Token);                   
                     listenMessagesTask

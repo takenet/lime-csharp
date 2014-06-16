@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -54,7 +55,7 @@ namespace Lime.Client.Console
 
             var resultSession = await Channel.EstablishSessionAsync(
                 c => c.First(),
-                e => e.First(),
+                e => SessionEncryption.TLS,
                 identity,
                 (s, r) => new GuestAuthentication(),
                 Environment.MachineName,
@@ -69,7 +70,7 @@ namespace Lime.Client.Console
             return true;
         }
 
-        public async Task<bool> ConnectAsync(Identity identity, string password, CancellationToken cancellationToken)
+        public async Task<bool> ConnectWithPasswordAsync(Identity identity, string password, CancellationToken cancellationToken)
         {
             var tcpClient = new TcpClient();
 
@@ -92,7 +93,7 @@ namespace Lime.Client.Console
 
             var resultSession = await Channel.EstablishSessionAsync(
                 c => c.First(),
-                e => e.First(),
+                e => SessionEncryption.TLS,
                 identity,
                 (s, r) => { var auth = new PlainAuthentication(); auth.SetToBase64Password(password); return auth; },
                 Environment.MachineName,
@@ -106,6 +107,47 @@ namespace Lime.Client.Console
 
             return true;
         }
+
+        public async Task<bool> ConnectWithCertificateAsync(Identity identity, X509Certificate2 clientCertificate, CancellationToken cancellationToken)
+        {
+            var tcpClient = new TcpClient();
+
+#if DEBUG
+            ITraceWriter traceWriter = new DebugTraceWriter("Client");
+#else
+            ITraceWriter traceWriter = new FileTraceWriter("client.log");
+#endif
+
+            var transport = new TcpTransport(
+                new TcpClientAdapter(tcpClient),
+                new EnvelopeSerializer(),
+                hostName: _clientUri.Host,
+                clientCertificate: clientCertificate,
+                traceWriter: traceWriter
+                );
+
+            Channel = new ClientChannel(transport, TimeSpan.FromSeconds(60), autoReplyPings: true, autoNotifyReceipt: true);
+
+            await Channel.Transport.OpenAsync(_clientUri, cancellationToken);
+
+            var resultSession = await Channel.EstablishSessionAsync(
+                c => c.First(),
+                e => SessionEncryption.TLS,
+                identity,
+                (s, r) => new TransportAuthentication(),
+                Environment.MachineName,
+                SessionMode.Node,
+                cancellationToken);
+
+            if (resultSession.State != SessionState.Established)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+
 
         public async Task ReceiveMessagesAsync(CancellationToken cancellationToken)
         {

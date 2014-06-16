@@ -1,5 +1,6 @@
 ﻿using Lime.Protocol;
 using Lime.Protocol.Network;
+using Lime.Protocol.Security;
 using Lime.Protocol.Serialization;
 using System;
 using System.Collections.Generic;
@@ -23,7 +24,7 @@ namespace Lime.Protocol.Tcp
     /// Provides the messaging protocol
     /// transport for TCP connections
     /// </summary>
-    public class TcpTransport : TransportBase, ITransport
+    public class TcpTransport : TransportBase, ITransport, IAuthenticatableTransport
     {
         public const int DEFAULT_BUFFER_SIZE = 8192;
 
@@ -34,6 +35,7 @@ namespace Lime.Protocol.Tcp
         private readonly IEnvelopeSerializer _envelopeSerializer;
         private readonly ITraceWriter _traceWriter;
         private X509Certificate2 _serverCertificate;
+        private X509Certificate2 _clientCertificate;
         private string _hostName;
 
         private SemaphoreSlim _receiveSemaphore;
@@ -51,8 +53,8 @@ namespace Lime.Protocol.Tcp
         /// <param name="hostName">Name of the host.</param>
         /// <param name="bufferSize">Size of the buffer.</param>
         /// <param name="traceWriter">The trace writer.</param>
-        public TcpTransport(int bufferSize = DEFAULT_BUFFER_SIZE, ITraceWriter traceWriter = null)
-            : this(new EnvelopeSerializer(), bufferSize, traceWriter)
+        public TcpTransport(X509Certificate2 clientCertificate = null, int bufferSize = DEFAULT_BUFFER_SIZE, ITraceWriter traceWriter = null)
+            : this(new EnvelopeSerializer(), clientCertificate, bufferSize, traceWriter)
         {
 
         }
@@ -65,8 +67,8 @@ namespace Lime.Protocol.Tcp
         /// <param name="hostName">Name of the host.</param>
         /// <param name="bufferSize">Size of the buffer.</param>
         /// <param name="traceWriter">The trace writer.</param>
-        public TcpTransport(IEnvelopeSerializer envelopeSerializer, int bufferSize = DEFAULT_BUFFER_SIZE, ITraceWriter traceWriter = null)
-            : this(new TcpClientAdapter(new TcpClient()), envelopeSerializer, null, null, bufferSize, traceWriter)
+        public TcpTransport(IEnvelopeSerializer envelopeSerializer, X509Certificate2 clientCertificate = null, int bufferSize = DEFAULT_BUFFER_SIZE, ITraceWriter traceWriter = null)
+            : this(new TcpClientAdapter(new TcpClient()), envelopeSerializer, null, clientCertificate, null, bufferSize, traceWriter)
         {
 
         }
@@ -79,8 +81,8 @@ namespace Lime.Protocol.Tcp
         /// <param name="hostName">Name of the host.</param>
         /// <param name="bufferSize">Size of the buffer.</param>
         /// <param name="traceWriter">The trace writer.</param>
-        public TcpTransport(ITcpClient tcpClient, IEnvelopeSerializer envelopeSerializer, string hostName, int bufferSize = DEFAULT_BUFFER_SIZE, ITraceWriter traceWriter = null)
-            : this(tcpClient, envelopeSerializer, null, hostName, bufferSize, traceWriter)
+        public TcpTransport(ITcpClient tcpClient, IEnvelopeSerializer envelopeSerializer, string hostName, X509Certificate2 clientCertificate = null, int bufferSize = DEFAULT_BUFFER_SIZE, ITraceWriter traceWriter = null)
+            : this(tcpClient, envelopeSerializer, null, clientCertificate, hostName, bufferSize, traceWriter)
 
         {
 
@@ -96,12 +98,12 @@ namespace Lime.Protocol.Tcp
         /// <param name="bufferSize">Size of the buffer.</param>
         /// <param name="traceWriter">The trace writer.</param>
         internal TcpTransport(ITcpClient tcpClient, IEnvelopeSerializer envelopeSerializer, X509Certificate2 serverCertificate, int bufferSize = DEFAULT_BUFFER_SIZE, ITraceWriter traceWriter = null)
-            : this(tcpClient, envelopeSerializer, serverCertificate, null, bufferSize, traceWriter)
+            : this(tcpClient, envelopeSerializer, serverCertificate, null, null, bufferSize, traceWriter)
         {
 
         }
 
-        private TcpTransport(ITcpClient tcpClient, IEnvelopeSerializer envelopeSerializer, X509Certificate2 serverCertificate, string hostName, int bufferSize, ITraceWriter traceWriter)
+        private TcpTransport(ITcpClient tcpClient, IEnvelopeSerializer envelopeSerializer, X509Certificate2 serverCertificate, X509Certificate2 clientCertificate, string hostName, int bufferSize, ITraceWriter traceWriter)
         {
             if (tcpClient == null)
             {
@@ -127,6 +129,7 @@ namespace Lime.Protocol.Tcp
             _sendSemaphore = new SemaphoreSlim(1);
 
             _serverCertificate = serverCertificate;
+            _clientCertificate = clientCertificate;
         }
 
         #endregion
@@ -354,14 +357,14 @@ namespace Lime.Protocol.Tcp
                                 sslStream = new SslStream(
                                     _stream,
                                     false,
-                                    null,
+                                    new RemoteCertificateValidationCallback(ValidateClientCertificate),
                                     null,
                                     EncryptionPolicy.RequireEncryption);
 
                                 await sslStream
                                     .AuthenticateAsServerAsync(
                                         _serverCertificate,
-                                        false,
+                                        true,
                                         SslProtocols.Tls,
                                         false)
                                     .WithCancellation(cancellationToken)
@@ -375,14 +378,22 @@ namespace Lime.Protocol.Tcp
                                     throw new InvalidOperationException("The hostname is mandatory for TLS client encryption support");
                                 }
 
-                                sslStream = new SslStream(_stream,
+                                sslStream = new SslStream(
+                                    _stream,
                                     false,
                                      new RemoteCertificateValidationCallback(ValidateServerCertificate));
+
+                                X509CertificateCollection clientCertificates = null;
+
+                                if (_clientCertificate != null)
+                                {
+                                    clientCertificates = new X509CertificateCollection(new[] { _clientCertificate });
+                                }
 
                                 await sslStream
                                     .AuthenticateAsClientAsync(
                                         _hostName,
-                                        null,
+                                        clientCertificates,
                                         SslProtocols.Tls,
                                         false)
                                     .WithCancellation(cancellationToken)
@@ -412,15 +423,72 @@ namespace Lime.Protocol.Tcp
 
         #endregion
 
+        #region IAuthenticatableTransport Members
+
+        /// <summary>
+        /// Authenticate the identity
+        /// in the transport layer
+        /// </summary>
+        /// <param name="identity">The identity to be authenticated</param>
+        /// <returns>
+        /// Indicates if the identity is authenticated
+        /// </returns>
+        public Task<bool> AuthenticateAsync(Identity identity)
+        {
+            var sslStream = _stream as SslStream;
+
+            if (sslStream != null &&
+                sslStream.IsAuthenticated &&
+                sslStream.RemoteCertificate != null)
+            {
+                var certificate = new X509Certificate2(sslStream.RemoteCertificate);
+
+                var identityName = certificate.GetNameInfo(X509NameType.EmailName, false);
+                Identity certificateIdentity;
+
+                if (Identity.TryParse(identityName, out certificateIdentity) &&
+                    certificateIdentity.Equals(identity))
+                {
+                    return Task.FromResult(true);
+                }                
+            }
+
+            return Task.FromResult(false);
+        }
+
+        #endregion
+
         #region Private methods
 
-        private static bool ValidateServerCertificate(
-              object sender,
-              X509Certificate certificate,
-              X509Chain chain,
-              SslPolicyErrors sslPolicyErrors)
+        private bool ValidateServerCertificate(
+            object sender,
+            X509Certificate certificate,
+            X509Chain chain,
+            SslPolicyErrors sslPolicyErrors)
         {
+#if DEBUG
+            return true;
+#else
             return sslPolicyErrors == SslPolicyErrors.None;
+#endif
+        }
+
+        private bool ValidateClientCertificate(
+            object sender,
+            X509Certificate certificate,
+            X509Chain chain,
+            SslPolicyErrors sslPolicyErrors)
+        {
+            // The client certificate can be null 
+            // but if present, must be valid
+            if (certificate == null)
+            {
+                return true;
+            }
+            else
+            {
+                return sslPolicyErrors == SslPolicyErrors.None;
+            }
         }
 
         #region Buffer fields
@@ -497,6 +565,6 @@ namespace Lime.Protocol.Tcp
             return false;
         }
 
-        #endregion        
+        #endregion
     }
 }

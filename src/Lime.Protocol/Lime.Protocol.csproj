@@ -60,6 +60,8 @@
     <Compile Include="JsonDocument.cs" />
     <Compile Include="Network\LimeException.cs" />
     <Compile Include="Resources\Receipt.cs" />
+    <Compile Include="Security\TransportAuthentication.cs" />
+    <Compile Include="Security\IAuthenticatableTransport.cs" />
     <Compile Include="Serialization\DictionaryJsonWriter.cs" />
     <Compile Include="Serialization\EnvelopeSerializer.cs" />
     <Compile Include="Serialization\TextJsonWriter.cs" />
