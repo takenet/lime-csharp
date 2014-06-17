@@ -5,6 +5,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Runtime.InteropServices;
 using System.Security;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -137,31 +138,6 @@ namespace Lime.Protocol
         }
 
         /// <summary>
-        /// Gets the default value of a Type        
-        /// </summary>
-        /// <a href="http://stackoverflow.com/questions/325426/programmatic-equivalent-of-defaulttype"/>
-        /// <param name="type"></param>
-        /// <returns></returns>
-        public static object GetDefaultValue(this Type type)
-        {
-            // Validate parameters.
-            if (type == null) throw new ArgumentNullException("type");
-
-            // We want an Func<object> which returns the default.
-            // Create that expression here.
-            Expression<Func<object>> e = Expression.Lambda<Func<object>>(
-                // Have to convert to object.
-                Expression.Convert(
-                // The default value, always get what the *code* tells us.
-                    Expression.Default(type), typeof(object)
-                )
-            );
-
-            // Compile and return the value.
-            return e.Compile()();
-        }
-
-        /// <summary>
         /// Creates a CancellationToken
         /// with the specified delay
         /// </summary>
@@ -171,6 +147,33 @@ namespace Lime.Protocol
         {
             var cts = new CancellationTokenSource(delay);
             return cts.Token;
+        }
+
+        /// <summary>
+        /// Gets the identity value from 
+        /// the certificate subject
+        /// </summary>
+        /// <param name="certificate"></param>
+        /// <param name="identity"></param>
+        /// <returns></returns>
+        public static Identity GetIdentity(this X509Certificate2 certificate)
+        {
+            if (certificate == null)
+            {
+                throw new ArgumentNullException("certificate");
+            }
+
+            Identity identity = null;
+
+            var identityName = certificate.GetNameInfo(X509NameType.EmailName, false);
+
+            if (!string.IsNullOrWhiteSpace(identityName))
+            {
+                Identity.TryParse(identityName, out identity);
+                return identity;
+            }
+
+            return identity;
         }
 
     }

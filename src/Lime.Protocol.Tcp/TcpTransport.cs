@@ -435,22 +435,25 @@ namespace Lime.Protocol.Tcp
         /// </returns>
         public Task<bool> AuthenticateAsync(Identity identity)
         {
+            if (identity == null)
+            {
+                throw new ArgumentNullException("identity");
+            }
+
             var sslStream = _stream as SslStream;
 
             if (sslStream != null &&
                 sslStream.IsAuthenticated &&
                 sslStream.RemoteCertificate != null)
-            {
+            {                
                 var certificate = new X509Certificate2(sslStream.RemoteCertificate);
+                var certificateIdentity = certificate.GetIdentity();
 
-                var identityName = certificate.GetNameInfo(X509NameType.EmailName, false);
-                Identity certificateIdentity;
-
-                if (Identity.TryParse(identityName, out certificateIdentity) &&
+                if (certificateIdentity != null &&
                     certificateIdentity.Equals(identity))
                 {
                     return Task.FromResult(true);
-                }                
+                }
             }
 
             return Task.FromResult(false);

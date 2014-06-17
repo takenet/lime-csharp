@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
@@ -10,6 +11,30 @@ namespace Lime.Protocol.Serialization
 {
     public static class SerializationExtensions
     {
+        /// <summary>
+        /// Gets the default value of a Type        
+        /// </summary>
+        /// <a href="http://stackoverflow.com/questions/325426/programmatic-equivalent-of-defaulttype"/>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        public static object GetDefaultValue(this Type type)
+        {
+            // Validate parameters.
+            if (type == null) throw new ArgumentNullException("type");
+
+            // We want an Func<object> which returns the default.
+            // Create that expression here.
+            Expression<Func<object>> e = Expression.Lambda<Func<object>>(
+                // Have to convert to object.
+                Expression.Convert(
+                // The default value, always get what the *code* tells us.
+                    Expression.Default(type), typeof(object)
+                )
+            );
+
+            // Compile and return the value.
+            return e.Compile()();
+        }
 
         public static string RemoveCrLf(this string value)
         {
@@ -96,7 +121,6 @@ namespace Lime.Protocol.Serialization
             }
             return sb.ToString();
         }
-
 
         private const int LowerCaseOffset = 'a' - 'A';
         
