@@ -312,7 +312,6 @@ namespace Lime.Protocol.Network
         /// </summary>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns></returns>
-        /// <exception cref="System.NotImplementedException"></exception>
         public virtual async Task<Session> ReceiveSessionAsync(CancellationToken cancellationToken)
         {
             if (this.State == SessionState.Finished)

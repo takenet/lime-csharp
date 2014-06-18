@@ -7,12 +7,13 @@
     <ProjectGuid>{0CFEE3A4-F914-4C45-BE13-A344C9CFA134}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Lime.Protocol.Net45</RootNamespace>
-    <AssemblyName>Lime.Protocol.Net45</AssemblyName>
+    <RootNamespace>Lime.Protocol</RootNamespace>
+    <AssemblyName>Lime.Protocol</AssemblyName>
     <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\..\</SolutionDir>
     <RestorePackages>true</RestorePackages>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
