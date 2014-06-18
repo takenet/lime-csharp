@@ -40,9 +40,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)Network\TransportBase.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Node.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Notification.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)obj\Debug\TemporaryGeneratedFile_036C0B5B-1481-4323-8D20-8F5ADCB23D92.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)obj\Debug\TemporaryGeneratedFile_5937a670-0e60-4077-877b-f7221da3dda1.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)obj\Debug\TemporaryGeneratedFile_E7A71F73-0F8D-4B9B-B56E-8E70B10BC5D3.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Reason.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ReasonCodes.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Resources\Account.cs" />
@@ -79,17 +76,5 @@
     <Compile Include="$(MSBuildThisFileDirectory)Util\AsyncQueue.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Util\DeferralManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Util\IAsyncQueue.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="$(MSBuildThisFileDirectory)obj\Debug\DesignTimeResolveAssemblyReferencesInput.cache" />
-    <None Include="$(MSBuildThisFileDirectory)obj\Debug\Lime.Protocol.csprojResolveAssemblyReference.cache" />
-    <None Include="$(MSBuildThisFileDirectory)obj\Debug\Lime.Protocol.dll" />
-    <None Include="$(MSBuildThisFileDirectory)obj\Debug\Lime.Protocol.pdb" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="$(MSBuildThisFileDirectory)obj\Debug\Lime.Protocol.csproj.FileListAbsolute.txt" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="$(MSBuildThisFileDirectory)obj\Debug\TempPE\" />
   </ItemGroup>
 </Project>

@@ -89,6 +89,7 @@
       </ItemGroup>
     </When>
   </Choose>
+  <Import Project="..\Lime.Protocol.Tcp\Lime.Protocol.Tcp\Lime.Protocol.Tcp.projitems" Label="Shared" Condition="Exists('..\Lime.Protocol.Tcp\Lime.Protocol.Tcp\Lime.Protocol.Tcp.projitems')" />
   <Import Project="$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets" Condition="Exists('$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets')" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
