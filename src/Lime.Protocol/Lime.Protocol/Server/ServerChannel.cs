@@ -341,10 +341,21 @@ namespace Lime.Protocol.Server
             await base.SendSessionAsync(session).ConfigureAwait(false);
             await base.Transport.CloseAsync(CancellationToken.None).ConfigureAwait(false);
         }
+
+        /// <summary>
+        /// Receives a session
+        /// from the remote node.
+        /// Avoid to use this method directly. Instead,
+        /// use the Server or Client channel methods.
+        /// </summary>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns></returns>
         public override async Task<Session> ReceiveSessionAsync(CancellationToken cancellationToken)
         {
             var session = await base.ReceiveSessionAsync(cancellationToken).ConfigureAwait(false);
-            if(session.State != SessionState.New && session.Id != this.SessionId)
+
+            if (session.State != SessionState.New && 
+                session.Id != this.SessionId)
             {
                 await this.SendFailedSessionAsync(new Reason()
                 {
@@ -352,8 +363,8 @@ namespace Lime.Protocol.Server
                     Description = "Invalid session id"
                 });
             }
-            return session;
 
+            return session;
         }
 
         #endregion
