@@ -154,27 +154,26 @@ namespace Lime.Protocol
         /// the certificate subject
         /// </summary>
         /// <param name="certificate"></param>
-        /// <param name="identity"></param>
         /// <returns></returns>
         public static Identity GetIdentity(this X509Certificate2 certificate)
         {
             if (certificate == null)
             {
                 throw new ArgumentNullException("certificate");
-            }
+            }            
+
+            var identityName = certificate.GetNameInfo(
+                X509NameType.SimpleName, 
+                false);
 
             Identity identity = null;
-
-            var identityName = certificate.GetNameInfo(X509NameType.EmailName, false);
 
             if (!string.IsNullOrWhiteSpace(identityName))
             {
                 Identity.TryParse(identityName, out identity);
-                return identity;
             }
 
             return identity;
         }
-
     }
 }

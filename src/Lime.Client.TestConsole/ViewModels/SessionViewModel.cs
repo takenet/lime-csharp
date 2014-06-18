@@ -363,6 +363,26 @@ namespace Lime.Client.TestConsole.ViewModels
                             if (certificates.Count > 0)
                             {
                                 clientCertificate = certificates[0];
+
+                                var identity = clientCertificate.GetIdentity();
+
+                                if (identity != null)
+                                {
+                                    var fromVariableViewModel = this.Variables.FirstOrDefault(v => v.Name.Equals("from", StringComparison.OrdinalIgnoreCase));
+
+                                    if (fromVariableViewModel == null)
+                                    {
+                                        fromVariableViewModel = new VariableViewModel()
+                                        {
+                                            Name = "from"
+                                        };
+
+                                        this.Variables.Add(fromVariableViewModel);
+                                    }
+
+                                    fromVariableViewModel.Value = identity.ToString();
+                                }
+
                             }
                             else
                             {
