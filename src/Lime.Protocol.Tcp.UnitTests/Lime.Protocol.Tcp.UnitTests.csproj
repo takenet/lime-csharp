@@ -8,7 +8,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Lime.Protocol.Tcp.UnitTests</RootNamespace>
     <AssemblyName>Lime.Protocol.Tcp.UnitTests</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{3AC096D0-A1C2-E12C-1390-A8335801FDAB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
@@ -18,6 +18,7 @@
     <TestProjectType>UnitTest</TestProjectType>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
     <RestorePackages>true</RestorePackages>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -62,13 +63,9 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Lime.Protocol.Tcp\Lime.Protocol.Tcp.csproj">
-      <Project>{0ee0db06-832f-4d33-96a8-0d2703af27a9}</Project>
-      <Name>Lime.Protocol.Tcp</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Lime.Protocol\Lime.Protocol.csproj">
-      <Project>{bd98c983-6dad-4eb6-b728-4619c7aca6e9}</Project>
-      <Name>Lime.Protocol</Name>
+    <ProjectReference Include="..\Lime.Protocol\Lime.Protocol.Net45\Lime.Protocol.Net45.csproj">
+      <Project>{0cfee3a4-f914-4c45-be13-a344c9cfa134}</Project>
+      <Name>Lime.Protocol.Net45</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

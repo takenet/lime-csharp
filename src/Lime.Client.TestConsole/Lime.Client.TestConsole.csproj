@@ -221,13 +221,9 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Lime.Protocol.Tcp\Lime.Protocol.Tcp.csproj">
-      <Project>{0ee0db06-832f-4d33-96a8-0d2703af27a9}</Project>
-      <Name>Lime.Protocol.Tcp</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Lime.Protocol\Lime.Protocol.csproj">
-      <Project>{bd98c983-6dad-4eb6-b728-4619c7aca6e9}</Project>
-      <Name>Lime.Protocol</Name>
+    <ProjectReference Include="..\Lime.Protocol\Lime.Protocol.Net45\Lime.Protocol.Net45.csproj">
+      <Project>{0cfee3a4-f914-4c45-be13-a344c9cfa134}</Project>
+      <Name>Lime.Protocol.Net45</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
