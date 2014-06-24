@@ -136,6 +136,19 @@ namespace Lime.Client.TestConsole.ViewModels
         }
 
 
+        private SessionState _sessionState;
+
+        public SessionState SessionState
+        {
+            get { return _sessionState; }
+            set 
+            { 
+                _sessionState = value;
+                RaisePropertyChanged(() => SessionState);
+            }
+        }
+
+
         private string _inputJson;
 
         public string InputJson

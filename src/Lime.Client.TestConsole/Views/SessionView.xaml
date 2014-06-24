@@ -9,8 +9,8 @@
              mc:Ignorable="d" 
              xmlns:i="clr-namespace:System.Windows.Interactivity;assembly=System.Windows.Interactivity"                 
              d:DataContext="{d:DesignData /DesignData/SessionDesignData.xaml}"   
-             d:DesignHeight="700" 
-             d:DesignWidth="700">
+             d:DesignHeight="768" 
+             d:DesignWidth="1024">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="300*" />            
@@ -49,7 +49,9 @@
                 <StackPanel Grid.Row="1" Grid.Column="0"  Margin="0,5" Orientation="Horizontal" Grid.ColumnSpan="2">
                     <Button Content="_Open" Command="{Binding OpenTransportCommand}" />
                     <Button Content="_Close" Command="{Binding CloseTransportCommand}" />
-                    <xctk:WatermarkTextBox VerticalAlignment="Center" Watermark="Client certificate thumbprint" Width="180" Text="{Binding ClientCertificateThumbprint, UpdateSourceTrigger=PropertyChanged}" />
+                    <xctk:WatermarkTextBox Margin="0,0,5,0"  VerticalAlignment="Center" Watermark="Client certificate thumbprint" Width="180" Text="{Binding ClientCertificateThumbprint, UpdateSourceTrigger=PropertyChanged}" />
+                    <TextBlock Margin="0,0,5,0" VerticalAlignment="Center" Text="Last session state" />
+                    <TextBox VerticalAlignment="Center" Width="80" IsReadOnly="True" Text="{Binding SessionState}" />
                 </StackPanel>
             </Grid>
 
