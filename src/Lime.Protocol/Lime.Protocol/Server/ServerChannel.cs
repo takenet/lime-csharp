@@ -290,11 +290,6 @@ namespace Lime.Protocol.Server
         /// <exception cref="System.InvalidOperationException"></exception>
         public async Task SendFinishedSessionAsync()
         {
-            if (base.State != SessionState.Established)
-            {
-                throw new InvalidOperationException(string.Format("Cannot finish a session in the '{0}' state", this.State));
-            }
-
             base.State = SessionState.Finished;
 
             var session = new Session()
