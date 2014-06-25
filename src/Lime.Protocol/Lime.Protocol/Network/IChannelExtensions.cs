@@ -148,9 +148,13 @@ namespace Lime.Protocol.Network
             {
                 return (TResource)responseCommand.Resource;
             }
+            else if (responseCommand.Reason != null)
+            {
+                throw new LimeException(responseCommand.Reason.Code, responseCommand.Reason.Description);
+            }
             else
             {
-                throw new LimeException(responseCommand.Reason);
+                throw new InvalidOperationException("An invalid command response was received");
             }
         }
 
@@ -200,10 +204,16 @@ namespace Lime.Protocol.Network
             var responseCommand = await ProcessCommandAsync(channel, requestCommand, cancellationToken).ConfigureAwait(false);
             if (responseCommand.Status != CommandStatus.Success)
             {
-                throw new LimeException(responseCommand.Reason);
+                if (responseCommand.Reason != null)
+                {
+                    throw new LimeException(responseCommand.Reason.Code, responseCommand.Reason.Description);
+                }
+                else
+                {
+                    throw new InvalidOperationException("An invalid command response was received");
+                }
             }
         }
-
 
         /// <summary>
         /// Composes a command envelope with a
@@ -288,9 +298,13 @@ namespace Lime.Protocol.Network
             {
                 return (TResource)responseCommand.Resource;
             }
+            else if (responseCommand.Reason != null)
+            {
+                throw new LimeException(responseCommand.Reason.Code, responseCommand.Reason.Description);
+            }
             else
             {
-                throw new LimeException(responseCommand.Reason);
+                throw new InvalidOperationException("An invalid command response was received");
             }
         }
 

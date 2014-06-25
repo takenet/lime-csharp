@@ -31,14 +31,9 @@ namespace Lime.Protocol.Network
         /// <param name="reason">The reason.</param>
         /// <param name="innerException">The inner exception.</param>
         /// <exception cref="System.ArgumentNullException">reason</exception>
-        public LimeException(Reason reason, Exception innerException = null)
+        private LimeException(Reason reason, Exception innerException = null)
             : base(reason.Description, innerException)
         {
-            if (reason == null)
-            {
-                throw new ArgumentNullException("reason");                
-            }
-
             this.Reason = reason;
         }
 
