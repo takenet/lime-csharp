@@ -280,6 +280,19 @@ namespace Lime.Protocol.Serialization
             return e.Compile()();
         }
 
+                /// <summary>
+        /// Build a delegate to
+        /// get a property value
+        /// of a class
+        /// </summary>
+        /// <a href="http://stackoverflow.com/questions/10820453/reflection-performance-create-delegate-properties-c"/>
+        /// <param name="methodInfo"></param>
+        /// <returns></returns>
+        public static Func<object, object> BuildGetAccessor(PropertyInfo propertyInfo)
+        {
+            return BuildGetAccessor(propertyInfo.GetGetMethod());
+        }
+
         /// <summary>
         /// Build a delegate to
         /// get a property value
@@ -307,6 +320,19 @@ namespace Lime.Protocol.Serialization
                     obj);
 
             return expr.Compile();
+        }
+
+                /// <summary>
+        /// Build a delegate to
+        /// set a property value
+        /// of a class
+        /// </summary>
+        /// <a href="http://stackoverflow.com/questions/10820453/reflection-performance-create-delegate-properties-c"/>
+        /// <param name="methodInfo"></param>
+        /// <returns></returns>
+        public static Action<object, object> BuildSetAccessor(PropertyInfo propertyInfo)
+        {
+            return BuildSetAccessor(propertyInfo.GetSetMethod());
         }
 
         /// <summary>

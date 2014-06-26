@@ -210,6 +210,13 @@ namespace Lime.Protocol.Network
                 }
                 else
                 {
+#if DEBUG
+                    if (requestCommand == responseCommand)
+                    {
+                        throw new InvalidOperationException("The request and the response are the same instance");
+                    }
+#endif
+
                     throw new InvalidOperationException("An invalid command response was received");
                 }
             }
@@ -330,7 +337,15 @@ namespace Lime.Protocol.Network
             try
             {
                 await channel.SendCommandAsync(requestCommand).ConfigureAwait(false);
-                return await channel.ReceiveCommandAsync(cancellationToken).ConfigureAwait(false);
+                var responseCommand = await channel.ReceiveCommandAsync(cancellationToken).ConfigureAwait(false);
+
+                if (responseCommand != null &&
+                    responseCommand.Id != requestCommand.Id)
+                {
+                    throw new InvalidOperationException(string.Format("A different command id response was received. Expected was '{0}' but received was '{1}'.", requestCommand.Id, responseCommand.Id));
+                }
+
+                return responseCommand;
             }
             finally
             {
