@@ -536,11 +536,17 @@ namespace Lime.Protocol.UnitTests.Server
 
         [TestMethod]
         [TestCategory("SendFinishedSessionAsync")]
-        [ExpectedException(typeof(InvalidOperationException))]
-        public async Task SendFinishedSessionAsync_NewState_ThrowsInvalidOperationException()
+        public async Task SendFinishedSessionAsync_NewState_ClosesTransport()
         {
             var target = GetTarget();
             await target.SendFinishedSessionAsync();
+
+            _transport.Verify(
+                t => t.CloseAsync(
+                    It.IsAny<CancellationToken>()));
+
+            Assert.AreEqual(target.State, SessionState.Finished);
+
         }
 
         #endregion
