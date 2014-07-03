@@ -82,7 +82,7 @@ namespace Lime.Protocol
         /// The destination doesn't have an active 
         /// account
         /// </summary>
-        public const int AUTHORIZATION_DESTINATION_ACCOUNT_NOT_FOUND = 32;
+        public const int AUTHORIZATION_DESTINATION_ACCOUNT_NOT_FOUND = 33;
         /// <summary>
         /// General routing error
         /// </summary>
