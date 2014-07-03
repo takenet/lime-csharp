@@ -44,6 +44,12 @@ namespace Lime.Client.TestConsole.Macros
                 if (transport.Encryption != session.Encryption.Value)
                 {
                     await transport.SetEncryptionAsync(session.Encryption.Value, cancellationToken);
+
+                    if (session.Encryption.Value != SessionEncryption.None)
+                    {
+                        sessionViewModel.CanSendAsRaw = false;
+                    }
+
                 }
             }
         }

@@ -28,19 +28,18 @@ namespace Lime.Protocol.Tcp
     {
         public const int DEFAULT_BUFFER_SIZE = 8192;
 
-        #region Private fields
+        #region Fields
 
-        private ITcpClient _tcpClient;
         private Stream _stream;
+        private readonly SemaphoreSlim _receiveSemaphore;
+        private readonly SemaphoreSlim _sendSemaphore;
+        private readonly ITcpClient _tcpClient;        
         private readonly IEnvelopeSerializer _envelopeSerializer;
         private readonly ITraceWriter _traceWriter;
-        private X509Certificate2 _serverCertificate;
-        private X509Certificate2 _clientCertificate;
+        private readonly X509Certificate2 _serverCertificate;
+        private readonly X509Certificate2 _clientCertificate;
         private string _hostName;
-
-        private SemaphoreSlim _receiveSemaphore;
-        private SemaphoreSlim _sendSemaphore;
-
+        
         #endregion
 
         #region Constructor

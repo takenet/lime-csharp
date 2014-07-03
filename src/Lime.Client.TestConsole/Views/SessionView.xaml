@@ -37,6 +37,7 @@
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
@@ -50,8 +51,18 @@
                     <Button Content="_Open" Command="{Binding OpenTransportCommand}" />
                     <Button Content="_Close" Command="{Binding CloseTransportCommand}" />
                     <xctk:WatermarkTextBox Margin="0,0,5,0"  VerticalAlignment="Center" Watermark="Client certificate thumbprint" Width="180" Text="{Binding ClientCertificateThumbprint, UpdateSourceTrigger=PropertyChanged}" />
+
+                </StackPanel>
+
+                <StackPanel Grid.Row="2" Grid.Column="0"  Margin="0,5" Orientation="Horizontal" Grid.ColumnSpan="2">
                     <TextBlock Margin="0,0,5,0" VerticalAlignment="Center" Text="Last session state" />
-                    <TextBox VerticalAlignment="Center" Width="80" IsReadOnly="True" Text="{Binding SessionState}" />
+                    <TextBox Margin="0,0,5,0" VerticalAlignment="Center" Width="80" IsReadOnly="True" Text="{Binding LastSessionState}" />
+                    <TextBlock Margin="0,0,5,0" VerticalAlignment="Center" Text="Last notification" />
+                    <TextBox Margin="0,0,5,0" VerticalAlignment="Center" Width="80" IsReadOnly="True" Text="{Binding LastNotificationEvent}" />
+                    <TextBlock Margin="0,0,5,0" VerticalAlignment="Center" Text="Local node" />
+                    <TextBox Margin="0,0,5,0" VerticalAlignment="Center" Width="150" IsReadOnly="True" Text="{Binding LocalNode, Converter={StaticResource ToStringConverter}}" />
+                    <TextBlock Margin="0,0,5,0" VerticalAlignment="Center" Text="Remote node" />
+                    <TextBox Margin="0,0,5,0" VerticalAlignment="Center" Width="150" IsReadOnly="True" Text="{Binding RemoteNode, Converter={StaticResource ToStringConverter}}" />
                 </StackPanel>
             </Grid>
 
@@ -62,7 +73,7 @@
                 </Grid.RowDefinitions>
 
                 <ScrollViewer ScrollChanged="ScrollViewer_ScrollChanged" PreviewMouseWheel="ScrollViewer_PreviewMouseWheel">
-                    <ListBox ItemsSource="{Binding Envelopes}">
+                    <ListBox ItemsSource="{Binding EnvelopesView}">
                         <ListBox.ItemContainerStyle>
                             <Style TargetType="ListBoxItem">
                                 <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
@@ -104,7 +115,7 @@
                     <Button Content="_Send" ToolTip="Sends the JSON through the transport" Command="{Binding SendCommand}" />
                     <CheckBox Margin="0,0,5,0" VerticalAlignment="Center" Content="Parse before send" IsChecked="{Binding ParseBeforeSend}" />
                     <CheckBox Margin="0,0,5,0" VerticalAlignment="Center" Content="Clear after sent" IsChecked="{Binding ClearAfterSent}" />
-                    <CheckBox VerticalAlignment="Center" Content="Send as raw" IsChecked="{Binding SendAsRaw}" />
+                    <CheckBox VerticalAlignment="Center" Content="Send as raw" IsChecked="{Binding SendAsRaw}" IsEnabled="{Binding CanSendAsRaw}" />
                 </StackPanel>
             </Grid>
 

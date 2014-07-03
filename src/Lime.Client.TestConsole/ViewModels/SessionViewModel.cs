@@ -12,6 +12,7 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Net.Sockets;
 using System.Reflection;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
@@ -24,7 +25,7 @@ using System.Windows.Threading;
 
 namespace Lime.Client.TestConsole.ViewModels
 {
-    public class SessionViewModel : ViewModelBase
+    public class SessionViewModel : ViewModelBase, ITraceWriter
     {
         #region Private Fields
 
@@ -70,6 +71,20 @@ namespace Lime.Client.TestConsole.ViewModels
         #endregion
 
         #region Data Properties
+
+        private ITcpClient _tcpClient;
+
+        public ITcpClient TcpClient
+        {
+            get { return _tcpClient; }
+            set 
+            { 
+                _tcpClient = value;
+                RaisePropertyChanged(() => TcpClient);
+            }
+        }
+
+
 
         private ITransport _transport;
 
@@ -136,15 +151,52 @@ namespace Lime.Client.TestConsole.ViewModels
         }
 
 
-        private SessionState _sessionState;
+        private SessionState _lastSessionState;
 
-        public SessionState SessionState
+        public SessionState LastSessionState
         {
-            get { return _sessionState; }
+            get { return _lastSessionState; }
             set 
             { 
-                _sessionState = value;
-                RaisePropertyChanged(() => SessionState);
+                _lastSessionState = value;
+                RaisePropertyChanged(() => LastSessionState);
+            }
+        }
+
+        private Node _localNode;
+        public Node LocalNode
+        {
+            get { return _localNode; }
+            set 
+            { 
+                _localNode = value;
+                RaisePropertyChanged(() => LocalNode);
+            }
+        }
+
+        private Node _remoteNode;
+
+        public Node RemoteNode
+        {
+            get { return _remoteNode; }
+            set 
+            { 
+                _remoteNode = value;
+                RaisePropertyChanged(() => RemoteNode);
+            }
+        }
+
+
+
+        private Event? _lastNotificationEvent;
+
+        public Event? LastNotificationEvent
+        {
+            get { return _lastNotificationEvent; }
+            set 
+            { 
+                _lastNotificationEvent = value;
+                RaisePropertyChanged(() => LastNotificationEvent);
             }
         }
 
@@ -208,8 +260,33 @@ namespace Lime.Client.TestConsole.ViewModels
             {
                 _envelopes = value;
                 RaisePropertyChanged(() => Envelopes);
+
+                if (_envelopes != null)
+                {
+                    EnvelopesView = CollectionViewSource.GetDefaultView(_envelopes);
+                    EnvelopesView.Filter = new Predicate<object>(o =>
+                    {
+                        var envelopeViewModel = o as EnvelopeViewModel;
+
+                        return envelopeViewModel != null &&
+                               (ShowRawValues || !envelopeViewModel.IsRaw);
+                    });
+                }
             }
         }
+
+        private ICollectionView _envelopesView;
+
+        public ICollectionView EnvelopesView
+        {
+            get { return _envelopesView; }
+            set 
+            { 
+                _envelopesView = value;
+                RaisePropertyChanged(() => EnvelopesView);
+            }
+        }
+
 
         private bool _showRawValues;
 
@@ -220,6 +297,11 @@ namespace Lime.Client.TestConsole.ViewModels
             { 
                 _showRawValues = value;
                 RaisePropertyChanged(() => ShowRawValues);
+
+                if (EnvelopesView != null)
+                {
+                    EnvelopesView.Refresh();
+                }
             }
         }
 
@@ -232,6 +314,18 @@ namespace Lime.Client.TestConsole.ViewModels
             {
                 _sendAsRaw = value;
                 RaisePropertyChanged(() => SendAsRaw);
+            }
+        }
+
+        private bool _canSendAsRaw;
+
+        public bool CanSendAsRaw
+        {
+            get { return _canSendAsRaw; }
+            set 
+            { 
+                _canSendAsRaw = value;
+                RaisePropertyChanged(() => CanSendAsRaw);
             }
         }
 
@@ -408,7 +502,14 @@ namespace Lime.Client.TestConsole.ViewModels
                         }                        
                     }
 
-                    Transport = new TcpTransport(clientCertificate: clientCertificate);
+                    TcpClient = new TcpClientAdapter(new TcpClient());
+
+                    Transport = new TcpTransport(
+                        TcpClient,
+                        new EnvelopeSerializer(),
+                        _hostUri.Host,
+                        clientCertificate: clientCertificate,
+                        traceWriter: this);
 
                     await Transport.OpenAsync(_hostUri, timeoutCancellationToken);
 
@@ -436,6 +537,7 @@ namespace Lime.Client.TestConsole.ViewModels
                     }, TaskScheduler.FromCurrentSynchronizationContext());
 
                     IsConnected = true;
+                    CanSendAsRaw = true;
 
                     AddStatusMessage("Connected");
 
@@ -584,7 +686,17 @@ namespace Lime.Client.TestConsole.ViewModels
                     var envelope = envelopeViewModel.Envelope;
                     envelopeViewModel.Direction = DataOperation.Send;
 
-                    await Transport.SendAsync(envelope, timeoutCancellationToken);
+                    if (SendAsRaw)
+                    {
+                        envelopeViewModel.IsRaw = true;
+                        var stream = TcpClient.GetStream();
+                        var envelopeBytes = Encoding.UTF8.GetBytes(envelopeViewModel.Json);
+                        await stream.WriteAsync(envelopeBytes, 0, envelopeBytes.Length, timeoutCancellationToken);
+                    }
+                    else
+                    {
+                        await Transport.SendAsync(envelope, timeoutCancellationToken);                        
+                    }
 
                     this.Envelopes.Add(envelopeViewModel);
 
@@ -788,6 +900,27 @@ namespace Lime.Client.TestConsole.ViewModels
 
         #endregion
 
+
+        #region ITraceWriter Members
+
+        public async Task TraceAsync(string data, DataOperation operation)
+        {
+            var envelopeViewModel = new EnvelopeViewModel()
+            {
+                IsRaw = true,
+                Json = data,
+                Direction = operation
+            };
+
+            await App.Current.Dispatcher.InvokeAsync(() => this.Envelopes.Add(envelopeViewModel));
+        }
+
+        public bool IsEnabled
+        {
+            get { return ShowRawValues; }
+        }
+
+        #endregion
     }
 
     public static class VariablesExtensions

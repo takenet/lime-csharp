@@ -3,7 +3,9 @@
                   xmlns:vm="clr-namespace:Lime.Client.TestConsole.ViewModels"
                   InputJson="{}{&quot;state&quot;:&quot;new&quot;}"
                   IsBusy="True"
-                  StatusMessage="Connecting...">
+                  StatusMessage="Connecting..."
+                  LastSessionState="Established"
+                  LastNotificationEvent="Dispatched">
     <vm:SessionViewModel.Envelopes>
         <vm:EnvelopeViewModel Direction="Send"
                               Json="{}{&quot;state&quot;:&quot;new&quot;}" />
@@ -29,7 +31,7 @@
     &quot;state&quot;: &quot;negotiating&quot;,    
     &quot;encryption&quot;: &quot;tls&quot;,
     &quot;compression&quot;: &quot;none&quot;
-}" />
+}" IsRaw="True" />
     </vm:SessionViewModel.Envelopes>
     <vm:SessionViewModel.Variables>
         <vm:VariableViewModel Name="from" Value="source@domain.com/instance" />

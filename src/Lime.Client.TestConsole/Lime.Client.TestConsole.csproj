@@ -34,8 +34,8 @@
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
     <OpenBrowserOnPublish>false</OpenBrowserOnPublish>
-    <ApplicationRevision>3</ApplicationRevision>
-    <ApplicationVersion>0.1.4.%2a</ApplicationVersion>
+    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationVersion>0.1.5.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -130,13 +130,16 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Converters\ToStringConverter.cs" />
+    <Compile Include="Converters\IsRawToBrushConverter.cs" />
     <Compile Include="Converters\IsErrorToBrushConverter.cs" />
     <Compile Include="Converters\DataOperationToBrushConverter.cs" />
     <Compile Include="FileUtil.cs" />
     <Compile Include="Macros\ApplyTransportOptionsMacro.cs" />
     <Compile Include="Macros\NotifyMessageConsumedMacro.cs" />
     <Compile Include="Macros\NotifyMessageReceivedMacro.cs" />
-    <Compile Include="Macros\SetSessionStateMacro.cs" />
+    <Compile Include="Macros\SetNotificationEvent.cs" />
+    <Compile Include="Macros\SetSessionDataMacro.cs" />
     <Compile Include="Macros\SetSessionIdMacro.cs" />
     <Compile Include="Macros\CloseTransportMacro.cs" />
     <Compile Include="Macros\IMacro.cs" />

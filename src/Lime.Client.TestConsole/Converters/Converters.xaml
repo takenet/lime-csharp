@@ -3,4 +3,6 @@
                     xmlns:converters="clr-namespace:Lime.Client.TestConsole.Converters">
     <converters:DataOperationToBrushConverter x:Key="DataOperationToBrushConverter" />
     <converters:IsErrorToBrushConverter x:Key="IsErrorToBrushConverter" />
+    <converters:IsRawToBrushConverter x:Key="IsRawToBrushConverter" />
+    <converters:ToStringConverter x:Key="ToStringConverter" />
 </ResourceDictionary>
