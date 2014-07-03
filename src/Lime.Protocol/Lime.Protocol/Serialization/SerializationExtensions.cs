@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -154,6 +155,19 @@ namespace Lime.Protocol.Serialization
             }
 
             return new string(newValue);
+        }
+
+        private static TextInfo _enUsTextInfo =  new CultureInfo("en-US", false).TextInfo;
+
+        /// <summary>
+        /// Converts the string to the
+        /// TitleCase (or PascalCase) representation
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static string ToTitleCase(this string value)
+        {
+            return _enUsTextInfo.ToTitleCase(value);
         }
 
         /// <summary>
