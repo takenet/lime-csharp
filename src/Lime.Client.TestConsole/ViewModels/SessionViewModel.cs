@@ -681,7 +681,7 @@ namespace Lime.Client.TestConsole.ViewModels
 
                     var timeoutCancellationToken = _operationTimeout.ToCancellationToken();
 
-                    var envelopeViewModel = new EnvelopeViewModel();
+                    var envelopeViewModel = new EnvelopeViewModel(false);
                     envelopeViewModel.Json = InputJson;
                     var envelope = envelopeViewModel.Envelope;
                     envelopeViewModel.Direction = DataOperation.Send;
@@ -695,7 +695,8 @@ namespace Lime.Client.TestConsole.ViewModels
                     }
                     else
                     {
-                        await Transport.SendAsync(envelope, timeoutCancellationToken);                        
+                        await Transport.SendAsync(envelope, timeoutCancellationToken);
+                        envelopeViewModel.IndentJson();
                     }
 
                     this.Envelopes.Add(envelopeViewModel);
@@ -905,7 +906,7 @@ namespace Lime.Client.TestConsole.ViewModels
 
         public async Task TraceAsync(string data, DataOperation operation)
         {
-            var envelopeViewModel = new EnvelopeViewModel()
+            var envelopeViewModel = new EnvelopeViewModel(false)
             {
                 IsRaw = true,
                 Json = data,

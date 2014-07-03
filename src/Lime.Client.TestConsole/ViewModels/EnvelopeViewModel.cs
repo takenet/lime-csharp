@@ -13,7 +13,7 @@ namespace Lime.Client.TestConsole.ViewModels
     public class EnvelopeViewModel : ViewModelBase
     {
         private static IEnvelopeSerializer _serializer;
-
+        private bool _shouldIndendJson;
 
         static EnvelopeViewModel()
         {
@@ -21,9 +21,26 @@ namespace Lime.Client.TestConsole.ViewModels
         }
 
 
+        public EnvelopeViewModel()
+            : this(true)
+        {
+
+        }
+
+        public EnvelopeViewModel(bool shouldIndendJson)
+        {
+            _shouldIndendJson = shouldIndendJson;
+        }        
+
 
 
         #region Data Properties
+
+
+        public void IndentJson()
+        {
+            Json = Json.IndentJson();
+        }
 
         
         private string _json;
@@ -38,12 +55,20 @@ namespace Lime.Client.TestConsole.ViewModels
 
                 try
                 {
-                    // Json indentation
-                    try
+                    if (_shouldIndendJson)
                     {
-                        _json = value.IndentJson();
+
+                        // Json indentation
+                        try
+                        {
+                            _json = value.IndentJson();
+                        }
+                        catch
+                        {
+                            _json = value;
+                        }
                     }
-                    catch
+                    else
                     {
                         _json = value;
                     }
