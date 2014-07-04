@@ -7,8 +7,8 @@
     <ProjectGuid>{D24B4EF4-9B8C-4F89-BFC6-F76007936382}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Lime.Protocol.Tcp.Net45</RootNamespace>
-    <AssemblyName>Lime.Protocol.Tcp.Net45</AssemblyName>
+    <RootNamespace>Lime.Protocol.Tcp</RootNamespace>
+    <AssemblyName>Lime.Protocol.Tcp</AssemblyName>
     <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />

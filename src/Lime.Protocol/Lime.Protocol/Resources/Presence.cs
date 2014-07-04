@@ -13,7 +13,7 @@ namespace Lime.Protocol.Resources
     /// if it sets its presence to an available status (except from the server, 
     /// who always knows if a node is available or node, since this information 
     /// is enforced by the existing session). 
-    /// In a new session, the node starts with a unavailable status.
+    /// In a new session, the node starts with an unavailable status.
     /// </summary>
     [DataContract(Namespace = "http://limeprotocol.org/2014")]
     public partial class Presence : Document
@@ -25,6 +25,7 @@ namespace Lime.Protocol.Resources
         public const string ROUTING_RULE_KEY = "routingRule";
         public const string LAST_SEEN_KEY = "lastSeen";
         public const string PRIORITY_KEY = "priority";
+        public const string INSTANCES_KEY = "instances";
 
         public Presence()
             : base(MediaType.Parse(MIME_TYPE))
@@ -61,6 +62,13 @@ namespace Lime.Protocol.Resources
         /// </summary>
         [DataMember(Name = PRIORITY_KEY, EmitDefaultValue = false)]
         public int Priority { get; set; }
+
+        /// <summary>
+        /// Present instances for
+        /// a identity.
+        /// </summary>
+        [DataMember(Name = INSTANCES_KEY)]
+        public string[] Instances { get; set; }
     }
 
     [DataContract(Namespace = "http://limeprotocol.org/2014")]
