@@ -81,6 +81,13 @@ namespace Lime.Protocol.Resources
         [EnumMember(Value = "instance")]
         Instance,
         /// <summary>
+        /// Delivery envelopes addressed to the current session instance 
+        /// (name@domain/instance) and envelopes addressed to the 
+        /// identity (name@domain)
+        /// </summary>
+        [EnumMember(Value = "identity")]
+        Identity,
+        /// <summary>
         /// Delivery envelopes addressed to the current session 
         /// instance (name@domain/instance) and envelopes addressed 
         /// to the identity (name@domain) if the distance from the 
