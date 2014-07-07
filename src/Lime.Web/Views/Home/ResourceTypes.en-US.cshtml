@@ -2,7 +2,7 @@
     ViewBag.Title = "Resource Types";
 }
 
-<div class="col-md-10" role="main">       
+<div class="col-md-10" role="main">
     <h1 class="page-header">Resource Types</h1>
 
     <div class="alert alert-warning">This specification is a <strong>work in progress</strong> and is subject to change without notice.</div>
@@ -176,6 +176,104 @@ S:
 {
     "$schema": "http://json-schema.org/draft-04/schema#",
     "title": "capability",
+    "type": "object",
+    "properties": {
+        "contentTypes": {
+            "type": "array",
+            "items": { 
+                "type": "string",
+                "pattern": "^[-\w]+/[-\w.]+(\+json)$"
+            }
+        },
+        "resourceTypes": {
+            "type": "array",
+            "items": { 
+                "type": "string",
+                "pattern": "^[-\w]+/[-\w.]+(\+json)$"
+            }
+        },
+    }
+}
+</code>
+</pre>
+
+    <h4>Properties</h4>
+    <ul>
+        <li>
+            <strong>contentTypes</strong> - Indicates the message content types that the session node is able to handle. By default, the server delivers all messages types to the nodes.
+        </li>
+        <li>
+            <strong>resourceTypes</strong> - Indicates the command resource types that the session node is able to handle. By default, the server blocks all command addressed to the nodes.
+        </li>
+    </ul>
+
+    <h4>Role support</h4>
+    <ul>
+        <li>
+            <strong>Node</strong> - Can get and set the resource value in the server.
+        </li>
+        <li>
+            <strong>Server</strong> - Holds the resource for other identities. The servers doesn't need to know the content types so this specific resource is unbounded.
+        </li>
+        <li>
+            <strong>Gateway</strong> - Inherited from the node.
+        </li>
+        <li>
+            <strong>Application</strong> - Inherited from the node.
+        </li>
+    </ul>
+
+    <h4>Example</h4>
+    <p>Get the current session capabilities:</p>
+<pre>
+<code class="json">
+C:
+{
+    "id": "d1ad793d-2bf2-42f2-a843-65c7b518e601",
+    "from": "walterjr@breakingbad.com/home",
+    "method": "get",
+    "type": "application/vnd.lime.capability+json"
+}
+</code>
+<code class="json">
+S:
+{
+    "id": "d1ad793d-2bf2-42f2-a843-65c7b518e601",    
+    "from": "server@breakingbad.com/machine1",
+    "to": "walterjr@breakingbad.com/home",
+    "method": "get",
+    "result": "success",
+    "type": "application/vnd.lime.capability+json",
+    "resource": {
+        "contentTypes": [
+            "application/vnd.lime.text+json",
+            "application/vnd.lime.chatstate+json",
+        ],
+        "resourceTypes": [
+            "application/vnd.lime.ping+json"
+        ]
+    }
+}
+</code>
+</pre>
+
+    <hr />
+
+    <h2 id="receipt">Receipt</h2>
+    <p>Represents the events that the client wants to receive.</p>
+
+    <h4>MIME type</h4>
+<pre>
+     application/vnd.lime.receipt+json
+</pre>
+
+    <h4>JSON Schema</h4>
+
+<pre>
+<code class="json-schema">
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "receipt",
     "type": "object",
     "properties": {
         "contentTypes": {
