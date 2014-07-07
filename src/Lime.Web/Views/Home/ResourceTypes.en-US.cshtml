@@ -808,6 +808,12 @@ S:
         },
         "priority" : {
             "type": "integer"
+        },
+        "instances" : {
+            "type": "array",
+            "items": {
+                "type": "string"
+            }
         }
         
     },
@@ -857,6 +863,9 @@ S:
         </li>
         <li>
             <strong>priority</strong> - The value of the priority for the <em>identityByPriority</em> routing rule.
+        </li>
+        <li>
+            <strong>instances</strong> - The instance names that have a defined presence in the server for a specified identity. This property is returned when the <em>from</em> value of the command envelope hasn't an specified instance.
         </li>
     </ul>
 
