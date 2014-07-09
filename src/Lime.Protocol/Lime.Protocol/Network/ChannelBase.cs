@@ -135,7 +135,7 @@ namespace Lime.Protocol.Network
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">message</exception>
         /// <exception cref="System.InvalidOperationException"></exception>
-        public Task SendMessageAsync(Message message)
+        public virtual Task SendMessageAsync(Message message)
         {
             if (message == null)
             {
@@ -187,7 +187,7 @@ namespace Lime.Protocol.Network
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">message</exception>
         /// <exception cref="System.InvalidOperationException"></exception>
-        public Task SendCommandAsync(Command command)
+        public virtual Task SendCommandAsync(Command command)
         {
             if (command == null)
             {
@@ -240,7 +240,7 @@ namespace Lime.Protocol.Network
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">notification</exception>
         /// <exception cref="System.InvalidOperationException"></exception>
-        public Task SendNotificationAsync(Notification notification)
+        public virtual Task SendNotificationAsync(Notification notification)
         {
             if (notification == null)
             {
@@ -294,7 +294,7 @@ namespace Lime.Protocol.Network
         /// <param name="session"></param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">session</exception>
-        public Task SendSessionAsync(Session session)
+        public virtual Task SendSessionAsync(Session session)
         {
             if (session == null)
             {

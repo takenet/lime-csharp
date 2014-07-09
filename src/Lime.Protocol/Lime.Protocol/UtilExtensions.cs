@@ -93,6 +93,23 @@ namespace Lime.Protocol
         }
 
         /// <summary>
+        /// Gets a long running task (a task that runs in a thread out of the thread pool)
+        /// for the specified task func.
+        /// </summary>
+        /// <param name="func"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public static Task AsLongRunningTask(this Func<Task> func, CancellationToken cancellationToken)
+        {
+            return Task.Factory.StartNew(
+                func,
+                cancellationToken,
+                TaskCreationOptions.LongRunning,
+                TaskScheduler.Current)
+                .Unwrap();
+        }
+
+        /// <summary>
         /// Converts a SecureString to a regular, unsecure string.        
         /// </summary>
         /// <a href="http://blogs.msdn.com/b/fpintos/archive/2009/06/12/how-to-properly-convert-securestring-to-string.aspx"/>
