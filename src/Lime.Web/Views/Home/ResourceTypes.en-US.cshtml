@@ -276,19 +276,16 @@ S:
     "title": "receipt",
     "type": "object",
     "properties": {
-        "contentTypes": {
-            "type": "array",
-            "items": { 
-                "type": "string",
-                "pattern": "^[-\w]+/[-\w.]+(\+json)$"
-            }
-        },
-        "resourceTypes": {
-            "type": "array",
-            "items": { 
-                "type": "string",
-                "pattern": "^[-\w]+/[-\w.]+(\+json)$"
-            }
+        "events" : {
+            "enum": [ 
+                "failed",
+                "accepted",
+                "validated",
+                "authorized",
+                "dispatched",
+                "received",
+                "consumed"
+            ]
         },
     }
 }
@@ -298,10 +295,7 @@ S:
     <h4>Properties</h4>
     <ul>
         <li>
-            <strong>contentTypes</strong> - Indicates the message content types that the session node is able to handle. By default, the server delivers all messages types to the nodes.
-        </li>
-        <li>
-            <strong>resourceTypes</strong> - Indicates the command resource types that the session node is able to handle. By default, the server blocks all command addressed to the nodes.
+            <strong>events</strong> - Indicates the message content types that the session node is able to handle. By default, the server delivers all messages types to the nodes.
         </li>
     </ul>
 
@@ -322,7 +316,7 @@ S:
     </ul>
 
     <h4>Example</h4>
-    <p>Get the current session capabilities:</p>
+    <p>Set to accept all events:</p>
 <pre>
 <code class="json">
 C:
