@@ -94,7 +94,7 @@ namespace Lime.Protocol.Resources
         /// origitator is the smallest among the available 
         /// nodes of the identity with this setting.
         /// </summary>
-        [EnumMember(Value = "identityByPriority")]
+        [EnumMember(Value = "identityByDistance")]
         IdentityByDistance,
         /// <summary>
         /// Delivery envelopes addressed to the current session 
@@ -104,7 +104,14 @@ namespace Lime.Protocol.Resources
         /// nodes of the identity with this setting.
         /// </summary>
         [EnumMember(Value = "identityByPriority")]
-        IdentityByPriority
+        IdentityByPriority,
+
+        /// <summary>
+        /// Delivery any envelopes addressed to the identity name@domain, 
+        /// including the envelopes addressed to any specific instance.
+        /// </summary>
+        [EnumMember(Value = "promiscuous")]
+        Promiscuous
     }
 
     /// <summary>
