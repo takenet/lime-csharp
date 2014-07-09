@@ -23,9 +23,9 @@ namespace Lime.Client.Windows.ViewModels
             Id = message.Id;
             Direction = direction;
 
-            if (message.Content is TextContent)
+            if (message.Content is PlainText)
             {
-                Text = ((TextContent)message.Content).Text;
+                Text = ((PlainText)message.Content).Text;
             }
             else
             {

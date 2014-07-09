@@ -343,7 +343,7 @@ namespace Lime.Client.Console
                                 var message = new Message()
                                 {
                                     To = to,
-                                    Content = new TextContent()
+                                    Content = new PlainText()
                                     {
                                         Text = messageText
                                     }

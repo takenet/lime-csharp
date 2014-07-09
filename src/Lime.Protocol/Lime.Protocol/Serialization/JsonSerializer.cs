@@ -96,6 +96,31 @@ namespace Lime.Protocol.Serialization
                     }
                 };
             }
+            else if (typeof(Document).IsAssignableFrom(propertyType))
+            {
+                serializePropertyAction = (v, w) =>
+                {
+                    var value = (Document)getFunc(v);
+
+                    if (value != null)
+                    {
+                        var mediaType = value.GetMediaType();
+
+                        if (string.IsNullOrWhiteSpace(mediaType.Suffix))
+                        {                            
+                            w.WriteStringProperty(memberName, value.ToString());                            
+                        }
+                        else if (mediaType.Suffix.Equals(MediaType.JSON_SUFFIX))
+                        {                            
+                            w.WriteProperty(memberName, value);                            
+                        }
+                        else
+                        {
+                            throw new NotSupportedException(string.Format("The type '{0}' of the property '{1}' is not supported", propertyType, memberName));
+                        }
+                    }
+                };
+            }
             else
             {
                 serializePropertyAction = (v, w) =>
@@ -267,36 +292,69 @@ namespace Lime.Protocol.Serialization
                         if (j.ContainsKey(Message.TYPE_KEY) &&
                             j[Message.TYPE_KEY] is string)
                         {
-                            var mediaType = MediaType.Parse((string)j[Message.TYPE_KEY]);                            
+                            var mediaType = MediaType.Parse((string)j[Message.TYPE_KEY]);
 
-                            JsonObject propertyJsonObject = null;
-                            if (j.ContainsKey(memberName) &&
-                                j[memberName] is JsonObject)
-                            {
-                                propertyJsonObject = (JsonObject)j[memberName];
-                            }
-                            
                             object value;
-                            Type concreteType;                            
+                            Type concreteType;
 
-                            if (TypeUtil.TryGetTypeForMediaType(mediaType, out concreteType))
-                            {                                
-                                if (propertyJsonObject != null)
+                            if (string.IsNullOrWhiteSpace(mediaType.Suffix))
+                            {
+                                string propertyValue = null;
+                                if (j.ContainsKey(memberName) &&
+                                     j[memberName] is string)
                                 {
-                                    value = JsonSerializer.ParseJson(concreteType, propertyJsonObject);
+                                    propertyValue = (string)j[memberName];
+                                }
+
+                                if (TypeUtil.TryGetTypeForMediaType(mediaType, out concreteType))
+                                {
+                                    if (propertyValue != null)
+                                    {
+                                        var parseFunc = TypeUtil.GetParseFuncForType(concreteType);
+                                        value = parseFunc(propertyValue);
+                                    }
+                                    else
+                                    {
+                                        value = TypeUtil.CreateInstance(concreteType);
+                                    }
                                 }
                                 else
                                 {
-                                    value = TypeUtil.CreateInstance(concreteType);
+                                    value = new PlainDocument(propertyValue, mediaType);
                                 }
                             }
-                            else if (propertyJsonObject != null)
+                            else if (mediaType.Suffix.Equals(MediaType.JSON_SUFFIX))
                             {
-                                value = new JsonDocument(propertyJsonObject, mediaType);
+                                JsonObject propertyJsonObject = null;
+                                if (j.ContainsKey(memberName) &&
+                                    j[memberName] is JsonObject)
+                                {
+                                    propertyJsonObject = (JsonObject)j[memberName];
+                                }
+
+                                if (TypeUtil.TryGetTypeForMediaType(mediaType, out concreteType))
+                                {
+                                    if (propertyJsonObject != null)
+                                    {
+                                        value = JsonSerializer.ParseJson(concreteType, propertyJsonObject);
+                                    }
+                                    else
+                                    {
+                                        value = TypeUtil.CreateInstance(concreteType);
+                                    }
+                                }
+                                else if (propertyJsonObject != null)
+                                {
+                                    value = new JsonDocument(propertyJsonObject, mediaType);
+                                }
+                                else
+                                {
+                                    value = new JsonDocument(mediaType);
+                                }
                             }
                             else
                             {
-                                value = new JsonDocument(mediaType);
+                                throw new NotSupportedException(string.Format("The type '{0}' of the property '{1}' is not supported", propertyType, memberName));
                             }
 
                             if (value != null)

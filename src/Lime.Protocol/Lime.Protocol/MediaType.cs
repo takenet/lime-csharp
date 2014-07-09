@@ -12,6 +12,11 @@ namespace Lime.Protocol
     /// </summary>
     public class MediaType
     {
+        public const string APPLICATION_TYPE = "application";
+        public const string TEXT_TYPE = "text";
+        public const string IMAGE_TYPE = "image";
+        public const string JSON_SUFFIX = "json";
+
         #region Constructor
 
         public MediaType()

@@ -157,7 +157,6 @@ namespace Lime.Protocol.Serialization.ServiceStack.UnitTests
 			message.Metadata.Add(metadataKey2, metadataValue2);
 
 			var resultString = target.Serialize(message);
-
 			Assert.IsTrue(resultString.HasValidJsonStackedBrackets());
 			Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.ID_KEY, message.Id));
 			Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.FROM_KEY, message.From));
@@ -165,14 +164,14 @@ namespace Lime.Protocol.Serialization.ServiceStack.UnitTests
 			Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.TO_KEY, message.To));
 			Assert.IsTrue(resultString.ContainsJsonProperty(Message.TYPE_KEY, message.Content.GetMediaType()));
 			Assert.IsTrue(resultString.ContainsJsonKey(Message.CONTENT_KEY));
-			Assert.IsTrue(resultString.ContainsJsonProperty(TextContent.TEXT_KEY, content.Text));
+			Assert.IsTrue(resultString.ContainsJsonProperty(Message.CONTENT_KEY, content.Text));
 			Assert.IsTrue(resultString.ContainsJsonProperty(metadataKey1, metadataValue1));
 			Assert.IsTrue(resultString.ContainsJsonProperty(metadataKey2, metadataValue2));
 		}
 
 		[TestMethod]
 		[TestCategory("Serialize")]
-		public void Serialize_UnknownContentMessage_ReturnsValidJsonString()
+		public void Serialize_UnknownJsonContentMessage_ReturnsValidJsonString()
 		{
 			var target = GetTarget();
 
@@ -207,6 +206,38 @@ namespace Lime.Protocol.Serialization.ServiceStack.UnitTests
 			Assert.IsTrue(resultString.ContainsJsonProperty(metadataKey2, metadataValue2));
 		}
 
+        [TestMethod]
+        [TestCategory("Serialize")]
+        public void Serialize_UnknownPlainContentMessage_ReturnsValidJsonString()
+        {
+            var target = GetTarget();
+
+            var content = DataUtil.CreatePlainDocument();
+            var message = DataUtil.CreateMessage(content);
+            message.Pp = DataUtil.CreateNode();
+
+            var metadataKey1 = "randomString1";
+            var metadataValue1 = DataUtil.CreateRandomString(50);
+            var metadataKey2 = "randomString2";
+            var metadataValue2 = DataUtil.CreateRandomString(50);
+            message.Metadata = new Dictionary<string, string>();
+            message.Metadata.Add(metadataKey1, metadataValue1);
+            message.Metadata.Add(metadataKey2, metadataValue2);
+
+            var resultString = target.Serialize(message);
+
+            Assert.IsTrue(resultString.HasValidJsonStackedBrackets());
+            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.ID_KEY, message.Id));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.FROM_KEY, message.From));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.PP_KEY, message.Pp));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.TO_KEY, message.To));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Message.TYPE_KEY, message.Content.GetMediaType()));
+            Assert.IsTrue(resultString.ContainsJsonKey(Message.CONTENT_KEY));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Message.CONTENT_KEY, content.Value));           
+            Assert.IsTrue(resultString.ContainsJsonProperty(metadataKey1, metadataValue1));
+            Assert.IsTrue(resultString.ContainsJsonProperty(metadataKey2, metadataValue2));
+        }
+
 		[TestMethod]
 		[TestCategory("Serialize")]
 		public void Serialize_FireAndForgetTextMessage_ReturnsValidJsonString()
@@ -225,7 +256,7 @@ namespace Lime.Protocol.Serialization.ServiceStack.UnitTests
 			Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.TO_KEY, message.To));
 			Assert.IsTrue(resultString.ContainsJsonProperty(Message.TYPE_KEY, message.Content.GetMediaType()));
 			Assert.IsTrue(resultString.ContainsJsonKey(Message.CONTENT_KEY));
-			Assert.IsTrue(resultString.ContainsJsonProperty(TextContent.TEXT_KEY, content.Text));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Message.CONTENT_KEY, content.Text));
 
 			Assert.IsFalse(resultString.ContainsJsonKey(Envelope.ID_KEY));
 			Assert.IsFalse(resultString.ContainsJsonKey(Envelope.PP_KEY));
@@ -359,13 +390,13 @@ namespace Lime.Protocol.Serialization.ServiceStack.UnitTests
 		{
 			var target = GetTarget();
 
-			var contentType1 = DataUtil.CreateMediaType();
-			var contentType2 = DataUtil.CreateMediaType();
-			var contentType3 = DataUtil.CreateMediaType();
+			var contentType1 = DataUtil.CreateJsonMediaType();
+			var contentType2 = DataUtil.CreateJsonMediaType();
+			var contentType3 = DataUtil.CreateJsonMediaType();
 
-			var resourceType1 = DataUtil.CreateMediaType();
-			var resourceType2 = DataUtil.CreateMediaType();
-			var resourceType3 = DataUtil.CreateMediaType();
+			var resourceType1 = DataUtil.CreateJsonMediaType();
+			var resourceType2 = DataUtil.CreateJsonMediaType();
+			var resourceType3 = DataUtil.CreateJsonMediaType();
 
 			var method = CommandMethod.Get;
 
@@ -656,7 +687,7 @@ namespace Lime.Protocol.Serialization.ServiceStack.UnitTests
 			var text = DataUtil.CreateRandomString(50);
 
 			string json = string.Format(
-				"{{\"type\":\"application/vnd.lime.text+json\",\"content\":{{\"text\":\"{0}\"}},\"id\":\"{1}\",\"from\":\"{2}\",\"pp\":\"{3}\",\"to\":\"{4}\",\"metadata\":{{\"{5}\":\"{6}\",\"{7}\":\"{8}\"}}}}",
+				"{{\"type\":\"text/plain\",\"content\":\"{0}\",\"id\":\"{1}\",\"from\":\"{2}\",\"pp\":\"{3}\",\"to\":\"{4}\",\"metadata\":{{\"{5}\":\"{6}\",\"{7}\":\"{8}\"}}}}",
 				text,
 				id,
 				from,
@@ -683,11 +714,65 @@ namespace Lime.Protocol.Serialization.ServiceStack.UnitTests
 			Assert.IsTrue(message.Metadata.ContainsKey(randomKey2));
 			Assert.AreEqual(message.Metadata[randomKey2], randomString2);
 
-			Assert.IsTrue(message.Content is TextContent);
+			Assert.IsTrue(message.Content is PlainText);
 
-			var textContent = (TextContent)message.Content;
+			var textContent = (PlainText)message.Content;
 			Assert.AreEqual(text, textContent.Text);
 		}
+
+
+        [TestMethod]
+        [TestCategory("Deserialize")]
+        public void Deserialize_ChatStateMessage_ReturnsValidInstance()
+        {
+            var target = GetTarget();
+
+            var id = Guid.NewGuid();
+            var from = DataUtil.CreateNode();
+            var pp = DataUtil.CreateNode();
+            var to = DataUtil.CreateNode();
+
+            string randomKey1 = "randomString1";
+            string randomKey2 = "randomString2";
+            string randomString1 = DataUtil.CreateRandomString(50);
+            string randomString2 = DataUtil.CreateRandomString(50);
+
+            var state = ChatStateEvent.Deleting;
+
+            string json = string.Format(
+                "{{\"type\":\"application/vnd.lime.chatstate+json\",\"content\":{{\"state\":\"{0}\"}},\"id\":\"{1}\",\"from\":\"{2}\",\"pp\":\"{3}\",\"to\":\"{4}\",\"metadata\":{{\"{5}\":\"{6}\",\"{7}\":\"{8}\"}}}}",
+                state.ToString().ToLowerInvariant(),
+                id,
+                from,
+                pp,
+                to,
+                randomKey1,
+                randomString1,
+                randomKey2,
+                randomString2
+                );
+
+            var envelope = target.Deserialize(json);
+
+            Assert.IsTrue(envelope is Message);
+
+            var message = (Message)envelope;
+            Assert.AreEqual(id, message.Id);
+            Assert.AreEqual(from, message.From);
+            Assert.AreEqual(pp, message.Pp);
+            Assert.AreEqual(to, message.To);
+            Assert.IsNotNull(message.Metadata);
+            Assert.IsTrue(message.Metadata.ContainsKey(randomKey1));
+            Assert.AreEqual(message.Metadata[randomKey1], randomString1);
+            Assert.IsTrue(message.Metadata.ContainsKey(randomKey2));
+            Assert.AreEqual(message.Metadata[randomKey2], randomString2);
+
+            Assert.IsTrue(message.Content is ChatState);
+
+            var textContent = (ChatState)message.Content;
+            Assert.AreEqual(state, textContent.State);
+        }
+
 
 
 		[TestMethod]
@@ -707,7 +792,7 @@ namespace Lime.Protocol.Serialization.ServiceStack.UnitTests
 			string randomString2 = DataUtil.CreateRandomString(50);
 
 		   
-			var type = DataUtil.CreateMediaType();
+			var type = DataUtil.CreateJsonMediaType();
 
 			var propertyName1 = DataUtil.CreateRandomString(10);
 			var propertyName2 = DataUtil.CreateRandomString(10);
@@ -761,20 +846,57 @@ namespace Lime.Protocol.Serialization.ServiceStack.UnitTests
 			
 		}
 
+
+        [TestMethod]
+        [TestCategory("Deserialize")]
+        public void Deserialize_FireAndForgetTextMessage_ReturnsValidInstance()
+        {
+            var target = GetTarget();
+
+            var from = DataUtil.CreateNode();
+            var to = DataUtil.CreateNode();
+
+            var text = DataUtil.CreateRandomString(50);
+
+            string json = string.Format(
+                "{{\"type\":\"text/plain\",\"content\":\"{0}\",\"from\":\"{1}\",\"to\":\"{2}\"}}",
+                text,
+                from,
+                to
+                );
+
+            var envelope = target.Deserialize(json);
+
+            Assert.IsTrue(envelope is Message);
+
+            var message = (Message)envelope;
+            Assert.AreEqual(from, message.From);
+            Assert.AreEqual(to, message.To);
+
+            Assert.AreEqual(message.Id, Guid.Empty);
+            Assert.IsNull(message.Pp);
+            Assert.IsNull(message.Metadata);
+
+            Assert.IsTrue(message.Content is PlainText);
+            var textContent = (PlainText)message.Content;
+            Assert.AreEqual(text, textContent.Text);
+        }
+
+
 		[TestMethod]
 		[TestCategory("Deserialize")]
-		public void Deserialize_FireAndForgetTextMessage_ReturnsValidInstance()
+		public void Deserialize_FireAndForgetChatStateMessage_ReturnsValidInstance()
 		{
 			var target = GetTarget();
 
 			var from = DataUtil.CreateNode();
 			var to = DataUtil.CreateNode();
 
-			var text = DataUtil.CreateRandomString(50);
+			var state = ChatStateEvent.Composing;
 
 			string json = string.Format(
-				"{{\"type\":\"application/vnd.lime.text+json\",\"content\":{{\"text\":\"{0}\"}},\"from\":\"{1}\",\"to\":\"{2}\"}}",
-				text,
+				"{{\"type\":\"application/vnd.lime.chatstate+json\",\"content\":{{\"state\":\"{0}\"}},\"from\":\"{1}\",\"to\":\"{2}\"}}",
+                state.ToString().ToCamelCase(),
 				from,
 				to
 				);
@@ -791,9 +913,9 @@ namespace Lime.Protocol.Serialization.ServiceStack.UnitTests
 			Assert.IsNull(message.Pp);
 			Assert.IsNull(message.Metadata);
 
-			Assert.IsTrue(message.Content is TextContent);
-			var textContent = (TextContent)message.Content;
-			Assert.AreEqual(text, textContent.Text);            
+            Assert.IsTrue(message.Content is ChatState);
+			var textContent = (ChatState)message.Content;
+			Assert.AreEqual(state, textContent.State);            
 		}
 
 		[TestMethod]

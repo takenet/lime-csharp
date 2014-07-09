@@ -14,7 +14,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Client\IClientChannelExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Command.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Contents\ChatState.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Contents\TextContent.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Contents\PlainText.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Document.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Envelope.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Identity.cs" />
@@ -40,6 +40,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Network\TransportBase.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Node.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Notification.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)PlainDocument.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Reason.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ReasonCodes.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Resources\Account.cs" />
