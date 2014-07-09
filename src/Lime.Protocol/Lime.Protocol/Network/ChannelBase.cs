@@ -135,7 +135,7 @@ namespace Lime.Protocol.Network
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">message</exception>
         /// <exception cref="System.InvalidOperationException"></exception>
-        public Task SendMessageAsync(Message message)
+        public virtual Task SendMessageAsync(Message message)
         {
             if (message == null)
             {
@@ -187,7 +187,7 @@ namespace Lime.Protocol.Network
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">message</exception>
         /// <exception cref="System.InvalidOperationException"></exception>
-        public Task SendCommandAsync(Command command)
+        public virtual Task SendCommandAsync(Command command)
         {
             if (command == null)
             {
@@ -240,7 +240,7 @@ namespace Lime.Protocol.Network
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">notification</exception>
         /// <exception cref="System.InvalidOperationException"></exception>
-        public Task SendNotificationAsync(Notification notification)
+        public virtual Task SendNotificationAsync(Notification notification)
         {
             if (notification == null)
             {
@@ -294,7 +294,7 @@ namespace Lime.Protocol.Network
         /// <param name="session"></param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">session</exception>
-        public Task SendSessionAsync(Session session)
+        public virtual Task SendSessionAsync(Session session)
         {
             if (session == null)
             {
@@ -318,13 +318,13 @@ namespace Lime.Protocol.Network
             {
                 throw new InvalidOperationException(string.Format("Cannot receive a session in the '{0}' session state", this.State));
             }
-
-            var combinedCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(
-                _channelCancellationTokenSource.Token,
-                cancellationToken);            
-
+       
             if (this.State == SessionState.Established)
             {
+                var combinedCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(
+                    _channelCancellationTokenSource.Token,
+                    cancellationToken);     
+
                 if (_consumeTransportTask.IsFaulted)
                 {
                     throw _consumeTransportTask.Exception.InnerException;
@@ -352,34 +352,44 @@ namespace Lime.Protocol.Network
 
         private async Task ConsumeTransportAsync()
         {
-            while (!_channelCancellationTokenSource.IsCancellationRequested && 
-                    this.State == SessionState.Established)
+            try
             {
-                Exception exception = null;
+                while (!_channelCancellationTokenSource.IsCancellationRequested &&
+                        this.State == SessionState.Established)
+                {
+                    Exception exception = null;
 
-                try
-                {
-                    var envelope = await this.ReceiveAsync(_channelCancellationTokenSource.Token).ConfigureAwait(false);                    
-                    await this.PostEnvelopeToBufferAsync(envelope);
-                }
-                catch (OperationCanceledException) { }
-                catch (ObjectDisposedException)
-                {
-                    if (!_isDisposing)
+                    try
                     {
-                        throw;
+                        var envelope = await this.ReceiveAsync(_channelCancellationTokenSource.Token).ConfigureAwait(false);
+                        await this.PostEnvelopeToBufferAsync(envelope);
+                    }
+                    catch (OperationCanceledException) { }
+                    catch (ObjectDisposedException)
+                    {
+                        if (!_isDisposing)
+                        {
+                            throw;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        exception = ex;
+                    }
+
+                    if (exception != null)
+                    {
+                        var cts = new CancellationTokenSource(_sendTimeout);
+                        await this.Transport.CloseAsync(cts.Token).ConfigureAwait(false);
+                        throw exception;
                     }
                 }
-                catch (Exception ex)
+            }
+            finally
+            {
+                if (!_channelCancellationTokenSource.IsCancellationRequested)
                 {
-                    exception = ex;
-                }
-
-                if (exception != null)
-                {
-                    var cts = new CancellationTokenSource(_sendTimeout);
-                    await this.Transport.CloseAsync(cts.Token).ConfigureAwait(false);
-                    throw exception;
+                    _channelCancellationTokenSource.Cancel();
                 }
             }
         }

@@ -783,7 +783,8 @@ namespace Lime.Protocol.UnitTests.Network
 
         [TestMethod]
         [TestCategory("Dispose")]
-        public void Dispose_Default_DisposeTransportAndCancelTasks()
+        [ExpectedException(typeof(TaskCanceledException))]
+        public async Task Dispose_ReceiveMessageCalled_ThrowsTaskCancelledException()
         {
             var disposableTransport = _transport.As<IDisposable>();
 
@@ -802,10 +803,87 @@ namespace Lime.Protocol.UnitTests.Network
             disposableTransport.Verify(
                 t => t.Dispose(),
                 Times.Once());
-
-            receiveMessageTask.IsCanceled.ShouldBe(true);
+            
+            await receiveMessageTask;
         }
 
+        [TestMethod]
+        [TestCategory("Dispose")]
+        [ExpectedException(typeof(TaskCanceledException))]
+        public async Task Dispose_ReceiveCommandCalled_ThrowsTaskCancelledException()
+        {
+            var disposableTransport = _transport.As<IDisposable>();
+
+            var cancellationToken = DataUtil.CreateCancellationToken();
+            var tcs = new TaskCompletionSource<Envelope>();
+
+            _transport
+                .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(() => tcs.Task);
+
+            var target = GetTarget(SessionState.Established);
+            var receiveCommandTask = target.ReceiveCommandAsync(cancellationToken);
+
+            target.Dispose();
+
+            disposableTransport.Verify(
+                t => t.Dispose(),
+                Times.Once());
+
+            await receiveCommandTask;
+        }
+
+        [TestMethod]
+        [TestCategory("Dispose")]
+        [ExpectedException(typeof(TaskCanceledException))]
+        public async Task Dispose_ReceiveNotificationCalled_ThrowsTaskCancelledException()
+        {
+            var disposableTransport = _transport.As<IDisposable>();
+
+            var cancellationToken = DataUtil.CreateCancellationToken();
+            var tcs = new TaskCompletionSource<Envelope>();
+
+            _transport
+                .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(() => tcs.Task);
+
+            var target = GetTarget(SessionState.Established);
+            var receiveNotificationTask = target.ReceiveNotificationAsync(cancellationToken);
+
+            target.Dispose();
+
+            disposableTransport.Verify(
+                t => t.Dispose(),
+                Times.Once());
+
+            await receiveNotificationTask;
+        }
+
+        [TestMethod]
+        [TestCategory("Dispose")]
+        [ExpectedException(typeof(TaskCanceledException))]
+        public async Task Dispose_ReceiveSessionCalled_ThrowsTaskCancelledException()
+        {
+            var disposableTransport = _transport.As<IDisposable>();
+
+            var cancellationToken = DataUtil.CreateCancellationToken();
+            var tcs = new TaskCompletionSource<Envelope>();
+
+            _transport
+                .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(() => tcs.Task);
+
+            var target = GetTarget(SessionState.Established);
+            var receiveSessionTask = target.ReceiveSessionAsync(cancellationToken);
+
+            target.Dispose();
+
+            disposableTransport.Verify(
+                t => t.Dispose(),
+                Times.Once());
+
+            await receiveSessionTask;
+        }
         #endregion
 
         #region Private classes
