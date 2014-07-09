@@ -96,6 +96,10 @@ namespace Lime.Protocol
         /// </summary>
         public const int ROUTING_GATEWAY_NOT_FOUND = 43;
         /// <summary>
+        /// The message destination was not found
+        /// </summary>
+        public const int ROUTING_ROUTE_NOT_FOUND = 44;
+        /// <summary>
         /// General dispatching error
         /// </summary>
         public const int DISPATCH_ERROR = 51;

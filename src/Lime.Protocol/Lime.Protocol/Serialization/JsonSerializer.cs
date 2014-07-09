@@ -128,7 +128,18 @@ namespace Lime.Protocol.Serialization
             {
                 propertyType = propertyType.GetElementType();
 
-                if (propertyType.IsEnum)
+                if (propertyType == typeof(string))
+                {
+                    deserializePropertyAction = (v, j) =>
+                    {
+                        var value = j.GetArrayOrNull(propertyType, memberName, i => (string)i);
+                        if (value != null)
+                        {
+                            setFunc(v, value);
+                        }
+                    };
+                }
+                else if (propertyType.IsEnum)
                 {
                     deserializePropertyAction = (v, j) =>
                     {
