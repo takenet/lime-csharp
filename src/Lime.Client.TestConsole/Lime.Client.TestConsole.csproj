@@ -34,7 +34,7 @@
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
     <OpenBrowserOnPublish>false</OpenBrowserOnPublish>
-    <ApplicationRevision>1</ApplicationRevision>
+    <ApplicationRevision>3</ApplicationRevision>
     <ApplicationVersion>0.1.6.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
@@ -137,6 +137,7 @@
     <Compile Include="FileUtil.cs" />
     <Compile Include="Macros\ApplyTransportOptionsMacro.cs" />
     <Compile Include="Macros\NotifyMessageConsumedMacro.cs" />
+    <Compile Include="Macros\ReplyPingMacro.cs" />
     <Compile Include="Macros\NotifyMessageReceivedMacro.cs" />
     <Compile Include="Macros\SetNotificationEvent.cs" />
     <Compile Include="Macros\SetSessionDataMacro.cs" />

@@ -38,6 +38,7 @@
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
@@ -47,6 +48,8 @@
                 <Label Grid.Row="0" Content="Host" />
                 <TextBox Grid.Row="0" Grid.Column="1" VerticalAlignment="Center" Text="{Binding Host, UpdateSourceTrigger=PropertyChanged}" Grid.ColumnSpan="2" />
 
+                
+                
                 <StackPanel Grid.Row="1" Grid.Column="0"  Margin="0,5" Orientation="Horizontal" Grid.ColumnSpan="2">
                     <Button Content="_Open" Command="{Binding OpenTransportCommand}" />
                     <Button Content="_Close" Command="{Binding CloseTransportCommand}" />
@@ -59,10 +62,13 @@
                     <TextBox Margin="0,0,5,0" VerticalAlignment="Center" Width="80" IsReadOnly="True" Text="{Binding LastSessionState}" />
                     <TextBlock Margin="0,0,5,0" VerticalAlignment="Center" Text="Last notification" />
                     <TextBox Margin="0,0,5,0" VerticalAlignment="Center" Width="80" IsReadOnly="True" Text="{Binding LastNotificationEvent}" />
+                </StackPanel>
+
+                <StackPanel Grid.Row="3" Grid.Column="0"  Margin="0,5" Orientation="Horizontal" Grid.ColumnSpan="2">
                     <TextBlock Margin="0,0,5,0" VerticalAlignment="Center" Text="Local node" />
-                    <TextBox Margin="0,0,5,0" VerticalAlignment="Center" Width="150" IsReadOnly="True" Text="{Binding LocalNode, Converter={StaticResource ToStringConverter}}" />
+                    <TextBox Margin="0,0,5,0" VerticalAlignment="Center" Width="250" IsReadOnly="True" Text="{Binding LocalNode, Converter={StaticResource ToStringConverter}}" />
                     <TextBlock Margin="0,0,5,0" VerticalAlignment="Center" Text="Remote node" />
-                    <TextBox Margin="0,0,5,0" VerticalAlignment="Center" Width="150" IsReadOnly="True" Text="{Binding RemoteNode, Converter={StaticResource ToStringConverter}}" />
+                    <TextBox Margin="0,0,5,0" VerticalAlignment="Center" Width="250" IsReadOnly="True" Text="{Binding RemoteNode, Converter={StaticResource ToStringConverter}}" />
                 </StackPanel>
             </Grid>
 

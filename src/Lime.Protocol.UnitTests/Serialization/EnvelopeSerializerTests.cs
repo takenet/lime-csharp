@@ -773,11 +773,67 @@ namespace Lime.Protocol.Serialization.ServiceStack.UnitTests
             Assert.AreEqual(state, textContent.State);
         }
 
+        [TestMethod]
+        [TestCategory("Deserialize")]
+        public void Deserialize_UnknownPlainContentMessage_ReturnsValidInstance()
+        {
+            var target = GetTarget();
 
+            var id = Guid.NewGuid();
+            var from = DataUtil.CreateNode();
+            var pp = DataUtil.CreateNode();
+            var to = DataUtil.CreateNode();
+
+            string randomKey1 = "randomString1";
+            string randomKey2 = "randomString2";
+            string randomString1 = DataUtil.CreateRandomString(50);
+            string randomString2 = DataUtil.CreateRandomString(50);
+
+            var type = DataUtil.CreatePlainMediaType();
+            var text = DataUtil.CreateRandomString(50);
+
+            string json = string.Format(
+                "{{\"type\":\"{0}\",\"content\":\"{1}\",\"id\":\"{2}\",\"from\":\"{3}\",\"pp\":\"{4}\",\"to\":\"{5}\",\"metadata\":{{\"{6}\":\"{7}\",\"{8}\":\"{9}\"}}}}",
+                type,
+                text,
+                id,
+                from,
+                pp,
+                to,
+                randomKey1,
+                randomString1,
+                randomKey2,
+                randomString2
+                );
+
+            var envelope = target.Deserialize(json);
+
+            Assert.IsTrue(envelope is Message);
+
+            var message = (Message)envelope;
+            Assert.AreEqual(id, message.Id);
+            Assert.AreEqual(from, message.From);
+            Assert.AreEqual(pp, message.Pp);
+            Assert.AreEqual(to, message.To);
+            Assert.IsNotNull(message.Metadata);
+            Assert.IsTrue(message.Metadata.ContainsKey(randomKey1));
+            Assert.AreEqual(message.Metadata[randomKey1], randomString1);
+            Assert.IsTrue(message.Metadata.ContainsKey(randomKey2));
+            Assert.AreEqual(message.Metadata[randomKey2], randomString2);
+
+            Assert.IsNotNull(message.Type);
+            Assert.AreEqual(message.Type, type);
+
+            Assert.IsTrue(message.Content is PlainDocument);
+
+            var content = (PlainDocument)message.Content;
+            Assert.AreEqual(text, content.Value);
+
+        }
 
 		[TestMethod]
 		[TestCategory("Deserialize")]
-		public void Deserialize_UnknownContentMessage_ReturnsValidInstance()
+		public void Deserialize_UnknownJsonContentMessage_ReturnsValidInstance()
 		{
 			var target = GetTarget();
 
@@ -845,6 +901,78 @@ namespace Lime.Protocol.Serialization.ServiceStack.UnitTests
 			Assert.AreEqual(content[propertyName2], propertyValue2);
 			
 		}
+
+
+        [TestMethod]
+        [TestCategory("Deserialize")]
+        public void Deserialize_GenericJsonContentMessage_ReturnsValidInstance()
+        {
+            var target = GetTarget();
+
+            var id = Guid.NewGuid();
+            var from = DataUtil.CreateNode();
+            var pp = DataUtil.CreateNode();
+            var to = DataUtil.CreateNode();
+
+            string randomKey1 = "randomString1";
+            string randomKey2 = "randomString2";
+            string randomString1 = DataUtil.CreateRandomString(50);
+            string randomString2 = DataUtil.CreateRandomString(50);
+
+
+            var type = new MediaType(MediaType.DiscreteTypes.Application, MediaType.SubTypes.JSON, null);
+
+            var propertyName1 = DataUtil.CreateRandomString(10);
+            var propertyName2 = DataUtil.CreateRandomString(10);
+            var propertyValue1 = DataUtil.CreateRandomString(10);
+            var propertyValue2 = DataUtil.CreateRandomInt(1000);
+
+
+            string json = string.Format(
+                "{{\"type\":\"{0}\",\"content\":{{\"{1}\":\"{2}\",\"{3}\":{4}}},\"id\":\"{5}\",\"from\":\"{6}\",\"pp\":\"{7}\",\"to\":\"{8}\",\"metadata\":{{\"{9}\":\"{10}\",\"{11}\":\"{12}\"}}}}",
+                type,
+                propertyName1,
+                propertyValue1,
+                propertyName2,
+                propertyValue2,
+                id,
+                from,
+                pp,
+                to,
+                randomKey1,
+                randomString1,
+                randomKey2,
+                randomString2
+                );
+
+            var envelope = target.Deserialize(json);
+
+            Assert.IsTrue(envelope is Message);
+
+            var message = (Message)envelope;
+            Assert.AreEqual(id, message.Id);
+            Assert.AreEqual(from, message.From);
+            Assert.AreEqual(pp, message.Pp);
+            Assert.AreEqual(to, message.To);
+            Assert.IsNotNull(message.Metadata);
+            Assert.IsTrue(message.Metadata.ContainsKey(randomKey1));
+            Assert.AreEqual(message.Metadata[randomKey1], randomString1);
+            Assert.IsTrue(message.Metadata.ContainsKey(randomKey2));
+            Assert.AreEqual(message.Metadata[randomKey2], randomString2);
+
+            Assert.IsNotNull(message.Type);
+            Assert.AreEqual(message.Type, type);
+
+            Assert.IsTrue(message.Content is JsonDocument);
+
+            var content = (JsonDocument)message.Content;
+
+            Assert.IsTrue(content.ContainsKey(propertyName1));
+            Assert.AreEqual(content[propertyName1], propertyValue1);
+            Assert.IsTrue(content.ContainsKey(propertyName2));
+            Assert.AreEqual(content[propertyName2], propertyValue2);
+
+        }
 
 
         [TestMethod]
