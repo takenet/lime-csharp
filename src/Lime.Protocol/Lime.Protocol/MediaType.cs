@@ -8,15 +8,11 @@ using System.Threading.Tasks;
 namespace Lime.Protocol
 {
     /// <summary>
-    /// MIME media type representation
+    /// MIME media type representation.
+    /// <a href="http://trac.tools.ietf.org/html/rfc2045" />
     /// </summary>
     public class MediaType
     {
-        public const string APPLICATION_TYPE = "application";
-        public const string TEXT_TYPE = "text";
-        public const string IMAGE_TYPE = "image";
-        public const string JSON_SUFFIX = "json";
-
         #region Constructor
 
         public MediaType()
@@ -45,6 +41,14 @@ namespace Lime.Protocol
 
         #endregion
 
+        #region Public Properties
+
+        /// <summary>
+        /// The top-level type
+        /// identifier. The valid values
+        /// are text, application, image,
+        /// audio and video.
+        /// </summary>
         public string Type { get; set; }
 
         public string Subtype { get; set; }
@@ -52,8 +56,25 @@ namespace Lime.Protocol
         /// <summary>
         /// Media type suffix        
         /// </summary>
-        /// <a href="http://trac.tools.ietf.org/html/draft-ietf-appsawg-media-type-regs-14#section-6"/>
+        /// <a href="http://tools.ietf.org/html/rfc6839"/>
         public string Suffix { get; set; }
+
+        /// <summary>
+        /// Indicates if the MIME 
+        /// represents a JSON type
+        /// </summary>
+        public bool IsJson
+        {
+            get
+            {
+                return (Suffix != null && Suffix.Equals(SubTypes.JSON, StringComparison.OrdinalIgnoreCase)) ||
+                       (Subtype != null && Subtype.Equals(SubTypes.JSON, StringComparison.OrdinalIgnoreCase));
+            }
+        }
+
+        #endregion
+
+        #region Public Methods
 
         /// <summary>
         /// Returns a <see cref="System.String" /> that represents this instance.
@@ -124,7 +145,7 @@ namespace Lime.Protocol
             {
                 throw new FormatException("Invalid media type format");
             }
-           
+
             var type = splittedMediaType[0];
 
             var splittedSubtype = splittedMediaType[1].Split('+');
@@ -157,8 +178,48 @@ namespace Lime.Protocol
             catch
             {
                 mediaType = null;
-                return false;                
+                return false;
             }
         }
+
+        #endregion
+
+        public static class DiscreteTypes
+        {
+            public static string Application = "application";
+
+            public static string Text = "text";
+
+            public static string Image = "image";
+
+            public static string Audio = "audio";
+
+            public static string Video = "video";
+        }
+
+        public static class CompositeTypes
+        {
+            public static string Message = "message";
+
+            public static string Multipart = "multipart";
+        }
+
+        public static class SubTypes
+        {
+            public static string Plain = "plain";
+
+            public static string JSON = "json";
+
+            public static string XML = "xml";
+
+            public static string HTML = "html";
+
+            public static string JPeg = "jpeg";
+
+            public static string Bitmap = "bmp";
+
+            public static string Javascript = "javascript";
+        }
+
     }
 }

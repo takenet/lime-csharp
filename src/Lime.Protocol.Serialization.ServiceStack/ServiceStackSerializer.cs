@@ -38,6 +38,20 @@ namespace Lime.Protocol.Serialization.ServiceStack
             JsConfig<Guid>.SerializeFn = g => g.ToString();
             JsConfig<Guid>.DeSerializeFn = s => Guid.Parse(s);
 
+            
+            JsConfig<Document>.RawSerializeFn = d =>
+                {
+                    var mediaType = d.GetMediaType();
+                    if (mediaType.IsJson)
+                    {
+                        return global::ServiceStack.Text.JsonSerializer.SerializeToString(d);                        
+                    }
+                    else
+                    {
+                        return string.Format("\"{0}\"", d.ToString());
+                    }
+                };
+
             foreach (var enumType in TypeUtil.GetEnumTypes())
             {
                 var jsonConfigEnumType = typeof(JsConfig<>).MakeGenericType(enumType);
@@ -123,7 +137,7 @@ namespace Lime.Protocol.Serialization.ServiceStack
             session.CompressionOptions = jsonObject.Get<SessionCompression[]>(Session.COMPRESSION_OPTIONS_KEY);
             session.SchemeOptions = jsonObject.Get<AuthenticationScheme[]>(Session.SCHEME_OPTIONS_KEY);
 
-            if (jsonObject.ContainsKey(Session.AUTHENTICATION_KEY))
+            if (jsonObject.ContainsKey(Session.SCHEME_KEY))
             {
                 AuthenticationScheme scheme;
                 if (!Enum.TryParse<AuthenticationScheme>(jsonObject[Session.SCHEME_KEY], true, out scheme))
@@ -137,8 +151,15 @@ namespace Lime.Protocol.Serialization.ServiceStack
                     throw new ArgumentException("Unknown authentication mechanism");
                 }
 
-                session.Authentication = (Authentication)global::ServiceStack.Text.JsonSerializer.DeserializeFromString(
-                    jsonObject.GetUnescaped(Session.AUTHENTICATION_KEY), authenticationType);
+                if (jsonObject.ContainsKey(Session.AUTHENTICATION_KEY))
+                {
+                    session.Authentication = (Authentication)global::ServiceStack.Text.JsonSerializer.DeserializeFromString(
+                        jsonObject.GetUnescaped(Session.AUTHENTICATION_KEY), authenticationType);
+                }
+                else
+                {
+                    session.Authentication = (Authentication)TypeUtil.CreateInstance(authenticationType);
+                }
             }
 
             return session;
@@ -181,16 +202,66 @@ namespace Lime.Protocol.Serialization.ServiceStack
             if (jsonObject.ContainsKey(typeKey))
             {
                 var mediaType = jsonObject.Get<MediaType>(typeKey);
-
                 Type documentType;
+                
+                if (mediaType.IsJson)
+                {                    
+                    if (TypeUtil.TryGetTypeForMediaType(mediaType, out documentType))
+                    {
+                        if (jsonObject.ContainsKey(documentPropertyName))
+                        {
+                            var documentString = jsonObject.GetUnescaped(documentPropertyName);
 
-                if (!TypeUtil.TryGetTypeForMediaType(mediaType, out documentType))
-                {
-                    throw new ArgumentException("Unknown document type");
+                            document = (Document)global::ServiceStack.Text.JsonSerializer.DeserializeFromString(
+                                documentString, documentType);
+                        }
+                        else
+                        {
+                            document = (Document)TypeUtil.CreateInstance(documentType);
+                        }
+                    }
+                    else
+                    {
+                        if (jsonObject.ContainsKey(documentPropertyName))
+                        {
+                            var documentJsonObject = jsonObject.Get<global::ServiceStack.Text.JsonObject>(documentPropertyName);
+                            var documentDictionary = documentJsonObject
+                                .ToDictionary(k => k.Key, v => (object)v.Value);
+
+                            document = new JsonDocument(documentDictionary, mediaType);
+                        }
+                        else
+                        {
+                            document = new JsonDocument(mediaType);
+                        }
+                    }
                 }
+                else
+                {
+                    string documentString = null;
 
-                document = (Document)global::ServiceStack.Text.JsonSerializer.DeserializeFromString(
-                    jsonObject.GetUnescaped(documentPropertyName), documentType);
+                    if (jsonObject.ContainsKey(documentPropertyName))
+                    {
+                        documentString = jsonObject.GetUnescaped(documentPropertyName);
+                    }
+                    
+                    if (TypeUtil.TryGetTypeForMediaType(mediaType, out documentType))
+                    {
+                        if (!string.IsNullOrWhiteSpace(documentString))
+                        {
+                            var parseFunc = TypeUtil.GetParseFuncForType(documentType);
+                            document = (Document)parseFunc(documentString);
+                        }
+                        else
+                        {
+                            document = (Document)TypeUtil.CreateInstance(documentType);
+                        }                        
+                    }
+                    else
+                    {
+                        document = new PlainDocument(documentString, mediaType);                        
+                    }
+                }                                
             }
 
             return document;

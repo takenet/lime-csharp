@@ -34,9 +34,9 @@ namespace Lime.Protocol
 
             _json = json;
 
-            if (!mediaType.Suffix.Equals(MediaType.JSON_SUFFIX))
+            if (!mediaType.IsJson)
             {
-                throw new ArgumentException("Invalid media type. The expected suffix is 'json'.");
+                throw new ArgumentException("The media type is not a valid json type");
             }
         }
 

@@ -106,17 +106,13 @@ namespace Lime.Protocol.Serialization
                     {
                         var mediaType = value.GetMediaType();
 
-                        if (string.IsNullOrWhiteSpace(mediaType.Suffix))
-                        {                            
-                            w.WriteStringProperty(memberName, value.ToString());                            
-                        }
-                        else if (mediaType.Suffix.Equals(MediaType.JSON_SUFFIX))
-                        {                            
+                        if (mediaType.IsJson)
+                        {
                             w.WriteProperty(memberName, value);                            
                         }
-                        else
+                        else 
                         {
-                            throw new NotSupportedException(string.Format("The type '{0}' of the property '{1}' is not supported", propertyType, memberName));
+                            w.WriteStringProperty(memberName, value.ToString());
                         }
                     }
                 };
@@ -297,33 +293,7 @@ namespace Lime.Protocol.Serialization
                             object value;
                             Type concreteType;
 
-                            if (string.IsNullOrWhiteSpace(mediaType.Suffix))
-                            {
-                                string propertyValue = null;
-                                if (j.ContainsKey(memberName) &&
-                                     j[memberName] is string)
-                                {
-                                    propertyValue = (string)j[memberName];
-                                }
-
-                                if (TypeUtil.TryGetTypeForMediaType(mediaType, out concreteType))
-                                {
-                                    if (propertyValue != null)
-                                    {
-                                        var parseFunc = TypeUtil.GetParseFuncForType(concreteType);
-                                        value = parseFunc(propertyValue);
-                                    }
-                                    else
-                                    {
-                                        value = TypeUtil.CreateInstance(concreteType);
-                                    }
-                                }
-                                else
-                                {
-                                    value = new PlainDocument(propertyValue, mediaType);
-                                }
-                            }
-                            else if (mediaType.Suffix.Equals(MediaType.JSON_SUFFIX))
+                            if (mediaType.IsJson)
                             {
                                 JsonObject propertyJsonObject = null;
                                 if (j.ContainsKey(memberName) &&
@@ -351,11 +321,33 @@ namespace Lime.Protocol.Serialization
                                 {
                                     value = new JsonDocument(mediaType);
                                 }
-                            }
+                            } 
                             else
                             {
-                                throw new NotSupportedException(string.Format("The type '{0}' of the property '{1}' is not supported", propertyType, memberName));
-                            }
+                                string propertyValue = null;
+                                if (j.ContainsKey(memberName) &&
+                                     j[memberName] is string)
+                                {
+                                    propertyValue = (string)j[memberName];
+                                }
+
+                                if (TypeUtil.TryGetTypeForMediaType(mediaType, out concreteType))
+                                {
+                                    if (propertyValue != null)
+                                    {
+                                        var parseFunc = TypeUtil.GetParseFuncForType(concreteType);
+                                        value = parseFunc(propertyValue);
+                                    }
+                                    else
+                                    {
+                                        value = TypeUtil.CreateInstance(concreteType);
+                                    }
+                                }
+                                else
+                                {
+                                    value = new PlainDocument(propertyValue, mediaType);
+                                }
+                            }                            
 
                             if (value != null)
                             {
