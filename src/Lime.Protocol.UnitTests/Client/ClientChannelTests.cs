@@ -7,6 +7,7 @@ using Moq;
 using System.Threading;
 using Lime.Protocol.Security;
 using Lime.Protocol.Resources;
+using Shouldly;
 
 namespace Lime.Protocol.UnitTests.Client
 {
@@ -26,16 +27,18 @@ namespace Lime.Protocol.UnitTests.Client
 
         #endregion
 
-        public ClientChannel GetTarget(Guid? sessionId = null, SessionState state = SessionState.New, bool fillReceivedEnvelopes = false, bool autoReplyPings = true, bool autoNotifyReceipt = true)
+        public ClientChannel GetTarget(Guid? sessionId = null, SessionState state = SessionState.New, bool fillEnvelopeRecipients = false, bool autoReplyPings = true, bool autoNotifyReceipt = true, Node remoteNode = null, Node localNode = null)
         {
             return new TestClientChannel(
                 sessionId,
                 state,
                 _transport.Object,
                 _sendTimeout,
-                fillReceivedEnvelopes,
+                fillEnvelopeRecipients,
                 autoReplyPings,
-                autoNotifyReceipt
+                autoNotifyReceipt,
+                remoteNode,
+                localNode
                 );
         }
 
@@ -330,6 +333,86 @@ namespace Lime.Protocol.UnitTests.Client
 
         #endregion
 
+        #region SendMessageAsync
+
+        [TestMethod]
+        [TestCategory("SendMessageAsync")]
+        public async Task SendMessageAsync_DelegateMessage_FillsFromTheSession()
+        {
+            var content = DataUtil.CreateTextContent();
+            var message = DataUtil.CreateMessage(content);
+
+            var remoteNode = DataUtil.CreateNode();
+            var localNode = DataUtil.CreateNode();
+
+            var senderNode = DataUtil.CreateNode();
+            var destinationNode = DataUtil.CreateNode();
+
+            message.From = senderNode.Copy();
+            message.To = destinationNode.Copy();
+
+            var target = GetTarget(
+                state: SessionState.Established,
+                fillEnvelopeRecipients: true,
+                remoteNode: remoteNode,
+                localNode: localNode);
+
+
+            await target.SendMessageAsync(message);
+
+            _transport.Verify(
+                t => t.SendAsync(It.Is<Message>(
+                        e => e.Id == message.Id &&
+                             e.From.Equals(senderNode) &&
+                             e.To.Equals(destinationNode) &&
+                             e.Pp != null &&
+                             e.Pp.Equals(localNode) &&
+                             e.Content == message.Content),
+                    It.IsAny<CancellationToken>()),
+                    Times.Once());
+        }
+
+        [TestMethod]
+        [TestCategory("SendMessageAsync")]
+        public async Task SendMessageAsync_DelegateMessageWithPpAndEmptyDomain_FillsFromTheSession()
+        {
+            var content = DataUtil.CreateTextContent();
+            var message = DataUtil.CreateMessage(content);
+
+            var remoteNode = DataUtil.CreateNode();
+            var localNode = DataUtil.CreateNode();
+
+            var senderNode = DataUtil.CreateNode();
+            var destinationNode = DataUtil.CreateNode();
+
+            message.From = senderNode.Copy();
+            message.To = destinationNode.Copy();
+            message.Pp = localNode.Copy();
+            message.Pp.Domain = null;
+
+            var target = GetTarget(
+                state: SessionState.Established,
+                fillEnvelopeRecipients: true,
+                remoteNode: remoteNode,
+                localNode: localNode);
+
+
+            await target.SendMessageAsync(message);
+
+            _transport.Verify(
+                t => t.SendAsync(It.Is<Message>(
+                        e => e.Id == message.Id &&
+                             e.From.Equals(senderNode) &&
+                             e.To.Equals(destinationNode) &&
+                             e.Pp != null &&
+                             e.Pp.Equals(localNode) &&
+                             e.Content == message.Content),
+                    It.IsAny<CancellationToken>()),
+                    Times.Once());
+        }
+
+        #endregion
+
         #region ReceiveMessageAsync
 
         [TestMethod]
@@ -611,14 +694,17 @@ namespace Lime.Protocol.UnitTests.Client
 
         private class TestClientChannel : ClientChannel
         {
-            public TestClientChannel(Guid? sessionId, SessionState state, ITransport transport, TimeSpan sendTimeout, bool fillReceivedEnvelopes = false, bool autoReplyPings = true, bool autoNotifyReceipt = false)
-                : base(transport, sendTimeout, 5, fillReceivedEnvelopes, autoReplyPings, autoNotifyReceipt)
+            public TestClientChannel(Guid? sessionId, SessionState state, ITransport transport, TimeSpan sendTimeout, bool fillEnvelopeRecipients = false, bool autoReplyPings = true, bool autoNotifyReceipt = false, Node remoteNode = null, Node localNode = null)
+                : base(transport, sendTimeout, 5, fillEnvelopeRecipients, autoReplyPings, autoNotifyReceipt)
             {
                 if (sessionId.HasValue)
                 {
                     base.SessionId = sessionId.Value;
                 }
                 base.State = state;
+                base.RemoteNode = remoteNode;
+                base.LocalNode = localNode;
+
             }
 
         }

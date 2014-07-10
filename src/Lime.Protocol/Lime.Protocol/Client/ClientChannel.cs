@@ -331,6 +331,33 @@ namespace Lime.Protocol.Client
             return session;
         }
 
+        /// <summary>
+        /// Fills the envelope recipients
+        /// using the session information
+        /// </summary>
+        /// <param name="envelope"></param>
+        protected override void FillEnvelope(Envelope envelope, bool isSending)
+        {
+            base.FillEnvelope(envelope, isSending);
+
+            if (this.LocalNode != null &&
+                isSending && 
+                this.Mode != SessionMode.Server)
+            {
+                if (envelope.Pp == null)
+                {
+                    if (!envelope.From.Equals(this.LocalNode))
+                    {
+                        envelope.Pp = this.LocalNode.Copy();
+                    }
+                }
+                else if (string.IsNullOrWhiteSpace(envelope.Pp.Domain))
+                {
+                    envelope.Pp.Domain = this.LocalNode.Domain;
+                }
+            }
+        }
+
         #endregion
     }
 }

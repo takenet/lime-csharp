@@ -99,7 +99,6 @@ namespace Lime.Protocol.UnitTests.Network
                     Times.Once());
         }
 
-
         [TestMethod]
         [TestCategory("SendMessageAsync")]
         public async Task SendMessageAsync_IncompleteRecipients_FillsFromTheSession()
@@ -130,6 +129,7 @@ namespace Lime.Protocol.UnitTests.Network
                     It.IsAny<CancellationToken>()),
                     Times.Once());
         }
+
         [TestMethod]
         [TestCategory("SendMessageAsync")]
         [ExpectedException(typeof(ArgumentNullException))]

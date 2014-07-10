@@ -408,71 +408,6 @@ namespace Lime.Protocol.Network
             }            
         }
 
-
-        /// <summary>
-        /// Fills the envelope recipients
-        /// using the session information
-        /// </summary>
-        /// <param name="envelope"></param>
-        private void FillEnvelope(Envelope envelope, bool isSending)
-        {
-            Node from;
-            Node to;
-
-            if (isSending)
-            {
-                from = this.LocalNode;
-                to = this.RemoteNode;
-            }
-            else
-            {
-                // Receiving
-                from = this.RemoteNode;
-                to = this.LocalNode;
-            }
-
-            if (from != null)
-            {
-                if (envelope.From == null)
-                {
-                    envelope.From = from.Copy();
-                }
-                else if (string.IsNullOrEmpty(envelope.From.Domain))
-                {
-                    envelope.From.Domain = from.Domain;
-                }
-            }
-
-            if (to != null)
-            {
-                if (envelope.To == null)
-                {
-                    envelope.To = to.Copy();
-                }
-                else if (string.IsNullOrEmpty(envelope.To.Domain))
-                {
-                    envelope.To.Domain = to.Domain;
-                }                
-            }
-
-            if (this.Mode != SessionMode.Server &&
-                isSending &&
-                from != null)
-            {
-                if (envelope.Pp == null)
-                {
-                    if (!envelope.From.Equals(from))
-                    {
-                        envelope.Pp = from.Copy();
-                    }
-                }
-                else if (string.IsNullOrWhiteSpace(envelope.Pp.Domain))
-                {
-                    envelope.Pp.Domain = from.Domain;
-                }
-            }
-        }
-
         /// <summary>
         /// Fills the buffer with the received envelope
         /// </summary>
@@ -487,7 +422,7 @@ namespace Lime.Protocol.Network
 
             if (_fillEnvelopeRecipients)
             {
-                this.FillEnvelope(envelope, false);
+                FillEnvelope(envelope, false);
             }
 
             if (envelope is Notification)
@@ -583,7 +518,7 @@ namespace Lime.Protocol.Network
 
             if (_fillEnvelopeRecipients)
             {
-                this.FillEnvelope(envelope, true);
+                FillEnvelope(envelope, true);
             }
 
             return this.Transport.SendAsync(
@@ -604,10 +539,61 @@ namespace Lime.Protocol.Network
 
             if (_fillEnvelopeRecipients)
             {
-                this.FillEnvelope(envelope, false);
+                FillEnvelope(envelope, false);
             }
 
             return envelope;
+        }
+
+        #endregion
+
+        #region Protected Methods
+
+        /// <summary>
+        /// Fills the envelope recipients
+        /// using the session information
+        /// </summary>
+        /// <param name="envelope"></param>
+        protected virtual void FillEnvelope(Envelope envelope, bool isSending)
+        {
+            Node from;
+            Node to;
+
+            if (isSending)
+            {
+                from = this.LocalNode;
+                to = this.RemoteNode;
+            }
+            else
+            {
+                // Receiving
+                from = this.RemoteNode;
+                to = this.LocalNode;
+            }
+
+            if (from != null)
+            {
+                if (envelope.From == null)
+                {
+                    envelope.From = from.Copy();
+                }
+                else if (string.IsNullOrEmpty(envelope.From.Domain))
+                {
+                    envelope.From.Domain = from.Domain;
+                }
+            }
+
+            if (to != null)
+            {
+                if (envelope.To == null)
+                {
+                    envelope.To = to.Copy();
+                }
+                else if (string.IsNullOrEmpty(envelope.To.Domain))
+                {
+                    envelope.To.Domain = to.Domain;
+                }
+            }
         }
 
         #endregion

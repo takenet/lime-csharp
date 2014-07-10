@@ -157,8 +157,6 @@ namespace Lime.Protocol.Serialization
             return new string(newValue);
         }
 
-        private static TextInfo _enUsTextInfo =  new CultureInfo("en-US", false).TextInfo;
-
         /// <summary>
         /// Converts the string to the
         /// TitleCase (or PascalCase) representation
@@ -167,7 +165,27 @@ namespace Lime.Protocol.Serialization
         /// <returns></returns>
         public static string ToTitleCase(this string value)
         {
-            return _enUsTextInfo.ToTitleCase(value);
+            if (string.IsNullOrEmpty(value)) return value;
+
+            var len = value.Length;
+            var newValue = new char[len];
+
+            for (var i = 0; i < len; ++i)
+            {
+                var c0 = value[i];
+                var c1 = i < len - 1 ? value[i + 1] : 'A';
+                var c0isUpper = c0 >= 'A' && c0 <= 'Z';
+                var c1isUpper = c1 >= 'A' && c1 <= 'Z';
+
+                if (i == 0 && !c0isUpper)
+                    c0 = (char)(c0 - LowerCaseOffset);
+                else if (c0isUpper && c1isUpper)
+                    c0 = (char)(c0 + LowerCaseOffset);
+
+                newValue[i] = c0;
+            }
+
+            return new string(newValue);
         }
 
         /// <summary>
