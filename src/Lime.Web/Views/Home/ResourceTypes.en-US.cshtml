@@ -295,7 +295,7 @@ S:
     <h4>Properties</h4>
     <ul>
         <li>
-            <strong>events</strong> - Indicates the message content types that the session node is able to handle. By default, the server delivers all messages types to the nodes.
+            <strong>events</strong> - Indicates the events that you want the server to send info about. By default, the server will notificate only failed events.
         </li>
     </ul>
 
@@ -321,30 +321,31 @@ S:
 <code class="json">
 C:
 {
-    "id": "d1ad793d-2bf2-42f2-a843-65c7b518e601",
+    "id":  "2f158480-8c4e-4987-94e5-e4b960622f4b",
+    "method":  "set",
     "from": "walterjr@breakingbad.com/home",
-    "method": "get",
-    "type": "application/vnd.lime.capability+json"
+    "type":  "application/vnd.lime.receipt+json",
+    "resource":  {
+        "events":  [
+            "failed",
+            "accepted",
+            "validated",
+            "authorized",
+            "dispatched",
+            "received",
+            "consumed"    
+    ]  
+  }
 }
 </code>
 <code class="json">
 S:
 {
-    "id": "d1ad793d-2bf2-42f2-a843-65c7b518e601",    
+    "method": "set",
+    "status": "success",
+    "id": "2f158480-8c4e-4987-94e5-e4b960622f4b",
     "from": "server@breakingbad.com/machine1",
-    "to": "walterjr@breakingbad.com/home",
-    "method": "get",
-    "result": "success",
-    "type": "application/vnd.lime.capability+json",
-    "resource": {
-        "contentTypes": [
-            "application/vnd.lime.text+json",
-            "application/vnd.lime.chatstate+json",
-        ],
-        "resourceTypes": [
-            "application/vnd.lime.ping+json"
-        ]
-    }
+    "to": "walterjr@breakingbad.com/home"
 }
 </code>
 </pre>
@@ -1341,6 +1342,9 @@ S:
             </li>
             <li>
                 <a href="#presence">Presence</a>
+            </li>
+            <li>
+                <a href="#receipt">Presence</a>
             </li>
             <li>
                 <a href="#quota">Quota</a>
