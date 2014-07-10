@@ -299,7 +299,7 @@ namespace Lime.Client.Windows.ViewModels
 
         internal void ReceiveMessage(Message message)
         {
-            if (message.Content is TextContent)
+            if (message.Content is PlainText)
             {
                 Messages.Add(new MessageViewModel(message, MessageDirection.Input));
             }

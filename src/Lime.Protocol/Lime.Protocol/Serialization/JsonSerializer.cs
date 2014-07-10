@@ -96,6 +96,27 @@ namespace Lime.Protocol.Serialization
                     }
                 };
             }
+            else if (typeof(Document).IsAssignableFrom(propertyType))
+            {
+                serializePropertyAction = (v, w) =>
+                {
+                    var value = (Document)getFunc(v);
+
+                    if (value != null)
+                    {
+                        var mediaType = value.GetMediaType();
+
+                        if (mediaType.IsJson)
+                        {
+                            w.WriteProperty(memberName, value);                            
+                        }
+                        else 
+                        {
+                            w.WriteStringProperty(memberName, value.ToString());
+                        }
+                    }
+                };
+            }
             else
             {
                 serializePropertyAction = (v, w) =>
@@ -267,37 +288,66 @@ namespace Lime.Protocol.Serialization
                         if (j.ContainsKey(Message.TYPE_KEY) &&
                             j[Message.TYPE_KEY] is string)
                         {
-                            var mediaType = MediaType.Parse((string)j[Message.TYPE_KEY]);                            
+                            var mediaType = MediaType.Parse((string)j[Message.TYPE_KEY]);
 
-                            JsonObject propertyJsonObject = null;
-                            if (j.ContainsKey(memberName) &&
-                                j[memberName] is JsonObject)
-                            {
-                                propertyJsonObject = (JsonObject)j[memberName];
-                            }
-                            
                             object value;
-                            Type concreteType;                            
+                            Type concreteType;
 
-                            if (TypeUtil.TryGetTypeForMediaType(mediaType, out concreteType))
-                            {                                
-                                if (propertyJsonObject != null)
+                            if (mediaType.IsJson)
+                            {
+                                JsonObject propertyJsonObject = null;
+                                if (j.ContainsKey(memberName) &&
+                                    j[memberName] is JsonObject)
                                 {
-                                    value = JsonSerializer.ParseJson(concreteType, propertyJsonObject);
+                                    propertyJsonObject = (JsonObject)j[memberName];
+                                }
+
+                                if (TypeUtil.TryGetTypeForMediaType(mediaType, out concreteType))
+                                {
+                                    if (propertyJsonObject != null)
+                                    {
+                                        value = JsonSerializer.ParseJson(concreteType, propertyJsonObject);
+                                    }
+                                    else
+                                    {
+                                        value = TypeUtil.CreateInstance(concreteType);
+                                    }
+                                }
+                                else if (propertyJsonObject != null)
+                                {
+                                    value = new JsonDocument(propertyJsonObject, mediaType);
                                 }
                                 else
                                 {
-                                    value = TypeUtil.CreateInstance(concreteType);
+                                    value = new JsonDocument(mediaType);
                                 }
-                            }
-                            else if (propertyJsonObject != null)
-                            {
-                                value = new JsonDocument(propertyJsonObject, mediaType);
-                            }
+                            } 
                             else
                             {
-                                value = new JsonDocument(mediaType);
-                            }
+                                string propertyValue = null;
+                                if (j.ContainsKey(memberName) &&
+                                     j[memberName] is string)
+                                {
+                                    propertyValue = (string)j[memberName];
+                                }
+
+                                if (TypeUtil.TryGetTypeForMediaType(mediaType, out concreteType))
+                                {
+                                    if (propertyValue != null)
+                                    {
+                                        var parseFunc = TypeUtil.GetParseFuncForType(concreteType);
+                                        value = parseFunc(propertyValue);
+                                    }
+                                    else
+                                    {
+                                        value = TypeUtil.CreateInstance(concreteType);
+                                    }
+                                }
+                                else
+                                {
+                                    value = new PlainDocument(propertyValue, mediaType);
+                                }
+                            }                            
 
                             if (value != null)
                             {

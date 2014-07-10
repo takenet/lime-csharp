@@ -11,7 +11,6 @@ namespace Lime.Protocol
 {
     /// <summary>
     /// Represents a generic JSON document.
-    /// 
     /// </summary>
     public sealed class JsonDocument : Document, IDictionary<string, object>
     {
@@ -34,6 +33,11 @@ namespace Lime.Protocol
             }
 
             _json = json;
+
+            if (!mediaType.IsJson)
+            {
+                throw new ArgumentException("The media type is not a valid json type");
+            }
         }
 
         #endregion

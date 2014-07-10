@@ -230,7 +230,7 @@ namespace Lime.Client.Windows.ViewModels
                                 Name = this.Contact.Identity.Name,
                                 Domain = this.Contact.Identity.Domain
                             },
-                            Content = new TextContent()
+                            Content = new PlainText()
                             {
                                 Text = messageViewModel.Text
                             }

@@ -11,12 +11,12 @@ namespace Lime.Protocol.Contents
     /// Represents a flat text content
     /// </summary>
     [DataContract(Namespace = "http://limeprotocol.org/2014")]
-    public partial class TextContent : Document
+    public partial class PlainText : Document
     {
-        public const string MIME_TYPE = "application/vnd.lime.text+json";
-        public const string TEXT_KEY = "text";
+        public const string MIME_TYPE = "text/plain";
 
-        public TextContent()
+
+        public PlainText()
             : base(MediaType.Parse(MIME_TYPE))
         {
 
@@ -25,7 +25,6 @@ namespace Lime.Protocol.Contents
         /// <summary>
         /// Text of the message
         /// </summary>
-        [DataMember(Name = TEXT_KEY)]
         public string Text { get; set; }
 
         /// <summary>
@@ -38,5 +37,17 @@ namespace Lime.Protocol.Contents
         {
             return this.Text;
         }
+
+        /// <summary>
+        /// Parses the string to a 
+        /// PlainText instance.
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static PlainText Parse(string value)
+        {
+            return new PlainText() { Text = value };
+        }
+
     }
 }

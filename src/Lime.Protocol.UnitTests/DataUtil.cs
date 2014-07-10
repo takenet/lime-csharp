@@ -169,9 +169,9 @@ namespace Lime.Protocol.UnitTests
             };
         }
 
-        public static TextContent CreateTextContent()
+        public static PlainText CreateTextContent()
         {
-            return new TextContent()
+            return new PlainText()
             {
                 Text = CreateRandomString(150)
             };
@@ -185,7 +185,14 @@ namespace Lime.Protocol.UnitTests
                     { CreateRandomString(10), CreateRandomString(50) },
                     { CreateRandomString(10), CreateRandomInt(50) }
                 },
-                CreateMediaType());
+                CreateJsonMediaType());
+        }
+
+        public static PlainDocument CreatePlainDocument()
+        {
+            return new PlainDocument(
+                CreateRandomString(50),
+                CreatePlainMediaType());
         }
 
 
@@ -227,7 +234,17 @@ namespace Lime.Protocol.UnitTests
             };
         }
 
-        public static MediaType CreateMediaType()
+        public static MediaType CreatePlainMediaType()
+        {
+            return new MediaType(
+                CreateRandomString(10),
+                CreateRandomString(10),
+                null
+                );
+
+        }
+
+        public static MediaType CreateJsonMediaType()
         {
             return new MediaType(
                 "application",
@@ -243,15 +260,15 @@ namespace Lime.Protocol.UnitTests
             {
                 ContentTypes = new[] 
                 { 
-                    CreateMediaType(),
-                    CreateMediaType(),
-                    CreateMediaType()
+                    CreateJsonMediaType(),
+                    CreateJsonMediaType(),
+                    CreateJsonMediaType()
                 },
                 ResourceTypes = new[] 
                 { 
-                    CreateMediaType(),
-                    CreateMediaType(),
-                    CreateMediaType()
+                    CreateJsonMediaType(),
+                    CreateJsonMediaType(),
+                    CreateJsonMediaType()
                 }
             };
         }

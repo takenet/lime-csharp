@@ -5,14 +5,20 @@ Authenticating guest	Session	{"id":"$sessionId","from":"$from","state":"authenti
 Authenticating plain	Session	{"id":"$sessionId","from":"$from","state":"authenticating","scheme":"plain","authentication":{"password":"$password"}}
 Authenticating transport	Session	{"id":"$sessionId","from":"$from","state":"authenticating","scheme":"transport"}
 Finishing	Session	{"id":"$sessionId","state": "finishing"}
-Text message	Message	{"id":"$messageId","from":"$from","to":"$to","type":"application/vnd.lime.text+json","content":{"text":"$text"}}
+Text message	Message	{"id":"$messageId","to":"$to","type":"plain/text","content":"$text"}
+Chat state message	Message	{"to":"$to","type":"application/vnd.lime.chatstate+json","content":{"state":"$chatState"}}
+Fire-and-forget text message	Message	{"to":"$to","type":"plain/text","content":"$text"}
 Received notification	Notification	{"id":"$messageId","from":"$from","to":"$to","event":"received"}
 Consumed notification	Notification	{"id":"$messageId","from":"$from","to":"$to","event":"consumed"}
 Failed notification	Notification	{"id":"$messageId","from":"$from","to":"$to","event":"failed","reason":{"code":$reasonCode,"description":"$reasonDescription"}}
 Set presence available	Command	{"id":"$commandId","method":"set","type":"application/vnd.lime.presence+json","resource":{"status":"available"}}
 Set presence unavailable	Command	{"id":"$commandId","method":"set","type":"application/vnd.lime.presence+json","resource":{"status":"unavailable"}}
+Set presence available identity	Command	{"id":"$commandId","method":"set","type":"application/vnd.lime.presence+json","resource":{"status":"available","routingRule":"identity"}}
+Set presence available promiscuous	Command	{"id":"$commandId","method":"set","type":"application/vnd.lime.presence+json","resource":{"status":"available","routingRule":"promiscuous"}}
+Get own presence	Command	{"id":"$commandId","method":"get","type":"application/vnd.lime.presence+json"}
 Get presence	Command	{"id":"$commandId","from":"$from","method":"get","type":"application/vnd.lime.presence+json"}
 Get account	Command	{"id":"$commandId","from":"$from","method":"get","type":"application/vnd.lime.account+json"}
+Get own account	Command	{"id":"$commandId","method":"get","type":"application/vnd.lime.account+json"}
 Set account	Command	{"id":"$commandId","method":"set","type":"application/vnd.lime.account+json","resource":{"fullName":"$fullName","phoneNumber":"$phoneNumber","city":"$city","password":"$newPassword"}}
 Set account password	Command	{"id":"$commandId","method":"set","type":"application/vnd.lime.account+json","resource":{"password":"$newPassword","oldPassword":"$oldPassword"}}
 Set receipts all events	Command	{"id":"$commandId","method":"set","type":"application/vnd.lime.receipt+json","resource":{"events":["failed","accepted","validated","authorized","dispatched","received","consumed"]}}

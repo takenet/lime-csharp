@@ -36,7 +36,6 @@ namespace Lime.Protocol.Serialization.Newtonsoft
                     _settings.Converters.Add(new AuthenticationJsonConverter());
                     _settings.Converters.Add(new MessageJsonConverter());
                     _settings.Converters.Add(new CommandJsonConverter());
-
                     _settings.Converters.Add(new DocumentJsonConverter());
                 }
 
@@ -269,10 +268,9 @@ namespace Lime.Protocol.Serialization.Newtonsoft
                     var session = new Session();
                     serializer.Populate(jObject.CreateReader(), session);
 
-                    if (jObject["authentication"] != null &&
-                        jObject["scheme"] != null)
+                    if (jObject[Session.SCHEME_KEY] != null)
                     {
-                        var authenticationScheme = jObject["scheme"]
+                        var authenticationScheme = jObject[Session.SCHEME_KEY]
                             .ToObject<AuthenticationScheme>();
 
                         Type authenticationType;
@@ -280,7 +278,10 @@ namespace Lime.Protocol.Serialization.Newtonsoft
                         if (TypeUtil.TryGetTypeForAuthenticationScheme(authenticationScheme, out authenticationType))
                         {
                             session.Authentication = (Authentication)Activator.CreateInstance(authenticationType);
-                            serializer.Populate(jObject["authentication"].CreateReader(), session.Authentication);
+                            if (jObject[Session.AUTHENTICATION_KEY] != null)
+                            {
+                                serializer.Populate(jObject[Session.AUTHENTICATION_KEY].CreateReader(), session.Authentication);
+                            }
                         }
                     }
 
@@ -292,6 +293,8 @@ namespace Lime.Protocol.Serialization.Newtonsoft
 
             public override void WriteJson(global::Newtonsoft.Json.JsonWriter writer, object value, global::Newtonsoft.Json.JsonSerializer serializer)
             {
+
+
                 throw new NotImplementedException();
             }
 
@@ -305,7 +308,7 @@ namespace Lime.Protocol.Serialization.Newtonsoft
         {
             public override bool CanWrite
             {
-                get { return false; }
+                get { return true; }
             }
 
             public override bool CanConvert(Type objectType)
@@ -330,20 +333,50 @@ namespace Lime.Protocol.Serialization.Newtonsoft
                 {
                     JObject jObject = JObject.Load(reader);
 
-                    if (jObject["content"] != null &&
-                        jObject["type"] != null)
+                    if (jObject[Message.CONTENT_KEY] != null &&
+                        jObject[Message.TYPE_KEY] != null)
                     {
                         var message = new Message(Guid.Empty);
                         serializer.Populate(jObject.CreateReader(), message);
-                        
-                        var contentMediaType = jObject["type"].ToObject<MediaType>();
+
+                        var contentMediaType = jObject[Message.TYPE_KEY].ToObject<MediaType>();
 
                         Type documentType;
 
                         if (TypeUtil.TryGetTypeForMediaType(contentMediaType, out documentType))
                         {
-                            message.Content = (Document)Activator.CreateInstance(documentType);
-                            serializer.Populate(jObject["content"].CreateReader(), message.Content);
+                            if (contentMediaType.IsJson)
+                            {
+                                message.Content = (Document)Activator.CreateInstance(documentType);
+                                serializer.Populate(jObject[Message.CONTENT_KEY].CreateReader(), message.Content);
+                            }
+                            else 
+                            {
+                                var parseFunc = TypeUtil.GetParseFuncForType(documentType);
+                                message.Content = (Document)parseFunc(jObject[Message.CONTENT_KEY].ToString());
+                            }
+                        }
+                        else
+                        {
+                            if (contentMediaType.IsJson)
+                            {
+                                var contentJsonObject = jObject[Message.CONTENT_KEY] as IDictionary<string, JToken>;
+                                if (contentJsonObject != null)
+                                {
+                                    var contentDictionary = contentJsonObject.ToDictionary(k => k.Key, v => (object)v.Value.ToString());
+                                    message.Content = new JsonDocument(contentDictionary, contentMediaType);                                        
+                                }
+                                else
+                                {
+                                    throw new ArgumentException("The property is not a JSON");
+                                }                                    
+                            }
+                            else
+                            {
+                                message.Content = new PlainDocument(
+                                    jObject[Message.CONTENT_KEY].ToString(),
+                                    contentMediaType);
+                            }
                         }
 
                         target = message;
@@ -358,8 +391,46 @@ namespace Lime.Protocol.Serialization.Newtonsoft
             }
 
             public override void WriteJson(global::Newtonsoft.Json.JsonWriter writer, object value, global::Newtonsoft.Json.JsonSerializer serializer)
-            {
-                throw new NotImplementedException();
+            {                                
+                var message = (Message)value;               
+
+                if (message.Type.IsJson)
+                {
+                    if (message.Content is JsonDocument)
+                    {
+                        throw new NotSupportedException("The content type is not supported by this serializer");
+                    }
+
+                    serializer.Serialize(writer, value);
+                }
+                else
+                {
+                    writer.WriteStartObject();
+
+                    writer.WriteValueIfNotDefault(Envelope.ID_KEY, message.Id);
+                    writer.WriteValueIfNotDefaultAsString(Envelope.FROM_KEY, message.From);
+                    writer.WriteValueIfNotDefaultAsString(Envelope.TO_KEY, message.To);
+                    writer.WriteValueIfNotDefaultAsString(Envelope.PP_KEY, message.Pp);
+
+                    writer.WritePropertyName(Message.TYPE_KEY);
+                    writer.WriteValue(message.Type.ToString());
+                    writer.WritePropertyName(Message.CONTENT_KEY);                    
+                    writer.WriteValue(message.Content.ToString());
+                    
+                    if (message.Metadata != null)
+                    {
+                        writer.WritePropertyName(Message.METADATA_KEY);
+                        writer.WriteStartObject();
+
+                        foreach (var item in message.Metadata)
+                        {
+                            writer.WritePropertyName(item.Key);
+                            writer.WriteValue(item.Value);
+                        }
+
+                        writer.WriteEndObject();
+                    }                    
+                }
             }
         }
 
@@ -398,17 +469,53 @@ namespace Lime.Protocol.Serialization.Newtonsoft
                     var command = new Command();
                     serializer.Populate(jObject.CreateReader(), command);
 
-                    if (jObject[Command.RESOURCE_KEY] != null &&
-                        jObject[Command.TYPE_KEY] != null)
+                    if (jObject[Command.TYPE_KEY] != null)
                     {
-                        var contentMediaType = jObject[Command.TYPE_KEY].ToObject<MediaType>();
+                        var resourceMediaType = jObject[Command.TYPE_KEY].ToObject<MediaType>();
 
                         Type documentType;
 
-                        if (TypeUtil.TryGetTypeForMediaType(contentMediaType, out documentType))
+                        if (TypeUtil.TryGetTypeForMediaType(resourceMediaType, out documentType))
                         {
-                            command.Resource = (Document)Activator.CreateInstance(documentType);
-                            serializer.Populate(jObject[Command.RESOURCE_KEY].CreateReader(), command.Resource);
+                            if (resourceMediaType.IsJson)
+                            {
+                                command.Resource = (Document)Activator.CreateInstance(documentType);
+                                if (jObject[Command.RESOURCE_KEY] != null)
+                                {
+                                    serializer.Populate(jObject[Command.RESOURCE_KEY].CreateReader(), command.Resource);
+                                }
+                            }
+                            else if (jObject[Command.RESOURCE_KEY] != null)
+                            {
+                                var parseFunc = TypeUtil.GetParseFuncForType(documentType);
+                                command.Resource = (Document)parseFunc(jObject[Command.RESOURCE_KEY].ToString());
+                            }
+                            else
+                            {
+                                command.Resource = (Document)Activator.CreateInstance(documentType);
+                            }
+                        }
+                        else
+                        {
+                            if (resourceMediaType.IsJson)
+                            {
+                                var contentJsonObject = jObject[Command.RESOURCE_KEY] as IDictionary<string, JToken>;
+                                if (contentJsonObject != null)
+                                {
+                                    var contentDictionary = contentJsonObject.ToDictionary(k => k.Key, v => (object)v.Value.ToString());
+                                    command.Resource = new JsonDocument(contentDictionary, resourceMediaType);
+                                }
+                                else
+                                {
+                                    throw new ArgumentException("The property is not a JSON");
+                                }
+                            }
+                            else
+                            {
+                                command.Resource = new PlainDocument(
+                                    jObject[Command.RESOURCE_KEY].ToString(),
+                                    resourceMediaType);
+                            }
                         }
                     }
 
@@ -457,5 +564,29 @@ namespace Lime.Protocol.Serialization.Newtonsoft
         }
 
         #endregion
+    }
+
+    public static class JsonWriterExtensions
+    {
+        public static void WriteValueIfNotDefault<T>(this JsonWriter writer, string propertyName, T value)
+        {
+            if (value != null && 
+                !value.Equals(default(T)))
+            {
+                writer.WritePropertyName(propertyName);
+                writer.WriteValue(value);
+            }
+        }
+
+        public static void WriteValueIfNotDefaultAsString<T>(this JsonWriter writer, string propertyName, T value)
+        {
+            if (value != null &&
+                !value.Equals(default(T)))
+            {
+                writer.WritePropertyName(propertyName);
+                writer.WriteValue(value.ToString());
+            }
+        }
+
     }
 }
