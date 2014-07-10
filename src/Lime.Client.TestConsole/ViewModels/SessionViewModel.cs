@@ -150,7 +150,6 @@ namespace Lime.Client.TestConsole.ViewModels
             }
         }
 
-
         private SessionState _lastSessionState;
 
         public SessionState LastSessionState
@@ -460,6 +459,10 @@ namespace Lime.Client.TestConsole.ViewModels
 
                     if (!string.IsNullOrWhiteSpace(ClientCertificateThumbprint))
                     {
+                        ClientCertificateThumbprint = ClientCertificateThumbprint
+                            .Replace(" ", "")
+                            .Replace("‎", "");
+
                         var store = new X509Store(StoreName.My, StoreLocation.CurrentUser);
 
                         try
@@ -900,7 +903,6 @@ namespace Lime.Client.TestConsole.ViewModels
         }
 
         #endregion
-
 
         #region ITraceWriter Members
 
