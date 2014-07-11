@@ -72,12 +72,12 @@
         </li>
     </ul>
 
-    <p>Every connected node must have an identity, presented in the <em>name@domain</em> format, as defined by the <a href="http://tools.ietf.org/html/rfc2822#section-3.4.1">RFC 2822, section 3.4.1</a>. The domain name SHOULD be a valid domain (i.e. can be resolved by a DNS server) and the name a valid user account identifier in the domain. The identity is authenticated by the server during the establishment of the session.</p>
+    <p>Every connected node must have an identity, presented in the <em>name@domain</em> format, as defined by the <a href="http://tools.ietf.org/html/rfc2822#section-3.4.1">RFC 2822, section 3.4.1</a>. The domain name should be a valid domain (i.e. can be resolved by a DNS server) and the name a valid user account identifier in the domain. The identity is authenticated by the server during the establishment of the session.</p>
     <p>In addition to the identity, the connected node can suggest a name to the particular connection using a identifier called <em>instance</em>. This identifier should appears after the identity, separated by a slash (/) symbol, during the session authentication process. Since one identity can have more than one active connection in a domain, the <em>instance</em> should be used to differentiate these connections. Normally is used the name of the device (John-Cellphone, John-PC) but can be any valid string. If not provided, the server will set a generic value.</p>
     <p>Therewith, the complete format of a node identifier is <em>name@domain/instance</em>, similar to the <a href="http://xmpp.org/rfcs/rfc3920.html#rfc.section.3">XMPP's Jabber ID</a> (the difference is that the identifier located after the slash is called <em>instance</em> instead of <em>resource</em>). The node identifier must be unique in a LIME network and a envelope addressed to a specific node should be delivered to a connection with that identifier (except for <a href="http://limeprotocol.org/resourcetypes#presence">promiscuous sessions</a>). envelopes addressed to a identity (<em>name@domain</em>) can be routed in different ways, according to the node presence configuration: A node can opt to always receive all messages sent to the identity, or to receive if it have the highest priority (like XMPP) or only receive if are addressed to the specific instance.</p>
 
     <h3 id="envelope">Envelope</h3>
-    <p>The JSON documents exchanged in a LIME conversation are called envelopes. The JSON data MUST be encoded in the <a href="http://tools.ietf.org/html/rfc3629">UTF-8</a> format.</p>
+    <p>The JSON documents exchanged in a LIME conversation are called envelopes. The JSON data must be compliant with the <a href="http://tools.ietf.org/html/rfc4627">RFC 4627</a> specification, using the <a href="http://tools.ietf.org/html/rfc3629">UTF-8</a> encoding.</p>
     <p>Each envelope MAY contains the following properties:</p>
     <ul>
         <li>
@@ -94,7 +94,7 @@
             The purpose of using a 128-bit identifier is minimize the risk of a collision, since the protocol allows interconnections between networks in different domains, each one with a large number of connected nodes.
         </li>
         <li>
-            <strong>metadata</strong> - Allows the transport of generic information, in the "name": "value" format. This property is OPTIONAL for all envelopes. Any value set in this property SHOULD NOT change the behavior of the server.
+            <strong>metadata</strong> - Allows the transport of generic information, in the "name": "value" format. This property is optional for all envelopes. Any value set in this property should NOT change the behavior of the server.
         </li>
     </ul>
 
@@ -129,7 +129,7 @@
         },
         "type" : {
             "type": "string",
-            "pattern": "^[-\w]+/[-\w.]+(\+json)$"
+            "pattern": "^[-\w]+/[-\w.]+(\+\w+)?$"
         },
         "content" : {
             "type": "object"
@@ -144,16 +144,16 @@
     <p>In a message, the following constraints should apply to the envelope properties:</p>
     <ul>
         <li>
-            <strong>id</strong> - OPTIONAL. The sender just need provide this information in order to receive notifications related to the message. If not provided, the message is processed in the <em>fire-and-forget</em> mode.
+            <strong>id</strong> - optional. The sender just need provide this information in order to receive notifications related to the message. If not provided, the message is processed in the <em>fire-and-forget</em> mode.
         </li>
         <li>
-            <strong>from</strong> - OPTIONAL for the sender, since the value can be determined by the server in the session. MANDATORY in the destination.
+            <strong>from</strong> - optional for the sender, since the value can be determined by the server in the session. mandatory in the destination.
         </li>
         <li>
-            <strong>to</strong> - MANDATORY for the sender, but is allowed to ommit the value of the <em>instance</em> (the server will route the envelope according to the routing rule chosen by the destination) and/or <em>domain</em> (the server will assume that the destination is in the same domain of the sender) properties. OPTIONAL in the destination.
+            <strong>to</strong> - mandatory for the sender, but is allowed to ommit the value of the <em>instance</em> (the server will route the envelope according to the routing rule chosen by the destination) and/or <em>domain</em> (the server will assume that the destination is in the same domain of the sender) properties. optional in the destination.
         </li>
         <li>
-            <strong>pp</strong> - OPTIONAL for the sender, when is considered the identity of the session. Is MANDATORY in the destination if the identity of the originator is different of the identity of the <em>from</em> property.
+            <strong>pp</strong> - optional for the sender, when is considered the identity of the session. Is mandatory in the destination if the identity of the originator is different of the identity of the <em>from</em> property.
         </li>
         <li>
             <strong>metadata</strong> - The sender should avoid to use this property to transport any kind of content-related information, but merely data relevant to the context of the communication. Consider to define a new content type if there's a need to include more content information into the message.
@@ -161,13 +161,20 @@
 
     </ul>
 
-    <p>Besides the properties defined in the envelope, a message SHOULD contains:</p>
+    <p>Besides the properties defined in the envelope, a message should contains:</p>
     <ul>
         <li>
-            <strong>type</strong> - <a href="http://tools.ietf.org/html/rfc2045">MIME</a> declaration of the content type of the message. It is used by the destination to handle the content in the appropriate way. The protocol defines some <a href="@Url.Action("ContentTypes")">common types</a> that SHOULD be reused, but any kind of content with subtype JSON is supported. If you are using a custom content type, consider <a href="http://www.iana.org/cgi-bin/mediatypes.pl">registering it</a> with IANA in order to provide interoperability.
+            <strong>type</strong> - <a href="http://tools.ietf.org/html/rfc2045">MIME</a> declaration of the content type of the message. 
+            This property is used by the destination to handle the content in the appropriate way. 
+            The MIME can be any discrete type (text, application, image, video or audio; composite types, like message or multipart, are not supported). 
+            For structured data, is recommended to use JSON subtypes (like <em>application/json</em> or <em>application/vnd.specific+json</em>), althought is possible to send other types, like XML, provided that the unsupported characters in content are escaped, accordinally to the JSON specification.
+            The protocol defines some <a href="@Url.Action("ContentTypes")">common types</a> that should be reused. 
+            If you are using a custom content type, consider <a href="http://www.iana.org/cgi-bin/mediatypes.pl">registering it</a> with IANA in order to provide interoperability.
         </li>
         <li>
-            <strong>content</strong> - JSON representation of the content.
+            <strong>content</strong> - The representation of the content. JSON content data are represented unescaped. 
+            Binary data (images, video and audio) should be represented with the Base64 encoding.
+            The remaining data types should be represented as an escaped value.
         </li>
     </ul>
 
@@ -185,16 +192,17 @@
 </code>
 </pre>
 
-    <p>Text message with metadata and notification support, omitting the destination domain:</p>
+    <p>JSON text message with metadata and notification support, omitting the destination domain:</p>
 <pre>
 <code class="json">
 {
     "id": "48600604-ce09-479c-b985-1195b196fe8e",
     "from": "heisenberg@breakingbad.com/bedroom",
     "to": "skyler/bedroom",
-    "type": "application/vnd.lime.text+json",
+    "type": "application/vnd.lime.threadedtext+json",
     "content": {
-        "text": "I am the one who knocks!"
+        "text": "I am the one who knocks!",
+        "thread": 2
     },
     "metadata": {
         "serverIp": "192.168.0.1"
@@ -202,7 +210,18 @@
 }
 </code>
 </pre>
-
+    <p>Binary text message with notification support:</p>
+<pre>
+<code class="json">
+{
+    "id": "65603604-fe19-479c-c885-3195b196fe8e",   
+    "to": "heisenberg@breakingbad.com/bedroom",
+    "type": "image/png",
+    "content": "iVBORw0KGgoAAAANSUhEUgAAACsAAAAqCAMAAAAd31JXAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyJpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENTNSBNYWNpbnRvc2giIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6MEYyQzgwNTUxQkY2MTFFMkE2NzBBRjFERkI1MEFCQjUiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6MEYyQzgwNTYxQkY2MTFFMkE2NzBBRjFERkI1MEFCQjUiPiA8eG1wTU06RGVyaXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0ieG1wLmlpZDowRjJDODA1MzFCRjYxMUUyQTY3MEFGMURGQjUwQUJCNSIgc3RSZWY6ZG9jdW1lbnRJRD0ieG1wLmRpZDowRjJDODA1NDFCRjYxMUUyQTY3MEFGMURGQjUwQUJCNSIvPiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/PnkDBYEAAADAUExURcbhnr/flKbTaZPJSrPZfprMVKzWdMzlqcXinpTKS9jsvt7vyKDPX7ncieLxz9Los5vMVtTqt/j788bin6/Wec/lruby1dvswtXouJDIRfH459Lns+v13eDvy+r02+7246zUc6LRY6nTbev13t3txuXy05TJS73cj5vNV7HYe6LPYrjbh7bZhJ7OXL/fk7naiZfLUKrUb6XRZ9vtw+nz2uPw0LPXfsnipM3mq9jqvcDdk8zkqbzcjvH46P///43GP1/s3CQAAALWSURBVHjajJXpmqowDIYtlB1kVQE3wH0ddfalJ/d/V6fQAtUZz5n8kMfyJv2aJqHz5/fW+b4UdKkF/2UDf7cGOHmeB/nRv3UQ2XQHp2z/0RtQiz8fskOS+z+z6SbZrt6fCLOFRWbz4cth7f/A+kbRGRPiYmRBZYpFyGzw4eWTW9Y/rcbEkkpIZywgXdJH0zgzJtfsY7J6Ihpj+AM0hQbXyDiqYcamxv6JuHU8WfRRzHFmpAKbZ1QARwBL7KHW8eND3rJv3pCQ+hVIjDXr/9DtJGHNBsbD1NQaVkaVh9awznNhBJw9egMqQHKlWkR9stqZ9JYhZ2lYiSVJblgFQWvWbF8GpuzjMuYpUFjo8kdAJcsksedX7LHoN1qxzji5WVEdLIM2izYVm+/bHICtUeUyqJUaGevIrtSRjlGx8EmEHWVs06SVkm0OljLIEBjbE1mqw0KOAoqO2yWFvEOXsl3KjhAyTVNDSDN1ZNKSxKoqusOi17AES6XxF5S14NrMTqWhZB1x3RkRotHjS2KGv7jeLyKsSrriuIsyDQrGTn04sufsS8sqLq1IVZHrw9oqKtOnkmhdseuiX2+numUVUEW4rQbV1fRRv2B3sfPmrKZknR3eub5jqpbMvTdWD8lwVO3HS8cuPbAsZoHEyYTXWTSjWzp1RquQsnPFrta8Jnen2MWmDWL5gi4ENp8vR86m8DBtOhNs5qTowg33lmndb+ftgDQtg4SWZ+b2o2PTm11YzRZX3VZGq73x9PUUtD2/oY3MmTazXLFE4kMozIfAyOYL8WTVJbB+Hs0v+dWM6kI0Rs1FcBvJ9IRkfjOj6OyDbDijtSAJ1WWWg7V3uZ199PaMZTTsC+OH7j4dv0bLPP0+q4PQWGad8dRCNLSN9cV08LEFCO98L/w1bF+G8z6150G8ouR5cv871N1A4l2Kojh4CZzD9N/frMAPz7swDP3Jb75vd+2vAAMAIkNXL7uoiZEAAAAASUVORK5CYII="
+}
+</code>
+</pre>
+    
     <h3 id="notification">Notification</h3>
     <p>A notification transports information about events associated to a message sent in a session. Can be originated by a server or by the message destination node.</p>
 
@@ -265,16 +284,16 @@
     <p>In a notification, the following constraints should apply to the envelope properties:</p>
     <ul>
         <li>
-            <strong>id</strong> - MANDATORY. The id references the related message.
+            <strong>id</strong> - Mandatory. The id references the related message.
         </li>
         <li>
-            <strong>from</strong> - OPTIONAL. If the value is not present in the destination, it means that the notification was generated by the connected node (server).
+            <strong>from</strong> - Optional. If the value is not present in the destination, it means that the notification was generated by the connected node (server).
         </li>
         <li>
-            <strong>to</strong> - MANDATORY for the sender and OPTIONAL in the destination. The sender can ommit the value of the <em>domain</em>.
+            <strong>to</strong> - Mmandatory for the sender and optional in the destination. The sender can ommit the value of the <em>domain</em>.
         </li>
         <li>
-            <strong>pp</strong> - OPTIONAL for the sender, when is considered the identity of the session. Is MANDATORY in the destination if the identity of the originator is different of the identity of the <em>from</em> property.
+            <strong>pp</strong> - Optional for the sender, when is considered the identity of the session. Is mandatory in the destination if the identity of the originator is different of the identity of the <em>from</em> property.
         </li>
         <li>
             <strong>metadata</strong> - Avoid to use this property to transport any event-related data.
@@ -302,7 +321,7 @@
                     <strong>received</strong> - The destination has received the message.
                 </li>
                 <li>
-                    <strong>failed</strong> - A problem occurred during the processing of the message. In this case, the <em>reason</em> property of the notification SHOULD be present.
+                    <strong>failed</strong> - A problem occurred during the processing of the message. In this case, the <em>reason</em> property of the notification should be present.
                 </li>
             </ul>
         </li>
@@ -388,7 +407,7 @@
         },
         "type" : {
             "type": "string",
-            "pattern": "^[-\w]+/[-\w.]+(\+json)$"
+            "pattern": "^[-\w]+/((json)|([-\w.]+(\+json)))$"
         },
         "resource" : {
             "type": "object"
@@ -421,16 +440,16 @@
     <p>In a command, the following constraints should apply to the envelope properties:</p>
     <ul>
         <li>
-            <strong>id</strong> - MANDATORY, except for the <em>observe</em> method. Must be provided during the request and the same value should be in the related response command.
+            <strong>id</strong> - Mandatory, except for the <em>observe</em> method. Must be provided during the request and the same value should be in the related response command.
         </li>
         <li>
-            <strong>from</strong> - OPTIONAL. If the value is not present in the destination, it means that the notification was generated by the connected node (server).
+            <strong>from</strong> - Optional. If the value is not present in the destination, it means that the notification was generated by the connected node (server).
         </li>
         <li>
-            <strong>to</strong> - OPTIONAL. If the value is left empty in the request, the command will be processed by the connected node (server).
+            <strong>to</strong> - Optional. If the value is left empty in the request, the command will be processed by the connected node (server).
         </li>
         <li>
-            <strong>pp</strong> - OPTIONAL. This property is useful to get resources in the server owned by different identities, like presence and account information. The value SHOULD be defined if the resource of an <em>observe</em> method command is owned by a different identity than the destination.
+            <strong>pp</strong> - Optional. This property is useful to get resources in the server owned by different identities, like presence and account information. The value should be defined if the resource of an <em>observe</em> method command is owned by a different identity than the destination.
         </li>
         <li>
             <strong>metadata</strong> - Avoid to use this property to transport any command-related data, like extra parameters.
@@ -452,7 +471,7 @@
                     <strong>delete</strong> - Deletes a value of the resource or the resource itself.
                 </li>
                 <li>
-                    <strong>observe</strong> - Notify the destination about a change in the resource value of the sender. This method is one way and the destination SHOULD NOT send a response for it. Because of that, a command envelope with this method MAY NOT have an <em>id</em>.
+                    <strong>observe</strong> - Notify the destination about a change in the resource value of the sender. This method is one way and the destination should NOT send a response for it. Because of that, a command envelope with this method MAY NOT have an <em>id</em>.
                 </li>
             </ul>
         </li>
@@ -460,8 +479,8 @@
             <strong>type</strong> - MIME type of the resource. Like the messages, the protocol defines some <a href="@Url.Action("ResourceTypes")">common resource types</a>, but may exists specific resources to the implementation. this property should be present if the method is<em>get</em> or if the <em>resource</em> property is defined.
         </li>
         <li>
-            <strong>resource</strong> - JSON representation of the resource. It MUST be present in commands with the methods <em>set</em> and <em>observe</em> and MAY be present in the method <em>delete</em>.
-            In a command response, MUST be present in successfully processed command with the method <em>get</em>.
+            <strong>resource</strong> - JSON representation of the resource. It must be present in commands with the methods <em>set</em> and <em>observe</em> and MAY be present in the method <em>delete</em>.
+            In a command response, must be present in successfully processed command with the method <em>get</em>.
         </li>
     </ul>
 
@@ -685,13 +704,13 @@ S:
     <p>In a session, the following constraints should apply to the envelope properties:</p>
     <ul>
         <li>
-            <strong>id</strong> - MANDATORY, except in the first request sent by the client (<em>new</em> state). This value is generated by the server in the first session envelope sent to the client.
+            <strong>id</strong> - Mandatory, except in the first request sent by the client (<em>new</em> state). This value is generated by the server in the first session envelope sent to the client.
         </li>
         <li>
-            <strong>from</strong> - MANDATORY for the client during the session authentication. Otherwise, is OPTIONAL.
+            <strong>from</strong> - Mandatory for the client during the session authentication. Otherwise, is optional.
         </li>
         <li>
-            <strong>to</strong> - OPTIONAL.
+            <strong>to</strong> - Optional.
         </li>
         <li>
             <strong>pp</strong> - NOT APPLICABLE.
@@ -711,7 +730,7 @@ S:
                 </li>
                 <li>
                     <strong>negotiating</strong> - The server and the client are negotiating the session options, like cryptography and compression. The server sends to the client the options (if available) and the client chooses the desired options.
-                    If there's no options (for instance, if the connection is already encrypted or the transport protocol doesn't support these options), the server SHOULD skip the negotiation.
+                    If there's no options (for instance, if the connection is already encrypted or the transport protocol doesn't support these options), the server should skip the negotiation.
                 </li>
                 <li>
                     <strong>authenticating</strong> - The session is being authenticated. The server sends to the client the available authentication schemes list and the client must choose one and send the specific authentication data.
@@ -727,7 +746,7 @@ S:
                     <strong>finished</strong> - The session was finished by the server.
                 </li>
                 <li>
-                    <strong>failed</strong> - A problem occurred while the session was established, under negotiation or authentication and it was closed by the server. In this case, the property <em>reason</em> MUST be present to provide more details about the problem.
+                    <strong>failed</strong> - A problem occurred while the session was established, under negotiation or authentication and it was closed by the server. In this case, the property <em>reason</em> must be present to provide more details about the problem.
                 </li>
             </ul>
 
