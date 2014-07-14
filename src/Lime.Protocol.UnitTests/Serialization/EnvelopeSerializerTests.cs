@@ -3,7 +3,6 @@ using Lime.Protocol.Resources;
 using Lime.Protocol.Security;
 using Lime.Protocol.Serialization;
 using Lime.Protocol.UnitTests;
-using Lime.Protocol.UnitTests.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
@@ -11,17 +10,89 @@ using System.Linq;
 using System.Text;
 using Shouldly;
 
-namespace Lime.Protocol.Serialization.ServiceStack.UnitTests
+namespace Lime.Protocol.UnitTests.Serialization
 {
 	[TestClass]
 	public class EnvelopeSerializerTests
 	{
-		public EnvelopeSerializer GetTarget()
-		{
-			return new EnvelopeSerializer();
-		}
+        public EnvelopeSerializer GetTarget()
+        {
+            return new EnvelopeSerializer();
+        }
 
 		#region Serialize
+
+        [TestMethod]
+        [TestCategory("Serialize")]
+        public void Serialize_AbsoluteUriRequestCommand_ReturnsValidJsonString()
+        {
+            var target = GetTarget();
+
+            var command = DataUtil.CreateCommand();
+            command.Pp = DataUtil.CreateNode();
+            command.Method = CommandMethod.Get;
+            command.Uri = DataUtil.CreateAbsoluteLimeUri();
+
+
+            var metadataKey1 = "randomString1";
+            var metadataValue1 = DataUtil.CreateRandomString(50);
+            var metadataKey2 = "randomString2";
+            var metadataValue2 = DataUtil.CreateRandomString(50);
+            command.Metadata = new Dictionary<string, string>();
+            command.Metadata.Add(metadataKey1, metadataValue1);
+            command.Metadata.Add(metadataKey2, metadataValue2);
+
+            var resultString = target.Serialize(command);
+
+            Assert.IsTrue(resultString.HasValidJsonStackedBrackets());
+            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.ID_KEY, command.Id));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.FROM_KEY, command.From));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.PP_KEY, command.Pp));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.TO_KEY, command.To));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Command.METHOD_KEY, command.Method));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Command.URI_KEY, command.Uri));
+            
+            
+            Assert.IsTrue(resultString.ContainsJsonProperty(Command.METHOD_KEY, command.Method));
+            Assert.IsTrue(resultString.ContainsJsonProperty(metadataKey1, metadataValue1));
+            Assert.IsTrue(resultString.ContainsJsonProperty(metadataKey2, metadataValue2));
+            
+            Assert.IsFalse(resultString.ContainsJsonKey(Command.STATUS_KEY));
+            Assert.IsFalse(resultString.ContainsJsonKey(Command.REASON_KEY));
+            Assert.IsFalse(resultString.ContainsJsonKey(Command.TYPE_KEY));
+            Assert.IsFalse(resultString.ContainsJsonKey(Command.RESOURCE_KEY));
+        }
+
+        [TestMethod]
+        [TestCategory("Serialize")]
+        public void Serialize_RelativeUriRequestCommand_ReturnsValidJsonString()
+        {
+            var target = GetTarget();
+
+            var resource = DataUtil.CreateJsonDocument();
+
+            var command = DataUtil.CreateCommand(resource);
+            command.Pp = DataUtil.CreateNode();
+            command.Method = CommandMethod.Set;
+            command.Uri = DataUtil.CreateRelativeLimeUri();
+
+            var resultString = target.Serialize(command);
+
+            Assert.IsTrue(resultString.HasValidJsonStackedBrackets());
+            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.ID_KEY, command.Id));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.FROM_KEY, command.From));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.PP_KEY, command.Pp));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.TO_KEY, command.To));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Command.METHOD_KEY, command.Method));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Command.URI_KEY, command.Uri));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Command.METHOD_KEY, command.Method));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Command.TYPE_KEY, resource.GetMediaType()));
+            Assert.IsTrue(resultString.ContainsJsonKey(Command.RESOURCE_KEY));
+
+            Assert.IsFalse(resultString.ContainsJsonKey(Command.METADATA_KEY));
+            Assert.IsFalse(resultString.ContainsJsonKey(Command.STATUS_KEY));
+            Assert.IsFalse(resultString.ContainsJsonKey(Command.REASON_KEY));            
+        }
 
 		[TestMethod]
 		[TestCategory("Serialize")]
@@ -33,6 +104,7 @@ namespace Lime.Protocol.Serialization.ServiceStack.UnitTests
 			var command = DataUtil.CreateCommand(resource);
 			command.Pp = DataUtil.CreateNode();
 			command.Method = CommandMethod.Get;
+            
 			
 			var metadataKey1 = "randomString1";
 			var metadataValue1 = DataUtil.CreateRandomString(50);
@@ -411,9 +483,12 @@ namespace Lime.Protocol.Serialization.ServiceStack.UnitTests
 			string randomString1 = DataUtil.CreateRandomString(50);
 			string randomString2 = DataUtil.CreateRandomString(50);
 
+            var resourceUri = new LimeUri("/capability");
+
 			string json = string.Format(
-				"{{\"type\":\"application/vnd.lime.capability+json\",\"resource\":{{\"contentTypes\":[\"{0}\",\"{1}\",\"{2}\"],\"resourceTypes\":[\"{3}\",\"{4}\",\"{5}\"]}},\"method\":\"{6}\",\"id\":\"{7}\",\"from\":\"{8}\",\"pp\":\"{9}\",\"to\":\"{10}\",\"metadata\":{{\"{11}\":\"{12}\",\"{13}\":\"{14}\"}}}}",
-				contentType1,
+				"{{\"uri\":\"{0}\",\"type\":\"application/vnd.lime.capability+json\",\"resource\":{{\"contentTypes\":[\"{1}\",\"{2}\",\"{3}\"],\"resourceTypes\":[\"{4}\",\"{5}\",\"{6}\"]}},\"method\":\"{7}\",\"id\":\"{8}\",\"from\":\"{9}\",\"pp\":\"{10}\",\"to\":\"{11}\",\"metadata\":{{\"{12}\":\"{13}\",\"{14}\":\"{15}\"}}}}",
+				resourceUri,
+                contentType1,
 				contentType2,
 				contentType3,
 				resourceType1,
@@ -456,11 +531,14 @@ namespace Lime.Protocol.Serialization.ServiceStack.UnitTests
 			Assert.IsTrue(capability.ResourceTypes.Any(c => c.Equals(resourceType1)));
 			Assert.IsTrue(capability.ResourceTypes.Any(c => c.Equals(resourceType2)));
 			Assert.IsTrue(capability.ResourceTypes.Any(c => c.Equals(resourceType3)));
+
+            Assert.IsNotNull(command.Uri);
+            Assert.AreEqual(command.Uri, resourceUri);
 		}
 
 		[TestMethod]
 		[TestCategory("Deserialize")]
-		public void Deserialize_RosterRequestCommand_ReturnsValidInstance()
+		public void Deserialize_AbsoluteUriRequestCommand_ReturnsValidInstance()
 		{
 			var target = GetTarget();
 
@@ -477,9 +555,12 @@ namespace Lime.Protocol.Serialization.ServiceStack.UnitTests
 			string randomString1 = DataUtil.CreateRandomString(50);
 			string randomString2 = DataUtil.CreateRandomString(50);
 
+            var resourceUri = DataUtil.CreateAbsoluteLimeUri();
+
 			string json = string.Format(
-				"{{\"type\":\"application/vnd.lime.roster+json\",\"method\":\"get\",\"id\":\"{0}\",\"from\":\"{1}\",\"pp\":\"{2}\",\"to\":\"{3}\",\"metadata\":{{\"{4}\":\"{5}\",\"{6}\":\"{7}\"}}}}",
-				id,
+				"{{\"uri\":\"{0}\",\"method\":\"get\",\"id\":\"{1}\",\"from\":\"{2}\",\"pp\":\"{3}\",\"to\":\"{4}\",\"metadata\":{{\"{5}\":\"{6}\",\"{7}\":\"{8}\"}}}}",
+				resourceUri,
+                id,
 				from,
 				pp,
 				to,
@@ -504,8 +585,11 @@ namespace Lime.Protocol.Serialization.ServiceStack.UnitTests
 			Assert.IsTrue(command.Metadata.ContainsKey(randomKey2));
 			Assert.AreEqual(command.Metadata[randomKey2], randomString2);
 
-			Assert.AreEqual(command.Type.ToString(),  Roster.MIME_TYPE);
+            Assert.IsNotNull(command.Uri);
+			Assert.AreEqual(command.Uri, resourceUri);
 
+            Assert.IsNull(command.Type);
+            Assert.IsNull(command.Resource);
 		}
 
 		[TestMethod]
@@ -720,7 +804,6 @@ namespace Lime.Protocol.Serialization.ServiceStack.UnitTests
 			Assert.AreEqual(text, textContent.Text);
 		}
 
-
         [TestMethod]
         [TestCategory("Deserialize")]
         public void Deserialize_ChatStateMessage_ReturnsValidInstance()
@@ -902,7 +985,6 @@ namespace Lime.Protocol.Serialization.ServiceStack.UnitTests
 			
 		}
 
-
         [TestMethod]
         [TestCategory("Deserialize")]
         public void Deserialize_GenericJsonContentMessage_ReturnsValidInstance()
@@ -974,7 +1056,6 @@ namespace Lime.Protocol.Serialization.ServiceStack.UnitTests
 
         }
 
-
         [TestMethod]
         [TestCategory("Deserialize")]
         public void Deserialize_FireAndForgetTextMessage_ReturnsValidInstance()
@@ -1009,7 +1090,6 @@ namespace Lime.Protocol.Serialization.ServiceStack.UnitTests
             var textContent = (PlainText)message.Content;
             Assert.AreEqual(text, textContent.Text);
         }
-
 
 		[TestMethod]
 		[TestCategory("Deserialize")]

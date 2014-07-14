@@ -17,6 +17,7 @@ namespace Lime.Protocol
     [DataContract(Namespace = "http://limeprotocol.org/2014")]
     public partial class Command : Envelope
     {
+        public const string URI_KEY = "uri";
         public const string TYPE_KEY = "type";
         public const string RESOURCE_KEY = "resource";
         public const string METHOD_KEY = "method";
@@ -35,6 +36,14 @@ namespace Lime.Protocol
         }
 
         #endregion
+
+
+        /// <summary>
+        /// The universal identifier
+        /// of the resource
+        /// </summary>
+        [DataMember(Name = URI_KEY)]
+        public LimeUri Uri { get; set; }
 
         /// <summary>
         ///  MIME declaration of the resource type of the command.

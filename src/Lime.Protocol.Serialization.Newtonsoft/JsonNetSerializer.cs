@@ -31,6 +31,7 @@ namespace Lime.Protocol.Serialization.Newtonsoft
                     _settings.Converters.Add(new StringEnumConverter());
                     _settings.Converters.Add(new IdentityJsonConverter());
                     _settings.Converters.Add(new NodeJsonConverter());
+                    _settings.Converters.Add(new LimeUriConverter());
                     _settings.Converters.Add(new MediaTypeJsonConverter());
                     _settings.Converters.Add(new SessionJsonConverter());
                     _settings.Converters.Add(new AuthenticationJsonConverter());
@@ -169,7 +170,46 @@ namespace Lime.Protocol.Serialization.Newtonsoft
 
         #endregion
 
-        #region NodeJsonConverter
+        #region LimeUriConverter
+
+        private class LimeUriConverter : JsonConverter
+        {
+            public override bool CanConvert(Type objectType)
+            {
+                return objectType == typeof(LimeUri);
+            }
+
+            public override object ReadJson(JsonReader reader, Type objectType, object existingValue, global::Newtonsoft.Json.JsonSerializer serializer)
+            {
+                if (reader.TokenType == JsonToken.String)
+                {
+                    var tokenValue = reader.Value.ToString();
+
+                    return LimeUri.Parse(tokenValue);
+                }
+                else
+                {
+                    return null;
+                }
+            }
+
+            public override void WriteJson(global::Newtonsoft.Json.JsonWriter writer, object value, global::Newtonsoft.Json.JsonSerializer serializer)
+            {
+                if (value != null)
+                {
+                    LimeUri identity = (LimeUri)value;
+                    writer.WriteValue(identity.ToString());
+                }
+                else
+                {
+                    writer.WriteNull();
+                }
+            }
+        }
+
+        #endregion
+
+        #region MediaTypeJsonConverter
 
         private class MediaTypeJsonConverter : JsonConverter
         {

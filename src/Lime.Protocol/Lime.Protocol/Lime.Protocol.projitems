@@ -12,6 +12,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Client\ClientChannel.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Client\IClientChannel.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Client\IClientChannelExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)DocumentCollection.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Command.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Contents\ChatState.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Contents\PlainText.cs" />
@@ -21,6 +22,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)IDocument.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)IIdentity.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)JsonDocument.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)LimeUri.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)MediaType.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Message.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Network\ChannelBase.cs" />

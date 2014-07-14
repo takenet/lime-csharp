@@ -91,6 +91,21 @@ namespace Lime.Protocol.UnitTests
             };
         }
 
+        public static LimeUri CreateAbsoluteLimeUri()
+        {
+            return new LimeUri(
+                string.Format("{0}://{1}/{2}",
+                LimeUri.LIME_URI_SCHEME,
+                CreateIdentity(),
+                CreateRandomString(10)));
+        }
+
+        public static LimeUri CreateRelativeLimeUri()
+        {
+            return new LimeUri(
+                string.Format("/{0}", CreateRandomString(10)));
+        }
+
         public static Session CreateSession(SessionState state = SessionState.New)
         {
             return new Session()

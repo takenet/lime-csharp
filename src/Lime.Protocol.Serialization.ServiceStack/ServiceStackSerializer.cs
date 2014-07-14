@@ -28,6 +28,7 @@ namespace Lime.Protocol.Serialization.ServiceStack
             JsConfig<Notification>.IncludeTypeInfo = false;
             JsConfig<Command>.IncludeTypeInfo = false;
             JsConfig<Session>.IncludeTypeInfo = false;
+
             
             JsConfig<MediaType>.SerializeFn = m => m.ToString();
             JsConfig<MediaType>.DeSerializeFn = s => MediaType.Parse(s);
@@ -37,7 +38,8 @@ namespace Lime.Protocol.Serialization.ServiceStack
             JsConfig<Identity>.DeSerializeFn = s => Identity.Parse(s);
             JsConfig<Guid>.SerializeFn = g => g.ToString();
             JsConfig<Guid>.DeSerializeFn = s => Guid.Parse(s);
-
+            JsConfig<LimeUri>.SerializeFn = u => u.ToString();
+            JsConfig<LimeUri>.DeSerializeFn = u => LimeUri.Parse(u);
             
             JsConfig<Document>.RawSerializeFn = d =>
                 {
@@ -178,6 +180,7 @@ namespace Lime.Protocol.Serialization.ServiceStack
             command.Method = jsonObject.Get<CommandMethod>(Command.METHOD_KEY);
             command.Reason = jsonObject.Get<Reason>(Command.REASON_KEY);
             command.Status = jsonObject.Get<CommandStatus>(Command.STATUS_KEY);
+            command.Uri = jsonObject.Get<LimeUri>(Command.URI_KEY);
             command.Resource = GetDocument(jsonObject, Command.TYPE_KEY, Command.RESOURCE_KEY);
 
             return command;
