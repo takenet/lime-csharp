@@ -184,6 +184,59 @@ namespace Lime.Protocol.UnitTests.Serialization
 			Assert.IsFalse(resultString.ContainsJsonKey(Command.REASON_KEY));
 		}
 
+        [TestMethod]
+        [TestCategory("Serialize")]
+        public void Serialize_ContactCollectionResponseCommand_ReturnsValidJsonString()
+        {
+            var target = GetTarget();
+
+            var contact1 = DataUtil.CreateContact();
+            contact1.ShareAccountInfo = true;
+            contact1.SharePresence = true;
+            var contact2 = DataUtil.CreateContact();
+            contact2.SharePresence = true;
+            var contact3 = DataUtil.CreateContact();
+
+            var resource = DataUtil.CreateDocumentCollection<Contact>(
+                contact1,
+                contact2,
+                contact3);
+
+            var command = DataUtil.CreateCommand(resource);
+            command.Pp = DataUtil.CreateNode();
+            command.Method = CommandMethod.Get;
+            command.Status = CommandStatus.Success;
+
+            var metadataKey1 = "randomString1";
+            var metadataValue1 = DataUtil.CreateRandomString(50);
+            var metadataKey2 = "randomString2";
+            var metadataValue2 = DataUtil.CreateRandomString(50);
+            command.Metadata = new Dictionary<string, string>();
+            command.Metadata.Add(metadataKey1, metadataValue1);
+            command.Metadata.Add(metadataKey2, metadataValue2);
+
+            var resultString = target.Serialize(command);
+
+            Assert.IsTrue(resultString.HasValidJsonStackedBrackets());
+            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.ID_KEY, command.Id));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.FROM_KEY, command.From));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.PP_KEY, command.Pp));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.TO_KEY, command.To));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Command.METHOD_KEY, command.Method));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Command.TYPE_KEY, command.Resource.GetMediaType()));
+            Assert.IsTrue(resultString.ContainsJsonKey(Command.RESOURCE_KEY));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Command.METHOD_KEY, command.Method));
+            Assert.IsTrue(resultString.ContainsJsonProperty(metadataKey1, metadataValue1));
+            Assert.IsTrue(resultString.ContainsJsonProperty(metadataKey2, metadataValue2));
+
+            Assert.IsTrue(resultString.ContainsJsonKey(DocumentCollection.ITEMS_KEY));
+            Assert.IsTrue(resultString.ContainsJsonProperty(DocumentCollection.ITEM_TYPE_KEY, contact1.GetMediaType()));
+            Assert.IsTrue(resultString.ContainsJsonProperty(DocumentCollection.TOTAL_KEY, resource.Items.Length));
+  
+            Assert.IsTrue(resultString.ContainsJsonKey(Command.STATUS_KEY));
+            Assert.IsFalse(resultString.ContainsJsonKey(Command.REASON_KEY));
+        }
+
 		[TestMethod]
 		[TestCategory("Serialize")]
 		public void Serialize_FailurePingResponseCommand_ReturnsValidJsonString()

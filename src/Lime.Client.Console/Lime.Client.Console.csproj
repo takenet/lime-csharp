@@ -70,10 +70,6 @@
       <Project>{07ef6707-b284-4068-9b2f-48998782bc9f}</Project>
       <Name>Lime.Protocol.Serialization.Newtonsoft</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Lime.Protocol.Serialization.ServiceStack\Lime.Protocol.Serialization.ServiceStack.csproj">
-      <Project>{0bd5d84e-79c4-415f-a668-f57b5af555fd}</Project>
-      <Name>Lime.Protocol.Serialization.ServiceStack</Name>
-    </ProjectReference>
     <ProjectReference Include="..\Lime.Protocol.Tcp\Lime.Protocol.Tcp.Net45\Lime.Protocol.Tcp.Net45.csproj">
       <Project>{d24b4ef4-9b8c-4f89-bfc6-f76007936382}</Project>
       <Name>Lime.Protocol.Tcp.Net45</Name>

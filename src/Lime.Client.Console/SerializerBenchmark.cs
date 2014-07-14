@@ -21,7 +21,7 @@ namespace Lime.Client.Console
 
             var serializer1 = new EnvelopeSerializer();
             var serializer2 = new Lime.Protocol.Serialization.Newtonsoft.JsonNetSerializer();
-            var serializer3 = new Lime.Protocol.Serialization.ServiceStack.ServiceStackSerializer();
+            //var serializer3 = new Lime.Protocol.Serialization.ServiceStack.ServiceStackSerializer();
 
 
             Envelope envelope1 = null, envelope2 = null, envelope3 = null;
@@ -37,7 +37,7 @@ namespace Lime.Client.Console
 
             envelope1 = ExecuteDeserialization(serializer1, json, count);
             envelope2 = ExecuteDeserialization(serializer2, json, count);
-            envelope3 = ExecuteDeserialization(serializer3, json, count);
+            //envelope3 = ExecuteDeserialization(serializer3, json, count);
 
             // netwonsoft is the reference serializer
             var json1 = serializer2.Serialize(envelope1);
@@ -59,7 +59,7 @@ namespace Lime.Client.Console
 
             json1 = ExecuteSerialization(serializer1, envelope, count);
             json2 = ExecuteSerialization(serializer2, envelope, count);
-            json3 = ExecuteSerialization(serializer3, envelope, count);
+            //json3 = ExecuteSerialization(serializer3, envelope, count);
 
             if (json1 == json2 && json2 == json3)
             {

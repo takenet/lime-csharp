@@ -238,6 +238,20 @@ namespace Lime.Protocol.UnitTests
             return new Ping();
         }
 
+        public static DocumentCollection CreateDocumentCollection<T>(params T[] documents) 
+            where T : Document, new()
+        {
+            var mediaType = new T().GetMediaType();
+
+            return new DocumentCollection()
+            {                
+                ItemType = mediaType,
+                Total = documents.Length,
+                Items = documents
+            };
+        }
+
+
         public static Presence CreatePresence()
         {
             return new Presence()
@@ -267,6 +281,17 @@ namespace Lime.Protocol.UnitTests
                 "json"
                 );
 
+
+        }
+
+        public static Contact CreateContact()
+        {
+            return new Contact()
+            {
+                Identity = CreateIdentity(),
+                Name = CreateRandomString(100)
+
+            };
         }
 
         public static Capability CreateCapability()

@@ -33,13 +33,22 @@ namespace Lime.Protocol.Resources
     }
 
     [DataContract(Namespace = "http://limeprotocol.org/2014")]
-    public partial class Contact : IIdentity
+    public partial class Contact : Document, IIdentity
     {
+        public const string MIME_TYPE = "application/vnd.lime.contact+json";
+
+
         public const string IDENTITY_KEY = "identity";
         public const string NAME_KEY = "name";
         public const string IS_PENDING_KEY = "isPending";
         public const string SHARE_PRESENCE_KEY = "sharePresence";
         public const string SHARE_ACCOUNT_INFO_KEY = "shareAccountInfo";
+
+        public Contact()
+            : base(MediaType.Parse(MIME_TYPE))
+        {
+
+        }
 
         /// <summary>
         /// The identity of the contact, 
