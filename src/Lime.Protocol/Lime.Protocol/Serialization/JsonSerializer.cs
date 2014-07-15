@@ -101,17 +101,18 @@ namespace Lime.Protocol.Serialization
                 serializePropertyAction = (v, w) =>
                 {
                     var value = (Document)getFunc(v);
-
                     if (value != null)
                     {
                         var mediaType = value.GetMediaType();
 
                         if (mediaType.IsJson)
                         {
+                            // Write unscaped
                             w.WriteProperty(memberName, value);                            
                         }
                         else 
                         {
+                            // Write as a string
                             w.WriteStringProperty(memberName, value.ToString());
                         }
                     }
@@ -170,6 +171,41 @@ namespace Lime.Protocol.Serialization
                             setFunc(v, value);
                         }
                     };
+                }
+                else if (propertyType.IsAbstract)
+                {
+                    if (propertyType == typeof(Document))
+                    {
+                        // Determine the type of the property using the
+                        // envelope content/resource Mime Type
+                        deserializePropertyAction = (v, j) =>
+                        {
+                            if (j.ContainsKey(DocumentCollection.ITEM_TYPE_KEY) &&
+                                j[DocumentCollection.ITEM_TYPE_KEY] is string)
+                            {
+                                var mediaType = MediaType.Parse((string)j[DocumentCollection.ITEM_TYPE_KEY]);
+                                
+                                Type itemPropertyType;
+                                
+
+                                if (TypeUtil.TryGetTypeForMediaType(mediaType, out itemPropertyType) &&
+                                    j.ContainsKey(memberName) &&
+                                    j[memberName] is IEnumerable)
+                                {
+                                    var value = j.GetArrayOrNull(propertyType, memberName, i => JsonSerializer.ParseJson(itemPropertyType, (JsonObject)i));
+
+                                    if (value != null)
+                                    {
+                                        setFunc(v, value);
+                                    }
+                                }
+                            }
+                        };                        
+                    }
+                    else
+                    {
+                        throw new NotSupportedException(string.Format("The type '{0}' of the property '{1}' is not supported", propertyType, memberName));
+                    }
                 }
                 else if (TypeUtil.IsKnownType(propertyType))
                 {
@@ -243,17 +279,6 @@ namespace Lime.Protocol.Serialization
                     }
                 };
             }
-            else if (propertyType == typeof(long))
-            {
-                deserializePropertyAction = (v, j) =>
-                {
-                    var value = j.GetValueOrNull<long>(memberName) ?? defaultValue;
-                    if (isNullable || value != null)
-                    {
-                        setFunc(v, value);
-                    }
-                };
-            }
             else if (propertyType == typeof(string))
             {
                 deserializePropertyAction = (v, j) =>
@@ -283,118 +308,13 @@ namespace Lime.Protocol.Serialization
                 {
                     // Determine the type of the property using the
                     // envelope content/resource Mime Type
-                    deserializePropertyAction = (v, j) =>
-                    {
-                        if (j.ContainsKey(Message.TYPE_KEY) &&
-                            j[Message.TYPE_KEY] is string)
-                        {
-                            var mediaType = MediaType.Parse((string)j[Message.TYPE_KEY]);
-
-                            object value;
-                            Type concreteType;
-
-                            if (mediaType.IsJson)
-                            {
-                                JsonObject propertyJsonObject = null;
-                                if (j.ContainsKey(memberName) &&
-                                    j[memberName] is JsonObject)
-                                {
-                                    propertyJsonObject = (JsonObject)j[memberName];
-                                }
-
-                                if (TypeUtil.TryGetTypeForMediaType(mediaType, out concreteType))
-                                {
-                                    if (propertyJsonObject != null)
-                                    {
-                                        value = JsonSerializer.ParseJson(concreteType, propertyJsonObject);
-                                    }
-                                    else
-                                    {
-                                        value = TypeUtil.CreateInstance(concreteType);
-                                    }
-                                }
-                                else if (propertyJsonObject != null)
-                                {
-                                    value = new JsonDocument(propertyJsonObject, mediaType);
-                                }
-                                else
-                                {
-                                    value = new JsonDocument(mediaType);
-                                }
-                            } 
-                            else
-                            {
-                                string propertyValue = null;
-                                if (j.ContainsKey(memberName) &&
-                                     j[memberName] is string)
-                                {
-                                    propertyValue = (string)j[memberName];
-                                }
-
-                                if (TypeUtil.TryGetTypeForMediaType(mediaType, out concreteType))
-                                {
-                                    if (propertyValue != null)
-                                    {
-                                        var parseFunc = TypeUtil.GetParseFuncForType(concreteType);
-                                        value = parseFunc(propertyValue);
-                                    }
-                                    else
-                                    {
-                                        value = TypeUtil.CreateInstance(concreteType);
-                                    }
-                                }
-                                else
-                                {
-                                    value = new PlainDocument(propertyValue, mediaType);
-                                }
-                            }                            
-
-                            if (value != null)
-                            {
-                                setFunc(v, value);
-                            }
-                        }
-                    };
+                    deserializePropertyAction = GetDocumentDeserializePropertyAction(memberName, setFunc);
                 }
                 else if (propertyType == typeof(Authentication))
                 {
                     // Determine the type of the property using the
                     // session Authentication property
-                    deserializePropertyAction = (v, j) =>
-                    {
-                        if (j.ContainsKey(Session.SCHEME_KEY) &&
-                            j[Session.SCHEME_KEY] is string)
-                        {
-                            var scheme = TypeUtil.GetEnumValue<AuthenticationScheme>((string)j[Session.SCHEME_KEY]);
-
-                            JsonObject propertyJsonObject = null;
-                            if (j.ContainsKey(memberName) &&
-                                j[memberName] is JsonObject)
-                            {
-                                propertyJsonObject = (JsonObject)j[memberName];
-                            }
-
-                            object value = null;
-                            Type concreteType;
-
-                            if (TypeUtil.TryGetTypeForAuthenticationScheme(scheme, out concreteType))
-                            {
-                                if (propertyJsonObject != null)
-                                {
-                                    value = JsonSerializer.ParseJson(concreteType, propertyJsonObject);
-                                }
-                                else
-                                {
-                                    value = TypeUtil.CreateInstance(concreteType);
-                                }
-                            }
-
-                            if (value != null)
-                            {
-                                setFunc(v, value);
-                            }
-                        }
-                    };
+                    deserializePropertyAction = GetAuthenticationDeserializePropertyAction(memberName, setFunc);
                 }
                 else
                 {
@@ -442,6 +362,122 @@ namespace Lime.Protocol.Serialization
             }
 
             return deserializePropertyAction;
+        }
+
+
+        private static Action<T, JsonObject> GetDocumentDeserializePropertyAction(string memberName, Action<object, object> setFunc)
+        {
+            return (v, j) =>
+            {
+                if (j.ContainsKey(Message.TYPE_KEY) &&
+                    j[Message.TYPE_KEY] is string)
+                {
+                    var mediaType = MediaType.Parse((string)j[Message.TYPE_KEY]);
+
+                    object value;
+                    Type concreteType;
+
+                    if (mediaType.IsJson)
+                    {
+                        JsonObject propertyJsonObject = null;
+                        if (j.ContainsKey(memberName) &&
+                            j[memberName] is JsonObject)
+                        {
+                            propertyJsonObject = (JsonObject)j[memberName];
+                        }
+
+                        if (TypeUtil.TryGetTypeForMediaType(mediaType, out concreteType))
+                        {
+                            if (propertyJsonObject != null)
+                            {
+                                value = JsonSerializer.ParseJson(concreteType, propertyJsonObject);
+                            }
+                            else
+                            {
+                                value = TypeUtil.CreateInstance(concreteType);
+                            }
+                        }
+                        else if (propertyJsonObject != null)
+                        {
+                            value = new JsonDocument(propertyJsonObject, mediaType);
+                        }
+                        else
+                        {
+                            value = new JsonDocument(mediaType);
+                        }
+                    }
+                    else
+                    {
+                        string propertyValue = null;
+                        if (j.ContainsKey(memberName) &&
+                             j[memberName] is string)
+                        {
+                            propertyValue = (string)j[memberName];
+                        }
+
+                        if (TypeUtil.TryGetTypeForMediaType(mediaType, out concreteType))
+                        {
+                            if (propertyValue != null)
+                            {
+                                var parseFunc = TypeUtil.GetParseFuncForType(concreteType);
+                                value = parseFunc(propertyValue);
+                            }
+                            else
+                            {
+                                value = TypeUtil.CreateInstance(concreteType);
+                            }
+                        }
+                        else
+                        {
+                            value = new PlainDocument(propertyValue, mediaType);
+                        }
+                    }
+
+                    if (value != null)
+                    {
+                        setFunc(v, value);
+                    }
+                }
+            };
+        }
+
+        private static Action<T, JsonObject> GetAuthenticationDeserializePropertyAction(string memberName, Action<object, object> setFunc)
+        {
+            return (v, j) =>
+            {
+                if (j.ContainsKey(Session.SCHEME_KEY) &&
+                    j[Session.SCHEME_KEY] is string)
+                {
+                    var scheme = TypeUtil.GetEnumValue<AuthenticationScheme>((string)j[Session.SCHEME_KEY]);
+
+                    JsonObject propertyJsonObject = null;
+                    if (j.ContainsKey(memberName) &&
+                        j[memberName] is JsonObject)
+                    {
+                        propertyJsonObject = (JsonObject)j[memberName];
+                    }
+
+                    object value = null;
+                    Type concreteType;
+
+                    if (TypeUtil.TryGetTypeForAuthenticationScheme(scheme, out concreteType))
+                    {
+                        if (propertyJsonObject != null)
+                        {
+                            value = JsonSerializer.ParseJson(concreteType, propertyJsonObject);
+                        }
+                        else
+                        {
+                            value = TypeUtil.CreateInstance(concreteType);
+                        }
+                    }
+
+                    if (value != null)
+                    {
+                        setFunc(v, value);
+                    }
+                }
+            };
         }
 
         #endregion
@@ -710,7 +746,7 @@ namespace Lime.Protocol.Serialization
 
             Func<JsonObject, object> parseJsonFunc;
             if (!_parseJsonFuncDictionary.TryGetValue(type, out parseJsonFunc))
-            {
+            {                
                 var serializer = typeof(JsonSerializer<>).MakeGenericType(type);
                 var parseJsonFuncType = typeof(Func<,>).MakeGenericType(typeof(JsonObject), type);
                 var method = serializer.GetMethod("ParseJson", BindingFlags.Static | BindingFlags.Public);

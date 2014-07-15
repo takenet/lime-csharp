@@ -37,7 +37,6 @@ namespace Lime.Protocol
         [DataMember(Name = ITEM_TYPE_KEY)]
         public MediaType ItemType { get; set; }
 
-
         [DataMember(Name = ITEMS_KEY)]
         public Document[] Items { get; set; }
 

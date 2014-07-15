@@ -18,7 +18,7 @@ namespace Lime.Protocol
     public partial class Command : Envelope
     {
         public const string URI_KEY = "uri";
-        public const string TYPE_KEY = "type";
+        public const string TYPE_KEY = Message.TYPE_KEY;
         public const string RESOURCE_KEY = "resource";
         public const string METHOD_KEY = "method";
         public const string STATUS_KEY = "status";
