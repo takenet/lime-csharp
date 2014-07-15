@@ -46,6 +46,10 @@ namespace Lime.Protocol
         /// </summary>
         public const int SESSION_NEGOTIATION_INVALID_OPTIONS = 17;
         /// <summary>
+        /// Invalid session mode requested
+        /// </summary>
+        public const int SESSION_INVALID_SESSION_MODE_REQUESTED = 18;
+        /// <summary>
         /// General validation error
         /// </summary>
         public const int VALIDATION_ERROR = 21;
