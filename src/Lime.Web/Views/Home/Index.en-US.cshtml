@@ -643,14 +643,6 @@ S:
                 "failed"
             ]
         },
-        "mode" : {
-            "enum": [
-                "node",
-                "application",
-                "server",
-                "gateway"
-            ]
-        },
         "encryptionOptions": {
             "type": "array",
             "minItems": 1,
@@ -750,24 +742,6 @@ S:
                 </li>
             </ul>
 
-        </li>
-        <li>
-            <strong>mode</strong> - Defines the role of the client node in the session with the server. This property is optional and the possible values are:
-            <ul>
-                <li>
-                    <strong>node</strong> - Default mode. Allows the message, notification and command exchange with other nodes.
-                </li>
-                <li>
-                    <strong>application</strong> - In this mode, the server defines a subdomain to forward messages and commands addressed to identities of this subdomain.
-                    For instance, if the user <em>chat@domain.com</em> starts a session in the application mode, a message addressed to <em>anyuser@chat.mydomain.com</em> will be delivered to the node <em>chat@domain.com</em>.
-                </li>
-                <li>
-                    <strong>server</strong> - Establish a session between server of the same domain. The servers exchange information about the connected nodes and forward messages from local nodes to remote nodes.
-                </li>
-                <li>
-                    <strong>gateway</strong> - Establish a session between servers of different domains. The gateway session receive messages addressed to identities of the specified domain and can send messages to local nodes sent by foreign nodes.
-                </li>
-            </ul>
         </li>
         <li>
             <strong>encryptionOptions</strong> - Encryption options provided by the server during the session negotiation. Some of the valid values (not limited to) are:
