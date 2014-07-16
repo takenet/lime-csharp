@@ -23,12 +23,11 @@ namespace Lime.Protocol.Client
         /// <param name="identity"></param>
         /// <param name="authenticator"></param>
         /// <param name="instance"></param>
-        /// <param name="sessionMode"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
         public async static Task<Session> EstablishSessionAsync(this IClientChannel channel, Func<SessionCompression[], SessionCompression> compressionSelector,
             Func<SessionEncryption[], SessionEncryption> encryptionSelector, Identity identity, Func<AuthenticationScheme[], Authentication, Authentication> authenticator, 
-            string instance, SessionMode sessionMode, CancellationToken cancellationToken)
+            string instance, CancellationToken cancellationToken)
         {
             if (channel == null)
             {
@@ -90,7 +89,6 @@ namespace Lime.Protocol.Client
                         identity,
                         authenticator(receivedSession.SchemeOptions, roundtrip),
                         instance,
-                        sessionMode,
                         cancellationToken).ConfigureAwait(false);
 
                     roundtrip = receivedSession.Authentication;

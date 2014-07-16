@@ -229,10 +229,9 @@ namespace Lime.Protocol.Server
         /// end of the session
         /// </summary>
         /// <param name="node"></param>
-        /// <param name="mode"></param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">node</exception>
-        public Task SendEstablishedSessionAsync(Node node, SessionMode mode)
+        public Task SendEstablishedSessionAsync(Node node)
         {
             if (node == null)
             {
@@ -246,7 +245,6 @@ namespace Lime.Protocol.Server
 
             base.State = SessionState.Established;
             base.RemoteNode = node;           
-            base.Mode = mode;
 
             var session = new Session()
             {
@@ -254,7 +252,6 @@ namespace Lime.Protocol.Server
                 From = base.LocalNode,
                 To = base.RemoteNode,
                 State = base.State,
-                Mode = base.Mode
             };
 
             return base.SendSessionAsync(session);
@@ -298,7 +295,6 @@ namespace Lime.Protocol.Server
                 From = base.LocalNode,
                 To = base.RemoteNode,
                 State = base.State,
-                Mode = base.Mode
             };
 
             await base.SendSessionAsync(session).ConfigureAwait(false);

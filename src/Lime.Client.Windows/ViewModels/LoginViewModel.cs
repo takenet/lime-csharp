@@ -172,7 +172,6 @@ namespace Lime.Client.Windows.ViewModels
                         new Identity() { Name = Guid.NewGuid().ToString(), Domain = _userNameNode.Domain },
                         (schemeOptions, roundtrip) => new GuestAuthentication(),
                         null,
-                        SessionMode.Node,
                         cancellationToken
                         );
 
@@ -220,7 +219,6 @@ namespace Lime.Client.Windows.ViewModels
                     new Identity() { Name = _userNameNode.Name, Domain = _userNameNode.Domain },
                     (schemeOptions, roundtrip) => authentication,
                     _userNameNode.Instance,
-                    SessionMode.Node,
                     cancellationToken);
                 
                 if (sessionResult.State == SessionState.Established)

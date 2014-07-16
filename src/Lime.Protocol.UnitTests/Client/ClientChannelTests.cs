@@ -145,7 +145,6 @@ namespace Lime.Protocol.UnitTests.Client
             var localIdentity = DataUtil.CreateIdentity();
             var localInstance = DataUtil.CreateInstanceName();
             var authentication = DataUtil.CreateAuthentication(Security.AuthenticationScheme.Plain);
-            var sessionMode = SessionMode.Node;
 
             var session = DataUtil.CreateSession(SessionState.Established);
             session.Id = target.SessionId;
@@ -157,7 +156,7 @@ namespace Lime.Protocol.UnitTests.Client
                 .Returns(Task.FromResult<Envelope>(session))
                 .Returns(tcs.Task);
 
-            var actualSession = await target.AuthenticateSessionAsync(localIdentity, authentication, localInstance, sessionMode, cancellationToken);
+            var actualSession = await target.AuthenticateSessionAsync(localIdentity, authentication, localInstance, cancellationToken);
 
             _transport.Verify(
                 t => t.SendAsync(It.Is<Session>(
@@ -165,7 +164,6 @@ namespace Lime.Protocol.UnitTests.Client
                                 e.Id == target.SessionId &&
                                 e.From.ToIdentity().Equals(localIdentity) &&
                                 e.From.Instance.Equals(localInstance) &&
-                                e.Mode == sessionMode &&
                                 e.Authentication == authentication),
                     It.IsAny<CancellationToken>()),
                     Times.Once());            
@@ -184,9 +182,8 @@ namespace Lime.Protocol.UnitTests.Client
             var localIdentity = DataUtil.CreateIdentity();
             var localInstance = DataUtil.CreateInstanceName();
             var authentication = DataUtil.CreateAuthentication(Security.AuthenticationScheme.Plain);
-            var sessionMode = SessionMode.Node;
 
-            var actualSession = await target.AuthenticateSessionAsync(localIdentity, authentication, localInstance, sessionMode, cancellationToken);
+            var actualSession = await target.AuthenticateSessionAsync(localIdentity, authentication, localInstance, cancellationToken);
         }
 
         [TestMethod]
@@ -200,9 +197,8 @@ namespace Lime.Protocol.UnitTests.Client
             Identity localIdentity = null;
             var localInstance = DataUtil.CreateInstanceName();
             var authentication = DataUtil.CreateAuthentication(Security.AuthenticationScheme.Plain);
-            var sessionMode = SessionMode.Node;
 
-            var actualSession = await target.AuthenticateSessionAsync(localIdentity, authentication, localInstance, sessionMode, cancellationToken);
+            var actualSession = await target.AuthenticateSessionAsync(localIdentity, authentication, localInstance, cancellationToken);
         }
 
         [TestMethod]
@@ -216,9 +212,8 @@ namespace Lime.Protocol.UnitTests.Client
             var localIdentity = DataUtil.CreateIdentity();
             var localInstance = DataUtil.CreateInstanceName();
             Authentication authentication = null;
-            var sessionMode = SessionMode.Node;
 
-            var actualSession = await target.AuthenticateSessionAsync(localIdentity, authentication, localInstance, sessionMode, cancellationToken);
+            var actualSession = await target.AuthenticateSessionAsync(localIdentity, authentication, localInstance, cancellationToken);
         }
 
 
@@ -606,7 +601,7 @@ namespace Lime.Protocol.UnitTests.Client
                 .Returns(tcs.Task);
             
             var target = GetTarget(state: SessionState.Authenticating, autoNotifyReceipt: true);
-            var actual = await target.AuthenticateSessionAsync(identity, authentication, null, SessionMode.Node, cancellationToken);
+            var actual = await target.AuthenticateSessionAsync(identity, authentication, null, cancellationToken);
 
             Assert.IsTrue(target.State == session.State);
             Assert.IsTrue(target.LocalNode.Equals(session.To));
@@ -680,7 +675,7 @@ namespace Lime.Protocol.UnitTests.Client
                 .Verifiable();
 
             var target = GetTarget(state: SessionState.Authenticating, autoNotifyReceipt: true);
-            var actual = await target.AuthenticateSessionAsync(identity, authentication, null, SessionMode.Node, cancellationToken);
+            var actual = await target.AuthenticateSessionAsync(identity, authentication, null, cancellationToken);
 
             Assert.IsTrue(target.State == session.State);
 

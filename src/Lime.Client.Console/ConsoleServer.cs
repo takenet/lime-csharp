@@ -271,7 +271,7 @@ namespace Lime.Client.Console
 
             instanceSessionDictionary.Add(node.Instance, channel.SessionId);
 
-            await channel.SendEstablishedSessionAsync(node, SessionMode.Node);
+            await channel.SendEstablishedSessionAsync(node);
 
             var receiveMessageTask = this.ReceiveMessagesAsync(channel, cancellationToken);
 

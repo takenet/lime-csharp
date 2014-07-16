@@ -43,14 +43,6 @@ namespace Lime.Protocol
         public SessionState State { get; set; }
 
         /// <summary>
-        /// Defines the role of the 
-        /// client node in the session with the server.
-        /// </summary>
-        [DataMember(Name = MODE_KEY, EmitDefaultValue = false)]
-        [DefaultValue(SessionMode.Node)]
-        public SessionMode Mode { get; set; }
-
-        /// <summary>
         /// Encryption options provided by 
         /// the server during the session negotiation.
         /// </summary>
@@ -123,51 +115,6 @@ namespace Lime.Protocol
         /// </summary>
         [DataMember(Name = REASON_KEY)]
         public Reason Reason { get; set; }       
-    }
-
-    /// <summary>
-    /// Defines the session modes that
-    /// a identity can connect to a server
-    /// </summary>
-    [DataContract(Namespace = "http://limeprotocol.org/2014")]
-    public enum SessionMode
-    {
-        /// <summary>
-        /// Default mode. 
-        /// Allows the message, notification 
-        /// and command exchange with other nodes.
-        /// </summary>
-        [EnumMember(Value = "node")]
-        Node,
-        /// <summary>
-        /// Establish a session between server 
-        /// of the same domain. The servers exchange 
-        /// information about the connected nodes 
-        /// and forward messages from local nodes 
-        /// to remote nodes.
-        /// </summary>
-        [EnumMember(Value = "server")]
-        Server,
-        /// <summary>
-        /// In this mode, the server defines a subdomain 
-        /// to forward messages and commands addressed to 
-        /// identities of this subdomain. For instance, if 
-        /// the user chat@domain.com starts a session in 
-        /// the application mode, a message addressed to 
-        /// anyuser@chat.mydomain.com will be delivered 
-        /// to the node chat@domain.com.
-        /// </summary>
-        [EnumMember(Value = "application")]
-        Application,
-        /// <summary>
-        /// Establish a session between servers of different 
-        /// domains. The gateway session receive messages 
-        /// addressed to identities of the specified domain 
-        /// and can send messages to local nodes sent by 
-        /// foreign nodes.
-        /// </summary>
-        [EnumMember(Value = "gateway")]
-        Gateway
     }
 
     /// <summary>

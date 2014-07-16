@@ -144,7 +144,7 @@ namespace Lime.Protocol.Client
         /// or
         /// authentication
         /// </exception>
-        public async Task<Session> AuthenticateSessionAsync(Identity identity, Authentication authentication, string instance, SessionMode sessionMode, CancellationToken cancellationToken)
+        public async Task<Session> AuthenticateSessionAsync(Identity identity, Authentication authentication, string instance, CancellationToken cancellationToken)
         {
             if (base.State != SessionState.Authenticating)
             {
@@ -171,7 +171,6 @@ namespace Lime.Protocol.Client
                     Instance = instance
                 },
                 State = SessionState.Authenticating,
-                Mode = sessionMode,
                 Authentication = authentication
             };
 
@@ -341,8 +340,7 @@ namespace Lime.Protocol.Client
             base.FillEnvelope(envelope, isSending);
 
             if (this.LocalNode != null &&
-                isSending && 
-                this.Mode != SessionMode.Server)
+                isSending)
             {
                 if (envelope.Pp == null)
                 {

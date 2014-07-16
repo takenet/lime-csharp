@@ -118,11 +118,6 @@ namespace Lime.Protocol.Network
             }
         }
 
-        /// <summary>
-        /// Current session mode
-        /// </summary>
-        public SessionMode Mode { get; protected set; }
-
         #endregion
 
         #region IMessageChannel Members

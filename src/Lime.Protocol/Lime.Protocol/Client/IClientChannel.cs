@@ -54,9 +54,8 @@ namespace Lime.Protocol.Client
         /// <param name="identity"></param>
         /// <param name="authentication"></param>
         /// <param name="instance"></param>
-        /// <param name="sessionMode"></param>
         /// <returns>An established session envelope or a failed session envelope.</returns>
-        Task<Session> AuthenticateSessionAsync(Identity identity, Authentication authentication, string instance, SessionMode sessionMode, CancellationToken cancellationToken);
+        Task<Session> AuthenticateSessionAsync(Identity identity, Authentication authentication, string instance, CancellationToken cancellationToken);
 
         /// <summary>
         /// Notify to the server that

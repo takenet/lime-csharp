@@ -37,9 +37,5 @@ namespace Lime.Protocol.Network
         /// </summary>
         SessionState State { get; }
 
-        /// <summary>
-        /// Current session mode
-        /// </summary>
-        SessionMode Mode { get; }
     }
 }

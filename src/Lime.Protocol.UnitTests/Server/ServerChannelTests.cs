@@ -122,7 +122,6 @@ namespace Lime.Protocol.UnitTests.Server
                                         e.Compression == null &&
                                         e.Encryption == null &&
                                         e.Authentication == null &&
-                                        e.Mode == SessionMode.Node &&
                                         e.Id == target.SessionId),
                     It.IsAny<CancellationToken>()),
                     Times.Once());
@@ -233,7 +232,6 @@ namespace Lime.Protocol.UnitTests.Server
                                         e.EncryptionOptions == null &&
                                         e.Encryption == sessionEncryption &&
                                         e.Authentication == null &&
-                                        e.Mode == SessionMode.Node &&
                                         e.Id == target.SessionId),
                     It.IsAny<CancellationToken>()),
                     Times.Once());
@@ -275,7 +273,6 @@ namespace Lime.Protocol.UnitTests.Server
                                         e.Compression == null &&
                                         e.Encryption == null &&
                                         e.Authentication == null &&
-                                        e.Mode == SessionMode.Node &&
                                         e.Id == target.SessionId),
                     It.IsAny<CancellationToken>()),
                     Times.Once());
@@ -358,7 +355,6 @@ namespace Lime.Protocol.UnitTests.Server
                                         e.Compression == null &&
                                         e.Encryption == null &&
                                         e.Authentication == authenticationRoundtrip &&
-                                        e.Mode == SessionMode.Node &&
                                         e.Id == target.SessionId),
                     It.IsAny<CancellationToken>()),
                     Times.Once());
@@ -406,9 +402,8 @@ namespace Lime.Protocol.UnitTests.Server
             var target = GetTarget(SessionState.Authenticating);
 
             var node = DataUtil.CreateNode();
-            var mode = SessionMode.Server;
 
-            await target.SendEstablishedSessionAsync(node, mode);
+            await target.SendEstablishedSessionAsync(node);
 
             _transport.Verify(
                 t => t.SendAsync(
@@ -421,14 +416,12 @@ namespace Lime.Protocol.UnitTests.Server
                                         e.Compression == null &&
                                         e.EncryptionOptions == null &&
                                         e.Encryption == null &&
-                                        e.Mode == mode &&
                                         e.Id == target.SessionId),
                     It.IsAny<CancellationToken>()),
                     Times.Once());
 
             Assert.AreEqual(target.State, SessionState.Established);
             Assert.AreEqual(target.RemoteNode, node);
-            Assert.AreEqual(target.Mode, mode);
         }
 
         [TestMethod]
@@ -439,9 +432,8 @@ namespace Lime.Protocol.UnitTests.Server
             var target = GetTarget(SessionState.Authenticating);
 
             Node node = null;
-            var mode = SessionMode.Node;
 
-            await target.SendEstablishedSessionAsync(node, mode);
+            await target.SendEstablishedSessionAsync(node);
         }
 
         [TestMethod]
@@ -452,9 +444,8 @@ namespace Lime.Protocol.UnitTests.Server
             var target = GetTarget();
 
             var node = DataUtil.CreateNode();
-            var mode = SessionMode.Node;
 
-            await target.SendEstablishedSessionAsync(node, mode);
+            await target.SendEstablishedSessionAsync(node);
         }
 
         #endregion
@@ -522,8 +513,7 @@ namespace Lime.Protocol.UnitTests.Server
                                         e.CompressionOptions == null &&
                                         e.Compression == null &&
                                         e.EncryptionOptions == null &&
-                                        e.Encryption == null &&
-                                        e.Mode == target.Mode),
+                                        e.Encryption == null),
                     It.IsAny<CancellationToken>()),
                     Times.Once());
 
@@ -576,8 +566,7 @@ namespace Lime.Protocol.UnitTests.Server
                                         e.CompressionOptions == null &&
                                         e.Compression == null &&
                                         e.EncryptionOptions == null &&
-                                        e.Encryption == null &&
-                                        e.Mode == target.Mode),
+                                        e.Encryption == null),
                     It.IsAny<CancellationToken>()),
                     Times.Once());
 

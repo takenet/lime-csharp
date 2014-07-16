@@ -59,7 +59,6 @@ namespace Lime.Client.Console
                 identity,
                 (s, r) => new GuestAuthentication(),
                 Environment.MachineName,
-                SessionMode.Node,
                 cancellationToken);
 
             if (resultSession.State != SessionState.Established)
@@ -97,7 +96,6 @@ namespace Lime.Client.Console
                 identity,
                 (s, r) => { var auth = new PlainAuthentication(); auth.SetToBase64Password(password); return auth; },
                 Environment.MachineName,
-                SessionMode.Node,
                 cancellationToken);
 
             if (resultSession.State != SessionState.Established)            
@@ -136,7 +134,6 @@ namespace Lime.Client.Console
                 identity,
                 (s, r) => new TransportAuthentication(),
                 Environment.MachineName,
-                SessionMode.Node,
                 cancellationToken);
 
             if (resultSession.State != SessionState.Established)

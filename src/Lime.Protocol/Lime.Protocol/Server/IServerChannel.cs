@@ -68,7 +68,7 @@ namespace Lime.Protocol.Server
         /// to the node to comunicate the
         /// end of the session 
         /// </summary>
-        Task SendEstablishedSessionAsync(Node node, SessionMode mode);
+        Task SendEstablishedSessionAsync(Node node);
 
         /// <summary>
         /// Receives a finishing session envelope
