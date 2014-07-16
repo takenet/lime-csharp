@@ -432,8 +432,10 @@ namespace Lime.Protocol.Tcp
         /// <returns>
         /// Indicates if the identity is authenticated
         /// </returns>
-        public Task<bool> AuthenticateAsync(Identity identity)
+        public Task<DomainRole> AuthenticateAsync(Identity identity)
         {
+            var role = DomainRole.Unknown;
+            
             if (identity == null)
             {
                 throw new ArgumentNullException("identity");
@@ -446,16 +448,22 @@ namespace Lime.Protocol.Tcp
                 sslStream.RemoteCertificate != null)
             {                
                 var certificate = new X509Certificate2(sslStream.RemoteCertificate);
-                var certificateIdentity = certificate.GetIdentity();
+                var identityCertificateName = certificate.GetNameInfo(X509NameType.SimpleName, false);
 
-                if (certificateIdentity != null &&
-                    certificateIdentity.Equals(identity))
+                Identity certificateIdentity;
+
+                if (identityCertificateName.Equals(identity.Domain, StringComparison.OrdinalIgnoreCase))
                 {
-                    return Task.FromResult(true);
+                    role = DomainRole.Authority;
                 }
+                else if (Identity.TryParse(identityCertificateName, out certificateIdentity) &&
+                         certificateIdentity.Equals(identity))
+                {
+                    role = DomainRole.Member;
+                }               
             }
 
-            return Task.FromResult(false);
+            return Task.FromResult(role);
         }
 
         #endregion
@@ -481,6 +489,8 @@ namespace Lime.Protocol.Tcp
             X509Chain chain,
             SslPolicyErrors sslPolicyErrors)
         {
+            // TODO: Check key usage
+
             // The client certificate can be null 
             // but if present, must be valid
             if (certificate == null)

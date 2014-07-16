@@ -19,6 +19,29 @@ namespace Lime.Protocol.Security
         /// </summary>
         /// <param name="identity">The identity to be authenticated</param>
         /// <returns>Indicates if the identity is authenticated</returns>
-        Task<bool> AuthenticateAsync(Identity identity);
+        Task<DomainRole> AuthenticateAsync(Identity identity);
+    }
+
+    /// <summary>
+    /// Indicates the role of
+    /// an identity in a domain
+    /// </summary>
+    public enum DomainRole
+    {
+        /// <summary>
+        /// The identity is unknown
+        /// in the domain
+        /// </summary>
+        Unknown,
+        /// <summary>
+        /// The identity is a 
+        /// member of the domain
+        /// </summary>
+        Member,
+        /// <summary>
+        /// The identity is a
+        /// domain authority
+        /// </summary>
+        Authority
     }
 }

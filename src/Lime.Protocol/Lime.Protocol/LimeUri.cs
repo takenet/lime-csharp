@@ -97,6 +97,10 @@ namespace Lime.Protocol
             return new Uri(baseUri, Path);
         }
 
+        public override int GetHashCode()
+        {
+            return this.ToString().ToLowerInvariant().GetHashCode();
+        }
 
         public override bool Equals(object obj)
         {
