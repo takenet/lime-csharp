@@ -629,12 +629,9 @@ namespace Lime.Protocol.Serialization.Newtonsoft.UnitTests
             Assert.IsTrue(command.Resource is Receipt);
         }
 
-        /// <summary>
-        /// TODO: Emit Default value support
-        /// </summary>
         [TestMethod]
         [TestCategory("Deserialize")]
-        public void Deserialize_RosterResponseCommand_ReturnsValidInstance()
+        public void Deserialize_ContactCollectionResponseCommand_ReturnsValidInstance()
         {
             var target = GetTarget();
 
@@ -659,7 +656,7 @@ namespace Lime.Protocol.Serialization.Newtonsoft.UnitTests
             string randomString2 = DataUtil.CreateRandomString(50);
 
             string json = string.Format(
-                "{{\"type\":\"application/vnd.lime.roster+json\",\"resource\":{{\"contacts\":[{{\"identity\":\"{0}\",\"name\":\"{1}\",\"isPending\":true,\"shareAccountInfo\":false}},{{\"identity\":\"{2}\",\"name\":\"{3}\",\"sharePresence\":false}},{{\"identity\":\"{4}\",\"name\":\"{5}\",\"isPending\":true,\"sharePresence\":false}}]}},\"method\":\"get\",\"status\":\"success\",\"id\":\"{6}\",\"from\":\"{7}\",\"pp\":\"{8}\",\"to\":\"{9}\",\"metadata\":{{\"{10}\":\"{11}\",\"{12}\":\"{13}\"}}}}",
+                "{{\"type\":\"application/vnd.lime.collection+json\",\"resource\":{{\"itemType\":\"application/vnd.lime.contact+json\",\"total\":3,\"items\":[{{\"identity\":\"{0}\",\"name\":\"{1}\",\"isPending\":true,\"shareAccountInfo\":false}},{{\"identity\":\"{2}\",\"name\":\"{3}\",\"sharePresence\":false}},{{\"identity\":\"{4}\",\"name\":\"{5}\",\"isPending\":true,\"sharePresence\":false}}]}},\"method\":\"get\",\"status\":\"success\",\"id\":\"{6}\",\"from\":\"{7}\",\"pp\":\"{8}\",\"to\":\"{9}\",\"metadata\":{{\"{10}\":\"{11}\",\"{12}\":\"{13}\"}}}}",
                 identity1,
                 name1,
                 identity2,
@@ -691,30 +688,32 @@ namespace Lime.Protocol.Serialization.Newtonsoft.UnitTests
             Assert.IsTrue(command.Metadata.ContainsKey(randomKey2));
             Assert.AreEqual(command.Metadata[randomKey2], randomString2);
 
-            Assert.IsTrue(command.Resource is Roster);
+            Assert.IsTrue(command.Resource is DocumentCollection);
 
-            var roster = (Roster)command.Resource;
+            var documents = (DocumentCollection)command.Resource;
 
-            Assert.IsNotNull(roster.Contacts, "Contacts is null");
-            Assert.AreEqual(roster.Contacts.Length, 3);
+            Assert.IsNotNull(documents.Items, "Items is null");
+            Assert.AreEqual(documents.Items.Length, 3);
 
-            Assert.IsTrue(roster.Contacts[0].Identity.Equals(identity1));
-            Assert.IsTrue(roster.Contacts[0].Name.Equals(name1));
-            Assert.IsTrue(roster.Contacts[0].IsPending);
-            Assert.IsFalse(roster.Contacts[0].ShareAccountInfo);
-            //Assert.IsTrue(roster.Contacts[0].SharePresence);
+            var contacts = documents.Cast<Contact>().ToArray();
 
-            Assert.IsTrue(roster.Contacts[1].Identity.Equals(identity2));
-            Assert.IsTrue(roster.Contacts[1].Name.Equals(name2));
-            Assert.IsFalse(roster.Contacts[1].IsPending);
-            //Assert.IsTrue(roster.Contacts[1].ShareAccountInfo);
-            Assert.IsFalse(roster.Contacts[1].SharePresence);
+            Assert.IsTrue(contacts[0].Identity.Equals(identity1));
+            Assert.IsTrue(contacts[0].Name.Equals(name1));
+            Assert.IsTrue(contacts[0].IsPending);
+            Assert.IsFalse(contacts[0].ShareAccountInfo);
+            //Assert.IsTrue(contacts[0].SharePresence);
 
-            Assert.IsTrue(roster.Contacts[2].Identity.Equals(identity3));
-            Assert.IsTrue(roster.Contacts[2].Name.Equals(name3));
-            Assert.IsTrue(roster.Contacts[2].IsPending);
-            //Assert.IsTrue(roster.Contacts[2].ShareAccountInfo);
-            Assert.IsFalse(roster.Contacts[2].SharePresence);
+            Assert.IsTrue(contacts[1].Identity.Equals(identity2));
+            Assert.IsTrue(contacts[1].Name.Equals(name2));
+            Assert.IsFalse(contacts[1].IsPending);
+            //Assert.IsTrue(contacts[1].ShareAccountInfo);
+            Assert.IsFalse(contacts[1].SharePresence);
+
+            Assert.IsTrue(contacts[2].Identity.Equals(identity3));
+            Assert.IsTrue(contacts[2].Name.Equals(name3));
+            Assert.IsTrue(contacts[2].IsPending);
+            //Assert.IsTrue(contacts[2].ShareAccountInfo);
+            Assert.IsFalse(contacts[2].SharePresence);
 
 
         }

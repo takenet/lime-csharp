@@ -15,28 +15,28 @@ namespace Lime.Protocol
 
         #region Constructor
 
-        public LimeUri(string path)
+        public LimeUri(string uriPath)
         {
-            if (string.IsNullOrWhiteSpace(path))
+            if (string.IsNullOrWhiteSpace(uriPath))
             {
-                throw new ArgumentNullException("path");
+                throw new ArgumentNullException("uriPath");
             }
 
-            if (Uri.IsWellFormedUriString(path, UriKind.Absolute))
+            if (Uri.IsWellFormedUriString(uriPath, UriKind.Absolute))
             {
-                _absoluteUri = new Uri(path);
+                _absoluteUri = new Uri(uriPath);
 
                 if (!_absoluteUri.Scheme.Equals(LIME_URI_SCHEME))
                 {
-                    throw new ArgumentException(string.Format("Invalid URI scheme. Expecter is '{0}'", LIME_URI_SCHEME));
+                    throw new ArgumentException(string.Format("Invalid URI scheme. Expected is '{0}'", LIME_URI_SCHEME));
                 }
             }
-            else if (!Uri.IsWellFormedUriString(path, UriKind.Relative))
+            else if (!Uri.IsWellFormedUriString(uriPath, UriKind.Relative))
             {
                 throw new ArgumentException("Invalid URI format");
             }
 
-            this.Path = path.TrimEnd('/');            
+            this.Path = uriPath.TrimEnd('/');            
         }
 
         #endregion
