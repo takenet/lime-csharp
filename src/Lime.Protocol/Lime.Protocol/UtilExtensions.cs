@@ -15,6 +15,35 @@ namespace Lime.Protocol
     public static class UtilExtensions
     {
         /// <summary>
+        /// Gets the Uri address
+        /// of a command resource
+        /// </summary>
+        /// <param name="command"></param>
+        /// <returns></returns>
+        public static Uri GetResourceUri(this Command command)
+        {
+            if (command.Uri == null)
+            {
+                throw new ArgumentException("The command 'uri' value is null");
+            }
+
+            if (command.Uri.IsRelative)
+            {
+                if (command.To == null)
+                {
+                    throw new ArgumentException("The command 'to' value is null");
+                }
+
+                return command.Uri.ToUri(command.To);
+            }
+            else
+            {
+                return command.Uri.ToUri();
+            }            
+        }
+
+
+        /// <summary>
         /// Disposes an object if it is not null
         /// and it implements IDisposable interface
         /// </summary>
