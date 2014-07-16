@@ -197,7 +197,7 @@ namespace Lime.Client.Console
                             {
                                 var authenticableTransport = channel.Transport as IAuthenticatableTransport;
 
-                                if ( await authenticableTransport.AuthenticateAsync(authenticatedSession.From.ToIdentity()))
+                                if (await authenticableTransport.AuthenticateAsync(authenticatedSession.From.ToIdentity()) != DomainRole.Unknown)
                                 {
                                     await RegisterChannel(channel, cancellationToken, authenticatedSession.From);
                                 }
