@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Text;
@@ -16,6 +17,7 @@ namespace Lime.Protocol.Resources
     /// In a new session, the node starts with an unavailable status.
     /// </summary>
     [DataContract(Namespace = "http://limeprotocol.org/2014")]
+    [DebuggerDisplay("Status = {Status}, RoutingRule = {RoutingRule}")]
     public partial class Presence : Document
     {
         public const string MIME_TYPE = "application/vnd.lime.presence+json";
@@ -75,20 +77,20 @@ namespace Lime.Protocol.Resources
     public enum RoutingRule
     {
         /// <summary>
-        /// Only delivery envelopes addressed 
+        /// Only deliver envelopes addressed 
         /// to the current session instance (name@domain/instance).
         /// </summary>
         [EnumMember(Value = "instance")]
         Instance,
         /// <summary>
-        /// Delivery envelopes addressed to the current session instance 
+        /// Deliver envelopes addressed to the current session instance 
         /// (name@domain/instance) and envelopes addressed to the 
         /// identity (name@domain)
         /// </summary>
         [EnumMember(Value = "identity")]
         Identity,
         /// <summary>
-        /// Delivery envelopes addressed to the current session 
+        /// Deliver envelopes addressed to the current session 
         /// instance (name@domain/instance) and envelopes addressed 
         /// to the identity (name@domain) if the distance from the 
         /// origitator is the smallest among the available 
@@ -97,7 +99,7 @@ namespace Lime.Protocol.Resources
         [EnumMember(Value = "identityByDistance")]
         IdentityByDistance,
         /// <summary>
-        /// Delivery envelopes addressed to the current session 
+        /// Deliver envelopes addressed to the current session 
         /// instance (name@domain/instance) and envelopes addressed 
         /// to the identity (name@domain) if the value of the 
         /// priority property is the largest among the available 
@@ -107,11 +109,20 @@ namespace Lime.Protocol.Resources
         IdentityByPriority,
 
         /// <summary>
-        /// Delivery any envelopes addressed to the identity name@domain, 
+        /// Deliver any envelopes addressed to the identity name@domain, 
         /// including the envelopes addressed to any specific instance.
         /// </summary>
         [EnumMember(Value = "promiscuous")]
-        Promiscuous
+        Promiscuous,
+
+        /// <summary>
+        /// This rule is intended to be used only for external domain authorities
+        /// (gateways) and sub-domain authorities (applications), in order to 
+        /// deliver envelopes addressed to their domain using the smallest distance 
+        /// from the origitator among the available connected nodes for these authorities.
+        /// </summary>
+        [EnumMember(Value = "domainByDistance")]
+        DomainByDistance
     }
 
     /// <summary>
