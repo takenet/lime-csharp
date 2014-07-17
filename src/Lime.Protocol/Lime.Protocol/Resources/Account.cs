@@ -15,6 +15,8 @@ namespace Lime.Protocol.Resources
     [DataContract(Namespace = "http://limeprotocol.org/2014")]
     public partial class Account : Document
     {
+        public const string RESOURCE_PATH = "/account";
+
         public const string MIME_TYPE = "application/vnd.lime.account+json";
 
         public const string FULL_NAME_KEY = "fullName";
