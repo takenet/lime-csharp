@@ -121,7 +121,11 @@ namespace Lime.Protocol.Serialization
             }
             else if (value is Enum)
             {
-                _jsonDictionary.Add(propertyName, value.ToString().ToCamelCase());
+                WriteStringProperty(propertyName, value.ToString().ToCamelCase());
+            }
+            else if (value is string)
+            {
+                WriteStringProperty(propertyName, (string)value);
             }
             else if (value is IEnumerable)
             {
@@ -158,7 +162,7 @@ namespace Lime.Protocol.Serialization
             }
             else
             {
-                _jsonDictionary.Add(propertyName, value.ToString());
+                WriteStringProperty(propertyName, value.ToString());                
             }
         }
 

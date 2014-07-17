@@ -29,12 +29,12 @@ namespace Lime.Protocol
 
             if (command.Uri.IsRelative)
             {
-                if (command.To == null)
+                if (command.From == null)
                 {
-                    throw new ArgumentException("The command 'to' value is null");
+                    throw new ArgumentException("The command 'from' value is null");
                 }
 
-                return command.Uri.ToUri(command.To);
+                return command.Uri.ToUri(command.From);
             }
             else
             {
