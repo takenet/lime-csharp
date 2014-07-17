@@ -221,5 +221,36 @@ namespace Lime.Protocol
 
             return identity;
         }
+
+        /// <summary>
+        /// Gets the identity
+        /// associated to the URI 
+        /// authority
+        /// </summary>
+        /// <param name="uri"></param>
+        /// <returns></returns>
+        public static Identity GetIdentity(this Uri uri)
+        {
+            if (uri == null)
+            {
+                throw new ArgumentNullException("uri");
+            }
+
+            if (uri.HostNameType != UriHostNameType.Dns)
+            {
+                throw new ArgumentException("The uri hostname must be a dns value");
+            }
+
+            if (string.IsNullOrWhiteSpace(uri.UserInfo))
+            {
+                throw new ArgumentException("The uri user info is empty");
+            }
+
+            return new Identity()
+            {
+                Name = uri.UserInfo,
+                Domain = uri.Host
+            };
+        }
     }
 }
