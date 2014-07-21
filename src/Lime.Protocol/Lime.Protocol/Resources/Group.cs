@@ -33,6 +33,12 @@ namespace Lime.Protocol.Resources
         public string Name { get; set; }
 
         /// <summary>
+        /// Owner of the group.
+        /// </summary>
+        [DataMember(Name = "owner")]
+        public Identity Owner { get; set; }
+
+        /// <summary>
         /// Type of the group.
         /// </summary>
         [DataMember(Name = "type")]
@@ -53,7 +59,6 @@ namespace Lime.Protocol.Resources
                 return new Uri(string.Format("lime://groups/{0}@{1}/members", Identity.Name, Identity.Domain));
             } 
         }
-
     }
 
     [DataContract(Namespace = "http://limeprotocol.org/2014")]
