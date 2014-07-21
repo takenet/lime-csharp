@@ -20,18 +20,6 @@ namespace Lime.Protocol.Resources
         {
 
         }
-
-        /// <summary>
-        /// List of groups that the node owns or participates.
-        /// </summary>
-        [DataMember(Name = "groups")]
-        public GroupDefinition[] Groups { get; set; }
-
-    }
-
-    [DataContract(Namespace = "http://limeprotocol.org/2014")]
-    public partial class GroupDefinition
-    {
         /// <summary>
         /// Identity of the group, in the group-id@groups.domain.com format. 
         /// </summary>
@@ -51,10 +39,21 @@ namespace Lime.Protocol.Resources
         public GroupType Type { get; set; }
 
         /// <summary>
-        /// Members of the contact group. 
+        /// Members uri of the contact group. 
         /// </summary>
         [DataMember(Name = "members")]
-        public GroupMember[] Members { get; set; }
+        public Uri MembersUri {
+
+            get
+            {
+                if (Identity == null)
+                {
+                    return null;
+                }
+                return new Uri(string.Format("lime://groups/{0}@{1}/members", Identity.Name, Identity.Domain));
+            } 
+        }
+
     }
 
     [DataContract(Namespace = "http://limeprotocol.org/2014")]
@@ -85,8 +84,15 @@ namespace Lime.Protocol.Resources
     }
 
     [DataContract(Namespace = "http://limeprotocol.org/2014")]
-    public partial class GroupMember
+    public partial class GroupMember : Document
     {
+        public const string MIME_TYPE = "application/vnd.lime.groupMemeber+json";
+
+        public GroupMember()
+            : base(MediaType.Parse(MIME_TYPE))
+        {
+
+        }
         /// <summary>
         /// The identity of the member, in the name@domain format. 
         /// </summary>
