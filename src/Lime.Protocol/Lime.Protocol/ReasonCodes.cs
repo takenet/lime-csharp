@@ -138,23 +138,39 @@ namespace Lime.Protocol
         /// </summary>
         public const int COMMAND_RESOURCE_NOT_FOUND = 67;
         /// <summary>
+        /// General message processing error
+        /// </summary>
+        public const int MESSAGE_PROCESSING_ERROR = 61;
+        /// <summary>
+        /// The message content type
+        /// is not supported
+        /// </summary>
+        public const int MESSAGE_UNSUPPORTED_CONTENT_TYPE = 71;
+        /// <summary>
         /// General gateway processing error
         /// </summary>
-        public const int GATEWAY_ERROR = 71;
+        public const int GATEWAY_ERROR = 81;
         /// <summary>
         /// The content type is not supported
         /// by the gateway
         /// </summary>
-        public const int GATEWAY_CONTENT_TYPE_NOT_SUPPORTED = 72;
+        public const int GATEWAY_CONTENT_TYPE_NOT_SUPPORTED = 82;
         /// <summary>
         /// The message destination was not found
         /// on gateway
         /// </summary>
-        public const int GATEWAY_DESTINATION_NOT_FOUND = 73;
+        public const int GATEWAY_DESTINATION_NOT_FOUND = 83;
         /// <summary>
         /// The functionality is not supported 
         /// by the gateway
         /// </summary>
-        public const int GATEWAY_NOT_SUPPORTED = 74;
+        public const int GATEWAY_NOT_SUPPORTED = 84;
+        /// <summary>
+        /// General application processing error
+        /// </summary>
+        public const int APPLICATION_ERROR = 101;
+
+
+        
     }
 }
