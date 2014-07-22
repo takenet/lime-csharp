@@ -48,17 +48,7 @@ namespace Lime.Protocol.Resources
         /// Members uri of the contact group. 
         /// </summary>
         [DataMember(Name = "members")]
-        public Uri MembersUri {
-
-            get
-            {
-                if (Identity == null)
-                {
-                    return null;
-                }
-                return new Uri(string.Format("lime://groups/{0}@{1}/members", Identity.Name, Identity.Domain));
-            } 
-        }
+        public LimeUri MembersUri { get; set; }
     }
 
     [DataContract(Namespace = "http://limeprotocol.org/2014")]
@@ -136,12 +126,5 @@ namespace Lime.Protocol.Resources
         /// </summary>
         [EnumMember(Value = "moderator")]
         Moderator,
-
-        /// <summary>
-        /// The owner have the permission to manage moderators, 
-        /// change and delete the group.
-        /// </summary>
-        [EnumMember(Value = "owner")]
-        Owner
     }
 }
