@@ -81,6 +81,8 @@ namespace Lime.Protocol.Resources
     [DataContract(Namespace = "http://limeprotocol.org/2014")]
     public partial class GroupMember : Document
     {
+        
+
         public const string MIME_TYPE = "application/vnd.lime.groupMemeber+json";
 
         public GroupMember()
@@ -99,6 +101,7 @@ namespace Lime.Protocol.Resources
         /// </summary>
         [DataMember(Name = "role")]
         public GroupMemberRole Role { get; set; }
+
     }
 
     [DataContract(Namespace = "http://limeprotocol.org/2014")]
