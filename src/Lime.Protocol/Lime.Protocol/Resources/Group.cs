@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Text;
@@ -79,6 +80,7 @@ namespace Lime.Protocol.Resources
     }
 
     [DataContract(Namespace = "http://limeprotocol.org/2014")]
+    [DebuggerDisplay("Identity = {Identity}, Role = {Role}")]
     public partial class GroupMember : Document
     {
         
