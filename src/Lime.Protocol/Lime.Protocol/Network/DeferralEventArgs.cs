@@ -29,7 +29,7 @@ namespace Lime.Protocol.Network
             return _deferrals.GetDeferral();
         }
 
-        internal Task WaitForDeferralsAsync()
+        public Task WaitForDeferralsAsync()
         {
             return _deferrals.SignalAndWaitAsync();
         }
