@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Text;
@@ -20,18 +21,6 @@ namespace Lime.Protocol.Resources
         {
 
         }
-
-        /// <summary>
-        /// List of groups that the node owns or participates.
-        /// </summary>
-        [DataMember(Name = "groups")]
-        public GroupDefinition[] Groups { get; set; }
-
-    }
-
-    [DataContract(Namespace = "http://limeprotocol.org/2014")]
-    public partial class GroupDefinition
-    {
         /// <summary>
         /// Identity of the group, in the group-id@groups.domain.com format. 
         /// </summary>
@@ -45,16 +34,22 @@ namespace Lime.Protocol.Resources
         public string Name { get; set; }
 
         /// <summary>
+        /// Owner of the group.
+        /// </summary>
+        [DataMember(Name = "owner")]
+        public Identity Owner { get; set; }
+
+        /// <summary>
         /// Type of the group.
         /// </summary>
         [DataMember(Name = "type")]
         public GroupType Type { get; set; }
 
         /// <summary>
-        /// Members of the contact group. 
+        /// Members uri of the contact group. 
         /// </summary>
         [DataMember(Name = "members")]
-        public GroupMember[] Members { get; set; }
+        public LimeUri MembersUri { get; set; }
     }
 
     [DataContract(Namespace = "http://limeprotocol.org/2014")]
@@ -85,8 +80,18 @@ namespace Lime.Protocol.Resources
     }
 
     [DataContract(Namespace = "http://limeprotocol.org/2014")]
-    public partial class GroupMember
+    [DebuggerDisplay("Identity = {Identity}, Role = {Role}")]
+    public partial class GroupMember : Document
     {
+        
+
+        public const string MIME_TYPE = "application/vnd.lime.groupMemeber+json";
+
+        public GroupMember()
+            : base(MediaType.Parse(MIME_TYPE))
+        {
+
+        }
         /// <summary>
         /// The identity of the member, in the name@domain format. 
         /// </summary>
@@ -98,6 +103,7 @@ namespace Lime.Protocol.Resources
         /// </summary>
         [DataMember(Name = "role")]
         public GroupMemberRole Role { get; set; }
+
     }
 
     [DataContract(Namespace = "http://limeprotocol.org/2014")]
@@ -125,12 +131,5 @@ namespace Lime.Protocol.Resources
         /// </summary>
         [EnumMember(Value = "moderator")]
         Moderator,
-
-        /// <summary>
-        /// The owner have the permission to manage moderators, 
-        /// change and delete the group.
-        /// </summary>
-        [EnumMember(Value = "owner")]
-        Owner
     }
 }
