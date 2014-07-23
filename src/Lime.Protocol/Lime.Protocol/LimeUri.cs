@@ -93,7 +93,7 @@ namespace Lime.Protocol
                 throw new ArgumentNullException("authority");
             }
 
-            var baseUri = new Uri(string.Format("{0}://{1}/", LIME_URI_SCHEME, authority));
+            var baseUri = GetBaseUri(authority);
             return new Uri(baseUri, Path);
         }
 
@@ -121,6 +121,11 @@ namespace Lime.Protocol
         public static LimeUri Parse(string value)
         {
             return new LimeUri(value);
+        }
+
+        public static Uri GetBaseUri(Identity authority)
+        {
+            return new Uri(string.Format("{0}://{1}/", LIME_URI_SCHEME, authority));
         }
 
         #endregion

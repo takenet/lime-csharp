@@ -55,6 +55,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Resources\Receipt.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Resources\Roster.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Resources\Subscription.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Resources\UriTemplates.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Security\Authentication.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Security\GuestAuthentication.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Security\IAuthenticatableTransport.cs" />
