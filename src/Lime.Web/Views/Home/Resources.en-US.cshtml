@@ -1,17 +1,25 @@
 ﻿@{
-    ViewBag.Title = "Resource Types";
+    ViewBag.Title = "Resources";
 }
 
 <div class="col-md-10" role="main">
-    <h1 class="page-header">Resource Types</h1>
+    <h1 class="page-header">Resources</h1>
 
     <div class="alert alert-warning">This specification is a <strong>work in progress</strong> and is subject to change without notice.</div>
 
-    <p>Every connected node on a LIME network has its own set of resources that can be queried or changed by another nodes through commands, if they have the permissions for that. Besides that, the domain servers can store resources for the domain identities, providing services like account and contact management.</p>
-    <p>To improve the interoperability, the protocol defines some common resource types that SHOULD be available in all protocol implementations.</p>
+    <p>
+        Every connected node on a LIME network has its own set of resources that can be queried or changed by another nodes through commands, if they have the permissions for that.
+        Besides that, the domain servers can store resources for the domain identities, providing services like account and contact management.
+    </p>
+    <p>To improve the interoperability, the protocol defines some common resource types that should be available in all protocol implementations.</p>
 
     <h2 id="account">Account</h2>
     <p>Represents an user account information.</p>
+
+    <h4>URI template</h4>
+<pre>
+    lime://{ownerIdentity}/account
+</pre>
 
     <h4>MIME type</h4>
 <pre>
@@ -112,24 +120,8 @@
             <strong>storeMessageContent</strong> - Indicates if the content of messages from this account should be stored in the server. Note that for offline messages, this will always happens.
         </li>
     </ul>
-    <h4>Role support</h4>
-    <ul>
-        <li>
-            <strong>Node</strong> - Can get and set the resource value in the server.
-        </li>
-        <li>
-            <strong>Server</strong> - Holds the resource for other identities.
-        </li>
-        <li>
-            <strong>Gateway</strong> - Inherited from the node.
-        </li>
-        <li>
-            <strong>Application</strong> - Inherited from the node.
-        </li>
-    </ul>
 
     <h4>Example</h4>
-
     <p>Setting the account information:</p>
 <pre>
 C:
@@ -138,6 +130,7 @@ C:
     "id": "f6b9160c-7539-4369-aa1d-c3b51380a524",
     "from": "saul@breakingbad.com/office",
     "method": "set",
+    "uri": "/account",
     "type": "application/vnd.lime.account+json",
     "resource": {
         "fullName": "Saul McGill Goodman",
@@ -163,6 +156,12 @@ S:
 
     <h2 id="capability">Capability</h2>
     <p>Represents the messaging capabilities of a node in a session.</p>
+
+    <h4>URI template</h4>
+<pre>
+    lime://{ownerIdentity}/capability
+</pre>
+
 
     <h4>MIME type</h4>
 <pre>
@@ -207,22 +206,6 @@ S:
         </li>
     </ul>
 
-    <h4>Role support</h4>
-    <ul>
-        <li>
-            <strong>Node</strong> - Can get and set the resource value in the server.
-        </li>
-        <li>
-            <strong>Server</strong> - Holds the resource for other identities. The servers doesn't need to know the content types so this specific resource is unbounded.
-        </li>
-        <li>
-            <strong>Gateway</strong> - Inherited from the node.
-        </li>
-        <li>
-            <strong>Application</strong> - Inherited from the node.
-        </li>
-    </ul>
-
     <h4>Example</h4>
     <p>Get the current session capabilities:</p>
 <pre>
@@ -232,7 +215,7 @@ C:
     "id": "d1ad793d-2bf2-42f2-a843-65c7b518e601",
     "from": "walterjr@breakingbad.com/home",
     "method": "get",
-    "type": "application/vnd.lime.capability+json"
+    "uri": "/capability"
 }
 </code>
 <code class="json">
@@ -261,6 +244,11 @@ S:
 
     <h2 id="receipt">Receipt</h2>
     <p>Represents the events that the client wants to receive.</p>
+
+    <h4>URI template</h4>
+<pre>
+    lime://{ownerIdentity}/receipt
+</pre>
 
     <h4>MIME type</h4>
 <pre>
@@ -299,22 +287,6 @@ S:
         </li>
     </ul>
 
-    <h4>Role support</h4>
-    <ul>
-        <li>
-            <strong>Node</strong> - Can get and set the resource value in the server.
-        </li>
-        <li>
-            <strong>Server</strong> - Holds the resource for other identities. The servers doesn't need to know the content types so this specific resource is unbounded.
-        </li>
-        <li>
-            <strong>Gateway</strong> - Inherited from the node.
-        </li>
-        <li>
-            <strong>Application</strong> - Inherited from the node.
-        </li>
-    </ul>
-
     <h4>Example</h4>
     <p>Set to accept all events:</p>
 <pre>
@@ -324,6 +296,7 @@ C:
     "id":  "2f158480-8c4e-4987-94e5-e4b960622f4b",
     "method":  "set",
     "from": "walterjr@breakingbad.com/home",
+    "uri": "/receipt",
     "type":  "application/vnd.lime.receipt+json",
     "resource":  {
         "events":  [
@@ -364,6 +337,11 @@ S:
     <p>
         In some cases, the delegation is issued automatically by the server. For instance if a node adds an identity to his roster, a node with this identity can <em>get</em> the <em>presence</em> resource on his behalf in the server.
     </p>
+
+    <h4>URI template</h4>
+<pre>
+    lime://{ownerIdentity}/delegations
+</pre>
 
     <h4>MIME type</h4>
 <pre>
@@ -447,22 +425,6 @@ S:
         </li>
     </ul>
 
-    <h4>Role support</h4>
-    <ul>
-        <li>
-            <strong>Node</strong> - Can get and set the resource value in the server.
-        </li>
-        <li>
-            <strong>Server</strong> - Holds the resource for other identities. The servers cannot delegate permissions to another nodes but they are automatically granted by all domain identities.
-        </li>
-        <li>
-            <strong>Gateway</strong> - Inherited from the node. The gateways cannot delegate permissions to another nodes but they can be granted by nodes.
-        </li>
-        <li>
-            <strong>Application</strong> - Inherited from the node. The applications cannot delegate permissions to another nodes but they can be granted by nodes.
-        </li>
-    </ul>
-
     <h4>Example</h4>
 
 <pre>
@@ -473,6 +435,7 @@ S:
     "from": "saul@breakingbad.com/office",
     "to": "heisenberg@breakingbad.com",
     "method": "get",
+    "uri": "/delegations",
     "type": "application/vnd.lime.delegation+json",
     "resource": {
         "destinations" : [
@@ -582,6 +545,12 @@ S:
     <h2 id="group">Group</h2>
     <p>Allows the nodes to manage the groups that they owns or participates.</p>
 
+    <h4>URI templates</h4>
+<pre>
+    lime://{ownerIdentity}/groups
+    lime://{ownerIdentity}/groups/{groupIdentity}
+</pre>
+
     <h4>MIME type</h4>
 <pre>
     application/vnd.lime.group+json
@@ -617,21 +586,9 @@ S:
                     "enum": [ "temporary", "public", "private" ]
                 },
                 "members" : {
-                    "type": "array",
-                    "items": {
-                        "title": "member",
-                        "type": "object",
-                        "properties": {
-                            "identity": {
-                                "title": "identity",
-                                "type": "string",
-                                "pattern": "^(?:([^\"&'/:<>@@]{1,1023})@@)?([^/@@]{1,1023})$"
-                            },
-                            "role": {
-                                "enum": [ "listener", "member", "moderator" ]
-                            }
-                        }
-                    }
+                    "title": "limeUri",
+                    "type": "string",
+                    "pattern": "^((lime://)(\w\.?-?)+@@?(\w\.?-?@@?)+)?(/(\w\.?-?@@?)+)+(\?{1}((\w+=\w+)&?)+)?$"
                 }
             },
             "required" : [ "identity", "owner" ]
@@ -669,60 +626,23 @@ S:
                     </ul>
                 </li>
                 <li>
-                    <strong>members</strong> - List of members of the contact group. Every member can have the following properties:
-                    <ul>
-                        <li>
-                            <strong>identity</strong> - The identity of the member, in the <em>name@domain</em> format.
-                        </li>
-                        <li>
-                            <strong>role</strong> - The role of the identity in the group. The possible values are:
-                            <ul>
-                                <li>
-                                    <strong>listener</strong> - The member can only receive messages from the group, and doesn't have permission to send.
-                                </li>
-                                <li>
-                                    <strong>member</strong> - The member can send and receive messages to the group. It's the default value.
-                                </li>
-                                <li>
-                                    <strong>moderator</strong> - The member can send and receive messages to the group and can <em>kick</em> and <em>ban</em> contacts from it.
-                                </li>
-                                <li>
-                                    <strong>owner</strong> - The owner have the permission to manage moderators, change and delete the group.
-                                </li>
-                            </ul>
-                        </li>
-                    </ul>
+                    <strong>members</strong> - The URI to the group members resource.
                 </li>
             </ul>
         </li>
     </ul>
 
-    <h4>Role support</h4>
-    <ul>
-        <li>
-            <strong>Node</strong> - Can get and set the resource value in the server.
-        </li>
-        <li>
-            <strong>Server</strong> - Holds the resource for other identities.
-        </li>
-        <li>
-            <strong>Gateway</strong> - Inherited from the node.
-        </li>
-        <li>
-            <strong>Application</strong> - Inherited from the node.
-        </li>
-    </ul>
+    <h4>Examples</h4>
 
-    <h4>Example</h4>
-
+    <p>Getting all groups:</p>
 <pre>
 C:
 <code class="json">
 {
     "id": "2aac8738-5507-44bf-b85a-30e146250fa3",
     "from": "gus@breakingbad.com/pollos",
-    "method": "get",
-    "type": "application/vnd.lime.group+json"
+    "method": "get",    
+    "uri": "/groups"
 }
 </code>
 S:
@@ -733,74 +653,220 @@ S:
     "to": "gus@breakingbad.com/pollos",
     "method": "get",
     "result": "success",
+    "type": "application/vnd.lime.collection+json",
     "resource": {
-        "groups": [
+        "total": 3,
+        "itemType": "application/vnd.lime.group+json",
+        "items": [
             {
                 "identity": "methcookers@groups.breakingbad.com",
                 "name": "Meth cookers",
                 "owner": "gus@breakingbad.com",
                 "type": "private",
-                "members": [
-                    {
-                        "identity": "mike@breakingbad.com",
-                        "role": "moderator"
-                    },
-                    {
-                        "identity": "ww@breakingbad.com"
-                    },
-                    {
-                        "identity": "jesse@breakingbad.com"
-                    },
-                    {
-                        "identity": "gale@breakingbad.com"
-                    },
-                    {
-                        "identity": "victor@breakingbad.com",
-                        "role": "listener"
-                    }
-                ]
+                "members": "/groups/methcookers@groups.breakingbad.com/members"
             },
             {
                 "identity": "pollos@groups.breakingbad.com",
                 "name": "Los Pollos Hermanos Staff",
                 "owner": "gus@breakingbad.com",
                 "type": "public",
-                "members": [
-                    {
-                        "identity": "victor@breakingbad.com"
-                    },
-                    {
-                        "identity": "gaff@breakingbad.com"
-                    }
-                ]
+                "members": "/groups/pollos@groups.breakingbad.com/members"
             },
             {
                 "identity": "police@groups.breakingbad.com",
                 "name": "Albuquerque Police Department officers and supporters",
                 "owner": "marshall@breakingbad.com",
                 "type": "public",
-                "members": [
-                    {
-                        "identity": "gus@breakingbad.com",
-                        "role": "listener"
-                    },
-                    {
-                        "identity": "officer1@breakingbad.com"
-                    },
-                    {
-                        "identity": "officer2@breakingbad.com"
-                    }
-                ]
+                "members": "/groups/police@groups.breakingbad.com/members"
             }
         ]
     }
 }
 </code>
 </pre>
+
+    <p>Getting specific group:</p>
+<pre>
+C:
+<code class="json">
+{
+    "id": "2aac8738-5507-44bf-b85a-30e146250fa3",
+    "from": "gus@breakingbad.com/pollos",
+    "method": "get",    
+    "uri": "/groups/pollos@groups.breakingbad.com"
+}
+</code>
+S:
+<code class="json">
+{
+    "id": "2aac8738-5507-44bf-b85a-30e146250fa3",
+    "from": "server@breakingbad.com/machine1",
+    "to": "gus@breakingbad.com/pollos",
+    "method": "get",
+    "result": "success",
+    "type": "application/vnd.lime.group+json",
+    "resource": {
+        "identity": "pollos@groups.breakingbad.com",
+        "name": "Los Pollos Hermanos Staff",
+        "owner": "gus@breakingbad.com",
+        "type": "public",
+        "members": "/groups/pollos@groups.breakingbad.com/members"
+    }
+}
+</code>
+</pre>
+
+    <hr />
+
+    <h2 id="member">Member</h2>
+    <p>Allows the nodes to manage the members of the groups that they owns or participates.</p>
+
+    <h4>URI templates</h4>
+<pre>
+    lime://{ownerIdentity}/groups/{groupIdentity}/members
+    lime://{ownerIdentity}/groups/{groupIdentity}/members/{memberIdentity}
+</pre>
+
+    <h4>MIME type</h4>
+<pre>
+    application/vnd.lime.group+json
+</pre>
+
+    <h4>JSON Schema</h4>
+
+<pre>
+<code class="json-schema">
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "member",
+    "type": "object",
+    "properties": {
+        "identity": {
+            "title": "identity",
+            "type": "string",
+            "pattern": "^(?:([^\"&'/:<>@@]{1,1023})@@)?([^/@@]{1,1023})$"
+        },
+        "role": {
+            "enum": [ "listener", "member", "moderator" ]
+        }
+    },
+    "required": [ "identity" ]
+}
+</code>
+</pre>
+
+    <h4>Properties</h4>
+
+    <ul>
+        <li>
+            <strong>identity</strong> - The identity of the member, in the <em>name@domain</em> format.
+        </li>
+        <li>
+            <strong>role</strong> - The role of the identity in the group. The possible values are:
+            <ul>
+                <li>
+                    <strong>listener</strong> - The member can only receive messages from the group, and doesn't have permission to send.
+                </li>
+                <li>
+                    <strong>member</strong> - The member can send and receive messages to the group. It's the default value.
+                </li>
+                <li>
+                    <strong>moderator</strong> - The member can send and receive messages to the group and can <em>kick</em> and <em>ban</em> contacts from it.
+                </li>
+                <li>
+                    <strong>owner</strong> - The owner have the permission to manage moderators, change and delete the group.
+                </li>
+            </ul>
+        </li>
+    </ul>
+
+
+    <h4>Examples</h4>
+
+    <p>Getting all group members:</p>
+<pre>
+C:
+<code class="json">
+{
+    "id": "2aac8738-5507-44bf-b85a-30e146250fa3",
+    "from": "gus@breakingbad.com/pollos",
+    "method": "get",    
+    "uri": "/groups/pollos@groups.breakingbad.com/members"
+}
+</code>
+S:
+<code class="json">
+{
+    "id": "2aac8738-5507-44bf-b85a-30e146250fa3",
+    "from": "server@breakingbad.com/machine1",
+    "to": "gus@breakingbad.com/pollos",
+    "method": "get",
+    "result": "success",
+    "type": "application/vnd.lime.collection+json",
+    "resource": {
+        "total": 3,
+        "itemType": "application/vnd.lime.groupmember+json",
+        "items": [
+            {
+                "identity": "mike@breakingbad.com",
+                "role": "moderator"
+            },
+            {
+                "identity": "ww@breakingbad.com"
+            },
+            {
+                "identity": "jesse@breakingbad.com"
+            },
+            {
+                "identity": "gale@breakingbad.com"
+            },
+            {
+                "identity": "victor@breakingbad.com",
+                "role": "listener"
+            }
+        ]
+    }
+}
+</code>
+</pre>
+
+    <p>Set specific group member:</p>
+<pre>
+C:
+<code class="json">
+{
+    "id": "2aac8738-5507-44bf-b85a-30e146250fa3",
+    "from": "gus@breakingbad.com/pollos",
+    "method": "set",    
+    "uri": "/groups/pollos@groups.breakingbad.com/members",
+    "type": "application/vnd.lime.groupmember+json",
+    "resource": {
+        "identity": "mike@breakingbad.com",
+        "role": "moderator"
+    }
+}
+</code>
+S:
+<code class="json">
+{
+    "id": "2aac8738-5507-44bf-b85a-30e146250fa3",
+    "from": "server@breakingbad.com/machine1",
+    "to": "gus@breakingbad.com/pollos",
+    "method": "get",
+    "result": "success"
+}
+</code>
+</pre>
+
     <hr />
 
     <h2 id="ping">Ping</h2>
     <p>Allows the nodes to test the network connectivity.</p>
+
+    <h4>URI templates</h4>
+<pre>
+    lime://{ownerIdentity}/ping
+</pre>
 
     <h4>MIME type</h4>
 <pre>
@@ -819,21 +885,6 @@ S:
 </code>
 </pre>
 
-    <h4>Role support</h4>
-    <ul>
-        <li>
-            <strong>Node</strong> - Every node can hold the resource. The only valid command method is get, since the resource doesn't have a body.
-        </li>
-        <li>
-            <strong>Server</strong> - Inherited from the node. The server sends ping commands to the idle nodes to ensure network connectivity.
-        </li>
-        <li>
-            <strong>Gateway</strong> - Inherited from the node.
-        </li>
-        <li>
-            <strong>Application</strong> - Inherited from the node.
-        </li>
-    </ul>
 
     <h4>Example</h4>
     <p>Ping request from the server:</p>
@@ -845,7 +896,7 @@ S:
     "from": "server@breakingbad.com/server1",
     "to": "saul@breakingbad.com/tv",
     "method": "get",
-    "type": "application/vnd.lime.ping+json"
+    "uri": "/ping"
 }
 </code>
 C:
@@ -866,6 +917,12 @@ C:
 
     <h2 id="presence">Presence</h2>
     <p>Represents the availability status of a node in a network. A node can only receive envelopes from another nodes in the network if it sets its presence to an available status (except from the server, who always <em>knows</em> if a node is available or node, since this information is enforced by the existing session). In a new session, the node starts with a <em>unavailable</em> status.</p>
+
+
+    <h4>URI templates</h4>
+<pre>
+    lime://{ownerIdentity}/presence
+</pre>
 
     <h4>MIME type</h4>
 <pre>
@@ -952,6 +1009,10 @@ C:
                 <li>
                     <strong>promiscuous</strong> - Delivery any envelopes addressed to the identity (<em>name@@domain</em>), including the envelopes addressed to any specific instance.
                 </li>
+                <li>
+                    <strong>domain</strong> - Delivery any envelopes addressed to the node domain (<em>name@@domain</em>), including the envelopes addressed to any specific instance.
+                    This rule can be used only by domain authorities.
+                </li>
             </ul>
         </li>
         <li>
@@ -962,21 +1023,6 @@ C:
         </li>
     </ul>
 
-    <h4>Role support</h4>
-    <ul>
-        <li>
-            <strong>Node</strong> - Can get and set the resource value in the server.
-        </li>
-        <li>
-            <strong>Server</strong> - Holds the resource for other identities, but can't set it to itself.
-        </li>
-        <li>
-            <strong>Gateway</strong> - Can't get or set it to itself.
-        </li>
-        <li>
-            <strong>Application</strong> - Can't get or set it to itself.
-        </li>
-    </ul>
 
     <h4>Example</h4>
     <p>Setting the presence:</p>
@@ -987,6 +1033,7 @@ C:
     "id": "2aac8738-5507-44bf-b85a-30e146250fa3",
     "from": "saul@breakingbad.com/tv",
     "method": "set",
+    "uri": "/presence",
     "type": "application/vnd.lime.presence+json",
     "resource": {
         "status": "available",
@@ -1010,6 +1057,11 @@ S:
 
     <h2 id="quota">Quota</h2>
     <p>Allows the nodes to manage the session envelope quota configuration.</p>
+
+    <h4>URI templates</h4>
+<pre>
+    lime://{ownerIdentity}/quota
+</pre>
 
     <h4>MIME type</h4>
 <pre>
@@ -1046,24 +1098,8 @@ S:
         </li>
     </ul>
 
-    <h4>Role support</h4>
-    <ul>
-        <li>
-            <strong>Node</strong> - Can get and set the resource value in the server.
-        </li>
-        <li>
-            <strong>Server</strong> - Holds the resource for other identities.
-        </li>
-        <li>
-            <strong>Gateway</strong> - Inherited from the node.
-        </li>
-        <li>
-            <strong>Application</strong> - Inherited from the node.
-        </li>
-    </ul>
-
     <h4>Example</h4>
-    <p>Adding a contact to the roster:</p>
+    <p>Getting the user quota:</p>
 <pre>
 C:
 <code class="json">
@@ -1071,8 +1107,7 @@ C:
     "id": "2aac8738-5507-44bf-b85a-30e146250fa3",
     "from": "hank@breakingbad.com/dea",
     "method": "get",
-    "type": "application/vnd.lime.quota+json"
-    }
+    "uri": "/quota"
 }
 </code>
 S:
@@ -1093,105 +1128,83 @@ S:
 </pre>
     <hr />
 
-    <h2 id="roster">Roster</h2>
+    <h2 id="contact">Contact</h2>
     <p>Allows the nodes to manage the contacts of their accounts.</p>
+
+    <h4>URI templates</h4>
+<pre>
+    lime://{ownerIdentity}/contacts
+    lime://{ownerIdentity}/contacts/{contactIdentity}
+</pre>
 
     <h4>MIME type</h4>
 <pre>
-    application/vnd.lime.roster+json
+    application/vnd.lime.contact+json
 </pre>
 
     <h4>JSON Schema</h4>
 
 <pre>
 <code class="json-schema">
-{
+ {
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "title": "roster",
+    "title": "contact",
     "type": "object",
     "properties": {
-        "contacts": {
-            "type": "array",
-            "items": {
-                "title": "contact",
-                "type": "object",
-                "properties": {
-                    "identity": {
-                        "title": "identity",
-                        "type": "string",
-                        "pattern": "^(?:([^\"&'/:<>@@]{1,1023})@@)?([^/@@]{1,1023})$"
-                    },
-                    "name": {
-                        "type": "string",
-                    },
-                    "isPending": {
-                        "type": "boolean"
-                    },
-                    "sharePresence": {
-                        "type": "boolean"
-                    },
-                    "shareAccountInfo": {
-                        "type": "boolean"
-                    }
-                },
-                "required": [ "identity" ]
-            }
-        }       
-    }
+        "identity": {
+            "title": "identity",
+            "type": "string",
+            "pattern": "^(?:([^\"&'/:<>@@]{1,1023})@@)?([^/@@]{1,1023})$"
+        },
+        "name": {
+            "type": "string",
+        },
+        "isPending": {
+            "type": "boolean"
+        },
+        "sharePresence": {
+            "type": "boolean"
+        },
+        "shareAccountInfo": {
+            "type": "boolean"
+        }
+    },
+    "required": [ "identity" ]
 }
+    
 </code>
 </pre>
 
     <h4>Properties</h4>
     <ul>
         <li>
-            <strong>contacts</strong> - Array of contacts related to the roster command. The contact properties are:
-            <ul>
-                <li>
-                    <strong>identity</strong> - The identity of the contact, in the <em>name@domain</em> format.
-                </li>
-                <li>
-                    <strong>name</strong> - The name of the contact. This information is only visible by the roster owner.
-                </li>
-                <li>
-                    <strong>isPending</strong> - Determines if the contact is pending for acceptance by the roster owner. The default value is <em>false</em>.
-                </li>
-                <li>
-                    <strong>sharePresence</strong> - Indicates if the roster owner wants to share presence information with the contact. If <em>true</em>, the server provides a <em>get</em> delegation permission to the contact identity into the roster owner <em>presence</em> resource. The default value is <em>true</em>.
-                </li>
-                <li>
-                    <strong>shareAccountInfo</strong> - Indicates if the roster owner wants to share account information with the contact. If <em>true</em>, the server provides a <em>get</em> delegation permission to the contact identity into the roster owner <em>account</em> resource. The default value is <em>true</em>.
-                </li>
-            </ul>
+            <strong>identity</strong> - The identity of the contact, in the <em>name@domain</em> format.
+        </li>
+        <li>
+            <strong>name</strong> - The name of the contact. This information is only visible by the roster owner.
+        </li>
+        <li>
+            <strong>isPending</strong> - Determines if the contact is pending for acceptance by the roster owner. The default value is <em>false</em>.
+        </li>
+        <li>
+            <strong>sharePresence</strong> - Indicates if the roster owner wants to share presence information with the contact. If <em>true</em>, the server provides a <em>get</em> delegation permission to the contact identity into the roster owner <em>presence</em> resource. The default value is <em>true</em>.
+        </li>
+        <li>
+            <strong>shareAccountInfo</strong> - Indicates if the roster owner wants to share account information with the contact. If <em>true</em>, the server provides a <em>get</em> delegation permission to the contact identity into the roster owner <em>account</em> resource. The default value is <em>true</em>.
         </li>
     </ul>
 
-    <h4>Role support</h4>
-    <ul>
-        <li>
-            <strong>Node</strong> - Can get and set the resource value in the server.
-        </li>
-        <li>
-            <strong>Server</strong> - Holds the resource for other identities.
-        </li>
-        <li>
-            <strong>Gateway</strong> - Inherited from the node.
-        </li>
-        <li>
-            <strong>Application</strong> - Inherited from the node.
-        </li>
-    </ul>
-
-    <h4>Example</h4>
+    <h4>Examples</h4>
     <p>Adding a contact to the roster:</p>
 <pre>
 C:
 <code class="json">
 {
-    "id": "2aac8738-5507-44bf-b85a-30e146250fa3",
+    "id": "c2a33f0b-717d-4573-bb63-43dc8293059e",
     "from": "hank@breakingbad.com/dea",
     "method": "set",
-    "type": "application/vnd.lime.roster+json",
+    "uri": "/contacts",
+    "type": "application/vnd.lime.contact+json",    
     "resource": {
         "contacts": [
             {
@@ -1205,7 +1218,30 @@ C:
 S:
 <code class="json">
 {
-    "id": "2aac8738-5507-44bf-b85a-30e146250fa3",
+    "id": "c2a33f0b-717d-4573-bb63-43dc8293059e",
+    "from": "server@breakingbad.com/machine1",
+    "to": "hank@breakingbad.com/dea",
+    "method": "set",
+    "result": "success"  
+}
+</code>
+</pre>
+
+    <p>Removing a contact from the roster:</p>
+    <pre>
+C:
+<code class="json">
+{
+    "id": 062b8d02-d5f1-4c15-b513-54c1a1d8d5a3",
+    "from": "hank@breakingbad.com/dea",
+    "method": "delete",
+    "uri": "/contacts/gomez@breakingbad.com"
+}
+</code>
+S:
+<code class="json">
+{
+    "id": "062b8d02-d5f1-4c15-b513-54c1a1d8d5a3",
     "from": "server@breakingbad.com/machine1",
     "to": "hank@breakingbad.com/dea",
     "method": "set",
@@ -1221,14 +1257,17 @@ S:
         Represents a resource subscription information, which allows to a node receive the updated value every time when a subscribed resource is changed in the target node.
         This is useful to receive updates of changes in other identities resources, like the presence, but is possible to subscribe to a remote resource owned by the caller, like a resource in a server. To be able to subscribe to another node resource, the subscriber must have a <em>get delegation</em> for the resource in the publisher node.
     </p>
+    <h4>URI template</h4>
+<pre>
+    lime://{ownerIdentity}/subscriptions
+</pre>
+
 
     <h4>MIME type</h4>
 <pre>
     application/vnd.lime.subscription+json
 </pre>
-
     <h4>JSON Schema</h4>
-
 <pre>
 <code class="json-schema">
 {
@@ -1249,7 +1288,6 @@ S:
 }
 </code>
 </pre>
-
     <h4>Properties</h4>
     <ul>
         <li>
@@ -1257,22 +1295,6 @@ S:
         </li>
         <li>
             <strong>type</strong> - The MIME type of the resource for subscription.
-        </li>
-    </ul>
-
-    <h4>Role support</h4>
-    <ul>
-        <li>
-            <strong>Node</strong> - Can get and set the resource value in the server.
-        </li>
-        <li>
-            <strong>Server</strong> - Holds the resource for other identities.
-        </li>
-        <li>
-            <strong>Gateway</strong> - Inherited from the node.
-        </li>
-        <li>
-            <strong>Application</strong> - Inherited from the node.
         </li>
     </ul>
 
@@ -1319,7 +1341,6 @@ S:
 }
 </code>
 </pre>
-
 </div>
 
 <div class="col-md-2" role="complementary">
@@ -1338,6 +1359,9 @@ S:
                 <a href="#group">Group</a>
             </li>
             <li>
+                <a href="#member">Member</a>
+            </li>
+            <li>
                 <a href="#ping">Ping</a>
             </li>
             <li>
@@ -1350,7 +1374,7 @@ S:
                 <a href="#quota">Quota</a>
             </li>
             <li>
-                <a href="#roster">Roster</a>
+                <a href="#contact">Contact</a>
             </li>
             <li>
                 <a href="#subscription">Subscription</a>

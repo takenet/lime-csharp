@@ -209,7 +209,7 @@
     <Content Include="Scripts\jquery-1.10.2.min.map" />
     <Content Include="Views\Home\Index.en-US.cshtml" />
     <Content Include="Views\Home\ContentTypes.en-US.cshtml" />
-    <Content Include="Views\Home\ResourceTypes.en-US.cshtml" />
+    <Content Include="Views\Home\Resources.en-US.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

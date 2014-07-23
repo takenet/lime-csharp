@@ -27,9 +27,9 @@ namespace Lime.Web.Controllers
             return LocalizedView("ContentTypes", language);
         }
 
-        public ActionResult ResourceTypes(string language)
+        public ActionResult Resources(string language)
         {
-            return LocalizedView("ResourceTypes", language);
+            return LocalizedView("Resources", language);
         }
 
         private ViewResult LocalizedView(string viewName, string language = null)
