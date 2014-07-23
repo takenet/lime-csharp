@@ -1195,6 +1195,48 @@ S:
     </ul>
 
     <h4>Examples</h4>
+    <p>Getting the first three contacts:</p>
+<pre>
+C:
+<code class="json">
+{
+    "id": "c2a33f0b-717d-4573-bb63-43dc8293059e",
+    "from": "hank@breakingbad.com/dea",
+    "method": "get",
+    "uri": "/contacts?take=3"
+}
+</code>
+S:
+<code class="json">
+{
+    "id": "c2a33f0b-717d-4573-bb63-43dc8293059e",
+    "from": "server@breakingbad.com/machine1",
+    "to": "hank@breakingbad.com/dea",
+    "method": "get",
+    "result": "success",
+    "type": "application/vnd.lime.collection+json",    
+    "resource": {
+        "total": 15,
+        "itemType": "application/vnd.lime.contact+json"
+        "items": [
+            {
+                "identity": "marie@breakingbad.com",
+                "name": "Marie Schrader"            
+            },
+            {
+                "identity": "gomez@breakingbad.com",
+                "name": "Gomie"            
+            },
+            {
+                "identity": "ww@breakingbad.com",
+                "name": "Walt"            
+            }
+        ]               
+    }
+}
+</code>
+</pre>
+
     <p>Adding a contact to the roster:</p>
 <pre>
 C:
@@ -1206,12 +1248,9 @@ C:
     "uri": "/contacts",
     "type": "application/vnd.lime.contact+json",    
     "resource": {
-        "contacts": [
-            {
-                "identity": "gomez@breakingbad.com",
-                "name": "Gomie"
-            }
-        ]
+        "identity": "gomez@breakingbad.com",
+        "name": "Gomie"            
+        
     }
 }
 </code>
