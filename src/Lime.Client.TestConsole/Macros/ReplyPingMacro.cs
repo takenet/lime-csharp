@@ -30,7 +30,8 @@ namespace Lime.Client.TestConsole.Macros
 
             if (command != null &&
                 command.Status == CommandStatus.Pending &&
-                command.Resource is Ping)
+                command.Uri != null &&
+                command.Uri.Path.Equals(UriTemplates.PING))
             {
                 var commandResponse = new Command()
                 {
