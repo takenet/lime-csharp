@@ -43,7 +43,7 @@ namespace Lime.Protocol.Resources
         /// Type of the group.
         /// </summary>
         [DataMember(Name = "type")]
-        public GroupType Type { get; set; }
+        public GroupType? Type { get; set; }
 
         /// <summary>
         /// Members uri of the contact group. 
