@@ -22,3 +22,4 @@ Get own account	Command	{"id":"$commandId","method":"get","type":"application/vn
 Set account	Command	{"id":"$commandId","method":"set","type":"application/vnd.lime.account+json","uri":"/account","resource":{"fullName":"$fullName","phoneNumber":"$phoneNumber","city":"$city","password":"$newPassword"}}
 Set account password	Command	{"id":"$commandId","method":"set","type":"application/vnd.lime.account+json","uri":"/account","resource":{"password":"$newPassword","oldPassword":"$oldPassword"}}
 Set receipts all events	Command	{"id":"$commandId","method":"set","type":"application/vnd.lime.receipt+json","uri":"/receipt","resource":{"events":["failed","accepted","validated","authorized","dispatched","received","consumed"]}}
+Set public group	Command	{"id":"$commandId","from":"$from","method":"set","type":"application/vnd.lime.group+json","uri": "/groups","resource":{"identity":"$groupIdentity","owner":"$from","name":"$groupName","type":"public"}}
