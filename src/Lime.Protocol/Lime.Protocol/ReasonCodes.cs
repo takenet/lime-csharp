@@ -60,7 +60,7 @@ namespace Lime.Protocol
         /// <summary>
         /// The envelope document MIME type is invalid
         /// </summary>
-        public const int VALIDATION_INVALID_MIME_TYPE = 23;
+        public const int VALIDATION_INVALID_RESOURCE = 23;
         /// <summary>
         /// The request status is invalid
         /// </summary>
