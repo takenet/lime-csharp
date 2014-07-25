@@ -70,68 +70,6 @@ namespace Lime.Protocol.UnitTests.Network
 
         [TestMethod]
         [TestCategory("SendMessageAsync")]
-        public async Task SendMessageAsync_NoRecipients_FillsFromTheSession()
-        {
-            var remoteNode = DataUtil.CreateNode();
-            var localNode = DataUtil.CreateNode();
-
-            var target = GetTarget(
-                SessionState.Established, 
-                fillEnvelopeRecipients: true, 
-                localNode: localNode, 
-                remoteNode: remoteNode);
-
-            var content = DataUtil.CreateTextContent();
-            var message = DataUtil.CreateMessage(content);
-            message.From = null;
-            message.To = null;
-
-            await target.SendMessageAsync(message);
-
-            _transport.Verify(
-                t => t.SendAsync(It.Is<Message>(
-                        e => e.Id == message.Id &&
-                             e.From.Equals(localNode) &&
-                             e.To.Equals(remoteNode) &&
-                             e.Pp == null &&
-                             e.Content == message.Content),
-                    It.IsAny<CancellationToken>()),
-                    Times.Once());
-        }
-
-        [TestMethod]
-        [TestCategory("SendMessageAsync")]
-        public async Task SendMessageAsync_IncompleteRecipients_FillsFromTheSession()
-        {
-            var content = DataUtil.CreateTextContent();
-            var message = DataUtil.CreateMessage(content);
-
-            var localNode = message.From.Copy();
-            var remoteNode = message.To.Copy();
-
-            var target = GetTarget(
-                SessionState.Established,
-                fillEnvelopeRecipients: true,
-                localNode: localNode,
-                remoteNode: remoteNode);
-
-            message.From.Domain = null;
-            message.To.Domain = null;
-
-            await target.SendMessageAsync(message);
-
-            _transport.Verify(
-                t => t.SendAsync(It.Is<Message>(
-                        e => e.Id == message.Id &&
-                             e.From.Equals(localNode) &&
-                             e.To.Equals(remoteNode) &&
-                             e.Content == message.Content),
-                    It.IsAny<CancellationToken>()),
-                    Times.Once());
-        }
-
-        [TestMethod]
-        [TestCategory("SendMessageAsync")]
         [ExpectedException(typeof(ArgumentNullException))]
         public async Task SendMessageAsync_NullMessage_ThrowsArgumentNullException()
         {

@@ -339,8 +339,8 @@ namespace Lime.Protocol.Client
         {
             base.FillEnvelope(envelope, isSending);
 
-            if (this.LocalNode != null &&
-                isSending)
+            if (isSending &&
+                this.LocalNode != null)
             {
                 if (envelope.Pp == null)
                 {

@@ -415,11 +415,6 @@ namespace Lime.Protocol.Network
                 throw new ArgumentNullException("envelope", "An empty envelope was received from the transport");
             }
 
-            if (_fillEnvelopeRecipients)
-            {
-                FillEnvelope(envelope, false);
-            }
-
             if (envelope is Notification)
             {
                 await this.PostNotificationToBufferAsync((Notification)envelope).ConfigureAwait(false);
@@ -551,42 +546,34 @@ namespace Lime.Protocol.Network
         /// <param name="envelope"></param>
         protected virtual void FillEnvelope(Envelope envelope, bool isSending)
         {
-            Node from;
-            Node to;
-
-            if (isSending)
-            {
-                from = this.LocalNode;
-                to = this.RemoteNode;
-            }
-            else
+            if (!isSending)
             {
                 // Receiving
-                from = this.RemoteNode;
-                to = this.LocalNode;
-            }
+                Node from = this.RemoteNode;
+                Node to = this.LocalNode;
 
-            if (from != null)
-            {
-                if (envelope.From == null)
+                if (from != null)
                 {
-                    envelope.From = from.Copy();
+                    if (envelope.From == null)
+                    {
+                        envelope.From = from.Copy();
+                    }
+                    else if (string.IsNullOrEmpty(envelope.From.Domain))
+                    {
+                        envelope.From.Domain = from.Domain;
+                    }
                 }
-                else if (string.IsNullOrEmpty(envelope.From.Domain))
-                {
-                    envelope.From.Domain = from.Domain;
-                }
-            }
 
-            if (to != null)
-            {
-                if (envelope.To == null)
+                if (to != null)
                 {
-                    envelope.To = to.Copy();
-                }
-                else if (string.IsNullOrEmpty(envelope.To.Domain))
-                {
-                    envelope.To.Domain = to.Domain;
+                    if (envelope.To == null)
+                    {
+                        envelope.To = to.Copy();
+                    }
+                    else if (string.IsNullOrEmpty(envelope.To.Domain))
+                    {
+                        envelope.To.Domain = to.Domain;
+                    }
                 }
             }
         }
