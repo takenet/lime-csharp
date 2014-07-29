@@ -574,11 +574,6 @@ S:
                     "type": "string",
                     "pattern": "^(?:([^\"&'/:<>@@]{1,1023})@@)?([^/@@]{1,1023})$"
                 },
-                "owner": {
-                    "title": "identity",
-                    "type": "string",
-                    "pattern": "^(?:([^\"&'/:<>@@]{1,1023})@@)?([^/@@]{1,1023})$"
-                },
                 "name" : {
                     "type": "string"
                 },
@@ -747,7 +742,7 @@ S:
             "pattern": "^(?:([^\"&'/:<>@@]{1,1023})@@)?([^/@@]{1,1023})$"
         },
         "role": {
-            "enum": [ "listener", "member", "moderator" ]
+            "enum": [ "listener", "member", "moderator", "owner" ]
         }
     },
     "required": [ "identity" ]
