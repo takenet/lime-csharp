@@ -79,7 +79,7 @@ namespace Lime.Protocol.Resources
     {
 
 
-        public const string MIME_TYPE = "application/vnd.lime.groupMemeber+json";
+        public const string MIME_TYPE = "application/vnd.lime.groupmember+json";
 
         public GroupMember()
             : base(MediaType.Parse(MIME_TYPE))
