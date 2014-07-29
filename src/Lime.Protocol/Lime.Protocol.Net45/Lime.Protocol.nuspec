@@ -12,9 +12,11 @@
     <description>C# Lime protocol stack implementation.</description>
     <copyright>Copyright ©  2014 Curupira S/A</copyright>
     <tags>lime</tags>
+    <dependencies>
+      <dependency id="Microsoft.Tpl.DataFlow" version="4.5" />
+    </dependencies>
   </metadata>
   <files>
     <file src="bin\Release\Lime.Protocol.dll" target="lib\net45\Lime.Protocol.dll" />
-    <file src="bin\Release\Lime.Protocol.xml" target="lib\net45\Lime.Protocol.xml" />
   </files>
 </package>
