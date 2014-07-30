@@ -34,12 +34,6 @@ namespace Lime.Protocol.Resources
         public string Name { get; set; }
 
         /// <summary>
-        /// Owner of the group.
-        /// </summary>
-        [DataMember(Name = "owner")]
-        public Identity Owner { get; set; }
-
-        /// <summary>
         /// Type of the group.
         /// </summary>
         [DataMember(Name = "type")]
@@ -83,9 +77,9 @@ namespace Lime.Protocol.Resources
     [DebuggerDisplay("Identity = {Identity}, Role = {Role}")]
     public partial class GroupMember : Document
     {
-        
 
-        public const string MIME_TYPE = "application/vnd.lime.groupMemeber+json";
+
+        public const string MIME_TYPE = "application/vnd.lime.groupmember+json";
 
         public GroupMember()
             : base(MediaType.Parse(MIME_TYPE))
@@ -131,5 +125,12 @@ namespace Lime.Protocol.Resources
         /// </summary>
         [EnumMember(Value = "moderator")]
         Moderator,
+
+        /// <summary>
+        /// The owner have the permission to manage moderators, 
+        /// change and delete the group.
+        /// </summary>
+        [EnumMember(Value = "owner")]
+        Owner
     }
 }

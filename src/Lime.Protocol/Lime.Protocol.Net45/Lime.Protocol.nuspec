@@ -1,0 +1,22 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
+  <metadata>
+    <id>Lime.Protocol</id>
+    <version>$version$</version>
+    <title>Lime.Protocol</title>
+    <authors>takenet</authors>
+    <owners>takenet,andrebires</owners>
+    <projectUrl>http://limeprotocol.org</projectUrl>
+    <licenseUrl>https://raw.githubusercontent.com/takenet/lime/master/LICENSE</licenseUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>C# Lime protocol stack implementation.</description>
+    <copyright>Copyright ©  2014 Curupira S/A</copyright>
+    <tags>lime</tags>
+    <dependencies>
+      <dependency id="Microsoft.Tpl.DataFlow" version="4.5" />
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="bin\Release\Lime.Protocol.dll" target="lib\net45\Lime.Protocol.dll" />
+  </files>
+</package>

@@ -574,11 +574,6 @@ S:
                     "type": "string",
                     "pattern": "^(?:([^\"&'/:<>@@]{1,1023})@@)?([^/@@]{1,1023})$"
                 },
-                "owner": {
-                    "title": "identity",
-                    "type": "string",
-                    "pattern": "^(?:([^\"&'/:<>@@]{1,1023})@@)?([^/@@]{1,1023})$"
-                },
                 "name" : {
                     "type": "string"
                 },
@@ -591,7 +586,7 @@ S:
                     "pattern": "^((lime://)(\w\.?-?)+@@?(\w\.?-?@@?)+)?(/(\w\.?-?@@?)+)+(\?{1}((\w+=\w+)&?)+)?$"
                 }
             },
-            "required" : [ "identity", "owner" ]
+            "required" : [ "identity" ]
         }
     }
 }
@@ -661,21 +656,18 @@ S:
             {
                 "identity": "methcookers@groups.breakingbad.com",
                 "name": "Meth cookers",
-                "owner": "gus@breakingbad.com",
                 "type": "private",
                 "members": "/groups/methcookers@groups.breakingbad.com/members"
             },
             {
                 "identity": "pollos@groups.breakingbad.com",
                 "name": "Los Pollos Hermanos Staff",
-                "owner": "gus@breakingbad.com",
                 "type": "public",
                 "members": "/groups/pollos@groups.breakingbad.com/members"
             },
             {
                 "identity": "police@groups.breakingbad.com",
                 "name": "Albuquerque Police Department officers and supporters",
-                "owner": "marshall@breakingbad.com",
                 "type": "public",
                 "members": "/groups/police@groups.breakingbad.com/members"
             }
@@ -708,7 +700,6 @@ S:
     "resource": {
         "identity": "pollos@groups.breakingbad.com",
         "name": "Los Pollos Hermanos Staff",
-        "owner": "gus@breakingbad.com",
         "type": "public",
         "members": "/groups/pollos@groups.breakingbad.com/members"
     }
@@ -747,7 +738,7 @@ S:
             "pattern": "^(?:([^\"&'/:<>@@]{1,1023})@@)?([^/@@]{1,1023})$"
         },
         "role": {
-            "enum": [ "listener", "member", "moderator" ]
+            "enum": [ "listener", "member", "moderator", "owner" ]
         }
     },
     "required": [ "identity" ]
