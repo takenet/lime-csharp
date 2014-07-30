@@ -252,5 +252,11 @@ namespace Lime.Protocol
                 Domain = uri.Host
             };
         }
+
+
+        public static string ToCommaSepparate(this IEnumerable<string> values)
+        {
+            return values.Aggregate((a, b) => string.Format("{0},{1}", a, b)).TrimEnd(',');
+        }
     }
 }
