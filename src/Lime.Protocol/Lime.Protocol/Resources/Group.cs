@@ -16,6 +16,12 @@ namespace Lime.Protocol.Resources
     {
         public const string MIME_TYPE = "application/vnd.lime.group+json";
 
+        public const string IDENTITY_KEY = "identity";
+        public const string NAME_KEY = "name";
+        public const string TYPE_KEY = "type";
+        public const string MEMBERS_KEY = "members";
+
+
         public Group()
             : base(MediaType.Parse(MIME_TYPE))
         {
@@ -24,25 +30,25 @@ namespace Lime.Protocol.Resources
         /// <summary>
         /// Identity of the group, in the group-id@groups.domain.com format. 
         /// </summary>
-        [DataMember(Name = "identity")]
+        [DataMember(Name = IDENTITY_KEY)]
         public Identity Identity { get; set; }
 
         /// <summary>
         /// Name of the group.
         /// </summary>
-        [DataMember(Name = "name")]
+        [DataMember(Name = NAME_KEY)]
         public string Name { get; set; }
 
         /// <summary>
         /// Type of the group.
         /// </summary>
-        [DataMember(Name = "type")]
+        [DataMember(Name = TYPE_KEY)]
         public GroupType? Type { get; set; }
 
         /// <summary>
         /// Members uri of the contact group. 
         /// </summary>
-        [DataMember(Name = "members")]
+        [DataMember(Name = MEMBERS_KEY)]
         public LimeUri MembersUri { get; set; }
     }
 
