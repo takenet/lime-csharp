@@ -166,6 +166,93 @@ namespace Lime.Protocol.Serialization
             return (s) => (object)parseFunc(s);
         }
 
+
+        /// <summary>
+        /// Try parses the string to 
+        /// a object of the specified type
+        /// </summary>
+        /// <param name="value"></param>
+        /// <param name="type"></param>
+        /// <param name="result"></param>
+        /// <returns></returns>
+        public static bool TryParseString(string value, Type type, out object result)
+        {
+            if (value == null)
+            {
+                throw new ArgumentNullException("value");
+            }
+
+            if (type == null)
+            {
+                throw new ArgumentNullException("type");
+            }
+
+            if (type.IsGenericType &&
+                type.GetGenericTypeDefinition() == typeof(Nullable<>))
+            {
+                type = type.GetGenericArguments()[0];
+            }
+
+            if (type == typeof(string))
+            {
+                result = value;
+                return true;
+            }
+            else if (type.IsArray)
+            {
+                var elementType = type.GetElementType();
+                var arrayValues = value.Split(';');
+                
+                var resultArray = Array.CreateInstance(elementType, arrayValues.Length);
+
+                for (int i = 0; i < arrayValues.Length; i++)
+                {
+                    var arrayValue = arrayValues[i];
+                    object resultArrayElement;
+
+                    if (TryParseString(arrayValue, elementType, out resultArrayElement))
+                    {
+                        resultArray.SetValue(resultArrayElement, i);
+                    }
+                    else
+                    {
+                        result = null;
+                        return false;
+                    }                    
+                }
+
+                result = resultArray;
+                return true;
+            }
+            else if (type.IsEnum)
+            {
+                try
+                {
+                    result = Enum.Parse(type, value, true);
+                    return true;
+                }
+                catch (ArgumentException)
+                {
+                    result = null;
+                    return false;
+                }
+            }
+            else
+            {
+                try
+                {
+                    var parseFunc = GetParseFuncForType(type);
+                    result = parseFunc(value);
+                    return true;
+                }
+                catch
+                {
+                    result = null;
+                    return false;
+                }
+            }
+        }
+
         public static bool TryGetTypeForMediaType(MediaType mediaType, out Type type)
         {
             return _documentMediaTypeDictionary.TryGetValue(mediaType, out type);            
