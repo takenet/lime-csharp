@@ -75,9 +75,9 @@ namespace Lime.Protocol.Network
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">channel</exception>
         /// <exception cref="LimeException">Returns an exception with the failure reason</exception>
-        public static Task<TResource> GetResourceAsync<TResource>(this IChannel channel, CancellationToken cancellationToken) where TResource : Document, new()
+        public static Task<TResource> GetResourceAsync<TResource>(this IChannel channel, LimeUri uri, CancellationToken cancellationToken) where TResource : Document, new()
         {
-            return GetResourceAsync<TResource>(channel, new TResource(), cancellationToken);
+            return GetResourceAsync<TResource>(channel, uri, null, cancellationToken);
         }
 
         /// <summary>
@@ -86,61 +86,29 @@ namespace Lime.Protocol.Network
         /// </summary>
         /// <typeparam name="TResource">The type of the resource.</typeparam>
         /// <param name="channel">The channel.</param>
+        /// <param name="uri">The resource uri.</param>
         /// <param name="from">From.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">channel</exception>
         /// <exception cref="LimeException">Returns an exception with the failure reason</exception>
-        public static Task<TResource> GetResourceAsync<TResource>(this IChannel channel, Node from, CancellationToken cancellationToken) where TResource : Document, new()
-        {
-            return GetResourceAsync<TResource>(channel, new TResource(), from, cancellationToken);
-        }
-
-        /// <summary>
-        /// Composes a command envelope with a
-        /// get method for the specified resource.
-        /// </summary>
-        /// <typeparam name="TResource">The type of the resource.</typeparam>
-        /// <param name="channel">The channel.</param>
-        /// <param name="resource">The resource.</param>
-        /// <param name="cancellationToken">The cancellation token.</param>
-        /// <returns></returns>
-        /// <exception cref="System.ArgumentNullException">channel</exception>
-        /// <exception cref="LimeException">Returns an exception with the failure reason</exception>
-        public static Task<TResource> GetResourceAsync<TResource>(this IChannel channel, TResource resource, CancellationToken cancellationToken) where TResource : Document
-        {
-            return GetResourceAsync<TResource>(channel, resource, null, cancellationToken);
-        }
-
-        /// <summary>
-        /// Composes a command envelope with a
-        /// get method for the specified resource.
-        /// </summary>
-        /// <typeparam name="TResource">The type of the resource.</typeparam>
-        /// <param name="channel">The channel.</param>
-        /// <param name="resource">The resource.</param>
-        /// <param name="from">From.</param>
-        /// <param name="cancellationToken">The cancellation token.</param>
-        /// <returns></returns>
-        /// <exception cref="System.ArgumentNullException">channel</exception>
-        /// <exception cref="LimeException">Returns an exception with the failure reason</exception>
-        public static async Task<TResource> GetResourceAsync<TResource>(this IChannel channel, TResource resource, Node from, CancellationToken cancellationToken) where TResource : Document
+        public static async Task<TResource> GetResourceAsync<TResource>(this IChannel channel, LimeUri uri, Node from, CancellationToken cancellationToken) where TResource : Document
         {
             if (channel == null)
             {
                 throw new ArgumentNullException("channel");
             }
 
-            if (resource == null)
+            if (uri == null)
             {
-                throw new ArgumentNullException("resource");
+                throw new ArgumentNullException("uri");
             }
 
             var requestCommand = new Command()
             {
                 From = from,
                 Method = CommandMethod.Get,
-                Resource = resource
+                Uri = uri
             };
 
             var responseCommand = await ProcessCommandAsync(channel, requestCommand, cancellationToken).ConfigureAwait(false);
@@ -163,12 +131,13 @@ namespace Lime.Protocol.Network
         /// </summary>
         /// <typeparam name="TResource">The type of the resource.</typeparam>
         /// <param name="channel">The channel.</param>
+        /// <param name="uri">The resource uri.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">channel</exception>
-        public static Task SetResourceAsync<TResource>(this IChannel channel, TResource resource, CancellationToken cancellationToken) where TResource : Document
+        public static Task SetResourceAsync<TResource>(this IChannel channel, LimeUri uri, TResource resource, CancellationToken cancellationToken) where TResource : Document
         {
-            return SetResourceAsync(channel, resource, null, cancellationToken);            
+            return SetResourceAsync(channel, uri, resource, null, cancellationToken);            
         }
 
         /// <summary>
@@ -176,17 +145,23 @@ namespace Lime.Protocol.Network
         /// </summary>
         /// <typeparam name="TResource">The type of the resource.</typeparam>
         /// <param name="channel">The channel.</param>
+        /// <param name="uri">The resource uri.</param>
         /// <param name="resource">The resource.</param>
         /// <param name="from">From.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">channel</exception>
         /// <exception cref="LimeException"></exception>
-        public static async Task SetResourceAsync<TResource>(this IChannel channel, TResource resource, Node from, CancellationToken cancellationToken) where TResource : Document
+        public static async Task SetResourceAsync<TResource>(this IChannel channel, LimeUri uri, TResource resource, Node from, CancellationToken cancellationToken) where TResource : Document
         {
             if (channel == null)
             {
                 throw new ArgumentNullException("channel");
+            }
+
+            if (uri == null)
+            {
+                throw new ArgumentNullException("uri");
             }
 
             if (resource == null)
@@ -198,6 +173,7 @@ namespace Lime.Protocol.Network
             {
                 From = from,
                 Method = CommandMethod.Set,
+                Uri = uri,
                 Resource = resource
             };
 
@@ -232,41 +208,9 @@ namespace Lime.Protocol.Network
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">channel</exception>
         /// <exception cref="LimeException">Returns an exception with the failure reason</exception>
-        public static Task<TResource> DeleteResourceAsync<TResource>(this IChannel channel, CancellationToken cancellationToken) where TResource : Document, new()
+        public static Task DeleteResourceAsync(this IChannel channel, LimeUri uri, CancellationToken cancellationToken) 
         {
-            return DeleteResourceAsync<TResource>(channel, new TResource(), null, cancellationToken);
-        }
-
-        /// <summary>
-        /// Composes a command envelope with a
-        /// delete method for the specified resource.
-        /// </summary>
-        /// <typeparam name="TResource">The type of the resource.</typeparam>
-        /// <param name="channel">The channel.</param>
-        /// <param name="from">From.</param>
-        /// <param name="cancellationToken">The cancellation token.</param>
-        /// <returns></returns>
-        /// <exception cref="System.ArgumentNullException">channel</exception>
-        /// <exception cref="LimeException">Returns an exception with the failure reason</exception>
-        public static Task<TResource> DeleteResourceAsync<TResource>(this IChannel channel, Node from, CancellationToken cancellationToken) where TResource : Document, new()
-        {
-            return DeleteResourceAsync<TResource>(channel, new TResource(), from, cancellationToken);
-        }
-
-        /// <summary>
-        /// Composes a command envelope with a
-        /// delete method for the specified resource.
-        /// </summary>
-        /// <typeparam name="TResource">The type of the resource.</typeparam>
-        /// <param name="channel">The channel.</param>
-        /// <param name="resource">The resource.</param>
-        /// <param name="cancellationToken">The cancellation token.</param>
-        /// <returns></returns>
-        /// <exception cref="System.ArgumentNullException">channel</exception>
-        /// <exception cref="LimeException">Returns an exception with the failure reason</exception>
-        public static Task<TResource> DeleteResourceAsync<TResource>(this IChannel channel, TResource resource, CancellationToken cancellationToken) where TResource : Document
-        {
-            return DeleteResourceAsync<TResource>(channel, resource, null, cancellationToken);
+            return DeleteResourceAsync(channel, uri, null, cancellationToken);
         }
 
         /// <summary>
@@ -281,37 +225,36 @@ namespace Lime.Protocol.Network
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">channel</exception>
         /// <exception cref="LimeException">Returns an exception with the failure reason</exception>
-        public static async Task<TResource> DeleteResourceAsync<TResource>(this IChannel channel, TResource resource, Node from, CancellationToken cancellationToken) where TResource : Document
+        public static async Task DeleteResourceAsync(this IChannel channel, LimeUri uri, Node from, CancellationToken cancellationToken)
         {
             if (channel == null)
             {
                 throw new ArgumentNullException("channel");
             }
 
-            if (resource == null)
+            if (uri == null)
             {
-                throw new ArgumentNullException("resource");
+                throw new ArgumentNullException("uri");
             }
 
             var requestCommand = new Command()
             {
                 From = from,
                 Method = CommandMethod.Delete,
-                Resource = resource
+                Uri = uri
             };
 
             var responseCommand = await ProcessCommandAsync(channel, requestCommand, cancellationToken).ConfigureAwait(false);
-            if (responseCommand.Status == CommandStatus.Success)
+            if (responseCommand.Status != CommandStatus.Success)
             {
-                return (TResource)responseCommand.Resource;
-            }
-            else if (responseCommand.Reason != null)
-            {
-                throw new LimeException(responseCommand.Reason.Code, responseCommand.Reason.Description);
-            }
-            else
-            {
-                throw new InvalidOperationException("An invalid command response was received");
+                if (responseCommand.Reason != null)
+                {
+                    throw new LimeException(responseCommand.Reason.Code, responseCommand.Reason.Description);
+                }
+                else
+                {
+                    throw new InvalidOperationException("An invalid command response was received");
+                }
             }
         }
 

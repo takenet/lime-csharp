@@ -9,8 +9,7 @@ using System.Threading.Tasks;
 namespace Lime.Protocol.Resources
 {
     /// <summary>
-    /// Represents an user account
-    /// information
+    /// Represents an user account information.
     /// </summary>
     [DataContract(Namespace = "http://limeprotocol.org/2014")]
     public partial class Account : Document

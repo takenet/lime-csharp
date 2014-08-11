@@ -9,34 +9,12 @@ using System.Threading.Tasks;
 namespace Lime.Protocol.Resources
 {
     /// <summary>
-    /// Allows the nodes to test 
-    /// the network connectivity.
+    /// Represents a contact information.
     /// </summary>
-    [DataContract(Namespace = "http://limeprotocol.org/2014")]
-    public partial class Roster : Document
-    {
-        public const string MIME_TYPE = "application/vnd.lime.roster+json";
-
-        public const string CONTACTS_KEY = "contacts";
-
-        public Roster()
-            : base(MediaType.Parse(MIME_TYPE))
-        {
-
-        }
-
-        /// <summary>
-        /// Members of the roster
-        /// </summary>
-        [DataMember(Name = CONTACTS_KEY)]
-        public Contact[] Contacts { get; set; }
-    }
-
     [DataContract(Namespace = "http://limeprotocol.org/2014")]
     public partial class Contact : Document, IIdentity
     {
         public const string MIME_TYPE = "application/vnd.lime.contact+json";
-
 
         public const string IDENTITY_KEY = "identity";
         public const string NAME_KEY = "name";

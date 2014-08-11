@@ -183,7 +183,11 @@ namespace Lime.Client.Windows.ViewModels
                             Password = this.Password.ToBase64()
                         };
 
-                        await client.SetResourceAsync<Account>(account, _userNameNode, cancellationToken);
+                        await client.SetResourceAsync<Account>(
+                            LimeUri.Parse(UriTemplates.ACCOUNT),
+                            account, 
+                            _userNameNode, 
+                            cancellationToken);
 
                         await client.SendFinishingSessionAsync();
                         await client.ReceiveFinishedSessionAsync(cancellationToken);

@@ -313,11 +313,12 @@ namespace Lime.Protocol.UnitTests
             };
         }
 
-        public static Roster CreateRoster()
+        public static DocumentCollection CreateRoster()
         {
-            return new Roster()
+            return new DocumentCollection()
             {
-                Contacts = new[]
+                ItemType = MediaType.Parse(Contact.MIME_TYPE),
+                Items = new[]
                 {
                     new Contact()
                     {

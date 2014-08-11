@@ -2,6 +2,7 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Serialization;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -581,10 +582,7 @@ namespace Lime.Protocol.Serialization.Newtonsoft
         {
             public override bool CanWrite
             {
-                get
-                {
-                    return false;
-                }
+                get { return false; }
             }
 
             public override bool CanConvert(Type objectType)
@@ -594,6 +592,7 @@ namespace Lime.Protocol.Serialization.Newtonsoft
 
             public override object ReadJson(JsonReader reader, Type objectType, object existingValue, global::Newtonsoft.Json.JsonSerializer serializer)
             {
+
                 if (objectType.IsAbstract)
                 {
                     // The serialization is made by the
@@ -653,7 +652,9 @@ namespace Lime.Protocol.Serialization.Newtonsoft
 
             public override void WriteJson(global::Newtonsoft.Json.JsonWriter writer, object value, global::Newtonsoft.Json.JsonSerializer serializer)
             {
-                throw new NotImplementedException();
+
+                // TODO: Implement DocumentCollection serialization
+                serializer.Serialize(writer, value);
             }
         }
 

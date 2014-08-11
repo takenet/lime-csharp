@@ -227,7 +227,7 @@ namespace Lime.Client.Console
                     var rosterCommand = new Command
                     {
                         Method = CommandMethod.Get,
-                        Resource = new Roster()
+                        Uri = LimeUri.Parse(UriTemplates.CONTACTS)
                     };
                     client.Channel.SendCommandAsync(rosterCommand).Wait();
                     var rosterCommandResult = client.Channel.ReceiveCommandAsync(cancellationTokenSource.Token).Result;
@@ -236,8 +236,8 @@ namespace Lime.Client.Console
                     {
                         System.Console.WriteLine("Contacts:");
 
-                        var roster = rosterCommandResult.Resource as Roster;
-                        foreach (var contact in roster.Contacts)
+                        var roster = rosterCommandResult.Resource as DocumentCollection;
+                        foreach (Contact contact in roster.Items)
                         {
                             System.Console.WriteLine("- {0}", contact.Identity);
                         }
@@ -310,15 +310,10 @@ namespace Lime.Client.Console
                                 var contactCommand = new Command
                                 {
                                     Method = CommandMethod.Set,
-                                    Resource = new Roster()
+                                    Uri = LimeUri.Parse(UriTemplates.CONTACTS),
+                                    Resource = new Contact()
                                     {
-                                        Contacts = new Contact[]
-                                        {
-                                            new Contact()
-                                            {
-                                                Identity = contactIdentity
-                                            }
-                                        }                                        
+                                        Identity = contactIdentity                                                                            
                                     }
                                 };
 

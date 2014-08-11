@@ -53,7 +53,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Resources\Presence.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Resources\Quota.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Resources\Receipt.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Resources\Roster.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Resources\Contact.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Resources\Subscription.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Resources\UriTemplates.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Security\Authentication.cs" />

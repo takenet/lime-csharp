@@ -356,6 +356,7 @@ namespace Lime.Client.Windows.ViewModels
                     {
                         // Events for notification
                         await _clientChannel.SetResourceAsync(
+                            LimeUri.Parse(UriTemplates.RECEIPT),
                             new Receipt()
                             {
                                 Events = new[]
@@ -371,6 +372,7 @@ namespace Lime.Client.Windows.ViewModels
                         {
                             // Gets the user account
                             this.Account = await _clientChannel.GetResourceAsync<Account>(
+                                LimeUri.Parse(UriTemplates.ACCOUNT),
                                 _receiveTimeout.ToCancellationToken());
                         }
                         catch (LimeException ex)
@@ -392,12 +394,13 @@ namespace Lime.Client.Windows.ViewModels
                             };
                                 
                             await _clientChannel.SetResourceAsync<Account>(
+                                LimeUri.Parse(UriTemplates.ACCOUNT),
                                 this.Account,
                                 _receiveTimeout.ToCancellationToken());
                         }                       
 
                         // Gets the roster
-                        await GetRosterAsync();
+                        await GetContactsAsync();
 
                         // Sets the presence
                         this.Presence = new Presence()
@@ -449,19 +452,14 @@ namespace Lime.Client.Windows.ViewModels
                     if (identity != null)
                     {
                         await _clientChannel.SetResourceAsync(
-                            new Roster()
+                            LimeUri.Parse(UriTemplates.CONTACTS),
+                            new Contact()
                             {
-                                Contacts = new[]
-                                {                    
-                                    new Contact()
-                                    {
-                                        Identity = _searchOrAddContactIdentity
-                                    }
-                                }
+                                Identity = _searchOrAddContactIdentity
                             },
                             _receiveTimeout.ToCancellationToken());
 
-                        await GetRosterAsync();
+                        await GetContactsAsync();
                     }
                 });
         }
@@ -488,16 +486,10 @@ namespace Lime.Client.Windows.ViewModels
                         selectedContact.Contact != null)
                     {
                         await _clientChannel.DeleteResourceAsync(
-                            new Roster()
-                            {
-                                Contacts = new[]
-                                {
-                                    SelectedContact.Contact
-                                }
-                            },
+                            LimeUri.Parse(UriTemplates.CONTACT.NamedFormat(new { contactIdentity = SelectedContact.Contact })),
                             _receiveTimeout.ToCancellationToken());
 
-                        await GetRosterAsync();
+                        await GetContactsAsync();
                     }
                 });
         }
@@ -520,24 +512,17 @@ namespace Lime.Client.Windows.ViewModels
                     var selectedContact = SelectedContact;
                     if (selectedContact != null &&
                         selectedContact.Contact != null)
-                    {
-                        var contact = new Contact()
-                        {
-                            Identity = selectedContact.Contact.Identity,
-                            SharePresence = true
-                        };
-
+                    {                        
                         await _clientChannel.SetResourceAsync(
-                            new Roster()
+                            LimeUri.Parse(UriTemplates.CONTACTS),
+                            new Contact()
                             {
-                                Contacts = new[]
-                                {
-                                    contact
-                                }
+                                Identity = selectedContact.Contact.Identity,
+                                SharePresence = true
                             },
                             _receiveTimeout.ToCancellationToken());
 
-                        await GetRosterAsync();
+                        await GetContactsAsync();
                     }
                 });
         }
@@ -561,23 +546,17 @@ namespace Lime.Client.Windows.ViewModels
                     if (selectedContact != null &&
                         selectedContact.Contact != null)
                     {
-                        var contact = new Contact()
-                        {
-                            Identity = selectedContact.Contact.Identity,
-                            SharePresence = false
-                        };
 
                         await _clientChannel.SetResourceAsync(
-                            new Roster()
+                            LimeUri.Parse(UriTemplates.CONTACTS),
+                            new Contact()
                             {
-                                Contacts = new[]
-                                {
-                                    contact
-                                }
+                                Identity = selectedContact.Contact.Identity,
+                                SharePresence = false
                             },
                             _receiveTimeout.ToCancellationToken());
 
-                        await GetRosterAsync();
+                        await GetContactsAsync();
                     }
                 });
         }
@@ -601,20 +580,16 @@ namespace Lime.Client.Windows.ViewModels
                 if (selectedContact != null &&
                     selectedContact.Contact != null)
                 {
-                    var contact = new Contact()
-                    {
-                        Identity = selectedContact.Contact.Identity,
-                        ShareAccountInfo = true
-                    };
-
                     await _clientChannel.SetResourceAsync(
-                        new Roster()
+                        LimeUri.Parse(UriTemplates.CONTACTS),
+                        new Contact()
                         {
-                            Contacts = new[] { contact }
+                            Identity = selectedContact.Contact.Identity,
+                            ShareAccountInfo = true
                         },
                         _receiveTimeout.ToCancellationToken());
 
-                    await GetRosterAsync();
+                    await GetContactsAsync();
                 }
             });
         }
@@ -638,23 +613,16 @@ namespace Lime.Client.Windows.ViewModels
                 if (selectedContact != null &&
                     selectedContact.Contact != null)
                 {
-                    var contact = new Contact()
-                    {
-                        Identity = selectedContact.Contact.Identity,
-                        ShareAccountInfo = false
-                    };
-
                     await _clientChannel.SetResourceAsync(
-                        new Roster()
+                        LimeUri.Parse(UriTemplates.CONTACTS),
+                        new Contact()
                         {
-                            Contacts = new[]
-                                {
-                                    contact
-                                }
+                            Identity = selectedContact.Contact.Identity,
+                            ShareAccountInfo = false
                         },
                         _receiveTimeout.ToCancellationToken());
 
-                    await GetRosterAsync();
+                    await GetContactsAsync();
                 }
             });
         }
@@ -678,25 +646,18 @@ namespace Lime.Client.Windows.ViewModels
                 if (selectedContact != null &&
                     selectedContact.Contact != null)
                 {
-                    var contact = new Contact()
-                    {
-                        Identity = selectedContact.Contact.Identity,
-                        IsPending = false,
-                        ShareAccountInfo = true,
-                        SharePresence = true
-                    };
-
                     await _clientChannel.SetResourceAsync(
-                        new Roster()
+                        LimeUri.Parse(UriTemplates.CONTACTS),
+                        new Contact()
                         {
-                            Contacts = new[]
-                                {
-                                    contact
-                                }
+                            Identity = selectedContact.Contact.Identity,
+                            IsPending = false,
+                            ShareAccountInfo = true,
+                            SharePresence = true
                         },
                         _receiveTimeout.ToCancellationToken());
 
-                    await GetRosterAsync();
+                    await GetContactsAsync();
                 }
             });
         }
@@ -720,22 +681,11 @@ namespace Lime.Client.Windows.ViewModels
                 if (selectedContact != null &&
                     selectedContact.Contact != null)
                 {
-                    var contact = new Contact()
-                    {
-                        Identity = selectedContact.Contact.Identity
-                    };
-
                     await _clientChannel.DeleteResourceAsync(
-                        new Roster()
-                        {
-                            Contacts = new[]
-                                {
-                                    contact
-                                }
-                        },
+                        LimeUri.Parse(UriTemplates.CONTACT.NamedFormat(new { contactIdentity =  selectedContact.Contact.Identity })),
                         _receiveTimeout.ToCancellationToken());
 
-                    await GetRosterAsync();
+                    await GetContactsAsync();
                 }
             });
         }
@@ -829,14 +779,15 @@ namespace Lime.Client.Windows.ViewModels
             }         
         }
 
-        private async Task GetRosterAsync()
+        private async Task GetContactsAsync()
         {
-            var roster = await _clientChannel.GetResourceAsync<Roster>(
+            var contactCollection = await _clientChannel.GetResourceAsync<DocumentCollection>(
+                LimeUri.Parse(UriTemplates.CONTACTS),
                 _receiveTimeout.ToCancellationToken());
 
             this.Contacts.Clear();
 
-            foreach (var contact in roster.Contacts)
+            foreach (Contact contact in contactCollection.Items)
             {
                 this.Contacts.Add(new ContactViewModel(contact, _clientChannel));
             }
@@ -845,6 +796,7 @@ namespace Lime.Client.Windows.ViewModels
         private Task SetPresenceAsync()
         {
             return _clientChannel.SetResourceAsync(
+                LimeUri.Parse(UriTemplates.PRESENCE),
                 this.Presence,
                 _receiveTimeout.ToCancellationToken());
         }
@@ -866,6 +818,7 @@ namespace Lime.Client.Windows.ViewModels
                             await base.ExecuteAsync(async () =>
                                 {
                                     contactViewModel.Presence = await _clientChannel.GetResourceAsync<Presence>(
+                                        LimeUri.Parse(UriTemplates.PRESENCE),
                                         new Node()
                                         {
                                             Name = contactViewModel.Contact.Identity.Name,
