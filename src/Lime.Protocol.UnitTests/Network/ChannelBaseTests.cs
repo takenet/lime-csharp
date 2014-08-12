@@ -828,8 +828,8 @@ namespace Lime.Protocol.UnitTests.Network
 
         private class TestChannel : ChannelBase
         {
-            public TestChannel(SessionState state, ITransport transport, TimeSpan sendTimeout, int buffersLimit, bool fillEnvelopeRecipients, Node remoteNode = null, Node localNode = null)
-                : base(transport, sendTimeout, buffersLimit, fillEnvelopeRecipients)
+            public TestChannel(SessionState state, ITransport transport, TimeSpan sendTimeout, int buffersLimit, bool fillEnvelopeRecipients, Node remoteNode = null, Node localNode = null, bool autoReplyPings = false)
+                : base(transport, sendTimeout, buffersLimit, fillEnvelopeRecipients, autoReplyPings)
             {                
                 base.RemoteNode = remoteNode;
                 base.LocalNode = localNode;

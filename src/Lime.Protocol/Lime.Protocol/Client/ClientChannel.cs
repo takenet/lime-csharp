@@ -18,7 +18,6 @@ namespace Lime.Protocol.Client
     {
         #region Private fields
 
-        private bool _autoReplyPings;
         private bool _autoNotifyReceipt;
 
         #endregion
@@ -30,12 +29,11 @@ namespace Lime.Protocol.Client
         /// </summary>
         /// <param name="transport">The transport to be used by the channel.</param>
         /// <param name="sendTimeout">The channel send timeout.</param>
-        /// <param name="autoReplyPings">Indicates if the client should reply automatically to server ping commands.</param>
+        /// <param name="autoReplyPings">Indicates if the channel should reply automatically to ping request commands. In this case, the ping command are not returned by the ReceiveCommandAsync method.</param>
         /// <param name="autoNotifyReceipt">Indicates if the client should automatically send 'received' notifications for messages.</param>
         public ClientChannel(ITransport transport, TimeSpan sendTimeout, int buffersLimit = 5, bool fillEnvelopeRecipients = false, bool autoReplyPings = true, bool autoNotifyReceipt = false)
-            : base(transport, sendTimeout, buffersLimit, fillEnvelopeRecipients)
+            : base(transport, sendTimeout, buffersLimit, fillEnvelopeRecipients, autoReplyPings)
         {
-            _autoReplyPings = autoReplyPings;
             _autoNotifyReceipt = autoNotifyReceipt;
         }
 
@@ -270,36 +268,6 @@ namespace Lime.Protocol.Client
         }
 
         /// <summary>
-        /// Receives a command
-        /// from the remote node.
-        /// </summary>
-        /// <param name="cancellationToken">The cancellation token.</param>
-        /// <returns></returns>
-        public override async Task<Command> ReceiveCommandAsync(CancellationToken cancellationToken)
-        {
-            var command = await base.ReceiveCommandAsync(cancellationToken).ConfigureAwait(false);
-
-            if (_autoReplyPings &&
-                command.Resource is Ping &&
-                command.Status == CommandStatus.Pending &&
-                command.Method == CommandMethod.Get)
-            {
-                var pingCommandResponse = new Command()
-                {
-                    Id = command.Id,
-                    To = command.From,
-                    Status = CommandStatus.Success,
-                    Method = CommandMethod.Get,
-                    Resource = new Ping()
-                };
-
-                await SendCommandAsync(pingCommandResponse).ConfigureAwait(false);
-            }
-
-            return command;
-        }
-
-        /// <summary>
         /// Receives a session
         /// from the remote node.
         /// Avoid to use this method directly. Instead,
@@ -344,7 +312,8 @@ namespace Lime.Protocol.Client
             {
                 if (envelope.Pp == null)
                 {
-                    if (!envelope.From.Equals(this.LocalNode))
+                    if (envelope.From != null &&
+                        !envelope.From.Equals(this.LocalNode))
                     {
                         envelope.Pp = this.LocalNode.Copy();
                     }

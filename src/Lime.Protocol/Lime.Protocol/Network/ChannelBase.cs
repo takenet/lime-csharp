@@ -1,4 +1,5 @@
-﻿using Lime.Protocol.Util;
+﻿using Lime.Protocol.Resources;
+using Lime.Protocol.Util;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -20,6 +21,7 @@ namespace Lime.Protocol.Network
         
         private TimeSpan _sendTimeout;
         private bool _fillEnvelopeRecipients;
+        private bool _autoReplyPings;
 
         private readonly BufferBlock<Message> _messageBuffer;
         private readonly BufferBlock<Command> _commandBuffer;
@@ -42,7 +44,8 @@ namespace Lime.Protocol.Network
         /// <param name="sendTimeout"></param>
         /// <param name="buffersLimit"></param>
         /// <param name="fillEnvelopeRecipients">Indicates if the from and to properties of sent and received envelopes should be filled with the session information if not defined.</param>
-        public ChannelBase(ITransport transport, TimeSpan sendTimeout, int buffersLimit, bool fillEnvelopeRecipients)
+        /// <param name="autoReplyPings">Indicates if the channel should reply automatically to ping request commands. In this case, the ping command are not returned by the ReceiveCommandAsync method.</param>
+        public ChannelBase(ITransport transport, TimeSpan sendTimeout, int buffersLimit, bool fillEnvelopeRecipients, bool autoReplyPings)
         {
             if (transport == null)
             {
@@ -54,6 +57,7 @@ namespace Lime.Protocol.Network
 
             _sendTimeout = sendTimeout;
             _fillEnvelopeRecipients = fillEnvelopeRecipients;
+            _autoReplyPings = autoReplyPings;
 
             _channelCancellationTokenSource = new CancellationTokenSource();
 
@@ -357,7 +361,26 @@ namespace Lime.Protocol.Network
                     try
                     {
                         var envelope = await this.ReceiveAsync(_channelCancellationTokenSource.Token).ConfigureAwait(false);
-                        await this.PostEnvelopeToBufferAsync(envelope);
+
+                        if (_autoReplyPings &&
+                            envelope is Command &&
+                            this.IsPingRequestCommand((Command)envelope))
+                        {
+                            var pingCommandResponse = new Command()
+                            {
+                                Id = envelope.Id,
+                                To = envelope.From,
+                                Status = CommandStatus.Success,
+                                Method = CommandMethod.Get,
+                                Resource = new Ping()
+                            };
+
+                            await SendCommandAsync(pingCommandResponse).ConfigureAwait(false);
+                        }
+                        else
+                        {
+                            await this.PostEnvelopeToBufferAsync(envelope);
+                        }
                     }
                     catch (OperationCanceledException) { }
                     catch (ObjectDisposedException)
@@ -387,6 +410,31 @@ namespace Lime.Protocol.Network
                     _channelCancellationTokenSource.Cancel();
                 }
             }
+        }
+        
+        /// <summary>
+        /// Indicates if a command is
+        /// a ping request
+        /// </summary>
+        /// <param name="command"></param>
+        /// <returns></returns>
+        private bool IsPingRequestCommand(Command command)
+        {
+            if (command.Method == CommandMethod.Get &&
+                command.Status == CommandStatus.Pending &&
+                command.Uri != null)
+            {
+                if (command.Uri.IsRelative)
+                {
+                    return command.Uri.Path.Equals(UriTemplates.PING, StringComparison.OrdinalIgnoreCase);
+                }
+                else
+                {
+                    return command.Uri.ToUri().LocalPath.Equals(UriTemplates.PING, StringComparison.OrdinalIgnoreCase);
+                }
+            }
+
+            return false;
         }
 
         /// <summary>

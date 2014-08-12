@@ -504,6 +504,7 @@ namespace Lime.Protocol.UnitTests.Client
         {           
             var ping = DataUtil.CreatePing();
             var command = DataUtil.CreateCommand(ping);
+            command.Uri = LimeUri.Parse(UriTemplates.PING);
             var cancellationToken = DataUtil.CreateCancellationToken();
 
             var tcs = new TaskCompletionSource<Envelope>();
@@ -514,7 +515,38 @@ namespace Lime.Protocol.UnitTests.Client
                 .Returns(tcs.Task);
 
             var target = GetTarget(state: SessionState.Established, autoReplyPings: true);
-            var actual = await target.ReceiveCommandAsync(cancellationToken);
+            
+            await Task.Delay(100);
+
+            _transport.Verify(
+                t => t.SendAsync(It.Is<Command>(
+                        c => c.Id == command.Id &&
+                             c.To.Equals(command.From) &&
+                             c.Resource is Ping &&
+                             c.Status == CommandStatus.Success),
+                    It.IsAny<CancellationToken>()),
+                    Times.Once());
+        }
+
+        [TestMethod]
+        [TestCategory("ReceiveCommandAsync")]
+        public async Task ReceiveCommandAsync_PingCommandAbsoluteUriReceivedAndAutoReplyPingsTrue_SendsPingCommandToTransport()
+        {
+            var ping = DataUtil.CreatePing();
+            var command = DataUtil.CreateCommand(ping);
+            command.Uri = LimeUri.Parse(LimeUri.Parse(UriTemplates.PING).ToUri(command.From).ToString());
+            var cancellationToken = DataUtil.CreateCancellationToken();
+
+            var tcs = new TaskCompletionSource<Envelope>();
+
+            _transport
+                .SetupSequence(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(Task.FromResult<Envelope>(command))
+                .Returns(tcs.Task);
+
+            var target = GetTarget(state: SessionState.Established, autoReplyPings: true);
+
+            await Task.Delay(100);
 
             _transport.Verify(
                 t => t.SendAsync(It.Is<Command>(
@@ -532,6 +564,7 @@ namespace Lime.Protocol.UnitTests.Client
         {           
             var ping = DataUtil.CreatePing();
             var command = DataUtil.CreateCommand(ping);
+            command.Uri = LimeUri.Parse(UriTemplates.PING);
             var cancellationToken = DataUtil.CreateCancellationToken();
 
             var tcs = new TaskCompletionSource<Envelope>();
@@ -543,6 +576,8 @@ namespace Lime.Protocol.UnitTests.Client
 
             var target = GetTarget(state: SessionState.Established, autoReplyPings: false);
             var actual = await target.ReceiveCommandAsync(cancellationToken);
+
+            actual.ShouldBe(command);
 
             _transport.Verify(
                 t => t.SendAsync(It.Is<Command>(

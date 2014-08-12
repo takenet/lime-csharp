@@ -17,8 +17,18 @@ namespace Lime.Protocol.Server
     {
         #region Constructor
 
-        public ServerChannel(Guid sessionId, Node serverNode, ITransport transport, TimeSpan sendTimeout, int buffersLimit = 5, bool fillEnvelopeRecipients = false)
-            : base(transport, sendTimeout, buffersLimit, fillEnvelopeRecipients)
+        /// <summary>
+        /// Initializes a new instance of the <a href="ServerChannel"/> class.
+        /// </summary>
+        /// <param name="sessionId"></param>
+        /// <param name="serverNode"></param>
+        /// <param name="transport"></param>
+        /// <param name="sendTimeout"></param>
+        /// <param name="buffersLimit"></param>
+        /// <param name="fillEnvelopeRecipients"></param>
+        /// <param name="autoReplyPings">Indicates if the channel should reply automatically to ping request commands. In this case, the ping command are not returned by the ReceiveCommandAsync method.</param>
+        public ServerChannel(Guid sessionId, Node serverNode, ITransport transport, TimeSpan sendTimeout, int buffersLimit = 5, bool fillEnvelopeRecipients = false, bool autoReplyPings = false)
+            : base(transport, sendTimeout, buffersLimit, fillEnvelopeRecipients, autoReplyPings)
         {
             base.LocalNode = serverNode;
             base.SessionId = sessionId;
