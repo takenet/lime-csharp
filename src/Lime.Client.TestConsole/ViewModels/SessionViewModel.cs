@@ -2,6 +2,7 @@
 using GalaSoft.MvvmLight.Command;
 using Lime.Client.TestConsole.Macros;
 using Lime.Client.TestConsole.Mvvm;
+using Lime.Client.TestConsole.Properties;
 using Lime.Protocol;
 using Lime.Protocol.Network;
 using Lime.Protocol.Serialization;
@@ -57,6 +58,7 @@ namespace Lime.Client.TestConsole.ViewModels
             this.ParseCommand = new RelayCommand(Parse, CanParse);
 
             this.Host = "net.tcp://iris.limeprotocol.org:55321";
+            this.ClientCertificateThumbprint = Settings.Default.LastCertificateThumbprint;
             this.ClearAfterSent = true;
             this.ParseBeforeSend = true;
 
@@ -144,6 +146,7 @@ namespace Lime.Client.TestConsole.ViewModels
             set 
             { 
                 _clientCertificateThumbprint = value;
+                Settings.Default.LastCertificateThumbprint = value;
                 RaisePropertyChanged(() => ClientCertificateThumbprint);
             }
         }

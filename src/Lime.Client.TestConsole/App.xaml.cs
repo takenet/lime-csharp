@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Configuration;
-using System.Data;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using Lime.Client.TestConsole.Properties;
 using System.Windows;
 
 namespace Lime.Client.TestConsole
@@ -13,5 +8,9 @@ namespace Lime.Client.TestConsole
     /// </summary>
     public partial class App : Application
     {
+        private void Application_Exit(object sender, ExitEventArgs e)
+        {
+            Settings.Default.Save();
+        }
     }
 }

@@ -2,6 +2,8 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="clr-namespace:Lime.Client.TestConsole.ViewModels"
+             xmlns:properties="clr-namespace:Lime.Client.TestConsole.Properties"
+             Exit="Application_Exit"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
         <ResourceDictionary>
@@ -20,12 +22,12 @@
                 <Setter Property="TextWrapping" Value="Wrap" />
                 <Setter Property="FontFamily" Value="Courier New" />
             </Style>
-
+            
             <vm:MainViewModel x:Key="MainViewModel" />
-            
-            
 
-            
-        </ResourceDictionary>                       
+            <properties:Settings x:Key="Settings" />
+
+        </ResourceDictionary>
+
     </Application.Resources>
 </Application>
