@@ -84,8 +84,6 @@ namespace Lime.Client.TestConsole.ViewModels
             }
         }
 
-
-
         private ITransport _transport;
 
         public ITransport Transport
@@ -928,8 +926,8 @@ namespace Lime.Client.TestConsole.ViewModels
 
     public static class VariablesExtensions
     {
-        private static Regex _variablesRegex = new Regex(@"(?<=\$)(\w+)", RegexOptions.Compiled);
-        private static string _variablePatternFormat = @"\B\${0}\b";
+        private static Regex _variablesRegex = new Regex(@"(?<=%)(\w+)", RegexOptions.Compiled);
+        private static string _variablePatternFormat = @"\B%{0}\b";
 
         public static IEnumerable<string> GetVariables(this string input)
         {
@@ -974,9 +972,9 @@ namespace Lime.Client.TestConsole.ViewModels
 
                 int deepth = 0;
 
-                while (variableValue.StartsWith("$"))
+                while (variableValue.StartsWith("%"))
                 {
-                    var innerVariableName = variableValue.TrimStart('$');
+                    var innerVariableName = variableValue.TrimStart('%');
 
                     if (!variableValues.TryGetValue(innerVariableName, out variableValue))
                     {
