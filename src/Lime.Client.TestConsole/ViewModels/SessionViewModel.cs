@@ -2,6 +2,7 @@
 using GalaSoft.MvvmLight.Command;
 using Lime.Client.TestConsole.Macros;
 using Lime.Client.TestConsole.Mvvm;
+using Lime.Client.TestConsole.Properties;
 using Lime.Protocol;
 using Lime.Protocol.Network;
 using Lime.Protocol.Serialization;
@@ -57,6 +58,7 @@ namespace Lime.Client.TestConsole.ViewModels
             this.ParseCommand = new RelayCommand(Parse, CanParse);
 
             this.Host = "net.tcp://iris.limeprotocol.org:55321";
+            this.ClientCertificateThumbprint = Settings.Default.LastCertificateThumbprint;
             this.ClearAfterSent = true;
             this.ParseBeforeSend = true;
 
@@ -83,8 +85,6 @@ namespace Lime.Client.TestConsole.ViewModels
                 RaisePropertyChanged(() => TcpClient);
             }
         }
-
-
 
         private ITransport _transport;
 
@@ -146,6 +146,7 @@ namespace Lime.Client.TestConsole.ViewModels
             set 
             { 
                 _clientCertificateThumbprint = value;
+                Settings.Default.LastCertificateThumbprint = value;
                 RaisePropertyChanged(() => ClientCertificateThumbprint);
             }
         }
@@ -928,8 +929,8 @@ namespace Lime.Client.TestConsole.ViewModels
 
     public static class VariablesExtensions
     {
-        private static Regex _variablesRegex = new Regex(@"(?<=\$)(\w+)", RegexOptions.Compiled);
-        private static string _variablePatternFormat = @"\B\${0}\b";
+        private static Regex _variablesRegex = new Regex(@"(?<=%)(\w+)", RegexOptions.Compiled);
+        private static string _variablePatternFormat = @"\B%{0}\b";
 
         public static IEnumerable<string> GetVariables(this string input)
         {
@@ -974,9 +975,9 @@ namespace Lime.Client.TestConsole.ViewModels
 
                 int deepth = 0;
 
-                while (variableValue.StartsWith("$"))
+                while (variableValue.StartsWith("%"))
                 {
-                    var innerVariableName = variableValue.TrimStart('$');
+                    var innerVariableName = variableValue.TrimStart('%');
 
                     if (!variableValues.TryGetValue(innerVariableName, out variableValue))
                     {

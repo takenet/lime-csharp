@@ -1,29 +1,29 @@
 ﻿New	Session	{"state":"new"}
-Negotiating none/none	Session	{"id":"$sessionId","state":"negotiating","encryption":"none","compression":"none"}
-Negotiating none/tls	Session	{"id":"$sessionId","state":"negotiating","encryption":"tls","compression":"none"}
-Authenticating guest	Session	{"id":"$sessionId","from":"$from","state":"authenticating","scheme":"guest"}
-Authenticating plain	Session	{"id":"$sessionId","from":"$from","state":"authenticating","scheme":"plain","authentication":{"password":"$password"}}
-Authenticating transport	Session	{"id":"$sessionId","from":"$from","state":"authenticating","scheme":"transport"}
-Finishing	Session	{"id":"$sessionId","state": "finishing"}
-Text message	Message	{"id":"$messageId","to":"$to","type":"plain/text","content":"$text"}
-Chat state message	Message	{"to":"$to","type":"application/vnd.lime.chatstate+json","content":{"state":"$chatState"}}
-Fire-and-forget text message	Message	{"to":"$to","type":"plain/text","content":"$text"}
-Received notification	Notification	{"id":"$messageId","from":"$from","to":"$to","event":"received"}
-Consumed notification	Notification	{"id":"$messageId","from":"$from","to":"$to","event":"consumed"}
-Failed notification	Notification	{"id":"$messageId","from":"$from","to":"$to","event":"failed","reason":{"code":$reasonCode,"description":"$reasonDescription"}}
-Set presence available	Command	{"id":"$commandId","method":"set","type":"application/vnd.lime.presence+json","uri":"/presence","resource":{"status":"available"}}
-Set presence unavailable	Command	{"id":"$commandId","method":"set","type":"application/vnd.lime.presence+json","uri":"/presence","resource":{"status":"unavailable"}}
-Set presence available identity	Command	{"id":"$commandId","method":"set","type":"application/vnd.lime.presence+json","uri":"/presence","resource":{"status":"available","routingRule":"identity"}}
-Set presence available promiscuous	Command	{"id":"$commandId","method":"set","type":"application/vnd.lime.presence+json","uri":"/presence","resource":{"status":"available","routingRule":"promiscuous"}}
-Get own presence	Command	{"id":"$commandId","method":"get","type":"application/vnd.lime.presence+json","uri":"/presence"}
-Get presence	Command	{"id":"$commandId","from":"$from","method":"get","type":"application/vnd.lime.presence+json","uri":"/presence"}
-Get account	Command	{"id":"$commandId","from":"$from","method":"get","type":"application/vnd.lime.account+json","uri":"/account"}
-Get own account	Command	{"id":"$commandId","method":"get","type":"application/vnd.lime.account+json","uri":"/account"}
-Set account	Command	{"id":"$commandId","method":"set","type":"application/vnd.lime.account+json","uri":"/account","resource":{"fullName":"$fullName","phoneNumber":"$phoneNumber","city":"$city","password":"$newPassword"}}
-Set account password	Command	{"id":"$commandId","method":"set","type":"application/vnd.lime.account+json","uri":"/account","resource":{"password":"$newPassword","oldPassword":"$oldPassword"}}
-Set receipts all events	Command	{"id":"$commandId","method":"set","type":"application/vnd.lime.receipt+json","uri":"/receipt","resource":{"events":["failed","accepted","validated","authorized","dispatched","received","consumed"]}}
-Get groups	Command	{"id":"$commandId","from":"$from","method":"get","type":"application/vnd.lime.group+json","uri": "/groups"}
-Get group	Command	{"id":"$commandId","from":"$from","method":"get","type":"application/vnd.lime.group+json","uri": "/groups/$groupIdentity"}
-Set group	Command	{"id":"$commandId","from":"$from","method":"set","type":"application/vnd.lime.group+json","uri": "/groups","resource":{"identity":"$groupIdentity","name":"$groupName","type":"public"}}
-Get group members	Command	{"id":"$commandId","from":"$from","method":"get","type":"application/vnd.lime.groupmember+json","uri": "/groups/$groupIdentity/members"}
-Set group member	Command	{"id":"$commandId","from":"$from","method":"set","type":"application/vnd.lime.groupmember+json","uri": "/groups/$groupIdentity/members","resource":{"identity":"<member>@any.com","role":"listener"}}
+Negotiating none/none	Session	{"id":"%sessionId","state":"negotiating","encryption":"none","compression":"none"}
+Negotiating none/tls	Session	{"id":"%sessionId","state":"negotiating","encryption":"tls","compression":"none"}
+Authenticating guest	Session	{"id":"%sessionId","from":"%from","state":"authenticating","scheme":"guest"}
+Authenticating plain	Session	{"id":"%sessionId","from":"%from","state":"authenticating","scheme":"plain","authentication":{"password":"%password"}}
+Authenticating transport	Session	{"id":"%sessionId","from":"%from","state":"authenticating","scheme":"transport"}
+Finishing	Session	{"id":"%sessionId","state": "finishing"}
+Text message	Message	{"id":"%messageId","to":"%to","type":"plain/text","content":"%text"}
+Chat state message	Message	{"to":"%to","type":"application/vnd.lime.chatstate+json","content":{"state":"%chatState"}}
+Fire-and-forget text message	Message	{"to":"%to","type":"plain/text","content":"%text"}
+Received notification	Notification	{"id":"%messageId","from":"%from","to":"%to","event":"received"}
+Consumed notification	Notification	{"id":"%messageId","from":"%from","to":"%to","event":"consumed"}
+Failed notification	Notification	{"id":"%messageId","from":"%from","to":"%to","event":"failed","reason":{"code":%reasonCode,"description":"%reasonDescription"}}
+Set presence available	Command	{"id":"%commandId","method":"set","type":"application/vnd.lime.presence+json","uri":"/presence","resource":{"status":"available"}}
+Set presence unavailable	Command	{"id":"%commandId","method":"set","type":"application/vnd.lime.presence+json","uri":"/presence","resource":{"status":"unavailable"}}
+Set presence available identity	Command	{"id":"%commandId","method":"set","type":"application/vnd.lime.presence+json","uri":"/presence","resource":{"status":"available","routingRule":"identity"}}
+Set presence available promiscuous	Command	{"id":"%commandId","method":"set","type":"application/vnd.lime.presence+json","uri":"/presence","resource":{"status":"available","routingRule":"promiscuous"}}
+Get own presence	Command	{"id":"%commandId","method":"get","type":"application/vnd.lime.presence+json","uri":"/presence"}
+Get presence	Command	{"id":"%commandId","from":"%from","method":"get","type":"application/vnd.lime.presence+json","uri":"/presence"}
+Get account	Command	{"id":"%commandId","from":"%from","method":"get","type":"application/vnd.lime.account+json","uri":"/account"}
+Get own account	Command	{"id":"%commandId","method":"get","type":"application/vnd.lime.account+json","uri":"/account"}
+Set account	Command	{"id":"%commandId","method":"set","type":"application/vnd.lime.account+json","uri":"/account","resource":{"fullName":"%fullName","phoneNumber":"%phoneNumber","city":"%city","password":"%newPassword"}}
+Set account password	Command	{"id":"%commandId","method":"set","type":"application/vnd.lime.account+json","uri":"/account","resource":{"password":"%newPassword","oldPassword":"%oldPassword"}}
+Set receipts all events	Command	{"id":"%commandId","method":"set","type":"application/vnd.lime.receipt+json","uri":"/receipt","resource":{"events":["failed","accepted","validated","authorized","dispatched","received","consumed"]}}
+Get groups	Command	{"id":"%commandId","from":"%from","method":"get","type":"application/vnd.lime.group+json","uri": "/groups"}
+Get group	Command	{"id":"%commandId","from":"%from","method":"get","type":"application/vnd.lime.group+json","uri": "/groups/%groupIdentity"}
+Set group	Command	{"id":"%commandId","from":"%from","method":"set","type":"application/vnd.lime.group+json","uri": "/groups","resource":{"identity":"%groupIdentity","name":"%groupName","type":"public"}}
+Get group members	Command	{"id":"%commandId","from":"%from","method":"get","type":"application/vnd.lime.groupmember+json","uri": "/groups/%groupIdentity/members"}
+Set group member	Command	{"id":"%commandId","from":"%from","method":"set","type":"application/vnd.lime.groupmember+json","uri": "/groups/%groupIdentity/members","resource":{"identity":"<member>@any.com","role":"listener"}}
