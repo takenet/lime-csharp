@@ -48,7 +48,7 @@ namespace Lime.Protocol.Resources
         /// The default value is false.
         /// </summary>
         [DataMember(Name = IS_PENDING_KEY, EmitDefaultValue = false)]
-        public bool IsPending { get; set; }
+        public bool? IsPending { get; set; }
 
         /// <summary>
         /// Indicates if the roster owner wants to share 
@@ -58,8 +58,7 @@ namespace Lime.Protocol.Resources
         /// presence resource. The default value is true.
         /// </summary>
         [DataMember(Name = SHARE_PRESENCE_KEY, EmitDefaultValue = false)]
-        [DefaultValue(true)]
-        public bool SharePresence { get; set; }
+        public bool? SharePresence { get; set; }
 
         /// <summary>
         /// Indicates if the roster owner wants to share account 
@@ -69,8 +68,7 @@ namespace Lime.Protocol.Resources
         /// The default value is true.
         /// </summary>
         [DataMember(Name = SHARE_ACCOUNT_INFO_KEY, EmitDefaultValue = false)]
-        [DefaultValue(true)]
-        public bool ShareAccountInfo { get; set; }
+        public bool? ShareAccountInfo { get; set; }
 
         #region IIdentity Members
 

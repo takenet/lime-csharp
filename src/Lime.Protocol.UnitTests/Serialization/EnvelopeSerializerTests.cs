@@ -746,21 +746,26 @@ namespace Lime.Protocol.UnitTests.Serialization
 
             Assert.IsTrue(contacts[0].Identity.Equals(identity1));
             Assert.IsTrue(contacts[0].Name.Equals(name1));
-			Assert.IsTrue(contacts[0].IsPending);
-			Assert.IsFalse(contacts[0].ShareAccountInfo);
-			Assert.IsTrue(contacts[0].SharePresence);
+            Assert.IsTrue(contacts[0].IsPending.HasValue);
+            Assert.IsTrue(contacts[0].IsPending.Value);
+            Assert.IsTrue(contacts[0].ShareAccountInfo.HasValue);
+            Assert.IsFalse(contacts[0].ShareAccountInfo.Value);
+			Assert.IsFalse(contacts[0].SharePresence.HasValue);
 
 			Assert.IsTrue(contacts[1].Identity.Equals(identity2));
 			Assert.IsTrue(contacts[1].Name.Equals(name2));
-			Assert.IsFalse(contacts[1].IsPending);
-			Assert.IsTrue(contacts[1].ShareAccountInfo);
-			Assert.IsFalse(contacts[1].SharePresence);
+			Assert.IsFalse(contacts[1].IsPending.HasValue);
+            Assert.IsFalse(contacts[1].ShareAccountInfo.HasValue);
+            Assert.IsTrue(contacts[1].SharePresence.HasValue);
+            Assert.IsFalse(contacts[1].SharePresence.Value);
 
 			Assert.IsTrue(contacts[2].Identity.Equals(identity3));
 			Assert.IsTrue(contacts[2].Name.Equals(name3));
-			Assert.IsTrue(contacts[2].IsPending);
-			Assert.IsTrue(contacts[2].ShareAccountInfo);
-			Assert.IsFalse(contacts[2].SharePresence);
+            Assert.IsTrue(contacts[2].IsPending.HasValue);
+			Assert.IsTrue(contacts[2].IsPending.Value);
+            Assert.IsFalse(contacts[2].ShareAccountInfo.HasValue);
+			Assert.IsTrue(contacts[2].SharePresence.HasValue);
+            Assert.IsFalse(contacts[2].SharePresence.Value);
 
 			
 		}

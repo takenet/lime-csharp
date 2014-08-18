@@ -66,22 +66,22 @@ namespace Lime.Client.Windows.ViewModels
 
         public bool IsPending
         {
-            get { return _contact.IsPending; }
+            get { return _contact.IsPending ?? false; }
         }
 
         public bool IsNotPending
         {
-            get { return !_contact.IsPending; }
+            get { return !_contact.IsPending ?? true; }
         }
 
         public bool SharePresence
         {
-            get { return _contact.SharePresence; }
+            get { return _contact.SharePresence ?? false; }
         }
 
         public bool ShareAccountInfo
         {
-            get { return _contact.ShareAccountInfo; }
+            get { return _contact.ShareAccountInfo ?? false; }
         }
 
         private Account _account;

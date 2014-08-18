@@ -406,7 +406,7 @@ namespace Lime.Client.Windows.ViewModels
                         this.Presence = new Presence()
                         {
                             Status = PresenceStatus.Available,
-                            RoutingRule = RoutingRule.IdentityByDistance
+                            RoutingRule = RoutingRule.Identity
                         };
 
                         await SetPresenceAsync();
@@ -817,15 +817,30 @@ namespace Lime.Client.Windows.ViewModels
                         {
                             await base.ExecuteAsync(async () =>
                                 {
-                                    contactViewModel.Presence = await _clientChannel.GetResourceAsync<Presence>(
+                                    var identityPresence = await _clientChannel.GetResourceAsync<Presence>(
                                         LimeUri.Parse(UriTemplates.PRESENCE),
                                         new Node()
                                         {
                                             Name = contactViewModel.Contact.Identity.Name,
                                             Domain = contactViewModel.Contact.Identity.Domain
                                         },
-                                        cancellationToken
-                                    );
+                                        cancellationToken);
+
+                                    if (identityPresence.Instances != null &&
+                                        identityPresence.Instances.Any())
+                                    {
+                                        var presence = await _clientChannel.GetResourceAsync<Presence>(
+                                            LimeUri.Parse(UriTemplates.PRESENCE),
+                                            new Node()
+                                            {
+                                                Name = contactViewModel.Contact.Identity.Name,
+                                                Domain = contactViewModel.Contact.Identity.Domain,
+                                                Instance = identityPresence.Instances[0]
+                                            },
+                                            cancellationToken);
+
+                                        contactViewModel.Presence = presence;
+                                    }                                    
                                 });
                         }
                         catch (LimeException ex)
