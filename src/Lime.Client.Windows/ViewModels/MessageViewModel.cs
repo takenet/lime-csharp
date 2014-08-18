@@ -60,7 +60,7 @@ namespace Lime.Client.Windows.ViewModels
             set
             {
                 if (_lastEvent == null || 
-                    (_lastEvent != Event.Failed && value > _lastEvent))
+                    (_lastEvent != Event.Failed && (value == Event.Failed || value > _lastEvent)))
                 {
                     _lastEvent = value;
                     RaisePropertyChanged(() => LastEvent);

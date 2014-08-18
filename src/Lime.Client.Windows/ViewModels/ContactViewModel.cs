@@ -17,6 +17,7 @@ namespace Lime.Client.Windows.ViewModels
         #region Private Fields
 
         private readonly IClientChannel _clientChannel;
+        private readonly object _syncRoot = new object();
 
         #endregion
 
@@ -193,17 +194,23 @@ namespace Lime.Client.Windows.ViewModels
             {
                 if (_conversation == null)
                 {
-                    _conversation = new ConversationViewModel(this);
-                    _conversation.Messages.CollectionChanged += Conversation_Messages_CollectionChanged;
-                    _conversation.LocalChatStateChanged += Conversation_LocalChatStateChanged;
-
-                    _conversation.PropertyChanged += (sender, e) =>
+                    lock (_syncRoot)
                     {
-                        if (e.PropertyName == "HasUnreadMessage")
+                        if (_conversation == null)
                         {
-                            HasUnreadMessage = _conversation.HasUnreadMessage;
+                            _conversation = new ConversationViewModel(this);
+                            _conversation.Messages.CollectionChanged += Conversation_Messages_CollectionChanged;
+                            _conversation.LocalChatStateChanged += Conversation_LocalChatStateChanged;
+
+                            _conversation.PropertyChanged += (sender, e) =>
+                            {
+                                if (e.PropertyName == "HasUnreadMessage")
+                                {
+                                    HasUnreadMessage = _conversation.HasUnreadMessage;
+                                }
+                            };
                         }
-                    };
+                    }
                 }
 
                 return _conversation;
