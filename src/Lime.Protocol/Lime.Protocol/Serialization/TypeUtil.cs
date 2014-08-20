@@ -37,8 +37,8 @@ namespace Lime.Protocol.Serialization
             _typeParseFuncDictionary = new ConcurrentDictionary<Type, Func<string, object>>();
             _knownTypes = new HashSet<Type>();
 
-            // Caches the known type (types decorated with DataContract in the current assembly)
-            foreach (var knownType in Assembly.GetExecutingAssembly().GetTypes().Where(t => t.GetCustomAttribute<DataContractAttribute>() != null))
+            // Caches the known type (types decorated with DataContract in all loaded assemblies)
+            foreach (var knownType in GetAllTypesFromApplication().Where(t => t.GetCustomAttribute<DataContractAttribute>() != null))
             {
                 _knownTypes.Add(knownType);
             }
@@ -467,6 +467,15 @@ namespace Lime.Protocol.Serialization
             }
 
             return Activator.CreateInstance(type);
+        }
+
+        private static IEnumerable<Type> GetAllTypesFromApplication()
+        {
+            return AppDomain
+                    .CurrentDomain
+                    .GetAssemblies()
+                    .SelectMany(a => a.GetTypes())
+                    .Where(t => !t.FullName.StartsWith("System."));
         }
     }
 }
