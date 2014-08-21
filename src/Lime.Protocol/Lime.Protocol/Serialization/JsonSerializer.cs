@@ -261,7 +261,18 @@ namespace Lime.Protocol.Serialization
             {
                 deserializePropertyAction = (v, j) =>
                 {
-                    var value = j.GetValueOrNull<int>(memberName) ?? defaultValue;
+                    var value = j.GetValueOrNull<int>(memberName, o => Convert.ToInt32(o)) ?? defaultValue;
+                    if (isNullable || value != null)
+                    {
+                        setFunc(v, value);
+                    }
+                };
+            }
+            else if (propertyType == typeof(long))
+            {
+                deserializePropertyAction = (v, j) =>
+                {
+                    var value = j.GetValueOrNull<long>(memberName) ?? defaultValue;
                     if (isNullable || value != null)
                     {
                         setFunc(v, value);

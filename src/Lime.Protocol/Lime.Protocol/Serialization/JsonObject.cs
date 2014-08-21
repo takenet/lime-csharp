@@ -325,15 +325,15 @@ namespace Lime.Protocol.Serialization
             else
             {
                 bool boolResult;
-                int intResult;
+                long longResult;
 
                 if (bool.TryParse(value, out boolResult))
                 {
                     return boolResult;
                 }
-                else if (int.TryParse(value, out intResult))
+                else if (long.TryParse(value, out longResult))
                 {
-                    return intResult;
+                    return longResult;
                 }
                 else
                 {
