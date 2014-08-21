@@ -15,84 +15,84 @@ namespace Lime.Protocol.UnitTests.Serialization
 	[TestClass]
 	public class EnvelopeSerializerTests
 	{
-        public EnvelopeSerializer GetTarget()
-        {
-            return new EnvelopeSerializer();
-        }
+		public EnvelopeSerializer GetTarget()
+		{
+			return new EnvelopeSerializer();
+		}
 
 		#region Serialize
 
-        [TestMethod]
-        [TestCategory("Serialize")]
-        public void Serialize_AbsoluteUriRequestCommand_ReturnsValidJsonString()
-        {
-            var target = GetTarget();
+		[TestMethod]
+		[TestCategory("Serialize")]
+		public void Serialize_AbsoluteUriRequestCommand_ReturnsValidJsonString()
+		{
+			var target = GetTarget();
 
-            var command = DataUtil.CreateCommand();
-            command.Pp = DataUtil.CreateNode();
-            command.Method = CommandMethod.Get;
-            command.Uri = DataUtil.CreateAbsoluteLimeUri();
+			var command = DataUtil.CreateCommand();
+			command.Pp = DataUtil.CreateNode();
+			command.Method = CommandMethod.Get;
+			command.Uri = DataUtil.CreateAbsoluteLimeUri();
 
 
-            var metadataKey1 = "randomString1";
-            var metadataValue1 = DataUtil.CreateRandomString(50);
-            var metadataKey2 = "randomString2";
-            var metadataValue2 = DataUtil.CreateRandomString(50);
-            command.Metadata = new Dictionary<string, string>();
-            command.Metadata.Add(metadataKey1, metadataValue1);
-            command.Metadata.Add(metadataKey2, metadataValue2);
+			var metadataKey1 = "randomString1";
+			var metadataValue1 = DataUtil.CreateRandomString(50);
+			var metadataKey2 = "randomString2";
+			var metadataValue2 = DataUtil.CreateRandomString(50);
+			command.Metadata = new Dictionary<string, string>();
+			command.Metadata.Add(metadataKey1, metadataValue1);
+			command.Metadata.Add(metadataKey2, metadataValue2);
 
-            var resultString = target.Serialize(command);
+			var resultString = target.Serialize(command);
 
-            Assert.IsTrue(resultString.HasValidJsonStackedBrackets());
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.ID_KEY, command.Id));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.FROM_KEY, command.From));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.PP_KEY, command.Pp));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.TO_KEY, command.To));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Command.METHOD_KEY, command.Method));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Command.URI_KEY, command.Uri));
-            
-            
-            Assert.IsTrue(resultString.ContainsJsonProperty(Command.METHOD_KEY, command.Method));
-            Assert.IsTrue(resultString.ContainsJsonProperty(metadataKey1, metadataValue1));
-            Assert.IsTrue(resultString.ContainsJsonProperty(metadataKey2, metadataValue2));
-            
-            Assert.IsFalse(resultString.ContainsJsonKey(Command.STATUS_KEY));
-            Assert.IsFalse(resultString.ContainsJsonKey(Command.REASON_KEY));
-            Assert.IsFalse(resultString.ContainsJsonKey(Command.TYPE_KEY));
-            Assert.IsFalse(resultString.ContainsJsonKey(Command.RESOURCE_KEY));
-        }
+			Assert.IsTrue(resultString.HasValidJsonStackedBrackets());
+			Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.ID_KEY, command.Id));
+			Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.FROM_KEY, command.From));
+			Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.PP_KEY, command.Pp));
+			Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.TO_KEY, command.To));
+			Assert.IsTrue(resultString.ContainsJsonProperty(Command.METHOD_KEY, command.Method));
+			Assert.IsTrue(resultString.ContainsJsonProperty(Command.URI_KEY, command.Uri));
+			
+			
+			Assert.IsTrue(resultString.ContainsJsonProperty(Command.METHOD_KEY, command.Method));
+			Assert.IsTrue(resultString.ContainsJsonProperty(metadataKey1, metadataValue1));
+			Assert.IsTrue(resultString.ContainsJsonProperty(metadataKey2, metadataValue2));
+			
+			Assert.IsFalse(resultString.ContainsJsonKey(Command.STATUS_KEY));
+			Assert.IsFalse(resultString.ContainsJsonKey(Command.REASON_KEY));
+			Assert.IsFalse(resultString.ContainsJsonKey(Command.TYPE_KEY));
+			Assert.IsFalse(resultString.ContainsJsonKey(Command.RESOURCE_KEY));
+		}
 
-        [TestMethod]
-        [TestCategory("Serialize")]
-        public void Serialize_RelativeUriRequestCommand_ReturnsValidJsonString()
-        {
-            var target = GetTarget();
+		[TestMethod]
+		[TestCategory("Serialize")]
+		public void Serialize_RelativeUriRequestCommand_ReturnsValidJsonString()
+		{
+			var target = GetTarget();
 
-            var resource = DataUtil.CreateJsonDocument();
+			var resource = DataUtil.CreateJsonDocument();
 
-            var command = DataUtil.CreateCommand(resource);
-            command.Pp = DataUtil.CreateNode();
-            command.Method = CommandMethod.Set;
-            command.Uri = DataUtil.CreateRelativeLimeUri();
+			var command = DataUtil.CreateCommand(resource);
+			command.Pp = DataUtil.CreateNode();
+			command.Method = CommandMethod.Set;
+			command.Uri = DataUtil.CreateRelativeLimeUri();
 
-            var resultString = target.Serialize(command);
+			var resultString = target.Serialize(command);
 
-            Assert.IsTrue(resultString.HasValidJsonStackedBrackets());
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.ID_KEY, command.Id));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.FROM_KEY, command.From));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.PP_KEY, command.Pp));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.TO_KEY, command.To));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Command.METHOD_KEY, command.Method));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Command.URI_KEY, command.Uri));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Command.METHOD_KEY, command.Method));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Command.TYPE_KEY, resource.GetMediaType()));
-            Assert.IsTrue(resultString.ContainsJsonKey(Command.RESOURCE_KEY));
+			Assert.IsTrue(resultString.HasValidJsonStackedBrackets());
+			Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.ID_KEY, command.Id));
+			Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.FROM_KEY, command.From));
+			Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.PP_KEY, command.Pp));
+			Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.TO_KEY, command.To));
+			Assert.IsTrue(resultString.ContainsJsonProperty(Command.METHOD_KEY, command.Method));
+			Assert.IsTrue(resultString.ContainsJsonProperty(Command.URI_KEY, command.Uri));
+			Assert.IsTrue(resultString.ContainsJsonProperty(Command.METHOD_KEY, command.Method));
+			Assert.IsTrue(resultString.ContainsJsonProperty(Command.TYPE_KEY, resource.GetMediaType()));
+			Assert.IsTrue(resultString.ContainsJsonKey(Command.RESOURCE_KEY));
 
-            Assert.IsFalse(resultString.ContainsJsonKey(Command.METADATA_KEY));
-            Assert.IsFalse(resultString.ContainsJsonKey(Command.STATUS_KEY));
-            Assert.IsFalse(resultString.ContainsJsonKey(Command.REASON_KEY));            
-        }
+			Assert.IsFalse(resultString.ContainsJsonKey(Command.METADATA_KEY));
+			Assert.IsFalse(resultString.ContainsJsonKey(Command.STATUS_KEY));
+			Assert.IsFalse(resultString.ContainsJsonKey(Command.REASON_KEY));            
+		}
 
 		[TestMethod]
 		[TestCategory("Serialize")]
@@ -104,7 +104,7 @@ namespace Lime.Protocol.UnitTests.Serialization
 			var command = DataUtil.CreateCommand(resource);
 			command.Pp = DataUtil.CreateNode();
 			command.Method = CommandMethod.Get;
-            
+			
 			
 			var metadataKey1 = "randomString1";
 			var metadataValue1 = DataUtil.CreateRandomString(50);
@@ -169,74 +169,74 @@ namespace Lime.Protocol.UnitTests.Serialization
 			Assert.IsTrue(resultString.ContainsJsonProperty(metadataKey1, metadataValue1));
 			Assert.IsTrue(resultString.ContainsJsonProperty(metadataKey2, metadataValue2));
 
-            Assert.IsTrue(resultString.ContainsJsonKey(DocumentCollection.ITEMS_KEY));
-            var contacts = resource.Items.Cast<Contact>().ToArray();
-            Assert.IsTrue(resultString.ContainsJsonProperty(Contact.IDENTITY_KEY, contacts[0].Identity));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Contact.NAME_KEY, contacts[0].Name));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Contact.IS_PENDING_KEY, contacts[0].IsPending));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Contact.SHARE_ACCOUNT_INFO_KEY, contacts[0].ShareAccountInfo));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Contact.IDENTITY_KEY, contacts[1].Identity));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Contact.NAME_KEY, contacts[1].Name));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Contact.SHARE_PRESENCE_KEY, contacts[1].SharePresence));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Contact.IDENTITY_KEY, contacts[2].Identity));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Contact.NAME_KEY, contacts[2].Name));
+			Assert.IsTrue(resultString.ContainsJsonKey(DocumentCollection.ITEMS_KEY));
+			var contacts = resource.Items.Cast<Contact>().ToArray();
+			Assert.IsTrue(resultString.ContainsJsonProperty(Contact.IDENTITY_KEY, contacts[0].Identity));
+			Assert.IsTrue(resultString.ContainsJsonProperty(Contact.NAME_KEY, contacts[0].Name));
+			Assert.IsTrue(resultString.ContainsJsonProperty(Contact.IS_PENDING_KEY, contacts[0].IsPending));
+			Assert.IsTrue(resultString.ContainsJsonProperty(Contact.SHARE_ACCOUNT_INFO_KEY, contacts[0].ShareAccountInfo));
+			Assert.IsTrue(resultString.ContainsJsonProperty(Contact.IDENTITY_KEY, contacts[1].Identity));
+			Assert.IsTrue(resultString.ContainsJsonProperty(Contact.NAME_KEY, contacts[1].Name));
+			Assert.IsTrue(resultString.ContainsJsonProperty(Contact.SHARE_PRESENCE_KEY, contacts[1].SharePresence));
+			Assert.IsTrue(resultString.ContainsJsonProperty(Contact.IDENTITY_KEY, contacts[2].Identity));
+			Assert.IsTrue(resultString.ContainsJsonProperty(Contact.NAME_KEY, contacts[2].Name));
 
 			Assert.IsTrue(resultString.ContainsJsonKey(Command.STATUS_KEY));
 			Assert.IsFalse(resultString.ContainsJsonKey(Command.REASON_KEY));
 		}
 
-        [TestMethod]
-        [TestCategory("Serialize")]
-        public void Serialize_ContactCollectionResponseCommand_ReturnsValidJsonString()
-        {
-            var target = GetTarget();
+		[TestMethod]
+		[TestCategory("Serialize")]
+		public void Serialize_ContactCollectionResponseCommand_ReturnsValidJsonString()
+		{
+			var target = GetTarget();
 
-            var contact1 = DataUtil.CreateContact();
-            contact1.ShareAccountInfo = true;
-            contact1.SharePresence = true;
-            var contact2 = DataUtil.CreateContact();
-            contact2.SharePresence = true;
-            var contact3 = DataUtil.CreateContact();
+			var contact1 = DataUtil.CreateContact();
+			contact1.ShareAccountInfo = true;
+			contact1.SharePresence = true;
+			var contact2 = DataUtil.CreateContact();
+			contact2.SharePresence = true;
+			var contact3 = DataUtil.CreateContact();
 
-            var resource = DataUtil.CreateDocumentCollection<Contact>(
-                contact1,
-                contact2,
-                contact3);
+			var resource = DataUtil.CreateDocumentCollection<Contact>(
+				contact1,
+				contact2,
+				contact3);
 
-            var command = DataUtil.CreateCommand(resource);
-            command.Pp = DataUtil.CreateNode();
-            command.Method = CommandMethod.Get;
-            command.Status = CommandStatus.Success;
+			var command = DataUtil.CreateCommand(resource);
+			command.Pp = DataUtil.CreateNode();
+			command.Method = CommandMethod.Get;
+			command.Status = CommandStatus.Success;
 
-            var metadataKey1 = "randomString1";
-            var metadataValue1 = DataUtil.CreateRandomString(50);
-            var metadataKey2 = "randomString2";
-            var metadataValue2 = DataUtil.CreateRandomString(50);
-            command.Metadata = new Dictionary<string, string>();
-            command.Metadata.Add(metadataKey1, metadataValue1);
-            command.Metadata.Add(metadataKey2, metadataValue2);
+			var metadataKey1 = "randomString1";
+			var metadataValue1 = DataUtil.CreateRandomString(50);
+			var metadataKey2 = "randomString2";
+			var metadataValue2 = DataUtil.CreateRandomString(50);
+			command.Metadata = new Dictionary<string, string>();
+			command.Metadata.Add(metadataKey1, metadataValue1);
+			command.Metadata.Add(metadataKey2, metadataValue2);
 
-            var resultString = target.Serialize(command);
+			var resultString = target.Serialize(command);
 
-            Assert.IsTrue(resultString.HasValidJsonStackedBrackets());
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.ID_KEY, command.Id));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.FROM_KEY, command.From));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.PP_KEY, command.Pp));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.TO_KEY, command.To));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Command.METHOD_KEY, command.Method));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Command.TYPE_KEY, command.Resource.GetMediaType()));
-            Assert.IsTrue(resultString.ContainsJsonKey(Command.RESOURCE_KEY));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Command.METHOD_KEY, command.Method));
-            Assert.IsTrue(resultString.ContainsJsonProperty(metadataKey1, metadataValue1));
-            Assert.IsTrue(resultString.ContainsJsonProperty(metadataKey2, metadataValue2));
+			Assert.IsTrue(resultString.HasValidJsonStackedBrackets());
+			Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.ID_KEY, command.Id));
+			Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.FROM_KEY, command.From));
+			Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.PP_KEY, command.Pp));
+			Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.TO_KEY, command.To));
+			Assert.IsTrue(resultString.ContainsJsonProperty(Command.METHOD_KEY, command.Method));
+			Assert.IsTrue(resultString.ContainsJsonProperty(Command.TYPE_KEY, command.Resource.GetMediaType()));
+			Assert.IsTrue(resultString.ContainsJsonKey(Command.RESOURCE_KEY));
+			Assert.IsTrue(resultString.ContainsJsonProperty(Command.METHOD_KEY, command.Method));
+			Assert.IsTrue(resultString.ContainsJsonProperty(metadataKey1, metadataValue1));
+			Assert.IsTrue(resultString.ContainsJsonProperty(metadataKey2, metadataValue2));
 
-            Assert.IsTrue(resultString.ContainsJsonKey(DocumentCollection.ITEMS_KEY));
-            Assert.IsTrue(resultString.ContainsJsonProperty(DocumentCollection.ITEM_TYPE_KEY, contact1.GetMediaType()));
-            Assert.IsTrue(resultString.ContainsJsonProperty(DocumentCollection.TOTAL_KEY, resource.Items.Length));
+			Assert.IsTrue(resultString.ContainsJsonKey(DocumentCollection.ITEMS_KEY));
+			Assert.IsTrue(resultString.ContainsJsonProperty(DocumentCollection.ITEM_TYPE_KEY, contact1.GetMediaType()));
+			Assert.IsTrue(resultString.ContainsJsonProperty(DocumentCollection.TOTAL_KEY, resource.Items.Length));
   
-            Assert.IsTrue(resultString.ContainsJsonKey(Command.STATUS_KEY));
-            Assert.IsFalse(resultString.ContainsJsonKey(Command.REASON_KEY));
-        }
+			Assert.IsTrue(resultString.ContainsJsonKey(Command.STATUS_KEY));
+			Assert.IsFalse(resultString.ContainsJsonKey(Command.REASON_KEY));
+		}
 
 		[TestMethod]
 		[TestCategory("Serialize")]
@@ -332,37 +332,37 @@ namespace Lime.Protocol.UnitTests.Serialization
 			Assert.IsTrue(resultString.ContainsJsonProperty(metadataKey2, metadataValue2));
 		}
 
-        [TestMethod]
-        [TestCategory("Serialize")]
-        public void Serialize_UnknownPlainContentMessage_ReturnsValidJsonString()
-        {
-            var target = GetTarget();
+		[TestMethod]
+		[TestCategory("Serialize")]
+		public void Serialize_UnknownPlainContentMessage_ReturnsValidJsonString()
+		{
+			var target = GetTarget();
 
-            var content = DataUtil.CreatePlainDocument();
-            var message = DataUtil.CreateMessage(content);
-            message.Pp = DataUtil.CreateNode();
+			var content = DataUtil.CreatePlainDocument();
+			var message = DataUtil.CreateMessage(content);
+			message.Pp = DataUtil.CreateNode();
 
-            var metadataKey1 = "randomString1";
-            var metadataValue1 = DataUtil.CreateRandomString(50);
-            var metadataKey2 = "randomString2";
-            var metadataValue2 = DataUtil.CreateRandomString(50);
-            message.Metadata = new Dictionary<string, string>();
-            message.Metadata.Add(metadataKey1, metadataValue1);
-            message.Metadata.Add(metadataKey2, metadataValue2);
+			var metadataKey1 = "randomString1";
+			var metadataValue1 = DataUtil.CreateRandomString(50);
+			var metadataKey2 = "randomString2";
+			var metadataValue2 = DataUtil.CreateRandomString(50);
+			message.Metadata = new Dictionary<string, string>();
+			message.Metadata.Add(metadataKey1, metadataValue1);
+			message.Metadata.Add(metadataKey2, metadataValue2);
 
-            var resultString = target.Serialize(message);
+			var resultString = target.Serialize(message);
 
-            Assert.IsTrue(resultString.HasValidJsonStackedBrackets());
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.ID_KEY, message.Id));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.FROM_KEY, message.From));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.PP_KEY, message.Pp));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.TO_KEY, message.To));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Message.TYPE_KEY, message.Content.GetMediaType()));
-            Assert.IsTrue(resultString.ContainsJsonKey(Message.CONTENT_KEY));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Message.CONTENT_KEY, content.Value));           
-            Assert.IsTrue(resultString.ContainsJsonProperty(metadataKey1, metadataValue1));
-            Assert.IsTrue(resultString.ContainsJsonProperty(metadataKey2, metadataValue2));
-        }
+			Assert.IsTrue(resultString.HasValidJsonStackedBrackets());
+			Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.ID_KEY, message.Id));
+			Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.FROM_KEY, message.From));
+			Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.PP_KEY, message.Pp));
+			Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.TO_KEY, message.To));
+			Assert.IsTrue(resultString.ContainsJsonProperty(Message.TYPE_KEY, message.Content.GetMediaType()));
+			Assert.IsTrue(resultString.ContainsJsonKey(Message.CONTENT_KEY));
+			Assert.IsTrue(resultString.ContainsJsonProperty(Message.CONTENT_KEY, content.Value));           
+			Assert.IsTrue(resultString.ContainsJsonProperty(metadataKey1, metadataValue1));
+			Assert.IsTrue(resultString.ContainsJsonProperty(metadataKey2, metadataValue2));
+		}
 
 		[TestMethod]
 		[TestCategory("Serialize")]
@@ -382,7 +382,7 @@ namespace Lime.Protocol.UnitTests.Serialization
 			Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.TO_KEY, message.To));
 			Assert.IsTrue(resultString.ContainsJsonProperty(Message.TYPE_KEY, message.Content.GetMediaType()));
 			Assert.IsTrue(resultString.ContainsJsonKey(Message.CONTENT_KEY));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Message.CONTENT_KEY, content.Text));
+			Assert.IsTrue(resultString.ContainsJsonProperty(Message.CONTENT_KEY, content.Text));
 
 			Assert.IsFalse(resultString.ContainsJsonKey(Envelope.ID_KEY));
 			Assert.IsFalse(resultString.ContainsJsonKey(Envelope.PP_KEY));
@@ -537,12 +537,12 @@ namespace Lime.Protocol.UnitTests.Serialization
 			string randomString1 = DataUtil.CreateRandomString(50);
 			string randomString2 = DataUtil.CreateRandomString(50);
 
-            var resourceUri = new LimeUri("/capability");
+			var resourceUri = new LimeUri("/capability");
 
 			string json = string.Format(
 				"{{\"uri\":\"{0}\",\"type\":\"application/vnd.lime.capability+json\",\"resource\":{{\"contentTypes\":[\"{1}\",\"{2}\",\"{3}\"],\"resourceTypes\":[\"{4}\",\"{5}\",\"{6}\"]}},\"method\":\"{7}\",\"id\":\"{8}\",\"from\":\"{9}\",\"pp\":\"{10}\",\"to\":\"{11}\",\"metadata\":{{\"{12}\":\"{13}\",\"{14}\":\"{15}\"}}}}",
 				resourceUri,
-                contentType1,
+				contentType1,
 				contentType2,
 				contentType3,
 				resourceType1,
@@ -586,8 +586,8 @@ namespace Lime.Protocol.UnitTests.Serialization
 			Assert.IsTrue(capability.ResourceTypes.Any(c => c.Equals(resourceType2)));
 			Assert.IsTrue(capability.ResourceTypes.Any(c => c.Equals(resourceType3)));
 
-            Assert.IsNotNull(command.Uri);
-            Assert.AreEqual(command.Uri, resourceUri);
+			Assert.IsNotNull(command.Uri);
+			Assert.AreEqual(command.Uri, resourceUri);
 		}
 
 		[TestMethod]
@@ -609,12 +609,12 @@ namespace Lime.Protocol.UnitTests.Serialization
 			string randomString1 = DataUtil.CreateRandomString(50);
 			string randomString2 = DataUtil.CreateRandomString(50);
 
-            var resourceUri = DataUtil.CreateAbsoluteLimeUri();
+			var resourceUri = DataUtil.CreateAbsoluteLimeUri();
 
 			string json = string.Format(
 				"{{\"uri\":\"{0}\",\"method\":\"get\",\"id\":\"{1}\",\"from\":\"{2}\",\"pp\":\"{3}\",\"to\":\"{4}\",\"metadata\":{{\"{5}\":\"{6}\",\"{7}\":\"{8}\"}}}}",
 				resourceUri,
-                id,
+				id,
 				from,
 				pp,
 				to,
@@ -639,11 +639,11 @@ namespace Lime.Protocol.UnitTests.Serialization
 			Assert.IsTrue(command.Metadata.ContainsKey(randomKey2));
 			Assert.AreEqual(command.Metadata[randomKey2], randomString2);
 
-            Assert.IsNotNull(command.Uri);
+			Assert.IsNotNull(command.Uri);
 			Assert.AreEqual(command.Uri, resourceUri);
 
-            Assert.IsNull(command.Type);
-            Assert.IsNull(command.Resource);
+			Assert.IsNull(command.Type);
+			Assert.IsNull(command.Resource);
 		}
 
 		[TestMethod]
@@ -703,7 +703,7 @@ namespace Lime.Protocol.UnitTests.Serialization
 			string randomString2 = DataUtil.CreateRandomString(50);
 
 			string json = string.Format(
-                "{{\"type\":\"application/vnd.lime.collection+json\",\"resource\":{{\"itemType\":\"application/vnd.lime.contact+json\",\"total\":3,\"items\":[{{\"identity\":\"{0}\",\"name\":\"{1}\",\"isPending\":true,\"shareAccountInfo\":false}},{{\"identity\":\"{2}\",\"name\":\"{3}\",\"sharePresence\":false}},{{\"identity\":\"{4}\",\"name\":\"{5}\",\"isPending\":true,\"sharePresence\":false}}]}},\"method\":\"get\",\"status\":\"success\",\"id\":\"{6}\",\"from\":\"{7}\",\"pp\":\"{8}\",\"to\":\"{9}\",\"metadata\":{{\"{10}\":\"{11}\",\"{12}\":\"{13}\"}}}}",
+				"{{\"type\":\"application/vnd.lime.collection+json\",\"resource\":{{\"itemType\":\"application/vnd.lime.contact+json\",\"total\":3,\"items\":[{{\"identity\":\"{0}\",\"name\":\"{1}\",\"isPending\":true,\"shareAccountInfo\":false}},{{\"identity\":\"{2}\",\"name\":\"{3}\",\"sharePresence\":false}},{{\"identity\":\"{4}\",\"name\":\"{5}\",\"isPending\":true,\"sharePresence\":false}}]}},\"method\":\"get\",\"status\":\"success\",\"id\":\"{6}\",\"from\":\"{7}\",\"pp\":\"{8}\",\"to\":\"{9}\",\"metadata\":{{\"{10}\":\"{11}\",\"{12}\":\"{13}\"}}}}",
 				identity1,
 				name1,
 				identity2,
@@ -737,35 +737,35 @@ namespace Lime.Protocol.UnitTests.Serialization
 
 			Assert.IsTrue(command.Resource is DocumentCollection);
 
-            var documents = (DocumentCollection)command.Resource;
+			var documents = (DocumentCollection)command.Resource;
 
-            Assert.IsNotNull(documents.Items, "Items is null");
-            Assert.AreEqual(documents.Items.Length, 3);
+			Assert.IsNotNull(documents.Items, "Items is null");
+			Assert.AreEqual(documents.Items.Length, 3);
 
-            var contacts = documents.Cast<Contact>().ToArray();
+			var contacts = documents.Cast<Contact>().ToArray();
 
-            Assert.IsTrue(contacts[0].Identity.Equals(identity1));
-            Assert.IsTrue(contacts[0].Name.Equals(name1));
-            Assert.IsTrue(contacts[0].IsPending.HasValue);
-            Assert.IsTrue(contacts[0].IsPending.Value);
-            Assert.IsTrue(contacts[0].ShareAccountInfo.HasValue);
-            Assert.IsFalse(contacts[0].ShareAccountInfo.Value);
+			Assert.IsTrue(contacts[0].Identity.Equals(identity1));
+			Assert.IsTrue(contacts[0].Name.Equals(name1));
+			Assert.IsTrue(contacts[0].IsPending.HasValue);
+			Assert.IsTrue(contacts[0].IsPending.Value);
+			Assert.IsTrue(contacts[0].ShareAccountInfo.HasValue);
+			Assert.IsFalse(contacts[0].ShareAccountInfo.Value);
 			Assert.IsFalse(contacts[0].SharePresence.HasValue);
 
 			Assert.IsTrue(contacts[1].Identity.Equals(identity2));
 			Assert.IsTrue(contacts[1].Name.Equals(name2));
 			Assert.IsFalse(contacts[1].IsPending.HasValue);
-            Assert.IsFalse(contacts[1].ShareAccountInfo.HasValue);
-            Assert.IsTrue(contacts[1].SharePresence.HasValue);
-            Assert.IsFalse(contacts[1].SharePresence.Value);
+			Assert.IsFalse(contacts[1].ShareAccountInfo.HasValue);
+			Assert.IsTrue(contacts[1].SharePresence.HasValue);
+			Assert.IsFalse(contacts[1].SharePresence.Value);
 
 			Assert.IsTrue(contacts[2].Identity.Equals(identity3));
 			Assert.IsTrue(contacts[2].Name.Equals(name3));
-            Assert.IsTrue(contacts[2].IsPending.HasValue);
+			Assert.IsTrue(contacts[2].IsPending.HasValue);
 			Assert.IsTrue(contacts[2].IsPending.Value);
-            Assert.IsFalse(contacts[2].ShareAccountInfo.HasValue);
+			Assert.IsFalse(contacts[2].ShareAccountInfo.HasValue);
 			Assert.IsTrue(contacts[2].SharePresence.HasValue);
-            Assert.IsFalse(contacts[2].SharePresence.Value);
+			Assert.IsFalse(contacts[2].SharePresence.Value);
 
 			
 		}
@@ -865,115 +865,115 @@ namespace Lime.Protocol.UnitTests.Serialization
 			Assert.AreEqual(text, textContent.Text);
 		}
 
-        [TestMethod]
-        [TestCategory("Deserialize")]
-        public void Deserialize_ChatStateMessage_ReturnsValidInstance()
-        {
-            var target = GetTarget();
+		[TestMethod]
+		[TestCategory("Deserialize")]
+		public void Deserialize_ChatStateMessage_ReturnsValidInstance()
+		{
+			var target = GetTarget();
 
-            var id = Guid.NewGuid();
-            var from = DataUtil.CreateNode();
-            var pp = DataUtil.CreateNode();
-            var to = DataUtil.CreateNode();
+			var id = Guid.NewGuid();
+			var from = DataUtil.CreateNode();
+			var pp = DataUtil.CreateNode();
+			var to = DataUtil.CreateNode();
 
-            string randomKey1 = "randomString1";
-            string randomKey2 = "randomString2";
-            string randomString1 = DataUtil.CreateRandomString(50);
-            string randomString2 = DataUtil.CreateRandomString(50);
+			string randomKey1 = "randomString1";
+			string randomKey2 = "randomString2";
+			string randomString1 = DataUtil.CreateRandomString(50);
+			string randomString2 = DataUtil.CreateRandomString(50);
 
-            var state = ChatStateEvent.Deleting;
+			var state = ChatStateEvent.Deleting;
 
-            string json = string.Format(
-                "{{\"type\":\"application/vnd.lime.chatstate+json\",\"content\":{{\"state\":\"{0}\"}},\"id\":\"{1}\",\"from\":\"{2}\",\"pp\":\"{3}\",\"to\":\"{4}\",\"metadata\":{{\"{5}\":\"{6}\",\"{7}\":\"{8}\"}}}}",
-                state.ToString().ToLowerInvariant(),
-                id,
-                from,
-                pp,
-                to,
-                randomKey1,
-                randomString1,
-                randomKey2,
-                randomString2
-                );
+			string json = string.Format(
+				"{{\"type\":\"application/vnd.lime.chatstate+json\",\"content\":{{\"state\":\"{0}\"}},\"id\":\"{1}\",\"from\":\"{2}\",\"pp\":\"{3}\",\"to\":\"{4}\",\"metadata\":{{\"{5}\":\"{6}\",\"{7}\":\"{8}\"}}}}",
+				state.ToString().ToLowerInvariant(),
+				id,
+				from,
+				pp,
+				to,
+				randomKey1,
+				randomString1,
+				randomKey2,
+				randomString2
+				);
 
-            var envelope = target.Deserialize(json);
+			var envelope = target.Deserialize(json);
 
-            Assert.IsTrue(envelope is Message);
+			Assert.IsTrue(envelope is Message);
 
-            var message = (Message)envelope;
-            Assert.AreEqual(id, message.Id);
-            Assert.AreEqual(from, message.From);
-            Assert.AreEqual(pp, message.Pp);
-            Assert.AreEqual(to, message.To);
-            Assert.IsNotNull(message.Metadata);
-            Assert.IsTrue(message.Metadata.ContainsKey(randomKey1));
-            Assert.AreEqual(message.Metadata[randomKey1], randomString1);
-            Assert.IsTrue(message.Metadata.ContainsKey(randomKey2));
-            Assert.AreEqual(message.Metadata[randomKey2], randomString2);
+			var message = (Message)envelope;
+			Assert.AreEqual(id, message.Id);
+			Assert.AreEqual(from, message.From);
+			Assert.AreEqual(pp, message.Pp);
+			Assert.AreEqual(to, message.To);
+			Assert.IsNotNull(message.Metadata);
+			Assert.IsTrue(message.Metadata.ContainsKey(randomKey1));
+			Assert.AreEqual(message.Metadata[randomKey1], randomString1);
+			Assert.IsTrue(message.Metadata.ContainsKey(randomKey2));
+			Assert.AreEqual(message.Metadata[randomKey2], randomString2);
 
-            Assert.IsTrue(message.Content is ChatState);
+			Assert.IsTrue(message.Content is ChatState);
 
-            var textContent = (ChatState)message.Content;
-            Assert.AreEqual(state, textContent.State);
-        }
+			var textContent = (ChatState)message.Content;
+			Assert.AreEqual(state, textContent.State);
+		}
 
-        [TestMethod]
-        [TestCategory("Deserialize")]
-        public void Deserialize_UnknownPlainContentMessage_ReturnsValidInstance()
-        {
-            var target = GetTarget();
+		[TestMethod]
+		[TestCategory("Deserialize")]
+		public void Deserialize_UnknownPlainContentMessage_ReturnsValidInstance()
+		{
+			var target = GetTarget();
 
-            var id = Guid.NewGuid();
-            var from = DataUtil.CreateNode();
-            var pp = DataUtil.CreateNode();
-            var to = DataUtil.CreateNode();
+			var id = Guid.NewGuid();
+			var from = DataUtil.CreateNode();
+			var pp = DataUtil.CreateNode();
+			var to = DataUtil.CreateNode();
 
-            string randomKey1 = "randomString1";
-            string randomKey2 = "randomString2";
-            string randomString1 = DataUtil.CreateRandomString(50);
-            string randomString2 = DataUtil.CreateRandomString(50);
+			string randomKey1 = "randomString1";
+			string randomKey2 = "randomString2";
+			string randomString1 = DataUtil.CreateRandomString(50);
+			string randomString2 = DataUtil.CreateRandomString(50);
 
-            var type = DataUtil.CreatePlainMediaType();
-            var text = DataUtil.CreateRandomString(50);
+			var type = DataUtil.CreatePlainMediaType();
+			var text = DataUtil.CreateRandomString(50);
 
-            string json = string.Format(
-                "{{\"type\":\"{0}\",\"content\":\"{1}\",\"id\":\"{2}\",\"from\":\"{3}\",\"pp\":\"{4}\",\"to\":\"{5}\",\"metadata\":{{\"{6}\":\"{7}\",\"{8}\":\"{9}\"}}}}",
-                type,
-                text,
-                id,
-                from,
-                pp,
-                to,
-                randomKey1,
-                randomString1,
-                randomKey2,
-                randomString2
-                );
+			string json = string.Format(
+				"{{\"type\":\"{0}\",\"content\":\"{1}\",\"id\":\"{2}\",\"from\":\"{3}\",\"pp\":\"{4}\",\"to\":\"{5}\",\"metadata\":{{\"{6}\":\"{7}\",\"{8}\":\"{9}\"}}}}",
+				type,
+				text,
+				id,
+				from,
+				pp,
+				to,
+				randomKey1,
+				randomString1,
+				randomKey2,
+				randomString2
+				);
 
-            var envelope = target.Deserialize(json);
+			var envelope = target.Deserialize(json);
 
-            Assert.IsTrue(envelope is Message);
+			Assert.IsTrue(envelope is Message);
 
-            var message = (Message)envelope;
-            Assert.AreEqual(id, message.Id);
-            Assert.AreEqual(from, message.From);
-            Assert.AreEqual(pp, message.Pp);
-            Assert.AreEqual(to, message.To);
-            Assert.IsNotNull(message.Metadata);
-            Assert.IsTrue(message.Metadata.ContainsKey(randomKey1));
-            Assert.AreEqual(message.Metadata[randomKey1], randomString1);
-            Assert.IsTrue(message.Metadata.ContainsKey(randomKey2));
-            Assert.AreEqual(message.Metadata[randomKey2], randomString2);
+			var message = (Message)envelope;
+			Assert.AreEqual(id, message.Id);
+			Assert.AreEqual(from, message.From);
+			Assert.AreEqual(pp, message.Pp);
+			Assert.AreEqual(to, message.To);
+			Assert.IsNotNull(message.Metadata);
+			Assert.IsTrue(message.Metadata.ContainsKey(randomKey1));
+			Assert.AreEqual(message.Metadata[randomKey1], randomString1);
+			Assert.IsTrue(message.Metadata.ContainsKey(randomKey2));
+			Assert.AreEqual(message.Metadata[randomKey2], randomString2);
 
-            Assert.IsNotNull(message.Type);
-            Assert.AreEqual(message.Type, type);
+			Assert.IsNotNull(message.Type);
+			Assert.AreEqual(message.Type, type);
 
-            Assert.IsTrue(message.Content is PlainDocument);
+			Assert.IsTrue(message.Content is PlainDocument);
 
-            var content = (PlainDocument)message.Content;
-            Assert.AreEqual(text, content.Value);
+			var content = (PlainDocument)message.Content;
+			Assert.AreEqual(text, content.Value);
 
-        }
+		}
 
 		[TestMethod]
 		[TestCategory("Deserialize")]
@@ -997,7 +997,7 @@ namespace Lime.Protocol.UnitTests.Serialization
 			var propertyName1 = DataUtil.CreateRandomString(10);
 			var propertyName2 = DataUtil.CreateRandomString(10);
 			var propertyValue1 = DataUtil.CreateRandomString(10);
-			var propertyValue2 = DataUtil.CreateRandomInt(1000);
+			var propertyValue2 = (long)DataUtil.CreateRandomInt(1000);
 			
 
 			string json = string.Format(
@@ -1046,126 +1046,90 @@ namespace Lime.Protocol.UnitTests.Serialization
 			
 		}
 
-        [TestMethod]
-        [TestCategory("Deserialize")]
-        public void Deserialize_GenericJsonContentMessage_ReturnsValidInstance()
-        {
-            var target = GetTarget();
+		[TestMethod]
+		[TestCategory("Deserialize")]
+		public void Deserialize_GenericJsonContentMessage_ReturnsValidInstance()
+		{
+			var target = GetTarget();
 
-            var id = Guid.NewGuid();
-            var from = DataUtil.CreateNode();
-            var pp = DataUtil.CreateNode();
-            var to = DataUtil.CreateNode();
+			var id = Guid.NewGuid();
+			var from = DataUtil.CreateNode();
+			var pp = DataUtil.CreateNode();
+			var to = DataUtil.CreateNode();
 
-            string randomKey1 = "randomString1";
-            string randomKey2 = "randomString2";
-            string randomString1 = DataUtil.CreateRandomString(50);
-            string randomString2 = DataUtil.CreateRandomString(50);
+			string randomKey1 = "randomString1";
+			string randomKey2 = "randomString2";
+			string randomString1 = DataUtil.CreateRandomString(50);
+			string randomString2 = DataUtil.CreateRandomString(50);
+
+			var type = new MediaType(MediaType.DiscreteTypes.Application, MediaType.SubTypes.JSON, null);
+
+			var propertyName1 = DataUtil.CreateRandomString(10);
+			var propertyName2 = DataUtil.CreateRandomString(10);
+			var propertyValue1 = DataUtil.CreateRandomString(10);
+			var propertyValue2 = (long)DataUtil.CreateRandomInt(1000);
 
 
-            var type = new MediaType(MediaType.DiscreteTypes.Application, MediaType.SubTypes.JSON, null);
+			string json = string.Format(
+				"{{\"type\":\"{0}\",\"content\":{{\"{1}\":\"{2}\",\"{3}\":{4}}},\"id\":\"{5}\",\"from\":\"{6}\",\"pp\":\"{7}\",\"to\":\"{8}\",\"metadata\":{{\"{9}\":\"{10}\",\"{11}\":\"{12}\"}}}}",
+				type,
+				propertyName1,
+				propertyValue1,
+				propertyName2,
+				propertyValue2,
+				id,
+				from,
+				pp,
+				to,
+				randomKey1,
+				randomString1,
+				randomKey2,
+				randomString2
+				);
 
-            var propertyName1 = DataUtil.CreateRandomString(10);
-            var propertyName2 = DataUtil.CreateRandomString(10);
-            var propertyValue1 = DataUtil.CreateRandomString(10);
-            var propertyValue2 = DataUtil.CreateRandomInt(1000);
+			var envelope = target.Deserialize(json);
 
+			Assert.IsTrue(envelope is Message);
 
-            string json = string.Format(
-                "{{\"type\":\"{0}\",\"content\":{{\"{1}\":\"{2}\",\"{3}\":{4}}},\"id\":\"{5}\",\"from\":\"{6}\",\"pp\":\"{7}\",\"to\":\"{8}\",\"metadata\":{{\"{9}\":\"{10}\",\"{11}\":\"{12}\"}}}}",
-                type,
-                propertyName1,
-                propertyValue1,
-                propertyName2,
-                propertyValue2,
-                id,
-                from,
-                pp,
-                to,
-                randomKey1,
-                randomString1,
-                randomKey2,
-                randomString2
-                );
+			var message = (Message)envelope;
+			Assert.AreEqual(id, message.Id);
+			Assert.AreEqual(from, message.From);
+			Assert.AreEqual(pp, message.Pp);
+			Assert.AreEqual(to, message.To);
+			Assert.IsNotNull(message.Metadata);
+			Assert.IsTrue(message.Metadata.ContainsKey(randomKey1));
+			Assert.AreEqual(message.Metadata[randomKey1], randomString1);
+			Assert.IsTrue(message.Metadata.ContainsKey(randomKey2));
+			Assert.AreEqual(message.Metadata[randomKey2], randomString2);
 
-            var envelope = target.Deserialize(json);
+			Assert.IsNotNull(message.Type);
+			Assert.AreEqual(message.Type, type);
 
-            Assert.IsTrue(envelope is Message);
+			Assert.IsTrue(message.Content is JsonDocument);
 
-            var message = (Message)envelope;
-            Assert.AreEqual(id, message.Id);
-            Assert.AreEqual(from, message.From);
-            Assert.AreEqual(pp, message.Pp);
-            Assert.AreEqual(to, message.To);
-            Assert.IsNotNull(message.Metadata);
-            Assert.IsTrue(message.Metadata.ContainsKey(randomKey1));
-            Assert.AreEqual(message.Metadata[randomKey1], randomString1);
-            Assert.IsTrue(message.Metadata.ContainsKey(randomKey2));
-            Assert.AreEqual(message.Metadata[randomKey2], randomString2);
+			var content = (JsonDocument)message.Content;
 
-            Assert.IsNotNull(message.Type);
-            Assert.AreEqual(message.Type, type);
+			Assert.IsTrue(content.ContainsKey(propertyName1));
+			Assert.AreEqual(content[propertyName1], propertyValue1);
+			Assert.IsTrue(content.ContainsKey(propertyName2));
+			Assert.AreEqual(content[propertyName2], propertyValue2);
 
-            Assert.IsTrue(message.Content is JsonDocument);
-
-            var content = (JsonDocument)message.Content;
-
-            Assert.IsTrue(content.ContainsKey(propertyName1));
-            Assert.AreEqual(content[propertyName1], propertyValue1);
-            Assert.IsTrue(content.ContainsKey(propertyName2));
-            Assert.AreEqual(content[propertyName2], propertyValue2);
-
-        }
-
-        [TestMethod]
-        [TestCategory("Deserialize")]
-        public void Deserialize_FireAndForgetTextMessage_ReturnsValidInstance()
-        {
-            var target = GetTarget();
-
-            var from = DataUtil.CreateNode();
-            var to = DataUtil.CreateNode();
-
-            var text = DataUtil.CreateRandomString(50);
-
-            string json = string.Format(
-                "{{\"type\":\"text/plain\",\"content\":\"{0}\",\"from\":\"{1}\",\"to\":\"{2}\"}}",
-                text,
-                from,
-                to
-                );
-
-            var envelope = target.Deserialize(json);
-
-            Assert.IsTrue(envelope is Message);
-
-            var message = (Message)envelope;
-            Assert.AreEqual(from, message.From);
-            Assert.AreEqual(to, message.To);
-
-            Assert.AreEqual(message.Id, Guid.Empty);
-            Assert.IsNull(message.Pp);
-            Assert.IsNull(message.Metadata);
-
-            Assert.IsTrue(message.Content is PlainText);
-            var textContent = (PlainText)message.Content;
-            Assert.AreEqual(text, textContent.Text);
-        }
+		}
 
 		[TestMethod]
 		[TestCategory("Deserialize")]
-		public void Deserialize_FireAndForgetChatStateMessage_ReturnsValidInstance()
+		public void Deserialize_FireAndForgetTextMessage_ReturnsValidInstance()
 		{
 			var target = GetTarget();
 
 			var from = DataUtil.CreateNode();
 			var to = DataUtil.CreateNode();
 
-			var state = ChatStateEvent.Composing;
+			var text = DataUtil.CreateRandomString(50);
 
 			string json = string.Format(
-				"{{\"type\":\"application/vnd.lime.chatstate+json\",\"content\":{{\"state\":\"{0}\"}},\"from\":\"{1}\",\"to\":\"{2}\"}}",
-                state.ToString().ToCamelCase(),
+				"{{\"type\":\"text/plain\",\"content\":\"{0}\",\"from\":\"{1}\",\"to\":\"{2}\"}}",
+				text,
 				from,
 				to
 				);
@@ -1182,7 +1146,42 @@ namespace Lime.Protocol.UnitTests.Serialization
 			Assert.IsNull(message.Pp);
 			Assert.IsNull(message.Metadata);
 
-            Assert.IsTrue(message.Content is ChatState);
+			Assert.IsTrue(message.Content is PlainText);
+			var textContent = (PlainText)message.Content;
+			Assert.AreEqual(text, textContent.Text);
+		}
+
+		[TestMethod]
+		[TestCategory("Deserialize")]
+		public void Deserialize_FireAndForgetChatStateMessage_ReturnsValidInstance()
+		{
+			var target = GetTarget();
+
+			var from = DataUtil.CreateNode();
+			var to = DataUtil.CreateNode();
+
+			var state = ChatStateEvent.Composing;
+
+			string json = string.Format(
+				"{{\"type\":\"application/vnd.lime.chatstate+json\",\"content\":{{\"state\":\"{0}\"}},\"from\":\"{1}\",\"to\":\"{2}\"}}",
+				state.ToString().ToCamelCase(),
+				from,
+				to
+				);
+
+			var envelope = target.Deserialize(json);
+
+			Assert.IsTrue(envelope is Message);
+
+			var message = (Message)envelope;
+			Assert.AreEqual(from, message.From);
+			Assert.AreEqual(to, message.To);
+
+			Assert.AreEqual(message.Id, Guid.Empty);
+			Assert.IsNull(message.Pp);
+			Assert.IsNull(message.Metadata);
+
+			Assert.IsTrue(message.Content is ChatState);
 			var textContent = (ChatState)message.Content;
 			Assert.AreEqual(state, textContent.State);            
 		}
