@@ -32,10 +32,10 @@ namespace Lime.Protocol.Network
 		private readonly IAsyncQueue<Notification> _notificationBuffer;
 		private readonly IAsyncQueue<Session> _sessionBuffer;
 #else
-		private readonly System.Threading.Tasks.Dataflow.BufferBlock<Message> _messageBuffer;
-		private readonly System.Threading.Tasks.Dataflow.BufferBlock<Command> _commandBuffer;
-		private readonly System.Threading.Tasks.Dataflow.BufferBlock<Notification> _notificationBuffer;
-		private readonly System.Threading.Tasks.Dataflow.BufferBlock<Session> _sessionBuffer;
+		private readonly BufferBlock<Message> _messageBuffer;
+		private readonly BufferBlock<Command> _commandBuffer;
+		private readonly BufferBlock<Notification> _notificationBuffer;
+		private readonly BufferBlock<Session> _sessionBuffer;
 #endif
 
         private Task _consumeTransportTask;
