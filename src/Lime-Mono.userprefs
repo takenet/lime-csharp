@@ -1,0 +1,32 @@
+﻿<Properties GitUserInfo="UsingGIT">
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="Lime.Protocol/Lime.Protocol/Network/ChannelBase.cs">
+    <Files>
+      <File FileName="Lime.Protocol/Lime.Protocol/Network/ChannelBase.cs" Line="499" Column="14" />
+      <File FileName="Lime.Protocol/Lime.Protocol/Util/IAsyncQueue.cs" Line="31" Column="18" />
+      <File FileName="Lime.Protocol/Lime.Protocol/Util/AsyncQueue.cs" Line="149" Column="2" />
+      <File FileName="Lime.Protocol.Console.Mono/Program.cs" Line="22" Column="53" />
+      <File FileName="Lime.Protocol/Lime.Protocol/LimeUri.cs" Line="35" Column="19" />
+      <File FileName="Lime.Protocol/Lime.Protocol/Resources/UriTemplates.cs" Line="23" Column="9" />
+    </Files>
+    <Pads>
+      <Pad Id="ProjectPad">
+        <State expanded="True">
+          <Node name="Lime.Protocol" expanded="True">
+            <Node name="Contents" expanded="True" />
+          </Node>
+          <Node name="Lime.Protocol.Console.Mono" expanded="True">
+            <Node name="References" expanded="True" />
+            <Node name="Program.cs" selected="True" />
+          </Node>
+          <Node name="Lime.Protocol.Mono" expanded="True" />
+          <Node name="Lime.Protocol.Tcp.Mono" expanded="True" />
+        </State>
+      </Pad>
+    </Pads>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore />
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+</Properties>

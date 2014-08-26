@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Threading.Tasks.Dataflow;
+
 
 namespace Lime.Protocol.Network
 {
@@ -19,14 +19,25 @@ namespace Lime.Protocol.Network
     {
         #region Fields
         
-        private TimeSpan _sendTimeout;
-        private bool _fillEnvelopeRecipients;
-        private bool _autoReplyPings;
+		private readonly TimeSpan _sendTimeout;
+		private readonly bool _fillEnvelopeRecipients;
+		private readonly bool _autoReplyPings;
 
-        private readonly BufferBlock<Message> _messageBuffer;
-        private readonly BufferBlock<Command> _commandBuffer;
-        private readonly BufferBlock<Notification> _notificationBuffer;
-        private readonly BufferBlock<Session> _sessionBuffer;
+		#if MONO
+
+		private readonly IAsyncQueue<Message> _messageBuffer;
+		private readonly IAsyncQueue<Command> _commandBuffer;
+		private readonly IAsyncQueue<Notification> _notificationBuffer;
+		private readonly IAsyncQueue<Session> _sessionBuffer;
+
+		#else
+
+		private readonly System.Threading.Tasks.Dataflow.BufferBlock<Message> _messageBuffer;
+		private readonly System.Threading.Tasks.Dataflow.BufferBlock<Command> _commandBuffer;
+		private readonly System.Threading.Tasks.Dataflow.BufferBlock<Notification> _notificationBuffer;
+		private readonly System.Threading.Tasks.Dataflow.BufferBlock<Session> _sessionBuffer;
+
+		#endif
 
         private Task _consumeTransportTask;
 
@@ -63,15 +74,26 @@ namespace Lime.Protocol.Network
 
             this.State = SessionState.New;
 
-            var bufferOptions = new DataflowBlockOptions()
-            {
-                BoundedCapacity = buffersLimit
-            };
+			#if MONO
 
-            _messageBuffer = new BufferBlock<Message>(bufferOptions);
-            _commandBuffer = new BufferBlock<Command>(bufferOptions);
-            _notificationBuffer = new BufferBlock<Notification>(bufferOptions);
-            _sessionBuffer = new BufferBlock<Session>(new DataflowBlockOptions() { BoundedCapacity = 1 });
+			_messageBuffer = new AsyncQueue<Message> (buffersLimit, buffersLimit);
+			_commandBuffer = new AsyncQueue<Command> (buffersLimit, buffersLimit);
+			_notificationBuffer = new AsyncQueue<Notification> (buffersLimit, buffersLimit);
+			_sessionBuffer = new AsyncQueue<Session> (1, 1);
+
+			#else
+
+			var bufferOptions = new System.Threading.Tasks.Dataflow.DataflowBlockOptions()
+			{
+				BoundedCapacity = buffersLimit
+			};
+
+			_messageBuffer = new System.Threading.Tasks.Dataflow.BufferBlock<Message>(bufferOptions);
+			_commandBuffer = new System.Threading.Tasks.Dataflow.BufferBlock<Command>(bufferOptions);
+			_notificationBuffer = new System.Threading.Tasks.Dataflow.BufferBlock<Notification>(bufferOptions);
+			_sessionBuffer = new System.Threading.Tasks.Dataflow.BufferBlock<Session>(new DataflowBlockOptions() { BoundedCapacity = 1 });
+
+			#endif
         }
 
         ~ChannelBase()

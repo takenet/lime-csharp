@@ -22,9 +22,21 @@ namespace Lime.Protocol
                 throw new ArgumentNullException("uriPath");
             }
 
-            if (Uri.IsWellFormedUriString(uriPath, UriKind.Absolute))
+			if (Uri.IsWellFormedUriString(uriPath, UriKind.Absolute))
             {
                 _absoluteUri = new Uri(uriPath);
+
+				#if MONO
+				// In Linux, a path like '/presence' is considered
+				// a valid absolute file uri
+
+				if (_absoluteUri.Scheme.Equals(Uri.UriSchemeFile))
+				{
+					_absoluteUri = null;
+				}
+				else
+
+				#endif
 
                 if (!_absoluteUri.Scheme.Equals(LIME_URI_SCHEME))
                 {
