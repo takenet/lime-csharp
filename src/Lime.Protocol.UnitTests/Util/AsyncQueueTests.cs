@@ -27,7 +27,7 @@ namespace Lime.Protocol.UnitTests.Util
             var item1 = DataUtil.CreateRandomString(100);
             var cancellationToken = DataUtil.CreateCancellationToken();
 
-            target.Post(item1);
+			Assert.IsTrue(target.Post(item1));
 
             var actual = await target.ReceiveAsync(cancellationToken);
 
@@ -45,7 +45,7 @@ namespace Lime.Protocol.UnitTests.Util
             var promiseTask = target.ReceiveAsync(cancellationToken);
 
             var item1 = DataUtil.CreateRandomString(100);
-            target.Post(item1);
+			Assert.IsTrue(target.Post(item1));
 
             var actual = await promiseTask;
 
@@ -68,7 +68,7 @@ namespace Lime.Protocol.UnitTests.Util
             Assert.IsFalse(target.HasPromises);
 
             var item1 = DataUtil.CreateRandomString(100);
-            target.Post(item1);
+			Assert.IsTrue(target.Post(item1));
 
             Assert.AreEqual(1, target.BufferCount);
         }
@@ -94,7 +94,7 @@ namespace Lime.Protocol.UnitTests.Util
                 Assert.IsFalse(promiseTaskArray[i].IsCompleted);
 
                 var item1 = DataUtil.CreateRandomString(100);
-                target.Post(item1);
+				Assert.IsTrue(target.Post(item1));
 
                 Assert.IsTrue(promiseTaskArray[i].IsCompleted);
 
@@ -119,8 +119,8 @@ namespace Lime.Protocol.UnitTests.Util
 
             Assert.IsFalse(promiseTask1.IsCompleted);
 
-            target.Post(item1);
-            target.Post(item2);
+			Assert.IsTrue(target.Post(item1));
+			Assert.IsTrue(target.Post(item2));
 
             var promiseTask2 = target.ReceiveAsync(cancellationToken);
             Assert.IsTrue(promiseTask2.IsCompleted);
@@ -134,8 +134,7 @@ namespace Lime.Protocol.UnitTests.Util
 
         [TestMethod]
         [TestCategory("Post")]
-        [ExpectedException(typeof(InvalidOperationException))]
-        public void Post_BufferLimitReached_ThrowsInvalidOperationException()
+		public void Post_BufferLimitReached_ReturnsFalse()
         {
             var target = GetTarget<string>(
                 bufferLimit: 2
@@ -145,9 +144,9 @@ namespace Lime.Protocol.UnitTests.Util
             var item2 = DataUtil.CreateRandomString(100);
             var item3 = DataUtil.CreateRandomString(100);
 
-            target.Post(item1);
-            target.Post(item2);
-            target.Post(item3);            
+			Assert.IsTrue(target.Post(item1));
+			Assert.IsTrue(target.Post(item2));
+			Assert.IsFalse(target.Post(item3));
         }
 
         #endregion
