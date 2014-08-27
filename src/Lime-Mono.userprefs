@@ -1,24 +1,6 @@
 ﻿<Properties GitUserInfo="UsingGIT">
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
-  <MonoDevelop.Ide.Workbench>
-    <Pads>
-      <Pad Id="ProjectPad">
-        <State expanded="True">
-          <Node name="Lime.Protocol" expanded="True">
-            <Node name="Contents" expanded="True" />
-          </Node>
-          <Node name="Lime.Protocol.Console.Mono" expanded="True">
-            <Node name="References" expanded="True" />
-            <Node name="Program.cs" selected="True" />
-          </Node>
-          <Node name="Lime.Protocol.Mono" expanded="True" />
-          <Node name="Lime.Protocol.Tcp.Mono" expanded="True">
-            <Node name="Properties" expanded="True" />
-          </Node>
-        </State>
-      </Pad>
-    </Pads>
-  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.Workbench />
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
     <BreakpointStore />
   </MonoDevelop.Ide.DebuggingService.Breakpoints>

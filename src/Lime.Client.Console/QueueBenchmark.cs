@@ -40,15 +40,15 @@ namespace Lime.Client.Console
 
             var target = new BufferBlock<string>();
 
-            var enqueueTasks = new Task[count];
+            var PostTasks = new Task[count];
             var dequeueTasks = new Task<string>[count];
 
-            var enqueueSetupTask = Task.Run(() =>
+            var PostSetupTask = Task.Run(() =>
             {
                 for (int i = 0; i < count; i++)
                 {
                     var item = "HVQFSW613ACT65DOS2ILBA4G4QB3UP3K4PPZPB7UZ771SX9TX7DVNZR82W1TSHWDBZHIE8V6CGILADRFQ3QA76BOYA4T3XS7A8OQ3I2FCT8X04L2GXR3RY23WB2A0ZLNT58WCMZTY54PRPOVVENCMOJMCZC6D85H9HPGJ58BBOHN7PJ0G3QTDSB8K4ACT26QXG5D30WI";
-                    enqueueTasks[i] = Task.Run(() => target.Post(item));
+                    PostTasks[i] = Task.Run(() => target.Post(item));
                 }
             });
 
@@ -60,9 +60,9 @@ namespace Lime.Client.Console
                 }
             });
 
-            await Task.WhenAll(enqueueSetupTask, dequeueSetupTask);
+            await Task.WhenAll(PostSetupTask, dequeueSetupTask);
             await Task.WhenAll(dequeueTasks);
-            await Task.WhenAll(enqueueTasks);
+            await Task.WhenAll(PostTasks);
 
             if (target.Count != 0)
             {
@@ -77,15 +77,15 @@ namespace Lime.Client.Console
 
             var target = new AsyncQueue<string>(count, count);
 
-            var enqueueTasks = new Task[count];
+            var PostTasks = new Task[count];
             var dequeueTasks = new Task<string>[count];
 
-            var enqueueSetupTask = Task.Run(() =>
+            var PostSetupTask = Task.Run(() =>
             {
                 for (int i = 0; i < count; i++)
                 {
                     var item = "HVQFSW613ACT65DOS2ILBA4G4QB3UP3K4PPZPB7UZ771SX9TX7DVNZR82W1TSHWDBZHIE8V6CGILADRFQ3QA76BOYA4T3XS7A8OQ3I2FCT8X04L2GXR3RY23WB2A0ZLNT58WCMZTY54PRPOVVENCMOJMCZC6D85H9HPGJ58BBOHN7PJ0G3QTDSB8K4ACT26QXG5D30WI";
-                    enqueueTasks[i] = Task.Run(() => target.Enqueue(item));
+                    PostTasks[i] = Task.Run(() => target.Post(item));
                 }
             });
 
@@ -93,13 +93,13 @@ namespace Lime.Client.Console
             {
                 for (int i = 0; i < count; i++)
                 {
-                    dequeueTasks[i] = target.DequeueAsync(cancellationToken);
+                    dequeueTasks[i] = target.ReceiveAsync(cancellationToken);
                 }
             });
 
-            await Task.WhenAll(enqueueSetupTask, dequeueSetupTask);
+            await Task.WhenAll(PostSetupTask, dequeueSetupTask);
             await Task.WhenAll(dequeueTasks);
-            await Task.WhenAll(enqueueTasks);
+            await Task.WhenAll(PostTasks);
 
             if (target.BufferCount != 0 ||
                 target.PromisesCount != 0)

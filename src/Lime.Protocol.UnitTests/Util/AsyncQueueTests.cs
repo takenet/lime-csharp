@@ -16,36 +16,36 @@ namespace Lime.Protocol.UnitTests.Util
                 promisesLimit,
                 bufferLimit);
         }
-        #region Enqueue
+        #region Post
 
         [TestMethod]
-        [TestCategory("Enqueue")]
-        public async Task Enqueue_NoPromisses_GoesToBuffer()
+        [TestCategory("Post")]
+        public async Task Post_NoPromisses_GoesToBuffer()
         {
             var target = GetTarget<string>();
 
             var item1 = DataUtil.CreateRandomString(100);
             var cancellationToken = DataUtil.CreateCancellationToken();
 
-            target.Enqueue(item1);
+            target.Post(item1);
 
-            var actual = await target.DequeueAsync(cancellationToken);
+            var actual = await target.ReceiveAsync(cancellationToken);
 
             Assert.AreEqual(item1, actual);
         }
 
         [TestMethod]
-        [TestCategory("Enqueue")]
-        public async Task Enqueue_HasOnePromise_CompletePromise()
+        [TestCategory("Post")]
+        public async Task Post_HasOnePromise_CompletePromise()
         {
             var target = GetTarget<string>();
 
             var cancellationToken = DataUtil.CreateCancellationToken();
 
-            var promiseTask = target.DequeueAsync(cancellationToken);
+            var promiseTask = target.ReceiveAsync(cancellationToken);
 
             var item1 = DataUtil.CreateRandomString(100);
-            target.Enqueue(item1);
+            target.Post(item1);
 
             var actual = await promiseTask;
 
@@ -53,14 +53,14 @@ namespace Lime.Protocol.UnitTests.Util
         }
 
         [TestMethod]
-        [TestCategory("Enqueue")]
-        public void Enqueue_HasOneCancelledPromise_GoesToBuffer()
+        [TestCategory("Post")]
+        public void Post_HasOneCancelledPromise_GoesToBuffer()
         {
             var target = GetTarget<string>();
 
             var cancellationTokenSource = DataUtil.CreateCancellationTokenSource();
 
-            var promiseTask = target.DequeueAsync(cancellationTokenSource.Token);
+            var promiseTask = target.ReceiveAsync(cancellationTokenSource.Token);
 
             cancellationTokenSource.Cancel();
 
@@ -68,14 +68,14 @@ namespace Lime.Protocol.UnitTests.Util
             Assert.IsFalse(target.HasPromises);
 
             var item1 = DataUtil.CreateRandomString(100);
-            target.Enqueue(item1);
+            target.Post(item1);
 
             Assert.AreEqual(1, target.BufferCount);
         }
 
         [TestMethod]
-        [TestCategory("Enqueue")]
-        public async Task Enqueue_HasMultiplePromises_CompletePromises()
+        [TestCategory("Post")]
+        public async Task Post_HasMultiplePromises_CompletePromises()
         {
             var target = GetTarget<string>();
 
@@ -86,7 +86,7 @@ namespace Lime.Protocol.UnitTests.Util
 
             for (int i = 0; i < promisesCount; i++)
             {
-                promiseTaskArray[i] = target.DequeueAsync(cancellationToken);
+                promiseTaskArray[i] = target.ReceiveAsync(cancellationToken);
             }
 
             for (int i = 0; i < promisesCount; i++)
@@ -94,7 +94,7 @@ namespace Lime.Protocol.UnitTests.Util
                 Assert.IsFalse(promiseTaskArray[i].IsCompleted);
 
                 var item1 = DataUtil.CreateRandomString(100);
-                target.Enqueue(item1);
+                target.Post(item1);
 
                 Assert.IsTrue(promiseTaskArray[i].IsCompleted);
 
@@ -105,24 +105,24 @@ namespace Lime.Protocol.UnitTests.Util
         }
 
         [TestMethod]
-        [TestCategory("Enqueue")]
-        public async Task Enqueue_TwiceHasOnePromise_CompletePromiseAndGoesToBuffer()
+        [TestCategory("Post")]
+        public async Task Post_TwiceHasOnePromise_CompletePromiseAndGoesToBuffer()
         {
             var target = GetTarget<string>();
 
             var cancellationToken = DataUtil.CreateCancellationToken();
 
-            var promiseTask1 = target.DequeueAsync(cancellationToken);
+            var promiseTask1 = target.ReceiveAsync(cancellationToken);
 
             var item1 = DataUtil.CreateRandomString(100);
             var item2 = DataUtil.CreateRandomString(100);
 
             Assert.IsFalse(promiseTask1.IsCompleted);
 
-            target.Enqueue(item1);
-            target.Enqueue(item2);
+            target.Post(item1);
+            target.Post(item2);
 
-            var promiseTask2 = target.DequeueAsync(cancellationToken);
+            var promiseTask2 = target.ReceiveAsync(cancellationToken);
             Assert.IsTrue(promiseTask2.IsCompleted);
 
             var actual1 = await promiseTask1;
@@ -133,9 +133,9 @@ namespace Lime.Protocol.UnitTests.Util
         }
 
         [TestMethod]
-        [TestCategory("Enqueue")]
+        [TestCategory("Post")]
         [ExpectedException(typeof(InvalidOperationException))]
-        public void Enqueue_BufferLimitReached_ThrowsInvalidOperationException()
+        public void Post_BufferLimitReached_ThrowsInvalidOperationException()
         {
             var target = GetTarget<string>(
                 bufferLimit: 2
@@ -145,28 +145,28 @@ namespace Lime.Protocol.UnitTests.Util
             var item2 = DataUtil.CreateRandomString(100);
             var item3 = DataUtil.CreateRandomString(100);
 
-            target.Enqueue(item1);
-            target.Enqueue(item2);
-            target.Enqueue(item3);            
+            target.Post(item1);
+            target.Post(item2);
+            target.Post(item3);            
         }
 
         #endregion
 
-        #region DequeueAsync
+        #region ReceiveAsync
 
         [TestMethod]
-        [TestCategory("DequeueAsync")]
-        public async Task DequeueAsync_HasBuffer_GetsFromTheBuffer()
+        [TestCategory("ReceiveAsync")]
+        public async Task ReceiveAsync_HasBuffer_GetsFromTheBuffer()
         {
             var target = GetTarget<string>();
             var cancellationToken = DataUtil.CreateCancellationToken();
 
             var item1 = DataUtil.CreateRandomString(100);
-            target.Enqueue(item1);
+            target.Post(item1);
 
             Assert.IsTrue(target.BufferCount == 1);
 
-            var promiseTask1 = target.DequeueAsync(cancellationToken);
+            var promiseTask1 = target.ReceiveAsync(cancellationToken);
             Assert.IsTrue(promiseTask1.IsCompleted);
             Assert.IsTrue(target.BufferCount == 0);
 
@@ -176,8 +176,8 @@ namespace Lime.Protocol.UnitTests.Util
         }
 
         [TestMethod]
-        [TestCategory("DequeueAsync")]
-        public void DequeueAsync_EmptyBuffer_GetsPromiseAndRaisesPromiseAdded()
+        [TestCategory("ReceiveAsync")]
+        public void ReceiveAsync_EmptyBuffer_GetsPromiseAndRaisesPromiseAdded()
         {
             var target = GetTarget<string>();
             bool promiseAddedRaised = false;
@@ -187,7 +187,7 @@ namespace Lime.Protocol.UnitTests.Util
             var cancellationToken = DataUtil.CreateCancellationToken();
             Assert.IsTrue(target.BufferCount == 0);
 
-            var promiseTask1 = target.DequeueAsync(cancellationToken);
+            var promiseTask1 = target.ReceiveAsync(cancellationToken);
             Assert.IsFalse(promiseTask1.IsCompleted);
             Assert.IsTrue(promiseAddedRaised);
         }
@@ -201,30 +201,30 @@ namespace Lime.Protocol.UnitTests.Util
                 promisesLimit: 2);
             var cancellationToken = DataUtil.CreateCancellationToken();
 
-            var promiseTask1 = target.DequeueAsync(cancellationToken);
-            var promiseTask2 = target.DequeueAsync(cancellationToken);
-            var promiseTask3 = target.DequeueAsync(cancellationToken);
+            var promiseTask1 = target.ReceiveAsync(cancellationToken);
+            var promiseTask2 = target.ReceiveAsync(cancellationToken);
+            var promiseTask3 = target.ReceiveAsync(cancellationToken);
         }
 
         [TestMethod]
         [TestCategory("Dequeue")]
-        [TestCategory("Enqueue")]
-        public async Task DequeueEnqueue_ConcurrentAccess_CompletePromises()
+        [TestCategory("Post")]
+        public async Task DequeuePost_ConcurrentAccess_CompletePromises()
         {
             var count = DataUtil.CreateRandomInt(1000);
             var cancellationToken = DataUtil.CreateCancellationToken();
 
             var target = GetTarget<string>(count, count);
 
-            var enqueueTasks = new Task[count];
+            var PostTasks = new Task[count];
             var dequeueTasks = new Task<string>[count];           
 
-            var enqueueSetupTask = Task.Run(() =>
+            var PostSetupTask = Task.Run(() =>
                 {
                     for (int i = 0; i < count; i++)
                     {
                         var item = DataUtil.CreateRandomString(100);
-                        enqueueTasks[i] = Task.Run(() => target.Enqueue(item));
+                        PostTasks[i] = Task.Run(() => target.Post(item));
                     }
                 });
 
@@ -233,13 +233,13 @@ namespace Lime.Protocol.UnitTests.Util
                 for (int i = 0; i < count; i++)
                 {
                     var item = DataUtil.CreateRandomString(100);
-                    dequeueTasks[i] = target.DequeueAsync(cancellationToken);
+                    dequeueTasks[i] = target.ReceiveAsync(cancellationToken);
                 }
             });
 
-            await Task.WhenAll(enqueueSetupTask, dequeueSetupTask);
+            await Task.WhenAll(PostSetupTask, dequeueSetupTask);
             await Task.WhenAll(dequeueTasks);
-            await Task.WhenAll(enqueueTasks);
+            await Task.WhenAll(PostTasks);
 
             Assert.IsTrue(target.BufferCount == 0);
             Assert.IsTrue(target.PromisesCount == 0);
@@ -248,4 +248,3 @@ namespace Lime.Protocol.UnitTests.Util
         #endregion
     }
 }
-
