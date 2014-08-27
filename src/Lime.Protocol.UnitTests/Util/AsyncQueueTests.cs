@@ -176,23 +176,6 @@ namespace Lime.Protocol.UnitTests.Util
         }
 
         [TestMethod]
-        [TestCategory("ReceiveAsync")]
-        public void ReceiveAsync_EmptyBuffer_GetsPromiseAndRaisesPromiseAdded()
-        {
-            var target = GetTarget<string>();
-            bool promiseAddedRaised = false;
-
-            target.PromiseAdded += (sender, e) => promiseAddedRaised = true;
-
-            var cancellationToken = DataUtil.CreateCancellationToken();
-            Assert.IsTrue(target.BufferCount == 0);
-
-            var promiseTask1 = target.ReceiveAsync(cancellationToken);
-            Assert.IsFalse(promiseTask1.IsCompleted);
-            Assert.IsTrue(promiseAddedRaised);
-        }
-
-        [TestMethod]
         [TestCategory("Dequeue")]
         [ExpectedException(typeof(InvalidOperationException))]
         public void Dequeue_PromisesLimitReached_ThrowsInvalidOperationException()
