@@ -34,47 +34,24 @@
         </li>
     </ul>
 
-    <p>The nodes communicate with each other over persistent connections, like TCP or Websockets. The protocol is asynchronous, so there's no guarantee of delivery order of the envelopes, except during the session negotiation, where only session envelopes are allowed. When connected, each node can have a different role with distinct capabilities. These roles and their capabilities are:</p>
-    <ul>
-        <li>
-            <strong>Node</strong>
-            <ul>
-                <li>Can send and receive messages, commands and notifications.</li>
-                <li>Can connect to servers.</li>
-                <li>Can start the session establishment when connected to a server.</li>
-            </ul>
-        </li>
-        <li>
-            <strong>Server</strong>
-            <ul>
-                <li>Has the same capabilities of the nodes.</li>
-                <li>Can establish a session.</li>
-                <li>Can forward messages in behalf of a node to other servers and nodes.</li>
-                <li>Can store resources owned by other identities than the server identity.</li>
-                <li>Can manipulate a specific set of resources of the domain servers.</li>
-            </ul>
-        </li>
-        <li>
-            <strong>Application</strong>
-            <ul>
-                <li>Has the same capabilities of the nodes.</li>
-                <li>Can receive messages and commands addressed to nodes in a specific subdomain.</li>
-                <li>Can manipulate a specific set of resources of the server.</li>
-            </ul>
-        </li>
-        <li>
-            <strong>Gateway</strong>
-            <ul>
-                <li>Has the same capabilities of the nodes.</li>
-                <li>Can receive messages addressed to a specific domain, different of the server domain.</li>
-                <li>Can manipulate a specific set of resources of the server.</li>
-            </ul>
-        </li>
-    </ul>
+    <p>
+        The nodes communicate with each other over persistent connections, like TCP or Websockets. 
+        The protocol is asynchronous, so there's no guarantee of delivery order of the envelopes, except during the session negotiation, where only session envelopes are allowed. 
+    </p>
 
     <p>Every connected node must have an identity, presented in the <em>name@domain</em> format, as defined by the <a href="http://tools.ietf.org/html/rfc2822#section-3.4.1">RFC 2822, section 3.4.1</a>. The domain name should be a valid domain (i.e. can be resolved by a DNS server) and the name a valid user account identifier in the domain. The identity is authenticated by the server during the establishment of the session.</p>
     <p>In addition to the identity, the connected node can suggest a name to the particular connection using a identifier called <em>instance</em>. This identifier should appears after the identity, separated by a slash (/) symbol, during the session authentication process. Since one identity can have more than one active connection in a domain, the <em>instance</em> should be used to differentiate these connections. Normally is used the name of the device (John-Cellphone, John-PC) but can be any valid string. If not provided, the server will set a generic value.</p>
     <p>Therewith, the complete format of a node identifier is <em>name@domain/instance</em>, similar to the <a href="http://xmpp.org/rfcs/rfc3920.html#rfc.section.3">XMPP's Jabber ID</a> (the difference is that the identifier located after the slash is called <em>instance</em> instead of <em>resource</em>). The node identifier must be unique in a LIME network and a envelope addressed to a specific node should be delivered to a connection with that identifier (except for <a href="http://limeprotocol.org/resourcetypes#presence">promiscuous sessions</a>). envelopes addressed to a identity (<em>name@domain</em>) can be routed in different ways, according to the node presence configuration: A node can opt to always receive all messages sent to the identity, or to receive if it have the highest priority (like XMPP) or only receive if are addressed to the specific instance.</p>
+    
+    <p>When connected, a client node can be authenticated by the server node in two levels: </p>
+    <ul>
+        <li>
+            <strong>Identity</strong> - The connected node represents a single member of a domain.
+        </li>
+        <li>
+            <strong>Domain</strong> - The connected node represents all members of a domain. In this case, the client node is able to originate and receive envelopes addressed to any member of the specified domain. For this level of authentication, the server node usually requires a trusted domain certificate from the client node. This level of authentication is useful for connecting servers in the same domain (cluster), in sub-domains (applications) or in different domains (inter-domain).
+        </li>
+    </ul>
 
     <h3 id="envelope">Envelope</h3>
     <p>The JSON documents exchanged in a LIME conversation are called envelopes. The JSON data must be compliant with the <a href="http://tools.ietf.org/html/rfc4627">RFC 4627</a> specification, using the <a href="http://tools.ietf.org/html/rfc3629">UTF-8</a> encoding.</p>
@@ -766,7 +743,7 @@ S:
             </ul>
             <ul>
                 <li>
-                    <strong>tls</strong> - The session will be encrypted by TLS.
+                    <strong>tls</strong> - The session will be encrypted by TLS. This options is required for transport authentication in TCP transport connections.
                 </li>
             </ul>
         </li>
@@ -797,6 +774,9 @@ S:
                 </li>
                 <li>
                     <strong>plain</strong> - User and password authentication.
+                </li>
+                <li>
+                    <strong>transport</strong> - The authentication is made in the transport level. For the TCP transport, this indicates a TLS/SSL client authentication, which requires a certificate from the client. This certificate should be already presented during the session negotiation state, after the confirmation of the encryption options, in the TLS handshake.
                 </li>
             </ul>
         </li>
