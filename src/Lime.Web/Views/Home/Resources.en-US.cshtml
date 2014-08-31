@@ -944,7 +944,8 @@ C:
                 "instance",
                 "identity",
                 "identityByPriority",
-                "promiscuous"
+                "promiscuous",
+                "domain"
             ]
         },
         "priority" : {
@@ -1001,8 +1002,7 @@ C:
                     <strong>promiscuous</strong> - Delivery any envelopes addressed to the identity (<em>name@@domain</em>), including the envelopes addressed to any specific instance.
                 </li>
                 <li>
-                    <strong>domain</strong> - Delivery any envelopes addressed to the node domain (<em>name@@domain</em>), including the envelopes addressed to any specific instance.
-                    This rule can be used only by domain authorities.
+                    <strong>domain</strong> - Delivery any envelopes addressed to the node domain, including the envelopes addressed to any specific instance. This rule can be used only by clients with domain authentication level.
                 </li>
             </ul>
         </li>
