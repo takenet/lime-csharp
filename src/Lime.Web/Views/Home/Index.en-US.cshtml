@@ -40,8 +40,8 @@
     </p>
 
     <p>Every connected node must have an identity, presented in the <em>name@domain</em> format, as defined by the <a href="http://tools.ietf.org/html/rfc2822#section-3.4.1">RFC 2822, section 3.4.1</a>. The domain name should be a valid domain (i.e. can be resolved by a DNS server) and the name a valid user account identifier in the domain. The identity is authenticated by the server during the establishment of the session.</p>
-    <p>In addition to the identity, the connected node can suggest a name to the particular connection using a identifier called <em>instance</em>. This identifier should appears after the identity, separated by a slash (/) symbol, during the session authentication process. Since one identity can have more than one active connection in a domain, the <em>instance</em> should be used to differentiate these connections. Normally is used the name of the device (John-Cellphone, John-PC) but can be any valid string. If not provided, the server will set a generic value.</p>
-    <p>Therewith, the complete format of a node identifier is <em>name@domain/instance</em>, similar to the <a href="http://xmpp.org/rfcs/rfc3920.html#rfc.section.3">XMPP's Jabber ID</a> (the difference is that the identifier located after the slash is called <em>instance</em> instead of <em>resource</em>). The node identifier must be unique in a LIME network and a envelope addressed to a specific node should be delivered to a connection with that identifier (except for <a href="http://limeprotocol.org/resourcetypes#presence">promiscuous sessions</a>). envelopes addressed to a identity (<em>name@domain</em>) can be routed in different ways, according to the node presence configuration: A node can opt to always receive all messages sent to the identity, or to receive if it have the highest priority (like XMPP) or only receive if are addressed to the specific instance.</p>
+    <p>In addition to the identity, the connected node can suggest a name to the particular connection using a identifier called <em>instance</em>. This identifier should appears after the identity, separated by a slash (/) symbol, during the session authentication process. One identity can have more than one active connection in a domain so the <em>instance</em> should be used to differentiate these connections. Usually is used the name of the device (John-Cellphone, John-PC) but can be any valid string. If not provided, the server will set a default value.</p>
+    <p>Therewith, the complete format of a node identifier is <em>name@domain/instance</em>, similar to the <a href="http://xmpp.org/rfcs/rfc3920.html#rfc.section.3">XMPP's Jabber ID</a> (the difference is that the identifier located after the slash is called <em>instance</em> instead of <em>resource</em>). The node identifier must be unique in a LIME network and a envelope addressed to a specific node should be delivered to a connection with that identifier (except for <a href="http://limeprotocol.org/resourcetypes#presence">promiscuous sessions</a>). Envelopes addressed to an identity (<em>name@domain</em>) can be routed in different ways, according to the node presence configuration: A node can opt to always receive all messages sent to the identity, or to receive if it have the highest priority (like XMPP) or only receive if are addressed to the specific instance.</p>
     
     <p>When connected, a client node can be authenticated by the server node in two levels: </p>
     <ul>
@@ -49,13 +49,14 @@
             <strong>Identity</strong> - The connected node represents a single member of a domain.
         </li>
         <li>
-            <strong>Domain</strong> - The connected node represents all members of a domain. In this case, the client node is able to originate and receive envelopes addressed to any member of the specified domain. For this level of authentication, the server node usually requires a trusted domain certificate from the client node. This level of authentication is useful for connecting servers in the same domain (cluster), in sub-domains (applications) or in different domains (inter-domain).
+            <strong>Domain</strong> - The connected node represents all members of a domain. This authentication level allows the client to set the <em>domain</em> routing rule in the <a href="http://limeprotocol.org/resourcetypes#presence">presence</a> resource. In this case, the client node is able to originate and receive envelopes addressed to any member of the specified domain. 
+            For this level of authentication, the server node usually requires a trusted domain certificate from the client node. This level of authentication is useful for connecting servers in the same domain (cluster), in sub-domains (applications) or in different domains (gateways).
         </li>
     </ul>
 
     <h3 id="envelope">Envelope</h3>
     <p>The JSON documents exchanged in a LIME conversation are called envelopes. The JSON data must be compliant with the <a href="http://tools.ietf.org/html/rfc4627">RFC 4627</a> specification, using the <a href="http://tools.ietf.org/html/rfc3629">UTF-8</a> encoding.</p>
-    <p>Each envelope may contains the following properties:</p>
+    <p>Every envelope may contains the following properties:</p>
     <ul>
         <li>
             <strong>from</strong> - Identifier of the sender node of the envelope, in the <em>name@domain/instance</em> format. 
@@ -121,19 +122,19 @@
     <p>In a message, the following constraints should apply to the envelope properties:</p>
     <ul>
         <li>
-            <strong>id</strong> - optional. The sender just need provide this information in order to receive notifications related to the message. If not provided, the message is processed in the <em>fire-and-forget</em> mode.
+            <strong>id</strong> - Optional. The sender just need provide this information in order to receive notifications related to the message. If not provided, the message is processed in the <em>fire-and-forget</em> mode.
         </li>
         <li>
-            <strong>from</strong> - optional for the sender, since the value can be determined by the server in the session. mandatory in the destination.
+            <strong>from</strong> - Optional for the sender, since the value can be determined by the server in the session. mandatory in the destination.
         </li>
         <li>
-            <strong>to</strong> - mandatory for the sender, but is allowed to ommit the value of the <em>instance</em> (the server will route the envelope according to the routing rule chosen by the destination) and/or <em>domain</em> (the server will assume that the destination is in the same domain of the sender) properties. optional in the destination.
+            <strong>to</strong> - Mandatory for the sender, but is allowed to ommit the value of the <em>instance</em> (the server will route the envelope according to the routing rule chosen by the destination) and/or <em>domain</em> (the server will assume that the destination is in the same domain of the sender) properties. optional in the destination.
         </li>
         <li>
-            <strong>pp</strong> - optional for the sender, when is considered the identity of the session. Is mandatory in the destination if the identity of the originator is different of the identity of the <em>from</em> property.
+            <strong>pp</strong> - Optional for the sender, when is considered the identity of the session. Is mandatory in the destination if the identity of the originator is different of the identity of the <em>from</em> property.
         </li>
         <li>
-            <strong>metadata</strong> - The sender should avoid to use this property to transport any kind of content-related information, but merely data relevant to the context of the communication. Consider to define a new content type if there's a need to include more content information into the message.
+            <strong>metadata</strong> - Optional. The sender should avoid to use this property to transport any kind of content-related information, but merely data relevant to the context of the communication. Consider to define a new content type if there's a need to include more content information into the message.
         </li>
 
     </ul>
@@ -157,7 +158,7 @@
 
     <p class="lead">Examples</p>
 
-    <p><em>Fire-and-forget</em> text message (no id):</p>
+    <p><em>Fire-and-forget</em> (no id) text message:</p>
 <pre>
 <code class="json">
 {
@@ -182,7 +183,7 @@
         "thread": 2
     },
     "metadata": {
-        "serverIp": "192.168.0.1"
+        "senderIp": "192.168.0.1"
     }
 }
 </code>
@@ -268,13 +269,13 @@
             <strong>from</strong> - Optional. If the value is not present in the destination, it means that the notification was generated by the connected node (server).
         </li>
         <li>
-            <strong>to</strong> - Mmandatory for the sender and optional in the destination. The sender can ommit the value of the <em>domain</em>.
+            <strong>to</strong> - Mandatory for the sender and optional in the destination. The sender can ommit the value of the <em>domain</em>.
         </li>
         <li>
             <strong>pp</strong> - Optional for the sender, when is considered the identity of the session. Is mandatory in the destination if the identity of the originator is different of the identity of the <em>from</em> property.
         </li>
         <li>
-            <strong>metadata</strong> - Avoid to use this property to transport any event-related data.
+            <strong>metadata</strong> - Optional. Avoid to use this property to transport any event-related data.
         </li>
     </ul>
 
@@ -438,7 +439,7 @@
             <strong>pp</strong> - Optional. This property is useful to get resources in the server owned by different identities, like presence and account information. The value should be defined if the resource of an <em>observe</em> method command is owned by a different identity than the destination.
         </li>
         <li>
-            <strong>metadata</strong> - Avoid to use this property to transport any command-related data, like extra parameters.
+            <strong>metadata</strong> - Optional. Avoid to use this property to transport any command-related data, like extra parameters.
         </li>
     </ul>
 
@@ -457,7 +458,7 @@
                     <strong>delete</strong> - Deletes a value of the resource or the resource itself.
                 </li>
                 <li>
-                    <strong>observe</strong> - Notify the destination about a change in the resource value of the sender. This method is one way and the destination should not send a response for it. Because of that, a command envelope with this method may not have an <em>id</em>.
+                    <strong>observe</strong> - Notify the destination about a change in the resource value of the sender. Commands with this method are one-way and the destination should not send a response for it. Because of that, these commands may not have an <em>id</em>.
                 </li>
             </ul>
         </li>
@@ -479,7 +480,7 @@
     <p>In addition of the above, the command response may contains the following properties:</p>
     <ul>
         <li>
-            <strong>status</strong> - Result status of the command processing. The valid values are:
+            <strong>status</strong> - Result status of the command processing. Mandatory in response commands. The valid values are:
             <ul>
                 <li>
                     <strong>success</strong> - The command was processed successfully. In cases of command of method <em>get</em>, the property <em>resource</em> of the response should have a value.
@@ -690,13 +691,13 @@ S:
             <strong>id</strong> - Mandatory, except in the first request sent by the client (<em>new</em> state). This value is generated by the server in the first session envelope sent to the client.
         </li>
         <li>
-            <strong>from</strong> - Mandatory for the client during the session authentication. Otherwise, is optional.
+            <strong>from</strong> - Mandatory for the client during the session authentication. Otherwise, is optional. The client may ommit the <em>instance</em> value. In this case, the server will define a default instance value.
         </li>
         <li>
             <strong>to</strong> - Optional.
         </li>
         <li>
-            <strong>pp</strong> - not APPLICABLE.
+            <strong>pp</strong> - Not applicable.
         </li>
         <li>
             <strong>metadata</strong> - The server should ignore any value set in this property by the client but it can use this property to send statistics about itself (serverVersion, lastConnectionDate, and so) to the client.
