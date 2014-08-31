@@ -14,30 +14,14 @@
 
     <h4>MIME type</h4>
 <pre>
-    application/vnd.lime.text+json
+    text/plain
 </pre>
 
-    <h4>JSON Schema</h4>
-<pre>
-<code class="json-schema">
-{
-    "$schema": "http://json-schema.org/draft-04/schema#",
-    "title": "Message",
-    "type": "object",
-    "properties": {
-        "text": {
-            "type": "string"
-        },        
-    },
-    "required": [ "text" ]
-}
-</code>
-</pre>
 
     <h4>Properties</h4>
     <ul>
         <li>
-            <strong>text</strong> - The actual message text.
+            <strong>content</strong> - The escaped value of the message text. 
         </li>
     </ul>
 
@@ -47,10 +31,8 @@
 {
     "from": "jesse@breakingbad.com/junkyard",
     "to": "heisenberg@breakingbad.com",
-    "type": "application/vnd.lime.text+json",
-    "content": {
-        "text": "Yeah, bitch! Magnets!"
-    }        
+    "type": "text/plain",
+    "content":  "Yeah, bitch! Magnets!"
 }
 </code>
 </pre>
