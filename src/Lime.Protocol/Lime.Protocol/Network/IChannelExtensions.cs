@@ -275,6 +275,11 @@ namespace Lime.Protocol.Network
                 throw new ArgumentNullException("channel");
             }
 
+            if (requestCommand == null)
+            {
+                throw new ArgumentNullException("requestCommand");
+            }
+
             await _processCommandSemaphore.WaitAsync().ConfigureAwait(false);
 
             try
