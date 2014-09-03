@@ -64,8 +64,12 @@ C# LIME protocol implementation
             CancellationToken.None);
 
         // Apply the options to the transport
-        await transport.SetCompressionAsync(receivedSession.Compression.Value, CancellationToken.None);
-        await transport.SetEncryptionAsync(receivedSession.Encryption.Value, CancellationToken.None);
+        await transport.SetCompressionAsync(
+            receivedSession.Compression.Value, 
+            CancellationToken.None);
+        await transport.SetEncryptionAsync(
+        receivedSession.Encryption.Value, 
+        CancellationToken.None);
 
         // Receive the authentication options
         receivedSession = await clientChannel.ReceiveAuthenticatingSessionAsync(CancellationToken.None);
@@ -92,7 +96,7 @@ C# LIME protocol implementation
     // Awaits for the session end
     receivedSession = await clientChannel.ReceiveFinishedSessionAsync(CancellationToken.None);
 
-´´´
+```
 
 ### Messages and notifications
 
@@ -107,26 +111,24 @@ C# LIME protocol implementation
             Text = "Hello!"
         }
     };
-
     await clientChannel.SendMessageAsync(message);
-            
+    
     // Receive a message
     var receivedMessage = await clientChannel.ReceiveMessageAsync(CancellationToken.None);
     Console.WriteLine("Message received from {0}: {1}", receivedMessage.From, receivedMessage.Content);
-
+    
     // Send a notification
     var notification = new Notification()
     {
         Id = receivedMessage.Id,
         Event = Event.Received
     };
-
+    
     await clientChannel.SendNotificationAsync(notification);
-
+    
     // Receive a notification
     var receivedNotification = await clientChannel.ReceiveNotificationAsync(CancellationToken.None);
     Console.WriteLine("Notification received from {0}: {1}", receivedNotification.From, receivedNotification.Event);
-
 
 ```
 
@@ -237,8 +239,12 @@ C# LIME protocol implementation
         receivedSession.Encryption.Value);
 
     // Apply the options to the transport
-    await transport.SetCompressionAsync(receivedSession.Compression.Value, CancellationToken.None);
-    await transport.SetEncryptionAsync(receivedSession.Encryption.Value, CancellationToken.None);
+    await transport.SetCompressionAsync(
+        receivedSession.Compression.Value, 
+        CancellationToken.None);
+    await transport.SetEncryptionAsync(
+        receivedSession.Encryption.Value, 
+        CancellationToken.None);
 
     // Send the authentication schemes options and receive the authentication
     var schemeOptions = new AuthenticationScheme[] { AuthenticationScheme.Plain };
