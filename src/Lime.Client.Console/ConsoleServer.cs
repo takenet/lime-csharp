@@ -24,9 +24,7 @@ namespace Lime.Client.Console
         private static Uri _listenerUri;
         private ITransportListener _listener;
         private IDictionary<Guid, IServerChannel> _serverConnectedNodesDictionary;
-
         private IDictionary<Identity, IDictionary<string, Guid>> _identityInstanceSessionIdDictionary;
-
         private IDictionary<Identity, string> _identityPasswordDictionary;
         private Node _serverNode;
 
@@ -176,7 +174,7 @@ namespace Lime.Client.Console
                             if (_identityPasswordDictionary.TryGetValue(authenticatedSession.From.ToIdentity(), out password) &&
                                 password.Equals(plainAuthentication.GetFromBase64Password()))
                             {
-                                await RegisterChannel(channel, cancellationToken, authenticatedSession.From);
+                                await RegisterChannel(channel, authenticatedSession.From, cancellationToken);
                             }
                             else
                             {
@@ -199,7 +197,7 @@ namespace Lime.Client.Console
 
                                 if (await authenticableTransport.AuthenticateAsync(authenticatedSession.From.ToIdentity()) != DomainRole.Unknown)
                                 {
-                                    await RegisterChannel(channel, cancellationToken, authenticatedSession.From);
+                                    await RegisterChannel(channel, authenticatedSession.From, cancellationToken);
                                 }
                                 else
                                 {
@@ -210,7 +208,6 @@ namespace Lime.Client.Console
                                             Description = "The authentication failed"
                                         });
                                 }
-
                             }
                             else
                             {
@@ -259,7 +256,7 @@ namespace Lime.Client.Console
             }            
         }
 
-        private async Task RegisterChannel(IServerChannel channel, CancellationToken cancellationToken, Node node)
+        private async Task RegisterChannel(IServerChannel channel, Node node, CancellationToken cancellationToken)
         {
             IDictionary<string, Guid> instanceSessionDictionary;
 
@@ -361,10 +358,6 @@ namespace Lime.Client.Console
                 }
 
             }
-        }
-
-
-
-        
+        }        
     }
 }

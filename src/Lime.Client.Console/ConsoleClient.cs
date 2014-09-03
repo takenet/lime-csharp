@@ -1,6 +1,8 @@
 ﻿using Lime.Protocol;
 using Lime.Protocol.Client;
+using Lime.Protocol.Contents;
 using Lime.Protocol.Network;
+using Lime.Protocol.Resources;
 using Lime.Protocol.Security;
 using Lime.Protocol.Serialization;
 using Lime.Protocol.Tcp;
@@ -144,8 +146,6 @@ namespace Lime.Client.Console
             return true;
         }
 
-
-
         public async Task ReceiveMessagesAsync(CancellationToken cancellationToken)
         {
             while (Channel.State == SessionState.Established)
@@ -177,10 +177,91 @@ namespace Lime.Client.Console
             }
         }
 
-        public async Task Disconnect(CancellationToken cancellationToken)
-        {
+        public async Task DisconnectAsync(CancellationToken cancellationToken)
+        {            
             await Channel.SendFinishingSessionAsync();
             await Channel.ReceiveFinishedSessionAsync(cancellationToken);
+        }
+
+        public Task<Command> SetReceiptsAsync(CancellationToken cancellationToken)
+        {
+            var receiptCommand = new Command()
+            {
+                Method = CommandMethod.Set,
+                Resource = new Receipt()
+                {
+                    Events = new[] { Event.Dispatched, Event.Received }
+                }
+            };
+            return Channel.ProcessCommandAsync(receiptCommand, cancellationToken);            
+        }
+
+        public Task<Command> GetAccountAsync(CancellationToken cancellationToken)
+        {
+            var accountCommand = new Command
+            {
+                Method = CommandMethod.Get,
+                Resource = new Account()
+            };
+            return Channel.ProcessCommandAsync(accountCommand, cancellationToken);
+        }
+
+        public Task<Command> SetAccountAsync(Account account, CancellationToken cancellationToken)
+        {
+            var accountCommand = new Command
+            {
+                Method = CommandMethod.Set,
+                Resource = account
+            };
+
+            return Channel.ProcessCommandAsync(accountCommand, cancellationToken);
+        }
+
+        public Task<Command> GetContactsAsync(CancellationToken cancellationToken)
+        {
+            var rosterCommand = new Command
+            {
+                Method = CommandMethod.Get,
+                Uri = LimeUri.Parse(UriTemplates.CONTACTS)
+            };
+            return Channel.ProcessCommandAsync(rosterCommand, cancellationToken);
+        }
+
+        public Task<Command> SetContactsAsync(Contact contact, CancellationToken cancellationToken)
+        {
+            var contactCommand = new Command
+            {
+                Method = CommandMethod.Set,
+                Uri = LimeUri.Parse(UriTemplates.CONTACTS),
+                Resource = contact
+            };
+
+            return Channel.ProcessCommandAsync(contactCommand, cancellationToken);
+        }
+
+
+        public Task<Command> SetPresenceAsync(Presence presence, CancellationToken cancellationToken)
+        {
+            var presenceCommand = new Command()
+            {
+                Method = CommandMethod.Set,
+                Resource = presence
+            };
+            return Channel.ProcessCommandAsync(presenceCommand, cancellationToken);
+        }
+
+        public Task SendTextMessageAsync(Node to, string text)
+        {
+            var message = new Message()
+            {
+                To = to,
+                Content = new PlainText()
+                {
+                    Text = text
+                }
+            };
+
+            return Channel.SendMessageAsync(message);
         }
 
 

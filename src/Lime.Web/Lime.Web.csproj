@@ -205,11 +205,12 @@
     <Content Include="Views\_ViewStart.cshtml" />
     <Content Include="Views\Shared\Error.cshtml" />
     <Content Include="Views\Shared\_Layout.cshtml" />
-    <Content Include="Views\Home\About.cshtml" />
+    <Content Include="Views\Home\About.en-US.cshtml" />
     <Content Include="Scripts\jquery-1.10.2.min.map" />
     <Content Include="Views\Home\Index.en-US.cshtml" />
     <Content Include="Views\Home\ContentTypes.en-US.cshtml" />
     <Content Include="Views\Home\Resources.en-US.cshtml" />
+    <Content Include="Views\Home\Libraries.en-US.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
