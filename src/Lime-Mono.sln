@@ -1,6 +1,8 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2012
+# Visual Studio 2013
+VisualStudioVersion = 12.0.30723.0
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Lime.Protocol", "Lime.Protocol\Lime.Protocol\Lime.Protocol.shproj", "{D12C1153-A423-40C6-A611-85C659CAEB7B}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lime.Protocol.Mono", "Lime.Protocol\Lime.Protocol.Mono\Lime.Protocol.Mono.csproj", "{E381ED6F-01EE-419C-8D41-8193343F9AC2}"
@@ -9,26 +11,35 @@ Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Lime.Protocol.Tcp", "Lime.P
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lime.Protocol.Tcp.Mono", "Lime.Protocol.Tcp\Lime.Protocol.Tcp.Mono\Lime.Protocol.Tcp.Mono.csproj", "{CB773EB7-5EA7-459A-9445-7052173FB47C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lime.Protocol.Console.Mono", "Lime.Protocol.Console.Mono\Lime.Protocol.Console.Mono.csproj", "{86D0A14F-B553-48DA-8146-94CF066BC63E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lime.Client.Console.Mono", "Lime.Client.Console.Mono\Lime.Client.Console.Mono.csproj", "{86D0A14F-B553-48DA-8146-94CF066BC63E}"
 EndProject
 Global
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		Lime.Protocol.Tcp\Lime.Protocol.Tcp\Lime.Protocol.Tcp.projitems*{cb773eb7-5ea7-459a-9445-7052173fb47c}*SharedItemsImports = 4
+		Lime.Protocol\Lime.Protocol\Lime.Protocol.projitems*{d12c1153-a423-40c6-a611-85c659caeb7b}*SharedItemsImports = 13
+		Lime.Protocol\Lime.Protocol\Lime.Protocol.projitems*{e381ed6f-01ee-419c-8d41-8193343f9ac2}*SharedItemsImports = 4
+		Lime.Protocol.Tcp\Lime.Protocol.Tcp\Lime.Protocol.Tcp.projitems*{968a35ef-0800-4f7e-9c93-f444d80a4da9}*SharedItemsImports = 13
+	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{86D0A14F-B553-48DA-8146-94CF066BC63E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{86D0A14F-B553-48DA-8146-94CF066BC63E}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{86D0A14F-B553-48DA-8146-94CF066BC63E}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{86D0A14F-B553-48DA-8146-94CF066BC63E}.Release|Any CPU.Build.0 = Release|Any CPU
-		{CB773EB7-5EA7-459A-9445-7052173FB47C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{CB773EB7-5EA7-459A-9445-7052173FB47C}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{CB773EB7-5EA7-459A-9445-7052173FB47C}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{CB773EB7-5EA7-459A-9445-7052173FB47C}.Release|Any CPU.Build.0 = Release|Any CPU
 		{E381ED6F-01EE-419C-8D41-8193343F9AC2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{E381ED6F-01EE-419C-8D41-8193343F9AC2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E381ED6F-01EE-419C-8D41-8193343F9AC2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E381ED6F-01EE-419C-8D41-8193343F9AC2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CB773EB7-5EA7-459A-9445-7052173FB47C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CB773EB7-5EA7-459A-9445-7052173FB47C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CB773EB7-5EA7-459A-9445-7052173FB47C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CB773EB7-5EA7-459A-9445-7052173FB47C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{86D0A14F-B553-48DA-8146-94CF066BC63E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{86D0A14F-B553-48DA-8146-94CF066BC63E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{86D0A14F-B553-48DA-8146-94CF066BC63E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{86D0A14F-B553-48DA-8146-94CF066BC63E}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(MonoDevelopProperties) = preSolution
 		StartupItem = Lime.Protocol.Console.Mono\Lime.Protocol.Console.Mono.csproj

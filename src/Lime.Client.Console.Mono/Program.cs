@@ -1,16 +1,17 @@
-﻿using System;
-using System.Linq;
-using Lime.Protocol.Tcp;
-using System.Threading;
+﻿using Lime.Protocol;
 using Lime.Protocol.Client;
-using System.Threading.Tasks;
-using Lime.Protocol.Security;
+using Lime.Protocol.Contents;
 using Lime.Protocol.Network;
 using Lime.Protocol.Resources;
+using Lime.Protocol.Security;
+using Lime.Protocol.Tcp;
+using System;
+using System.Linq;
 using System.Net.NetworkInformation;
-using Lime.Protocol.Contents;
+using System.Threading;
+using System.Threading.Tasks;
 
-namespace Lime.Protocol.Console.Mono
+namespace Lime.Client.Console.Mono
 {
 	class MainClass
 	{
