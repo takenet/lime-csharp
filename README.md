@@ -6,6 +6,12 @@ C# LIME protocol implementation
 - Work in progress. See more at: http://limeprotocol.org/
 
 
+### Nuget packages
+
+- **Lime.Protocol**: Base protocol
+- **Lime.Protocol.Tcp**: TCP transport
+
+
 # Client
 
 ### Creating the channel
