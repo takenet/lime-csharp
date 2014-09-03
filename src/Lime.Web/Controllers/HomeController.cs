@@ -15,11 +15,16 @@ namespace Lime.Web.Controllers
             return LocalizedView("Index", language);            
         }
 
+        public ActionResult Libraries(string language)
+        {
+            return LocalizedView("Libraries", language);
+        }
+
         public ActionResult About(string language)
         {
             ViewBag.Message = "Your application description page.";
 
-            return View();
+            return LocalizedView("About", language);
         }
 
         public ActionResult ContentTypes(string language)
