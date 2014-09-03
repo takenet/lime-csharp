@@ -500,6 +500,9 @@ namespace Lime.Protocol.Tcp
 			X509Chain chain,
 			SslPolicyErrors sslPolicyErrors)
 		{
+#if DEBUG
+			return true;
+#else
 			// TODO: Check key usage
 
 			// The client certificate can be null 
@@ -512,6 +515,7 @@ namespace Lime.Protocol.Tcp
 			{
 				return sslPolicyErrors == SslPolicyErrors.None;
 			}
+#endif
 		}
 
 		#region Buffer fields
