@@ -4,19 +4,17 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{9CE8A3B9-5900-4D8B-81A6-C33513553E97}</ProjectGuid>
-    <OutputType>Exe</OutputType>
+    <ProjectGuid>{1095E1BA-C764-46B0-86D1-2290DA9C07AD}</ProjectGuid>
+    <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Lime.Client.Console</RootNamespace>
-    <AssemblyName>Lime.Client.Console</AssemblyName>
+    <RootNamespace>Lime.Protocol.Http.Net45</RootNamespace>
+    <AssemblyName>Lime.Protocol.Http.Net45</AssemblyName>
     <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
-    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
     <RestorePackages>true</RestorePackages>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
@@ -26,16 +24,12 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
-  <PropertyGroup>
-    <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -51,38 +45,18 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ConsoleClient.cs" />
-    <Compile Include="ConsoleServer.cs" />
-    <Compile Include="DebugTraceWriter.cs" />
-    <Compile Include="FileTraceWriter.cs" />
-    <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="QueueBenchmark.cs" />
-    <Compile Include="SerializerBenchmark.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="App.config" />
-    <None Include="app.manifest" />
-    <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Lime.Protocol.Http.Net45\Lime.Protocol.Http.Net45.csproj">
-      <Project>{1095e1ba-c764-46b0-86d1-2290da9c07ad}</Project>
-      <Name>Lime.Protocol.Http.Net45</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Lime.Protocol.Serialization.Newtonsoft\Lime.Protocol.Serialization.Newtonsoft.csproj">
-      <Project>{07ef6707-b284-4068-9b2f-48998782bc9f}</Project>
-      <Name>Lime.Protocol.Serialization.Newtonsoft</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Lime.Protocol.Tcp\Lime.Protocol.Tcp.Net45\Lime.Protocol.Tcp.Net45.csproj">
-      <Project>{d24b4ef4-9b8c-4f89-bfc6-f76007936382}</Project>
-      <Name>Lime.Protocol.Tcp.Net45</Name>
-    </ProjectReference>
     <ProjectReference Include="..\Lime.Protocol\Lime.Protocol.Net45\Lime.Protocol.Net45.csproj">
       <Project>{0cfee3a4-f914-4c45-be13-a344c9cfa134}</Project>
       <Name>Lime.Protocol.Net45</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <Import Project="..\Lime.Protocol.Http\Lime.Protocol.Http.projitems" Label="Shared" Condition="Exists('..\Lime.Protocol.Http\Lime.Protocol.Http.projitems')" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

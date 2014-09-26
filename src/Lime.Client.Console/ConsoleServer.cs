@@ -16,6 +16,7 @@ using System.Security.Cryptography;
 using System.Security.AccessControl;
 using System.Security.Principal;
 using Notification = Lime.Protocol.Notification;
+using Lime.Protocol.Http;
 
 namespace Lime.Client.Console
 {
@@ -74,13 +75,15 @@ namespace Lime.Client.Console
             ITraceWriter traceWriter = new FileTraceWriter("server.log"); 
 #endif
 
-            _listener = new TcpTransportListener(
-                _listenerUri,
-                certificates[0],
-                new EnvelopeSerializer(),
-                traceWriter
-                );
 
+            //_listener = new TcpTransportListener(
+            //    _listenerUri,
+            //    certificates[0],
+            //    new EnvelopeSerializer(),
+            //    traceWriter
+            //    );
+
+            _listener = new HttpTransportListener(8080);
 
             await _listener.StartAsync();
         }

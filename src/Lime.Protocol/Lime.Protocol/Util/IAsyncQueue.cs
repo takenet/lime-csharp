@@ -11,10 +11,21 @@ namespace Lime.Protocol.Util
     {
         /// <summary>
         /// Enqueue a new item 
-        /// in the queue
+        /// in the queue.
         /// </summary>
         /// <param name="item"></param>
+        /// <returns>true if the item was successfully added; false otherwise.</returns>
 		bool Post(T item);
+
+        /// <summary>
+        /// Enqueue a new item 
+        /// in the queue, awaiting
+        /// for space if not available.
+        /// </summary>
+        /// <param name="item"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        Task SendAsync(T item, CancellationToken cancellationToken);
 
         /// <summary>
         /// Takes an Task which can be a promise
@@ -24,24 +35,5 @@ namespace Lime.Protocol.Util
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
         Task<T> ReceiveAsync(CancellationToken cancellationToken);
-
-        /// <summary>
-        /// Informs if theres any 
-        /// pending promise task in the
-        /// queue
-        /// </summary>
-        bool HasPromises { get; }        
-
-        /// <summary>
-        /// Gets the total of enqueued items
-        /// in the promises queue.
-        /// </summary>
-        int PromisesCount { get; }
-
-        /// <summary>
-        /// Gets the total of enqueued items
-        /// in the buffer queue.
-        /// </summary>
-        int BufferCount { get; }
     }
 }

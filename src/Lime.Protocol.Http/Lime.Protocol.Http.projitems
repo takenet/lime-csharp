@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <SharedGUID>797c3cab-166e-4821-a7c9-9d2b6d53ddc0</SharedGUID>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <Import_RootNamespace>Lime.Protocol.Http</Import_RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)Serialization\IDocumentSerializer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Serialization\DocumentSerializer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ServerHttpTransport.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)HttpTransportListener.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="$(MSBuildThisFileDirectory)Storage\" />
+  </ItemGroup>
+</Project>

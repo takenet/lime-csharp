@@ -6,6 +6,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Security;
+using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -378,6 +379,32 @@ namespace Lime.Protocol
             {
                 sb.Append(format.Substring(startIndex));
             }
+            return sb.ToString();
+        }
+
+
+        /// <summary>
+        /// Gets a SHA1 hash for the specified string.
+        /// </summary>
+        /// <param name="inputString"></param>
+        /// <returns></returns>
+        public static byte[] ToSHA1Hash(this string inputString)
+        {
+            HashAlgorithm algorithm = SHA1.Create();
+            return algorithm.ComputeHash(Encoding.UTF8.GetBytes(inputString));
+        }
+
+        /// <summary>
+        /// Gets a SHA1 hash for the specified string.
+        /// </summary>
+        /// <param name="inputString"></param>
+        /// <returns></returns>
+        public static string ToSHA1HashString(this string inputString)
+        {
+            StringBuilder sb = new StringBuilder();
+            foreach (byte b in ToSHA1Hash(inputString))
+                sb.Append(b.ToString("X2"));
+
             return sb.ToString();
         }
     }

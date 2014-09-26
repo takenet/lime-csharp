@@ -20,7 +20,7 @@ namespace Lime.Client.Console
             var json = commandJson;
 
             var serializer1 = new EnvelopeSerializer();
-            var serializer2 = new Lime.Protocol.Serialization.Newtonsoft.JsonNetSerializer();
+            //var serializer2 = new Lime.Protocol.Serialization.Newtonsoft.JsonNetSerializer();
             //var serializer3 = new Lime.Protocol.Serialization.ServiceStack.ServiceStackSerializer();
 
 
@@ -36,39 +36,39 @@ namespace Lime.Client.Console
             System.Console.WriteLine("Deserialization:");
 
             envelope1 = ExecuteDeserialization(serializer1, json, count);
-            envelope2 = ExecuteDeserialization(serializer2, json, count);
+            //envelope2 = ExecuteDeserialization(serializer2, json, count);
             //envelope3 = ExecuteDeserialization(serializer3, json, count);
 
             // netwonsoft is the reference serializer
-            var json1 = serializer2.Serialize(envelope1);
-            var json2 = serializer2.Serialize(envelope2);
-            var json3 = serializer2.Serialize(envelope3);
+            //var json1 = serializer2.Serialize(envelope1);
+            //var json2 = serializer2.Serialize(envelope2);
+            //var json3 = serializer2.Serialize(envelope3);
 
-            if (json1 == json2 && json2 == json3)
-            {
-                System.Console.WriteLine("All deserialized types are equals");
-            }
-            else
-            {
-                System.Console.WriteLine("Deserialized types NOT equals: ");
-            }
+            //if (json1 == json2 && json2 == json3)
+            //{
+            //    System.Console.WriteLine("All deserialized types are equals");
+            //}
+            //else
+            //{
+            //    System.Console.WriteLine("Deserialized types NOT equals: ");
+            //}
 
             var envelope = envelope1;
 
             System.Console.WriteLine("Serialization:");
 
-            json1 = ExecuteSerialization(serializer1, envelope, count);
-            json2 = ExecuteSerialization(serializer2, envelope, count);
+            var json1 = ExecuteSerialization(serializer1, envelope, count);
+            //json2 = ExecuteSerialization(serializer2, envelope, count);
             //json3 = ExecuteSerialization(serializer3, envelope, count);
 
-            if (json1 == json2 && json2 == json3)
-            {
-                System.Console.WriteLine("All serialized types are equals");
-            }
-            else
-            {
-                System.Console.WriteLine("Serialized types are NOT equals: ");
-            }
+            //if (json1 == json2 && json2 == json3)
+            //{
+            //    System.Console.WriteLine("All serialized types are equals");
+            //}
+            //else
+            //{
+            //    System.Console.WriteLine("Serialized types are NOT equals: ");
+            //}
 
             System.Console.Read();
         }

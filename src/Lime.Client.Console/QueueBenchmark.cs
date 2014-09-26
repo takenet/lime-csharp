@@ -101,11 +101,11 @@ namespace Lime.Client.Console
             await Task.WhenAll(dequeueTasks);
             await Task.WhenAll(PostTasks);
 
-            if (target.BufferCount != 0 ||
-                target.PromisesCount != 0)
-            {
-                System.Console.WriteLine("AsyncQueue - Not empty");
-            }
+            //if (target.BufferCount != 0 ||
+            //    target.PromisesCount != 0)
+            //{
+            //    System.Console.WriteLine("AsyncQueue - Not empty");
+            //}
         }
     }
 }

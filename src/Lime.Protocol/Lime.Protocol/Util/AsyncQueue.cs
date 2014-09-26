@@ -79,6 +79,11 @@ namespace Lime.Protocol.Util
             }            
         }
 
+        public Task SendAsync(T item, CancellationToken cancellationToken)
+        {
+            throw new NotSupportedException();
+        }
+
         /// <summary>
         /// Dequeues the asynchronous.
         /// </summary>
@@ -115,13 +120,17 @@ namespace Lime.Protocol.Util
             return Task.FromResult(item);
         }
 
+        #endregion
+
+        #region Internal Methods
+
         /// <summary>
         /// Gets a value indicating whether this instance has promises.
         /// </summary>
         /// <value>
         /// <c>true</c> if this instance has promises; otherwise, <c>false</c>.
         /// </value>
-        public bool HasPromises
+        internal bool HasPromises
         {
             get { return this.PromisesCount > 0; }
         }
@@ -130,7 +139,7 @@ namespace Lime.Protocol.Util
         /// Gets the total of enqueued items
         /// in the promises queue.
         /// </summary>
-        public int PromisesCount
+        internal int PromisesCount
         {
             get { return _promisesQueue.Where(p => !p.Task.IsCanceled).Count(); }
         }
@@ -139,7 +148,7 @@ namespace Lime.Protocol.Util
         /// Gets the total of enqueued items
         /// in the buffer queue.
         /// </summary>
-        public int BufferCount
+        internal int BufferCount
         {
             get { return _bufferQueue.Count; }
         }

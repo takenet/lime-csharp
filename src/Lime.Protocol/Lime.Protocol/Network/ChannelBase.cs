@@ -8,10 +8,6 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-#if !MONO
-using System.Threading.Tasks.Dataflow;
-#endif
-
 namespace Lime.Protocol.Network
 {
     /// <summary>
@@ -25,22 +21,12 @@ namespace Lime.Protocol.Network
 		private readonly TimeSpan _sendTimeout;
 		private readonly bool _fillEnvelopeRecipients;
 		private readonly bool _autoReplyPings;
-
-#if MONO
 		private readonly IAsyncQueue<Message> _messageBuffer;
 		private readonly IAsyncQueue<Command> _commandBuffer;
 		private readonly IAsyncQueue<Notification> _notificationBuffer;
 		private readonly IAsyncQueue<Session> _sessionBuffer;
-#else
-		private readonly BufferBlock<Message> _messageBuffer;
-		private readonly BufferBlock<Command> _commandBuffer;
-		private readonly BufferBlock<Notification> _notificationBuffer;
-		private readonly BufferBlock<Session> _sessionBuffer;
-#endif
-
-        private Task _consumeTransportTask;
-
-        protected readonly CancellationTokenSource _channelCancellationTokenSource;                
+        protected readonly CancellationTokenSource _channelCancellationTokenSource;
+        private Task _consumeTransportTask;        
         private bool _isDisposing;
 
         #endregion
@@ -79,16 +65,10 @@ namespace Lime.Protocol.Network
 			_notificationBuffer = new AsyncQueue<Notification> (buffersLimit, buffersLimit);
 			_sessionBuffer = new AsyncQueue<Session> (1, 1);
 #else
-			var bufferOptions = new System.Threading.Tasks.Dataflow.DataflowBlockOptions()
-			{
-				BoundedCapacity = buffersLimit
-			};
-
-			_messageBuffer = new BufferBlock<Message>(bufferOptions);
-			_commandBuffer = new BufferBlock<Command>(bufferOptions);
-			_notificationBuffer = new BufferBlock<Notification>(bufferOptions);
-			_sessionBuffer = new BufferBlock<Session>(
-				new DataflowBlockOptions() { BoundedCapacity = 1 });
+            _messageBuffer = new BufferBlockAsyncQueue<Message>(buffersLimit);
+            _commandBuffer = new BufferBlockAsyncQueue<Command>(buffersLimit);
+            _notificationBuffer = new BufferBlockAsyncQueue<Notification>(buffersLimit);
+            _sessionBuffer = new BufferBlockAsyncQueue<Session>(1);
 #endif
         }
 

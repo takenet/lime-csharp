@@ -78,6 +78,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)UtilExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Util\AsyncCountdownEvent.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Util\AsyncQueue.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Util\BufferBlockAsyncQueue.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Util\DeferralManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Util\IAsyncQueue.cs" />
   </ItemGroup>

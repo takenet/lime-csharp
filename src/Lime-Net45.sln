@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
-VisualStudioVersion = 12.0.30501.0
+VisualStudioVersion = 12.0.30723.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lime.Web", "Lime.Web\Lime.Web.csproj", "{7017CC97-1450-4851-A39A-B4A611BC2AA0}"
 EndProject
@@ -45,11 +45,19 @@ Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Lime.Protocol.Tcp", "Lime.P
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lime.Protocol.Tcp.Net45", "Lime.Protocol.Tcp\Lime.Protocol.Tcp.Net45\Lime.Protocol.Tcp.Net45.csproj", "{D24B4EF4-9B8C-4F89-BFC6-F76007936382}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Transports", "Transports", "{84538803-A033-47DD-A350-A04E84F6BAE8}"
+EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Lime.Protocol.Http", "Lime.Protocol.Http\Lime.Protocol.Http.shproj", "{797C3CAB-166E-4821-A7C9-9D2B6D53DDC0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lime.Protocol.Http.Net45", "Lime.Protocol.Http.Net45\Lime.Protocol.Http.Net45.csproj", "{1095E1BA-C764-46B0-86D1-2290DA9C07AD}"
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		Lime.Protocol\Lime.Protocol\Lime.Protocol.projitems*{1c6d3db7-ecf0-4013-80ee-76688aed4176}*SharedItemsImports = 4
 		Lime.Protocol.Tcp\Lime.Protocol.Tcp\Lime.Protocol.Tcp.projitems*{d24b4ef4-9b8c-4f89-bfc6-f76007936382}*SharedItemsImports = 4
 		Lime.Protocol\Lime.Protocol\Lime.Protocol.projitems*{d12c1153-a423-40c6-a611-85c659caeb7b}*SharedItemsImports = 13
+		Lime.Protocol.Http\Lime.Protocol.Http.projitems*{797c3cab-166e-4821-a7c9-9d2b6d53ddc0}*SharedItemsImports = 13
+		Lime.Protocol.Http\Lime.Protocol.Http.projitems*{1095e1ba-c764-46b0-86d1-2290da9c07ad}*SharedItemsImports = 4
 		Lime.Protocol\Lime.Protocol\Lime.Protocol.projitems*{0cfee3a4-f914-4c45-be13-a344c9cfa134}*SharedItemsImports = 4
 		Lime.Protocol.Tcp\Lime.Protocol.Tcp\Lime.Protocol.Tcp.projitems*{690cb13d-5bfc-4d2e-b23c-64bd00b7af6f}*SharedItemsImports = 4
 		Lime.Protocol.Tcp\Lime.Protocol.Tcp\Lime.Protocol.Tcp.projitems*{968a35ef-0800-4f7e-9c93-f444d80a4da9}*SharedItemsImports = 13
@@ -185,6 +193,18 @@ Global
 		{D24B4EF4-9B8C-4F89-BFC6-F76007936382}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D24B4EF4-9B8C-4F89-BFC6-F76007936382}.Release|Any CPU.Build.0 = Release|Any CPU
 		{D24B4EF4-9B8C-4F89-BFC6-F76007936382}.Release|x86.ActiveCfg = Release|Any CPU
+		{1095E1BA-C764-46B0-86D1-2290DA9C07AD}.Ad-Hoc|Any CPU.ActiveCfg = Release|Any CPU
+		{1095E1BA-C764-46B0-86D1-2290DA9C07AD}.Ad-Hoc|Any CPU.Build.0 = Release|Any CPU
+		{1095E1BA-C764-46B0-86D1-2290DA9C07AD}.Ad-Hoc|x86.ActiveCfg = Release|Any CPU
+		{1095E1BA-C764-46B0-86D1-2290DA9C07AD}.AppStore|Any CPU.ActiveCfg = Release|Any CPU
+		{1095E1BA-C764-46B0-86D1-2290DA9C07AD}.AppStore|Any CPU.Build.0 = Release|Any CPU
+		{1095E1BA-C764-46B0-86D1-2290DA9C07AD}.AppStore|x86.ActiveCfg = Release|Any CPU
+		{1095E1BA-C764-46B0-86D1-2290DA9C07AD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1095E1BA-C764-46B0-86D1-2290DA9C07AD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1095E1BA-C764-46B0-86D1-2290DA9C07AD}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{1095E1BA-C764-46B0-86D1-2290DA9C07AD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1095E1BA-C764-46B0-86D1-2290DA9C07AD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1095E1BA-C764-46B0-86D1-2290DA9C07AD}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -192,8 +212,13 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{07EF6707-B284-4068-9B2F-48998782BC9F} = {AFDCE25A-4480-4ED6-8C8F-A41E30ED6689}
 		{C51D26F4-E780-4BDE-84FC-AADC6AE63D5B} = {AFDCE25A-4480-4ED6-8C8F-A41E30ED6689}
+		{690CB13D-5BFC-4D2E-B23C-64BD00B7AF6F} = {84538803-A033-47DD-A350-A04E84F6BAE8}
 		{1847098B-FE9E-4E40-AA69-9E70FAF5D06E} = {9827B4C3-A069-4229-A51A-55E71B94F50C}
 		{9CE8A3B9-5900-4D8B-81A6-C33513553E97} = {9827B4C3-A069-4229-A51A-55E71B94F50C}
 		{9E13148D-726D-4E42-B924-4A1AF4F0DC3E} = {9827B4C3-A069-4229-A51A-55E71B94F50C}
+		{968A35EF-0800-4F7E-9C93-F444D80A4DA9} = {84538803-A033-47DD-A350-A04E84F6BAE8}
+		{D24B4EF4-9B8C-4F89-BFC6-F76007936382} = {84538803-A033-47DD-A350-A04E84F6BAE8}
+		{797C3CAB-166E-4821-A7C9-9D2B6D53DDC0} = {84538803-A033-47DD-A350-A04E84F6BAE8}
+		{1095E1BA-C764-46B0-86D1-2290DA9C07AD} = {84538803-A033-47DD-A350-A04E84F6BAE8}
 	EndGlobalSection
 EndGlobal
