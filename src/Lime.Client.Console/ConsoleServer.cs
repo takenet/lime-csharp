@@ -269,13 +269,22 @@ namespace Lime.Client.Console
                 _identityInstanceSessionIdDictionary.Add(node.ToIdentity(), instanceSessionDictionary);
             }
 
+            if (string.IsNullOrWhiteSpace(node.Instance))
+            {
+                node.Instance = "default";
+            }
+
             instanceSessionDictionary.Add(node.Instance, channel.SessionId);
 
             await channel.SendEstablishedSessionAsync(node);
 
-            var receiveMessageTask = this.ReceiveMessagesAsync(channel, cancellationToken);
+            var receiveMessagesTask = this.ReceiveMessagesAsync(channel, cancellationToken);
+            var receiveCommandsTask = this.ReceiveReceiveCommandsAsync(channel, cancellationToken);
 
             await channel.ReceiveFinishingSessionAsync(cancellationToken);
+
+
+            await Task.WhenAll(receiveMessagesTask, receiveCommandsTask);
 
             await channel.SendFinishedSessionAsync();
 
@@ -291,59 +300,15 @@ namespace Lime.Client.Console
         {
             while (channel.State == SessionState.Established)
             {
-                cancellationToken.ThrowIfCancellationRequested();
-
-                var message = await channel.ReceiveMessageAsync(cancellationToken);
-
-                IDictionary<string, Guid> instanceSessionDictionary;
-
-                if (message.To == null)
+                try
                 {
-                    var notification = new Notification()
-                    {
-                        Id = message.Id,
-                        Event = Event.Failed,
-                        Reason = new Reason()
-                        {
-                            Code = ReasonCodes.VALIDATION_INVALID_RECIPIENTS,
-                            Description = "Invalid destination"
-                        }
-                    };
+                    cancellationToken.ThrowIfCancellationRequested();
 
-                    await channel.SendNotificationAsync(notification);
-                }
-                else if (!_identityInstanceSessionIdDictionary.TryGetValue(message.To.ToIdentity(), out instanceSessionDictionary) ||
-                         !instanceSessionDictionary.Any())
-                {
-                    var notification = new Notification()
-                    {
-                        Id = message.Id,
-                        Event = Event.Failed,
-                        Reason = new Reason()
-                        {
-                            Code = ReasonCodes.ROUTING_DESTINATION_NOT_FOUND,
-                            Description = "Destination not found"
-                        }
-                    };
+                    var message = await channel.ReceiveMessageAsync(cancellationToken);
 
-                    await channel.SendNotificationAsync(notification);
-                }
-                else 
-                {
-                    Guid destinationSessionId;
+                    IDictionary<string, Guid> instanceSessionDictionary;
 
-                    if (!instanceSessionDictionary.TryGetValue(message.To.Instance, out destinationSessionId))
-                    {
-                        destinationSessionId = instanceSessionDictionary.First().Value;
-                    }
-
-                    IServerChannel destinationChannel;
-
-                    if (_serverConnectedNodesDictionary.TryGetValue(destinationSessionId, out destinationChannel))
-                    {
-                        await destinationChannel.SendMessageAsync(message);
-                    }
-                    else
+                    if (message.To == null)
                     {
                         var notification = new Notification()
                         {
@@ -351,16 +316,107 @@ namespace Lime.Client.Console
                             Event = Event.Failed,
                             Reason = new Reason()
                             {
-                                Code = ReasonCodes.DISPATCH_ERROR,
-                                Description = "Destination session is unavailable"
+                                Code = ReasonCodes.VALIDATION_INVALID_RECIPIENTS,
+                                Description = "Invalid destination"
                             }
                         };
 
                         await channel.SendNotificationAsync(notification);
                     }
+                    else if (!_identityInstanceSessionIdDictionary.TryGetValue(message.To.ToIdentity(), out instanceSessionDictionary) ||
+                             !instanceSessionDictionary.Any())
+                    {
+                        var notification = new Notification()
+                        {
+                            Id = message.Id,
+                            Event = Event.Failed,
+                            Reason = new Reason()
+                            {
+                                Code = ReasonCodes.ROUTING_DESTINATION_NOT_FOUND,
+                                Description = "Destination not found"
+                            }
+                        };
+
+                        await channel.SendNotificationAsync(notification);
+                    }
+                    else
+                    {
+                        Guid destinationSessionId;
+
+                        if (!instanceSessionDictionary.TryGetValue(message.To.Instance, out destinationSessionId))
+                        {
+                            destinationSessionId = instanceSessionDictionary.First().Value;
+                        }
+
+                        IServerChannel destinationChannel;
+
+                        if (_serverConnectedNodesDictionary.TryGetValue(destinationSessionId, out destinationChannel))
+                        {
+                            await destinationChannel.SendMessageAsync(message);
+
+                            var notification = new Notification()
+                            {
+                                Id = message.Id,
+                                Event = Event.Dispatched                                
+                            };
+
+                            await channel.SendNotificationAsync(notification);
+                        }
+                        else
+                        {
+                            var notification = new Notification()
+                            {
+                                Id = message.Id,
+                                Event = Event.Failed,
+                                Reason = new Reason()
+                                {
+                                    Code = ReasonCodes.DISPATCH_ERROR,
+                                    Description = "Destination session is unavailable"
+                                }
+                            };
+
+                            await channel.SendNotificationAsync(notification);
+                        }
+                    }
+                }
+                catch (OperationCanceledException)
+                {
+                    break;
                 }
 
             }
-        }        
+        }    
+    
+        private async Task ReceiveReceiveCommandsAsync(IChannel channel, CancellationToken cancellationToken)
+        {
+            while (channel.State == SessionState.Established)
+            {
+                try
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+
+                    var command = await channel.ReceiveCommandAsync(cancellationToken);
+
+                    var commandResponse = new Command()
+                    {
+                        Id = command.Id,
+                        To = command.From,
+                        Status = CommandStatus.Failure,
+                        Reason = new Reason()
+                        {
+                            Code = ReasonCodes.COMMAND_RESOURCE_NOT_SUPPORTED,
+                            Description = "The resource type is not supported"
+                        }
+                    };
+
+                    await channel.SendCommandAsync(commandResponse);
+                }
+                catch (OperationCanceledException)
+                {
+                    break;
+                }
+            }
+
+        }
     }
 }

@@ -74,6 +74,14 @@ namespace Lime.Protocol
         /// </summary>
         public const int VALIDATION_INVALID_RECIPIENTS = 26;
         /// <summary>
+        /// The command method is invalid
+        /// </summary>
+        public const int VALIDATION_INVALID_METHOD = 27;
+        /// <summary>
+        /// The command URI format is invalid
+        /// </summary>
+        public const int VALIDATION_INVALID_URI = 27;
+        /// <summary>
         /// General authorization error
         /// </summary>
         public const int AUTHORIZATION_ERROR = 31;

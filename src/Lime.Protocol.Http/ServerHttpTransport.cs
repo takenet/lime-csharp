@@ -117,8 +117,7 @@ namespace Lime.Protocol.Http
                         responseSession.From = new Node()
                         {
                             Name = identity.Name,
-                            Domain = identity.Domain,
-                            Instance = session.Id.ToString()
+                            Domain = identity.Domain
                         };
 
                         var plainAuthentication = new PlainAuthentication();

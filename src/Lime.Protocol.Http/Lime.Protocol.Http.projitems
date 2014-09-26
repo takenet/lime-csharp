@@ -9,12 +9,11 @@
     <Import_RootNamespace>Lime.Protocol.Http</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)HttpListenerContextExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Serialization\IDocumentSerializer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Serialization\DocumentSerializer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ServerHttpTransport.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)HttpTransportListener.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="$(MSBuildThisFileDirectory)Storage\" />
+    <Compile Include="$(MSBuildThisFileDirectory)Storage\IMessageStorage.cs" />
   </ItemGroup>
 </Project>

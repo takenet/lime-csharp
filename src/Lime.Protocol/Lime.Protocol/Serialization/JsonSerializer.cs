@@ -638,32 +638,11 @@ namespace Lime.Protocol.Serialization
                 throw new ArgumentNullException("value");
             }
 
-            var type = value.GetType();
-
-            Func<object, string> serializeFunc;
-
-            if (!_serializeFuncDictionary.TryGetValue(type, out serializeFunc))
+            using (var writer = new TextJsonWriter())
             {
-                var serializer = typeof(JsonSerializer<>).MakeGenericType(type);
-                var serializeFuncType = typeof(Func<,>).MakeGenericType(type, typeof(string));
-                var method = serializer.GetMethod("Serialize", BindingFlags.Static | BindingFlags.Public);
-                var genericSerializeFunc = Delegate.CreateDelegate(serializeFuncType, method);
-                var serializeFuncAdapterMethod = typeof(JsonSerializer)
-                    .GetMethod("SerializeFuncAdapter", BindingFlags.Static | BindingFlags.NonPublic)
-                    .MakeGenericMethod(type);
-
-                try
-                {
-                    serializeFunc = (Func<object, string>)serializeFuncAdapterMethod.Invoke(null, new[] { genericSerializeFunc });
-                    _serializeFuncDictionary.TryAdd(type, serializeFunc);
-                }
-                catch (TargetInvocationException ex)
-                {
-                    throw ex.InnerException;
-                }
+                Write(value, writer);
+                return writer.ToString();
             }
-
-            return serializeFunc(value);
         }
 
         /// <summary>
@@ -729,7 +708,8 @@ namespace Lime.Protocol.Serialization
                 throw new ArgumentNullException("type");
             }
 
-            throw new NotImplementedException();
+            var jsonObject = JsonObject.ParseJson(json);
+            return ParseJson(type, jsonObject);
         }
 
         /// <summary>
