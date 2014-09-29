@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Lime.Protocol.Http
 {
-    public static class HttpListenerContextExtensions
+    public static class UtilityExtensions
     {
         /// <summary>
         /// Extracts an variable value
@@ -38,6 +38,20 @@ namespace Lime.Protocol.Http
             {
                 return "/";
             }            
+        }
+
+
+        public static bool TryGetEnvelopeId(this Uri uri, out Guid messageId)
+        {
+            var segments = uri.Segments;
+            if (segments.Length >= 3)
+            {
+                return Guid.TryParse(segments[2].TrimEnd('/'), out messageId);
+            }
+
+            messageId = default(Guid);
+            return false;
+
         }
     }
 }

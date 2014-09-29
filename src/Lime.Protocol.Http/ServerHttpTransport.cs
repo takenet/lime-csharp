@@ -12,7 +12,7 @@ using System.Threading.Tasks.Dataflow;
 
 namespace Lime.Protocol.Http
 {
-    internal class ServerHttpTransport : TransportBase
+    public class ServerHttpTransport : TransportBase
     {
 
         private HttpListenerBasicIdentity _identity;
@@ -23,7 +23,7 @@ namespace Lime.Protocol.Http
 
         #region Constructor
 
-        public ServerHttpTransport(HttpListenerBasicIdentity identity, bool isHttps)
+        internal ServerHttpTransport(HttpListenerBasicIdentity identity, bool isHttps)
         {
             if (identity == null)
             {

@@ -1,4 +1,6 @@
-﻿using Lime.Protocol.Http.Serialization;
+﻿using Lime.Protocol.Http.Processors;
+using Lime.Protocol.Http.Serialization;
+using Lime.Protocol.Http.Storage;
 using Lime.Protocol.Network;
 using Lime.Protocol.Serialization;
 using Lime.Protocol.Server;
@@ -19,28 +21,28 @@ using System.Threading.Tasks.Dataflow;
 namespace Lime.Protocol.Http
 {
     /*
-    # Receive from the channel (long polling)
-    GET /messages/
+# Receive from the channel (long polling)
+GET /messages/
 
-    # Stored messages
-    GET /storage/messages/
+# Stored messages
+GET /storage/messages/
 
-    # Send to the channel, fire-and-forget
-    POST /messages/
+# Send to the channel, fire-and-forget
+POST /messages/
 
-    # Send to the channel, with notification
-    POST /messages/?id=a9173c7d-038c-4101-b547-939c25d8053e
+# Send to the channel, with notification
+POST /messages/?id=a9173c7d-038c-4101-b547-939c25d8053e
 
-    # Commands only to the channel (not stored)
-    GET /commands/presence/
-    POST /commands/presence/
-    DELETE /commands/presence/
+# Commands only to the channel (not stored)
+GET /commands/presence/
+POST /commands/presence/
+DELETE /commands/presence/
 
-    # Receive from the channel
-    GET /storage/notifications/
+# Receive from the storage
+GET /storage/notifications/
 
-    # Send to the channel
-    POST /notifications/?id=a9173c7d-038c-4101-b547-939c25d8053e
+# Send to the channel
+POST /notifications/?id=a9173c7d-038c-4101-b547-939c25d8053e
     */
 
 
@@ -61,9 +63,12 @@ namespace Lime.Protocol.Http
         private readonly ConcurrentDictionary<string, ServerHttpTransport> _transportDictionary;               
         private readonly BufferBlock<HttpListenerContext> _listenerInputBufferBlock;
         private readonly ActionBlock<HttpListenerContext> _processContextActionBlock;
-        private readonly ConcurrentDictionary<Guid, HttpListenerContext> _pendingContextsDictionary;
+        private readonly ConcurrentDictionary<Guid, HttpListenerResponse> _pendingResponsesDictionary;
         private readonly ActionBlock<Envelope> _processTransportOutputActionBlock;
 
+
+        private readonly IEnvelopeStorage<Message> _messageStorage;
+        private readonly IEnvelopeStorage<Notification> _notificationStorage;
 
         private HttpListener _httpListener;
         private Task _listenerTask;
@@ -74,31 +79,12 @@ namespace Lime.Protocol.Http
 
         #endregion
 
-        #region Constants
 
-        private const string ROOT = "/";
-        private const string MESSAGES_PATH = "messages";
-        private const string COMMANDS_PATH = "commands";
-        private const string NOTIFICATIONS_PATH = "notifications";
-        private const string HTTP_METHOD_GET = "GET";
-        private const string HTTP_METHOD_POST = "POST";
-        private const string HTTP_METHOD_DELETE = "DELETE";
-        private const string CONTENT_TYPE_HEADER = "Content-Type";
-        private const string ENVELOPE_ID_HEADER = "X-Id";
-        private const string ENVELOPE_ID_QUERY = "id";
-        private const string ENVELOPE_FROM_HEADER = "X-From";
-        private const string ENVELOPE_FROM_QUERY = "from";
-        private const string ENVELOPE_TO_HEADER = "X-To";
-        private const string ENVELOPE_TO_QUERY = "to";
-        private const string ENVELOPE_PP_HEADER = "X-Pp";
-        private const string ENVELOPE_PP_QUERY = "pp";
-        private const string ASYNC_QUERY = "async"; 
-
-        #endregion
+        private UriTemplateTable _uriTemplateTable;
 
         #region Constructor
 
-        public HttpTransportListener(int port, string hostName = "*", bool useHttps = false, bool writeExceptionsToOutput = true)
+        public HttpTransportListener(int port, string hostName = "*", bool useHttps = false, bool writeExceptionsToOutput = true, IEnvelopeStorage<Message> messageStorage = null, IEnvelopeStorage<Notification> notificationStorage = null)
         {
             if (!HttpListener.IsSupported)
             {
@@ -117,9 +103,9 @@ namespace Lime.Protocol.Http
             _basePath = string.Format("{0}://{1}:{2}", scheme, hostName, port);
             _prefixes = new string[]
             {
-                ROOT + MESSAGES_PATH + ROOT,
-                ROOT + COMMANDS_PATH + ROOT,
-                ROOT + NOTIFICATIONS_PATH + ROOT
+                Constants.ROOT + Constants.MESSAGES_PATH + Constants.ROOT,
+                Constants.ROOT + Constants.COMMANDS_PATH + Constants.ROOT,
+                Constants.ROOT + Constants.NOTIFICATIONS_PATH + Constants.ROOT
             };
 
             var safeHostName = hostName;
@@ -133,6 +119,9 @@ namespace Lime.Protocol.Http
                 .Select(p => new Uri(baseUri, p))
                 .ToArray();
 
+            _messageStorage = messageStorage ?? new DictionaryEnvelopeStorage<Message>();
+            _notificationStorage = notificationStorage ?? new DictionaryEnvelopeStorage<Notification>();
+            
             _requestTimeout = TimeSpan.FromSeconds(60);
             _serializer = new DocumentSerializer();
 
@@ -140,11 +129,22 @@ namespace Lime.Protocol.Http
             _transportDictionary = new ConcurrentDictionary<string, ServerHttpTransport>();
             
             // Pipelines
-            _pendingContextsDictionary = new ConcurrentDictionary<Guid, HttpListenerContext>();
+            _pendingResponsesDictionary = new ConcurrentDictionary<Guid, HttpListenerResponse>();
             _listenerInputBufferBlock = new BufferBlock<HttpListenerContext>();
-            _processContextActionBlock = new ActionBlock<HttpListenerContext>(c => ProcessListenerRequestAsync(c));
+            _processContextActionBlock = new ActionBlock<HttpListenerContext>(c => ProcessListenerContextAsync(c));
             _listenerInputBufferBlock.LinkTo(_processContextActionBlock);            
             _processTransportOutputActionBlock = new ActionBlock<Envelope>(e => ProcessTransportOutputAsync(e));            
+
+
+            // New
+            var sendCommandProcessor = new SendCommandProcessor(Constants.COMMANDS_PATH, _pendingResponsesDictionary);
+            var sendMessageProcessor = new SendMessageProcessor(Constants.MESSAGES_PATH, _pendingResponsesDictionary);
+
+            _uriTemplateTable = new UriTemplateTable(baseUri);
+            _uriTemplateTable.KeyValuePairs.Add(new KeyValuePair<UriTemplate, object>(sendCommandProcessor.Template, sendCommandProcessor));
+            _uriTemplateTable.KeyValuePairs.Add(new KeyValuePair<UriTemplate, object>(sendMessageProcessor.Template, sendMessageProcessor));
+            _uriTemplateTable.MakeReadOnly(true);                     
+
         }
 
         #endregion
@@ -235,224 +235,88 @@ namespace Lime.Protocol.Http
         }
 
         /// <summary>
-        /// Process a request enqueued by
+        /// Process a request received by 
         /// the HTTP listener.
         /// </summary>
         /// <param name="context"></param>
         /// <returns></returns>
-        private async Task ProcessListenerRequestAsync(HttpListenerContext context)
+        private async Task ProcessListenerContextAsync(HttpListenerContext context)
         {
-            var cancellationToken = _requestTimeout.ToCancellationToken();
-            var transport = GetTransport(context);
+            var match = _uriTemplateTable
+                .Match(context.Request.Url)
+                .Where(m => ((IRequestProcessor)m.Data).Methods.Contains(context.Request.HttpMethod))
+                .FirstOrDefault();
 
-            Exception exception = null;
-
-            try
+            if (match != null)
             {
-                var session = await transport.GetSessionAsync(cancellationToken).ConfigureAwait(false);
-                if (session.State == SessionState.Established)
+                var cancellationToken = _requestTimeout.ToCancellationToken();
+                var transport = GetTransport(context);
+
+                Exception exception = null;
+
+                try
                 {
-                    var method = context.Request.HttpMethod;
-                    var path = context.Request.Url.GetRootPath();
-                    switch (path)
+                    var session = await transport.GetSessionAsync(cancellationToken).ConfigureAwait(false);
+                    context.Response.Headers.Add(Constants.SESSION_ID_HEADER, session.Id.ToString());
+
+                    if (session.State == SessionState.Established)
                     {
-                        case MESSAGES_PATH:
-                            if (method.Equals(HTTP_METHOD_POST))
-                            {                                                                                                
-                                // Put the message to the transport
-                                var message = await GetMessageAsync(context.Request).ConfigureAwait(false);
+                        var processor = (IRequestProcessor)match.Data;
+                        await processor.ProcessAsync(context, transport, cancellationToken).ConfigureAwait(false);
 
-                                bool isAsync = message.Id == Guid.Empty;
-                                if (!isAsync)
-                                {
-                                    bool.TryParse(context.Request.QueryString.Get(ASYNC_QUERY), out isAsync);
-                                }
-
-                                await ProcessEnvelopeAsync(message, transport, context, isAsync, cancellationToken).ConfigureAwait(false);
-                            }
-                            else if (method.Equals(HTTP_METHOD_GET))
-                            {
-                                // TODO: Get messages from storage
-                            }
-                            else
-                            {
-                                context.Response.StatusCode = (int)HttpStatusCode.MethodNotAllowed;
-                                context.Response.Close();
-                            }
-                            break;
-
-                        case COMMANDS_PATH:
-                            var command = await GetCommandAsync(context.Request).ConfigureAwait(false);
-                            await ProcessEnvelopeAsync(command, transport, context, false, cancellationToken).ConfigureAwait(false);
-                            break;
-
-                        case NOTIFICATIONS_PATH:
-                            if (method.Equals(HTTP_METHOD_POST))
-                            {
-                                // TODO: Send notification
-                            }
-                            else if (method.Equals(HTTP_METHOD_GET))
-                            {
-                                // TODO: Get messages from storage
-                            }
-                            else
-                            {
-                                context.Response.StatusCode = (int)HttpStatusCode.MethodNotAllowed;
-                                context.Response.Close();
-                            }
-                            break;
-
-                        default:
-                            context.Response.StatusCode = (int)HttpStatusCode.NotFound;
-                            context.Response.Close();
-                            break;
                     }
-                }
-                else if (session.Reason != null)
-                {
-                    context.Response.StatusCode = (int)GetHttpStatusCode(session.Reason.Code);
-                    context.Response.StatusDescription = session.Reason.Description;
-                    context.Response.Close();
-                }
-                else
-                {
-                    context.Response.StatusCode = (int)HttpStatusCode.NotFound;
-                    context.Response.Close();
-                }                
-
-            }
-            catch (LimeException ex)
-            {
-                context.Response.StatusCode = (int)GetHttpStatusCode(ex.Reason.Code);
-                context.Response.StatusDescription = ex.Reason.Description;
-                context.Response.Close();
-            }
-            catch (Exception ex)
-            {
-                exception = ex;
-            }
-
-            if (exception != null)
-            {
-                if (exception is OperationCanceledException)
-                {
-                    await transport.CloseAsync(_listenerCancellationTokenSource.Token).ConfigureAwait(false);
-                    context.Response.StatusCode = (int)HttpStatusCode.RequestTimeout;
-                    context.Response.Close();
-                }
-                else
-                {
-                    context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
-                    if (_writeExceptionsToOutput)
+                    else if (session.Reason != null)
                     {
-                        using (var writer = new StreamWriter(context.Response.OutputStream))
-                        {
-                            await writer.WriteAsync(exception.ToString()).ConfigureAwait(false);
-                        }
-                    }
-
-                    context.Response.Close();
-                }
-            }
-        }
-
-        /// <summary>
-        /// Consumes the transports outputs.
-        /// </summary>
-        /// <param name="envelope"></param>
-        /// <returns></returns>
-        private async Task ProcessTransportOutputAsync(Envelope envelope)
-        {
-            Exception exception = null;
-
-            try
-            {
-                HttpListenerContext context;
-
-                if (envelope is Message)
-                {
-                    // TODO: Stores the envelope
-                }
-                else if (_pendingContextsDictionary.TryRemove(envelope.Id, out context))
-                {
-                    if (envelope is Notification)
-                    {
-                        var notification = (Notification)envelope;
-                        ProcessNotificationResult(context.Response, notification);
-                    }
-                    else if (envelope is Command)
-                    {
-                        var command = (Command)envelope;
-                        await ProcessCommandResultAsync(context.Response, command).ConfigureAwait(false);
+                        context.Response.StatusCode = (int)GetHttpStatusCode(session.Reason.Code);
+                        context.Response.StatusDescription = session.Reason.Description;
+                        context.Response.Close();
                     }
                     else
                     {
-                        // Message and sessions should not be here...
-                        context.Response.StatusCode = (int)HttpStatusCode.Conflict;
+                        context.Response.StatusCode = (int)HttpStatusCode.NotFound;
+                        context.Response.Close();
                     }
 
+                }
+                catch (LimeException ex)
+                {
+                    context.Response.StatusCode = (int)GetHttpStatusCode(ex.Reason.Code);
+                    context.Response.StatusDescription = ex.Reason.Description;
                     context.Response.Close();
-                }                
-                else if (envelope is Notification)
-                {
-                    // TODO: Stores the envelope
                 }
-                else
+                catch (Exception ex)
                 {
-                    // Register the error, but do not throw an exception
+                    exception = ex;
                 }
-            }
-            catch (Exception ex)
-            {
-                exception = ex;
-            }
 
-            if (exception != null)
-            {
+                if (exception != null)
+                {
+                    if (exception is OperationCanceledException)
+                    {
+                        await transport.CloseAsync(_listenerCancellationTokenSource.Token).ConfigureAwait(false);
+                        context.Response.StatusCode = (int)HttpStatusCode.RequestTimeout;
+                        context.Response.Close();
+                    }
+                    else
+                    {
+                        context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+                        if (_writeExceptionsToOutput)
+                        {
+                            context.Response.ContentType = Constants.TEXT_PLAIN_HEADER_VALUE;
+                            using (var writer = new StreamWriter(context.Response.OutputStream))
+                            {
+                                await writer.WriteAsync(exception.ToString()).ConfigureAwait(false);
+                            }
+                        }
 
-            }
-        }
-
-        /// <summary>
-        /// Process the envelope request.
-        /// </summary>
-        /// <param name="envelope"></param>
-        /// <param name="transport"></param>
-        /// <param name="context"></param>
-        /// <param name="releaseContext">if true, the context should be closed; otherwise, it will be added to the pending list and waits for a transport result.</param>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        private async Task ProcessEnvelopeAsync(Envelope envelope, ServerHttpTransport transport, HttpListenerContext context, bool isAsync, CancellationToken cancellationToken)
-        {
-            if (isAsync)
-            {
-                await transport.InputBuffer.SendAsync(envelope, cancellationToken).ConfigureAwait(false);
-                context.Response.StatusCode = (int)HttpStatusCode.Accepted;
-                context.Response.Close();
+                        context.Response.Close();
+                    }
+                }
             }
             else
             {
-                // Register the context for callback
-                if (_pendingContextsDictionary.TryAdd(envelope.Id, context))
-                {
-                    // The cancellationToken can be collected by the GC before this?
-                    cancellationToken.Register(() =>
-                    {
-                        HttpListenerContext c;
-                        if (_pendingContextsDictionary.TryRemove(envelope.Id, out c))
-                        {
-                            c.Response.StatusCode = (int)HttpStatusCode.RequestTimeout;
-                            c.Response.Close();
-                        };
-                    });
-
-                    await transport.InputBuffer.SendAsync(envelope, cancellationToken).ConfigureAwait(false);
-                }
-                else
-                {
-                    context.Response.StatusCode = (int)HttpStatusCode.Conflict;
-                    context.Response.Close();
-                }
+                context.Response.StatusCode = (int)HttpStatusCode.NotFound;
+                context.Response.Close();
             }
         }
 
@@ -506,126 +370,65 @@ namespace Lime.Protocol.Http
             return string.Format("{0}:{1}", identity.Name, identity.Password).ToSHA1HashString();
         }
 
-        private async Task<Message> GetMessageAsync(HttpListenerRequest request)
+        /// <summary>
+        /// Consumes the transports outputs.
+        /// </summary>
+        /// <param name="envelope"></param>
+        /// <returns></returns>
+        private async Task ProcessTransportOutputAsync(Envelope envelope)
         {
-            Message message = null;
+            Exception exception = null;
 
-            var content = await GetDocumentAsync(request).ConfigureAwait(false);
-            if (content != null)
+            try
             {
-                message = new Message()
+                HttpListenerResponse response;
+
+                if (envelope is Message)
                 {
-                    Content = content
-                };
-                FillEnvelopeFromRequest(message, request);
-            }
-            else
-            {
-                throw new LimeException(ReasonCodes.VALIDATION_EMPTY_DOCUMENT, "Invalid or empty content");
-            }
-
-            return message;
-        }
-
-        private async Task<Command> GetCommandAsync(HttpListenerRequest request)
-        {
-            Command command = null;            
-
-            CommandMethod method;
-            if (TryConvertToCommandMethod(request.HttpMethod, out method))
-            {                               
-                var limeUriFragment = request.Url.Segments.Except(new[] { COMMANDS_PATH + ROOT }).Aggregate((s1, s2) => s1 + s2);
-                if (!string.IsNullOrWhiteSpace(limeUriFragment))
+                    await _messageStorage.StoreEnvelopeAsync(envelope.To.ToIdentity(), (Message)envelope).ConfigureAwait(false);
+                }
+                else if (_pendingResponsesDictionary.TryRemove(envelope.Id, out response))
                 {
-                    command = new Command();
-                    FillEnvelopeFromRequest(command, request);
-
-                    if (command.Id != Guid.Empty)
+                    if (envelope is Notification)
                     {
-                        command.Method = method;
-                        command.Uri = new LimeUri(limeUriFragment);
-
-                        if (command.Method == CommandMethod.Set ||
-                            command.Method == CommandMethod.Observe)
-                        {
-                            command.Resource = await GetDocumentAsync(request).ConfigureAwait(false);
-                        }
+                        ProcessNotificationResult((Notification)envelope, response);
+                    }
+                    else if (envelope is Command)
+                    {
+                        await ProcessCommandResultAsync((Command)envelope, response).ConfigureAwait(false);
                     }
                     else
                     {
-                        throw new LimeException(ReasonCodes.VALIDATION_ERROR, "Invalid or empty id");
+                        // Message and sessions should not be here...
+                        // Put the response back
+                        _pendingResponsesDictionary.TryAdd(envelope.Id, response);
+
+                        // Stores the envelope
+                        
                     }
+
+                    response.Close();
+                }                
+                else if (envelope is Notification)
+                {
+                    await _notificationStorage.StoreEnvelopeAsync(envelope.To.ToIdentity(), (Notification)envelope).ConfigureAwait(false);
                 }
                 else
                 {
-                    throw new LimeException(ReasonCodes.VALIDATION_INVALID_URI, "Invalid command URI");
+                    // Register the error, but do not throw an exception
                 }
             }
-            else
+            catch (Exception ex)
             {
-                throw new LimeException(ReasonCodes.VALIDATION_INVALID_METHOD, "Invalid method");
+                exception = ex;
             }
 
-            return command;
-        }        
-
-        private bool TryConvertToCommandMethod(string httpMethod, out CommandMethod commandMethod)
-        {
-            switch (httpMethod)
+            if (exception != null)
             {
-                case HTTP_METHOD_GET:
-                    commandMethod = CommandMethod.Get;
-                    return true;
-                case HTTP_METHOD_POST:
-                    commandMethod = CommandMethod.Set;
-                    return true;
-                case HTTP_METHOD_DELETE:
-                    commandMethod = CommandMethod.Delete;
-                    return true;
-                default:
-                    commandMethod = default(CommandMethod);
-                    return false;
+
             }
         }
-
-        private async Task<Document> GetDocumentAsync(HttpListenerRequest request)
-        {
-            Document document = null;
-
-            MediaType mediaType = null;
-            MediaType.TryParse(request.Headers.Get(CONTENT_TYPE_HEADER), out mediaType);
-
-            if (mediaType != null)
-            {                
-                using (var streamReader = new StreamReader(request.InputStream))
-                {
-                    var body = await streamReader.ReadToEndAsync().ConfigureAwait(false);
-                    document = _serializer.Deserialize(body, mediaType);
-                }
-            }
-
-            return document;        
-        }
-
-        private void FillEnvelopeFromRequest(Envelope envelope, HttpListenerRequest request)
-        {
-            if (envelope != null)
-            {
-                Guid id;
-                Guid.TryParse(request.GetValue(ENVELOPE_ID_HEADER, ENVELOPE_ID_QUERY), out id);
-                Node from;
-                Node.TryParse(request.GetValue(ENVELOPE_FROM_HEADER, ENVELOPE_FROM_QUERY), out from);
-                Node to;
-                Node.TryParse(request.GetValue(ENVELOPE_TO_HEADER, ENVELOPE_TO_QUERY), out to);
-                Node pp;
-                Node.TryParse(request.GetValue(ENVELOPE_PP_HEADER, ENVELOPE_PP_QUERY), out pp);
-
-                envelope.Id = id;
-                envelope.From = from;
-                envelope.To = to;
-                envelope.Pp = pp;
-            }
-        }
+   
 
         private HttpStatusCode GetHttpStatusCode(int reasonCode)
         {            
@@ -643,7 +446,7 @@ namespace Lime.Protocol.Http
             return HttpStatusCode.Forbidden;
         }
 
-        private void ProcessNotificationResult(HttpListenerResponse response, Notification notification)
+        private void ProcessNotificationResult(Notification notification, HttpListenerResponse response)
         {
             if (notification.Event == Event.Dispatched)
             {
@@ -656,8 +459,7 @@ namespace Lime.Protocol.Http
             }
         }
 
-
-        private async Task ProcessCommandResultAsync(HttpListenerResponse response, Command command)
+        private async Task ProcessCommandResultAsync(Command command, HttpListenerResponse response)
         {
             if (command.Status == CommandStatus.Success)
             {
@@ -672,7 +474,7 @@ namespace Lime.Protocol.Http
             if (command.Resource != null)
             {
                 var mediaType = command.Resource.GetMediaType();
-                response.Headers.Add(CONTENT_TYPE_HEADER, mediaType.ToString());
+                response.Headers.Add(Constants.CONTENT_TYPE_HEADER, mediaType.ToString());
 
                 using (var writer = new StreamWriter(response.OutputStream))
                 {
@@ -680,7 +482,7 @@ namespace Lime.Protocol.Http
                     await writer.WriteAsync(documentString).ConfigureAwait(false);
                 }
             }
-        }
+        }       
 
         #endregion
     }
