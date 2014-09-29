@@ -310,25 +310,22 @@ namespace Lime.Client.Console
 
                     if (message.To == null)
                     {
-                        var notification = new Notification()
-                        {
-                            Id = message.Id,
-                            Event = Event.Failed,
-                            Reason = new Reason()
-                            {
-                                Code = ReasonCodes.VALIDATION_INVALID_RECIPIENTS,
-                                Description = "Invalid destination"
-                            }
-                        };
-
-                        await channel.SendNotificationAsync(notification);
+                        message.To = channel.LocalNode;                        
                     }
-                    else if (!_identityInstanceSessionIdDictionary.TryGetValue(message.To.ToIdentity(), out instanceSessionDictionary) ||
+
+                    if (message.To.Instance == null)
+                    {
+                        message.To.Instance = "default";
+                    }
+
+                    if (!_identityInstanceSessionIdDictionary.TryGetValue(message.To.ToIdentity(), out instanceSessionDictionary) ||
                              !instanceSessionDictionary.Any())
                     {
                         var notification = new Notification()
                         {
                             Id = message.Id,
+                            From = channel.LocalNode,
+                            To = channel.RemoteNode,
                             Event = Event.Failed,
                             Reason = new Reason()
                             {
@@ -352,11 +349,15 @@ namespace Lime.Client.Console
 
                         if (_serverConnectedNodesDictionary.TryGetValue(destinationSessionId, out destinationChannel))
                         {
+                            message.From = channel.RemoteNode;
+
                             await destinationChannel.SendMessageAsync(message);
 
                             var notification = new Notification()
                             {
                                 Id = message.Id,
+                                From = channel.LocalNode,
+                                To = channel.RemoteNode,
                                 Event = Event.Dispatched                                
                             };
 
@@ -367,6 +368,8 @@ namespace Lime.Client.Console
                             var notification = new Notification()
                             {
                                 Id = message.Id,
+                                From = channel.LocalNode,
+                                To = channel.RemoteNode,
                                 Event = Event.Failed,
                                 Reason = new Reason()
                                 {
@@ -400,7 +403,8 @@ namespace Lime.Client.Console
                     var commandResponse = new Command()
                     {
                         Id = command.Id,
-                        To = command.From,
+                        From = channel.LocalNode,
+                        To = channel.RemoteNode,
                         Status = CommandStatus.Failure,
                         Reason = new Reason()
                         {

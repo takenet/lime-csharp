@@ -20,32 +20,6 @@ using System.Threading.Tasks.Dataflow;
 
 namespace Lime.Protocol.Http
 {
-    /*
-# Receive from the channel (long polling)
-GET /messages/
-
-# Stored messages
-GET /storage/messages/
-
-# Send to the channel, fire-and-forget
-POST /messages/
-
-# Send to the channel, with notification
-POST /messages/?id=a9173c7d-038c-4101-b547-939c25d8053e
-
-# Commands only to the channel (not stored)
-GET /commands/presence/
-POST /commands/presence/
-DELETE /commands/presence/
-
-# Receive from the storage
-GET /storage/notifications/
-
-# Send to the channel
-POST /notifications/?id=a9173c7d-038c-4101-b547-939c25d8053e
-    */
-
-
     /// <summary>
     /// Implements a HTTP listener server 
     /// that supports an emulation layer 
@@ -65,8 +39,6 @@ POST /notifications/?id=a9173c7d-038c-4101-b547-939c25d8053e
         private readonly ActionBlock<HttpListenerContext> _processContextActionBlock;
         private readonly ConcurrentDictionary<Guid, HttpListenerResponse> _pendingResponsesDictionary;
         private readonly ActionBlock<Envelope> _processTransportOutputActionBlock;
-
-
         private readonly IEnvelopeStorage<Message> _messageStorage;
         private readonly IEnvelopeStorage<Notification> _notificationStorage;
 
@@ -136,13 +108,21 @@ POST /notifications/?id=a9173c7d-038c-4101-b547-939c25d8053e
             _processTransportOutputActionBlock = new ActionBlock<Envelope>(e => ProcessTransportOutputAsync(e));            
 
 
-            // New
-            var sendCommandProcessor = new SendCommandProcessor(Constants.COMMANDS_PATH, _pendingResponsesDictionary);
-            var sendMessageProcessor = new SendMessageProcessor(Constants.MESSAGES_PATH, _pendingResponsesDictionary);
+            // Request processors
+            var sendCommandRequestProcessor = new SendCommandRequestProcessor(_pendingResponsesDictionary);
+            var sendMessageRequestProcessor = new SendMessageRequestProcessor(_pendingResponsesDictionary);
+            var getMessagesRequestProcessor = new GetMessagesRequestProcessor(_messageStorage);            
+            var getMessageByIdRequestProcessor = new GetMessageByIdRequestProcessor(_messageStorage);
+            var getNotificationsRequestProcessor = new GetNotificationsRequestProcessor(_notificationStorage);
+            var getNotificationByIdRequestProcessor = new GetNotificationByIdRequestProcessor(_notificationStorage);
 
             _uriTemplateTable = new UriTemplateTable(baseUri);
-            _uriTemplateTable.KeyValuePairs.Add(new KeyValuePair<UriTemplate, object>(sendCommandProcessor.Template, sendCommandProcessor));
-            _uriTemplateTable.KeyValuePairs.Add(new KeyValuePair<UriTemplate, object>(sendMessageProcessor.Template, sendMessageProcessor));
+            _uriTemplateTable.KeyValuePairs.Add(new KeyValuePair<UriTemplate, object>(sendCommandRequestProcessor.Template, sendCommandRequestProcessor));
+            _uriTemplateTable.KeyValuePairs.Add(new KeyValuePair<UriTemplate, object>(sendMessageRequestProcessor.Template, sendMessageRequestProcessor));
+            _uriTemplateTable.KeyValuePairs.Add(new KeyValuePair<UriTemplate, object>(getMessagesRequestProcessor.Template, getMessagesRequestProcessor));
+            _uriTemplateTable.KeyValuePairs.Add(new KeyValuePair<UriTemplate, object>(getMessageByIdRequestProcessor.Template, getMessageByIdRequestProcessor));
+            _uriTemplateTable.KeyValuePairs.Add(new KeyValuePair<UriTemplate, object>(getNotificationsRequestProcessor.Template, getNotificationsRequestProcessor));
+            _uriTemplateTable.KeyValuePairs.Add(new KeyValuePair<UriTemplate, object>(getNotificationByIdRequestProcessor.Template, getNotificationByIdRequestProcessor));
             _uriTemplateTable.MakeReadOnly(true);                     
 
         }
@@ -262,12 +242,13 @@ POST /notifications/?id=a9173c7d-038c-4101-b547-939c25d8053e
                     if (session.State == SessionState.Established)
                     {
                         var processor = (IRequestProcessor)match.Data;
-                        await processor.ProcessAsync(context, transport, cancellationToken).ConfigureAwait(false);
+                        await processor.ProcessAsync(context, transport, match, cancellationToken).ConfigureAwait(false);
 
                     }
                     else if (session.Reason != null)
                     {
-                        context.Response.StatusCode = (int)GetHttpStatusCode(session.Reason.Code);
+                        context.Response.Headers.Add(Constants.REASON_CODE_HEADER, session.Reason.Code.ToString());
+                        context.Response.StatusCode = (int)session.Reason.ToHttpStatusCode();
                         context.Response.StatusDescription = session.Reason.Description;
                         context.Response.Close();
                     }
@@ -280,7 +261,8 @@ POST /notifications/?id=a9173c7d-038c-4101-b547-939c25d8053e
                 }
                 catch (LimeException ex)
                 {
-                    context.Response.StatusCode = (int)GetHttpStatusCode(ex.Reason.Code);
+                    context.Response.Headers.Add(Constants.REASON_CODE_HEADER, ex.Reason.Code.ToString());
+                    context.Response.StatusCode = (int)ex.Reason.ToHttpStatusCode();
                     context.Response.StatusDescription = ex.Reason.Description;
                     context.Response.Close();
                 }
@@ -392,29 +374,42 @@ POST /notifications/?id=a9173c7d-038c-4101-b547-939c25d8053e
                     if (envelope is Notification)
                     {
                         ProcessNotificationResult((Notification)envelope, response);
+                        response.Close();
                     }
                     else if (envelope is Command)
                     {
                         await ProcessCommandResultAsync((Command)envelope, response).ConfigureAwait(false);
+                        response.Close();
                     }
                     else
-                    {
-                        // Message and sessions should not be here...
-                        // Put the response back
-                        _pendingResponsesDictionary.TryAdd(envelope.Id, response);
-
-                        // Stores the envelope
-                        
-                    }
-
-                    response.Close();
+                    {                        
+                        // Put the response back (maybe is an id colision)
+                        _pendingResponsesDictionary.TryAdd(envelope.Id, response);                                                
+                    }                    
                 }                
                 else if (envelope is Notification)
                 {
-                    await _notificationStorage.StoreEnvelopeAsync(envelope.To.ToIdentity(), (Notification)envelope).ConfigureAwait(false);
+                    var notification = (Notification)envelope;
+                    var owner = envelope.To.ToIdentity();
+
+                    var existingNotification = await _notificationStorage.GetEnvelopeAsync(owner, envelope.Id).ConfigureAwait(false);
+                    if (existingNotification != null)
+                    {
+                        if (notification.Event == Event.Failed || 
+                            existingNotification.Event < notification.Event)
+                        {
+                            await _notificationStorage.DeleteEnvelopeAsync(owner, envelope.Id).ConfigureAwait(false);
+                            await _notificationStorage.StoreEnvelopeAsync(owner, notification).ConfigureAwait(false);
+                        }                        
+                    }
+                    else
+                    {
+                        await _notificationStorage.StoreEnvelopeAsync(owner, notification).ConfigureAwait(false);
+                    }
                 }
                 else
                 {
+                    
                     // Register the error, but do not throw an exception
                 }
             }
@@ -427,35 +422,26 @@ POST /notifications/?id=a9173c7d-038c-4101-b547-939c25d8053e
             {
 
             }
-        }
-   
-
-        private HttpStatusCode GetHttpStatusCode(int reasonCode)
-        {            
-            if (reasonCode >= 20 && reasonCode < 30)
-            {
-                // Validation errors
-                return HttpStatusCode.BadRequest;
-            }
-            else if ((reasonCode >= 10 && reasonCode < 20) || (reasonCode >= 30 && reasonCode < 40))
-            {
-                // Session or Authorization errors
-                return HttpStatusCode.Unauthorized;
-            }            
-            
-            return HttpStatusCode.Forbidden;
-        }
+        }  
 
         private void ProcessNotificationResult(Notification notification, HttpListenerResponse response)
-        {
-            if (notification.Event == Event.Dispatched)
+        {            
+            if (notification.Event == Event.Failed)
             {
-                response.StatusCode = (int)HttpStatusCode.Created;
+                if (notification.Reason != null)
+                {
+                    response.Headers.Add(Constants.REASON_CODE_HEADER, notification.Reason.Code.ToString());
+                    response.StatusCode = (int)notification.Reason.ToHttpStatusCode();
+                    response.StatusDescription = notification.Reason.Description;
+                }
+                else
+                {
+                    response.StatusCode = (int)HttpStatusCode.InternalServerError;
+                }
             }
-            else if (notification.Event == Event.Failed)
-            {
-                response.StatusCode = (int)GetHttpStatusCode(notification.Reason.Code);
-                response.StatusDescription = notification.Reason.Description;
+            else
+            {                
+                response.StatusCode = (int)HttpStatusCode.Created;                
             }
         }
 
@@ -465,16 +451,21 @@ POST /notifications/?id=a9173c7d-038c-4101-b547-939c25d8053e
             {
                 response.StatusCode = (int)HttpStatusCode.Created;
             }
+            else if (command.Reason != null)
+            {
+                response.Headers.Add(Constants.REASON_CODE_HEADER, command.Reason.Code.ToString());
+                response.StatusCode = (int)command.Reason.ToHttpStatusCode();
+                response.StatusDescription = command.Reason.Description;
+            }
             else
             {
-                response.StatusCode = (int)GetHttpStatusCode(command.Reason.Code);
-                response.StatusDescription = command.Reason.Description;
+                response.StatusCode = (int)HttpStatusCode.InternalServerError;
             }
 
             if (command.Resource != null)
             {
                 var mediaType = command.Resource.GetMediaType();
-                response.Headers.Add(Constants.CONTENT_TYPE_HEADER, mediaType.ToString());
+                response.ContentType = mediaType.ToString();
 
                 using (var writer = new StreamWriter(response.OutputStream))
                 {
@@ -482,7 +473,7 @@ POST /notifications/?id=a9173c7d-038c-4101-b547-939c25d8053e
                     await writer.WriteAsync(documentString).ConfigureAwait(false);
                 }
             }
-        }       
+        }
 
         #endregion
     }

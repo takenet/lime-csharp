@@ -10,12 +10,12 @@ using System.Threading.Tasks;
 
 namespace Lime.Protocol.Http.Processors
 {
-    public class SendMessageProcessor : SendEnvelopeProcessorBase<Message>, IRequestProcessor
+    public class SendMessageRequestProcessor : SendEnvelopeRequestProcessorBase<Message>, IRequestProcessor
     {
         #region Constructor
 
-        public SendMessageProcessor(string messagesPath, ConcurrentDictionary<Guid, HttpListenerResponse> pendingResponsesDictionary)
-            : base(new[] { Constants.HTTP_METHOD_POST }, new UriTemplate(string.Format("/{0}", Constants.MESSAGES_PATH)), new DocumentSerializer(), pendingResponsesDictionary)
+        public SendMessageRequestProcessor(ConcurrentDictionary<Guid, HttpListenerResponse> pendingResponsesDictionary)
+            : base(new HashSet<string> { Constants.HTTP_METHOD_POST }, new UriTemplate(string.Format("/{0}", Constants.MESSAGES_PATH)), new DocumentSerializer(), pendingResponsesDictionary)
         {
 
         }
@@ -23,11 +23,11 @@ namespace Lime.Protocol.Http.Processors
         #endregion
 
 
-        public override Task ProcessAsync(HttpListenerContext context, ServerHttpTransport transport, CancellationToken cancellationToken)
+        public override Task ProcessAsync(HttpListenerContext context, ServerHttpTransport transport, UriTemplateMatch match, CancellationToken cancellationToken)
         {            
             if (context.Request.HttpMethod.Equals(Constants.HTTP_METHOD_POST))
             {
-                return base.ProcessAsync(context, transport, cancellationToken);
+                return base.ProcessAsync(context, transport, match, cancellationToken);
             }
             else
             {

@@ -9,10 +9,10 @@ namespace Lime.Protocol.Http
 {
     public interface IRequestProcessor
     {
-        string[] Methods { get; }
+        HashSet<string> Methods { get; }
 
         UriTemplate Template { get; }
 
-        Task ProcessAsync(HttpListenerContext context, ServerHttpTransport transport, CancellationToken cancellationToken);
+        Task ProcessAsync(HttpListenerContext context, ServerHttpTransport transport, UriTemplateMatch match, CancellationToken cancellationToken);
     }
 }

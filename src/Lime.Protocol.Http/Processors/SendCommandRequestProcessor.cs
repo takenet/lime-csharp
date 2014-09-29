@@ -10,12 +10,12 @@ using Lime.Protocol.Http.Serialization;
 
 namespace Lime.Protocol.Http.Processors
 {
-    public class SendCommandProcessor : SendEnvelopeProcessorBase<Command>, IRequestProcessor
+    public class SendCommandRequestProcessor : SendEnvelopeRequestProcessorBase<Command>, IRequestProcessor
     {
         #region Constructor
 
-        public SendCommandProcessor(string commandsPath, ConcurrentDictionary<Guid, HttpListenerResponse> pendingResponsesDictionary)
-            : base(new[] { Constants.HTTP_METHOD_GET, Constants.HTTP_METHOD_POST, Constants.HTTP_METHOD_DELETE }, new UriTemplate(string.Format("/{0}", Constants.COMMANDS_PATH)), new DocumentSerializer(), pendingResponsesDictionary)
+        public SendCommandRequestProcessor(ConcurrentDictionary<Guid, HttpListenerResponse> pendingResponsesDictionary)
+            : base(new HashSet<string> { Constants.HTTP_METHOD_GET, Constants.HTTP_METHOD_POST, Constants.HTTP_METHOD_DELETE }, new UriTemplate(string.Format("/{0}", Constants.COMMANDS_PATH)), new DocumentSerializer(), pendingResponsesDictionary)
         {
 
         }

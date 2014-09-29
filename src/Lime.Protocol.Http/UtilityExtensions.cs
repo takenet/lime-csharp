@@ -53,5 +53,22 @@ namespace Lime.Protocol.Http
             return false;
 
         }
+
+        public static HttpStatusCode ToHttpStatusCode(this Reason reason)
+        {
+            if (reason.Code >= 20 && reason.Code < 30)
+            {
+                // Validation errors
+                return HttpStatusCode.BadRequest;
+            }
+            else if ((reason.Code >= 10 && reason.Code < 20) || (reason.Code >= 30 && reason.Code < 40))
+            {
+                // Session or Authorization errors
+                return HttpStatusCode.Unauthorized;
+            }
+
+            return HttpStatusCode.Forbidden;
+        }
+
     }
 }

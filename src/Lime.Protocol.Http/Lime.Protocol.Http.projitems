@@ -11,9 +11,15 @@
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)Constants.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)IRequestProcessor.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Processors\SendCommandProcessor.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Processors\SendEnvelopeProcessorBase.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Processors\SendMessageProcessor.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Processors\GetMessageByIdRequestProcessor.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Processors\GetEnvelopeByIdRequestProcessor.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Processors\GetEnvelopesRequestProcessor.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Processors\GetNotificationByIdRequestProcessor.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Processors\GetNotificationsRequestProcessor.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Processors\GetMessagesRequestProcessor.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Processors\SendCommandRequestProcessor.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Processors\SendEnvelopeRequestProcessorBase.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Processors\SendMessageRequestProcessor.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)UtilityExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Serialization\IDocumentSerializer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Serialization\DocumentSerializer.cs" />

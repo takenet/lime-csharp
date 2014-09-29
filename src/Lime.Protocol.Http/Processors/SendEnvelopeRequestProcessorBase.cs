@@ -11,7 +11,7 @@ using System.Threading.Tasks.Dataflow;
 
 namespace Lime.Protocol.Http.Processors
 {
-    public abstract class SendEnvelopeProcessorBase<T> : IRequestProcessor 
+    public abstract class SendEnvelopeRequestProcessorBase<T> : IRequestProcessor 
         where T : Envelope
     {
 
@@ -21,7 +21,7 @@ namespace Lime.Protocol.Http.Processors
 
         #region Constructor
 
-        public SendEnvelopeProcessorBase(string[] methods, UriTemplate template, IDocumentSerializer serializer, ConcurrentDictionary<Guid, HttpListenerResponse> pendingResponsesDictionary)
+        public SendEnvelopeRequestProcessorBase(HashSet<string> methods, UriTemplate template, IDocumentSerializer serializer, ConcurrentDictionary<Guid, HttpListenerResponse> pendingResponsesDictionary)
         {
             Methods = methods;
             Template = template;
@@ -35,12 +35,12 @@ namespace Lime.Protocol.Http.Processors
 
         #region IRequestProcessor Members
 
-        public string[] Methods { get; private set; }
+        public HashSet<string> Methods { get; private set; }
 
 
         public UriTemplate Template { get; private set; }
 
-        public virtual async Task ProcessAsync(HttpListenerContext context, ServerHttpTransport transport, CancellationToken cancellationToken)
+        public virtual async Task ProcessAsync(HttpListenerContext context, ServerHttpTransport transport, UriTemplateMatch match, CancellationToken cancellationToken)
         {
             var envelope = await ParseEnvelopeAsync(context.Request).ConfigureAwait(false);
 
@@ -110,7 +110,7 @@ namespace Lime.Protocol.Http.Processors
             Document document = null;
 
             MediaType mediaType;
-            if (MediaType.TryParse(request.Headers.Get(Constants.CONTENT_TYPE_HEADER), out mediaType))
+            if (MediaType.TryParse(request.ContentType, out mediaType))
             {
                 using (var streamReader = new StreamReader(request.InputStream))
                 {

@@ -13,7 +13,6 @@ namespace Lime.Protocol.Http
         public const string HTTP_METHOD_GET = "GET";
         public const string HTTP_METHOD_POST = "POST";
         public const string HTTP_METHOD_DELETE = "DELETE";
-        public const string CONTENT_TYPE_HEADER = "Content-Type";
         public const string TEXT_PLAIN_HEADER_VALUE = "text/plain";
         public const string SESSION_ID_HEADER = "X-Session-Id";
         public const string ENVELOPE_ID_HEADER = "X-Id";
@@ -24,6 +23,7 @@ namespace Lime.Protocol.Http
         public const string ENVELOPE_TO_QUERY = "to";
         public const string ENVELOPE_PP_HEADER = "X-Pp";
         public const string ENVELOPE_PP_QUERY = "pp";
-        public const string ASYNC_QUERY = "async"; 
+        public const string ASYNC_QUERY = "async";
+        public const string REASON_CODE_HEADER = "X-Reason-Code";
     }
 }
