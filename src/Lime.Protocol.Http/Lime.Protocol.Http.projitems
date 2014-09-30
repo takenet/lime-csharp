@@ -23,7 +23,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Processors\SendCommandContextProcessor.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Processors\SendEnvelopeRequestContextBase.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Processors\SendMessageContextProcessor.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)UtilityExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UtilExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Serialization\IDocumentSerializer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Serialization\DocumentSerializer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ServerHttpTransport.cs" />

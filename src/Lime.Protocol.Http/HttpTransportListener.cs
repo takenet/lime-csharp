@@ -54,6 +54,18 @@ namespace Lime.Protocol.Http
 
         #region Constructor
 
+        /// <summary>
+        /// Creates a new instance of the
+        /// </summary>
+        /// <param name="port"></param>
+        /// <param name="hostName"></param>
+        /// <param name="useHttps"></param>
+        /// <param name="requestTimeout"></param>
+        /// <param name="writeExceptionsToOutput"></param>
+        /// <param name="serializer"></param>
+        /// <param name="messageStorage"></param>
+        /// <param name="notificationStorage"></param>
+        /// <param name="traceWriter"></param>
         public HttpTransportListener(int port, string hostName = "*", bool useHttps = false, TimeSpan requestTimeout = default(TimeSpan), bool writeExceptionsToOutput = true, IDocumentSerializer serializer = null, IEnvelopeStorage<Message> messageStorage = null, IEnvelopeStorage<Notification> notificationStorage = null, ITraceWriter traceWriter = null)
         {
             if (!HttpListener.IsSupported)
@@ -101,24 +113,8 @@ namespace Lime.Protocol.Http
             _processTransportOutputActionBlock = new ActionBlock<Envelope>(e => ProcessTransportOutputAsync(e));
 
             // Context processors
-            var sendCommandContextProcessor = new SendCommandContextProcessor(_pendingResponsesDictionary, _traceWriter);
-            var sendMessageContextProcessor = new SendMessageContextProcessor(_pendingResponsesDictionary, _traceWriter);
-            var getMessagesContextProcessor = new GetMessagesContextProcessor(_messageStorage);            
-            var getMessageByIdContextProcessor = new GetMessageByIdContextProcessor(_messageStorage);
-            var deleteMessageByIdContextProcessor = new DeleteMessageByIdContextProcessor(_messageStorage);
-            var getNotificationsContextProcessor = new GetNotificationsContextProcessor(_notificationStorage);
-            var getNotificationByIdContextProcessor = new GetNotificationByIdContextProcessor(_notificationStorage);
-            var deleteNotificationByIdContextProcessor = new DeleteNotificationByIdContextProcessor(_notificationStorage);
             _uriTemplateTable = new UriTemplateTable(baseUri);
-            _uriTemplateTable.KeyValuePairs.Add(new KeyValuePair<UriTemplate, object>(sendCommandContextProcessor.Template, sendCommandContextProcessor));
-            _uriTemplateTable.KeyValuePairs.Add(new KeyValuePair<UriTemplate, object>(sendMessageContextProcessor.Template, sendMessageContextProcessor));
-            _uriTemplateTable.KeyValuePairs.Add(new KeyValuePair<UriTemplate, object>(getMessagesContextProcessor.Template, getMessagesContextProcessor));
-            _uriTemplateTable.KeyValuePairs.Add(new KeyValuePair<UriTemplate, object>(getMessageByIdContextProcessor.Template, getMessageByIdContextProcessor));
-            _uriTemplateTable.KeyValuePairs.Add(new KeyValuePair<UriTemplate, object>(deleteMessageByIdContextProcessor.Template, deleteMessageByIdContextProcessor));
-            _uriTemplateTable.KeyValuePairs.Add(new KeyValuePair<UriTemplate, object>(getNotificationsContextProcessor.Template, getNotificationsContextProcessor));
-            _uriTemplateTable.KeyValuePairs.Add(new KeyValuePair<UriTemplate, object>(getNotificationByIdContextProcessor.Template, getNotificationByIdContextProcessor));
-            _uriTemplateTable.KeyValuePairs.Add(new KeyValuePair<UriTemplate, object>(deleteNotificationByIdContextProcessor.Template, deleteNotificationByIdContextProcessor));
-            _uriTemplateTable.MakeReadOnly(true);                     
+            RegisterProcessors();
 
         }
 
@@ -183,7 +179,32 @@ namespace Lime.Protocol.Http
 
         #endregion
 
-        #region Private Fields
+        #region Private Methods
+
+        /// <summary>
+        /// Register the context processors
+        /// in the URI template table.
+        /// </summary>
+        private void RegisterProcessors()
+        {
+            var sendCommandContextProcessor = new SendCommandContextProcessor(_pendingResponsesDictionary, _traceWriter);
+            var sendMessageContextProcessor = new SendMessageContextProcessor(_pendingResponsesDictionary, _traceWriter);
+            var getMessagesContextProcessor = new GetMessagesContextProcessor(_messageStorage);
+            var getMessageByIdContextProcessor = new GetMessageByIdContextProcessor(_messageStorage);
+            var deleteMessageByIdContextProcessor = new DeleteMessageByIdContextProcessor(_messageStorage);
+            var getNotificationsContextProcessor = new GetNotificationsContextProcessor(_notificationStorage);
+            var getNotificationByIdContextProcessor = new GetNotificationByIdContextProcessor(_notificationStorage);
+            var deleteNotificationByIdContextProcessor = new DeleteNotificationByIdContextProcessor(_notificationStorage);
+            _uriTemplateTable.KeyValuePairs.Add(new KeyValuePair<UriTemplate, object>(sendCommandContextProcessor.Template, sendCommandContextProcessor));
+            _uriTemplateTable.KeyValuePairs.Add(new KeyValuePair<UriTemplate, object>(sendMessageContextProcessor.Template, sendMessageContextProcessor));
+            _uriTemplateTable.KeyValuePairs.Add(new KeyValuePair<UriTemplate, object>(getMessagesContextProcessor.Template, getMessagesContextProcessor));
+            _uriTemplateTable.KeyValuePairs.Add(new KeyValuePair<UriTemplate, object>(getMessageByIdContextProcessor.Template, getMessageByIdContextProcessor));
+            _uriTemplateTable.KeyValuePairs.Add(new KeyValuePair<UriTemplate, object>(deleteMessageByIdContextProcessor.Template, deleteMessageByIdContextProcessor));
+            _uriTemplateTable.KeyValuePairs.Add(new KeyValuePair<UriTemplate, object>(getNotificationsContextProcessor.Template, getNotificationsContextProcessor));
+            _uriTemplateTable.KeyValuePairs.Add(new KeyValuePair<UriTemplate, object>(getNotificationByIdContextProcessor.Template, getNotificationByIdContextProcessor));
+            _uriTemplateTable.KeyValuePairs.Add(new KeyValuePair<UriTemplate, object>(deleteNotificationByIdContextProcessor.Template, deleteNotificationByIdContextProcessor));
+            _uriTemplateTable.MakeReadOnly(true);
+        }
 
         /// <summary>
         /// Consumes the http listener.
@@ -229,7 +250,6 @@ namespace Lime.Protocol.Http
                 if (match != null)
                 {
                     bool timedOut = false;
-
                     var cancellationToken = _requestTimeout.ToCancellationToken();
                     var transport = GetTransport(context);
 
@@ -249,7 +269,7 @@ namespace Lime.Protocol.Http
                         }
                         else
                         {
-                            context.Response.SendResponse(HttpStatusCode.NotFound);
+                            context.Response.SendResponse(HttpStatusCode.ServiceUnavailable);
                         }
                     }
                     catch (LimeException ex)
@@ -279,6 +299,12 @@ namespace Lime.Protocol.Http
 
             if (exception != null)
             {
+                if (_traceWriter != null &&
+                    _traceWriter.IsEnabled)
+                {
+                    await _traceWriter.TraceAsync("Listener exception: " + exception.ToString(), DataOperation.Send).ConfigureAwait(false);
+                }
+
                 if (_writeExceptionsToOutput)
                 {
                     await context.Response.SendResponseAsync(
@@ -288,12 +314,6 @@ namespace Lime.Protocol.Http
                 }
                 else
                 {
-                    if (_traceWriter != null &&
-                        _traceWriter.IsEnabled)
-                    {
-                        await _traceWriter.TraceAsync(exception.ToString(), DataOperation.Send).ConfigureAwait(false);
-                    }
-
                     context.Response.SendResponse(HttpStatusCode.InternalServerError);                    
                 }
             }
@@ -423,7 +443,7 @@ namespace Lime.Protocol.Http
                 if (_traceWriter != null &&
                     _traceWriter.IsEnabled)
                 {
-                    await _traceWriter.TraceAsync("Transport output: " + exception.ToString(), DataOperation.Send).ConfigureAwait(false);
+                    await _traceWriter.TraceAsync("Transport output exception: " + exception.ToString(), DataOperation.Send).ConfigureAwait(false);
                 }
             }
         }  

@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Lime.Protocol.Http
 {
-    public static class UtilityExtensions
+    public static class UtilExtensions
     {
         /// <summary>
         /// Extracts an variable value
@@ -41,20 +41,12 @@ namespace Lime.Protocol.Http
             }            
         }
 
-
-        public static bool TryGetEnvelopeId(this Uri uri, out Guid messageId)
-        {
-            var segments = uri.Segments;
-            if (segments.Length >= 3)
-            {
-                return Guid.TryParse(segments[2].TrimEnd('/'), out messageId);
-            }
-
-            messageId = default(Guid);
-            return false;
-
-        }
-
+        /// <summary>
+        /// Gets a related HTTP code
+        /// for the specified reason.
+        /// </summary>
+        /// <param name="reason"></param>
+        /// <returns></returns>
         public static HttpStatusCode ToHttpStatusCode(this Reason reason)
         {
             if (reason.Code >= 20 && reason.Code < 30)
@@ -72,6 +64,13 @@ namespace Lime.Protocol.Http
         }
 
 
+        /// <summary>
+        /// Sends a response
+        /// to the context.
+        /// </summary>
+        /// <param name="response"></param>
+        /// <param name="statusCode"></param>
+        /// <param name="headers"></param>
         public static void SendResponse(this HttpListenerResponse response, HttpStatusCode statusCode, IDictionary<string, string> headers = null)
         {
             if (headers != null)
@@ -83,6 +82,16 @@ namespace Lime.Protocol.Http
             response.Close();
         }
 
+        /// <summary>
+        /// Sends a response
+        /// to the context.
+        /// </summary>
+        /// <param name="response"></param>
+        /// <param name="statusCode"></param>
+        /// <param name="contentType"></param>
+        /// <param name="content"></param>
+        /// <param name="headers"></param>
+        /// <returns></returns>
         public static async Task SendResponseAsync(this HttpListenerResponse response, HttpStatusCode statusCode, string contentType, string content, IDictionary<string, string> headers = null)
         {
             if (headers != null)
@@ -99,6 +108,13 @@ namespace Lime.Protocol.Http
             response.Close();
         }
 
+        /// <summary>
+        /// Sends a response
+        /// to the context.
+        /// </summary>
+        /// <param name="response"></param>
+        /// <param name="reason"></param>
+        /// <param name="headers"></param>
         public static void SendResponse(this HttpListenerResponse response, Reason reason, IDictionary<string, string> headers = null)
         {
             if (headers != null)
@@ -112,6 +128,13 @@ namespace Lime.Protocol.Http
             response.Close();
         }
 
+        /// <summary>
+        /// Writes the specified
+        /// dictionary in the response
+        /// headers.
+        /// </summary>
+        /// <param name="response"></param>
+        /// <param name="headers"></param>
         public static void WriteHeaders(this HttpListenerResponse response, IDictionary<string, string> headers)
         {
             foreach (var header in headers)

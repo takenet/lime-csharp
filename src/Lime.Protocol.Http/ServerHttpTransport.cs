@@ -20,7 +20,7 @@ namespace Lime.Protocol.Http
     {
         #region Private Fields
 
-        private HttpListenerBasicIdentity _identity;
+        private HttpListenerBasicIdentity _httpIdentity;
         private readonly BufferBlock<Envelope> _inputBufferBlock;
         private readonly BufferBlock<Envelope> _outputBufferBlock;
         private readonly TaskCompletionSource<Session> _sessionTaskCompletionSource;
@@ -36,7 +36,7 @@ namespace Lime.Protocol.Http
                 throw new ArgumentNullException("identity");
             }
 
-            _identity = identity;
+            _httpIdentity = identity;
             Compression = SessionCompression.None;
             Encryption = isHttps ? SessionEncryption.TLS : SessionEncryption.None;
 
@@ -76,6 +76,14 @@ namespace Lime.Protocol.Http
             return _sessionTaskCompletionSource.Task;
         }
 
+        /// <summary>
+        /// Gets the transport associated identity.
+        /// </summary>
+        internal HttpListenerBasicIdentity HttpIdentity
+        {
+            get { return _httpIdentity; }
+        }
+
         #endregion
 
         #region TransportBase Members
@@ -100,7 +108,10 @@ namespace Lime.Protocol.Http
             }
             else
             {
-                await OutputBuffer.SendAsync(envelope, cancellationToken).ConfigureAwait(false);
+                if (!await OutputBuffer.SendAsync(envelope, cancellationToken).ConfigureAwait(false))
+                {
+                    throw new InvalidOperationException("The output buffer is complete");
+                }
             }
         }
 
@@ -121,7 +132,9 @@ namespace Lime.Protocol.Http
 
         protected override Task PerformCloseAsync(CancellationToken cancellationToken)
         {
-            // TODO: Close the buffers
+            // Close the buffers
+            InputBuffer.Complete();
+            OutputBuffer.Complete();
 
             _sessionTaskCompletionSource.TrySetCanceled();
             return Task.FromResult<object>(null);
@@ -146,7 +159,10 @@ namespace Lime.Protocol.Http
                         Encryption = this.Encryption
                     };
 
-                    await InputBuffer.SendAsync(responseSession, cancellationToken).ConfigureAwait(false);
+                    if (!await InputBuffer.SendAsync(responseSession, cancellationToken).ConfigureAwait(false))
+                    {                        
+                        throw new InvalidOperationException("The input buffer is complete");                        
+                    }
                 }
             }
             else if (session.State == SessionState.Authenticating)
@@ -159,7 +175,7 @@ namespace Lime.Protocol.Http
                 if (session.SchemeOptions != null &&
                     session.SchemeOptions.Any(s => s == AuthenticationScheme.Plain))
                 {
-                    var identity = Identity.Parse(_identity.Name);
+                    var identity = Identity.Parse(_httpIdentity.Name);
                     responseSession.State = SessionState.Authenticating;
                     responseSession.From = new Node()
                     {
@@ -168,7 +184,7 @@ namespace Lime.Protocol.Http
                     };
 
                     var plainAuthentication = new PlainAuthentication();
-                    plainAuthentication.SetToBase64Password(_identity.Password);
+                    plainAuthentication.SetToBase64Password(_httpIdentity.Password);
                     responseSession.Authentication = plainAuthentication;
                 }
                 else
@@ -177,17 +193,15 @@ namespace Lime.Protocol.Http
                     responseSession.State = SessionState.Finishing;
                 }
 
-                await InputBuffer.SendAsync(responseSession, cancellationToken).ConfigureAwait(false);
+                if (!await InputBuffer.SendAsync(responseSession, cancellationToken).ConfigureAwait(false))
+                {                    
+                    throw new InvalidOperationException("The input buffer is complete");                    
+                }
             }
             else
             {
                 // Remove the identity from the memory, since is not necessary anymore
-                _identity = null;
-
-                if (session.State == SessionState.Established)
-                {
-
-                }
+                _httpIdentity = null;
 
                 // Completes the task
                 _sessionTaskCompletionSource.SetResult(session);                
