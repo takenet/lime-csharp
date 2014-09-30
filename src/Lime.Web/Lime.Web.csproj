@@ -211,6 +211,7 @@
     <Content Include="Views\Home\ContentTypes.en-US.cshtml" />
     <Content Include="Views\Home\Resources.en-US.cshtml" />
     <Content Include="Views\Home\Libraries.en-US.cshtml" />
+    <Content Include="Views\Home\OverHttp.en-US.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

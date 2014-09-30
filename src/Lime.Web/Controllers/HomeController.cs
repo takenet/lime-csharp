@@ -37,6 +37,11 @@ namespace Lime.Web.Controllers
             return LocalizedView("Resources", language);
         }
 
+        public ActionResult OverHttp(string language)
+        {
+            return LocalizedView("OverHttp", language);
+        }
+
         private ViewResult LocalizedView(string viewName, string language = null)
         {            
             if (language == null )
