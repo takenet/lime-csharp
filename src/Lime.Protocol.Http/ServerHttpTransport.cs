@@ -12,14 +12,20 @@ using System.Threading.Tasks.Dataflow;
 
 namespace Lime.Protocol.Http
 {
+    /// <summary>
+    /// Represents the server transport 
+    /// for the HTTP emulation layer.
+    /// </summary>
     public class ServerHttpTransport : TransportBase
     {
+        #region Private Fields
 
         private HttpListenerBasicIdentity _identity;
         private readonly BufferBlock<Envelope> _inputBufferBlock;
         private readonly BufferBlock<Envelope> _outputBufferBlock;
+        private readonly TaskCompletionSource<Session> _sessionTaskCompletionSource;
 
-        private TaskCompletionSource<Session> _sessionTaskCompletionSource;
+        #endregion
 
         #region Constructor
 
@@ -42,6 +48,8 @@ namespace Lime.Protocol.Http
 
         #endregion
 
+        #region Internal Properties
+
         /// <summary>
         /// Represents the buffer that
         /// the server reads the envelopes
@@ -60,13 +68,15 @@ namespace Lime.Protocol.Http
         internal BufferBlock<Envelope> OutputBuffer
         {
             get { return _outputBufferBlock; }
-        }       
+        }
 
         internal Task<Session> GetSessionAsync(CancellationToken cancellationToken)
         {
             cancellationToken.Register(() => _sessionTaskCompletionSource.TrySetCanceled());
             return _sessionTaskCompletionSource.Task;
         }
+
+        #endregion
 
         #region TransportBase Members
 
@@ -86,64 +96,12 @@ namespace Lime.Protocol.Http
             {
                 // The session negotiation is emulated by the transport
                 var session = (Session)envelope;
-                if (session.State == SessionState.Negotiating)
-                {
-                    if (session.CompressionOptions != null &&
-                        session.EncryptionOptions != null)
-                    {
-                        var responseSession = new Session()
-                        {
-                            Id = session.Id,
-                            State = SessionState.Negotiating,
-                            Compression = this.Compression,
-                            Encryption = this.Encryption
-                        };
-
-                        await InputBuffer.SendAsync(responseSession, cancellationToken).ConfigureAwait(false);
-                    }
-                }
-                else if (session.State == SessionState.Authenticating)
-                {
-                    var responseSession = new Session()
-                    {
-                        Id = session.Id                        
-                    };
-
-                    if (session.SchemeOptions != null &&
-                        session.SchemeOptions.Any(s => s == AuthenticationScheme.Plain))
-                    {
-                        var identity = Identity.Parse(_identity.Name);
-                        responseSession.State = SessionState.Authenticating;
-                        responseSession.From = new Node()
-                        {
-                            Name = identity.Name,
-                            Domain = identity.Domain
-                        };
-
-                        var plainAuthentication = new PlainAuthentication();
-                        plainAuthentication.SetToBase64Password(_identity.Password);
-                        responseSession.Authentication = plainAuthentication;
-                    }
-                    else
-                    {
-                        // Unsupported authentication scheme
-                        responseSession.State = SessionState.Finishing;
-                    }
-
-                    await InputBuffer.SendAsync(responseSession, cancellationToken).ConfigureAwait(false);
-                }
-                else
-                {
-                    // Remove the identity from the memory, since is not necessary anymore
-                    _identity = null;
-                    _sessionTaskCompletionSource.SetResult(session);
-                }
+                await ReceiveSessionAsync(cancellationToken, session).ConfigureAwait(false);
             }
             else
             {
                 await OutputBuffer.SendAsync(envelope, cancellationToken).ConfigureAwait(false);
             }
-
         }
 
         public override Task<Envelope> ReceiveAsync(CancellationToken cancellationToken)
@@ -168,6 +126,73 @@ namespace Lime.Protocol.Http
             _sessionTaskCompletionSource.TrySetCanceled();
             return Task.FromResult<object>(null);
         } 
+
+        #endregion
+
+        #region Private Methods
+
+        private async Task ReceiveSessionAsync(CancellationToken cancellationToken, Session session)
+        {
+            if (session.State == SessionState.Negotiating)
+            {
+                if (session.CompressionOptions != null &&
+                    session.EncryptionOptions != null)
+                {
+                    var responseSession = new Session()
+                    {
+                        Id = session.Id,
+                        State = SessionState.Negotiating,
+                        Compression = this.Compression,
+                        Encryption = this.Encryption
+                    };
+
+                    await InputBuffer.SendAsync(responseSession, cancellationToken).ConfigureAwait(false);
+                }
+            }
+            else if (session.State == SessionState.Authenticating)
+            {
+                var responseSession = new Session()
+                {
+                    Id = session.Id
+                };
+
+                if (session.SchemeOptions != null &&
+                    session.SchemeOptions.Any(s => s == AuthenticationScheme.Plain))
+                {
+                    var identity = Identity.Parse(_identity.Name);
+                    responseSession.State = SessionState.Authenticating;
+                    responseSession.From = new Node()
+                    {
+                        Name = identity.Name,
+                        Domain = identity.Domain
+                    };
+
+                    var plainAuthentication = new PlainAuthentication();
+                    plainAuthentication.SetToBase64Password(_identity.Password);
+                    responseSession.Authentication = plainAuthentication;
+                }
+                else
+                {
+                    // Unsupported authentication scheme
+                    responseSession.State = SessionState.Finishing;
+                }
+
+                await InputBuffer.SendAsync(responseSession, cancellationToken).ConfigureAwait(false);
+            }
+            else
+            {
+                // Remove the identity from the memory, since is not necessary anymore
+                _identity = null;
+
+                if (session.State == SessionState.Established)
+                {
+
+                }
+
+                // Completes the task
+                _sessionTaskCompletionSource.SetResult(session);                
+            }
+        }
 
         #endregion
     }

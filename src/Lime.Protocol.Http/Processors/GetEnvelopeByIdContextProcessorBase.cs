@@ -11,7 +11,7 @@ using Lime.Protocol.Http.Serialization;
 
 namespace Lime.Protocol.Http.Processors
 {
-    public abstract class GetEnvelopeByIdRequestProcessor<T> : IRequestProcessor
+    public abstract class GetEnvelopeByIdContextProcessorBase<T> : IContextProcessor
         where T : Envelope
     {
         private readonly IEnvelopeStorage<T> _envelopeStorage;
@@ -19,7 +19,7 @@ namespace Lime.Protocol.Http.Processors
 
         #region Constructor
 
-        public GetEnvelopeByIdRequestProcessor(IEnvelopeStorage<T> envelopeStorage, string path)
+        public GetEnvelopeByIdContextProcessorBase(IEnvelopeStorage<T> envelopeStorage, string path)
         {
             _envelopeStorage = envelopeStorage;
             _serializer = new DocumentSerializer();
@@ -57,26 +57,25 @@ namespace Lime.Protocol.Http.Processors
                     if (envelope.To != null)
                     {
                         context.Response.Headers.Add(Constants.ENVELOPE_TO_HEADER, envelope.To.ToString());
-                    }                                        
+                    }
 
                     if (envelope.Pp != null)
                     {
                         context.Response.Headers.Add(Constants.ENVELOPE_PP_HEADER, envelope.Pp.ToString());
                     }
 
-                    await WriteEnvelopeResultAsync(envelope, context.Response).ConfigureAwait(false);                 
+                    await WriteEnvelopeResultAsync(envelope, context.Response).ConfigureAwait(false);
+                    context.Response.Close();
                 }
                 else
                 {
-                    context.Response.StatusCode = (int)HttpStatusCode.NotFound;
+                    context.Response.SendResponse(HttpStatusCode.NotFound);
                 }
             }
             else
             {
-                context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
-            }            
-
-            context.Response.Close();
+                context.Response.SendResponse(HttpStatusCode.BadRequest);
+            }
         }
 
         #endregion

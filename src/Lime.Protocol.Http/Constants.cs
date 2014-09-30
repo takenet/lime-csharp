@@ -6,6 +6,7 @@ namespace Lime.Protocol.Http
 {
     internal static class Constants
     {
+        public const int DEFAULT_REQUEST_TIMEOUT = 60;
         public const string ROOT = "/";
         public const string MESSAGES_PATH = "messages";
         public const string COMMANDS_PATH = "commands";
@@ -25,5 +26,6 @@ namespace Lime.Protocol.Http
         public const string ENVELOPE_PP_QUERY = "pp";
         public const string ASYNC_QUERY = "async";
         public const string REASON_CODE_HEADER = "X-Reason-Code";
+        
     }
 }

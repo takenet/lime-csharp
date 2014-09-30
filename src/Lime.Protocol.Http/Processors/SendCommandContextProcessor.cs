@@ -10,17 +10,19 @@ using Lime.Protocol.Http.Serialization;
 
 namespace Lime.Protocol.Http.Processors
 {
-    public class SendCommandRequestProcessor : SendEnvelopeRequestProcessorBase<Command>, IRequestProcessor
+    public sealed class SendCommandContextProcessor : SendEnvelopeRequestContextBase<Command>, IContextProcessor
     {
         #region Constructor
 
-        public SendCommandRequestProcessor(ConcurrentDictionary<Guid, HttpListenerResponse> pendingResponsesDictionary)
-            : base(new HashSet<string> { Constants.HTTP_METHOD_GET, Constants.HTTP_METHOD_POST, Constants.HTTP_METHOD_DELETE }, new UriTemplate(string.Format("/{0}", Constants.COMMANDS_PATH)), new DocumentSerializer(), pendingResponsesDictionary)
+        public SendCommandContextProcessor(ConcurrentDictionary<Guid, HttpListenerResponse> pendingResponsesDictionary, ITraceWriter traceWriter = null)
+            : base(new HashSet<string> { Constants.HTTP_METHOD_GET, Constants.HTTP_METHOD_POST, Constants.HTTP_METHOD_DELETE }, new UriTemplate(string.Format("/{0}/*", Constants.COMMANDS_PATH)), new DocumentSerializer(), pendingResponsesDictionary, traceWriter)
         {
 
         }
 
         #endregion
+
+        #region SendEnvelopeRequestContextBase Members
 
         protected override async Task<Command> ParseEnvelopeAsync(HttpListenerRequest request)
         {
@@ -64,6 +66,10 @@ namespace Lime.Protocol.Http.Processors
             return command;
         }
 
+        #endregion
+
+        #region Private Methods
+
         private bool TryConvertToCommandMethod(string httpMethod, out CommandMethod commandMethod)
         {
             switch (httpMethod)
@@ -83,5 +89,6 @@ namespace Lime.Protocol.Http.Processors
             }
         }
 
+        #endregion
     }
 }

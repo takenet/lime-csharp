@@ -11,11 +11,11 @@ using Lime.Protocol.Http.Serialization;
 
 namespace Lime.Protocol.Http.Processors
 {
-    public class GetNotificationByIdRequestProcessor : GetEnvelopeByIdRequestProcessor<Notification>
+    public sealed class GetNotificationByIdContextProcessor : GetEnvelopeByIdContextProcessorBase<Notification>
     {
         #region Constructor
 
-        public GetNotificationByIdRequestProcessor(IEnvelopeStorage<Notification> notificationStorage)
+        public GetNotificationByIdContextProcessor(IEnvelopeStorage<Notification> notificationStorage)
             : base(notificationStorage, Constants.NOTIFICATIONS_PATH)
         {
             

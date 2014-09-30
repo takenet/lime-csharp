@@ -10,14 +10,14 @@ using System.Threading.Tasks;
 
 namespace Lime.Protocol.Http.Processors
 {
-    public class GetEnvelopesRequestProcessor<T> : IRequestProcessor 
+    public class GetEnvelopesContextProcessor<T> : IContextProcessor 
         where T : Envelope
     {
         private readonly IEnvelopeStorage<T> _envelopeStorage;
 
         #region Constructor
 
-        public GetEnvelopesRequestProcessor(IEnvelopeStorage<T> envelopeStorage, string path)
+        public GetEnvelopesContextProcessor(IEnvelopeStorage<T> envelopeStorage, string path)
         {
             _envelopeStorage = envelopeStorage;
 

@@ -81,7 +81,7 @@ namespace Lime.Client.Console
             await server.StopServerAsync();
             cancellationTokenSource.Cancel();
 
-            System.Console.WriteLine("Server stoped. Press any key to exit.");
+            System.Console.WriteLine("Server stopped. Press any key to exit.");
             System.Console.ReadLine();
         }
 

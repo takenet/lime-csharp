@@ -10,11 +10,11 @@ using System.Threading.Tasks;
 
 namespace Lime.Protocol.Http.Processors
 {
-    public class GetMessagesRequestProcessor : GetEnvelopesRequestProcessor<Message>
+    public sealed class GetMessagesContextProcessor : GetEnvelopesContextProcessor<Message>
     {
         #region Constructor
 
-        public GetMessagesRequestProcessor(IEnvelopeStorage<Message> messageStorage)
+        public GetMessagesContextProcessor(IEnvelopeStorage<Message> messageStorage)
             : base(messageStorage, Constants.MESSAGES_PATH)
         {
 

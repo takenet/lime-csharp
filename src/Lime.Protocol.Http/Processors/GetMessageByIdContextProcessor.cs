@@ -11,13 +11,13 @@ using Lime.Protocol.Http.Serialization;
 
 namespace Lime.Protocol.Http.Processors
 {
-    public class GetMessageByIdRequestProcessor : GetEnvelopeByIdRequestProcessor<Message>
+    public sealed class GetMessageByIdContextProcessor : GetEnvelopeByIdContextProcessorBase<Message>
     {
         private readonly IDocumentSerializer _serializer;
 
         #region Constructor
 
-        public GetMessageByIdRequestProcessor(IEnvelopeStorage<Message> messageStorage)
+        public GetMessageByIdContextProcessor(IEnvelopeStorage<Message> messageStorage)
             : base(messageStorage, Constants.MESSAGES_PATH)
         {
             _serializer = new DocumentSerializer();

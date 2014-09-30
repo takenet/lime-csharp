@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
@@ -70,5 +71,53 @@ namespace Lime.Protocol.Http
             return HttpStatusCode.Forbidden;
         }
 
+
+        public static void SendResponse(this HttpListenerResponse response, HttpStatusCode statusCode, IDictionary<string, string> headers = null)
+        {
+            if (headers != null)
+            {
+                response.WriteHeaders(headers);
+            }
+
+            response.StatusCode = (int)statusCode;
+            response.Close();
+        }
+
+        public static async Task SendResponseAsync(this HttpListenerResponse response, HttpStatusCode statusCode, string contentType, string content, IDictionary<string, string> headers = null)
+        {
+            if (headers != null)
+            {
+                response.WriteHeaders(headers);
+            }
+
+            response.StatusCode = (int)statusCode;
+            response.ContentType = contentType;            
+            using (var writer = new StreamWriter(response.OutputStream))
+            {
+                await writer.WriteAsync(content).ConfigureAwait(false);
+            }
+            response.Close();
+        }
+
+        public static void SendResponse(this HttpListenerResponse response, Reason reason, IDictionary<string, string> headers = null)
+        {
+            if (headers != null)
+            {
+                response.WriteHeaders(headers);
+            }
+
+            response.Headers.Add(Constants.REASON_CODE_HEADER, reason.Code.ToString());
+            response.StatusCode = (int)reason.ToHttpStatusCode();
+            response.StatusDescription = reason.Description;
+            response.Close();
+        }
+
+        public static void WriteHeaders(this HttpListenerResponse response, IDictionary<string, string> headers)
+        {
+            foreach (var header in headers)
+            {
+                response.Headers.Add(header.Key, header.Value);
+            }
+        }
     }
 }

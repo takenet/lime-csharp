@@ -1,4 +1,5 @@
 ﻿using Lime.Protocol.Http.Serialization;
+using Lime.Protocol.Network;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -11,24 +12,27 @@ using System.Threading.Tasks.Dataflow;
 
 namespace Lime.Protocol.Http.Processors
 {
-    public abstract class SendEnvelopeRequestProcessorBase<T> : IRequestProcessor 
+    public abstract class SendEnvelopeRequestContextBase<T> : IContextProcessor 
         where T : Envelope
     {
+        #region Private Fields
 
         private readonly IDocumentSerializer _serializer;
         private readonly ConcurrentDictionary<Guid, HttpListenerResponse> _pendingResponsesDictionary;
+        private readonly ITraceWriter _traceWriter;
 
+        #endregion
 
         #region Constructor
 
-        public SendEnvelopeRequestProcessorBase(HashSet<string> methods, UriTemplate template, IDocumentSerializer serializer, ConcurrentDictionary<Guid, HttpListenerResponse> pendingResponsesDictionary)
+        public SendEnvelopeRequestContextBase(HashSet<string> methods, UriTemplate template, IDocumentSerializer serializer, ConcurrentDictionary<Guid, HttpListenerResponse> pendingResponsesDictionary, ITraceWriter traceWriter = null)
         {
             Methods = methods;
             Template = template;
 
             _serializer = serializer;
             _pendingResponsesDictionary = pendingResponsesDictionary;
-
+            _traceWriter = traceWriter;
         }
 
         #endregion
@@ -75,8 +79,7 @@ namespace Lime.Protocol.Http.Processors
             if (isAsync)
             {
                 await transport.InputBuffer.SendAsync(envelope, cancellationToken).ConfigureAwait(false);
-                response.StatusCode = (int)HttpStatusCode.Accepted;
-                response.Close();
+                response.SendResponse(HttpStatusCode.Accepted);
             }
             else
             {
@@ -98,12 +101,10 @@ namespace Lime.Protocol.Http.Processors
                 }
                 else
                 {
-                    response.StatusCode = (int)HttpStatusCode.Conflict;
-                    response.Close();
+                    response.SendResponse(HttpStatusCode.Conflict);
                 }
             }
         }
-
 
         protected async Task<Document> ParseDocumentAsync(HttpListenerRequest request)
         {
@@ -115,13 +116,19 @@ namespace Lime.Protocol.Http.Processors
                 using (var streamReader = new StreamReader(request.InputStream))
                 {
                     var body = await streamReader.ReadToEndAsync().ConfigureAwait(false);
+
+                    if (_traceWriter != null &&
+                        _traceWriter.IsEnabled)
+                    {
+                        await _traceWriter.TraceAsync(body, DataOperation.Receive).ConfigureAwait(false);
+                    }
+
                     document = _serializer.Deserialize(body, mediaType);
                 }
             }
 
             return document;
         }
-
 
         protected void FillEnvelopeFromRequest(Envelope envelope, HttpListenerRequest request)
         {

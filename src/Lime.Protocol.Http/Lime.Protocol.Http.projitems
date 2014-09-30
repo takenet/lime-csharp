@@ -10,16 +10,19 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)Constants.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)IRequestProcessor.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Processors\GetMessageByIdRequestProcessor.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Processors\GetEnvelopeByIdRequestProcessor.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Processors\GetEnvelopesRequestProcessor.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Processors\GetNotificationByIdRequestProcessor.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Processors\GetNotificationsRequestProcessor.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Processors\GetMessagesRequestProcessor.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Processors\SendCommandRequestProcessor.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Processors\SendEnvelopeRequestProcessorBase.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Processors\SendMessageRequestProcessor.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)IContextProcessor.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Processors\DeleteEnvelopeByIdContextProcessor.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Processors\DeleteNotificationByIdContextProcessor.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Processors\DeleteMessageByIdContextProcessor.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Processors\GetMessageByIdContextProcessor.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Processors\GetEnvelopeByIdContextProcessorBase.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Processors\GetEnvelopesContextProcessor.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Processors\GetNotificationByIdContextProcessor.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Processors\GetNotificationsContextProcessor.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Processors\GetMessagesContextProcessor.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Processors\SendCommandContextProcessor.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Processors\SendEnvelopeRequestContextBase.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Processors\SendMessageContextProcessor.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)UtilityExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Serialization\IDocumentSerializer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Serialization\DocumentSerializer.cs" />

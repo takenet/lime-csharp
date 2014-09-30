@@ -51,6 +51,8 @@ Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Lime.Protocol.Http", "Lime.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lime.Protocol.Http.Net45", "Lime.Protocol.Http.Net45\Lime.Protocol.Http.Net45.csproj", "{1095E1BA-C764-46B0-86D1-2290DA9C07AD}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lime.Protocol.Http.UnitTests", "Lime.Protocol.Http.UnitTests\Lime.Protocol.Http.UnitTests.csproj", "{ED45BE37-AD6E-42A2-82C5-13D2B9189868}"
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		Lime.Protocol\Lime.Protocol\Lime.Protocol.projitems*{1c6d3db7-ecf0-4013-80ee-76688aed4176}*SharedItemsImports = 4
@@ -205,6 +207,18 @@ Global
 		{1095E1BA-C764-46B0-86D1-2290DA9C07AD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1095E1BA-C764-46B0-86D1-2290DA9C07AD}.Release|Any CPU.Build.0 = Release|Any CPU
 		{1095E1BA-C764-46B0-86D1-2290DA9C07AD}.Release|x86.ActiveCfg = Release|Any CPU
+		{ED45BE37-AD6E-42A2-82C5-13D2B9189868}.Ad-Hoc|Any CPU.ActiveCfg = Release|Any CPU
+		{ED45BE37-AD6E-42A2-82C5-13D2B9189868}.Ad-Hoc|Any CPU.Build.0 = Release|Any CPU
+		{ED45BE37-AD6E-42A2-82C5-13D2B9189868}.Ad-Hoc|x86.ActiveCfg = Release|Any CPU
+		{ED45BE37-AD6E-42A2-82C5-13D2B9189868}.AppStore|Any CPU.ActiveCfg = Release|Any CPU
+		{ED45BE37-AD6E-42A2-82C5-13D2B9189868}.AppStore|Any CPU.Build.0 = Release|Any CPU
+		{ED45BE37-AD6E-42A2-82C5-13D2B9189868}.AppStore|x86.ActiveCfg = Release|Any CPU
+		{ED45BE37-AD6E-42A2-82C5-13D2B9189868}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ED45BE37-AD6E-42A2-82C5-13D2B9189868}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ED45BE37-AD6E-42A2-82C5-13D2B9189868}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{ED45BE37-AD6E-42A2-82C5-13D2B9189868}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ED45BE37-AD6E-42A2-82C5-13D2B9189868}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ED45BE37-AD6E-42A2-82C5-13D2B9189868}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -220,5 +234,6 @@ Global
 		{D24B4EF4-9B8C-4F89-BFC6-F76007936382} = {84538803-A033-47DD-A350-A04E84F6BAE8}
 		{797C3CAB-166E-4821-A7C9-9D2B6D53DDC0} = {84538803-A033-47DD-A350-A04E84F6BAE8}
 		{1095E1BA-C764-46B0-86D1-2290DA9C07AD} = {84538803-A033-47DD-A350-A04E84F6BAE8}
+		{ED45BE37-AD6E-42A2-82C5-13D2B9189868} = {84538803-A033-47DD-A350-A04E84F6BAE8}
 	EndGlobalSection
 EndGlobal

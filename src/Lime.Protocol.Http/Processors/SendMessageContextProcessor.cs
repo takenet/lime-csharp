@@ -10,12 +10,12 @@ using System.Threading.Tasks;
 
 namespace Lime.Protocol.Http.Processors
 {
-    public class SendMessageRequestProcessor : SendEnvelopeRequestProcessorBase<Message>, IRequestProcessor
+    public sealed class SendMessageContextProcessor : SendEnvelopeRequestContextBase<Message>, IContextProcessor
     {
         #region Constructor
 
-        public SendMessageRequestProcessor(ConcurrentDictionary<Guid, HttpListenerResponse> pendingResponsesDictionary)
-            : base(new HashSet<string> { Constants.HTTP_METHOD_POST }, new UriTemplate(string.Format("/{0}", Constants.MESSAGES_PATH)), new DocumentSerializer(), pendingResponsesDictionary)
+        public SendMessageContextProcessor(ConcurrentDictionary<Guid, HttpListenerResponse> pendingResponsesDictionary, ITraceWriter traceWriter = null)
+            : base(new HashSet<string> { Constants.HTTP_METHOD_POST }, new UriTemplate(string.Format("/{0}", Constants.MESSAGES_PATH)), new DocumentSerializer(), pendingResponsesDictionary, traceWriter)
         {
 
         }
@@ -31,8 +31,7 @@ namespace Lime.Protocol.Http.Processors
             }
             else
             {
-                context.Response.StatusCode = (int)HttpStatusCode.MethodNotAllowed;
-                context.Response.Close();
+                context.Response.SendResponse(HttpStatusCode.MethodNotAllowed);
                 return Task.FromResult<object>(null);
             }            
         }
