@@ -12,6 +12,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Client\ClientChannel.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Client\IClientChannel.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Client\IClientChannelExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Contents\BitmapImage.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)DocumentCollection.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Command.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Contents\ChatState.cs" />

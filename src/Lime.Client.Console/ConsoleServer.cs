@@ -35,8 +35,8 @@ namespace Lime.Client.Console
         {
             _serverNode = new Node() 
             { 
-                Name = "server", 
-                Domain = "limeprotocol.org", 
+                Name = "server",
+                Domain = "breakingbad.com", 
                 Instance = Environment.MachineName 
             };
 
@@ -46,10 +46,12 @@ namespace Lime.Client.Console
 
             _identityPasswordDictionary = new Dictionary<Identity, string>
             {
-                { Identity.Parse("ww@limeprotocol.org") , "123456" },
-                { Identity.Parse("skylar@limeprotocol.org") , "abcdef" },
-                { Identity.Parse("wjr@limeprotocol.org") , "654321" },
-                { Identity.Parse("hank@limeprotocol.org") , "minerals" },
+                { Identity.Parse("ww@breakingbad.com") , "123456" },
+                { Identity.Parse("heisenberg@breakingbad.com") , "999999" },
+                { Identity.Parse("jesse@breakingbad.com") , "bitch" },
+                { Identity.Parse("skylar@breakingbad.com") , "abcdef" },
+                { Identity.Parse("wjr@breakingbad.com") , "654321" },
+                { Identity.Parse("hank@breakingbad.com") , "minerals" },
             };
         }
 

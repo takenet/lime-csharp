@@ -74,12 +74,10 @@ namespace Lime.Protocol.Http.Processors
         /// <returns></returns>
         protected async Task ProcessEnvelopeAsync(Envelope envelope, ServerHttpTransport transport, HttpListenerResponse response, bool isAsync, CancellationToken cancellationToken)
         {
-            response.Headers.Add(Constants.ENVELOPE_ID_HEADER, envelope.Id.ToString());
-
             if (isAsync)
             {
                 await transport.InputBuffer.SendAsync(envelope, cancellationToken).ConfigureAwait(false);
-                response.SendResponse(HttpStatusCode.Accepted);
+                await response.SendResponseAsync(HttpStatusCode.Accepted, Constants.TEXT_PLAIN_HEADER_VALUE, envelope.Id.ToString()).ConfigureAwait(false);
             }
             else
             {

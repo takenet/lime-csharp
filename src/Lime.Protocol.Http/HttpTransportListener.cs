@@ -390,7 +390,7 @@ namespace Lime.Protocol.Http
                 {
                     if (envelope is Notification)
                     {
-                        ProcessNotificationResult((Notification)envelope, response);
+                        await ProcessNotificationResultAsync((Notification)envelope, response).ConfigureAwait(false);
                     }
                     else if (envelope is Command)
                     {
@@ -448,11 +448,11 @@ namespace Lime.Protocol.Http
             }
         }  
 
-        private void ProcessNotificationResult(Notification notification, HttpListenerResponse response)
+        private async Task ProcessNotificationResultAsync(Notification notification, HttpListenerResponse response)
         {            
             if (notification.Event != Event.Failed)
             {
-                response.SendResponse(HttpStatusCode.Created);
+                await response.SendResponseAsync(HttpStatusCode.Created, Constants.TEXT_PLAIN_HEADER_VALUE, notification.Id.ToString());
             }
             else if (notification.Reason != null)
             {

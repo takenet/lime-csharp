@@ -55,7 +55,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lime.Protocol.Http.UnitTest
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
-		Lime.Protocol\Lime.Protocol\Lime.Protocol.projitems*{1c6d3db7-ecf0-4013-80ee-76688aed4176}*SharedItemsImports = 4
 		Lime.Protocol.Tcp\Lime.Protocol.Tcp\Lime.Protocol.Tcp.projitems*{d24b4ef4-9b8c-4f89-bfc6-f76007936382}*SharedItemsImports = 4
 		Lime.Protocol\Lime.Protocol\Lime.Protocol.projitems*{d12c1153-a423-40c6-a611-85c659caeb7b}*SharedItemsImports = 13
 		Lime.Protocol.Http\Lime.Protocol.Http.projitems*{797c3cab-166e-4821-a7c9-9d2b6d53ddc0}*SharedItemsImports = 13
