@@ -13,7 +13,7 @@ using System.Threading.Tasks.Dataflow;
 namespace Lime.Protocol.Http.Processors
 {
     public abstract class SendEnvelopeRequestContextBase<T> : IContextProcessor 
-        where T : Envelope
+        where T : Envelope, new()
     {
         #region Private Fields
 
@@ -46,22 +46,15 @@ namespace Lime.Protocol.Http.Processors
 
         public virtual async Task ProcessAsync(HttpListenerContext context, ServerHttpTransport transport, UriTemplateMatch match, CancellationToken cancellationToken)
         {
-            var envelope = await ParseEnvelopeAsync(context.Request).ConfigureAwait(false);
-
-            bool isAsync = envelope is Message;
-            if (isAsync)
-            {
-                bool.TryParse(context.Request.QueryString.Get(Constants.ASYNC_QUERY), out isAsync);
-            }
-
-            await ProcessEnvelopeAsync(envelope, transport, context.Response, isAsync, cancellationToken).ConfigureAwait(false);
+            var envelope = await GetEnvelopeFromRequestAsync(context.Request).ConfigureAwait(false);
+            await ProcessEnvelopeAsync(envelope, transport, context.Response, false, cancellationToken).ConfigureAwait(false);
         }
 
         #endregion
         
         #region Protected Methods
 
-        protected abstract Task<T> ParseEnvelopeAsync(HttpListenerRequest request);
+        protected abstract Task FillEnvelopeAsync(T envelope, HttpListenerRequest request);
 
         /// <summary>
         /// Process the envelope request.
@@ -128,28 +121,30 @@ namespace Lime.Protocol.Http.Processors
             return document;
         }
 
-        protected void FillEnvelopeFromRequest(Envelope envelope, HttpListenerRequest request)
-        {
-            if (envelope != null)
-            {
-                Guid id;
-                if (!Guid.TryParse(request.GetValue(Constants.ENVELOPE_ID_HEADER, Constants.ENVELOPE_ID_QUERY), out id))
-                {
-                    id = Guid.NewGuid();
-                }
-                Node from;
-                Node.TryParse(request.GetValue(Constants.ENVELOPE_FROM_HEADER, Constants.ENVELOPE_FROM_QUERY), out from);
-                Node to;
-                Node.TryParse(request.GetValue(Constants.ENVELOPE_TO_HEADER, Constants.ENVELOPE_TO_QUERY), out to);
-                Node pp;
-                Node.TryParse(request.GetValue(Constants.ENVELOPE_PP_HEADER, Constants.ENVELOPE_PP_QUERY), out pp);
 
-                envelope.Id = id;
-                envelope.From = from;
-                envelope.To = to;
-                envelope.Pp = pp;
-            }
+        protected async Task<T> GetEnvelopeFromRequestAsync(HttpListenerRequest request)
+        {
+            var envelope = new T();
+            
+            Guid id;
+            Guid.TryParse(request.GetValue(Constants.ENVELOPE_ID_HEADER, Constants.ENVELOPE_ID_QUERY), out id);            
+            Node from;
+            Node.TryParse(request.GetValue(Constants.ENVELOPE_FROM_HEADER, Constants.ENVELOPE_FROM_QUERY), out from);
+            Node to;
+            Node.TryParse(request.GetValue(Constants.ENVELOPE_TO_HEADER, Constants.ENVELOPE_TO_QUERY), out to);
+            Node pp;
+            Node.TryParse(request.GetValue(Constants.ENVELOPE_PP_HEADER, Constants.ENVELOPE_PP_QUERY), out pp);
+
+            envelope.Id = id;
+            envelope.From = from;
+            envelope.To = to;
+            envelope.Pp = pp;
+
+            await FillEnvelopeAsync(envelope, request).ConfigureAwait(false);
+
+            return envelope;
         }
+
 
         #endregion
     }

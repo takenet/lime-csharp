@@ -22,40 +22,26 @@ namespace Lime.Protocol.Http.Processors
 
         #endregion
 
+        public override async Task ProcessAsync(HttpListenerContext context, ServerHttpTransport transport, UriTemplateMatch match, CancellationToken cancellationToken)
+        {
+            var envelope = await GetEnvelopeFromRequestAsync(context.Request).ConfigureAwait(false);
 
-        public override Task ProcessAsync(HttpListenerContext context, ServerHttpTransport transport, UriTemplateMatch match, CancellationToken cancellationToken)
-        {            
-            if (context.Request.HttpMethod.Equals(Constants.HTTP_METHOD_POST))
+            bool isAsync = envelope.Id == Guid.Empty;
+            if (!isAsync)
             {
-                return base.ProcessAsync(context, transport, match, cancellationToken);
+                bool.TryParse(context.Request.QueryString.Get(Constants.ASYNC_QUERY), out isAsync);
             }
-            else
-            {
-                context.Response.SendResponse(HttpStatusCode.MethodNotAllowed);
-                return Task.FromResult<object>(null);
-            }            
+
+            await ProcessEnvelopeAsync(envelope, transport, context.Response, isAsync, cancellationToken).ConfigureAwait(false); 
         }
 
-
-        protected override async Task<Message> ParseEnvelopeAsync(HttpListenerRequest request)
+        protected override async Task FillEnvelopeAsync(Message envelope, HttpListenerRequest request)
         {
-            Message message = null;
-
-            var content = await ParseDocumentAsync(request).ConfigureAwait(false);
-            if (content != null)
-            {
-                message = new Message()
-                {
-                    Content = content
-                };
-                FillEnvelopeFromRequest(message, request);
-            }
-            else
+            envelope.Content = await ParseDocumentAsync(request).ConfigureAwait(false);
+            if (envelope.Content == null)
             {
                 throw new LimeException(ReasonCodes.VALIDATION_EMPTY_DOCUMENT, "Invalid or empty content");
             }
-
-            return message;
         }
     }
 }

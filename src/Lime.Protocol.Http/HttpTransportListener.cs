@@ -192,6 +192,7 @@ namespace Lime.Protocol.Http
             var getMessagesContextProcessor = new GetMessagesContextProcessor(_messageStorage);
             var getMessageByIdContextProcessor = new GetMessageByIdContextProcessor(_messageStorage);
             var deleteMessageByIdContextProcessor = new DeleteMessageByIdContextProcessor(_messageStorage);
+            var sendNotificationContextProcessor = new SendNotificationContextProcessor(_traceWriter);
             var getNotificationsContextProcessor = new GetNotificationsContextProcessor(_notificationStorage);
             var getNotificationByIdContextProcessor = new GetNotificationByIdContextProcessor(_notificationStorage);
             var deleteNotificationByIdContextProcessor = new DeleteNotificationByIdContextProcessor(_notificationStorage);
@@ -200,6 +201,7 @@ namespace Lime.Protocol.Http
             _uriTemplateTable.KeyValuePairs.Add(new KeyValuePair<UriTemplate, object>(getMessagesContextProcessor.Template, getMessagesContextProcessor));
             _uriTemplateTable.KeyValuePairs.Add(new KeyValuePair<UriTemplate, object>(getMessageByIdContextProcessor.Template, getMessageByIdContextProcessor));
             _uriTemplateTable.KeyValuePairs.Add(new KeyValuePair<UriTemplate, object>(deleteMessageByIdContextProcessor.Template, deleteMessageByIdContextProcessor));
+            _uriTemplateTable.KeyValuePairs.Add(new KeyValuePair<UriTemplate, object>(sendNotificationContextProcessor.Template, sendNotificationContextProcessor));
             _uriTemplateTable.KeyValuePairs.Add(new KeyValuePair<UriTemplate, object>(getNotificationsContextProcessor.Template, getNotificationsContextProcessor));
             _uriTemplateTable.KeyValuePairs.Add(new KeyValuePair<UriTemplate, object>(getNotificationByIdContextProcessor.Template, getNotificationByIdContextProcessor));
             _uriTemplateTable.KeyValuePairs.Add(new KeyValuePair<UriTemplate, object>(deleteNotificationByIdContextProcessor.Template, deleteNotificationByIdContextProcessor));

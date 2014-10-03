@@ -13,13 +13,16 @@ using System.Threading;
 using System.Net;
 using Lime.Protocol.Server;
 using Lime.Protocol.Security;
+using System.Text;
 
 
 namespace Lime.Protocol.Http.UnitTests
 {
     [TestClass]
     public class HttpTransportListenerTests
-    {        
+    {
+        #region Public properties
+
         public string Host { get; private set; }
 
         public int Port { get; private set; }
@@ -34,11 +37,12 @@ namespace Lime.Protocol.Http.UnitTests
 
         public HttpClient Client { get; private set; }
 
-        public string GetMessagesUrl { get; private set; }
+        public string MessagesUrl { get; private set; }
 
         public AuthenticationHeaderValue AuthenticationHeader { get; private set; }
 
         public HttpRequestMessage GetMessagesHttpRequestMessage { get; private set; }
+
         public TimeSpan SendTimeout { get; private set; }
 
         public Guid SessionId { get; private set; }
@@ -49,28 +53,49 @@ namespace Lime.Protocol.Http.UnitTests
 
         public Reason Reason { get; private set; }
 
+        public Message SentMessage { get; private set; }
+
+        public HttpRequestMessage SendMessageHttpRequestMessage { get; private set; }
+
+
+        public Notification Notification { get; set; }
+
+        #endregion
+
         [TestInitialize]
         public void Arrange()
         {
             Host = "localhost";
-            Port = 8080 + DataUtil.CreateRandomInt(10000);            
+            Port = 8080 + DataUtil.CreateRandomInt(10000);
             CancellationToken = TimeSpan.FromSeconds(5).ToCancellationToken();
             ClientNode = DataUtil.CreateNode();
             User = ClientNode.ToIdentity().ToString();
             Password = DataUtil.CreateRandomString(20);
-            Client = new HttpClient();            
-            GetMessagesUrl = "http://" + Host + ":" + Port + "/messages";
+            Client = new HttpClient();
+            MessagesUrl = "http://" + Host + ":" + Port + "/messages";
             AuthenticationHeader = new AuthenticationHeaderValue("Basic", (User + ":" + Password).ToBase64());
             GetMessagesHttpRequestMessage = new HttpRequestMessage();
             GetMessagesHttpRequestMessage.Method = HttpMethod.Get;
-            GetMessagesHttpRequestMessage.RequestUri = new Uri(GetMessagesUrl);
+            GetMessagesHttpRequestMessage.RequestUri = new Uri(MessagesUrl);
             GetMessagesHttpRequestMessage.Headers.Authorization = AuthenticationHeader;
             SessionId = Guid.NewGuid();
             ServerNode = DataUtil.CreateNode();
             SendTimeout = TimeSpan.FromSeconds(5);
             Reason = DataUtil.CreateReason();
+            Target = new HttpTransportListener(Port, Host);
 
-            Target = new HttpTransportListener(Port, Host);            
+            SentMessage = new Message()
+            {
+                To = DataUtil.CreateNode(),
+                Content = DataUtil.CreateTextContent()
+            };            
+
+            SendMessageHttpRequestMessage = new HttpRequestMessage();
+            SendMessageHttpRequestMessage.Method = HttpMethod.Post;
+            SendMessageHttpRequestMessage.RequestUri = new Uri(MessagesUrl);
+            SendMessageHttpRequestMessage.Headers.Authorization = AuthenticationHeader;
+            SendMessageHttpRequestMessage.Content = new StringContent(JsonSerializer.Serialize(SentMessage.Content), Encoding.UTF8, SentMessage.Content.GetMediaType().ToString());
+
         }
 
         [TestCleanup]
@@ -86,7 +111,7 @@ namespace Lime.Protocol.Http.UnitTests
                 Client.Dispose();
             }
         }
-
+        
         [TestMethod]
         public void ListenerUris_ValidHostAndPort_GetsRegisteredUris()
         {            
@@ -174,8 +199,7 @@ namespace Lime.Protocol.Http.UnitTests
         {
             // Act
             await Target.StartAsync();
-            var httpResponseMessageTask = Client.SendAsync(GetMessagesHttpRequestMessage, CancellationToken);
-            
+            var httpResponseMessageTask = Client.SendAsync(GetMessagesHttpRequestMessage, CancellationToken);            
             var transport = await Target.AcceptTransportAsync(CancellationToken);
 
             var serverChannel = new ServerChannel(
@@ -278,7 +302,6 @@ namespace Lime.Protocol.Http.UnitTests
             httpResponseMessage.StatusCode.ShouldBe(HttpStatusCode.RequestTimeout);
         }
 
-
         [TestMethod]
         public async Task ProcessListenerContextAsync_InvalidUrl_ReturnsNotFound()
         {
@@ -291,6 +314,25 @@ namespace Lime.Protocol.Http.UnitTests
            
             // Assert
             httpResponseMessage.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        }
+
+        [TestMethod]
+        public async Task ProcessTransportOutputAsync_NotificationWithPendingResponse_CloseResponseWithSuccess()
+        {
+            // Act
+            await Target.StartAsync();
+            var httpResponseMessageTask = Client.SendAsync(SendMessageHttpRequestMessage, CancellationToken);
+            var transport = await Target.AcceptTransportAsync(CancellationToken);
+            var serverChannel = new ServerChannel(
+                SessionId,
+                ServerNode,
+                transport,
+                SendTimeout);
+            await transport.OpenAsync(null, CancellationToken);
+            await EstablishSessionAsync(serverChannel);
+
+            
+
         }
 
         #region Private Methods
@@ -320,7 +362,5 @@ namespace Lime.Protocol.Http.UnitTests
         }
 
         #endregion
-
-
     }
 }

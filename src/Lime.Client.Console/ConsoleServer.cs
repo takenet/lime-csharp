@@ -280,13 +280,13 @@ namespace Lime.Client.Console
 
             await channel.SendEstablishedSessionAsync(node);
 
-            var receiveMessagesTask = this.ReceiveMessagesAsync(channel, cancellationToken);
-            var receiveCommandsTask = this.ReceiveReceiveCommandsAsync(channel, cancellationToken);
+            var receiveMessagesTask = this.ReceiveMessagesAsync(channel, cancellationToken);            
+            var receiveCommandsTask = this.ReceiveCommandsAsync(channel, cancellationToken);
+            var receiveNotificationsTask = this.ReceiveNotificationsAsync(channel, cancellationToken);
 
             await channel.ReceiveFinishingSessionAsync(cancellationToken);
 
-
-            await Task.WhenAll(receiveMessagesTask, receiveCommandsTask);
+            await Task.WhenAll(receiveMessagesTask, receiveCommandsTask, receiveNotificationsTask);
 
             await channel.SendFinishedSessionAsync();
 
@@ -309,6 +309,11 @@ namespace Lime.Client.Console
                     var message = await channel.ReceiveMessageAsync(cancellationToken);
 
                     IDictionary<string, Guid> instanceSessionDictionary;
+
+                    if (message.From == null)
+                    {
+                        message.From = channel.RemoteNode;
+                    }
 
                     if (message.To == null)
                     {
@@ -392,7 +397,7 @@ namespace Lime.Client.Console
             }
         }    
     
-        private async Task ReceiveReceiveCommandsAsync(IChannel channel, CancellationToken cancellationToken)
+        private async Task ReceiveCommandsAsync(IChannel channel, CancellationToken cancellationToken)
         {
             while (channel.State == SessionState.Established)
             {
@@ -424,5 +429,62 @@ namespace Lime.Client.Console
             }
 
         }
+
+        private async Task ReceiveNotificationsAsync(IChannel channel, CancellationToken cancellationToken)
+        {
+            while (channel.State == SessionState.Established)
+            {
+                try
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+
+                    var notification = await channel.ReceiveNotificationAsync(cancellationToken);
+                    if (new[] { Event.Received, Event.Consumed, Event.Failed }.Contains(notification.Event))
+                    {
+                        IDictionary<string, Guid> instanceSessionDictionary;
+
+                        if (notification.From == null)
+                        {
+                            notification.From = channel.RemoteNode;
+                        }
+
+                        if (notification.To == null)
+                        {
+                            notification.To = channel.LocalNode;
+                        }
+
+                        if (notification.To.Instance == null)
+                        {
+                            notification.To.Instance = "default";
+                        }
+
+                        if (_identityInstanceSessionIdDictionary.TryGetValue(notification.To.ToIdentity(), out instanceSessionDictionary) &&
+                            instanceSessionDictionary.Any())
+                        {
+                            Guid destinationSessionId;
+
+                            if (!instanceSessionDictionary.TryGetValue(notification.To.Instance, out destinationSessionId))
+                            {
+                                destinationSessionId = instanceSessionDictionary.First().Value;
+                            }
+
+                            IServerChannel destinationChannel;
+
+                            if (_serverConnectedNodesDictionary.TryGetValue(destinationSessionId, out destinationChannel))
+                            {
+
+                                await destinationChannel.SendNotificationAsync(notification);
+                            }
+
+                        } 
+                    }
+                }
+                catch (OperationCanceledException)
+                {
+                    break;
+                }
+
+            }
+        }    
     }
 }

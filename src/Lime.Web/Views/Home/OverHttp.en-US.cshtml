@@ -35,7 +35,7 @@
                     <code>id</code>
                 </td>
                 <td>
-                    <code>X-Id</code> header or <code>id</code> URL query string parameter. If not present, the server should define a value.
+                    <code>X-Id</code> header or <code>id</code> URL query string parameter.
                 </td>
             </tr>
             <tr>
@@ -205,18 +205,20 @@
 
     <h4>Examples</h4>
 
-    <p>Sending a text message:</p>
+    <p>Sending a text message with the destination in the query string:</p>
     <pre>
-POST https://breakingbad.com/messages HTTP/1.1
+C:
+
+POST https://breakingbad.com/messages?to=heisenberg%40breakingbad.com HTTP/1.1
 Content-Type: text/plain
-X-To: heisenberg@breakingbad.com
 Host: breakingbad.com
 Authorization: Basic amVzc2VAYnJlYWtpbmdiYWQuY29tOmJpdGNo
 Content-Length: 21
 
 Yeah, bitch! Magnets!
-    </pre>
-    <pre>
+
+S:
+
 HTTP/1.1 201 Created
 Content-Type: text/plain
 Date: Wed, 01 Oct 2014 18:46:47 GMT
@@ -225,18 +227,21 @@ Content-Length: 36
 27bf69ca-2a53-4a68-ac9d-6f8c833f50f9
 </pre>
 
-    <p>Sending an async text message:</p>
+    <p>Sending an async text message with the destination in the headers:</p>  
     <pre>
+C:
+
 POST http://localhost:8080/messages?async=true HTTP/1.1
 Content-Type: text/plain
-X-To: heisenberg@breakingbad.com
 Host: localhost:8080
+X-To: heisenberg@breakingbad.com
 Authorization: Basic amVzc2VAYnJlYWtpbmdiYWQuY29tOmJpdGNo
 Content-Length: 8
 
 Science!
-    </pre>
-    <pre>
+    
+S:
+
 HTTP/1.1 202 Accepted
 Content-Type: text/plain
 Date: Wed, 01 Oct 2014 18:50:57 GMT
@@ -248,6 +253,8 @@ dd079a4d-bb82-4a6b-8479-a420fc9ca91c
 
     <p>Sending a message to an unavailable destination:</p>
     <pre>
+C:
+
 POST http://localhost:8080/messages HTTP/1.1
 Content-Type: text/plain
 X-To: hank@breakingbad.com
@@ -256,8 +263,8 @@ Authorization: Basic aGVpc2VuYmVyZ0BicmVha2luZ2JhZC5jb206OTk5OTk5
 Content-Length: 5
 
 Hank?
-    </pre>
-    <pre>
+    
+S:
 
 HTTP/1.1 403 Destination not found
 X-Reason-Code: 42
@@ -268,14 +275,17 @@ Content-Length: 0
 
     <p>Get stored messages ids:</p>
     <pre>
+C:
+
 GET http://localhost:8080/messages HTTP/1.1
 Content-Type: text/plain
 X-To: heisenberg@breakingbad.com
 Host: localhost:8080
 Authorization: Basic aGVpc2VuYmVyZ0BicmVha2luZ2JhZC5jb206OTk5OTk5
 Content-Length: 0
-    </pre>
-    <pre>
+    
+S:
+
 HTTP/1.1 200 OK
 Content-Type: text/plain
 X-Session-Id: fe78f967-39f1-4392-865b-7725d976664b
@@ -290,14 +300,14 @@ dd079a4d-bb82-4a6b-8479-a420fc9ca91c
 
     <p>Get a message by its id:</p>
     <pre>
+C:
 GET http://localhost:8080/messages/27bf69ca-2a53-4a68-ac9d-6f8c833f50f9 HTTP/1.1
 Content-Type: text/plain
 X-To: heisenberg@breakingbad.com
 Host: localhost:8080
 Authorization: Basic aGVpc2VuYmVyZ0BicmVha2luZ2JhZC5jb206OTk5OTk5
 Content-Length: 0
-    </pre>
-    <pre>
+    
 HTTP/1.1 200 OK
 Content-Type: text/plain
 X-Session-Id: fe78f967-39f1-4392-865b-7725d976664b
@@ -335,11 +345,9 @@ Yeah, bitch! Magnets!
                     <code>event</code>
                 </td>
                 <td>
-                    In case of a success notification, the response body.
+                    The HTTP message body.
                 </td>
             </tr>
-        </tbody>
-        <tbody>
             <tr>
                 <td>
                     <code>reason</code>
@@ -416,5 +424,232 @@ Yeah, bitch! Magnets!
         </tbody>
     </table>
 
+    <h4>Examples</h4>
 
+    <p>Sending a received notification:</p>
+    <pre>
+C:
+
+POST http://localhost:8080/notifications HTTP/1.1
+Content-Type: text/plain
+X-To: heisenberg@breakingbad.com
+Host: localhost:8080
+Authorization: Basic aGVpc2VuYmVyZ0BicmVha2luZ2JhZC5jb206OTk5OTk5
+Content-Length: 8
+Content-Type: text/plain
+X-Id: 4e28e514-8706-42b6-9ba4-5dbab0ac72b5
+
+received
+
+
+S:
+
+HTTP/1.1 202 Accepted
+Content-Type: text/plain
+Server: Microsoft-HTTPAPI/2.0
+X-Session-Id: b94d5f7a-0409-4eec-93c7-1b5b15d889de
+Date: Thu, 02 Oct 2014 15:19:30 GMT
+Content-Length: 36
+
+4e28e514-8706-42b6-9ba4-5dbab0ac72b5
+</pre>
+
+    <p>Getting all stored notifications ids:</p>
+    <pre>
+C:
+
+GET http://localhost:8080/notifications HTTP/1.1
+Content-Type: text/plain
+Host: localhost:8080
+Authorization: Basic aGVpc2VuYmVyZ0BicmVha2luZ2JhZC5jb206OTk5OTk5
+
+S:
+
+HTTP/1.1 200 OK
+Content-Type: text/plain
+Server: Microsoft-HTTPAPI/2.0
+X-Session-Id: 2a55a5b4-1b3e-49a8-8fba-307954e4a8ef
+Date: Thu, 02 Oct 2014 15:38:05 GMT
+Content-Length: 76
+
+6bb9a442-5e10-4360-af40-d9fe19924ec2
+4e28e514-8706-42b6-9ba4-5dbab0ac72b5
+
+    </pre>
+
+    <p>Getting a failed notification:</p>
+    <pre>
+C:
+
+GET http://localhost:8080/notifications/6bb9a442-5e10-4360-af40-d9fe19924ec2 HTTP/1.1
+Content-Type: text/plain
+Host: localhost:8080
+Authorization: Basic aGVpc2VuYmVyZ0BicmVha2luZ2JhZC5jb206OTk5OTk5
+
+S:
+
+HTTP/1.1 400 Unsupported content type
+Content-Type: text/plain
+Server: Microsoft-HTTPAPI/2.0
+X-Session-Id: 2a55a5b4-1b3e-49a8-8fba-307954e4a8ef
+X-From: jesse@breakingbad.com/default
+X-To: heisenberg@breakingbad.com/default
+X-Reason-Code: 21
+Date: Thu, 02 Oct 2014 15:39:42 GMT
+Content-Length: 6
+
+failed
+
+</pre>
+
+
+    <h3 id="commands">Commands</h3>
+    <p>
+        The client can send commands requests thought the HTTP server, using the <code>http://{host:port}/commands</code> resource URI. 
+        
+    </p>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>
+                    Property
+                </th>
+                <th>
+                    HTTP mapping
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>
+                    <code>method</code>
+                </td>
+                <td>
+                    The HTTP request method. The LIME-HTTP mapping is:
+                    <ul>
+                        <li>
+                            <code>get</code> - <code>GET</code>
+                        </li>
+                        <li>
+                            <code>set</code> - <code>POST</code>
+                        </li>
+                        <li>
+                            <code>delete</code> - <code>DELETE</code>
+                        </li>
+                    </ul>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <code>uri</code>
+                </td>
+                <td>
+                    The value of the HTTP request URI, excluding the <code>http://{host:port}/commands</code> base host.
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <code>type</code>
+                </td>
+                <td>
+                    <code>Content-Type</code> header.
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <code>resource</code>
+                </td>
+                <td>
+                    The HTTP message <code>body</code> encoded according to the MIME type.
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <code>reason</code>
+                </td>
+                <td>
+                    In case of a failure notification, the HTTP response <code>status code</code> should be a semantically related value to the envelope reason code.
+                    The HTTP response <code>reason phrase</code> should be the envelope reason description value.
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <p>The expected server behavior is:</p>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>
+                    URI
+                </th>
+                <th>
+                    Method
+                </th>
+                <th>
+                    Behavior
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>
+                    <code>/commands/*</code>
+                </td>
+                <td>
+                    <code>POST</code>
+                </td>
+                <td>
+                    The server should compose a command envelope with <code>set</code> method with the <code>/*</code> URI.
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <code>/commands/*</code>
+                </td>
+                <td>
+                    <code>GET</code>
+                </td>
+                <td>
+                    The server should compose a command envelope with <code>get</code> method with the <code>/*</code> URI.
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <code>/commands/*</code>
+                </td>
+                <td>
+                    <code>DELETE</code>
+                </td>
+                <td>
+                    The server should compose a command envelope with <code>delete</code> method with the <code>/*</code> URI.
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h4>Examples</h4>
+
+    <p>Sending a presence command:</p>
+    <pre>
+C:
+
+POST http://localhost:8080/commands/presence HTTP/1.1
+Host: localhost:8080
+Authorization: Basic aGVpc2VuYmVyZ0BicmVha2luZ2JhZC5jb206OTk5OTk5
+Content-Type: application/vnd.lime.presence+json
+Content-Length: 22
+
+{"status":"available"}
+
+S:
+
+HTTP/1.1 203 Created
+Server: Microsoft-HTTPAPI/2.0
+X-Session-Id: b94d5f7a-0409-4eec-93c7-1b5b15d889de
+Date: Thu, 02 Oct 2014 15:19:30 GMT
+Content-Length: 0
+
+</pre> 
 </div>

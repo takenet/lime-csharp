@@ -24,33 +24,26 @@ namespace Lime.Protocol.Http.Processors
 
         #region SendEnvelopeRequestContextBase Members
 
-        protected override async Task<Command> ParseEnvelopeAsync(HttpListenerRequest request)
+        protected override async Task FillEnvelopeAsync(Command envelope, HttpListenerRequest request)
         {
-            Command command = null;
-
             CommandMethod method;
             if (TryConvertToCommandMethod(request.HttpMethod, out method))
             {
                 var limeUriFragment = request.Url.Segments.Except(new[] { Constants.COMMANDS_PATH + Constants.ROOT }).Aggregate((s1, s2) => s1 + s2);
                 if (!string.IsNullOrWhiteSpace(limeUriFragment))
-                {
-                    command = new Command();
-                    FillEnvelopeFromRequest(command, request);
-
-                    if (command.Id != Guid.Empty)
+                {                    
+                    if (envelope.Id == Guid.Empty)
                     {
-                        command.Method = method;
-                        command.Uri = new LimeUri(limeUriFragment);
+                        envelope.Id = Guid.NewGuid();
 
-                        if (command.Method == CommandMethod.Set ||
-                            command.Method == CommandMethod.Observe)
-                        {
-                            command.Resource = await ParseDocumentAsync(request).ConfigureAwait(false);
-                        }
                     }
-                    else
+                    envelope.Method = method;
+                    envelope.Uri = new LimeUri(limeUriFragment);
+
+                    if (envelope.Method == CommandMethod.Set ||
+                        envelope.Method == CommandMethod.Observe)
                     {
-                        throw new LimeException(ReasonCodes.VALIDATION_ERROR, "Invalid or empty id");
+                        envelope.Resource = await ParseDocumentAsync(request).ConfigureAwait(false);
                     }
                 }
                 else
@@ -62,10 +55,8 @@ namespace Lime.Protocol.Http.Processors
             {
                 throw new LimeException(ReasonCodes.VALIDATION_INVALID_METHOD, "Invalid method");
             }
-
-            return command;
         }
-
+        
         #endregion
 
         #region Private Methods
@@ -90,5 +81,7 @@ namespace Lime.Protocol.Http.Processors
         }
 
         #endregion
+
+
     }
 }

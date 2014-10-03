@@ -26,6 +26,7 @@ namespace Lime.Protocol.Http
         public const string ENVELOPE_PP_QUERY = "pp";
         public const string ASYNC_QUERY = "async";
         public const string REASON_CODE_HEADER = "X-Reason-Code";
+        public const string REASON_DESCRIPTION_HEADER = "X-Reason-Description";
         
     }
 }
