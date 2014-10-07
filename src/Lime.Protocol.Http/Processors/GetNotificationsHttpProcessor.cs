@@ -10,12 +10,12 @@ using System.Threading.Tasks;
 
 namespace Lime.Protocol.Http.Processors
 {
-    public sealed class GetMessagesContextProcessor : GetEnvelopesContextProcessor<Message>
+    public sealed class GetNotificationsHttpProcessor : GetEnvelopesHttpProcessor<Notification>
     {
         #region Constructor
 
-        public GetMessagesContextProcessor(IEnvelopeStorage<Message> messageStorage)
-            : base(messageStorage, Constants.MESSAGES_PATH)
+        public GetNotificationsHttpProcessor(IEnvelopeStorage<Notification> notificationStorage)
+            : base(notificationStorage, Constants.NOTIFICATIONS_PATH)
         {
 
         }

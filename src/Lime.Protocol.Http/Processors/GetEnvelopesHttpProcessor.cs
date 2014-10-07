@@ -10,14 +10,14 @@ using System.Threading.Tasks;
 
 namespace Lime.Protocol.Http.Processors
 {
-    public class GetEnvelopesContextProcessor<T> : IContextProcessor 
+    public class GetEnvelopesHttpProcessor<T> : IHttpProcessor
         where T : Envelope
     {
         private readonly IEnvelopeStorage<T> _envelopeStorage;
 
         #region Constructor
 
-        public GetEnvelopesContextProcessor(IEnvelopeStorage<T> envelopeStorage, string path)
+        public GetEnvelopesHttpProcessor(IEnvelopeStorage<T> envelopeStorage, string path)
         {
             _envelopeStorage = envelopeStorage;
 
@@ -27,44 +27,46 @@ namespace Lime.Protocol.Http.Processors
 
         #endregion
 
-        #region IRequestProcessor Members
+        #region IHttpProcessor Members
 
         public HashSet<string> Methods { get; private set; }
 
         public UriTemplate Template { get; private set; }
 
-        public async Task ProcessAsync(HttpListenerContext context, ServerHttpTransport transport, UriTemplateMatch match, CancellationToken cancellationToken)
+        public async Task<HttpResponse> ProcessAsync(HttpRequest request, UriTemplateMatch match, ServerHttpTransport transport, CancellationToken cancellationToken)
         {
             Identity owner;
 
-            if (Identity.TryParse(context.User.Identity.Name, out owner))
+            if (Identity.TryParse(request.User.Identity.Name, out owner))
             {
                 var ids = await _envelopeStorage.GetEnvelopesAsync(owner).ConfigureAwait(false);
                 if (ids.Length > 0)
                 {
-                    context.Response.StatusCode = (int)HttpStatusCode.OK;
-                    context.Response.ContentType = Constants.TEXT_PLAIN_HEADER_VALUE;
+                    string body;
 
-                    using (var writer = new StreamWriter(context.Response.OutputStream))
+                    using (var writer = new StringWriter())
                     {
                         foreach (var id in ids)
                         {
                             await writer.WriteLineAsync(id.ToString()).ConfigureAwait(false);
                         }
+
+                        body = writer.ToString();
                     }
+
+                    var response = new HttpResponse(request.CorrelatorId, HttpStatusCode.OK, body: body);
+                    response.Headers[HttpResponseHeader.ContentType] = Constants.TEXT_PLAIN_HEADER_VALUE;
+                    return response;
                 }
                 else
                 {
-                    context.Response.StatusCode = (int)HttpStatusCode.NoContent;                    
-                }            
+                    return new HttpResponse(request.CorrelatorId, HttpStatusCode.NoContent);
+                }
             }
             else
             {
-                context.Response.StatusCode = (int)HttpStatusCode.BadRequest;                
-            }
-
-            context.Response.Close();
-
+                return new HttpResponse(request.CorrelatorId, HttpStatusCode.BadRequest);
+            }            
         }
 
         #endregion

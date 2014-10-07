@@ -14,18 +14,39 @@ namespace Lime.Protocol.Http
     {
         #region Constructor
 
-        public HttpResponse(Guid correlatorId, HttpStatusCode statusCode, string statusDescription = null, WebHeaderCollection headers = null, Stream body = null)
+        public HttpResponse(Guid correlatorId, HttpStatusCode statusCode, string statusDescription = null, WebHeaderCollection headers = null, string body = null, string contentType = null)
         {
-            if (correlatorId == default(Guid))
+            if (correlatorId.Equals(default(Guid)))
             {
-                throw new ArgumentException("The correlatorId must be a valid GUID", "correlatorId");
+                throw new ArgumentException("CorrelatorId must be a valid GUID", "correlatorId");
             }
 
             CorrelatorId = correlatorId;
+
             StatusCode = statusCode;
             StatusDescription = statusDescription;
-            Headers = headers;
+            if (headers != null)
+            {
+                Headers = headers;
+            }
+            else
+            {
+                Headers = new WebHeaderCollection();
+            }
+
             Body = body;
+
+            if (body != null)
+            {
+                if (contentType != null)
+                {
+                    Headers.Add(HttpResponseHeader.ContentType, contentType);
+                }
+                else
+                {
+                    Headers.Add(HttpResponseHeader.ContentType, Constants.TEXT_PLAIN_HEADER_VALUE);
+                }
+            }            
         }
 
         #endregion
@@ -40,7 +61,7 @@ namespace Lime.Protocol.Http
 
         public WebHeaderCollection Headers { get; private set; }
 
-        public Stream Body { get; private set; }
+        public string Body { get; private set; }
 
         #endregion
     }    

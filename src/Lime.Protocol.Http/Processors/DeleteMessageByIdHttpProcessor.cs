@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Lime.Protocol.Http.Processors
 {
-    public sealed class DeleteMessageByIdContextProcessor : DeleteEnvelopeByIdContextProcessor<Message>
+    public sealed class DeleteMessageByIdContextProcessor : DeleteEnvelopeByIdHttpProcessor<Message>
     {
         public DeleteMessageByIdContextProcessor(IEnvelopeStorage<Message> messageStorage)
             : base(messageStorage, Constants.MESSAGES_PATH)

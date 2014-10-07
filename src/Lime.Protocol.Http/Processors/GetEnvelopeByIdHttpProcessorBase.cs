@@ -11,7 +11,7 @@ using Lime.Protocol.Http.Serialization;
 
 namespace Lime.Protocol.Http.Processors
 {
-    public abstract class GetEnvelopeByIdContextProcessorBase<T> : IContextProcessor
+    public abstract class GetEnvelopeByIdHttpProcessorBase<T> : IHttpProcessor
         where T : Envelope
     {
         private readonly IEnvelopeStorage<T> _envelopeStorage;
@@ -19,7 +19,7 @@ namespace Lime.Protocol.Http.Processors
 
         #region Constructor
 
-        public GetEnvelopeByIdContextProcessorBase(IEnvelopeStorage<T> envelopeStorage, string path)
+        public GetEnvelopeByIdHttpProcessorBase(IEnvelopeStorage<T> envelopeStorage, string path)
         {
             _envelopeStorage = envelopeStorage;
             _serializer = new DocumentSerializer();
@@ -30,58 +30,54 @@ namespace Lime.Protocol.Http.Processors
 
         #endregion
 
-        #region IRequestProcessor Members
+        #region IHttpProcessor Members
 
         public HashSet<string> Methods { get; private set; }
 
         public UriTemplate Template { get; private set; }
 
-        public async Task ProcessAsync(HttpListenerContext context, ServerHttpTransport transport, UriTemplateMatch match, CancellationToken cancellationToken)
+        public async Task<HttpResponse> ProcessAsync(HttpRequest request, UriTemplateMatch match, ServerHttpTransport transport, CancellationToken cancellationToken)
         {
             Identity owner;
             Guid id;
 
-            if (Identity.TryParse(context.User.Identity.Name, out owner) &&
+            if (Identity.TryParse(request.User.Identity.Name, out owner) &&
                 Guid.TryParse(match.BoundVariables.Get("id"), out id))
             {
                 var envelope = await _envelopeStorage.GetEnvelopeAsync(owner, id).ConfigureAwait(false);
                 if (envelope != null)
                 {
-                    context.Response.StatusCode = (int)HttpStatusCode.OK;
-
+                    var response = GetEnvelopeResponse(envelope, request); 
                     if (envelope.From != null)
                     {
-                        context.Response.Headers.Add(Constants.ENVELOPE_FROM_HEADER, envelope.From.ToString());
+                        response.Headers.Add(Constants.ENVELOPE_FROM_HEADER, envelope.From.ToString());
                     }
-                    
+
                     if (envelope.To != null)
                     {
-                        context.Response.Headers.Add(Constants.ENVELOPE_TO_HEADER, envelope.To.ToString());
+                        response.Headers.Add(Constants.ENVELOPE_TO_HEADER, envelope.To.ToString());
                     }
 
                     if (envelope.Pp != null)
                     {
-                        context.Response.Headers.Add(Constants.ENVELOPE_PP_HEADER, envelope.Pp.ToString());
+                        response.Headers.Add(Constants.ENVELOPE_PP_HEADER, envelope.Pp.ToString());
                     }
-
-                    await WriteEnvelopeResultAsync(envelope, context.Response).ConfigureAwait(false);
-                    context.Response.Close();
+                    
+                    return response;
                 }
                 else
                 {
-                    context.Response.SendResponse(HttpStatusCode.NotFound);
+                    return new HttpResponse(request.CorrelatorId, HttpStatusCode.NotFound);
                 }
             }
             else
             {
-                context.Response.SendResponse(HttpStatusCode.BadRequest);
+                return new HttpResponse(request.CorrelatorId, HttpStatusCode.BadRequest);
             }
         }
 
         #endregion
 
-
-        protected abstract Task WriteEnvelopeResultAsync(T envelope, HttpListenerResponse response);
-
+        protected abstract HttpResponse GetEnvelopeResponse(T envelope, HttpRequest request);
     }
 }

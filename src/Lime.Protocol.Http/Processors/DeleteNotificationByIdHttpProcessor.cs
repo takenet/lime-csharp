@@ -5,9 +5,9 @@ using System.Text;
 
 namespace Lime.Protocol.Http.Processors
 {
-    public sealed class DeleteNotificationByIdContextProcessor : DeleteEnvelopeByIdContextProcessor<Notification>
+    public sealed class DeleteNotificationByIdHttpProcessor : DeleteEnvelopeByIdHttpProcessor<Notification>
     {
-        public DeleteNotificationByIdContextProcessor(IEnvelopeStorage<Notification> notificationStorage)
+        public DeleteNotificationByIdHttpProcessor(IEnvelopeStorage<Notification> notificationStorage)
             : base(notificationStorage, Constants.NOTIFICATIONS_PATH)
         {
 

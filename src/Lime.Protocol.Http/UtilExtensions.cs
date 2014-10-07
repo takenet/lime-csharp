@@ -17,7 +17,7 @@ namespace Lime.Protocol.Http
         /// <param name="headerKey"></param>
         /// <param name="queryStringKey"></param>
         /// <returns></returns>
-        public static string GetValue(this HttpListenerRequest request, string headerKey, string queryStringKey)
+        public static string GetValue(this HttpRequest request, string headerKey, string queryStringKey)
         {
             return request.Headers.Get(headerKey) ?? request.QueryString.Get(queryStringKey);
         }

@@ -1,7 +1,9 @@
-﻿using Lime.Protocol.Network;
+﻿using Lime.Protocol.Http.Storage;
+using Lime.Protocol.Network;
 using Lime.Protocol.Security;
 using Lime.Protocol.Util;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -18,18 +20,23 @@ namespace Lime.Protocol.Http
     /// </summary>
     public class ServerHttpTransport : TransportBase
     {
-        #region Private Fields
+        #region Private Fields        
 
         private HttpListenerBasicIdentity _httpIdentity;
         private readonly BufferBlock<Envelope> _inputBufferBlock;
-        private readonly BufferBlock<Envelope> _outputBufferBlock;
+
+        private readonly IEnvelopeStorage<Message> _messageStorage;
+        private readonly IEnvelopeStorage<Notification> _notificationStorage;
+        
         private readonly TaskCompletionSource<Session> _sessionTaskCompletionSource;
+        private readonly ConcurrentDictionary<Guid, TaskCompletionSource<Notification>> _pendingNotificationsDictionary;
+        private readonly ConcurrentDictionary<Guid, TaskCompletionSource<Command>> _pendingCommandsDictionary;
 
         #endregion
 
         #region Constructor
 
-        internal ServerHttpTransport(HttpListenerBasicIdentity identity, bool isHttps)
+        internal ServerHttpTransport(HttpListenerBasicIdentity identity, bool isHttps, IEnvelopeStorage<Message> messageStorage, IEnvelopeStorage<Notification> notificationStorage)
         {
             if (identity == null)
             {
@@ -40,10 +47,14 @@ namespace Lime.Protocol.Http
             Compression = SessionCompression.None;
             Encryption = isHttps ? SessionEncryption.TLS : SessionEncryption.None;
 
+            _messageStorage = messageStorage;
+            _notificationStorage = notificationStorage;
+
             _inputBufferBlock = new BufferBlock<Envelope>();
-            _outputBufferBlock = new BufferBlock<Envelope>();
 
             _sessionTaskCompletionSource = new TaskCompletionSource<Session>();
+            _pendingNotificationsDictionary = new ConcurrentDictionary<Guid, TaskCompletionSource<Notification>>();
+            _pendingCommandsDictionary = new ConcurrentDictionary<Guid, TaskCompletionSource<Command>>();
         }
 
         #endregion
@@ -51,26 +62,52 @@ namespace Lime.Protocol.Http
         #region Internal Properties
 
         /// <summary>
-        /// Represents the buffer that
+        /// Adds the envelope to the buffer that
         /// the server reads the envelopes
         /// sent by the node.
         /// </summary>
-        internal BufferBlock<Envelope> InputBuffer
+        internal Task<bool> SendToInputBufferAsync(Envelope envelope, CancellationToken cancellationToken)
         {
-            get { return _inputBufferBlock; }
+            return _inputBufferBlock.SendAsync(envelope, cancellationToken);
         }
 
-        /// <summary>
-        /// Represents the buffer that
-        /// the server writes the envelopes
-        /// to be received by the node.
-        /// </summary>
-        internal BufferBlock<Envelope> OutputBuffer
+        internal async Task<Notification> ProcessMessageAsync(Message message, CancellationToken cancellationToken)
         {
-            get { return _outputBufferBlock; }
+            if (message.Id == Guid.Empty)
+            {
+                throw new ArgumentException("Invalid message id");
+            }
+
+            var tcs = new TaskCompletionSource<Notification>();
+            cancellationToken.Register(() => tcs.TrySetCanceled());
+            _pendingNotificationsDictionary.TryAdd(message.Id, tcs);
+            if (!await SendToInputBufferAsync(message, cancellationToken).ConfigureAwait(false))
+            {
+                throw new InvalidOperationException("The input buffer is complete");
+            }
+
+            return await tcs.Task;
         }
 
-        internal Task<Session> GetSessionAsync(CancellationToken cancellationToken)
+        internal async Task<Command> ProcessCommandAsync(Command command, CancellationToken cancellationToken)
+        {
+            if (command.Id == Guid.Empty)
+            {
+                throw new ArgumentException("Invalid command id");
+            }
+
+            var tcs = new TaskCompletionSource<Command>();
+            cancellationToken.Register(() => tcs.TrySetCanceled());
+            _pendingCommandsDictionary.TryAdd(command.Id, tcs);
+            if (!await SendToInputBufferAsync(command, cancellationToken).ConfigureAwait(false))
+            {
+                throw new InvalidOperationException("The input buffer is complete");
+            }
+
+            return await tcs.Task;
+        }
+
+        internal Task<Session> AuthenticateAsync(CancellationToken cancellationToken)
         {
             cancellationToken.Register(() => _sessionTaskCompletionSource.TrySetCanceled());
             return _sessionTaskCompletionSource.Task;
@@ -106,18 +143,61 @@ namespace Lime.Protocol.Http
                 var session = (Session)envelope;
                 await ReceiveSessionAsync(cancellationToken, session).ConfigureAwait(false);
             }
-            else
+            else if (envelope is Notification)
             {
-                if (!await OutputBuffer.SendAsync(envelope, cancellationToken).ConfigureAwait(false))
+                var notification = (Notification)envelope;
+
+                TaskCompletionSource<Notification> notificationTcs;
+                if (_pendingNotificationsDictionary.TryRemove(envelope.Id, out notificationTcs))
                 {
-                    throw new InvalidOperationException("The output buffer is complete");
+                    notificationTcs.TrySetResult(notification);                                       
+                }
+                else
+                {
+                    var owner = notification.To.ToIdentity();
+                    var existingNotification = await _notificationStorage.GetEnvelopeAsync(owner, envelope.Id).ConfigureAwait(false);
+                    if (existingNotification != null)
+                    {
+                        if (notification.Event == Event.Failed ||
+                            existingNotification.Event < notification.Event)
+                        {
+                            bool updated = false;
+                            int tryCount = 0;
+
+                            while (!updated && tryCount++ < 3)
+                            {
+                                await _notificationStorage.DeleteEnvelopeAsync(owner, envelope.Id).ConfigureAwait(false);
+                                updated = await _notificationStorage.StoreEnvelopeAsync(owner, notification).ConfigureAwait(false);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        await _notificationStorage.StoreEnvelopeAsync(owner, notification).ConfigureAwait(false);
+                    }
                 }
             }
+            else if (envelope is Message)
+            {
+                var message = (Message)envelope;
+                await _messageStorage.StoreEnvelopeAsync(envelope.To.ToIdentity(), message).ConfigureAwait(false);
+            }
+            else if (envelope is Command)                     
+            {
+                var command = (Command)envelope;
+
+                TaskCompletionSource<Command> commandTcs;
+                if (_pendingCommandsDictionary.TryRemove(envelope.Id, out commandTcs))
+                {
+                    commandTcs.TrySetResult(command);                                       
+                }                
+            }
+       
         }
 
         public override Task<Envelope> ReceiveAsync(CancellationToken cancellationToken)
         {
-            return InputBuffer.ReceiveAsync(cancellationToken);
+            return _inputBufferBlock.ReceiveAsync(cancellationToken);
         }
 
         public override Task OpenAsync(Uri uri, CancellationToken cancellationToken)
@@ -127,16 +207,37 @@ namespace Lime.Protocol.Http
                 State = SessionState.New
             };
 
-            return InputBuffer.SendAsync(session, cancellationToken);
+            return SendToInputBufferAsync(session, cancellationToken);
         }
 
         protected override Task PerformCloseAsync(CancellationToken cancellationToken)
         {
-            // Close the buffers
-            InputBuffer.Complete();
-            OutputBuffer.Complete();
-
+            // Close the buffers            
+            _inputBufferBlock.Complete();
             _sessionTaskCompletionSource.TrySetCanceled();
+
+            var pendingCommandIds = _pendingCommandsDictionary.Keys.ToArray();
+            foreach (var commandId in pendingCommandIds)
+            {
+                TaskCompletionSource<Command> tcs;
+
+                if (_pendingCommandsDictionary.TryRemove(commandId, out tcs))
+                {
+                    tcs.TrySetCanceled();
+                }
+            }
+
+            var pendingNotificationIds = _pendingNotificationsDictionary.Keys.ToArray();
+            foreach (var notification in pendingNotificationIds)
+            {
+                TaskCompletionSource<Notification> tcs;
+
+                if (_pendingNotificationsDictionary.TryRemove(notification, out tcs))
+                {
+                    tcs.TrySetCanceled();
+                }
+            }
+
             return Task.FromResult<object>(null);
         } 
 
@@ -159,7 +260,7 @@ namespace Lime.Protocol.Http
                         Encryption = this.Encryption
                     };
 
-                    if (!await InputBuffer.SendAsync(responseSession, cancellationToken).ConfigureAwait(false))
+                    if (!await SendToInputBufferAsync(responseSession, cancellationToken).ConfigureAwait(false))
                     {                        
                         throw new InvalidOperationException("The input buffer is complete");                        
                     }
@@ -193,7 +294,7 @@ namespace Lime.Protocol.Http
                     responseSession.State = SessionState.Finishing;
                 }
 
-                if (!await InputBuffer.SendAsync(responseSession, cancellationToken).ConfigureAwait(false))
+                if (!await SendToInputBufferAsync(responseSession, cancellationToken).ConfigureAwait(false))
                 {                    
                     throw new InvalidOperationException("The input buffer is complete");                    
                 }

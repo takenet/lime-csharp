@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.IO;
 using System.Net;
 using System.Security.Principal;
@@ -15,7 +16,7 @@ namespace Lime.Protocol.Http
     {
         #region Constructor
 
-        public HttpRequest(string method, Uri uri, IPrincipal user, Guid correlatorId = default(Guid), WebHeaderCollection headers = null, Stream body = null)
+        public HttpRequest(string method, Uri uri, IPrincipal user, Guid correlatorId = default(Guid), WebHeaderCollection headers = null, NameValueCollection queryString = null, Stream bodyStream = null)
         {
             if (string.IsNullOrWhiteSpace(method))
             {
@@ -35,13 +36,34 @@ namespace Lime.Protocol.Http
             }
             User = user;
 
-            if (correlatorId == default(Guid))
+            if (correlatorId.Equals(default(Guid)))
             {
-                correlatorId = Guid.NewGuid();
+                CorrelatorId = Guid.NewGuid();
+            }
+            else
+            {
+                CorrelatorId = correlatorId;
             }
 
-            Headers = headers;
-            Body = body;
+            if (headers != null)
+            {
+                Headers = headers;
+            }
+            else
+            {
+                Headers = new WebHeaderCollection();
+            }
+
+            if (queryString != null)
+            {
+                QueryString = queryString;
+            }
+            else
+            {
+                QueryString = new NameValueCollection();
+            }
+
+            BodyStream = bodyStream;
         }
 
         #endregion
@@ -58,7 +80,9 @@ namespace Lime.Protocol.Http
 
         public WebHeaderCollection Headers { get; private set; }
 
-        public Stream Body { get; private set; }
+        public NameValueCollection QueryString { get; private set; }
+
+        public Stream BodyStream { get; private set; }
 
         #endregion
     }

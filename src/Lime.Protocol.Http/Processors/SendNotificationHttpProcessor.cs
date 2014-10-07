@@ -9,25 +9,19 @@ using System.Threading.Tasks;
 
 namespace Lime.Protocol.Http.Processors
 {
-    public class SendNotificationContextProcessor : SendEnvelopeRequestContextBase<Notification>
+    public class SendNotificationHttpProcessor : SendEnvelopeHttpProcessorBase<Notification>
     {        
         #region Constructor
 
-        public SendNotificationContextProcessor(ITraceWriter traceWriter = null)
-            : base(new HashSet<string> { Constants.HTTP_METHOD_POST }, new UriTemplate(string.Format("/{0}", Constants.NOTIFICATIONS_PATH)), null, null, traceWriter)
+        public SendNotificationHttpProcessor(ITraceWriter traceWriter = null)
+            : base(new HashSet<string> { Constants.HTTP_METHOD_POST }, new UriTemplate(string.Format("/{0}", Constants.NOTIFICATIONS_PATH)), null, traceWriter)
         {
 
         }
 
         #endregion
 
-        public override async Task ProcessAsync(HttpListenerContext context, ServerHttpTransport transport, UriTemplateMatch match, System.Threading.CancellationToken cancellationToken)
-        {
-            var envelope = await GetEnvelopeFromRequestAsync(context.Request).ConfigureAwait(false);            
-            await ProcessEnvelopeAsync(envelope, transport, context.Response, true, cancellationToken).ConfigureAwait(false); 
-        }
-
-        protected override async Task FillEnvelopeAsync(Notification envelope, HttpListenerRequest request)
+        protected override async Task FillEnvelopeAsync(Notification envelope, HttpRequest request)
         {
             if (envelope.Id == Guid.Empty)
             {
@@ -35,7 +29,7 @@ namespace Lime.Protocol.Http.Processors
             }
 
             string body;
-            using (var streamReader = new StreamReader(request.InputStream))
+            using (var streamReader = new StreamReader(request.BodyStream))
             {
                 body = await streamReader.ReadToEndAsync().ConfigureAwait(false);                                             
             }
@@ -63,8 +57,8 @@ namespace Lime.Protocol.Http.Processors
                 }
 
                 envelope.Reason.Description = request.Headers.Get(Constants.REASON_DESCRIPTION_HEADER);
-            }
-            
+            }            
         }
+
     }
 }

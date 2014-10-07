@@ -11,7 +11,7 @@ using Lime.Protocol.Http.Serialization;
 
 namespace Lime.Protocol.Http.Processors
 {
-    public class DeleteEnvelopeByIdContextProcessor<T> : IContextProcessor
+    public class DeleteEnvelopeByIdHttpProcessor<T> : IHttpProcessor
         where T : Envelope
     {
         private readonly IEnvelopeStorage<T> _envelopeStorage;
@@ -19,7 +19,7 @@ namespace Lime.Protocol.Http.Processors
 
         #region Constructor
 
-        public DeleteEnvelopeByIdContextProcessor(IEnvelopeStorage<T> envelopeStorage, string path)
+        public DeleteEnvelopeByIdHttpProcessor(IEnvelopeStorage<T> envelopeStorage, string path)
         {
             _envelopeStorage = envelopeStorage;
             _serializer = new DocumentSerializer();
@@ -30,33 +30,33 @@ namespace Lime.Protocol.Http.Processors
 
         #endregion
 
-        #region IRequestProcessor Members
+        #region IHttpProcessor Members
 
         public HashSet<string> Methods { get; private set; }
 
         public UriTemplate Template { get; private set; }
 
-        public async Task ProcessAsync(HttpListenerContext context, ServerHttpTransport transport, UriTemplateMatch match, CancellationToken cancellationToken)
-        {
+        public async Task<HttpResponse> ProcessAsync(HttpRequest request, UriTemplateMatch match, ServerHttpTransport transport, CancellationToken cancellationToken)
+        {            
             Identity owner;
             Guid id;
 
-            if (Identity.TryParse(context.User.Identity.Name, out owner) &&
+            if (Identity.TryParse(request.User.Identity.Name, out owner) &&
                 Guid.TryParse(match.BoundVariables.Get("id"), out id))
             {
                 if (await _envelopeStorage.DeleteEnvelopeAsync(owner, id).ConfigureAwait(false))
                 {
-                    context.Response.SendResponse(HttpStatusCode.OK);
-                    
+                    return new HttpResponse(request.CorrelatorId, HttpStatusCode.OK);
+
                 }
                 else
                 {
-                    context.Response.SendResponse(HttpStatusCode.NotFound);
+                    return new HttpResponse(request.CorrelatorId, HttpStatusCode.NotFound);
                 }
             }
             else
             {
-                context.Response.SendResponse(HttpStatusCode.BadRequest);
+                return new HttpResponse(request.CorrelatorId, HttpStatusCode.BadRequest);
             }
         }
 
