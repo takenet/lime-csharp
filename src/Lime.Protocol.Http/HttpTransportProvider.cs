@@ -26,26 +26,37 @@ namespace Lime.Protocol.Http
 
         #region IHttpTransportProvider Members
 
-        public ServerHttpTransport GetTransport(IPrincipal requestPrincipal)
+        public IEmulatedTransport GetTransport(IPrincipal requestPrincipal, bool cacheInstance)
         {
             var identity = (HttpListenerBasicIdentity)requestPrincipal.Identity;
             var transportKey = GetTransportKey(identity);
 
-            var transport = _transportDictionary.GetOrAdd(
-                transportKey,
-                k =>
-                {
-                    var newTransport = CreateTransport(identity);
-                    newTransport.Closing += (sender, e) =>
+            ServerHttpTransport transport;
+
+            if (cacheInstance)
+            {
+                transport = _transportDictionary.GetOrAdd(
+                    transportKey,
+                    k =>
                     {
-                        _transportDictionary.TryRemove(k, out newTransport);
-                    };
-                    return newTransport;
-                });
+                        var newTransport = CreateTransport(identity);
+                        newTransport.Closing += (sender, e) =>
+                        {
+                            ServerHttpTransport t;
+                            _transportDictionary.TryRemove(k, out t);
+                        };
+                        return newTransport;
+                    });
+            }
+            else if (!_transportDictionary.TryRemove(transportKey, out transport))
+            {
+                transport = CreateTransport(identity);
+            }
+            
             return transport;
         }
 
-        public event EventHandler<ServerHttpTransportEventArgs> TransportCreated;
+        public event EventHandler<TransportEventArgs> TransportCreated;
 
         #endregion
 
@@ -59,7 +70,7 @@ namespace Lime.Protocol.Http
         private ServerHttpTransport CreateTransport(HttpListenerBasicIdentity identity)
         {
             var transport = new ServerHttpTransport(identity, _useHttps, _messageStorage, _notificationStorage);
-            TransportCreated.RaiseEvent(this, new ServerHttpTransportEventArgs(transport));
+            TransportCreated.RaiseEvent(this, new TransportEventArgs(transport));
             return transport;
         }
 

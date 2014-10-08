@@ -22,7 +22,7 @@ namespace Lime.Protocol.Http.Processors
 
         #endregion
 
-        public override async Task<HttpResponse> ProcessAsync(HttpRequest request, UriTemplateMatch match, ServerHttpTransport transport, CancellationToken cancellationToken)
+        public override async Task<HttpResponse> ProcessAsync(HttpRequest request, UriTemplateMatch match, IEmulatedTransport transport, CancellationToken cancellationToken)
         {
             bool isAsync;
             bool.TryParse(request.QueryString.Get(Constants.ASYNC_QUERY), out isAsync);
@@ -56,7 +56,6 @@ namespace Lime.Protocol.Http.Processors
                     return new HttpResponse(request.CorrelatorId, HttpStatusCode.Conflict);
                 }
             }  
-
         }
 
         protected override async Task FillEnvelopeAsync(Message envelope, HttpRequest request)

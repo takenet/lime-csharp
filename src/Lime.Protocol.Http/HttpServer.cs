@@ -13,20 +13,32 @@ namespace Lime.Protocol.Http
 {
     public sealed class HttpServer : IHttpServer, IDisposable
     {
+        #region Private Fields
+
         private readonly HttpListener _httpListener;
         private readonly ConcurrentDictionary<Guid, HttpListenerContext> _pendingContextsDictionary;
 
+        #endregion
+
+        #region Constructor
+
         public HttpServer(string[] prefixes, AuthenticationSchemes authenticationSchemes)
         {
+            if (!HttpListener.IsSupported)
+            {
+                throw new NotSupportedException("Windows XP SP2 or Server 2003 is required to use the HttpListener class.");
+            }
+
             _httpListener = new HttpListener();
             foreach (var prefix in prefixes)
             {
                 _httpListener.Prefixes.Add(prefix);
             }
             _httpListener.AuthenticationSchemes = authenticationSchemes;
-
             _pendingContextsDictionary = new ConcurrentDictionary<Guid, HttpListenerContext>();
         }
+
+        #endregion
 
         #region IHttpServer Members
 
@@ -42,36 +54,50 @@ namespace Lime.Protocol.Http
 
         public async Task<HttpRequest> AcceptRequestAsync(CancellationToken cancellationToken)
         {
-            var context = await _httpListener.GetContextAsync().WithCancellation(cancellationToken).ConfigureAwait(false);
-
-            Guid correlatorId;
-            if (!Guid.TryParse(context.Request.Headers.Get(Constants.ENVELOPE_ID_HEADER), out correlatorId) ||
-                correlatorId == Guid.Empty)
+            try
             {
-                correlatorId = Guid.NewGuid();
-            }
+                var context = await _httpListener
+                    .GetContextAsync()
+                    .WithCancellation(cancellationToken)
+                    .ConfigureAwait(false);
 
-            while (!_pendingContextsDictionary.TryAdd(correlatorId, context))
+                Guid correlatorId;
+                if (!Guid.TryParse(context.Request.GetValue(Constants.ENVELOPE_ID_HEADER, Constants.ENVELOPE_ID_QUERY), out correlatorId) ||
+                    correlatorId == Guid.Empty)
+                {
+                    correlatorId = Guid.NewGuid();
+                }
+
+                while (!_pendingContextsDictionary.TryAdd(correlatorId, context))
+                {
+                    correlatorId = Guid.NewGuid();
+                }
+
+                return new HttpRequest(
+                    context.Request.HttpMethod,
+                    context.Request.Url,
+                    context.User,
+                    correlatorId,
+                    (WebHeaderCollection)context.Request.Headers,
+                    context.Request.QueryString,
+                    context.Request.InputStream);
+            }
+            catch (HttpListenerException ex)
             {
-                correlatorId = Guid.NewGuid();
-            }
+                if (ex.ErrorCode == 995)
+                {
+                    // Workarround since the GetContextAsync method doesn't supports cancellation
+                    // "The I/O operation has been aborted because of either a thread exit or an application request"
+                    throw new OperationCanceledException();
+                }                
 
-            return new HttpRequest(
-                context.Request.HttpMethod,
-                context.Request.Url,
-                context.User,
-                correlatorId,
-                (WebHeaderCollection)context.Request.Headers,
-                context.Request.QueryString,
-                context.Request.InputStream);            
+                throw;
+            }        
         }
 
-        public async Task SubmitResponseAsync(HttpResponse response, CancellationToken cancellationToken)
+        public async Task SubmitResponseAsync(HttpResponse response)
         {
-            cancellationToken.ThrowIfCancellationRequested();
-
             HttpListenerContext context;
-
             if (!_pendingContextsDictionary.TryRemove(response.CorrelatorId, out context))
             {
                 throw new ArgumentException("Invalid response CorrelatorId", "response");

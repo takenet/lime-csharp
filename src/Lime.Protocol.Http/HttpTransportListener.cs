@@ -23,53 +23,57 @@ namespace Lime.Protocol.Http
 {
     public sealed class HttpTransportListener : ITransportListener, IDisposable
     {
-        private readonly bool _useHttps;       
+        #region Private Fields
+
+        private readonly bool _useHttps;
         private readonly TimeSpan _requestTimeout;
-        private readonly bool _writeExceptionsToOutput;        
-
-        private readonly UriTemplateTable _uriTemplateTable;
-
+        private readonly bool _writeExceptionsToOutput;
+        private readonly int _maxDegreeOfParallelism;
+        private readonly IHttpServer _httpServer;
+        private readonly IHttpTransportProvider _httpTransportProvider;
         private readonly IDocumentSerializer _serializer;
         private readonly IEnvelopeStorage<Message> _messageStorage;
         private readonly IEnvelopeStorage<Notification> _notificationStorage;
         private readonly ITraceWriter _traceWriter;
+        private readonly UriTemplateTable _uriTemplateTable;
 
-        private readonly IHttpTransportProvider _httpTransportProvider;
-        private readonly BufferBlock<ServerHttpTransport> _transportBufferBlock;
-
-        private readonly IHttpServer _httpServer;        
-
-        private readonly BufferBlock<HttpRequest> _httpRequestBufferBlock;
-        private readonly TransformBlock<HttpRequest, HttpResponse> _processHttpRequestBufferBlock;
-        private readonly ActionBlock<HttpResponse> _httpResponseActionBlock;
-
+        private BufferBlock<ITransport> _transportBufferBlock;        
+        private BufferBlock<HttpRequest> _httpRequestBufferBlock;
+        private TransformBlock<HttpRequest, HttpResponse> _processHttpRequestBufferBlock;
+        private ActionBlock<HttpResponse> _httpResponseActionBlock;
+        
         private CancellationTokenSource _listenerCancellationTokenSource;
         private Task _httpServerListenerTask;
-                
-        /// <summary>
-        /// Creates a new instance of the
-        /// </summary>
-        /// <param name="port"></param>
-        /// <param name="hostName"></param>
-        /// <param name="useHttps"></param>
-        /// <param name="requestTimeout"></param>
-        /// <param name="writeExceptionsToOutput"></param>
-        /// <param name="serializer"></param>
-        /// <param name="messageStorage"></param>
-        /// <param name="notificationStorage"></param>
-        /// <param name="traceWriter"></param>
-        public HttpTransportListener(int port, string hostName = "*", bool useHttps = false, TimeSpan requestTimeout = default(TimeSpan), bool writeExceptionsToOutput = true, 
-            IDocumentSerializer serializer = null, IHttpServer httpServer = null, IHttpTransportProvider httpTransportProvider = null, IEnvelopeStorage<Message> messageStorage = null, IEnvelopeStorage<Notification> notificationStorage = null, ITraceWriter traceWriter = null)
-        {
-            if (!HttpListener.IsSupported)
-            {
-                throw new NotSupportedException("Windows XP SP2 or Server 2003 is required to use the HttpListener class.");
-            }
 
+        #endregion
+
+        #region Constructor
+
+        /// <summary>
+        /// Creates a new instance of the HttpTransportListener class.
+        /// </summary>
+        /// <param name="port">The port for listening.</param>
+        /// <param name="hostName">Name of the host for binding.</param>
+        /// <param name="useHttps">if set to <c>true</c> the listener endpoint will use HTTPS.</param>
+        /// <param name="requestTimeout">The request timeout.</param>
+        /// <param name="writeExceptionsToOutput">if set to <c>true</c> the exceptions details will be written in the response body.</param>
+        /// <param name="httpServer">The HTTP server instance.</param>
+        /// <param name="httpTransportProvider">The HTTP transport provider instance.</param>
+        /// <param name="serializer">The serializer instance.</param>
+        /// <param name="messageStorage">The message storage instance.</param>
+        /// <param name="notificationStorage">The notification storage instance.</param>
+        /// <param name="processors">The processors.</param>
+        /// <param name="traceWriter">The trace writer.</param>
+        public HttpTransportListener(int port, string hostName = "*", bool useHttps = false, TimeSpan requestTimeout = default(TimeSpan), bool writeExceptionsToOutput = true,
+            int maxDegreeOfParallelism = 1,
+            IHttpServer httpServer = null, IHttpTransportProvider httpTransportProvider = null, IDocumentSerializer serializer = null, IEnvelopeStorage<Message> messageStorage = null,
+            IEnvelopeStorage<Notification> notificationStorage = null, IHttpProcessor[] processors = null, ITraceWriter traceWriter = null)
+        {
             _useHttps = useHttps;
             var scheme = _useHttps ? Uri.UriSchemeHttps : Uri.UriSchemeHttp;
 
             _writeExceptionsToOutput = writeExceptionsToOutput;
+            _maxDegreeOfParallelism = maxDegreeOfParallelism;
             _requestTimeout = requestTimeout != default(TimeSpan) ? requestTimeout : TimeSpan.FromSeconds(Constants.DEFAULT_REQUEST_TIMEOUT);
 
             var basePath = string.Format("{0}://{1}:{2}", scheme, hostName, port);
@@ -101,19 +105,20 @@ namespace Lime.Protocol.Http
             _httpTransportProvider = httpTransportProvider ?? new HttpTransportProvider(_useHttps, _messageStorage, _notificationStorage);
             _httpTransportProvider.TransportCreated += async (sender, e) => await _transportBufferBlock.SendAsync(e.Transport, _listenerCancellationTokenSource.Token).ConfigureAwait(false);
 
-            // Pipeline
-            _transportBufferBlock = new BufferBlock<ServerHttpTransport>();
-
-            _httpRequestBufferBlock = new BufferBlock<HttpRequest>();
-            _processHttpRequestBufferBlock = new TransformBlock<HttpRequest, HttpResponse>(r => ProcessAsync(r));
-            _httpResponseActionBlock = new ActionBlock<HttpResponse>(r => SubmitResponseAsync(r));
-            _httpRequestBufferBlock.LinkTo(_processHttpRequestBufferBlock);
-            _processHttpRequestBufferBlock.LinkTo(_httpResponseActionBlock);
-
             // Context processors
             _uriTemplateTable = new UriTemplateTable(baseUri);
-            RegisterProcessors();
+            if (processors == null)
+            {
+                processors = CreateProcessors();
+            }            
+            foreach (var processor in processors)
+            {
+                _uriTemplateTable.KeyValuePairs.Add(new KeyValuePair<UriTemplate, object>(processor.Template, processor));
+            }
+            _uriTemplateTable.MakeReadOnly(true);            
         }
+
+        #endregion
 
         #region ITransportListener Members
 
@@ -128,12 +133,14 @@ namespace Lime.Protocol.Http
             }
 
             _listenerCancellationTokenSource = new CancellationTokenSource();
+            BuildPipeline();
+            
             _httpServer.Start();
             _httpServerListenerTask = ListenAsync();
-            return Task.FromResult<object>(null);            
+            return Task.FromResult<object>(null);
         }
 
-        public async Task<ITransport> AcceptTransportAsync(CancellationToken cancellationToken)
+        public Task<ITransport> AcceptTransportAsync(CancellationToken cancellationToken)
         {
             if (_httpServerListenerTask == null)
             {
@@ -143,7 +150,7 @@ namespace Lime.Protocol.Http
             var linkedCancellationToken = CancellationTokenSource.CreateLinkedTokenSource(
                 cancellationToken, _listenerCancellationTokenSource.Token);
 
-            return await _transportBufferBlock.ReceiveAsync(linkedCancellationToken.Token).ConfigureAwait(false);
+            return _transportBufferBlock.ReceiveAsync(linkedCancellationToken.Token);
         }        
 
         public async Task StopAsync()
@@ -154,8 +161,17 @@ namespace Lime.Protocol.Http
             }
 
             _httpServer.Stop();
+            _transportBufferBlock.Complete();
+            _httpRequestBufferBlock.Complete();            
+            
             _listenerCancellationTokenSource.Cancel();
-            await _httpServerListenerTask.ConfigureAwait(false);
+
+            await Task.WhenAll(
+                _httpServerListenerTask,
+                _transportBufferBlock.Completion,
+                _httpRequestBufferBlock.Completion).ConfigureAwait(false);
+
+            _httpServerListenerTask = null;
         }
 
         #endregion
@@ -194,16 +210,17 @@ namespace Lime.Protocol.Http
             catch (OperationCanceledException) { }
         }
 
+        /// <summary>
+        /// Processes the HTTP request.
+        /// </summary>
+        /// <param name="request">The request.</param>
+        /// <returns></returns>
         private async Task<HttpResponse> ProcessAsync(HttpRequest request)
         {
-            HttpResponse response = null;
-
-            Exception exception = null;
+            HttpResponse response;
 
             try
             {
-                var cancellationToken = _requestTimeout.ToCancellationToken();
-
                 var match = _uriTemplateTable
                     .Match(request.Uri)
                     .Where(m => ((IHttpProcessor)m.Data).Methods.Contains(request.Method))
@@ -211,26 +228,59 @@ namespace Lime.Protocol.Http
 
                 if (match != null)
                 {
+                    var cancellationToken = _requestTimeout.ToCancellationToken();
+
                     // Authenticate the request session
-                    var transport = _httpTransportProvider.GetTransport(request.User);
-                    var session = await transport.AuthenticateAsync(cancellationToken).ConfigureAwait(false);
-                    if (session.State == SessionState.Established)
+
+                    var keepSession = false;
+                    bool.TryParse(request.Headers.Get(Constants.KEEP_SESSION_HEADER), out keepSession);
+
+                    var transport = _httpTransportProvider.GetTransport(request.User, keepSession);
+
+                    Exception exception = null;
+                    try
                     {
-                        var processor = (IHttpProcessor)match.Data;
-                        response = await processor.ProcessAsync(request, match, transport, cancellationToken).ConfigureAwait(false);
+
+                        var session = await transport.AuthenticateAsync(cancellationToken).ConfigureAwait(false);
+                        if (session.State == SessionState.Established)
+                        {
+                            var processor = (IHttpProcessor)match.Data;
+                            response = await processor.ProcessAsync(request, match, transport, cancellationToken).ConfigureAwait(false);
+                        }
+                        else if (session.Reason != null)
+                        {
+                            response = new HttpResponse(
+                                request.CorrelatorId,
+                                session.Reason.ToHttpStatusCode(),
+                                session.Reason.Description);
+                        }
+                        else
+                        {
+                            response = new HttpResponse(
+                                request.CorrelatorId,
+                                HttpStatusCode.ServiceUnavailable);
+                        }
+
+                        response.Headers.Add(Constants.SESSION_ID_HEADER, session.Id.ToString());
                     }
-                    else if (session.Reason != null)
+                    catch (Exception ex)
                     {
-                        response = new HttpResponse(
-                            request.CorrelatorId,
-                            session.Reason.ToHttpStatusCode(),
-                            session.Reason.Description);
+                        response = null;
+                        exception = ex;
+                    }                    
+
+                    if (keepSession)
+                    {
+                        
                     }
                     else
                     {
-                        response = new HttpResponse(
-                            request.CorrelatorId,
-                            HttpStatusCode.ServiceUnavailable);
+                        await transport.CloseAsync(_listenerCancellationTokenSource.Token).ConfigureAwait(false);
+                    }
+
+                    if (exception != null)
+                    {
+                        throw exception;
                     }
                 }
                 else
@@ -255,26 +305,35 @@ namespace Lime.Protocol.Http
             }
             catch (Exception ex)
             {
-                exception = ex;
-            }
+                string body = null;
 
-            if (exception != null)
-            {
+                if (_writeExceptionsToOutput)
+                {
+                    body = ex.ToString();
+                }
+
                 response = new HttpResponse(
                     request.CorrelatorId,
-                    HttpStatusCode.InternalServerError);
+                    HttpStatusCode.InternalServerError,
+                    body: body);
             }
-
+           
             return response;
         }
 
+        /// <summary>
+        /// Submits the response 
+        /// to the HTTP server.
+        /// </summary>
+        /// <param name="response">The response.</param>
+        /// <returns></returns>
         private async Task SubmitResponseAsync(HttpResponse response)
         {
             Exception exception = null;
 
             try
             {
-                await _httpServer.SubmitResponseAsync(response, _listenerCancellationTokenSource.Token).ConfigureAwait(false);
+                await _httpServer.SubmitResponseAsync(response).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -287,32 +346,44 @@ namespace Lime.Protocol.Http
             }
         }
 
+        private void BuildPipeline()
+        {
+            _transportBufferBlock = new BufferBlock<ITransport>();
+            _httpRequestBufferBlock = new BufferBlock<HttpRequest>();
+            var executionOptions = new ExecutionDataflowBlockOptions()
+            {
+                MaxDegreeOfParallelism = _maxDegreeOfParallelism
+            };
+            _processHttpRequestBufferBlock = new TransformBlock<HttpRequest, HttpResponse>(r => ProcessAsync(r), executionOptions);
+            _httpResponseActionBlock = new ActionBlock<HttpResponse>(r => SubmitResponseAsync(r), executionOptions);
+
+            var linkOptions = new DataflowLinkOptions()
+            {
+                PropagateCompletion = true
+            };
+
+            _httpRequestBufferBlock.LinkTo(_processHttpRequestBufferBlock, linkOptions);
+            _processHttpRequestBufferBlock.LinkTo(_httpResponseActionBlock, linkOptions);
+        }
 
         /// <summary>
-        /// Register the context processors
-        /// in the URI template table.
+        /// Gets the context processors
+        /// for the URI template table.
         /// </summary>
-        private void RegisterProcessors()
+        private IHttpProcessor[] CreateProcessors()
         {
-            var sendCommandContextProcessor = new SendCommandHttpProcessor(_traceWriter);
-            var sendMessageContextProcessor = new SendMessageHttpProcessor(_traceWriter);
-            var getMessagesContextProcessor = new GetMessagesHttpProcessor(_messageStorage);
-            var getMessageByIdContextProcessor = new GetMessageByIdHttpProcessor(_messageStorage);
-            var deleteMessageByIdContextProcessor = new DeleteMessageByIdContextProcessor(_messageStorage);
-            var sendNotificationContextProcessor = new SendNotificationHttpProcessor(_traceWriter);
-            var getNotificationsContextProcessor = new GetNotificationsHttpProcessor(_notificationStorage);
-            var getNotificationByIdContextProcessor = new GetNotificationByIdHttpProcessor(_notificationStorage);
-            var deleteNotificationByIdContextProcessor = new DeleteNotificationByIdHttpProcessor(_notificationStorage);
-            _uriTemplateTable.KeyValuePairs.Add(new KeyValuePair<UriTemplate, object>(sendCommandContextProcessor.Template, sendCommandContextProcessor));
-            _uriTemplateTable.KeyValuePairs.Add(new KeyValuePair<UriTemplate, object>(sendMessageContextProcessor.Template, sendMessageContextProcessor));
-            _uriTemplateTable.KeyValuePairs.Add(new KeyValuePair<UriTemplate, object>(getMessagesContextProcessor.Template, getMessagesContextProcessor));
-            _uriTemplateTable.KeyValuePairs.Add(new KeyValuePair<UriTemplate, object>(getMessageByIdContextProcessor.Template, getMessageByIdContextProcessor));
-            _uriTemplateTable.KeyValuePairs.Add(new KeyValuePair<UriTemplate, object>(deleteMessageByIdContextProcessor.Template, deleteMessageByIdContextProcessor));
-            _uriTemplateTable.KeyValuePairs.Add(new KeyValuePair<UriTemplate, object>(sendNotificationContextProcessor.Template, sendNotificationContextProcessor));
-            _uriTemplateTable.KeyValuePairs.Add(new KeyValuePair<UriTemplate, object>(getNotificationsContextProcessor.Template, getNotificationsContextProcessor));
-            _uriTemplateTable.KeyValuePairs.Add(new KeyValuePair<UriTemplate, object>(getNotificationByIdContextProcessor.Template, getNotificationByIdContextProcessor));
-            _uriTemplateTable.KeyValuePairs.Add(new KeyValuePair<UriTemplate, object>(deleteNotificationByIdContextProcessor.Template, deleteNotificationByIdContextProcessor));
-            _uriTemplateTable.MakeReadOnly(true);
+            return new IHttpProcessor[]
+                {
+                    new SendCommandHttpProcessor(_traceWriter),
+                    new SendMessageHttpProcessor(_traceWriter),
+                    new GetMessagesHttpProcessor(_messageStorage),
+                    new GetMessageByIdHttpProcessor(_messageStorage),
+                    new DeleteMessageByIdContextProcessor(_messageStorage),
+                    new SendNotificationHttpProcessor(_traceWriter),
+                    new GetNotificationsHttpProcessor(_notificationStorage),
+                    new GetNotificationByIdHttpProcessor(_notificationStorage),
+                    new DeleteNotificationByIdHttpProcessor(_notificationStorage)
+                };      
         }
 
         #endregion

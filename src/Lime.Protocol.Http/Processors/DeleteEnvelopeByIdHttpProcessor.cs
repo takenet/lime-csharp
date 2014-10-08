@@ -36,7 +36,7 @@ namespace Lime.Protocol.Http.Processors
 
         public UriTemplate Template { get; private set; }
 
-        public async Task<HttpResponse> ProcessAsync(HttpRequest request, UriTemplateMatch match, ServerHttpTransport transport, CancellationToken cancellationToken)
+        public async Task<HttpResponse> ProcessAsync(HttpRequest request, UriTemplateMatch match, IEmulatedTransport transport, CancellationToken cancellationToken)
         {            
             Identity owner;
             Guid id;

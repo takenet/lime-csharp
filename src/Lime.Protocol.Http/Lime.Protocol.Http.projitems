@@ -15,6 +15,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)HttpServer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)HttpTransportListener.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)HttpTransportProvider.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)IEmulatedTransport.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)IHttpServer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)IHttpTransportProvider.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)IHttpProcessor.cs" />

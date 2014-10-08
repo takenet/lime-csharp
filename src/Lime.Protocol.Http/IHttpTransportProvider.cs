@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Lime.Protocol.Network;
+using System;
 using System.Collections.Generic;
 using System.Security.Principal;
 using System.Text;
@@ -14,18 +15,19 @@ namespace Lime.Protocol.Http
         /// for the specified principal.
         /// </summary>
         /// <param name="requestPrincipal">The request principal.</param>
+        /// <param name="cacheInstance">if set to <c>true</c> the transport instance should be cached.</param>
         /// <returns></returns>
-        ServerHttpTransport GetTransport(IPrincipal requestPrincipal);
+        IEmulatedTransport GetTransport(IPrincipal requestPrincipal, bool cacheInstance);
 
         /// <summary>
         /// Occurs when a new transport is created.
         /// </summary>
-        event EventHandler<ServerHttpTransportEventArgs> TransportCreated;
+        event EventHandler<TransportEventArgs> TransportCreated;
     }
 
-    public class ServerHttpTransportEventArgs : EventArgs
+    public class TransportEventArgs : EventArgs
     {
-        public ServerHttpTransportEventArgs(ServerHttpTransport transport)
+        public TransportEventArgs(ITransport transport)
         {
             if (transport == null)
             {
@@ -35,6 +37,6 @@ namespace Lime.Protocol.Http
             Transport = transport;
         }
 
-        public ServerHttpTransport Transport { get; private set; }
+        public ITransport Transport { get; private set; }
     }
 }

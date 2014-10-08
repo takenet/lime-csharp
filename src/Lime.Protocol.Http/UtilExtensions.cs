@@ -17,6 +17,19 @@ namespace Lime.Protocol.Http
         /// <param name="headerKey"></param>
         /// <param name="queryStringKey"></param>
         /// <returns></returns>
+        public static string GetValue(this HttpListenerRequest request, string headerKey, string queryStringKey)
+        {
+            return request.Headers.Get(headerKey) ?? request.QueryString.Get(queryStringKey);
+        }
+
+        /// <summary>
+        /// Extracts an variable value
+        /// from the header or the query string.
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="headerKey"></param>
+        /// <param name="queryStringKey"></param>
+        /// <returns></returns>
         public static string GetValue(this HttpRequest request, string headerKey, string queryStringKey)
         {
             return request.Headers.Get(headerKey) ?? request.QueryString.Get(queryStringKey);
@@ -61,86 +74,6 @@ namespace Lime.Protocol.Http
             }
 
             return HttpStatusCode.Forbidden;
-        }
-
-
-        /// <summary>
-        /// Sends a response
-        /// to the context.
-        /// </summary>
-        /// <param name="response"></param>
-        /// <param name="statusCode"></param>
-        /// <param name="headers"></param>
-        public static void SendResponse(this HttpListenerResponse response, HttpStatusCode statusCode, IDictionary<string, string> headers = null)
-        {
-            if (headers != null)
-            {
-                response.WriteHeaders(headers);
-            }
-
-            response.StatusCode = (int)statusCode;
-            response.Close();
-        }
-
-        /// <summary>
-        /// Sends a response
-        /// to the context.
-        /// </summary>
-        /// <param name="response"></param>
-        /// <param name="statusCode"></param>
-        /// <param name="contentType"></param>
-        /// <param name="content"></param>
-        /// <param name="headers"></param>
-        /// <returns></returns>
-        public static async Task SendResponseAsync(this HttpListenerResponse response, HttpStatusCode statusCode, string contentType, string content, IDictionary<string, string> headers = null)
-        {
-            if (headers != null)
-            {
-                response.WriteHeaders(headers);
-            }
-
-            response.StatusCode = (int)statusCode;
-            response.ContentType = contentType;            
-            using (var writer = new StreamWriter(response.OutputStream))
-            {
-                await writer.WriteAsync(content).ConfigureAwait(false);
-            }
-            response.Close();
-        }
-
-        /// <summary>
-        /// Sends a response
-        /// to the context.
-        /// </summary>
-        /// <param name="response"></param>
-        /// <param name="reason"></param>
-        /// <param name="headers"></param>
-        public static void SendResponse(this HttpListenerResponse response, Reason reason, IDictionary<string, string> headers = null)
-        {
-            if (headers != null)
-            {
-                response.WriteHeaders(headers);
-            }
-
-            response.Headers.Add(Constants.REASON_CODE_HEADER, reason.Code.ToString());
-            response.StatusCode = (int)reason.ToHttpStatusCode();
-            response.StatusDescription = reason.Description;
-            response.Close();
-        }
-
-        /// <summary>
-        /// Writes the specified
-        /// dictionary in the response
-        /// headers.
-        /// </summary>
-        /// <param name="response"></param>
-        /// <param name="headers"></param>
-        public static void WriteHeaders(this HttpListenerResponse response, IDictionary<string, string> headers)
-        {
-            foreach (var header in headers)
-            {
-                response.Headers.Add(header.Key, header.Value);
-            }
         }
     }
 }

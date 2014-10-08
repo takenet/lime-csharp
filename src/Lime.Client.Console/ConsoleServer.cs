@@ -280,11 +280,15 @@ namespace Lime.Client.Console
 
             await channel.SendEstablishedSessionAsync(node);
 
-            var receiveMessagesTask = this.ReceiveMessagesAsync(channel, cancellationToken);            
-            var receiveCommandsTask = this.ReceiveCommandsAsync(channel, cancellationToken);
-            var receiveNotificationsTask = this.ReceiveNotificationsAsync(channel, cancellationToken);
+            var receiveCancellationTokenSource = new CancellationTokenSource();
+
+            var receiveMessagesTask = this.ReceiveMessagesAsync(channel, receiveCancellationTokenSource.Token);
+            var receiveCommandsTask = this.ReceiveCommandsAsync(channel, receiveCancellationTokenSource.Token);
+            var receiveNotificationsTask = this.ReceiveNotificationsAsync(channel, receiveCancellationTokenSource.Token);
 
             await channel.ReceiveFinishingSessionAsync(cancellationToken);
+
+            receiveCancellationTokenSource.Cancel();
 
             await Task.WhenAll(receiveMessagesTask, receiveCommandsTask, receiveNotificationsTask);
 

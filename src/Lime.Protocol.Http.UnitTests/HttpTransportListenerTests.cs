@@ -175,6 +175,9 @@ namespace Lime.Protocol.Http.UnitTests
         {
             // Act
             await Target.StartAsync();
+
+            await Task.Delay(500);
+
             await Target.StopAsync();
 
             // Assert
@@ -354,12 +357,17 @@ namespace Lime.Protocol.Http.UnitTests
                         plainAuthentication.GetFromBase64Password().Equals(Password))
                     {
                         await serverChannel.SendEstablishedSessionAsync(ClientNode).ConfigureAwait(false);
+
+                        serverChannel
+                            .ReceiveFinishingSessionAsync(CancellationToken)
+                            .ContinueWith(async (s) => await serverChannel.SendFinishedSessionAsync());
                     }
-
                 }
-
             }
         }
+
+
+        
 
         #endregion
     }

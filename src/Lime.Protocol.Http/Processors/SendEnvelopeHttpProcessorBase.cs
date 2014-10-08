@@ -43,10 +43,10 @@ namespace Lime.Protocol.Http.Processors
         public UriTemplate Template { get; private set; }
 
 
-        public virtual async Task<HttpResponse> ProcessAsync(HttpRequest request, UriTemplateMatch match, ServerHttpTransport transport, CancellationToken cancellationToken)
+        public virtual async Task<HttpResponse> ProcessAsync(HttpRequest request, UriTemplateMatch match, IEmulatedTransport transport, CancellationToken cancellationToken)
         {
             var envelope = await GetEnvelopeFromRequestAsync(request).ConfigureAwait(false);            
-            await transport.SendToInputBufferAsync(envelope, cancellationToken).ConfigureAwait(false);
+            await transport.SubmitAsync(envelope, cancellationToken).ConfigureAwait(false);
             return new HttpResponse(request.CorrelatorId, HttpStatusCode.Accepted);                     
         }
 
@@ -57,9 +57,7 @@ namespace Lime.Protocol.Http.Processors
         protected async Task<T> GetEnvelopeFromRequestAsync(HttpRequest request)
         {
             var envelope = new T();
-            
-            Guid id;
-            Guid.TryParse(request.GetValue(Constants.ENVELOPE_ID_HEADER, Constants.ENVELOPE_ID_QUERY), out id);            
+                       
             Node from;
             Node.TryParse(request.GetValue(Constants.ENVELOPE_FROM_HEADER, Constants.ENVELOPE_FROM_QUERY), out from);
             Node to;
@@ -67,7 +65,7 @@ namespace Lime.Protocol.Http.Processors
             Node pp;
             Node.TryParse(request.GetValue(Constants.ENVELOPE_PP_HEADER, Constants.ENVELOPE_PP_QUERY), out pp);
 
-            envelope.Id = id;
+            envelope.Id = request.CorrelatorId;
             envelope.From = from;
             envelope.To = to;
             envelope.Pp = pp;
