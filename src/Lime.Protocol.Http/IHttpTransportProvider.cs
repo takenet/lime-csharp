@@ -17,7 +17,7 @@ namespace Lime.Protocol.Http
         /// <param name="requestPrincipal">The request principal.</param>
         /// <param name="cacheInstance">if set to <c>true</c> the transport instance should be cached.</param>
         /// <returns></returns>
-        IEmulatedTransport GetTransport(IPrincipal requestPrincipal, bool cacheInstance);
+        ITransportSession GetTransport(IPrincipal requestPrincipal, bool cacheInstance);
 
         /// <summary>
         /// Occurs when a new transport is created.

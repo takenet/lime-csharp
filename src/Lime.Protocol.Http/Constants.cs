@@ -16,7 +16,9 @@ namespace Lime.Protocol.Http
         public const string HTTP_METHOD_DELETE = "DELETE";
         public const string TEXT_PLAIN_HEADER_VALUE = "text/plain";
         public const string SESSION_ID_HEADER = "X-Session-Id";
-        public const string KEEP_SESSION_HEADER = "X-Keep-Session";
+        public const string SESSION_HEADER = "X-Session";
+        public const string KEEP_ALIVE_HEADER_VALUE = "Keep-Alive";
+        public const string CLOSE_HEADER_VALUE = "Close";
         public const string SESSION_EXPIRATION_HEADER = "X-Session-Expiration";
         public const string ENVELOPE_ID_HEADER = "X-Id";
         public const string ENVELOPE_ID_QUERY = "id";

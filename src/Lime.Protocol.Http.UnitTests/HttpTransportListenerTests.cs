@@ -34,20 +34,26 @@ namespace Lime.Protocol.Http.UnitTests
 
         public Mock<IHttpServer> HttpServer { get; private set; }
 
-        public BufferBlock<HttpRequest> HttpServerRequestBuffer { get; private set; }        
+        public Task<HttpResponse> HttpServerResponse { get; private set; }
+
+        public BufferBlock<HttpRequest> HttpServerRequestBuffer { get; private set; }
 
         public Mock<IHttpTransportProvider> HttpTransportProvider { get; private set; }
         public Mock<IPrincipal> Principal { get; private set; }
 
         public Mock<ITransport> Transport { get; private set; }
 
-        public Mock<IEmulatedTransport> EmulatedTransport { get; private set; }
+        public DateTimeOffset SessionExpiration { get; private set; }
+
+        public Mock<ITransportSession> EmulatedTransport { get; private set; }
 
         public Mock<IHttpProcessor> Processor1 { get; private set; }
 
         public HashSet<string> Processor1Methods { get; private set; }
 
         public UriTemplate Processor1Template { get; private set; }
+
+        public HttpRequest Processor1HttpRequest { get; private set; }
 
         public Mock<IHttpProcessor> Processor2 { get; private set; }
 
@@ -101,17 +107,25 @@ namespace Lime.Protocol.Http.UnitTests
             {
                 To = DataUtil.CreateNode(),
                 Content = DataUtil.CreateTextContent()
-            };            
+            };
 
             HttpServer = new Mock<IHttpServer>();
             HttpServerRequestBuffer = new BufferBlock<HttpRequest>();
 
+            var tcs = new TaskCompletionSource<HttpResponse>();
+            HttpServer
+                .Setup(s => s.SubmitResponseAsync(It.IsAny<HttpResponse>()))
+                .Callback((HttpResponse r) => tcs.SetResult(r));
+            HttpServerResponse = tcs.Task;
+
             HttpServer
                 .Setup(s => s.AcceptRequestAsync(It.IsAny<CancellationToken>()))
-                .Returns((CancellationToken cancellationToken) => HttpServerRequestBuffer.ReceiveAsync(cancellationToken));                
-            
-            Transport = new Mock<ITransport>();
-            EmulatedTransport = new Mock<IEmulatedTransport>();
+                .Returns((CancellationToken cancellationToken) => HttpServerRequestBuffer.ReceiveAsync(cancellationToken));
+
+            Transport = new Mock<ITransport>();            
+            EmulatedTransport = new Mock<ITransportSession>();
+            SessionExpiration = DateTimeOffset.Parse("Mon, 15 Jun 2009 20:45:30 GMT");
+            EmulatedTransport.SetupGet(t => t.Expiration).Returns(() => SessionExpiration);
             Principal = new Mock<IPrincipal>();
             HttpTransportProvider = new Mock<IHttpTransportProvider>();
             HttpTransportProvider
@@ -119,10 +133,13 @@ namespace Lime.Protocol.Http.UnitTests
                 .Returns(() => EmulatedTransport.Object);
 
             Processor1Methods = new HashSet<string> { "GET" };
-            Processor1Template = new UriTemplate("/" + DataUtil.CreateRandomString(10));            
+            Processor1Template = new UriTemplate("/" + DataUtil.CreateRandomString(10));
             Processor1 = new Mock<IHttpProcessor>();
             Processor1.SetupGet(p => p.Methods).Returns(Processor1Methods);
             Processor1.SetupGet(p => p.Template).Returns(Processor1Template);
+
+            var uri = new Uri("http://" + Host + ":" + Port + Processor1Template);
+            Processor1HttpRequest = new HttpRequest("GET", uri, Principal.Object);
 
             Processor2Methods = new HashSet<string> { "POST", "DELETE", "GET" };
             Processor2Template = new UriTemplate("/" + DataUtil.CreateRandomString(10) + "/{id}");
@@ -131,10 +148,10 @@ namespace Lime.Protocol.Http.UnitTests
             Processor2.SetupGet(p => p.Template).Returns(Processor2Template);
 
             Target = new HttpTransportListener(
-                Port, 
-                Host, 
-                httpServer: HttpServer.Object, 
-                httpTransportProvider: HttpTransportProvider.Object, 
+                Port,
+                Host,
+                httpServer: HttpServer.Object,
+                httpTransportProvider: HttpTransportProvider.Object,
                 processors: new[] { Processor1.Object, Processor2.Object });
 
         }
@@ -147,10 +164,10 @@ namespace Lime.Protocol.Http.UnitTests
                 Target.Dispose();
             }
         }
-        
+
         [TestMethod]
         public void ListenerUris_ValidHostAndPort_GetsRegisteredUris()
-        {            
+        {
             // Act
             var listenerUris = Target.ListenerUris;
 
@@ -158,12 +175,12 @@ namespace Lime.Protocol.Http.UnitTests
             listenerUris.ShouldNotBe(null);
             listenerUris.Length.ShouldBe(3);
             listenerUris.ShouldAllBe(u => u.Host == Host && u.Port == Port);
-             
+
         }
 
         [TestMethod]
         public async Task StartAsync_ValidHostAndPort_ServerStarted()
-        {           
+        {
             // Act
             await Target.StartAsync();
 
@@ -182,7 +199,7 @@ namespace Lime.Protocol.Http.UnitTests
 
         [TestMethod]
         public async Task AcceptTransportAsync_NewRequest_RetunsTransport()
-        {            
+        {
             // Act
             await Target.StartAsync();
             HttpTransportProvider.Raise(h => h.TransportCreated += null, new TransportEventArgs(Transport.Object));
@@ -221,12 +238,9 @@ namespace Lime.Protocol.Http.UnitTests
         }
 
         [TestMethod]
-        public async Task ProcessAsync_ValidUrlAuthenticatedUser_CallProcessor()
+        public async Task ProcessAsync_ValidUrlAuthenticatedUser_CallProcessorAndKeepSession()
         {
-            // Arrange
-            var uri = new Uri("http://" + Host + ":" + Port + Processor1Template);
-            var httpRequest = new HttpRequest("GET", uri, Principal.Object);
-
+            // Arrange            
             var session = new Session()
             {
                 Id = Guid.NewGuid(),
@@ -237,36 +251,32 @@ namespace Lime.Protocol.Http.UnitTests
                 .Setup(e => e.AuthenticateAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(session);
 
-            var processorResponse = new HttpResponse(httpRequest.CorrelatorId, HttpStatusCode.OK);
+            var processorResponse = new HttpResponse(Processor1HttpRequest.CorrelatorId, HttpStatusCode.OK);
 
             Processor1
-                .Setup(p => p.ProcessAsync(httpRequest, It.IsAny<UriTemplateMatch>(), It.IsAny<IEmulatedTransport>(), It.IsAny<CancellationToken>()))
+                .Setup(p => p.ProcessAsync(Processor1HttpRequest, It.IsAny<UriTemplateMatch>(), It.IsAny<ITransportSession>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(processorResponse)
                 .Verifiable();
 
-            var tcs = new TaskCompletionSource<HttpResponse>();
-            HttpServer
-                .Setup(s => s.SubmitResponseAsync(It.IsAny<HttpResponse>()))
-                .Callback((HttpResponse r) => tcs.SetResult(r));
-
             // Act
             await Target.StartAsync();
-            HttpServerRequestBuffer.Post(httpRequest);
+            HttpServerRequestBuffer.Post(Processor1HttpRequest);
 
             // Assert
-            var actualResponse = await tcs.Task;
-            
+            var actualResponse = await HttpServerResponse;
             Processor1.Verify();
             actualResponse.ShouldBe(processorResponse);
+            EmulatedTransport.Verify(t => t.FinishAsync(It.IsAny<CancellationToken>()), Times.Never());
+            actualResponse.Headers.Get(Constants.SESSION_EXPIRATION_HEADER).ShouldNotBe(null);
+            var actualSessionExpiration = DateTimeOffset.Parse(actualResponse.Headers.Get(Constants.SESSION_EXPIRATION_HEADER));
+            actualSessionExpiration.ShouldBe(SessionExpiration);
+            HttpTransportProvider.Verify(h => h.GetTransport(Principal.Object, true), Times.Once());
         }
 
         [TestMethod]
-        public async Task ProcessListenerContextAsync_InvalidSessionAuthentication_ReturnsUnauthorized()
+        public async Task ProcessAsync_InvalidSessionAuthentication_ReturnsUnauthorized()
         {
             // Arrange
-            var uri = new Uri("http://" + Host + ":" + Port + Processor1Template);
-            var httpRequest = new HttpRequest("GET", uri, Principal.Object);
-
             var session = new Session()
             {
                 Id = Guid.NewGuid(),
@@ -282,139 +292,143 @@ namespace Lime.Protocol.Http.UnitTests
                 .Setup(e => e.AuthenticateAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(session);
 
-            var tcs = new TaskCompletionSource<HttpResponse>();
-            HttpServer
-                .Setup(s => s.SubmitResponseAsync(It.IsAny<HttpResponse>()))
-                .Callback((HttpResponse r) => tcs.SetResult(r));
+            // Act
+            await Target.StartAsync();
+            HttpServerRequestBuffer.Post(Processor1HttpRequest);
+
+            // Assert
+            var actualResponse = await HttpServerResponse;
+            actualResponse.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+            actualResponse.StatusDescription.ShouldBe(session.Reason.Description);
+        }
+
+        [TestMethod]
+        public async Task ProcessAsync_FailedSessionEmptyReason_ReturnsServiceUnavailable()
+        {
+            // Arrange
+            var session = new Session()
+            {
+                Id = Guid.NewGuid(),
+                State = SessionState.Failed
+            };
+
+            EmulatedTransport
+                .Setup(e => e.AuthenticateAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(session);
 
             // Act
             await Target.StartAsync();
-            HttpServerRequestBuffer.Post(httpRequest);
+            HttpServerRequestBuffer.Post(Processor1HttpRequest);
 
             // Assert
-            var actualResponse = await tcs.Task;
-            Processor1.Verify();
-            actualResponse.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
-            actualResponse.StatusDescription.ShouldBe(session.Reason.Description);
-
+            var actualResponse = await HttpServerResponse;
+            actualResponse.StatusCode.ShouldBe(HttpStatusCode.ServiceUnavailable);
         }
 
-        //[TestMethod]
-        //public async Task ProcessListenerContextAsync_FailedSessionEmptyReason_ReturnsServiceUnavailable()
-        //{
-        //    // Act
-        //    await Target.StartAsync();
-        //    var httpResponseMessageTask = Client.SendAsync(GetMessagesHttpRequestMessage, CancellationToken);
-
-        //    var transport = await Target.AcceptTransportAsync(CancellationToken);
-
-        //    var serverChannel = new ServerChannel(
-        //        SessionId,
-        //        ServerNode,
-        //        transport,
-        //        SendTimeout);
-
-        //    await transport.OpenAsync(null, CancellationToken);
-
-        //    var receivedSession = await serverChannel.ReceiveNewSessionAsync(CancellationToken);
-        //    if (receivedSession.State == SessionState.New)
-        //    {
-        //        var failedSession = new Session()
-        //        {
-        //            State = SessionState.Failed
-        //        };
-
-        //        await serverChannel.SendSessionAsync(failedSession);
-        //    }
-
-        //    var httpResponseMessage = await httpResponseMessageTask;
-
-        //    // Assert
-        //    httpResponseMessage.StatusCode.ShouldBe(HttpStatusCode.ServiceUnavailable);
-        //}
-
-        //[TestMethod]
-        //public async Task ProcessListenerContextAsync_RequestTimedOut_ReturnsTimeout()
-        //{
-        //    // Act
-        //    var target = new HttpTransportListener(Port, Host, requestTimeout: TimeSpan.FromMilliseconds(500));
-
-        //    await target.StartAsync();
-        //    var httpResponseMessageTask = Client.SendAsync(GetMessagesHttpRequestMessage, CancellationToken);
-
-
-        //    await Task.Delay(500);
-
-        //    var httpResponseMessage = await httpResponseMessageTask;
-
-        //    // Assert
-        //    httpResponseMessage.StatusCode.ShouldBe(HttpStatusCode.RequestTimeout);
-        //}
-
-        //[TestMethod]
-        //public async Task ProcessListenerContextAsync_InvalidUrl_ReturnsNotFound()
-        //{
-        //    // Act
-        //    var target = new HttpTransportListener(Port, Host, requestTimeout: TimeSpan.FromMilliseconds(500));            
-
-        //    await target.StartAsync();
-        //    GetMessagesHttpRequestMessage.RequestUri = new Uri(GetMessagesHttpRequestMessage.RequestUri, "/invalid/path");
-        //    var httpResponseMessage = await Client.SendAsync(GetMessagesHttpRequestMessage, CancellationToken);
-           
-        //    // Assert
-        //    httpResponseMessage.StatusCode.ShouldBe(HttpStatusCode.NotFound);
-        //}
-
-        //[TestMethod]
-        //public async Task ProcessTransportOutputAsync_NotificationWithPendingResponse_CloseResponseWithSuccess()
-        //{
-        //    // Act
-        //    await Target.StartAsync();
-        //    var httpResponseMessageTask = Client.SendAsync(SendMessageHttpRequestMessage, CancellationToken);
-        //    var transport = await Target.AcceptTransportAsync(CancellationToken);
-        //    var serverChannel = new ServerChannel(
-        //        SessionId,
-        //        ServerNode,
-        //        transport,
-        //        SendTimeout);
-        //    await transport.OpenAsync(null, CancellationToken);
-        //    await EstablishSessionAsync(serverChannel);
-
-            
-
-        //}
-
-        #region Private Methods
-
-        private async Task EstablishSessionAsync(ServerChannel serverChannel)
+        [TestMethod]
+        public async Task ProcessAsync_RequestTimedOut_ReturnsTimeout()
         {
-            var receivedSession = await serverChannel.ReceiveNewSessionAsync(CancellationToken);
-            if (receivedSession.State == SessionState.New)
-            {
-                receivedSession = await serverChannel.AuthenticateSessionAsync(
-                    new[] { AuthenticationScheme.Plain },
-                    CancellationToken);
+            // Arrange
+            EmulatedTransport
+                .Setup(e => e.AuthenticateAsync(It.IsAny<CancellationToken>()))
+                .Throws<OperationCanceledException>();
 
-                if (receivedSession.State == SessionState.Authenticating)
-                {
-                    var plainAuthentication = receivedSession.Authentication as PlainAuthentication;
-                    if (plainAuthentication != null &&
-                        receivedSession.From.ToIdentity().Equals(ClientNode.ToIdentity()) &&
-                        plainAuthentication.GetFromBase64Password().Equals(Password))
-                    {
-                        await serverChannel.SendEstablishedSessionAsync(ClientNode).ConfigureAwait(false);
+            // Act
+            await Target.StartAsync();
+            HttpServerRequestBuffer.Post(Processor1HttpRequest);
 
-                        serverChannel
-                            .ReceiveFinishingSessionAsync(CancellationToken)
-                            .ContinueWith(async (s) => await serverChannel.SendFinishedSessionAsync());
-                    }
-                }
-            }
+            // Assert
+            var actualResponse = await HttpServerResponse;
+            actualResponse.StatusCode.ShouldBe(HttpStatusCode.RequestTimeout);
         }
 
+        [TestMethod]
+        public async Task ProcessAsync_InvalidUrl_ReturnsNotFound()
+        {
+            // Arrange
+            var invalidHttpRequest = new HttpRequest(
+                "GET", 
+                new Uri("http://" + Host + ":" + Port + "/" + DataUtil.CreateRandomString(10)), 
+                Principal.Object);
 
-        
+            // Act
+            await Target.StartAsync();
+            HttpServerRequestBuffer.Post(invalidHttpRequest);
 
-        #endregion
+            // Assert
+            var actualResponse = await HttpServerResponse;
+            actualResponse.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        }
+
+        [TestMethod]
+        public async Task ProcessAsync_ProcessorRaisesException_ReturnsInternalServerError()
+        {
+            // Arrange            
+            var session = new Session()
+            {
+                Id = Guid.NewGuid(),
+                State = SessionState.Established
+            };
+
+            EmulatedTransport
+                .Setup(e => e.AuthenticateAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(session);
+
+            var exceptionMessage = DataUtil.CreateRandomString(100);
+
+            Processor1
+                .Setup(p => p.ProcessAsync(Processor1HttpRequest, It.IsAny<UriTemplateMatch>(), It.IsAny<ITransportSession>(), It.IsAny<CancellationToken>()))
+                .Throws(new Exception(exceptionMessage))
+                .Verifiable();
+
+
+            // Act
+            await Target.StartAsync();
+            HttpServerRequestBuffer.Post(Processor1HttpRequest);
+
+            // Assert
+            var actualResponse = await HttpServerResponse;
+            actualResponse.StatusCode.ShouldBe(HttpStatusCode.InternalServerError);
+            actualResponse.Body.ShouldContain(exceptionMessage);
+
+            Processor1.Verify();
+        }
+
+        [TestMethod]
+        public async Task ProcessAsync_SessionCloseHeader_FinishTransport()
+        {
+            // Arrange            
+            var session = new Session()
+            {
+                Id = Guid.NewGuid(),
+                State = SessionState.Established
+            };
+
+            EmulatedTransport
+                .Setup(e => e.AuthenticateAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(session);
+
+            Processor1HttpRequest.Headers.Add(Constants.SESSION_HEADER, Constants.CLOSE_HEADER_VALUE);
+
+            var processorResponse = new HttpResponse(Processor1HttpRequest.CorrelatorId, HttpStatusCode.OK);
+
+            Processor1
+                .Setup(p => p.ProcessAsync(Processor1HttpRequest, It.IsAny<UriTemplateMatch>(), It.IsAny<ITransportSession>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(processorResponse)
+                .Verifiable();
+
+            // Act
+            await Target.StartAsync();
+            HttpServerRequestBuffer.Post(Processor1HttpRequest);
+
+            // Assert
+            var actualResponse = await HttpServerResponse;
+
+            Processor1.Verify();
+            actualResponse.ShouldBe(processorResponse);
+            EmulatedTransport.Verify(t => t.FinishAsync(It.IsAny<CancellationToken>()), Times.Once());
+            HttpTransportProvider.Verify(h => h.GetTransport(Principal.Object, false), Times.Once());
+        }
+
     }
 }

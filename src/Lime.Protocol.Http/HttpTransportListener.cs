@@ -21,6 +21,10 @@ using System.Threading.Tasks.Dataflow;
 
 namespace Lime.Protocol.Http
 {
+    /// <summary>
+    /// Listens for HTTP requests emulating the
+    /// behavior of LIME in the backend.
+    /// </summary>
     public sealed class HttpTransportListener : ITransportListener, IDisposable
     {
         #region Private Fields
@@ -229,18 +233,16 @@ namespace Lime.Protocol.Http
                 if (match != null)
                 {
                     var cancellationToken = _requestTimeout.ToCancellationToken();
+                    
+                    var closeSession = !string.IsNullOrEmpty(request.Headers.Get(Constants.SESSION_HEADER)) &&
+                        request.Headers.Get(Constants.SESSION_HEADER).Equals(Constants.CLOSE_HEADER_VALUE, StringComparison.OrdinalIgnoreCase);
 
-                    // Authenticate the request session
-
-                    var keepSession = false;
-                    bool.TryParse(request.Headers.Get(Constants.KEEP_SESSION_HEADER), out keepSession);
-
-                    var transport = _httpTransportProvider.GetTransport(request.User, keepSession);
+                    var transport = _httpTransportProvider.GetTransport(request.User, !closeSession);
 
                     Exception exception = null;
                     try
                     {
-
+                        // Authenticate the request session
                         var session = await transport.AuthenticateAsync(cancellationToken).ConfigureAwait(false);
                         if (session.State == SessionState.Established)
                         {
@@ -269,13 +271,13 @@ namespace Lime.Protocol.Http
                         exception = ex;
                     }                    
 
-                    if (keepSession)
+                    if (closeSession)
                     {
-                        
+                        await transport.FinishAsync(_listenerCancellationTokenSource.Token).ConfigureAwait(false);                        
                     }
-                    else
+                    else if (response != null)
                     {
-                        await transport.CloseAsync(_listenerCancellationTokenSource.Token).ConfigureAwait(false);
+                        response.Headers.Add(Constants.SESSION_EXPIRATION_HEADER, transport.Expiration.ToString("r"));
                     }
 
                     if (exception != null)
@@ -310,7 +312,7 @@ namespace Lime.Protocol.Http
                 if (_writeExceptionsToOutput)
                 {
                     body = ex.ToString();
-                }
+                }           
 
                 response = new HttpResponse(
                     request.CorrelatorId,
@@ -340,9 +342,11 @@ namespace Lime.Protocol.Http
                 exception = ex;
             }
 
-            if (exception != null)
+            if (exception != null &&
+                _traceWriter != null &&
+                _traceWriter.IsEnabled)
             {
-
+                await _traceWriter.TraceAsync("SubmitResponseAsync: " + exception.ToString(), DataOperation.Send).ConfigureAwait(false);
             }
         }
 

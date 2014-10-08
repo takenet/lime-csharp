@@ -69,6 +69,7 @@
     </Compile>
     <Compile Include="HttpTransportListenerTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ServerHttpTransportTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Lime.Protocol.Http.Net45\Lime.Protocol.Http.Net45.csproj">

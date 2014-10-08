@@ -43,7 +43,7 @@ namespace Lime.Protocol.Http.Processors
         public UriTemplate Template { get; private set; }
 
 
-        public virtual async Task<HttpResponse> ProcessAsync(HttpRequest request, UriTemplateMatch match, IEmulatedTransport transport, CancellationToken cancellationToken)
+        public virtual async Task<HttpResponse> ProcessAsync(HttpRequest request, UriTemplateMatch match, ITransportSession transport, CancellationToken cancellationToken)
         {
             var envelope = await GetEnvelopeFromRequestAsync(request).ConfigureAwait(false);            
             await transport.SubmitAsync(envelope, cancellationToken).ConfigureAwait(false);

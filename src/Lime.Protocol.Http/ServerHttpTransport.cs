@@ -18,9 +18,9 @@ namespace Lime.Protocol.Http
     /// Represents the server transport 
     /// for the HTTP emulation layer.
     /// </summary>
-    internal class ServerHttpTransport : TransportBase, IEmulatedTransport
+    internal class ServerHttpTransport : TransportBase, ITransportSession
     {
-        #region Private Fields        
+        #region Private Fields
 
         private HttpListenerBasicIdentity _httpIdentity;
         private readonly BufferBlock<Envelope> _inputBufferBlock;
@@ -60,15 +60,11 @@ namespace Lime.Protocol.Http
             {
                 throw new ArgumentNullException("notificationStorage");
             }
-
             _notificationStorage = notificationStorage;
 
             _inputBufferBlock = new BufferBlock<Envelope>();
-
             _pendingNotificationsDictionary = new ConcurrentDictionary<Guid, TaskCompletionSource<Notification>>();
             _pendingCommandsDictionary = new ConcurrentDictionary<Guid, TaskCompletionSource<Command>>();
-
-
 
         }
 
@@ -76,14 +72,22 @@ namespace Lime.Protocol.Http
 
         #region IEmulatedTransport Members
 
+        public DateTimeOffset Expiration
+        {
+            get { return DateTimeOffset.UtcNow; }
+        }
+
         /// <summary>
         /// Adds the envelope to the buffer that
         /// the server reads the envelopes
         /// sent by the node.
         /// </summary>
-        public Task<bool> SubmitAsync(Envelope envelope, CancellationToken cancellationToken)
+        public async Task SubmitAsync(Envelope envelope, CancellationToken cancellationToken)
         {
-            return _inputBufferBlock.SendAsync(envelope, cancellationToken);
+            if (!await _inputBufferBlock.SendAsync(envelope, cancellationToken).ConfigureAwait(false))
+            {
+                throw new InvalidOperationException("The input buffer is complete");
+            }
         }
 
         /// <summary>
@@ -118,10 +122,7 @@ namespace Lime.Protocol.Http
                 throw new InvalidOperationException("Could not register the message");
             }
 
-            if (!await SubmitAsync(message, cancellationToken).ConfigureAwait(false))
-            {
-                throw new InvalidOperationException("The input buffer is complete");
-            }
+            await SubmitAsync(message, cancellationToken).ConfigureAwait(false);            
 
             return await tcs.Task;
         }
@@ -167,10 +168,7 @@ namespace Lime.Protocol.Http
                 throw new InvalidOperationException("Could not register the command");
             }
 
-            if (!await SubmitAsync(command, cancellationToken).ConfigureAwait(false))
-            {
-                throw new InvalidOperationException("The input buffer is complete");
-            }
+            await SubmitAsync(command, cancellationToken).ConfigureAwait(false);
 
             return await tcs.Task;
         }
@@ -193,7 +191,7 @@ namespace Lime.Protocol.Http
             return _authenticationTaskCompletionSource.Task;
         }
 
-        async Task IEmulatedTransport.CloseAsync(CancellationToken cancellationToken)
+        public async Task FinishAsync(CancellationToken cancellationToken)
         {
             if (_closingTaskCompletionSource != null)
             {
@@ -365,10 +363,7 @@ namespace Lime.Protocol.Http
                         Encryption = this.Encryption
                     };
 
-                    if (!await SubmitAsync(responseSession, cancellationToken).ConfigureAwait(false))
-                    {                        
-                        throw new InvalidOperationException("The input buffer is complete");                        
-                    }
+                    await SubmitAsync(responseSession, cancellationToken).ConfigureAwait(false);
                 }
             }
             else if (session.State == SessionState.Authenticating)
@@ -399,10 +394,7 @@ namespace Lime.Protocol.Http
                     responseSession.State = SessionState.Finishing;
                 }
 
-                if (!await SubmitAsync(responseSession, cancellationToken).ConfigureAwait(false))
-                {                    
-                    throw new InvalidOperationException("The input buffer is complete");                    
-                }
+                await SubmitAsync(responseSession, cancellationToken).ConfigureAwait(false);
             }
             else if (_authenticationTaskCompletionSource != null &&
                      !_authenticationTaskCompletionSource.Task.IsCompleted)
@@ -417,8 +409,7 @@ namespace Lime.Protocol.Http
                      !_closingTaskCompletionSource.Task.IsCompleted)
             {
                 _closingTaskCompletionSource.TrySetResult(session);
-            }                
-            
+            }
         }
 
         private async Task ProcessSentNotificationAsync(Notification notification)
@@ -455,5 +446,6 @@ namespace Lime.Protocol.Http
         }
 
         #endregion
+
     }
 }

@@ -10,28 +10,35 @@ namespace Lime.Protocol.Http
 {
     public sealed class HttpTransportProvider : IHttpTransportProvider
     {
-        private readonly bool _useHttps;
-        private readonly ConcurrentDictionary<string, ServerHttpTransport> _transportDictionary;
+        #region Private Fields
 
+        private readonly bool _useHttps;
+        private readonly ConcurrentDictionary<string, ITransportSession> _transportDictionary;
         private readonly IEnvelopeStorage<Message> _messageStorage;
         private readonly IEnvelopeStorage<Notification> _notificationStorage;
+
+        #endregion
+
+        #region Constructor
 
         public HttpTransportProvider(bool useHttps, IEnvelopeStorage<Message> messageStorage, IEnvelopeStorage<Notification> notificationStorage)
         {
             _useHttps = useHttps;
             _messageStorage = messageStorage;
             _notificationStorage = notificationStorage;
-            _transportDictionary = new ConcurrentDictionary<string, ServerHttpTransport>();
+            _transportDictionary = new ConcurrentDictionary<string, ITransportSession>();
         }
+
+        #endregion
 
         #region IHttpTransportProvider Members
 
-        public IEmulatedTransport GetTransport(IPrincipal requestPrincipal, bool cacheInstance)
+        public ITransportSession GetTransport(IPrincipal requestPrincipal, bool cacheInstance)
         {
             var identity = (HttpListenerBasicIdentity)requestPrincipal.Identity;
             var transportKey = GetTransportKey(identity);
 
-            ServerHttpTransport transport;
+            ITransportSession transport;
 
             if (cacheInstance)
             {
@@ -42,7 +49,7 @@ namespace Lime.Protocol.Http
                         var newTransport = CreateTransport(identity);
                         newTransport.Closing += (sender, e) =>
                         {
-                            ServerHttpTransport t;
+                            ITransportSession t;
                             _transportDictionary.TryRemove(k, out t);
                         };
                         return newTransport;
