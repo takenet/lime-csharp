@@ -1,5 +1,6 @@
 ﻿using Lime.Protocol.Http.Storage;
 using Lime.Protocol.Network;
+using Lime.Protocol.Resources;
 using Lime.Protocol.Security;
 using Lime.Protocol.Util;
 using System;
@@ -22,10 +23,12 @@ namespace Lime.Protocol.Http
     {
         #region Private Fields
 
-        private HttpListenerBasicIdentity _httpIdentity;
+        private readonly Identity _identity;
+        private Authentication _authentication;
         private readonly BufferBlock<Envelope> _inputBufferBlock;
         private readonly IEnvelopeStorage<Message> _messageStorage;
         private readonly IEnvelopeStorage<Notification> _notificationStorage;
+        private readonly TimeSpan _expirationInactivityInternal;
 
         private TaskCompletionSource<Session> _authenticationTaskCompletionSource;
         private TaskCompletionSource<Session> _closingTaskCompletionSource;
@@ -33,19 +36,25 @@ namespace Lime.Protocol.Http
         private readonly ConcurrentDictionary<Guid, TaskCompletionSource<Notification>> _pendingNotificationsDictionary;
         private readonly ConcurrentDictionary<Guid, TaskCompletionSource<Command>> _pendingCommandsDictionary;
 
-
         #endregion
 
         #region Constructor
 
-        internal ServerHttpTransport(HttpListenerBasicIdentity identity, bool isHttps, IEnvelopeStorage<Message> messageStorage, IEnvelopeStorage<Notification> notificationStorage)
+        internal ServerHttpTransport(Identity identity, Authentication authentication, bool isHttps, IEnvelopeStorage<Message> messageStorage, IEnvelopeStorage<Notification> notificationStorage, TimeSpan expirationInactivityInternal = default(TimeSpan))
         {
             if (identity == null)
             {
-                throw new ArgumentNullException("identity");
+                throw new ArgumentNullException("authentication");
             }
 
-            _httpIdentity = identity;
+            _identity = identity;
+
+            if (authentication == null)
+            {
+                throw new ArgumentNullException("authentication");
+            }
+
+            _authentication = authentication;
             Compression = SessionCompression.None;
             Encryption = isHttps ? SessionEncryption.TLS : SessionEncryption.None;
 
@@ -62,32 +71,51 @@ namespace Lime.Protocol.Http
             }
             _notificationStorage = notificationStorage;
 
+            if (expirationInactivityInternal.Equals(default(TimeSpan)))
+            {
+                _expirationInactivityInternal = TimeSpan.FromSeconds(60);
+            }
+            else
+            {
+                _expirationInactivityInternal = expirationInactivityInternal;
+            }
+
+            Expiration = DateTimeOffset.UtcNow.Add(_expirationInactivityInternal);
+
             _inputBufferBlock = new BufferBlock<Envelope>();
             _pendingNotificationsDictionary = new ConcurrentDictionary<Guid, TaskCompletionSource<Notification>>();
             _pendingCommandsDictionary = new ConcurrentDictionary<Guid, TaskCompletionSource<Command>>();
-
         }
 
         #endregion
 
         #region IEmulatedTransport Members
 
-        public DateTimeOffset Expiration
-        {
-            get { return DateTimeOffset.UtcNow; }
-        }
+        public DateTimeOffset Expiration { get; private set; }
 
         /// <summary>
         /// Adds the envelope to the buffer that
         /// the server reads the envelopes
         /// sent by the node.
         /// </summary>
+        /// <param name="envelope">The envelope to be sent.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">envelope</exception>
+        /// <exception cref="System.InvalidOperationException">The input buffer is complete</exception>
         public async Task SubmitAsync(Envelope envelope, CancellationToken cancellationToken)
         {
+            if (envelope == null)
+            {
+                throw new ArgumentNullException("envelope");
+            }
+
             if (!await _inputBufferBlock.SendAsync(envelope, cancellationToken).ConfigureAwait(false))
             {
                 throw new InvalidOperationException("The input buffer is complete");
             }
+
+            Expiration = DateTimeOffset.UtcNow.Add(_expirationInactivityInternal);
         }
 
         /// <summary>
@@ -105,6 +133,11 @@ namespace Lime.Protocol.Http
         /// </exception>
         public async Task<Notification> ProcessMessageAsync(Message message, CancellationToken cancellationToken)
         {
+            if (message == null)
+            {
+                throw new ArgumentNullException("message");
+            }
+
             if (message.Id.Equals(Guid.Empty))
             {
                 throw new ArgumentException("Invalid message id");
@@ -146,6 +179,11 @@ namespace Lime.Protocol.Http
         /// </exception>
         public async Task<Command> ProcessCommandAsync(Command command, CancellationToken cancellationToken)
         {
+            if (command == null)
+            {
+                throw new ArgumentNullException("command");
+            }
+
             if (command.Id.Equals(Guid.Empty))
             {
                 throw new ArgumentException("Invalid command id", "command");
@@ -220,14 +258,6 @@ namespace Lime.Protocol.Http
             }                                 
         }
 
-        /// <summary>
-        /// Gets the transport associated identity.
-        /// </summary>
-        internal HttpListenerBasicIdentity HttpIdentity
-        {
-            get { return _httpIdentity; }
-        }
-
         #endregion
 
         #region TransportBase Members
@@ -271,13 +301,8 @@ namespace Lime.Protocol.Http
             else if (envelope is Command)                     
             {
                 var command = (Command)envelope;
-
-                TaskCompletionSource<Command> commandTcs;
-                if (_pendingCommandsDictionary.TryRemove(command.Id, out commandTcs))
-                {
-                    commandTcs.TrySetResult(command);                                       
-                }                
-            }       
+                await ProcessSentCommandAsync(command, cancellationToken);
+            }
         }
 
         /// <summary>
@@ -317,7 +342,12 @@ namespace Lime.Protocol.Http
         {
             // Close the buffers            
             _inputBufferBlock.Complete();
-            _authenticationTaskCompletionSource.TrySetCanceled();
+            
+            if (_authenticationTaskCompletionSource != null &&
+                !_authenticationTaskCompletionSource.Task.IsCompleted)
+            {
+                _authenticationTaskCompletionSource.TrySetCanceled();
+            }
 
             var pendingCommandIds = _pendingCommandsDictionary.Keys.ToArray();
             foreach (var commandId in pendingCommandIds)
@@ -376,17 +406,15 @@ namespace Lime.Protocol.Http
                 if (session.SchemeOptions != null &&
                     session.SchemeOptions.Any(s => s == AuthenticationScheme.Plain))
                 {
-                    var identity = Identity.Parse(_httpIdentity.Name);
+                    
                     responseSession.State = SessionState.Authenticating;
                     responseSession.From = new Node()
                     {
-                        Name = identity.Name,
-                        Domain = identity.Domain
+                        Name = _identity.Name,
+                        Domain = _identity.Domain
                     };
 
-                    var plainAuthentication = new PlainAuthentication();
-                    plainAuthentication.SetToBase64Password(_httpIdentity.Password);
-                    responseSession.Authentication = plainAuthentication;
+                    responseSession.Authentication = _authentication;
                 }
                 else
                 {
@@ -399,8 +427,8 @@ namespace Lime.Protocol.Http
             else if (_authenticationTaskCompletionSource != null &&
                      !_authenticationTaskCompletionSource.Task.IsCompleted)
             {
-                // Remove the identity from the memory, since is not necessary anymore
-                _httpIdentity = null;
+                // Remove the authentication information from the memory, since is not necessary anymore
+                _authentication = null;
 
                 // Completes the session task
                 _authenticationTaskCompletionSource.TrySetResult(session);                
@@ -442,6 +470,26 @@ namespace Lime.Protocol.Http
                 {
                     await _notificationStorage.StoreEnvelopeAsync(owner, notification).ConfigureAwait(false);
                 }
+            }
+        }
+
+        private async Task ProcessSentCommandAsync(Command command, CancellationToken cancellationToken)
+        {
+            TaskCompletionSource<Command> commandTcs;
+            if (_pendingCommandsDictionary.TryRemove(command.Id, out commandTcs))
+            {
+                commandTcs.TrySetResult(command);
+            }
+            else if (command.IsPingRequest())
+            {
+                var commandResponse = new Command()
+                {
+                    Id = command.Id,
+                    To = command.From,
+                    Uri = new LimeUri(UriTemplates.PING)
+                };
+
+                await SubmitAsync(commandResponse, cancellationToken).ConfigureAwait(false);
             }
         }
 

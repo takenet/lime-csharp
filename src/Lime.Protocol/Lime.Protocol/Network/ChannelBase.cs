@@ -362,7 +362,7 @@ namespace Lime.Protocol.Network
 
                         if (_autoReplyPings &&
                             envelope is Command &&
-                            this.IsPingRequestCommand((Command)envelope))
+                            ((Command)envelope).IsPingRequest())
                         {
                             var pingCommandResponse = new Command()
                             {
@@ -410,31 +410,6 @@ namespace Lime.Protocol.Network
             }
         }
         
-        /// <summary>
-        /// Indicates if a command is
-        /// a ping request
-        /// </summary>
-        /// <param name="command"></param>
-        /// <returns></returns>
-        private bool IsPingRequestCommand(Command command)
-        {
-            if (command.Method == CommandMethod.Get &&
-                command.Status == CommandStatus.Pending &&
-                command.Uri != null)
-            {
-                if (command.Uri.IsRelative)
-                {
-                    return command.Uri.Path.Equals(UriTemplates.PING, StringComparison.OrdinalIgnoreCase);
-                }
-                else
-                {
-                    return command.Uri.ToUri().LocalPath.Equals(UriTemplates.PING, StringComparison.OrdinalIgnoreCase);
-                }
-            }
-
-            return false;
-        }
-
         /// <summary>
         /// Cancels the token that is associated to 
         /// the channel send and receive tasks.

@@ -1,4 +1,5 @@
 ﻿using Lime.Protocol.Http.Storage;
+using Lime.Protocol.Security;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -74,9 +75,13 @@ namespace Lime.Protocol.Http
         /// </summary>
         /// <param name="identity"></param>
         /// <returns></returns>
-        private ServerHttpTransport CreateTransport(HttpListenerBasicIdentity identity)
+        private ServerHttpTransport CreateTransport(HttpListenerBasicIdentity httpIdentity)
         {
-            var transport = new ServerHttpTransport(identity, _useHttps, _messageStorage, _notificationStorage);
+            var identity = Identity.Parse(httpIdentity.Name);
+            var plainAuthentication = new PlainAuthentication();
+            plainAuthentication.SetToBase64Password(httpIdentity.Password);
+
+            var transport = new ServerHttpTransport(identity, plainAuthentication, _useHttps, _messageStorage, _notificationStorage);
             TransportCreated.RaiseEvent(this, new TransportEventArgs(transport));
             return transport;
         }

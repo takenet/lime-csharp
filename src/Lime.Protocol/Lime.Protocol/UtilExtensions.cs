@@ -18,6 +18,36 @@ namespace Lime.Protocol
     public static class UtilExtensions
     {
         /// <summary>
+        /// Indicates if a command is
+        /// a ping request
+        /// </summary>
+        /// <param name="command"></param>
+        /// <returns></returns>
+        public static bool IsPingRequest(this Command command)
+        {
+            if (command == null)
+            {
+                throw new ArgumentNullException("command");
+            }
+
+            if (command.Method == CommandMethod.Get &&
+                command.Status == CommandStatus.Pending &&
+                command.Uri != null)
+            {
+                if (command.Uri.IsRelative)
+                {
+                    return command.Uri.Path.Equals(Lime.Protocol.Resources.UriTemplates.PING, StringComparison.OrdinalIgnoreCase);
+                }
+                else
+                {
+                    return command.Uri.ToUri().LocalPath.Equals(Lime.Protocol.Resources.UriTemplates.PING, StringComparison.OrdinalIgnoreCase);
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
         /// Gets the Uri address
         /// of a command resource
         /// </summary>
