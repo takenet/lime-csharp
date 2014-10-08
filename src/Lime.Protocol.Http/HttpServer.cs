@@ -88,7 +88,7 @@ namespace Lime.Protocol.Http
                 {
                     // Workarround since the GetContextAsync method doesn't supports cancellation
                     // "The I/O operation has been aborted because of either a thread exit or an application request"
-                    throw new OperationCanceledException();
+                    throw new OperationCanceledException("The listener was cancelled", ex);
                 }                
 
                 throw;
