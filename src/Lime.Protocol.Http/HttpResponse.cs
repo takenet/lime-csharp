@@ -14,7 +14,7 @@ namespace Lime.Protocol.Http
     {
         #region Constructor
 
-        public HttpResponse(Guid correlatorId, HttpStatusCode statusCode, string statusDescription = null, WebHeaderCollection headers = null, string body = null, string contentType = null)
+        public HttpResponse(Guid correlatorId, HttpStatusCode statusCode, string statusDescription = null, WebHeaderCollection headers = null, MediaType contentType = null, string body = null)
         {
             if (correlatorId.Equals(default(Guid)))
             {
@@ -32,20 +32,18 @@ namespace Lime.Protocol.Http
             else
             {
                 Headers = new WebHeaderCollection();
-            }
-
-            Body = body;
+            }            
 
             if (body != null)
             {
-                if (contentType != null)
+                Body = body;
+
+                if (contentType == null)
                 {
-                    Headers.Add(HttpResponseHeader.ContentType, contentType);
+                    contentType = MediaType.Parse(Constants.TEXT_PLAIN_HEADER_VALUE);                       
                 }
-                else
-                {
-                    Headers.Add(HttpResponseHeader.ContentType, Constants.TEXT_PLAIN_HEADER_VALUE);
-                }
+
+                Headers.Add(HttpResponseHeader.ContentType, contentType.ToString());                
             }            
         }
 
@@ -60,6 +58,8 @@ namespace Lime.Protocol.Http
         public string StatusDescription { get; private set; }
 
         public WebHeaderCollection Headers { get; private set; }
+
+        public MediaType ContentType { get; private set; }
 
         public string Body { get; private set; }
 

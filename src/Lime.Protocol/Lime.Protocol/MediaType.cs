@@ -139,7 +139,7 @@ namespace Lime.Protocol
                 throw new ArgumentNullException("value");
             }
 
-            var splittedMediaType = s.Split('/');
+            var splittedMediaType = s.Split(';')[0].Split('/');
 
             if (splittedMediaType.Length != 2)
             {

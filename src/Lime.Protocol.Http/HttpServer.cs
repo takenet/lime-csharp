@@ -73,6 +73,13 @@ namespace Lime.Protocol.Http
                     correlatorId = Guid.NewGuid();
                 }
 
+                MediaType contentType = null;
+
+                if (!string.IsNullOrEmpty(context.Request.ContentType))
+                {
+                    contentType = MediaType.Parse(context.Request.ContentType);
+                }
+
                 return new HttpRequest(
                     context.Request.HttpMethod,
                     context.Request.Url,
@@ -80,6 +87,7 @@ namespace Lime.Protocol.Http
                     correlatorId,
                     (WebHeaderCollection)context.Request.Headers,
                     context.Request.QueryString,
+                    contentType,
                     context.Request.InputStream);
             }
             catch (HttpListenerException ex)

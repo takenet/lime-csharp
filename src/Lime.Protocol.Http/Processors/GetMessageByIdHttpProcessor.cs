@@ -30,8 +30,8 @@ namespace Lime.Protocol.Http.Processors
             if (envelope.Content != null)
             {
                 var body = _serializer.Serialize(envelope.Content);
-                var contentType = envelope.Content.GetMediaType().ToString();
-                return new HttpResponse(request.CorrelatorId, HttpStatusCode.OK, body: body, contentType: contentType);
+                var contentType = envelope.Content.GetMediaType();
+                return new HttpResponse(request.CorrelatorId, HttpStatusCode.OK, contentType: contentType, body: body);
             }
             else
             {

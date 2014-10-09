@@ -16,7 +16,7 @@ namespace Lime.Protocol.Http
     {
         #region Constructor
 
-        public HttpRequest(string method, Uri uri, IPrincipal user, Guid correlatorId = default(Guid), WebHeaderCollection headers = null, NameValueCollection queryString = null, Stream bodyStream = null)
+        public HttpRequest(string method, Uri uri, IPrincipal user, Guid correlatorId = default(Guid), WebHeaderCollection headers = null, NameValueCollection queryString = null, MediaType contentType = null, Stream bodyStream = null)
         {
             if (string.IsNullOrWhiteSpace(method))
             {
@@ -61,9 +61,21 @@ namespace Lime.Protocol.Http
             else
             {
                 QueryString = new NameValueCollection();
-            }
+            }            
 
-            BodyStream = bodyStream;
+            if (bodyStream != null)
+            {
+                BodyStream = bodyStream;
+
+                if (contentType != null)
+                {
+                    ContentType = contentType;
+                }
+                else
+                {
+                    ContentType = MediaType.Parse(Constants.TEXT_PLAIN_HEADER_VALUE);
+                }
+            }
         }
 
         #endregion
@@ -81,6 +93,8 @@ namespace Lime.Protocol.Http
         public WebHeaderCollection Headers { get; private set; }
 
         public NameValueCollection QueryString { get; private set; }
+
+        public MediaType ContentType { get; private set; }
 
         public Stream BodyStream { get; private set; }
 

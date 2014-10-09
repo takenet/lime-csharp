@@ -40,12 +40,12 @@ namespace Lime.Protocol.Http.Processors
                     var commandResponse = await transport.ProcessCommandAsync(commandRequest, cancellationToken).ConfigureAwait(false);
 
                     string body = null;
-                    string contentType = null;
+                    MediaType contentType = null;
 
                     if (commandResponse.Resource != null)
                     {
                         body = _serializer.Serialize(commandResponse.Resource);
-                        contentType = commandResponse.Resource.GetMediaType().ToString();
+                        contentType = commandResponse.Resource.GetMediaType();
 
                         if (_traceWriter != null &&
                             _traceWriter.IsEnabled)
@@ -56,11 +56,11 @@ namespace Lime.Protocol.Http.Processors
 
                     if (commandResponse.Status == CommandStatus.Success)
                     {
-                        return new HttpResponse(request.CorrelatorId, HttpStatusCode.OK, body: body, contentType: contentType);
+                        return new HttpResponse(request.CorrelatorId, HttpStatusCode.OK, contentType: contentType, body: body);
                     }
                     else if (commandResponse.Reason != null)
                     {
-                        return new HttpResponse(request.CorrelatorId, commandResponse.Reason.ToHttpStatusCode(), commandResponse.Reason.Description, body: body, contentType: contentType);
+                        return new HttpResponse(request.CorrelatorId, commandResponse.Reason.ToHttpStatusCode(), commandResponse.Reason.Description, contentType: contentType, body: body);
                     }
                     else
                     {

@@ -250,16 +250,11 @@ namespace Lime.Protocol.Http
                         }
                         else if (session.Reason != null)
                         {
-                            response = new HttpResponse(
-                                request.CorrelatorId,
-                                session.Reason.ToHttpStatusCode(),
-                                session.Reason.Description);
+                            response = new HttpResponse(request.CorrelatorId, session.Reason.ToHttpStatusCode(), session.Reason.Description);
                         }
                         else
                         {
-                            response = new HttpResponse(
-                                request.CorrelatorId,
-                                HttpStatusCode.ServiceUnavailable);
+                            response = new HttpResponse(request.CorrelatorId, HttpStatusCode.ServiceUnavailable);
                         }
 
                         response.Headers.Add(Constants.SESSION_ID_HEADER, session.Id.ToString());
@@ -286,23 +281,16 @@ namespace Lime.Protocol.Http
                 }
                 else
                 {
-                    response = new HttpResponse(
-                        request.CorrelatorId,
-                        HttpStatusCode.NotFound);
+                    response = new HttpResponse(request.CorrelatorId, HttpStatusCode.NotFound);
                 }
             }
             catch (LimeException ex)
             {
-                response = new HttpResponse(
-                    request.CorrelatorId,
-                    ex.Reason.ToHttpStatusCode(),
-                    ex.Reason.Description);
+                response = new HttpResponse(request.CorrelatorId, ex.Reason.ToHttpStatusCode(), ex.Reason.Description);
             }
             catch (OperationCanceledException)
             {
-                response = new HttpResponse(
-                    request.CorrelatorId,
-                    HttpStatusCode.RequestTimeout);
+                response = new HttpResponse(request.CorrelatorId, HttpStatusCode.RequestTimeout);
             }
             catch (Exception ex)
             {
@@ -311,12 +299,9 @@ namespace Lime.Protocol.Http
                 if (_writeExceptionsToOutput)
                 {
                     body = ex.ToString();
-                }           
+                }
 
-                response = new HttpResponse(
-                    request.CorrelatorId,
-                    HttpStatusCode.InternalServerError,
-                    body: body);
+                response = new HttpResponse(request.CorrelatorId, HttpStatusCode.InternalServerError, body: body);
             }
            
             return response;
