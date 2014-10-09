@@ -81,18 +81,21 @@
         For every call, the HTTP client should send the <code>Authorization</code> header and the server should establish a session using the request authentication information, mapping the schemes accordingly.
     </p>
     <p>
-        By default, the session is closed after the request is processed. To allow the clients keep the session to allow features like the definition of the presence status for receiving messages, the client must send the <code>X-Keep-Session: true</code> header.
-        In this case, the server should returns the <code>X-Session-Id</code> header with the identifier of the session and the <code>X-Session-Expiration</code> header, with the information of the lifetime of the specified session.
-        The value of the session expiration can change after every request, since it is relative to the last request date. 
-        To close an existing session, the client must send the <code>X-Keep-Session: false</code> header.
-        Even with an active session, the client needs to send its credentials for all requests. The server should store the cached session using a hashed value of the client credentials as key.
+        By default, the server keeps the session alive for further client requests with the same <code>Authorization</code> header value. This allows the to clients use features like the definition of the presence status for receiving messages. 
+        The default behavior is the same when sending the header <code>X-Session: Keep-Alive</code>.
+    </p>
+    <p>
+        In every response with alive session, the server should return the <code>X-Session-Id</code> header with the identifier of the session and the <code>X-Session-Expiration</code> header, with the information of the lifetime of the specified session.
+        The value of the session expiration can change after every request, since it is relative to the last request date.
+        Even with an active session, the client needs to send its credentials for all requests. The server should store the cached session using a hashed value of the <code>Authorization</code> header as a key.
         For server behind load balancers, its important to use sticky sessions to avoid multiple active HTTP sessions for the same identity.
+        If the client doesn't wants to keep an open session or to close an existing session, it must send the <code>X-Session: Close</code> header.
     </p>    
 
     <h3 id="messages">Messages</h3>
     <p>
         The client can send and receive messages thought the HTTP server, using the <code>http://{host:port}/messages</code> resource URI.
-        For receiving, the client needs an active session (<code>X-Keep-Session</code>) and set the presence as usual. Thus the HTTP server should receive the messages and store them for further retrieving by the client.
+        For receiving, the client needs an active session (<code>X-Session: Keep-Alive</code>) and set the presence as usual. Thus the HTTP server should receive the messages and store them for further retrieving by the client.
         The property mapping for the message envelope is:
     </p>
 
@@ -152,19 +155,20 @@
                     <code>POST</code>
                 </td>
                 <td>
-                    The server should compose a message envelope, send it to the LIME backend and await for the first related notification.
-                    If the received notification event is <code>Failure</code>, the HTTP response status code should be an 4xx (client error) or 5xx (server error), according to the failure reason and the reason phrase the value of the reason description; otherwise, the status should be 201 (Created) and the body value should be the id of the sent message.                    
+                    The server should compose a message envelope, send it to the LIME backend and return the HTTP status code 202 (Accepted) and the body value should be the id of the sent message.
+
                 </td>
             </tr>
             <tr>
                 <td>
-                    <code>/messages?async=true</code>
+                    <code>/messages?waitUntil={notification}</code>
                 </td>
                 <td>
                     <code>POST</code>
                 </td>
                 <td>
-                    The server should compose a message envelope, send it to the LIME backend and return the HTTP status code 202 (Accepted) and the body value should be the id of the sent message.
+                    The server should compose a message envelope, send it to the LIME backend and await for the specified notification or a further one (i.e. an <code>delivered</code> notification can be used to complete a <code>waitUntil=dispatched</code> request.)
+                    If the received notification event is <code>Failure</code>, the HTTP response status code should be an 4xx (client error) or 5xx (server error), according to the failure reason and the reason phrase the value of the reason description; otherwise, the status should be 201 (Created) and the body value should be the id of the sent message.                    
                 </td>
             </tr>
             <tr>
@@ -205,33 +209,13 @@
 
     <h4>Examples</h4>
 
-    <p>Sending a text message with the destination in the query string:</p>
+
+
+    <p>Sending an async text message with the destination in the query string:</p>  
     <pre>
 C:
 
-POST https://breakingbad.com/messages?to=heisenberg%40breakingbad.com HTTP/1.1
-Content-Type: text/plain
-Host: breakingbad.com
-Authorization: Basic amVzc2VAYnJlYWtpbmdiYWQuY29tOmJpdGNo
-Content-Length: 21
-
-Yeah, bitch! Magnets!
-
-S:
-
-HTTP/1.1 201 Created
-Content-Type: text/plain
-Date: Wed, 01 Oct 2014 18:46:47 GMT
-Content-Length: 36
-
-27bf69ca-2a53-4a68-ac9d-6f8c833f50f9
-</pre>
-
-    <p>Sending an async text message with the destination in the headers:</p>  
-    <pre>
-C:
-
-POST http://localhost:8080/messages?async=true HTTP/1.1
+POST http://localhost:8080/messages?to=heisenberg%40breakingbad.com HTTP/1.1
 Content-Type: text/plain
 Host: localhost:8080
 X-To: heisenberg@breakingbad.com
@@ -248,6 +232,28 @@ Date: Wed, 01 Oct 2014 18:50:57 GMT
 Content-Length: 36
 
 dd079a4d-bb82-4a6b-8479-a420fc9ca91c
+</pre>
+
+    <p>Sending a text message with the destination in the headers and waiting for the <code>dispatched</code> notification:</p>
+    <pre>
+C:
+
+POST https://breakingbad.com/messages?waitUntil=dispatched HTTP/1.1
+Content-Type: text/plain
+Host: breakingbad.com
+X-To: heisenberg@breakingbad.com
+Authorization: Basic amVzc2VAYnJlYWtpbmdiYWQuY29tOmJpdGNo
+Content-Length: 21
+Yeah, bitch! Magnets!
+
+S:
+
+HTTP/1.1 201 Created
+Content-Type: text/plain
+Date: Wed, 01 Oct 2014 18:46:47 GMT
+Content-Length: 36
+
+27bf69ca-2a53-4a68-ac9d-6f8c833f50f9
 </pre>
 
 
@@ -323,7 +329,7 @@ Yeah, bitch! Magnets!
     <h3 id="notifications">Notifications</h3>
     <p>        
         The client can send and receive notifications thought the HTTP server, using the <code>http://{host:port}/notifications</code> resource URI.
-        For receiving, the client needs an active session (<code>X-Keep-Session</code>). Thus the HTTP server should receive the notifications and store them for further retrieving by the client.
+        For receiving, the client needs an active session (<code>X-Session: Keep-Alive</code>). Thus the HTTP server should receive the notifications and store them for further retrieving by the client.
         The server only stores the last received notification for a specified message id, overwritting the existing ones.
         The property mapping for the notification envelope is:
     </p>
