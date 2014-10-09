@@ -10,6 +10,7 @@ using Moq;
 using System.Threading;
 using Shouldly;
 using Lime.Protocol.Network;
+using Lime.Protocol.Resources;
 
 namespace Lime.Protocol.Http.UnitTests
 {
@@ -38,14 +39,17 @@ namespace Lime.Protocol.Http.UnitTests
 
         public Message TextMessage { get; set; }
 
-
-        public Notification FailedNotification { get; set; }
+        public Notification AcceptedNotification { get; set; }
 
         public Notification DispatchedNotification { get; set; }
+
+        public Notification FailedNotification { get; set; }        
 
         public Command PresenceRequestCommand { get; set; }
 
         public Command PresenceResponseCommand { get; set; }
+
+        public Command PingRequestCommand { get; set; }
 
         public Session OptionsNegotiatingSession { get; set; }
 
@@ -77,6 +81,10 @@ namespace Lime.Protocol.Http.UnitTests
 
             TextMessage = DataUtil.CreateMessage(DataUtil.CreateTextContent());
 
+            AcceptedNotification = DataUtil.CreateNotification(Event.Accepted);
+            AcceptedNotification.Id = TextMessage.Id;
+            AcceptedNotification.To = TextMessage.From;
+
             DispatchedNotification = DataUtil.CreateNotification(Event.Dispatched);
             DispatchedNotification.Id = TextMessage.Id;
             DispatchedNotification.To = TextMessage.From;
@@ -87,8 +95,12 @@ namespace Lime.Protocol.Http.UnitTests
             FailedNotification.Reason = DataUtil.CreateReason();
 
             PresenceRequestCommand = DataUtil.CreateCommand();
+            PresenceRequestCommand.Uri = new LimeUri(UriTemplates.PRESENCE);            
             PresenceResponseCommand = DataUtil.CreateCommand(DataUtil.CreatePresence(), status: CommandStatus.Success);
             PresenceResponseCommand.Id = PresenceRequestCommand.Id;
+
+            PingRequestCommand = DataUtil.CreateCommand();
+            PingRequestCommand.Uri = new LimeUri(UriTemplates.PING);            
 
             OptionsNegotiatingSession = DataUtil.CreateSession(SessionState.Negotiating);
             OptionsNegotiatingSession.CompressionOptions = new[] { SessionCompression.None };
@@ -154,6 +166,11 @@ namespace Lime.Protocol.Http.UnitTests
         [TestMethod]
         public async Task ProcessMessageAsync_ValidMessage_ReturnsNotification()
         {
+            // Arrange
+            NotificationStorage
+                .Setup(n => n.StoreEnvelopeAsync(It.IsAny<Identity>(), It.IsAny<Notification>()))
+                .ReturnsAsync(true);
+                    
             // Act
             var notificationTask = Target.Value.ProcessMessageAsync(TextMessage, CancellationToken);
             await Target.Value.SendAsync(DispatchedNotification, CancellationToken);
@@ -213,6 +230,11 @@ namespace Lime.Protocol.Http.UnitTests
         [TestMethod]
         public async Task ProcessCommandAsync_ValidCommand_ReturnsResponse()
         {
+            // Arrange
+            NotificationStorage
+                .Setup(n => n.StoreEnvelopeAsync(It.IsAny<Identity>(), It.IsAny<Notification>()))
+                .ReturnsAsync(true);
+
             // Act
             var commandTask = Target.Value.ProcessCommandAsync(PresenceRequestCommand, CancellationToken);
             await Target.Value.SendAsync(PresenceResponseCommand, CancellationToken);
@@ -609,20 +631,41 @@ namespace Lime.Protocol.Http.UnitTests
         }
 
         [TestMethod]
-        public async Task SendAsync_DuplicateNotification_DeletesAndSendsToStorage()
+        [ExpectedException(typeof(InvalidOperationException))]
+        public async Task SendAsync_NotificationStorageFailed_ThrowsInvalidOperationException()
         {
             // Arrange
+            NotificationStorage
+                .Setup(m => m.StoreEnvelopeAsync(DispatchedNotification.To.ToIdentity(), DispatchedNotification))
+                .ReturnsAsync(false);
+
+            // Act
+            await Target.Value.SendAsync(DispatchedNotification, CancellationToken);
+        }
+
+        [TestMethod]
+        public async Task SendAsync_OrderedNotifications_UpdatesOnStorage()
+        {
+            // Arrange
+            NotificationStorage
+                .Setup(m => m.StoreEnvelopeAsync(DispatchedNotification.To.ToIdentity(), DispatchedNotification))
+                .ReturnsAsync(true)
+                .Verifiable();
+
             NotificationStorage
                 .Setup(m => m.StoreEnvelopeAsync(FailedNotification.To.ToIdentity(), FailedNotification))
                 .ReturnsAsync(true)
                 .Verifiable();
 
             NotificationStorage
+                .Setup(m => m.DeleteEnvelopeAsync(FailedNotification.To.ToIdentity(), DispatchedNotification.Id))
+                .ReturnsAsync(true)
+                .Verifiable();
+
+            NotificationStorage
                 .SetupSequence(m => m.GetEnvelopeAsync(DispatchedNotification.To.ToIdentity(), DispatchedNotification.Id))
                 .Returns(Task.FromResult<Notification>(null))
-                .Returns(Task.FromResult<Notification>(DispatchedNotification));
-                
-                    
+                .Returns(Task.FromResult<Notification>(DispatchedNotification));                                   
 
             // Act
             await Target.Value.SendAsync(DispatchedNotification, CancellationToken);
@@ -631,5 +674,175 @@ namespace Lime.Protocol.Http.UnitTests
             // Assert
             NotificationStorage.Verify();
         }
+
+        [TestMethod]
+        [ExpectedException(typeof(InvalidOperationException))]
+        public async Task SendAsync_OrderedNotificationsUpdateFailed_ThrowsInvalidOperationException()
+        {
+            // Arrange
+            NotificationStorage
+                .Setup(m => m.StoreEnvelopeAsync(DispatchedNotification.To.ToIdentity(), DispatchedNotification))
+                .ReturnsAsync(true)
+                .Verifiable();
+
+            NotificationStorage
+                .Setup(m => m.StoreEnvelopeAsync(FailedNotification.To.ToIdentity(), FailedNotification))
+                .ReturnsAsync(false)
+                .Verifiable();
+
+            NotificationStorage
+                .Setup(m => m.DeleteEnvelopeAsync(FailedNotification.To.ToIdentity(), DispatchedNotification.Id))
+                .ReturnsAsync(true)
+                .Verifiable();
+
+            NotificationStorage
+                .SetupSequence(m => m.GetEnvelopeAsync(DispatchedNotification.To.ToIdentity(), DispatchedNotification.Id))
+                .Returns(Task.FromResult<Notification>(null))
+                .Returns(Task.FromResult<Notification>(DispatchedNotification));
+
+            // Act
+            await Target.Value.SendAsync(DispatchedNotification, CancellationToken);
+            await Target.Value.SendAsync(FailedNotification, CancellationToken);            
+        }
+
+        [TestMethod]
+        public async Task SendAsync_UnorderedNotifications_KeepsTheLastestOnStorage()
+        {
+            // Arrange
+            NotificationStorage
+                .Setup(m => m.StoreEnvelopeAsync(DispatchedNotification.To.ToIdentity(), DispatchedNotification))
+                .ReturnsAsync(true)
+                .Verifiable();
+                            
+            NotificationStorage
+                .SetupSequence(m => m.GetEnvelopeAsync(DispatchedNotification.To.ToIdentity(), DispatchedNotification.Id))
+                .Returns(Task.FromResult<Notification>(null))
+                .Returns(Task.FromResult<Notification>(DispatchedNotification));
+
+            // Act
+            await Target.Value.SendAsync(DispatchedNotification, CancellationToken);
+            await Target.Value.SendAsync(AcceptedNotification, CancellationToken);
+
+            // Assert
+            NotificationStorage.Verify();
+            NotificationStorage.Verify(m => m.StoreEnvelopeAsync(AcceptedNotification.To.ToIdentity(), AcceptedNotification), Times.Never());
+            NotificationStorage.Verify(m => m.DeleteEnvelopeAsync(FailedNotification.To.ToIdentity(), DispatchedNotification.Id), Times.Never());               
+        }
+
+        [TestMethod]
+        public async Task SendAsync_UnorderedNotificationsWithFailed_KeepsTheLastestOnStorage()
+        {
+            // Arrange
+            NotificationStorage
+                .Setup(m => m.StoreEnvelopeAsync(FailedNotification.To.ToIdentity(), FailedNotification))
+                .ReturnsAsync(true)
+                .Verifiable();
+
+            NotificationStorage
+                .SetupSequence(m => m.GetEnvelopeAsync(FailedNotification.To.ToIdentity(), FailedNotification.Id))
+                .Returns(Task.FromResult<Notification>(null))
+                .Returns(Task.FromResult<Notification>(FailedNotification));
+
+            // Act
+            await Target.Value.SendAsync(FailedNotification, CancellationToken);
+            await Target.Value.SendAsync(AcceptedNotification, CancellationToken);
+
+            // Assert
+            NotificationStorage.Verify();
+            NotificationStorage.Verify(m => m.StoreEnvelopeAsync(AcceptedNotification.To.ToIdentity(), AcceptedNotification), Times.Never());
+            NotificationStorage.Verify(m => m.DeleteEnvelopeAsync(FailedNotification.To.ToIdentity(), FailedNotification.Id), Times.Never());
+        }
+
+        [TestMethod]
+        public async Task SendAsync_ResponseCommandWithPendingRequest_CompletesTask()
+        {
+            // Arrange
+            var requestCommandTask = Target.Value.ProcessCommandAsync(PresenceRequestCommand, CancellationToken);
+            requestCommandTask.IsCompleted.ShouldBe(false);
+
+            // Act
+            await Target.Value.SendAsync(PresenceResponseCommand, CancellationToken);
+
+            // Assert
+            var actual = await requestCommandTask;
+            actual.ShouldBe(PresenceResponseCommand);
+        }
+
+        [TestMethod]
+        public async Task SendAsync_ResponseCommand_DoesNothing()
+        {
+            // Act
+            await Target.Value.SendAsync(PresenceResponseCommand, CancellationToken);
+
+            // Assert
+            var envelopeTask = Target.Value.ReceiveAsync(CancellationToken);
+            await Task.Delay(100);
+            envelopeTask.IsCompleted.ShouldBe(false);
+        }
+
+        [TestMethod]
+        public async Task SendAsync_PingRequestCommand_SendsSuccessResponseToBuffer()
+        {
+            // Act
+            await Target.Value.SendAsync(PingRequestCommand, CancellationToken);
+
+            // Assert
+            var envelope = await Target.Value.ReceiveAsync(CancellationToken);
+            var responseCommand = envelope.ShouldBeOfType<Command>();
+            responseCommand.Id.ShouldBe(PingRequestCommand.Id);
+            responseCommand.Status.ShouldBe(CommandStatus.Success);
+        }
+
+        [TestMethod]
+        public async Task SendAsync_RequestCommandWithPendingRequest_SendsNotSupportedResponseToBuffer()
+        {
+            // Act
+            await Target.Value.SendAsync(PresenceRequestCommand, CancellationToken);
+
+            // Assert
+            var envelope = await Target.Value.ReceiveAsync(CancellationToken);
+            var responseCommand = envelope.ShouldBeOfType<Command>();
+            responseCommand.Id.ShouldBe(PresenceRequestCommand.Id);
+            responseCommand.Status.ShouldBe(CommandStatus.Failure);
+            responseCommand.Reason.ShouldNotBe(null);
+            responseCommand.Reason.Code.ShouldBe(ReasonCodes.COMMAND_RESOURCE_NOT_SUPPORTED);
+        }
+        
+        [TestMethod]
+        public async Task OpenAsync_SendsNewSessionToBuffer()
+        {
+            // Act
+            await Target.Value.OpenAsync(It.IsAny<Uri>(), CancellationToken);
+
+            // Assert
+            var envelope = await Target.Value.ReceiveAsync(CancellationToken);
+            var session = envelope.ShouldBeOfType<Session>();
+            session.Id.ShouldBe(Guid.Empty);
+            session.State.ShouldBe(SessionState.New);
+        }
+
+        [TestMethod]
+        public async Task CloseAsync_ClosesInputBufferAndCancelsPendingTasks()
+        {
+            // Arrange
+            var sessionTask = Target.Value.GetSessionAsync(CancellationToken);
+            var commandTask = Target.Value.ProcessCommandAsync(PresenceRequestCommand, CancellationToken);
+            var notificationTask = Target.Value.ProcessMessageAsync(TextMessage, CancellationToken);
+
+            // Act
+            await Target.Value.CloseAsync(CancellationToken);
+
+            // Assert
+            try
+            {
+                await Target.Value.SubmitAsync(TextMessage, CancellationToken);
+            }
+            catch (InvalidOperationException) {}
+
+            sessionTask.IsCanceled.ShouldBe(true);
+            commandTask.IsCanceled.ShouldBe(true);
+            notificationTask.IsCanceled.ShouldBe(true);
+        }
+        
     }
 }

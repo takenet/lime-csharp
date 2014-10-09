@@ -43,16 +43,14 @@ namespace Lime.Protocol.Http
         {
             if (identity == null)
             {
-                throw new ArgumentNullException("authentication");
+                throw new ArgumentNullException("identity");
             }
-
             _identity = identity;
 
             if (authentication == null)
             {
                 throw new ArgumentNullException("authentication");
             }
-
             _authentication = authentication;
             Compression = SessionCompression.None;
             Encryption = isHttps ? SessionEncryption.TLS : SessionEncryption.None;
@@ -61,7 +59,6 @@ namespace Lime.Protocol.Http
             {
                 throw new ArgumentNullException("messageStorage");
             }
-
             _messageStorage = messageStorage;
 
             if (notificationStorage == null)
@@ -442,22 +439,32 @@ namespace Lime.Protocol.Http
                 var existingNotification = await _notificationStorage.GetEnvelopeAsync(owner, notification.Id).ConfigureAwait(false);
                 if (existingNotification != null)
                 {
-                    if (notification.Event == Event.Failed ||
-                        existingNotification.Event < notification.Event)
+                    if (existingNotification.Event != Event.Failed && 
+                        (notification.Event == Event.Failed || existingNotification.Event < notification.Event))
                     {
                         bool updated = false;
                         int tryCount = 0;
 
                         while (!updated && tryCount++ < 3)
                         {
-                            await _notificationStorage.DeleteEnvelopeAsync(owner, notification.Id).ConfigureAwait(false);
-                            updated = await _notificationStorage.StoreEnvelopeAsync(owner, notification).ConfigureAwait(false);
+                            if (await _notificationStorage.DeleteEnvelopeAsync(owner, notification.Id).ConfigureAwait(false))
+                            {
+                                updated = await _notificationStorage.StoreEnvelopeAsync(owner, notification).ConfigureAwait(false);
+                            }
+                        }
+
+                        if (!updated)
+                        {
+                            throw new InvalidOperationException("Could not update the notification");
                         }
                     }
                 }
                 else
                 {
-                    await _notificationStorage.StoreEnvelopeAsync(owner, notification).ConfigureAwait(false);
+                    if (!await _notificationStorage.StoreEnvelopeAsync(owner, notification).ConfigureAwait(false))
+                    {
+                        throw new InvalidOperationException("Could not store the notification");
+                    }
                 }
             }
         }
@@ -483,7 +490,22 @@ namespace Lime.Protocol.Http
                 {
                     Id = command.Id,
                     To = command.From,
-                    Uri = new LimeUri(UriTemplates.PING)
+                    Status = CommandStatus.Success
+                };
+
+                await SubmitAsync(commandResponse, cancellationToken).ConfigureAwait(false);
+            }
+            else if (command.Status == CommandStatus.Pending)
+            {
+                var commandResponse = new Command()
+                {
+                    Id = command.Id,
+                    To = command.From,
+                    Status = CommandStatus.Failure,
+                    Reason = new Reason()
+                    {
+                        Code = ReasonCodes.COMMAND_RESOURCE_NOT_SUPPORTED
+                    }
                 };
 
                 await SubmitAsync(commandResponse, cancellationToken).ConfigureAwait(false);
