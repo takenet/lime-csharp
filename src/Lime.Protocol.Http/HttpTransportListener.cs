@@ -243,7 +243,7 @@ namespace Lime.Protocol.Http
                     try
                     {
                         // Authenticate the request session
-                        var session = await transport.AuthenticateAsync(cancellationToken).ConfigureAwait(false);
+                        var session = await transport.GetSessionAsync(cancellationToken).ConfigureAwait(false);
                         if (session.State == SessionState.Established)
                         {
                             var processor = (IHttpProcessor)match.Data;

@@ -248,7 +248,7 @@ namespace Lime.Protocol.Http.UnitTests
             };
 
             EmulatedTransport
-                .Setup(e => e.AuthenticateAsync(It.IsAny<CancellationToken>()))
+                .Setup(e => e.GetSessionAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(session);
 
             var processorResponse = new HttpResponse(Processor1HttpRequest.CorrelatorId, HttpStatusCode.OK);
@@ -289,7 +289,7 @@ namespace Lime.Protocol.Http.UnitTests
             };
 
             EmulatedTransport
-                .Setup(e => e.AuthenticateAsync(It.IsAny<CancellationToken>()))
+                .Setup(e => e.GetSessionAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(session);
 
             // Act
@@ -313,7 +313,7 @@ namespace Lime.Protocol.Http.UnitTests
             };
 
             EmulatedTransport
-                .Setup(e => e.AuthenticateAsync(It.IsAny<CancellationToken>()))
+                .Setup(e => e.GetSessionAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(session);
 
             // Act
@@ -330,7 +330,7 @@ namespace Lime.Protocol.Http.UnitTests
         {
             // Arrange
             EmulatedTransport
-                .Setup(e => e.AuthenticateAsync(It.IsAny<CancellationToken>()))
+                .Setup(e => e.GetSessionAsync(It.IsAny<CancellationToken>()))
                 .Throws<OperationCanceledException>();
 
             // Act
@@ -371,7 +371,7 @@ namespace Lime.Protocol.Http.UnitTests
             };
 
             EmulatedTransport
-                .Setup(e => e.AuthenticateAsync(It.IsAny<CancellationToken>()))
+                .Setup(e => e.GetSessionAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(session);
 
             var exceptionMessage = DataUtil.CreateRandomString(100);
@@ -405,7 +405,7 @@ namespace Lime.Protocol.Http.UnitTests
             };
 
             EmulatedTransport
-                .Setup(e => e.AuthenticateAsync(It.IsAny<CancellationToken>()))
+                .Setup(e => e.GetSessionAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(session);
 
             Processor1HttpRequest.Headers.Add(Constants.SESSION_HEADER, Constants.CLOSE_HEADER_VALUE);

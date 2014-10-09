@@ -21,11 +21,12 @@ namespace Lime.Protocol.Http
         DateTimeOffset Expiration { get; }
 
         /// <summary>
-        /// Authenticates the transport session.
+        /// Gets the result session
+        /// of the authentication proccess.
         /// </summary>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns></returns>
-        Task<Session> AuthenticateAsync(CancellationToken cancellationToken);
+        Task<Session> GetSessionAsync(CancellationToken cancellationToken);
 
         /// <summary>
         /// Finishes the transport session..

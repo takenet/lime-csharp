@@ -24,15 +24,14 @@ namespace Lime.Protocol.Http
         #region Private Fields
 
         private readonly Identity _identity;
-        private Authentication _authentication;
-        private readonly BufferBlock<Envelope> _inputBufferBlock;
+        private Authentication _authentication;        
         private readonly IEnvelopeStorage<Message> _messageStorage;
         private readonly IEnvelopeStorage<Notification> _notificationStorage;
         private readonly TimeSpan _expirationInactivityInternal;
 
-        private TaskCompletionSource<Session> _authenticationTaskCompletionSource;
-        private TaskCompletionSource<Session> _closingTaskCompletionSource;
-
+        private readonly TaskCompletionSource<Session> _authenticationTaskCompletionSource;
+        private readonly TaskCompletionSource<Session> _closingTaskCompletionSource;
+        private readonly BufferBlock<Envelope> _inputBufferBlock;
         private readonly ConcurrentDictionary<Guid, TaskCompletionSource<Notification>> _pendingNotificationsDictionary;
         private readonly ConcurrentDictionary<Guid, TaskCompletionSource<Command>> _pendingCommandsDictionary;
 
@@ -82,6 +81,8 @@ namespace Lime.Protocol.Http
 
             Expiration = DateTimeOffset.UtcNow.Add(_expirationInactivityInternal);
 
+            _authenticationTaskCompletionSource = new TaskCompletionSource<Session>();
+            _closingTaskCompletionSource = new TaskCompletionSource<Session>();
             _inputBufferBlock = new BufferBlock<Envelope>();
             _pendingNotificationsDictionary = new ConcurrentDictionary<Guid, TaskCompletionSource<Notification>>();
             _pendingCommandsDictionary = new ConcurrentDictionary<Guid, TaskCompletionSource<Command>>();
@@ -216,46 +217,44 @@ namespace Lime.Protocol.Http
         /// </summary>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns></returns>
-        public Task<Session> AuthenticateAsync(CancellationToken cancellationToken)
+        public Task<Session> GetSessionAsync(CancellationToken cancellationToken)
         {
-            if (_authenticationTaskCompletionSource != null)
+            if (!_authenticationTaskCompletionSource.Task.IsCompleted)
             {
-                throw new InvalidOperationException("An authentication process is already active.");
+                cancellationToken.Register(() => _authenticationTaskCompletionSource.TrySetCanceled());
             }
-
-            _authenticationTaskCompletionSource = new TaskCompletionSource<Session>();            
-            cancellationToken.Register(() => _authenticationTaskCompletionSource.TrySetCanceled());
-
+            
             return _authenticationTaskCompletionSource.Task;
         }
 
         public async Task FinishAsync(CancellationToken cancellationToken)
         {
-            if (_closingTaskCompletionSource != null)
-            {
-                throw new InvalidOperationException("The transport closing process is already active.");
-            }
-
-            if (_authenticationTaskCompletionSource == null)
-            {
-                throw new InvalidOperationException("Cannot close an unauthenticated transport");
-            }
-
-            _closingTaskCompletionSource = new TaskCompletionSource<Session>();
             cancellationToken.Register(() => _closingTaskCompletionSource.TrySetCanceled());
-
-            var existingSession = await _authenticationTaskCompletionSource.Task.ConfigureAwait(false);
-            if (existingSession.State == SessionState.Established)
+            
+            var currentSession = await GetSessionAsync(cancellationToken).ConfigureAwait(false);
+            if (currentSession.State == SessionState.Established)
             {
-                var session = new Session()
+                var finishingSession = new Session()
                 {
-                    Id = existingSession.Id,
+                    Id = currentSession.Id,
                     State = SessionState.Finishing
                 };
 
-                await SubmitAsync(session, cancellationToken).ConfigureAwait(false);
-                await _closingTaskCompletionSource.Task.ConfigureAwait(false);
-            }                                 
+                await SubmitAsync(finishingSession, cancellationToken).ConfigureAwait(false);
+                var finishedSession = await _closingTaskCompletionSource.Task.ConfigureAwait(false);
+
+                if (finishedSession.State != SessionState.Finished)
+                {
+                    if (finishedSession.Reason != null)
+                    {
+                        throw new LimeException(finishedSession.Reason.Code, finishedSession.Reason.Description);
+                    }
+                    else
+                    {
+                        throw new LimeException(ReasonCodes.SESSION_ERROR, "The session has failed");
+                    }                    
+                }
+            }
         }
 
         #endregion
@@ -274,8 +273,6 @@ namespace Lime.Protocol.Http
 
         /// <summary>
         /// Sends an envelope to the node. 
-        /// If there's no pending HTTP request
-        /// for the envelope, it will be stored.
         /// </summary>
         /// <param name="envelope">The envelope.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
@@ -286,22 +283,22 @@ namespace Lime.Protocol.Http
             {
                 // The session negotiation is emulated by the transport
                 var session = (Session)envelope;
-                await ProcessSentSessionAsync(session, cancellationToken).ConfigureAwait(false);
+                await SendSessionAsync(session, cancellationToken).ConfigureAwait(false);
             }
             else if (envelope is Notification)
             {
                 var notification = (Notification)envelope;
-                await ProcessSentNotificationAsync(notification).ConfigureAwait(false);
+                await SendNotificationAsync(notification).ConfigureAwait(false);
             }
             else if (envelope is Message)
             {
                 var message = (Message)envelope;
-                await _messageStorage.StoreEnvelopeAsync(message.To.ToIdentity(), message).ConfigureAwait(false);
+                await SendMessageAsync(message);
             }
             else if (envelope is Command)                     
             {
                 var command = (Command)envelope;
-                await ProcessSentCommandAsync(command, cancellationToken);
+                await SendCommandAsync(command, cancellationToken).ConfigureAwait(false);
             }
         }
 
@@ -343,8 +340,7 @@ namespace Lime.Protocol.Http
             // Close the buffers            
             _inputBufferBlock.Complete();
             
-            if (_authenticationTaskCompletionSource != null &&
-                !_authenticationTaskCompletionSource.Task.IsCompleted)
+            if (!_authenticationTaskCompletionSource.Task.IsCompleted)
             {
                 _authenticationTaskCompletionSource.TrySetCanceled();
             }
@@ -353,7 +349,6 @@ namespace Lime.Protocol.Http
             foreach (var commandId in pendingCommandIds)
             {
                 TaskCompletionSource<Command> tcs;
-
                 if (_pendingCommandsDictionary.TryRemove(commandId, out tcs))
                 {
                     tcs.TrySetCanceled();
@@ -364,7 +359,6 @@ namespace Lime.Protocol.Http
             foreach (var notification in pendingNotificationIds)
             {
                 TaskCompletionSource<Notification> tcs;
-
                 if (_pendingNotificationsDictionary.TryRemove(notification, out tcs))
                 {
                     tcs.TrySetCanceled();
@@ -378,7 +372,7 @@ namespace Lime.Protocol.Http
 
         #region Private Methods
 
-        private async Task ProcessSentSessionAsync(Session session, CancellationToken cancellationToken)
+        private async Task SendSessionAsync(Session session, CancellationToken cancellationToken)
         {
             if (session.State == SessionState.Negotiating)
             {
@@ -424,23 +418,18 @@ namespace Lime.Protocol.Http
 
                 await SubmitAsync(responseSession, cancellationToken).ConfigureAwait(false);
             }
-            else if (_authenticationTaskCompletionSource != null &&
-                     !_authenticationTaskCompletionSource.Task.IsCompleted)
+            else if (_authenticationTaskCompletionSource.TrySetResult(session))
             {
                 // Remove the authentication information from the memory, since is not necessary anymore
                 _authentication = null;
-
-                // Completes the session task
-                _authenticationTaskCompletionSource.TrySetResult(session);                
             }
-            else if (_closingTaskCompletionSource != null &&
-                     !_closingTaskCompletionSource.Task.IsCompleted)
+            else
             {
                 _closingTaskCompletionSource.TrySetResult(session);
-            }
+            }                     
         }
 
-        private async Task ProcessSentNotificationAsync(Notification notification)
+        private async Task SendNotificationAsync(Notification notification)
         {
             TaskCompletionSource<Notification> notificationTcs;
             if (_pendingNotificationsDictionary.TryRemove(notification.Id, out notificationTcs))
@@ -473,7 +462,15 @@ namespace Lime.Protocol.Http
             }
         }
 
-        private async Task ProcessSentCommandAsync(Command command, CancellationToken cancellationToken)
+        private async Task SendMessageAsync(Message message)
+        {
+            if (!await _messageStorage.StoreEnvelopeAsync(message.To.ToIdentity(), message).ConfigureAwait(false))
+            {
+                throw new InvalidOperationException("Could not store the message");
+            }
+        }
+
+        private async Task SendCommandAsync(Command command, CancellationToken cancellationToken)
         {
             TaskCompletionSource<Command> commandTcs;
             if (_pendingCommandsDictionary.TryRemove(command.Id, out commandTcs))
