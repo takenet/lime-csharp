@@ -39,7 +39,7 @@ namespace Lime.Protocol.Http
 
         #region Constructor
 
-        internal ServerHttpTransport(Identity identity, Authentication authentication, bool isHttps, IEnvelopeStorage<Message> messageStorage, IEnvelopeStorage<Notification> notificationStorage, TimeSpan expirationInactivityInternal = default(TimeSpan))
+        internal ServerHttpTransport(Identity identity, Authentication authentication, bool useHttps, IEnvelopeStorage<Message> messageStorage, IEnvelopeStorage<Notification> notificationStorage, TimeSpan expirationInactivityInternal = default(TimeSpan))
         {
             if (identity == null)
             {
@@ -53,7 +53,7 @@ namespace Lime.Protocol.Http
             }
             _authentication = authentication;
             Compression = SessionCompression.None;
-            Encryption = isHttps ? SessionEncryption.TLS : SessionEncryption.None;
+            Encryption = useHttps ? SessionEncryption.TLS : SessionEncryption.None;
 
             if (messageStorage == null)
             {

@@ -69,8 +69,7 @@ namespace Lime.Protocol.Http
         /// <param name="processors">The processors.</param>
         /// <param name="traceWriter">The trace writer.</param>
         public HttpTransportListener(int port, string hostName = "*", bool useHttps = false, TimeSpan requestTimeout = default(TimeSpan), bool writeExceptionsToOutput = true,
-            int maxDegreeOfParallelism = 1,
-            IHttpServer httpServer = null, IHttpTransportProvider httpTransportProvider = null, IDocumentSerializer serializer = null, IEnvelopeStorage<Message> messageStorage = null,
+            int maxDegreeOfParallelism = 1, IHttpServer httpServer = null, IHttpTransportProvider httpTransportProvider = null, IDocumentSerializer serializer = null, IEnvelopeStorage<Message> messageStorage = null,
             IEnvelopeStorage<Notification> notificationStorage = null, IHttpProcessor[] processors = null, ITraceWriter traceWriter = null)
         {
             _useHttps = useHttps;

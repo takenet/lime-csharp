@@ -25,7 +25,7 @@ namespace Lime.Protocol.Http.UnitTests
 
         public Authentication Authentication { get; set; }
 
-        public bool IsHttps { get; set; }
+        public bool UseHttps { get; set; }
 
         public Mock<IEnvelopeStorage<Message>> MessageStorage { get; set; }
 
@@ -70,7 +70,7 @@ namespace Lime.Protocol.Http.UnitTests
         {
             Identity = DataUtil.CreateIdentity();
             Authentication = DataUtil.CreateAuthentication(AuthenticationScheme.Plain);
-            IsHttps = true;
+            UseHttps = true;
 
             MessageStorage = new Mock<IEnvelopeStorage<Message>>();
             NotificationStorage = new Mock<IEnvelopeStorage<Notification>>();
@@ -122,7 +122,7 @@ namespace Lime.Protocol.Http.UnitTests
 
 
             Target = new Lazy<ServerHttpTransport>(() =>
-                new ServerHttpTransport(Identity, Authentication, IsHttps, MessageStorage.Object, NotificationStorage.Object, ExpirationInactivityInternal));
+                new ServerHttpTransport(Identity, Authentication, UseHttps, MessageStorage.Object, NotificationStorage.Object, ExpirationInactivityInternal));
         }
 
         [TestMethod]
@@ -425,7 +425,7 @@ namespace Lime.Protocol.Http.UnitTests
         public void GetSupportedEncryption_IsHttpsTrue_ReturnsTLS()
         {
             // Act
-            IsHttps = true;
+            UseHttps = true;
 
             // Assert
             Target.Value.Encryption.ShouldBe(SessionEncryption.TLS);
@@ -435,7 +435,7 @@ namespace Lime.Protocol.Http.UnitTests
         public void GetSupportedEncryption_IsHttpsFalse_ReturnsNone()
         {
             // Act
-            IsHttps = false;
+            UseHttps = false;
 
             // Assert
             Target.Value.Encryption.ShouldBe(SessionEncryption.None);
