@@ -55,7 +55,6 @@ namespace Lime.Protocol.Http.Processors
                     }
 
                     var response = new HttpResponse(request.CorrelatorId, HttpStatusCode.OK, body: body);
-                    response.Headers[HttpResponseHeader.ContentType] = Constants.TEXT_PLAIN_HEADER_VALUE;
                     return response;
                 }
                 else

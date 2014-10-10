@@ -68,6 +68,8 @@
       <Link>DataUtil.cs</Link>
     </Compile>
     <Compile Include="HttpTransportListenerTests.cs" />
+    <Compile Include="Processors\DeleteEnvelopeByIdHttpProcessorTests.cs" />
+    <Compile Include="Processors\GetEnvelopesHttpProcessorTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ServerHttpTransportTests.cs" />
     <Compile Include="HttpTransportProviderTests.cs" />

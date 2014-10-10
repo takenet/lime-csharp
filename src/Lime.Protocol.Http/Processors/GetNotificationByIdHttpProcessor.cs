@@ -30,7 +30,6 @@ namespace Lime.Protocol.Http.Processors
             HttpResponse response;
             if (envelope.Reason != null)
             {
-
                 var body = envelope.Event.ToString().ToCamelCase();
                 response = new HttpResponse(request.CorrelatorId, envelope.Reason.ToHttpStatusCode(), envelope.Reason.Description, body: body);                
                 response.Headers.Add(Constants.REASON_CODE_HEADER, envelope.Reason.Code.ToString());

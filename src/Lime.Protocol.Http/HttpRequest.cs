@@ -75,6 +75,8 @@ namespace Lime.Protocol.Http
                 {
                     ContentType = MediaType.Parse(Constants.TEXT_PLAIN_HEADER_VALUE);
                 }
+
+                Headers.Add(HttpRequestHeader.ContentType, ContentType.ToString());
             }
         }
 

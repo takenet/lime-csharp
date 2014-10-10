@@ -366,7 +366,7 @@ namespace Lime.Protocol.Http
                     new SendMessageHttpProcessor(_traceWriter),
                     new GetMessagesHttpProcessor(_messageStorage),
                     new GetMessageByIdHttpProcessor(_messageStorage),
-                    new DeleteMessageByIdContextProcessor(_messageStorage),
+                    new DeleteMessageByIdHttpProcessor(_messageStorage),
                     new SendNotificationHttpProcessor(_traceWriter),
                     new GetNotificationsHttpProcessor(_notificationStorage),
                     new GetNotificationByIdHttpProcessor(_notificationStorage),

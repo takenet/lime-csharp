@@ -38,12 +38,16 @@ namespace Lime.Protocol.Http
             {
                 Body = body;
 
-                if (contentType == null)
+                if (contentType != null)
                 {
-                    contentType = MediaType.Parse(Constants.TEXT_PLAIN_HEADER_VALUE);                       
+                    ContentType = contentType;
+                }
+                else
+                {
+                    ContentType = MediaType.Parse(Constants.TEXT_PLAIN_HEADER_VALUE);
                 }
 
-                Headers.Add(HttpResponseHeader.ContentType, contentType.ToString());                
+                Headers.Add(HttpResponseHeader.ContentType, ContentType.ToString());                
             }            
         }
 

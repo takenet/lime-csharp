@@ -14,16 +14,18 @@ namespace Lime.Protocol.Http.Processors
     public class DeleteEnvelopeByIdHttpProcessor<T> : IHttpProcessor
         where T : Envelope
     {
+        #region Private Fields
+
         private readonly IEnvelopeStorage<T> _envelopeStorage;
-        private readonly IDocumentSerializer _serializer;
+
+        #endregion
 
         #region Constructor
 
         public DeleteEnvelopeByIdHttpProcessor(IEnvelopeStorage<T> envelopeStorage, string path)
         {
             _envelopeStorage = envelopeStorage;
-            _serializer = new DocumentSerializer();
-
+       
             Methods = new HashSet<string> { Constants.HTTP_METHOD_DELETE };
             Template = new UriTemplate(string.Format("/{0}/{{id}}", path));
         }
@@ -38,6 +40,16 @@ namespace Lime.Protocol.Http.Processors
 
         public async Task<HttpResponse> ProcessAsync(HttpRequest request, UriTemplateMatch match, ITransportSession transport, CancellationToken cancellationToken)
         {            
+            if (request == null)
+            {
+                throw new ArgumentNullException("request");
+            }
+
+            if (match == null)
+            {
+                throw new ArgumentNullException("match");
+            }
+
             Identity owner;
             Guid id;
 
