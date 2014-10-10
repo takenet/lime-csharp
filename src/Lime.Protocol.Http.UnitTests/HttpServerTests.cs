@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Net;
 using Lime.Protocol.UnitTests;
@@ -46,11 +47,22 @@ namespace Lime.Protocol.Http.UnitTests
 
         public HttpRequestMessage GetHttpRequestMessage { get; set; }
 
-        public MediaType BodyMediaType { get; set; }
+        public MediaType RequestBodyMediaType { get; set; }
 
         public string RequestBody { get; set; }
 
         public HttpRequestMessage PostHttpRequestMessage { get; set; }
+
+
+        public WebHeaderCollection HttpResponseHeaders { get; set; }
+
+        public MediaType ResponseBodyMediaType { get; set; }
+
+        public string ResponseBody { get; set; }
+
+        public HttpResponse HttpResponse { get; set; }
+
+
 
         public CancellationToken CancellationToken { get; set; }
 
@@ -81,10 +93,18 @@ namespace Lime.Protocol.Http.UnitTests
             GetHttpRequestMessage = new HttpRequestMessage(HttpMethod.Get, RequestUri);
             GetHttpRequestMessage.Headers.Add(Constants.ENVELOPE_ID_HEADER, EnvelopeId.ToString());
 
-            BodyMediaType = DataUtil.CreateJsonMediaType();
+            RequestBodyMediaType = DataUtil.CreateJsonMediaType();
             RequestBody = DataUtil.CreateMessageJson();
             PostHttpRequestMessage = new HttpRequestMessage(HttpMethod.Post, RequestUri);
-            PostHttpRequestMessage.Content = new StringContent(RequestBody, Encoding.UTF8, BodyMediaType.ToString());
+            PostHttpRequestMessage.Content = new StringContent(RequestBody, Encoding.UTF8, RequestBodyMediaType.ToString());
+
+            HttpResponseHeaders = new WebHeaderCollection();
+            HttpResponseHeaders.Add(DataUtil.CreateRandomString(10), DataUtil.CreateRandomString(10));
+            HttpResponseHeaders.Add(DataUtil.CreateRandomString(10), DataUtil.CreateRandomString(10));
+            HttpResponseHeaders.Add(DataUtil.CreateRandomString(10), DataUtil.CreateRandomString(10));
+            ResponseBodyMediaType = DataUtil.CreateJsonMediaType();
+            ResponseBody = DataUtil.CreateMessageJson();
+            HttpResponse = new Http.HttpResponse(EnvelopeId, HttpStatusCode.OK, DataUtil.CreateRandomString(50), HttpResponseHeaders, ResponseBodyMediaType, ResponseBody);
 
             CancellationToken = TimeSpan.FromSeconds(5).ToCancellationToken();
             Target = new Lazy<HttpServer>(() => new HttpServer(Prefixes, AuthenticationSchemes));
@@ -165,7 +185,64 @@ namespace Lime.Protocol.Http.UnitTests
             actual.QueryString.ShouldNotBe(null);
             actual.QueryString.Get("value1").ShouldBe(QueryStringValue1);
             actual.QueryString.Get("value2").ShouldBe(QueryStringValue2.ToString());
-            actual.ContentType.ShouldBe(BodyMediaType);
+            actual.ContentType.ShouldBe(RequestBodyMediaType);
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(OperationCanceledException), AllowDerivedTypes = true)]
+        public async Task AcceptRequestAsync_CancelRequest_ThrowsTaskCanceledException()
+        {
+            // Arrange
+            Target.Value.Start();
+            var cts = new CancellationTokenSource();
+
+            // Act
+            var acceptRequestTask = Target.Value.AcceptRequestAsync(cts.Token);
+            cts.CancelAfter(TimeSpan.FromMilliseconds(100));
+            var actual = await acceptRequestTask;
+        }
+
+        [TestMethod]
+        public async Task SubmitResponseAsync_ExistingCorrelationId_CompletesRequest()
+        {
+            // Arrange
+            Target.Value.Start();
+            var acceptRequestTask = Target.Value.AcceptRequestAsync(CancellationToken);
+            var httpRequestTask = HttpClient.SendAsync(GetHttpRequestMessage, CancellationToken);
+            var httpRequest = await acceptRequestTask;
+            
+            // Act
+            await Target.Value.SubmitResponseAsync(HttpResponse);
+            var httpResponseMessage = await httpRequestTask;
+            
+            // Assert
+            httpResponseMessage.StatusCode.ShouldBe(HttpResponse.StatusCode);
+            httpResponseMessage.ReasonPhrase.ShouldBe(HttpResponse.StatusDescription);
+            foreach (var headerName in HttpResponseHeaders.AllKeys)
+            {
+                var headerValue = HttpResponseHeaders.Get(headerName);
+
+                if (headerName.StartsWith("Content"))
+                {
+                    httpResponseMessage.Content.Headers.GetValues(headerName).ShouldNotBe(null);
+                    httpResponseMessage.Content.Headers.GetValues(headerName).First().ShouldBe(headerValue);
+                }
+                else
+                {
+                    httpResponseMessage.Headers.GetValues(headerName).ShouldNotBe(null);
+                    httpResponseMessage.Headers.GetValues(headerName).First().ShouldBe(headerValue);
+                }                
+            }
+            var responseBody = await httpResponseMessage.Content.ReadAsStringAsync();
+            responseBody.ShouldBe(ResponseBody);
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(ArgumentException))]
+        public async Task SubmitResponseAsync_InvalidCorrelationId_ThrowsArgumentException()
+        {
+            // Act
+            await Target.Value.SubmitResponseAsync(HttpResponse);
         }
     }
 }

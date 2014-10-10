@@ -13,6 +13,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)HttpRequest.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)HttpResponse.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)HttpServer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)HttpServerException.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)HttpTransportListener.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)HttpTransportProvider.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ITransportSession.cs" />

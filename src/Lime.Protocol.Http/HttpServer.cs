@@ -44,7 +44,15 @@ namespace Lime.Protocol.Http
 
         public void Start()
         {
-            _httpListener.Start();
+            try
+            {
+                _httpListener.Start();
+
+            }
+            catch (HttpListenerException ex)
+            {
+                throw new HttpServerException(ex.Message, ex);
+            }
         }
 
         public void Stop()
@@ -99,7 +107,7 @@ namespace Lime.Protocol.Http
                     throw new OperationCanceledException("The listener was cancelled", ex);
                 }                
 
-                throw;
+                throw new HttpServerException(ex.Message, ex);
             }        
         }
 
