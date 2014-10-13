@@ -7,6 +7,7 @@ namespace Lime.Protocol.Http
     internal static class Constants
     {
         public const int DEFAULT_REQUEST_TIMEOUT = 60;
+        public const int DEFAULT_TRANSPORT_EXPIRATION_INACTIVITY_INTERVAL = 180;
         public const string ROOT = "/";
         public const string MESSAGES_PATH = "messages";
         public const string COMMANDS_PATH = "commands";
@@ -28,7 +29,7 @@ namespace Lime.Protocol.Http
         public const string ENVELOPE_TO_QUERY = "to";
         public const string ENVELOPE_PP_HEADER = "X-Pp";
         public const string ENVELOPE_PP_QUERY = "pp";
-        public const string ASYNC_QUERY = "async";
+        public const string WAIT_UNTIL_QUERY = "waitUntil";
         public const string REASON_CODE_HEADER = "X-Reason-Code";
         public const string REASON_DESCRIPTION_HEADER = "X-Reason-Description";
         

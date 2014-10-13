@@ -68,7 +68,7 @@ namespace Lime.Protocol.Http
         /// <param name="notificationStorage">The notification storage instance.</param>
         /// <param name="processors">The processors.</param>
         /// <param name="traceWriter">The trace writer.</param>
-        public HttpTransportListener(int port, string hostName = "*", bool useHttps = false, TimeSpan requestTimeout = default(TimeSpan), bool writeExceptionsToOutput = true,
+        public HttpTransportListener(int port, string hostName = "*", bool useHttps = false, TimeSpan requestTimeout = default(TimeSpan), TimeSpan transportExpirationInactivityInterval = default(TimeSpan), bool writeExceptionsToOutput = true,
             int maxDegreeOfParallelism = 1, IHttpServer httpServer = null, IHttpTransportProvider httpTransportProvider = null, IDocumentSerializer serializer = null, IEnvelopeStorage<Message> messageStorage = null,
             IEnvelopeStorage<Notification> notificationStorage = null, IHttpProcessor[] processors = null, ITraceWriter traceWriter = null)
         {
@@ -105,7 +105,9 @@ namespace Lime.Protocol.Http
             _messageStorage = messageStorage ?? new DictionaryEnvelopeStorage<Message>();
             _notificationStorage = notificationStorage ?? new DictionaryEnvelopeStorage<Notification>();
             _traceWriter = traceWriter;
-            _httpTransportProvider = httpTransportProvider ?? new HttpTransportProvider(_useHttps, _messageStorage, _notificationStorage);
+
+            transportExpirationInactivityInterval = transportExpirationInactivityInterval != default(TimeSpan) ? transportExpirationInactivityInterval : TimeSpan.FromSeconds(Constants.DEFAULT_TRANSPORT_EXPIRATION_INACTIVITY_INTERVAL);
+            _httpTransportProvider = httpTransportProvider ?? new HttpTransportProvider(_useHttps, _messageStorage, _notificationStorage, transportExpirationInactivityInterval);
             _httpTransportProvider.TransportCreated += async (sender, e) => await _transportBufferBlock.SendAsync(e.Transport, _listenerCancellationTokenSource.Token).ConfigureAwait(false);
 
             // Context processors
@@ -362,7 +364,7 @@ namespace Lime.Protocol.Http
         {
             return new IHttpProcessor[]
                 {
-                    new SendCommandHttpProcessor(_traceWriter),
+                    new SendCommandHttpProcessor(traceWriter: _traceWriter),
                     new SendMessageHttpProcessor(_traceWriter),
                     new GetMessagesHttpProcessor(_messageStorage),
                     new GetMessageByIdHttpProcessor(_messageStorage),

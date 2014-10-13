@@ -32,7 +32,7 @@ namespace Lime.Protocol.Http
         private readonly TaskCompletionSource<Session> _authenticationTaskCompletionSource;
         private readonly TaskCompletionSource<Session> _closingTaskCompletionSource;
         private readonly BufferBlock<Envelope> _inputBufferBlock;
-        private readonly ConcurrentDictionary<Guid, TaskCompletionSource<Notification>> _pendingNotificationsDictionary;
+        private readonly ConcurrentDictionary<Guid, Tuple<Event, TaskCompletionSource<Notification>>> _pendingNotificationsDictionary;
         private readonly ConcurrentDictionary<Guid, TaskCompletionSource<Command>> _pendingCommandsDictionary;
 
         #endregion
@@ -81,7 +81,7 @@ namespace Lime.Protocol.Http
             _authenticationTaskCompletionSource = new TaskCompletionSource<Session>();
             _closingTaskCompletionSource = new TaskCompletionSource<Session>();
             _inputBufferBlock = new BufferBlock<Envelope>();
-            _pendingNotificationsDictionary = new ConcurrentDictionary<Guid, TaskCompletionSource<Notification>>();
+            _pendingNotificationsDictionary = new ConcurrentDictionary<Guid, Tuple<Event, TaskCompletionSource<Notification>>>();
             _pendingCommandsDictionary = new ConcurrentDictionary<Guid, TaskCompletionSource<Command>>();
         }
 
@@ -121,15 +121,15 @@ namespace Lime.Protocol.Http
         /// and awaits for a notification.
         /// </summary>
         /// <param name="message">The message.</param>
+        /// <param name="waitUntilEvent">The wait until event.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">message</exception>
         /// <exception cref="System.ArgumentException">Invalid message id</exception>
-        /// <exception cref="System.InvalidOperationException">
-        /// Could not register the message
+        /// <exception cref="System.InvalidOperationException">Could not register the message
         /// or
-        /// The input buffer is complete
-        /// </exception>
-        public async Task<Notification> ProcessMessageAsync(Message message, CancellationToken cancellationToken)
+        /// {D255958A-8513-4226-94B9-080D98F904A1}The input buffer is complete</exception>
+        public async Task<Notification> ProcessMessageAsync(Message message, Event waitUntilEvent, CancellationToken cancellationToken)
         {
             if (message == null)
             {
@@ -141,21 +141,21 @@ namespace Lime.Protocol.Http
                 throw new ArgumentException("Invalid message id");
             }
 
-            var tcs = new TaskCompletionSource<Notification>();
+            var eventTcs = new Tuple<Event, TaskCompletionSource<Notification>>(waitUntilEvent, new TaskCompletionSource<Notification>());
             cancellationToken.Register(() => 
                 {
-                    tcs.TrySetCanceled();
-                    _pendingNotificationsDictionary.TryRemove(message.Id, out tcs);
+                    eventTcs.Item2.TrySetCanceled();
+                    _pendingNotificationsDictionary.TryRemove(message.Id, out eventTcs);
                 });
             
-            if (!_pendingNotificationsDictionary.TryAdd(message.Id, tcs))
+            if (!_pendingNotificationsDictionary.TryAdd(message.Id, eventTcs))
             {
                 throw new InvalidOperationException("Could not register the message");
             }
 
             await SubmitAsync(message, cancellationToken).ConfigureAwait(false);            
 
-            return await tcs.Task;
+            return await eventTcs.Item2.Task;
         }
 
         /// <summary>
@@ -251,6 +251,10 @@ namespace Lime.Protocol.Http
                         throw new LimeException(ReasonCodes.SESSION_ERROR, "The session has failed");
                     }                    
                 }
+            }
+            else
+            {
+                throw new InvalidOperationException("Cannot finish a non established session");
             }
         }
 
@@ -355,10 +359,10 @@ namespace Lime.Protocol.Http
             var pendingNotificationIds = _pendingNotificationsDictionary.Keys.ToArray();
             foreach (var notification in pendingNotificationIds)
             {
-                TaskCompletionSource<Notification> tcs;
-                if (_pendingNotificationsDictionary.TryRemove(notification, out tcs))
+                Tuple<Event, TaskCompletionSource<Notification>> eventTcs;
+                if (_pendingNotificationsDictionary.TryRemove(notification, out eventTcs))
                 {
-                    tcs.TrySetCanceled();
+                    eventTcs.Item2.TrySetCanceled();
                 }
             }
 
@@ -428,10 +432,15 @@ namespace Lime.Protocol.Http
 
         private async Task SendNotificationAsync(Notification notification)
         {
-            TaskCompletionSource<Notification> notificationTcs;
-            if (_pendingNotificationsDictionary.TryRemove(notification.Id, out notificationTcs))
+            Tuple<Event, TaskCompletionSource<Notification>> eventTcs;
+            if (_pendingNotificationsDictionary.TryGetValue(notification.Id, out eventTcs))                
             {
-                notificationTcs.TrySetResult(notification);
+                // Do not store notifications with pending responses
+                if ((notification.Event == eventTcs.Item1 || notification.Event == Event.Failed) &&
+                    _pendingNotificationsDictionary.TryRemove(notification.Id, out eventTcs))
+                {
+                    eventTcs.Item2.TrySetResult(notification);                
+                }
             }
             else
             {

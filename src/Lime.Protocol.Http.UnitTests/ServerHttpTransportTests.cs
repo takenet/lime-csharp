@@ -43,7 +43,9 @@ namespace Lime.Protocol.Http.UnitTests
 
         public Notification DispatchedNotification { get; set; }
 
-        public Notification FailedNotification { get; set; }        
+        public Notification FailedNotification { get; set; }
+
+        public Event WaitUntilEvent { get; set; }
 
         public Command PresenceRequestCommand { get; set; }
 
@@ -93,6 +95,8 @@ namespace Lime.Protocol.Http.UnitTests
             FailedNotification.Id = TextMessage.Id;
             FailedNotification.To = TextMessage.From;
             FailedNotification.Reason = DataUtil.CreateReason();
+
+            WaitUntilEvent = DispatchedNotification.Event;
 
             PresenceRequestCommand = DataUtil.CreateCommand();
             PresenceRequestCommand.Uri = new LimeUri(UriTemplates.PRESENCE);            
@@ -172,7 +176,8 @@ namespace Lime.Protocol.Http.UnitTests
                 .ReturnsAsync(true);
                     
             // Act
-            var notificationTask = Target.Value.ProcessMessageAsync(TextMessage, CancellationToken);
+            var notificationTask = Target.Value.ProcessMessageAsync(TextMessage, WaitUntilEvent, CancellationToken);
+            await Target.Value.SendAsync(AcceptedNotification, CancellationToken);
             await Target.Value.SendAsync(DispatchedNotification, CancellationToken);
 
             // Assert
@@ -186,6 +191,24 @@ namespace Lime.Protocol.Http.UnitTests
         }
 
         [TestMethod]
+        public async Task ProcessMessageAsync_ValidMessageFailedNotification_ReturnsNotification()
+        {
+            // Arrange
+            NotificationStorage
+                .Setup(n => n.StoreEnvelopeAsync(It.IsAny<Identity>(), It.IsAny<Notification>()))
+                .ReturnsAsync(true);
+
+            // Act
+            var notificationTask = Target.Value.ProcessMessageAsync(TextMessage, WaitUntilEvent, CancellationToken);
+            await Target.Value.SendAsync(AcceptedNotification, CancellationToken);
+            await Target.Value.SendAsync(FailedNotification, CancellationToken);
+
+            // Assert
+            var actual = await notificationTask;
+            actual.ShouldBe(FailedNotification);
+        }
+
+        [TestMethod]
         [ExpectedException(typeof(ArgumentNullException))]
         public async Task ProcessMessageAsync_NullMessage_ThrowsArgumentNullException()
         {
@@ -193,7 +216,7 @@ namespace Lime.Protocol.Http.UnitTests
             Message message = null;
 
             // Act
-            await Target.Value.ProcessMessageAsync(message, CancellationToken);
+            await Target.Value.ProcessMessageAsync(message, WaitUntilEvent, CancellationToken);
         }
 
         [TestMethod]
@@ -204,7 +227,7 @@ namespace Lime.Protocol.Http.UnitTests
             TextMessage.Id = Guid.Empty;
 
             // Act
-            await Target.Value.ProcessMessageAsync(TextMessage, CancellationToken);
+            await Target.Value.ProcessMessageAsync(TextMessage, WaitUntilEvent, CancellationToken);
         }
 
         [TestMethod]
@@ -212,8 +235,8 @@ namespace Lime.Protocol.Http.UnitTests
         public async Task ProcessMessageAsync_DuplicateMessageId_ThrowsInvalidOperationException()
         {
             // Act
-            Target.Value.ProcessMessageAsync(TextMessage, CancellationToken);
-            await Target.Value.ProcessMessageAsync(TextMessage, CancellationToken);
+            Target.Value.ProcessMessageAsync(TextMessage, WaitUntilEvent, CancellationToken);
+            await Target.Value.ProcessMessageAsync(TextMessage, WaitUntilEvent, CancellationToken);
         }
 
         [TestMethod]
@@ -224,7 +247,7 @@ namespace Lime.Protocol.Http.UnitTests
             CancellationToken = TimeSpan.FromSeconds(1).ToCancellationToken();
 
             // Act
-            await Target.Value.ProcessMessageAsync(TextMessage, CancellationToken);
+            await Target.Value.ProcessMessageAsync(TextMessage, WaitUntilEvent, CancellationToken);
         }
 
         [TestMethod]
@@ -405,7 +428,8 @@ namespace Lime.Protocol.Http.UnitTests
         }
 
         [TestMethod]
-        public async Task FinishAsync_FailedSession_ReturnsTask()
+        [ExpectedException(typeof(InvalidOperationException))]
+        public async Task FinishAsync_FailedSession_ThrowsInvalidOperationException()
         {
             // Arrange
             await Target.Value.SendAsync(FailedSession, CancellationToken);
@@ -602,8 +626,8 @@ namespace Lime.Protocol.Http.UnitTests
         [TestMethod]
         public async Task SendAsync_FailedNotificationForPendingMessage_CompletesTask()
         {
-            // Arrange
-            var processMessageTask = Target.Value.ProcessMessageAsync(TextMessage, CancellationToken);
+            // Arrange            
+            var processMessageTask = Target.Value.ProcessMessageAsync(TextMessage, WaitUntilEvent, CancellationToken);
             processMessageTask.IsCompleted.ShouldBe(false);
 
             // Act
@@ -827,7 +851,7 @@ namespace Lime.Protocol.Http.UnitTests
             // Arrange
             var sessionTask = Target.Value.GetSessionAsync(CancellationToken);
             var commandTask = Target.Value.ProcessCommandAsync(PresenceRequestCommand, CancellationToken);
-            var notificationTask = Target.Value.ProcessMessageAsync(TextMessage, CancellationToken);
+            var notificationTask = Target.Value.ProcessMessageAsync(TextMessage, WaitUntilEvent, CancellationToken);
 
             // Act
             await Target.Value.CloseAsync(CancellationToken);

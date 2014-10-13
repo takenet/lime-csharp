@@ -221,7 +221,7 @@ namespace Lime.Protocol.UnitTests
             };
         }
 
-        public static Command CreateCommand(Document resource = null, CommandMethod method = CommandMethod.Get, CommandStatus status = CommandStatus.Pending)
+        public static Command CreateCommand(Document resource = null, CommandMethod method = CommandMethod.Get, CommandStatus status = CommandStatus.Pending, LimeUri uri = null)
         {
             return new Command()
             {
@@ -229,6 +229,7 @@ namespace Lime.Protocol.UnitTests
                 To = CreateNode(),
                 Method = method,
                 Status = status,
+                Uri = uri,
                 Resource = resource
             };
         }

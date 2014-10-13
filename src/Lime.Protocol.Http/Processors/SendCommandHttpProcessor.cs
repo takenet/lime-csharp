@@ -13,75 +13,66 @@ namespace Lime.Protocol.Http.Processors
 {
     public sealed class SendCommandHttpProcessor : SendEnvelopeHttpProcessorBase<Command>
     {
+        private readonly string[] _exceptUriSegments;
+
         #region Constructor
 
-        public SendCommandHttpProcessor(ITraceWriter traceWriter = null)
-            : base(new HashSet<string> { Constants.HTTP_METHOD_GET, Constants.HTTP_METHOD_POST, Constants.HTTP_METHOD_DELETE }, new UriTemplate(string.Format("/{0}/*", Constants.COMMANDS_PATH)), new DocumentSerializer(), traceWriter)
+        public SendCommandHttpProcessor(IDocumentSerializer documentSerializer = null, ITraceWriter traceWriter = null)
+            : base(new HashSet<string> { Constants.HTTP_METHOD_GET, Constants.HTTP_METHOD_POST, Constants.HTTP_METHOD_DELETE }, new UriTemplate(string.Format("/{0}/*", Constants.COMMANDS_PATH)), documentSerializer ?? new DocumentSerializer(), traceWriter)
         {
-
+            _exceptUriSegments = new[] { Constants.COMMANDS_PATH + Constants.ROOT };
         }
 
         #endregion
 
         public override async Task<HttpResponse> ProcessAsync(HttpRequest request, UriTemplateMatch match, ITransportSession transport, CancellationToken cancellationToken)
         {
-            bool isAsync;
-            bool.TryParse(request.QueryString.Get(Constants.ASYNC_QUERY), out isAsync);
-
-            if (isAsync)
+            var commandRequest = await GetEnvelopeFromRequestAsync(request).ConfigureAwait(false);
+            try
             {
-                return await base.ProcessAsync(request, match, transport, cancellationToken).ConfigureAwait(false);
+                var commandResponse = await transport.ProcessCommandAsync(commandRequest, cancellationToken).ConfigureAwait(false);
+                string body = null;
+                MediaType contentType = null;
+
+                if (commandResponse.Resource != null)
+                {
+                    body = _serializer.Serialize(commandResponse.Resource);
+                    contentType = commandResponse.Resource.GetMediaType();
+
+                    if (_traceWriter != null &&
+                        _traceWriter.IsEnabled)
+                    {
+                        await _traceWriter.TraceAsync(body, DataOperation.Send).ConfigureAwait(false);
+                    }
+                }
+
+                if (commandResponse.Status == CommandStatus.Success)
+                {
+                    return new HttpResponse(request.CorrelatorId, HttpStatusCode.OK, contentType: contentType, body: body);
+                }
+                else if (commandResponse.Reason != null)
+                {
+                    return new HttpResponse(request.CorrelatorId, commandResponse.Reason.ToHttpStatusCode(), commandResponse.Reason.Description, contentType: contentType, body: body);
+                }
+                else
+                {
+                    return new HttpResponse(request.CorrelatorId, HttpStatusCode.ServiceUnavailable, body: body);
+                }
             }
-            else
+            catch (ArgumentException)
             {
-                var commandRequest = await GetEnvelopeFromRequestAsync(request).ConfigureAwait(false);
-                try
-                {
-                    var commandResponse = await transport.ProcessCommandAsync(commandRequest, cancellationToken).ConfigureAwait(false);
-
-                    string body = null;
-                    MediaType contentType = null;
-
-                    if (commandResponse.Resource != null)
-                    {
-                        body = _serializer.Serialize(commandResponse.Resource);
-                        contentType = commandResponse.Resource.GetMediaType();
-
-                        if (_traceWriter != null &&
-                            _traceWriter.IsEnabled)
-                        {
-                            await _traceWriter.TraceAsync(body, DataOperation.Send).ConfigureAwait(false);
-                        }
-                    }
-
-                    if (commandResponse.Status == CommandStatus.Success)
-                    {
-                        return new HttpResponse(request.CorrelatorId, HttpStatusCode.OK, contentType: contentType, body: body);
-                    }
-                    else if (commandResponse.Reason != null)
-                    {
-                        return new HttpResponse(request.CorrelatorId, commandResponse.Reason.ToHttpStatusCode(), commandResponse.Reason.Description, contentType: contentType, body: body);
-                    }
-                    else
-                    {
-                        return new HttpResponse(request.CorrelatorId, HttpStatusCode.ServiceUnavailable, body: body);
-                    }
-                }
-                catch (ArgumentException)
-                {
-                    return new HttpResponse(request.CorrelatorId, HttpStatusCode.Conflict);
-                }
-            }            
+                return new HttpResponse(request.CorrelatorId, HttpStatusCode.Conflict);
+            }
         }
 
-        #region SendEnvelopeRequestContextBase Members
+        #region SendEnvelopeHttpProcessorBase Members
 
         protected override async Task FillEnvelopeAsync(Command envelope, HttpRequest request)
         {
             CommandMethod method;
             if (TryConvertToCommandMethod(request.Method, out method))
             {
-                var limeUriFragment = request.Uri.Segments.Except(new[] { Constants.COMMANDS_PATH + Constants.ROOT }).Aggregate((s1, s2) => s1 + s2);
+                var limeUriFragment = request.Uri.Segments.Except(_exceptUriSegments).Aggregate((s1, s2) => s1 + s2);
                 if (!string.IsNullOrWhiteSpace(limeUriFragment))
                 {                    
                     if (envelope.Id == Guid.Empty)

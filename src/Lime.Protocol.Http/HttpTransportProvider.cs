@@ -1,15 +1,20 @@
 ﻿using Lime.Protocol.Http.Storage;
 using Lime.Protocol.Security;
 using System;
+using System.Linq;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Net;
 using System.Security.Principal;
 using System.Text;
+using System.Timers;
+using System.Threading;
+using Timer = System.Timers.Timer;
+using Lime.Protocol.Network;
 
 namespace Lime.Protocol.Http
 {
-    public sealed class HttpTransportProvider : IHttpTransportProvider
+    public sealed class HttpTransportProvider : IHttpTransportProvider, IDisposable
     {
         #region Private Fields
 
@@ -17,17 +22,31 @@ namespace Lime.Protocol.Http
         private readonly ConcurrentDictionary<string, ITransportSession> _transportDictionary;
         private readonly IEnvelopeStorage<Message> _messageStorage;
         private readonly IEnvelopeStorage<Notification> _notificationStorage;
+        private readonly Timer _expirationTimer;
+        private readonly TimeSpan _expirationInactivityInterval;
+        private readonly TimeSpan _closeTransportTimeout;
 
         #endregion
 
         #region Constructor
 
-        public HttpTransportProvider(bool useHttps, IEnvelopeStorage<Message> messageStorage, IEnvelopeStorage<Notification> notificationStorage)
+        public HttpTransportProvider(bool useHttps, IEnvelopeStorage<Message> messageStorage, IEnvelopeStorage<Notification> notificationStorage, 
+            TimeSpan expirationInactivityInterval, TimeSpan expirationTimerInterval = default(TimeSpan), TimeSpan closeTransportTimeout = default(TimeSpan))
         {
             _useHttps = useHttps;
             _messageStorage = messageStorage;
             _notificationStorage = notificationStorage;
             _transportDictionary = new ConcurrentDictionary<string, ITransportSession>();
+            _expirationInactivityInterval = expirationInactivityInterval;
+            _closeTransportTimeout = closeTransportTimeout != default(TimeSpan) ? closeTransportTimeout : TimeSpan.FromSeconds(60);
+
+            if (expirationTimerInterval.Equals(default(TimeSpan)))
+            {
+                expirationTimerInterval = TimeSpan.FromSeconds(5);
+            }           
+            _expirationTimer = new Timer(expirationTimerInterval.TotalMilliseconds);
+            _expirationTimer.Elapsed += ExpirationTimer_Elapsed;
+            _expirationTimer.Start();
         }
 
         #endregion
@@ -81,7 +100,7 @@ namespace Lime.Protocol.Http
             var plainAuthentication = new PlainAuthentication();
             plainAuthentication.SetToBase64Password(httpIdentity.Password);
 
-            var transport = new ServerHttpTransport(identity, plainAuthentication, _useHttps, _messageStorage, _notificationStorage);
+            var transport = new ServerHttpTransport(identity, plainAuthentication, _useHttps, _messageStorage, _notificationStorage, _expirationInactivityInterval);
             TransportCreated.RaiseEvent(this, new TransportEventArgs(transport));
             return transport;
         }
@@ -96,5 +115,57 @@ namespace Lime.Protocol.Http
         {
             return string.Format("{0}:{1}", identity.Name, identity.Password).ToSHA1HashString();
         }
+
+        private async void ExpirationTimer_Elapsed(object sender, ElapsedEventArgs e)
+        {            
+            _expirationTimer.Stop();
+
+            try
+            {
+                var expiredTransportSessions = _transportDictionary
+                    .Values
+                    .Where(s => s.Expiration <= DateTimeOffset.UtcNow)
+                    .ToArray();
+
+                foreach (var expiredSession in expiredTransportSessions)
+                {
+                    var cancellationToken = _closeTransportTimeout.ToCancellationToken();
+
+                    bool finished;
+                    try
+                    {
+                        await expiredSession.FinishAsync(cancellationToken);
+                        finished = true;
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        finished = false;
+                    }
+                    catch (InvalidOperationException)
+                    {
+                        finished = false;
+                    }
+
+                    if (!finished)
+                    {
+                        // Force closing the transport
+                        await ((ITransport)expiredSession).CloseAsync(cancellationToken);
+                    }
+                }
+            }
+            finally
+            {
+                _expirationTimer.Start();
+            }
+        }
+
+        #region IDisposable Members
+
+        public void Dispose()
+        {
+            _expirationTimer.Dispose();
+        }
+
+        #endregion
     }
 }

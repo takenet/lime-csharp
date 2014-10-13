@@ -32,6 +32,12 @@ namespace Lime.Protocol.Http.UnitTests
 
         public bool CacheInstance { get; set; }
 
+        public TimeSpan ExpirationInactivityInterval { get; set; }
+
+        public TimeSpan ExpirationTimerInterval { get; set; }
+
+        public TimeSpan CloseTransportTimeout { get; set; }
+
         public Lazy<HttpTransportProvider> Target { get; set; }
 
         [TestInitialize]
@@ -51,8 +57,10 @@ namespace Lime.Protocol.Http.UnitTests
             Principal.SetupGet(p => p.Identity).Returns(HttpListenerBasicIdentity);
 
             CacheInstance = true;
+            ExpirationInactivityInterval = TimeSpan.FromSeconds(30);
+            ExpirationTimerInterval = TimeSpan.FromSeconds(5);
 
-            Target = new Lazy<HttpTransportProvider>(() => new HttpTransportProvider(UseHttps, MessageStorage.Object, NotificationStorage.Object));
+            Target = new Lazy<HttpTransportProvider>(() => new HttpTransportProvider(UseHttps, MessageStorage.Object, NotificationStorage.Object, ExpirationInactivityInterval, ExpirationTimerInterval, CloseTransportTimeout));
         }
 
 
@@ -103,6 +111,28 @@ namespace Lime.Protocol.Http.UnitTests
             // Assert
             second.ShouldBe(first);
             third.ShouldNotBe(second);
+        }
+
+        [TestMethod]
+        public void ExpirationTimer_Elapsed_ExpiredTransport_CloseTransport()
+        {
+            // Arrange
+            ExpirationInactivityInterval = TimeSpan.FromMilliseconds(80);
+            ExpirationTimerInterval = TimeSpan.FromMilliseconds(50);
+            CloseTransportTimeout = TimeSpan.FromMilliseconds(150);
+
+            bool closed = false;
+
+            // Act
+            var actual = Target.Value.GetTransport(Principal.Object, true);
+            ((ITransport)actual).Closed += (sender, e) => closed = true;
+            
+            Thread.Sleep(300);
+
+            // Assert          
+            closed.ShouldBe(true);
+            var transport = Target.Value.GetTransport(Principal.Object, true);
+            transport.ShouldNotBe(actual);
         }
     }
 }

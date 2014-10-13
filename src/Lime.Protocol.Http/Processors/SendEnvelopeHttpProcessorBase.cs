@@ -47,7 +47,7 @@ namespace Lime.Protocol.Http.Processors
         {
             var envelope = await GetEnvelopeFromRequestAsync(request).ConfigureAwait(false);            
             await transport.SubmitAsync(envelope, cancellationToken).ConfigureAwait(false);
-            return new HttpResponse(request.CorrelatorId, HttpStatusCode.Accepted);                     
+            return new HttpResponse(request.CorrelatorId, HttpStatusCode.Accepted, body: envelope.Id.ToString());                     
         }
 
         #endregion
@@ -101,8 +101,6 @@ namespace Lime.Protocol.Http.Processors
             return document;
         }
 
-        #endregion
-
-        
+        #endregion        
     }
 }

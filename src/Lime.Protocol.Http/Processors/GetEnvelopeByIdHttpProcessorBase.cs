@@ -14,8 +14,12 @@ namespace Lime.Protocol.Http.Processors
     public abstract class GetEnvelopeByIdHttpProcessorBase<T> : IHttpProcessor
         where T : Envelope
     {
+        #region Private Fields
+
         private readonly IEnvelopeStorage<T> _envelopeStorage;
         private readonly IDocumentSerializer _serializer;
+
+        #endregion
 
         #region Constructor
 

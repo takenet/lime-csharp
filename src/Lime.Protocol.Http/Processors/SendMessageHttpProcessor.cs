@@ -1,5 +1,6 @@
 ﻿using Lime.Protocol.Http.Serialization;
 using Lime.Protocol.Network;
+using Lime.Protocol.Serialization;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -24,23 +25,18 @@ namespace Lime.Protocol.Http.Processors
 
         public override async Task<HttpResponse> ProcessAsync(HttpRequest request, UriTemplateMatch match, ITransportSession transport, CancellationToken cancellationToken)
         {
-            bool isAsync;
-            bool.TryParse(request.QueryString.Get(Constants.ASYNC_QUERY), out isAsync);
+            Event waitUntilEvent;
 
-            if (isAsync)
-            {
-                return await base.ProcessAsync(request, match, transport, cancellationToken).ConfigureAwait(false);
-            }
-            else
+            if (Enum.TryParse<Event>(request.QueryString.Get(Constants.WAIT_UNTIL_QUERY), true, out waitUntilEvent))
             {
                 var message = await GetEnvelopeFromRequestAsync(request).ConfigureAwait(false);
                 try
                 {
-                    var notification = await transport.ProcessMessageAsync(message, cancellationToken).ConfigureAwait(false);
+                    var notification = await transport.ProcessMessageAsync(message, waitUntilEvent, cancellationToken).ConfigureAwait(false);
 
                     if (notification.Event != Event.Failed)
                     {
-                        return new HttpResponse(request.CorrelatorId, HttpStatusCode.Created);
+                        return new HttpResponse(request.CorrelatorId, HttpStatusCode.Created, body: notification.Id.ToString());
                     }
                     else if (notification.Reason != null)
                     {
@@ -55,7 +51,11 @@ namespace Lime.Protocol.Http.Processors
                 {
                     return new HttpResponse(request.CorrelatorId, HttpStatusCode.Conflict);
                 }
-            }  
+            }
+            else
+            {
+                return await base.ProcessAsync(request, match, transport, cancellationToken).ConfigureAwait(false);
+            }
         }
 
         protected override async Task FillEnvelopeAsync(Message envelope, HttpRequest request)

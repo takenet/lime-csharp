@@ -50,9 +50,10 @@ namespace Lime.Protocol.Http
         /// for the first related notification.
         /// </summary>
         /// <param name="message">The message.</param>
+        /// <param name="waitUntilEvent">The expected notification for the completion of the processing.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns></returns>
-        Task<Notification> ProcessMessageAsync(Message message, CancellationToken cancellationToken);
+        Task<Notification> ProcessMessageAsync(Message message, Event waitUntilEvent, CancellationToken cancellationToken);
 
         /// <summary>
         /// Submits the command to the

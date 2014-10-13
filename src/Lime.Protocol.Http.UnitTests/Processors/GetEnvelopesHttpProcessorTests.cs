@@ -16,7 +16,7 @@ namespace Lime.Protocol.Http.UnitTests.Processors
     [TestClass]
     public class GetEnvelopesHttpProcessorTests
     {
-        public Mock<IEnvelopeStorage<Message>> MessageEnvelopeStorage { get; set; }
+        public Mock<IEnvelopeStorage<Envelope>> EnvelopeStorage { get; set; }
 
         public Mock<IPrincipal> Principal { get; set; }
 
@@ -32,16 +32,16 @@ namespace Lime.Protocol.Http.UnitTests.Processors
 
         public UriTemplateMatch GetMessagesUriTemplateMatch { get; set; }
 
-        public Guid[] MessageIds { get; private set; }
+        public Guid[] EnvelopeIds { get; private set; }
 
         public CancellationToken CancellationToken { get; private set; }
 
-        public GetEnvelopesHttpProcessor<Message> Target { get; set; }
+        public GetEnvelopesHttpProcessor<Envelope> Target { get; set; }
 
         [TestInitialize]
         public void Arrange()
         {
-            MessageEnvelopeStorage = new Mock<IEnvelopeStorage<Message>>();
+            EnvelopeStorage = new Mock<IEnvelopeStorage<Envelope>>();
             Principal = new Mock<IPrincipal>();
             PrincipalIdentity = new Mock<System.Security.Principal.IIdentity>();
             Principal.SetupGet(p => p.Identity).Returns(() => PrincipalIdentity.Object);
@@ -51,23 +51,24 @@ namespace Lime.Protocol.Http.UnitTests.Processors
             GetMessagesUri = new Uri("http://" + Constants.MESSAGES_PATH + ":" + DataUtil.CreateRandomInt(50000) + "/" + Constants.MESSAGES_PATH);
             GetMessagesHttpRequest = new HttpRequest("DELETE", GetMessagesUri, Principal.Object, Guid.NewGuid());
             GetMessagesUriTemplateMatch = new UriTemplateMatch();
-            MessageIds = new Guid[]
+            EnvelopeIds = new Guid[]
             {
                 Guid.NewGuid(),
                 Guid.NewGuid(),
                 Guid.NewGuid()
             };
 
-            Target = new GetEnvelopesHttpProcessor<Message>(MessageEnvelopeStorage.Object, Constants.MESSAGES_PATH);
+            Target = new GetEnvelopesHttpProcessor<Envelope>(EnvelopeStorage.Object, Constants.MESSAGES_PATH);
         }
 
         [TestMethod]
-        public async Task ProcessAsync_ValidHttpRequest_CallsStorageAndReturnsHttpResponse()
+        public async Task ProcessAsync_ValidHttpRequest_CallsStorageAndReturnsOKHttpResponse()
         {
             // Arrange
-            MessageEnvelopeStorage
+            EnvelopeStorage
                 .Setup(m => m.GetEnvelopesAsync(Identity))
-                .ReturnsAsync(MessageIds);
+                .ReturnsAsync(EnvelopeIds)
+                .Verifiable();
 
             // Act
             var actual = await Target.ProcessAsync(GetMessagesHttpRequest, GetMessagesUriTemplateMatch, It.IsAny<ITransportSession>(), CancellationToken);
@@ -76,12 +77,47 @@ namespace Lime.Protocol.Http.UnitTests.Processors
             actual.StatusCode.ShouldBe(HttpStatusCode.OK);
             actual.Body.ShouldNotBe(null);
             var reader = new StringReader(actual.Body);            
-            foreach (var messageId in MessageIds)
+            foreach (var messageId in EnvelopeIds)
             {
                 reader.ReadLine().ShouldBe(messageId.ToString());
             }
             actual.ContentType.ShouldNotBe(null);
+            actual.ContentType.ToString().ShouldBe(Constants.TEXT_PLAIN_HEADER_VALUE);
+            EnvelopeStorage.Verify();
+        }
 
+        [TestMethod]
+        public async Task ProcessAsync_NoStoredEnvelopesForIdentity_ReturnsNoContentHttpResponse()
+        {
+            // Arrange
+            EnvelopeStorage
+                .Setup(m => m.GetEnvelopesAsync(Identity))
+                .ReturnsAsync(new Guid[0])
+                .Verifiable();
+
+            // Act
+            var actual = await Target.ProcessAsync(GetMessagesHttpRequest, GetMessagesUriTemplateMatch, It.IsAny<ITransportSession>(), CancellationToken);
+
+            // Assert
+            actual.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+            actual.Body.ShouldBe(null);
+            actual.ContentType.ShouldBe(null);
+            EnvelopeStorage.Verify();
+        }
+
+        [TestMethod]
+        public async Task ProcessAsync_InvalidPrincipalNameFormat_RetunsBadRequestHttpResponse()
+        {
+            // Arrange
+            PrincipalIdentityName = string.Empty;
+
+            // Act
+            var actual = await Target.ProcessAsync(GetMessagesHttpRequest, GetMessagesUriTemplateMatch, It.IsAny<ITransportSession>(), CancellationToken);
+
+            // Assert
+            actual.CorrelatorId.ShouldBe(GetMessagesHttpRequest.CorrelatorId);
+            actual.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+            EnvelopeStorage.Verify();
         }
     }
 }
