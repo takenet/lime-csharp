@@ -85,7 +85,7 @@ namespace Lime.Client.Console
             //    traceWriter
             //    );
 
-            _listener = new HttpTransportListener(8080);
+            _listener = new HttpTransportListener(8080, transportExpirationInactivityInterval: TimeSpan.FromSeconds(10));
 
             await _listener.StartAsync();
         }
