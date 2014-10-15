@@ -10,9 +10,9 @@ using System.Threading.Tasks;
 namespace Lime.Protocol
 {
     /// <summary>
-    /// Represents peer-to-server interaction, 
-    /// like a information query or parameters
-    /// definition change
+    /// Allows the manipulation of node resources, 
+    /// like server session parameters or 
+    /// information related to the network nodes.
     /// </summary>
     [DataContract(Namespace = "http://limeprotocol.org/2014")]
     public partial class Command : Envelope

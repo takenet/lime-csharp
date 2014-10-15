@@ -44,7 +44,7 @@ namespace Lime.Protocol.Util
             return _bufferBlock.Post(item);
         }
 
-        public Task SendAsync(T item, CancellationToken cancellationToken)
+        public Task<bool> SendAsync(T item, CancellationToken cancellationToken)
         {
             return _bufferBlock.SendAsync(item, cancellationToken);
         }

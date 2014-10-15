@@ -11,8 +11,8 @@ using System.Threading.Tasks;
 namespace Lime.Protocol
 {
     /// <summary>
-    /// Represents a client session with the
-    /// server and its current state
+    /// Allows the configuration and establishment of 
+    /// the communication channel between nodes. 
     /// </summary>
     [DataContract(Namespace = "http://limeprotocol.org/2014")]
     public partial class Session : Envelope

@@ -73,7 +73,7 @@ namespace Lime.Protocol.Http
                 if (!Guid.TryParse(context.Request.GetValue(Constants.ENVELOPE_ID_HEADER, Constants.ENVELOPE_ID_QUERY), out correlatorId) ||
                     correlatorId == Guid.Empty)
                 {
-                    correlatorId = Guid.NewGuid();
+                    correlatorId = context.Request.RequestTraceIdentifier;
                 }
 
                 while (!_pendingContextsDictionary.TryAdd(correlatorId, context))

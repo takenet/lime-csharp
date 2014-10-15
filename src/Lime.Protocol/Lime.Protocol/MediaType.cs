@@ -20,7 +20,7 @@ namespace Lime.Protocol
 
         }
 
-        public MediaType(string type, string subtype, string suffix)
+        public MediaType(string type, string subtype, string suffix = null)
         {
             if (string.IsNullOrWhiteSpace(type))
             {

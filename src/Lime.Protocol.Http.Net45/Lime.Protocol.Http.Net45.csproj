@@ -7,8 +7,8 @@
     <ProjectGuid>{1095E1BA-C764-46B0-86D1-2290DA9C07AD}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Lime.Protocol.Http.Net45</RootNamespace>
-    <AssemblyName>Lime.Protocol.Http.Net45</AssemblyName>
+    <RootNamespace>Lime.Protocol.Http</RootNamespace>
+    <AssemblyName>Lime.Protocol.Http</AssemblyName>
     <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>

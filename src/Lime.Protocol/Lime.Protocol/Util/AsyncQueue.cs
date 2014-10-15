@@ -79,7 +79,7 @@ namespace Lime.Protocol.Util
             }            
         }
 
-        public Task SendAsync(T item, CancellationToken cancellationToken)
+        public Task<bool> SendAsync(T item, CancellationToken cancellationToken)
         {
             throw new NotSupportedException();
         }

@@ -25,7 +25,7 @@ namespace Lime.Protocol.Util
         /// <param name="item"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        Task SendAsync(T item, CancellationToken cancellationToken);
+        Task<bool> SendAsync(T item, CancellationToken cancellationToken);
 
         /// <summary>
         /// Takes an Task which can be a promise

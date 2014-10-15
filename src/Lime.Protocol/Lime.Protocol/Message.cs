@@ -8,6 +8,10 @@ using System.Text;
 
 namespace Lime.Protocol
 {
+    /// <summary>
+    /// Provides the transport of a content 
+    /// between nodes in a network.
+    /// </summary>
     [DataContract(Namespace = "http://limeprotocol.org/2014")]
     public partial class Message : Envelope
     {
