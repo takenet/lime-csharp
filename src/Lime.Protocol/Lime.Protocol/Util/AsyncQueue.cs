@@ -8,151 +8,151 @@ using System.Threading.Tasks;
 
 namespace Lime.Protocol.Util
 {
-    public class AsyncQueue<T> : IAsyncQueue<T>
-    {
-        #region Private fields
+	public class AsyncQueue<T> : IAsyncQueue<T>
+	{
+		#region Private fields
 
-        private ConcurrentQueue<T> _bufferQueue;
-        private ConcurrentQueue<TaskCompletionSource<T>> _promisesQueue;
-        private object _syncRoot = new object();
-        private int _promisesLimit;
-        private int _bufferLimit;
+		private ConcurrentQueue<T> _bufferQueue;
+		private ConcurrentQueue<TaskCompletionSource<T>> _promisesQueue;
+		private object _syncRoot = new object();
+		private int _promisesLimit;
+		private int _bufferLimit;
 
-        #endregion
+		#endregion
 
-        #region Constructor
+		#region Constructor
 
-        public AsyncQueue()
-            : this(0, 0)
-        {
+		public AsyncQueue()
+			: this(0, 0)
+		{
 
-        }
+		}
 
-        public AsyncQueue(int promisesLimit, int bufferLimit)
-        {
-            _promisesLimit = promisesLimit;
-            _bufferLimit = bufferLimit;
+		public AsyncQueue(int promisesLimit, int bufferLimit)
+		{
+			_promisesLimit = promisesLimit;
+			_bufferLimit = bufferLimit;
 
-            _bufferQueue = new ConcurrentQueue<T>();
-            _promisesQueue = new ConcurrentQueue<TaskCompletionSource<T>>();
-        }
+			_bufferQueue = new ConcurrentQueue<T>();
+			_promisesQueue = new ConcurrentQueue<TaskCompletionSource<T>>();
+		}
 
-        #endregion
+		#endregion
 
-        #region IAsyncQueue<T> Members
+		#region IAsyncQueue<T> Members
 
-        /// <summary>
-        /// Enqueues the specified item.
-        /// </summary>
-        /// <param name="item">The item.</param>
+		/// <summary>
+		/// Enqueues the specified item.
+		/// </summary>
+		/// <param name="item">The item.</param>
 		public bool Post(T item)
-        {
-            TaskCompletionSource<T> promise;
-            do
-            {
-                if (_promisesQueue.TryDequeue(out promise) &&
-                    !promise.Task.IsCanceled &&
-                    promise.TrySetResult(item))
-                {
+		{
+			TaskCompletionSource<T> promise;
+			do
+			{
+				if (_promisesQueue.TryDequeue(out promise) &&
+					!promise.Task.IsCanceled &&
+					promise.TrySetResult(item))
+				{
 					return true;                                       
-                }
-            }
-            while (promise != null);
+				}
+			}
+			while (promise != null);
 
-            lock (_syncRoot)
-            {
-                if (_promisesQueue.TryDequeue(out promise) &&
-                    !promise.Task.IsCanceled &&
-                    promise.TrySetResult(item))
-                {
+			lock (_syncRoot)
+			{
+				if (_promisesQueue.TryDequeue(out promise) &&
+					!promise.Task.IsCanceled &&
+					promise.TrySetResult(item))
+				{
 					return true;
-                }
+				}
 
-                if (_bufferLimit != 0 &&
-                    this.BufferCount >= _bufferLimit)
-                {
+				if (_bufferLimit != 0 &&
+					this.BufferCount >= _bufferLimit)
+				{
 					return false;
-                }
+				}
 
-                _bufferQueue.Enqueue(item);
+				_bufferQueue.Enqueue(item);
 				return true;
-            }            
-        }
+			}            
+		}
 
-        public Task SendAsync(T item, CancellationToken cancellationToken)
-        {
-            throw new NotSupportedException();
-        }
+		public Task<bool> SendAsync(T item, CancellationToken cancellationToken)
+		{
+			throw new NotSupportedException();
+		}
 
-        /// <summary>
-        /// Dequeues the asynchronous.
-        /// </summary>
-        /// <param name="cancellationToken">The cancellation token.</param>
-        /// <returns></returns>
+		/// <summary>
+		/// Dequeues the asynchronous.
+		/// </summary>
+		/// <param name="cancellationToken">The cancellation token.</param>
+		/// <returns></returns>
 		public Task<T> ReceiveAsync(CancellationToken cancellationToken)
-        {
-            T item;            
+		{
+			T item;            
 
-            if (!_bufferQueue.TryDequeue(out item))
-            {
-                lock (_syncRoot)
-                {
-                    cancellationToken.ThrowIfCancellationRequested();
+			if (!_bufferQueue.TryDequeue(out item))
+			{
+				lock (_syncRoot)
+				{
+					cancellationToken.ThrowIfCancellationRequested();
 
-                    if (!_bufferQueue.TryDequeue(out item))
-                    {
-                        if (_promisesLimit != 0 &&
-                            this.PromisesCount >= _promisesLimit)
-                        {
-                            throw new InvalidOperationException("Queue promises limit reached");
-                        }
+					if (!_bufferQueue.TryDequeue(out item))
+					{
+						if (_promisesLimit != 0 &&
+							this.PromisesCount >= _promisesLimit)
+						{
+							throw new InvalidOperationException("Queue promises limit reached");
+						}
 
-                        var promise = new TaskCompletionSource<T>();
-                        cancellationToken.Register(() => promise.TrySetCanceled());
+						var promise = new TaskCompletionSource<T>();
+						cancellationToken.Register(() => promise.TrySetCanceled());
 
-                        _promisesQueue.Enqueue(promise);
+						_promisesQueue.Enqueue(promise);
 
-                        return promise.Task;
-                    }
-                }
-            }
+						return promise.Task;
+					}
+				}
+			}
 
-            return Task.FromResult(item);
-        }
+			return Task.FromResult(item);
+		}
 
-        #endregion
+		#endregion
 
-        #region Internal Methods
+		#region Internal Methods
 
-        /// <summary>
-        /// Gets a value indicating whether this instance has promises.
-        /// </summary>
-        /// <value>
-        /// <c>true</c> if this instance has promises; otherwise, <c>false</c>.
-        /// </value>
-        internal bool HasPromises
-        {
-            get { return this.PromisesCount > 0; }
-        }
+		/// <summary>
+		/// Gets a value indicating whether this instance has promises.
+		/// </summary>
+		/// <value>
+		/// <c>true</c> if this instance has promises; otherwise, <c>false</c>.
+		/// </value>
+		internal bool HasPromises
+		{
+			get { return this.PromisesCount > 0; }
+		}
 
-        /// <summary>
-        /// Gets the total of enqueued items
-        /// in the promises queue.
-        /// </summary>
-        internal int PromisesCount
-        {
-            get { return _promisesQueue.Where(p => !p.Task.IsCanceled).Count(); }
-        }
+		/// <summary>
+		/// Gets the total of enqueued items
+		/// in the promises queue.
+		/// </summary>
+		internal int PromisesCount
+		{
+			get { return _promisesQueue.Where(p => !p.Task.IsCanceled).Count(); }
+		}
 
-        /// <summary>
-        /// Gets the total of enqueued items
-        /// in the buffer queue.
-        /// </summary>
-        internal int BufferCount
-        {
-            get { return _bufferQueue.Count; }
-        }
+		/// <summary>
+		/// Gets the total of enqueued items
+		/// in the buffer queue.
+		/// </summary>
+		internal int BufferCount
+		{
+			get { return _bufferQueue.Count; }
+		}
 
-        #endregion
-    }
+		#endregion
+	}
 }

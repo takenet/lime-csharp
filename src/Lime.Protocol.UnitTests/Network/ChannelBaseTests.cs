@@ -139,12 +139,13 @@ namespace Lime.Protocol.UnitTests.Network
             var actual = await target.ReceiveMessageAsync(cancellationToken);
         }
 
+#if MONO
         [TestMethod]
         [TestCategory("ReceiveMessageAsync")]
         [ExpectedException(typeof(InvalidOperationException))]
-        public void ReceiveMessageAsync_LimitedBuffers_ThrowsInvalidOperationException()
+        public async Task ReceiveMessageAsync_LimitedBuffers_ThrowsInvalidOperationException()
         {
-            int buffersLimit = 5;
+            int buffersLimit = 1;
 
             var cancellationToken = DataUtil.CreateCancellationToken();
 
@@ -154,16 +155,13 @@ namespace Lime.Protocol.UnitTests.Network
             _transport
                 .SetupSequence(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
                 .Returns(Task.FromResult<Envelope>(message))
-                .Returns(Task.FromResult<Envelope>(message))
-                .Returns(Task.FromResult<Envelope>(message))
-                .Returns(Task.FromResult<Envelope>(message))
-                .Returns(Task.FromResult<Envelope>(message))
                 .Returns(Task.FromResult<Envelope>(message));
 
             var target = GetTarget(SessionState.Established, buffersLimit);
 
-            var receiveMessageTask = target.ReceiveMessageAsync(cancellationToken);            
+            var receiveMessage = await target.ReceiveMessageAsync(cancellationToken);            
         }
+#endif
 
         [TestMethod]
         [TestCategory("ReceiveMessageAsync")]
@@ -339,6 +337,7 @@ namespace Lime.Protocol.UnitTests.Network
             var actual = await target.ReceiveCommandAsync(cancellationToken);
         }
 
+#if MONO
         [TestMethod]
         [TestCategory("ReceiveCommandAsync")]
         [ExpectedException(typeof(InvalidOperationException))]
@@ -364,6 +363,7 @@ namespace Lime.Protocol.UnitTests.Network
             
             var receiveCommandTask = target.ReceiveCommandAsync(cancellationToken);            
         }
+#endif
 
         #endregion
 
@@ -458,6 +458,7 @@ namespace Lime.Protocol.UnitTests.Network
             var actual = await target.ReceiveNotificationAsync(cancellationToken);
         }
 
+#if MONO
         [TestMethod]
         [TestCategory("ReceiveNotificationAsync")]
         [ExpectedException(typeof(InvalidOperationException))]
@@ -483,6 +484,7 @@ namespace Lime.Protocol.UnitTests.Network
             var receiveNotificationTask = target.ReceiveNotificationAsync(cancellationToken);
             
         }
+#endif
 
         #endregion
 

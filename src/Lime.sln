@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
-VisualStudioVersion = 12.0.30626.0
+VisualStudioVersion = 12.0.30723.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lime.Web", "Lime.Web\Lime.Web.csproj", "{7017CC97-1450-4851-A39A-B4A611BC2AA0}"
 EndProject
@@ -53,7 +53,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Platforms", "Platforms", "{
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
-		Lime.Protocol\Lime.Protocol\Lime.Protocol.projitems*{1c6d3db7-ecf0-4013-80ee-76688aed4176}*SharedItemsImports = 4
 		Lime.Protocol\Lime.Protocol\Lime.Protocol.projitems*{ded26d13-381a-4235-9b68-48387fad03c7}*SharedItemsImports = 4
 		Lime.Protocol.Tcp\Lime.Protocol.Tcp\Lime.Protocol.Tcp.projitems*{d24b4ef4-9b8c-4f89-bfc6-f76007936382}*SharedItemsImports = 4
 		Lime.Protocol\Lime.Protocol\Lime.Protocol.projitems*{d12c1153-a423-40c6-a611-85c659caeb7b}*SharedItemsImports = 13
