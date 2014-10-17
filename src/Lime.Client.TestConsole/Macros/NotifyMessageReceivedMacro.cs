@@ -33,7 +33,7 @@ namespace Lime.Client.TestConsole.Macros
                 var notification = new Notification()
                 {
                     Id = message.Id,
-                    To = message.From,
+                    To = message.Pp ?? message.From,
                     Event = Event.Received
                 };
 

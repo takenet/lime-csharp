@@ -75,5 +75,11 @@ namespace Lime.Protocol.Http
 
             return HttpStatusCode.Forbidden;
         }
+
+        public static bool IsSuccess(this HttpStatusCode httpStatusCode)
+        {
+            return (int)httpStatusCode >= 200 && (int)httpStatusCode < 300;
+
+        }
     }
 }

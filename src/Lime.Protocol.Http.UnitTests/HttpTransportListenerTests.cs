@@ -19,6 +19,7 @@ using Lime.Protocol.Network;
 using System.Collections.Generic;
 using System.Security.Principal;
 using System.Threading.Tasks.Dataflow;
+using System.IO;
 
 
 namespace Lime.Protocol.Http.UnitTests
@@ -389,7 +390,11 @@ namespace Lime.Protocol.Http.UnitTests
             // Assert
             var actualResponse = await HttpServerResponse;
             actualResponse.StatusCode.ShouldBe(HttpStatusCode.InternalServerError);
-            actualResponse.Body.ShouldContain(exceptionMessage);
+            actualResponse.BodyStream.ShouldNotBe(null);
+
+            var reader = new StreamReader(actualResponse.BodyStream);
+            var body = reader.ReadToEnd();
+            body.ShouldContain(exceptionMessage);
 
             Processor1.Verify();
         }

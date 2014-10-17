@@ -127,12 +127,9 @@ namespace Lime.Protocol.Http
             
             context.Response.Headers = response.Headers;
 
-            if (response.Body != null)
+            if (response.BodyStream != null)
             {
-                using (var writer = new StreamWriter(context.Response.OutputStream))
-                {
-                    await writer.WriteAsync(response.Body).ConfigureAwait(false);
-                }
+                await response.BodyStream.CopyToAsync(context.Response.OutputStream);                
             }
             
             context.Response.Close();

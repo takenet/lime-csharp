@@ -75,8 +75,8 @@ namespace Lime.Protocol.Http.UnitTests.Processors
 
             // Assert
             actual.StatusCode.ShouldBe(HttpStatusCode.OK);
-            actual.Body.ShouldNotBe(null);
-            var reader = new StringReader(actual.Body);            
+            actual.BodyStream.ShouldNotBe(null);
+            var reader = new StreamReader(actual.BodyStream);
             foreach (var messageId in EnvelopeIds)
             {
                 reader.ReadLine().ShouldBe(messageId.ToString());
@@ -100,7 +100,7 @@ namespace Lime.Protocol.Http.UnitTests.Processors
 
             // Assert
             actual.StatusCode.ShouldBe(HttpStatusCode.NoContent);
-            actual.Body.ShouldBe(null);
+            actual.BodyStream.ShouldBe(null);
             actual.ContentType.ShouldBe(null);
             EnvelopeStorage.Verify();
         }

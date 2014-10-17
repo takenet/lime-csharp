@@ -10,6 +10,7 @@ using System.Net.Http;
 using System.Threading;
 using System.Net.Http.Headers;
 using System.Text;
+using System.IO;
 
 namespace Lime.Protocol.Http.UnitTests
 {
@@ -60,6 +61,8 @@ namespace Lime.Protocol.Http.UnitTests
 
         public string ResponseBody { get; set; }
 
+        public Stream ResponseBodyStream { get; set; }
+
         public HttpResponse HttpResponse { get; set; }
 
 
@@ -104,7 +107,8 @@ namespace Lime.Protocol.Http.UnitTests
             HttpResponseHeaders.Add(DataUtil.CreateRandomString(10), DataUtil.CreateRandomString(10));
             ResponseBodyMediaType = DataUtil.CreateJsonMediaType();
             ResponseBody = DataUtil.CreateMessageJson();
-            HttpResponse = new Http.HttpResponse(EnvelopeId, HttpStatusCode.OK, DataUtil.CreateRandomString(50), HttpResponseHeaders, ResponseBodyMediaType, ResponseBody);
+            ResponseBodyStream = new MemoryStream(Encoding.UTF8.GetBytes(ResponseBody));
+            HttpResponse = new Http.HttpResponse(EnvelopeId, HttpStatusCode.OK, DataUtil.CreateRandomString(50), HttpResponseHeaders, ResponseBodyMediaType, ResponseBodyStream);
 
             CancellationToken = TimeSpan.FromSeconds(5).ToCancellationToken();
             Target = new Lazy<HttpServer>(() => new HttpServer(Prefixes, AuthenticationSchemes));

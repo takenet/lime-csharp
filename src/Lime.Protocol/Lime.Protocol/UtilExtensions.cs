@@ -437,5 +437,10 @@ namespace Lime.Protocol
 
             return sb.ToString();
         }
+
+        public static Task<T> AsCompletedTask<T>(this T value)
+        {
+            return Task.FromResult<T>(value);
+        }
     }
 }

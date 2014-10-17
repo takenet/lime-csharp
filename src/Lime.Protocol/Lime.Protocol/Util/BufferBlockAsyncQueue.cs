@@ -13,7 +13,7 @@ namespace Lime.Protocol.Util
     /// to the TPL Dataflow BufferBlock.
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public sealed class BufferBlockAsyncQueue<T> : IAsyncQueue<T>
+    public class BufferBlockAsyncQueue<T> : IAsyncQueue<T>
     {
         private readonly BufferBlock<T> _bufferBlock;
 

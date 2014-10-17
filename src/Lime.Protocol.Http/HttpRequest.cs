@@ -15,8 +15,8 @@ namespace Lime.Protocol.Http
     public sealed class HttpRequest
     {
         #region Constructor
-
-        public HttpRequest(string method, Uri uri, IPrincipal user, Guid correlatorId = default(Guid), WebHeaderCollection headers = null, NameValueCollection queryString = null, MediaType contentType = null, Stream bodyStream = null)
+        
+        public HttpRequest(string method, Uri uri, IPrincipal user = null, Guid correlatorId = default(Guid), WebHeaderCollection headers = null, NameValueCollection queryString = null, MediaType contentType = null, Stream bodyStream = null)
         {
             if (string.IsNullOrWhiteSpace(method))
             {
@@ -30,10 +30,7 @@ namespace Lime.Protocol.Http
             }
             Uri = uri;
 
-            if (user == null)
-            {
-                throw new ArgumentNullException("user");
-            }
+
             User = user;
 
             if (correlatorId.Equals(default(Guid)))
@@ -61,7 +58,7 @@ namespace Lime.Protocol.Http
             else
             {
                 QueryString = new NameValueCollection();
-            }            
+            }
 
             if (bodyStream != null)
             {

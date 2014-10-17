@@ -238,47 +238,54 @@ namespace Lime.Protocol.Http
                     var closeSession = !string.IsNullOrEmpty(request.Headers.Get(Constants.SESSION_HEADER)) &&
                         request.Headers.Get(Constants.SESSION_HEADER).Equals(Constants.CLOSE_HEADER_VALUE, StringComparison.OrdinalIgnoreCase);
 
-                    var transport = _httpTransportProvider.GetTransport(request.User, !closeSession);
-
-                    Exception exception = null;
-                    try
+                    if (request.User != null)
                     {
-                        // Authenticate the request session
-                        var session = await transport.GetSessionAsync(cancellationToken).ConfigureAwait(false);
-                        if (session.State == SessionState.Established)
+                        var transport = _httpTransportProvider.GetTransport(request.User, !closeSession);
+
+                        Exception exception = null;
+                        try
                         {
-                            var processor = (IHttpProcessor)match.Data;
-                            response = await processor.ProcessAsync(request, match, transport, cancellationToken).ConfigureAwait(false);
+                            // Authenticate the request session
+                            var session = await transport.GetSessionAsync(cancellationToken).ConfigureAwait(false);
+                            if (session.State == SessionState.Established)
+                            {
+                                var processor = (IHttpProcessor)match.Data;
+                                response = await processor.ProcessAsync(request, match, transport, cancellationToken).ConfigureAwait(false);
+                            }
+                            else if (session.Reason != null)
+                            {
+                                response = new HttpResponse(request.CorrelatorId, session.Reason.ToHttpStatusCode(), session.Reason.Description);
+                            }
+                            else
+                            {
+                                response = new HttpResponse(request.CorrelatorId, HttpStatusCode.ServiceUnavailable);
+                            }
+
+                            response.Headers.Add(Constants.SESSION_ID_HEADER, session.Id.ToString());
                         }
-                        else if (session.Reason != null)
+                        catch (Exception ex)
                         {
-                            response = new HttpResponse(request.CorrelatorId, session.Reason.ToHttpStatusCode(), session.Reason.Description);
+                            response = null;
+                            exception = ex;
                         }
-                        else
+
+                        if (closeSession)
                         {
-                            response = new HttpResponse(request.CorrelatorId, HttpStatusCode.ServiceUnavailable);
+                            await transport.FinishAsync(_listenerCancellationTokenSource.Token).ConfigureAwait(false);
+                        }
+                        else if (response != null)
+                        {
+                            response.Headers.Add(Constants.SESSION_EXPIRATION_HEADER, transport.Expiration.ToString("r"));
                         }
 
-                        response.Headers.Add(Constants.SESSION_ID_HEADER, session.Id.ToString());
+                        if (exception != null)
+                        {
+                            throw exception;
+                        }
                     }
-                    catch (Exception ex)
+                    else
                     {
-                        response = null;
-                        exception = ex;
-                    }                    
-
-                    if (closeSession)
-                    {
-                        await transport.FinishAsync(_listenerCancellationTokenSource.Token).ConfigureAwait(false);                        
-                    }
-                    else if (response != null)
-                    {
-                        response.Headers.Add(Constants.SESSION_EXPIRATION_HEADER, transport.Expiration.ToString("r"));
-                    }
-
-                    if (exception != null)
-                    {
-                        throw exception;
+                        response = new HttpResponse(request.CorrelatorId, HttpStatusCode.Unauthorized);
                     }
                 }
                 else
