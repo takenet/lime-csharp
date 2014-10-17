@@ -80,7 +80,10 @@
     <Compile Include="HttpServerTests.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Lime.Protocol.Http.Net45\Lime.Protocol.Http.Net45.csproj">
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Lime.Protocol.Http\Lime.Protocol.Http.Net45\Lime.Protocol.Http.Net45.csproj">
       <Project>{1095e1ba-c764-46b0-86d1-2290da9c07ad}</Project>
       <Name>Lime.Protocol.Http.Net45</Name>
     </ProjectReference>
@@ -88,9 +91,6 @@
       <Project>{0cfee3a4-f914-4c45-be13-a344c9cfa134}</Project>
       <Name>Lime.Protocol.Net45</Name>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="packages.config" />
   </ItemGroup>
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">

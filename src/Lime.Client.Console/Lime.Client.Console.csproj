@@ -66,7 +66,7 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Lime.Protocol.Http.Net45\Lime.Protocol.Http.Net45.csproj">
+    <ProjectReference Include="..\Lime.Protocol.Http\Lime.Protocol.Http.Net45\Lime.Protocol.Http.Net45.csproj">
       <Project>{1095e1ba-c764-46b0-86d1-2290da9c07ad}</Project>
       <Name>Lime.Protocol.Http.Net45</Name>
     </ProjectReference>

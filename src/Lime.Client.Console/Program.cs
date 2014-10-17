@@ -1,7 +1,6 @@
 ﻿using Lime.Protocol;
 using Lime.Protocol.Client;
 using Lime.Protocol.Contents;
-using Lime.Protocol.Http;
 using Lime.Protocol.Network;
 using Lime.Protocol.Resources;
 using Lime.Protocol.Security;

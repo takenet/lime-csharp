@@ -78,14 +78,18 @@ namespace Lime.Client.Console
 #endif
 
 
-            //_listener = new TcpTransportListener(
-            //    _listenerUri,
-            //    certificates[0],
-            //    new EnvelopeSerializer(),
-            //    traceWriter
-            //    );
+#if HTTP
+            _listener = new HttpTransportListener(
+        8080, transportExpirationInactivityInterval: TimeSpan.FromSeconds(10)); 
+#else
+            _listener = new TcpTransportListener(
+                _listenerUri,
+                certificates[0],
+                new EnvelopeSerializer(),
+                traceWriter
+                );
 
-            _listener = new HttpTransportListener(8080, transportExpirationInactivityInterval: TimeSpan.FromSeconds(10));
+#endif            
 
             await _listener.StartAsync();
         }
