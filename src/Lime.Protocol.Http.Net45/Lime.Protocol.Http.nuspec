@@ -1,23 +1,23 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
   <metadata>
-    <id>Lime.Protocol.Tcp</id>
+    <id>Lime.Protocol.Http</id>
     <version>$version$</version>
-    <title>Lime.Protocol.Tcp</title>
+    <title>Lime.Protocol.Http</title>
     <authors>takenet</authors>
     <owners>takenet,andrebires</owners>
     <projectUrl>http://limeprotocol.org</projectUrl>
     <licenseUrl>https://raw.githubusercontent.com/takenet/lime/master/LICENSE</licenseUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
-    <description>C# Lime protocol stack implementation.</description>
+    <description>LIME HTTP emulation layer.</description>
     <copyright>Copyright ©  2014 Curupira S/A</copyright>
-    <tags>lime</tags>
+    <tags>lime, http</tags>
     <dependencies>
       <dependency id="Lime.Protocol" />
     </dependencies>
   </metadata>
   <files>
-    <file src="bin\Release\Lime.Protocol.Tcp.dll" target="lib\net45\Lime.Protocol.Tcp.dll" />
-    <file src="bin\Release\Lime.Protocol.Tcp.XML" target="lib\net45\Lime.Protocol.Tcp.XML" />
+    <file src="bin\Release\Lime.Protocol.Http.dll" target="lib\net45\Lime.Protocol.Http.dll" />
+    <file src="bin\Release\Lime.Protocol.Http.XML" target="lib\net45\Lime.Protocol.Http.XML" />
   </files>
 </package>
