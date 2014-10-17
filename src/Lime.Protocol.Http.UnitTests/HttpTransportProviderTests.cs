@@ -117,9 +117,9 @@ namespace Lime.Protocol.Http.UnitTests
         public void ExpirationTimer_Elapsed_ExpiredTransport_CloseTransport()
         {
             // Arrange
-            ExpirationInactivityInterval = TimeSpan.FromMilliseconds(80);
+            ExpirationInactivityInterval = TimeSpan.FromMilliseconds(60);
             ExpirationTimerInterval = TimeSpan.FromMilliseconds(50);
-            CloseTransportTimeout = TimeSpan.FromMilliseconds(150);
+            CloseTransportTimeout = TimeSpan.FromMilliseconds(250);
 
             bool closed = false;
 
@@ -127,7 +127,7 @@ namespace Lime.Protocol.Http.UnitTests
             var actual = Target.Value.GetTransport(Principal.Object, true);
             ((ITransport)actual).Closed += (sender, e) => closed = true;
             
-            Thread.Sleep(300);
+            Thread.Sleep(500);
 
             // Assert          
             closed.ShouldBe(true);
