@@ -15,7 +15,7 @@ namespace Lime.Protocol.Util
     /// <typeparam name="T"></typeparam>
     public class BufferBlockAsyncQueue<T> : IAsyncQueue<T>
     {
-        private readonly BufferBlock<T> _bufferBlock;
+        protected readonly BufferBlock<T> _bufferBlock;
 
         #region Constructor
 
