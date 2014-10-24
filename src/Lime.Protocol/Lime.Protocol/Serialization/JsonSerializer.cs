@@ -313,6 +313,18 @@ namespace Lime.Protocol.Serialization
                     }
                 };
             }
+            else if (typeof(IDictionary<string, object>).IsAssignableFrom(propertyType))
+            {
+                // Metadata property
+                deserializePropertyAction = (v, j) =>
+                {
+                    var value = j.GetValueOrDefault<IDictionary<string, object>>(memberName, d => ((IDictionary<string, object>)d).ToDictionary(e => e.Key, e => e.Value));
+                    if (value != null)
+                    {
+                        setFunc(v, value);
+                    }
+                };
+            }
             else if (propertyType.IsAbstract)
             {
                 if (propertyType == typeof(Document))

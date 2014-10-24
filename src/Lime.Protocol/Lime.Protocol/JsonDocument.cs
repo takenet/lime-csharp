@@ -18,6 +18,15 @@ namespace Lime.Protocol
 
         #region Constructor
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="JsonDocument"/> class.
+        /// </summary>
+        public JsonDocument()
+            : this(new MediaType(MediaType.DiscreteTypes.Application, MediaType.SubTypes.JSON))
+        {
+
+        }
+
         public JsonDocument(MediaType mediaType)
             : this(new Dictionary<string, object>(), mediaType)
         {
@@ -41,6 +50,21 @@ namespace Lime.Protocol
         }
 
         #endregion
+
+        public void SetMediaType(MediaType mediaType)
+        {
+            if (mediaType == null)
+            {
+                throw new ArgumentNullException("mediaType");
+            }
+
+            if (!mediaType.IsJson)
+            {
+                throw new ArgumentException("The media type is not a valid json type");
+            }
+
+            _mediaType = mediaType;
+        }
 
         #region IDictionary<string,object> Members
 
@@ -230,5 +254,24 @@ namespace Lime.Protocol
         }
 
         #endregion
+
+        /// <summary>
+        /// Returns the JSON representation of the object.
+        /// </summary>
+        /// <returns>
+        /// A <see cref="System.String" /> that represents this instance.
+        /// </returns>
+        public override string ToString()
+        {
+            using (var jsonWriter = new TextJsonWriter())
+            {
+                foreach (var keyAndValue in this)
+                {
+                    jsonWriter.WriteProperty(keyAndValue.Key, keyAndValue.Value);
+                }
+
+                return jsonWriter.ToString();
+            }
+        }
     }
 }

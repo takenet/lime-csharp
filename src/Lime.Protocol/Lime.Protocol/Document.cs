@@ -13,7 +13,7 @@ namespace Lime.Protocol
     [DataContract(Namespace = "http://limeprotocol.org/2014")]
     public abstract partial class Document : IDocument
     {
-        private MediaType _mediaType;
+        protected MediaType _mediaType;
 
         #region Constructor
 

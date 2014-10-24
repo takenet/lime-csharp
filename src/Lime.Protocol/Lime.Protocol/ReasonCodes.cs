@@ -176,9 +176,6 @@ namespace Lime.Protocol
         /// <summary>
         /// General application processing error
         /// </summary>
-        public const int APPLICATION_ERROR = 101;
-
-
-        
+        public const int APPLICATION_ERROR = 101;        
     }
 }
