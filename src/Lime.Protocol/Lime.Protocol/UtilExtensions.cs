@@ -12,6 +12,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using Lime.Protocol.Network;
 
 namespace Lime.Protocol
 {
@@ -438,9 +439,29 @@ namespace Lime.Protocol
             return sb.ToString();
         }
 
+        /// <summary>
+        /// Ases the completed task.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="value">The value.</param>
+        /// <returns></returns>
         public static Task<T> AsCompletedTask<T>(this T value)
         {
             return Task.FromResult<T>(value);
+        }
+
+        /// <summary>
+        /// Converts an exception to a general error reason.
+        /// </summary>
+        /// <param name="exception">The exception.</param>
+        /// <returns></returns>
+        public static Reason ToReason(this Exception exception)
+        {
+            return new Reason()
+            {
+                Code = ReasonCodes.GENERAL_ERROR,
+                Description = exception.Message
+            };            
         }
     }
 }

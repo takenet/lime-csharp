@@ -15,15 +15,17 @@ namespace Lime.Protocol.Resources
     public partial class Contact : Document, IIdentity
     {
         public const string MIME_TYPE = "application/vnd.lime.contact+json";
+        private static readonly MediaType _contacMediaType = MediaType.Parse(MIME_TYPE);
 
         public const string IDENTITY_KEY = "identity";
         public const string NAME_KEY = "name";
         public const string IS_PENDING_KEY = "isPending";
         public const string SHARE_PRESENCE_KEY = "sharePresence";
         public const string SHARE_ACCOUNT_INFO_KEY = "shareAccountInfo";
+        public const string PRIORITY_KEY = "priority";
 
         public Contact()
-            : base(MediaType.Parse(MIME_TYPE))
+            : base(_contacMediaType)
         {
 
         }
@@ -69,6 +71,15 @@ namespace Lime.Protocol.Resources
         /// </summary>
         [DataMember(Name = SHARE_ACCOUNT_INFO_KEY, EmitDefaultValue = false)]
         public bool? ShareAccountInfo { get; set; }
+
+        /// <summary>
+        /// Indicates the contact priority.
+        /// </summary>
+        /// <value>
+        /// The priority.
+        /// </value>
+        [DataMember(Name = PRIORITY_KEY, EmitDefaultValue = false)]
+        public int? Priority { get; set; }
 
         #region IIdentity Members
 
