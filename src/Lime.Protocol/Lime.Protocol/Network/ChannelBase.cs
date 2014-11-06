@@ -548,11 +548,11 @@ namespace Lime.Protocol.Network
 			return Task.FromResult<object>(null);
 		}
 
-		/// <summary>
-		/// Sends the envelope to the transport
-		/// </summary>
-		/// <param name="envelope"></param>
-		/// <returns></returns>
+        /// <summary>
+        /// Sends the envelope to the transport.
+        /// </summary>
+        /// <param name="envelope">The envelope.</param>
+        /// <returns></returns>
 		private Task SendAsync(Envelope envelope)
 		{
 			var timeoutCancellationTokenSource = new CancellationTokenSource(_sendTimeout);
@@ -569,12 +569,12 @@ namespace Lime.Protocol.Network
 					timeoutCancellationTokenSource.Token).Token);
 		}
 
-		/// <summary>
-		/// Receives an envelope from the transport
-		/// </summary>
-		/// <param name="envelope"></param>
-		/// <returns></returns>
-		private async Task<Envelope> ReceiveAsync(CancellationToken cancellationToken)
+        /// <summary>
+        /// Receives an envelope from the transport.
+        /// </summary>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns></returns>
+	    private async Task<Envelope> ReceiveAsync(CancellationToken cancellationToken)
 		{
 			var envelope = await this.Transport.ReceiveAsync(cancellationToken);
 

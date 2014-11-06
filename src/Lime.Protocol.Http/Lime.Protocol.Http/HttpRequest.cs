@@ -30,50 +30,17 @@ namespace Lime.Protocol.Http
             }
             Uri = uri;
 
-
             User = user;
-
-            if (correlatorId.Equals(default(Guid)))
-            {
-                CorrelatorId = Guid.NewGuid();
-            }
-            else
-            {
-                CorrelatorId = correlatorId;
-            }
-
-            if (headers != null)
-            {
-                Headers = headers;
-            }
-            else
-            {
-                Headers = new WebHeaderCollection();
-            }
-
-            if (queryString != null)
-            {
-                QueryString = queryString;
-            }
-            else
-            {
-                QueryString = new NameValueCollection();
-            }
+            CorrelatorId = correlatorId.Equals(default(Guid)) ? Guid.NewGuid() : correlatorId;
+            Headers = headers ?? new WebHeaderCollection();
+            QueryString = queryString ?? new NameValueCollection();
 
             if (bodyStream != null)
             {
                 BodyStream = bodyStream;
-
-                if (contentType != null)
-                {
-                    ContentType = contentType;
-                }
-                else
-                {
-                    ContentType = MediaType.Parse(Constants.TEXT_PLAIN_HEADER_VALUE);
-                }
-
-                Headers.Add(HttpRequestHeader.ContentType, ContentType.ToString());
+                ContentType = contentType ?? MediaType.Parse(Constants.TEXT_PLAIN_HEADER_VALUE);
+                Headers.Remove(HttpRequestHeader.ContentType);
+                Headers.Add(HttpRequestHeader.ContentType, ContentType.ToString());                                
             }
         }
 

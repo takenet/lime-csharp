@@ -280,7 +280,7 @@ namespace Lime.Protocol.Network
                 throw new ArgumentNullException("requestCommand");
             }
 
-            await _processCommandSemaphore.WaitAsync().ConfigureAwait(false);
+            await _processCommandSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
 
             try
             {
