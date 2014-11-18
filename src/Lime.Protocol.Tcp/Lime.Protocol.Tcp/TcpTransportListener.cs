@@ -82,7 +82,6 @@ namespace Lime.Protocol.Tcp
         /// <summary>
         /// Start listening connections.
         /// </summary>
-        /// <param name="listenerUri"></param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">listenerUri</exception>
         /// <exception cref="System.ArgumentException">
@@ -105,16 +104,14 @@ namespace Lime.Protocol.Tcp
 
             var listenerUri = this.ListenerUris[0];
 
-            IPEndPoint listenerEndPoint;                       
-
+            IPEndPoint listenerEndPoint;
             if (listenerUri.IsLoopback)
             {
-                listenerEndPoint = new IPEndPoint(IPAddress.Any, this.ListenerUris[0].Port);
+                listenerEndPoint = new IPEndPoint(IPAddress.Any, listenerUri.Port);
             }
             else if (listenerUri.HostNameType == UriHostNameType.Dns)
             {
-                var dnsEntry = await Dns.GetHostEntryAsync(listenerUri.Host);
-
+                var dnsEntry = await Dns.GetHostEntryAsync(listenerUri.Host).ConfigureAwait(false);
                 if (dnsEntry.AddressList.Any(a => a.AddressFamily == AddressFamily.InterNetwork))
                 {
                     listenerEndPoint = new IPEndPoint(dnsEntry.AddressList.First(a => a.AddressFamily == AddressFamily.InterNetwork), listenerUri.Port);

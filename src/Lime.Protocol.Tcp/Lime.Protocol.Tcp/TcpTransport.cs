@@ -36,7 +36,9 @@ namespace Lime.Protocol.Tcp
 		private readonly ITcpClient _tcpClient;        
 		private readonly IEnvelopeSerializer _envelopeSerializer;
 		private readonly ITraceWriter _traceWriter;
-		private readonly X509Certificate2 _serverCertificate;
+	    private readonly RemoteCertificateValidationCallback _serverCertificateValidationCallback;
+	    private readonly RemoteCertificateValidationCallback _clientCertificateValidationCallback;
+	    private readonly X509Certificate2 _serverCertificate;
 		private readonly X509Certificate2 _clientCertificate;
 		private string _hostName;
 		
@@ -44,65 +46,84 @@ namespace Lime.Protocol.Tcp
 
 		#region Constructor
 
-		/// <summary>
-		/// Initializes a new instance of the <see cref="TcpTransport"/> class.
-		/// </summary>
-		/// <param name="tcpClient">The TCP client.</param>
-		/// <param name="envelopeSerializer">The envelope serializer.</param>
-		/// <param name="hostName">Name of the host.</param>
-		/// <param name="bufferSize">Size of the buffer.</param>
-		/// <param name="traceWriter">The trace writer.</param>
-		public TcpTransport(X509Certificate2 clientCertificate = null, int bufferSize = DEFAULT_BUFFER_SIZE, ITraceWriter traceWriter = null)
-			: this(new EnvelopeSerializer(), clientCertificate, bufferSize, traceWriter)
+	    /// <summary>
+	    /// Initializes a new instance of the <see cref="TcpTransport"/> class.
+	    /// </summary>
+	    /// <param name="clientCertificate"></param>
+	    /// <param name="bufferSize">Size of the buffer.</param>
+	    /// <param name="traceWriter">The trace writer.</param>
+        /// <param name="serverCertificateValidationCallback">A callback to validate the server certificate in the TLS authentication process.</param>
+	    public TcpTransport(X509Certificate2 clientCertificate = null, int bufferSize = DEFAULT_BUFFER_SIZE, ITraceWriter traceWriter = null, RemoteCertificateValidationCallback serverCertificateValidationCallback = null)
+			: this(new EnvelopeSerializer(), clientCertificate, bufferSize, traceWriter, serverCertificateValidationCallback)
 		{
 
 		}
 
-		/// <summary>
-		/// Initializes a new instance of the <see cref="TcpTransport"/> class.
-		/// </summary>
-		/// <param name="tcpClient">The TCP client.</param>
-		/// <param name="envelopeSerializer">The envelope serializer.</param>
-		/// <param name="hostName">Name of the host.</param>
-		/// <param name="bufferSize">Size of the buffer.</param>
-		/// <param name="traceWriter">The trace writer.</param>
-		public TcpTransport(IEnvelopeSerializer envelopeSerializer, X509Certificate2 clientCertificate = null, int bufferSize = DEFAULT_BUFFER_SIZE, ITraceWriter traceWriter = null)
-			: this(new TcpClientAdapter(new TcpClient()), envelopeSerializer, null, clientCertificate, null, bufferSize, traceWriter)
+	    /// <summary>
+	    /// Initializes a new instance of the <see cref="TcpTransport"/> class.
+	    /// </summary>
+	    /// <param name="envelopeSerializer">The envelope serializer.</param>
+	    /// <param name="clientCertificate">The client certificate.</param>
+	    /// <param name="bufferSize">Size of the buffer.</param>
+	    /// <param name="traceWriter">The trace writer.</param>
+        /// <param name="serverCertificateValidationCallback">A callback to validate the server certificate in the TLS authentication process.</param>
+	    public TcpTransport(IEnvelopeSerializer envelopeSerializer, X509Certificate2 clientCertificate = null, int bufferSize = DEFAULT_BUFFER_SIZE, ITraceWriter traceWriter = null, RemoteCertificateValidationCallback serverCertificateValidationCallback = null)
+			: this(new TcpClientAdapter(new TcpClient()), envelopeSerializer, null, clientCertificate, null, bufferSize, traceWriter, serverCertificateValidationCallback, null)
 		{
 
 		}
 
-		/// <summary>
-		/// Initializes a new instance of the <see cref="TcpTransport"/> class.
-		/// </summary>
-		/// <param name="tcpClient">The TCP client.</param>
-		/// <param name="envelopeSerializer">The envelope serializer.</param>
-		/// <param name="hostName">Name of the host.</param>
-		/// <param name="bufferSize">Size of the buffer.</param>
-		/// <param name="traceWriter">The trace writer.</param>
-		public TcpTransport(ITcpClient tcpClient, IEnvelopeSerializer envelopeSerializer, string hostName, X509Certificate2 clientCertificate = null, int bufferSize = DEFAULT_BUFFER_SIZE, ITraceWriter traceWriter = null)
-			: this(tcpClient, envelopeSerializer, null, clientCertificate, hostName, bufferSize, traceWriter)
+	    /// <summary>
+	    /// Initializes a new instance of the <see cref="TcpTransport"/> class.
+	    /// </summary>
+	    /// <param name="tcpClient">The TCP client.</param>
+	    /// <param name="envelopeSerializer">The envelope serializer.</param>
+	    /// <param name="hostName">Name of the host.</param>
+	    /// <param name="clientCertificate">The client certificate.</param>
+	    /// <param name="bufferSize">Size of the buffer.</param>
+	    /// <param name="traceWriter">The trace writer.</param>
+        /// <param name="serverCertificateValidationCallback">A callback to validate the server certificate in the TLS authentication process.</param>
+	    public TcpTransport(ITcpClient tcpClient, IEnvelopeSerializer envelopeSerializer, string hostName, X509Certificate2 clientCertificate = null, int bufferSize = DEFAULT_BUFFER_SIZE, ITraceWriter traceWriter = null, RemoteCertificateValidationCallback serverCertificateValidationCallback = null)
+			: this(tcpClient, envelopeSerializer, null, clientCertificate, hostName, bufferSize, traceWriter, serverCertificateValidationCallback, null)
 
 		{
 
 		}
 
-		/// <summary>
-		/// Initializes a new instance of the <see cref="TcpTransport"/> class.
-		/// This constructor is used by the <see cref="TcpTransportListener"/> class.
-		/// </summary>
-		/// <param name="tcpClient">The TCP client.</param>
-		/// <param name="envelopeSerializer">The envelope serializer.</param>
-		/// <param name="serverCertificate">The server certificate.</param>
-		/// <param name="bufferSize">Size of the buffer.</param>
-		/// <param name="traceWriter">The trace writer.</param>
-		internal TcpTransport(ITcpClient tcpClient, IEnvelopeSerializer envelopeSerializer, X509Certificate2 serverCertificate, int bufferSize = DEFAULT_BUFFER_SIZE, ITraceWriter traceWriter = null)
-			: this(tcpClient, envelopeSerializer, serverCertificate, null, null, bufferSize, traceWriter)
+	    /// <summary>
+	    /// Initializes a new instance of the <see cref="TcpTransport"/> class.
+	    /// This constructor is used by the <see cref="TcpTransportListener"/> class.
+	    /// </summary>
+	    /// <param name="tcpClient">The TCP client.</param>
+	    /// <param name="envelopeSerializer">The envelope serializer.</param>
+	    /// <param name="serverCertificate">The server certificate.</param>
+	    /// <param name="bufferSize">Size of the buffer.</param>
+	    /// <param name="traceWriter">The trace writer.</param>
+        /// <param name="clientCertificateValidationCallback">A callback to validate the client certificate in the TLS authentication process.</param>
+	    internal TcpTransport(ITcpClient tcpClient, IEnvelopeSerializer envelopeSerializer, X509Certificate2 serverCertificate, int bufferSize = DEFAULT_BUFFER_SIZE, ITraceWriter traceWriter = null, RemoteCertificateValidationCallback clientCertificateValidationCallback = null)
+			: this(tcpClient, envelopeSerializer, serverCertificate, null, null, bufferSize, traceWriter, null, clientCertificateValidationCallback)
 		{
 
 		}
 
-		private TcpTransport(ITcpClient tcpClient, IEnvelopeSerializer envelopeSerializer, X509Certificate2 serverCertificate, X509Certificate2 clientCertificate, string hostName, int bufferSize, ITraceWriter traceWriter)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="TcpTransport"/> class.
+        /// </summary>
+        /// <param name="tcpClient">The TCP client.</param>
+        /// <param name="envelopeSerializer">The envelope serializer.</param>
+        /// <param name="serverCertificate">The server certificate.</param>
+        /// <param name="clientCertificate">The client certificate.</param>
+        /// <param name="hostName">Name of the host.</param>
+        /// <param name="bufferSize">Size of the buffer.</param>
+        /// <param name="traceWriter">The trace writer.</param>
+        /// <param name="serverCertificateValidationCallback">The server certificate validation callback.</param>
+        /// <param name="clientCertificateValidationCallback">The client certificate validation callback.</param>
+        /// <exception cref="System.ArgumentNullException">
+        /// tcpClient
+        /// or
+        /// envelopeSerializer
+        /// </exception>
+		private TcpTransport(ITcpClient tcpClient, IEnvelopeSerializer envelopeSerializer, X509Certificate2 serverCertificate, X509Certificate2 clientCertificate, string hostName, int bufferSize, ITraceWriter traceWriter, RemoteCertificateValidationCallback serverCertificateValidationCallback, RemoteCertificateValidationCallback clientCertificateValidationCallback)
 		{
 			if (tcpClient == null)
 			{
@@ -124,11 +145,14 @@ namespace Lime.Protocol.Tcp
 			_hostName = hostName;
 			_traceWriter = traceWriter;
 
-			_receiveSemaphore = new SemaphoreSlim(1);
+		    _receiveSemaphore = new SemaphoreSlim(1);
 			_sendSemaphore = new SemaphoreSlim(1);
 
 			_serverCertificate = serverCertificate;
 			_clientCertificate = clientCertificate;
+
+            _serverCertificateValidationCallback = serverCertificateValidationCallback ?? ValidateServerCertificate;
+            _clientCertificateValidationCallback = clientCertificateValidationCallback ?? ValidateClientCertificate;
 		}
 
 		#endregion
@@ -352,24 +376,22 @@ namespace Lime.Protocol.Tcp
 
 							if (_serverCertificate != null)
 							{
-							#if MONO
+#if MONO
 								// Server
 								sslStream = new SslStream(
 									_stream,
 									false,
-									new RemoteCertificateValidationCallback(ValidateClientCertificate),
+									_clientCertificateValidationCallback,
 									null);
-							#else
-
-								// Server
+#else
+                                // Server
 								sslStream = new SslStream(
 									_stream,
 									false,
-									new RemoteCertificateValidationCallback(ValidateClientCertificate),
+									_clientCertificateValidationCallback,
 									null,
 									EncryptionPolicy.RequireEncryption);
-							#endif
-
+#endif
 								await sslStream
 									.AuthenticateAsServerAsync(
 										_serverCertificate,
@@ -390,7 +412,7 @@ namespace Lime.Protocol.Tcp
 								sslStream = new SslStream(
 									_stream,
 									false,
-									 new RemoteCertificateValidationCallback(ValidateServerCertificate));
+									 _serverCertificateValidationCallback);
 
 								X509CertificateCollection clientCertificates = null;
 
