@@ -18,6 +18,13 @@ namespace Lime.Protocol.Util
 		bool Post(T item);
 
         /// <summary>
+        /// Tries to take an item from the queue, if available.
+        /// </summary>
+        /// <param name="item">The item.</param>
+        /// <returns></returns>
+        bool TryTake(out T item);
+
+        /// <summary>
         /// Enqueue a new item 
         /// in the queue, awaiting
         /// for space if not available.

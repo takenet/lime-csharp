@@ -79,6 +79,17 @@ namespace Lime.Protocol.Util
             }            
         }
 
+        /// <summary>
+        /// Tries the take.
+        /// </summary>
+        /// <param name="item">The item.</param>
+        /// <returns></returns>
+        /// <exception cref="System.NotImplementedException"></exception>
+        public bool TryTake(out T item)
+        {
+            throw new NotSupportedException();
+        }
+
         public Task<bool> SendAsync(T item, CancellationToken cancellationToken)
         {
             throw new NotSupportedException();

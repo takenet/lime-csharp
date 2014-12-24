@@ -15,7 +15,7 @@ namespace Lime.Protocol.Util
     /// <typeparam name="T"></typeparam>
     public class BufferBlockAsyncQueue<T> : IAsyncQueue<T>
     {
-        protected readonly BufferBlock<T> _bufferBlock;
+        private readonly BufferBlock<T> _bufferBlock;
 
         #region Constructor
 
@@ -41,20 +41,30 @@ namespace Lime.Protocol.Util
 
         public bool Post(T item)
         {
-            return _bufferBlock.Post(item);
+            return BufferBlock.Post(item);
+        }
+
+        public bool TryTake(out T item)
+        {
+            return BufferBlock.TryReceive(out item);
         }
 
         public Task<bool> SendAsync(T item, CancellationToken cancellationToken)
         {
-            return _bufferBlock.SendAsync(item, cancellationToken);
+            return BufferBlock.SendAsync(item, cancellationToken);
         }
 
         public Task<T> ReceiveAsync(CancellationToken cancellationToken)
         {
-            return _bufferBlock.ReceiveAsync(cancellationToken);
+            return BufferBlock.ReceiveAsync(cancellationToken);
         }
 
         #endregion
+
+        public BufferBlock<T> BufferBlock
+        {
+            get { return _bufferBlock; }
+        }
     }
 }
 #endif
