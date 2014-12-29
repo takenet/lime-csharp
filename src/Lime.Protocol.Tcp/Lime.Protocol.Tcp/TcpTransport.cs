@@ -277,7 +277,13 @@ namespace Lime.Protocol.Tcp
 					if (envelope == null &&
 						_stream.CanRead)
 					{
-						_bufferCurPos += await _stream.ReadAsync(_buffer, _bufferCurPos, _buffer.Length - _bufferCurPos, cancellationToken).ConfigureAwait(false);
+                        // The NetworkStream ReceiveAsync doesn't support cancellation
+                        // http://stackoverflow.com/questions/21468137/async-network-operations-never-finish
+                        // http://referencesource.microsoft.com/#mscorlib/system/io/stream.cs,421
+						_bufferCurPos += await _stream
+                            .ReadAsync(_buffer, _bufferCurPos, _buffer.Length - _bufferCurPos, cancellationToken)
+                            .WithCancellation(cancellationToken)
+                            .ConfigureAwait(false);
 
 						if (_bufferCurPos >= _buffer.Length)
 						{

@@ -440,7 +440,7 @@ namespace Lime.Protocol
         }
 
         /// <summary>
-        /// Ases the completed task.
+        /// Creates a completed task.
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="value">The value.</param>
