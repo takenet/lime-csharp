@@ -40,6 +40,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Network\ITraceWriter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Network\ITransport.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Network\LimeException.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Network\TraceWriter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Network\TransportBase.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Node.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Notification.cs" />
@@ -83,5 +84,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)Util\BufferBlockAsyncQueue.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Util\DeferralManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Util\IAsyncQueue.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Util\TaskUtil.cs" />
   </ItemGroup>
 </Project>
