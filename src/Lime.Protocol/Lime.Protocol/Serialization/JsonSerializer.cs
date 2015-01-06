@@ -471,7 +471,7 @@ namespace Lime.Protocol.Serialization
                 if (j.ContainsKey(Session.SCHEME_KEY) &&
                     j[Session.SCHEME_KEY] is string)
                 {
-                    var scheme = TypeUtil.GetEnumValue<AuthenticationScheme>((string)j[Session.SCHEME_KEY]);
+                    var scheme = TypeUtil.ParseEnum<AuthenticationScheme>((string)j[Session.SCHEME_KEY]);
 
                     JsonObject propertyJsonObject = null;
                     if (j.ContainsKey(memberName) &&

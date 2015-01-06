@@ -94,7 +94,7 @@ namespace Lime.Protocol.Serialization
                     for (int i = 0; i < list.Count; i++)
                     {
                         var item = (string)list[i];
-                        var itemValue = TypeUtil.GetEnumValue(enumType, item);
+                        var itemValue = TypeUtil.ParseEnum(enumType, item);
                         array.SetValue(itemValue, i);
                     }
                 }
@@ -112,7 +112,7 @@ namespace Lime.Protocol.Serialization
                 var value = base[key];
                 if (value != null)
                 {
-                    enumValue = TypeUtil.GetEnumValue(enumType, (string)value);
+                    enumValue = TypeUtil.ParseEnum(enumType, (string)value);
                 }
             }
 

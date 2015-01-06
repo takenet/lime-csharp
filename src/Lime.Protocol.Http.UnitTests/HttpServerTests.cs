@@ -54,7 +54,6 @@ namespace Lime.Protocol.Http.UnitTests
 
         public HttpRequestMessage PostHttpRequestMessage { get; set; }
 
-
         public WebHeaderCollection HttpResponseHeaders { get; set; }
 
         public MediaType ResponseBodyMediaType { get; set; }
@@ -64,8 +63,6 @@ namespace Lime.Protocol.Http.UnitTests
         public Stream ResponseBodyStream { get; set; }
 
         public HttpResponse HttpResponse { get; set; }
-
-
 
         public CancellationToken CancellationToken { get; set; }
 

@@ -70,6 +70,12 @@ namespace Lime.Protocol.Resources
         /// Template for the
         /// receipt resource
         /// </summary>
-        public const string RECEIPT = "/receipt";        
+        public const string RECEIPT = "/receipt";
+
+        /// <summary>
+        /// Template for the
+        /// quota resource.
+        /// </summary>
+        public const string QUOTA = "/quota";
     }
 }

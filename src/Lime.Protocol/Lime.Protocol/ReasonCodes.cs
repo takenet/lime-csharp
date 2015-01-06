@@ -96,6 +96,10 @@ namespace Lime.Protocol
         /// </summary>
         public const int AUTHORIZATION_DESTINATION_ACCOUNT_NOT_FOUND = 33;
         /// <summary>
+        /// The envelope quota limit has been exceeded
+        /// </summary>
+        public const int AUTHORIZATION_QUOTA_THRESHOLD_EXCEEDED = 34;
+        /// <summary>
         /// General routing error
         /// </summary>
         public const int ROUTING_ERROR = 41;

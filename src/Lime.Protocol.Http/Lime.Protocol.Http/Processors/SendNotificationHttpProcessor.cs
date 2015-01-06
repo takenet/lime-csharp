@@ -36,7 +36,7 @@ namespace Lime.Protocol.Http.Processors
 
             try
             {
-                envelope.Event = TypeUtil.GetEnumValue<Event>(body);
+                envelope.Event = TypeUtil.ParseEnum<Event>(body);
             }
             catch (ArgumentException ex)
             {
