@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Lime.Protocol.Server
 {
-    public static class IServerChannelExtensions
+    public static class ServerChannelExtensions
     {
         public static async Task<Session> EstablishSessionAsync(this IServerChannel channel, IEnumerable<SessionCompression> enabledCompressionOptions, IEnumerable<SessionEncryption> enabledEncryptionOptions, 
             Func<Identity, Authentication, Node> authenticateFunc, CancellationToken cancellationToken)

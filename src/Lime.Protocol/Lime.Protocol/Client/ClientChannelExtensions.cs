@@ -12,7 +12,7 @@ namespace Lime.Protocol.Client
     /// Helper extensions for the 
     /// IClientChannel interface
     /// </summary>
-    public static class IClientChannelExtensions
+    public static class ClientChannelExtensions
     {
         /// <summary>
         /// Performs the session negotiation and authentication
