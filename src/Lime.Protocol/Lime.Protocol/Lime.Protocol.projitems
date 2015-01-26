@@ -11,7 +11,7 @@
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)Client\ClientChannel.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Client\IClientChannel.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Client\IClientChannelExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Client\ClientChannelExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Contents\BitmapImage.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)DocumentCollection.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Command.cs" />
@@ -74,7 +74,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Serialization\TextJsonWriter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Serialization\TypeUtil.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Server\IServerChannel.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Server\IServerChannelExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Server\ServerChannelExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Server\ITransportListener.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Server\ServerChannel.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Server\TransportEventArgs.cs" />
