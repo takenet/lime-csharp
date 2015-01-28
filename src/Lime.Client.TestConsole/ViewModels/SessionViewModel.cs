@@ -6,7 +6,6 @@ using Lime.Client.TestConsole.Properties;
 using Lime.Protocol;
 using Lime.Protocol.Network;
 using Lime.Protocol.Serialization;
-using Lime.Protocol.Tcp;
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
@@ -23,6 +22,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Data;
 using System.Windows.Threading;
+using Lime.Transport.Tcp.Protocol;
 
 namespace Lime.Client.TestConsole.ViewModels
 {

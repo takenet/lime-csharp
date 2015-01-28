@@ -4,8 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Data;
-using Lime.Protocol.Contents;
-using Lime.Protocol.Resources;
+using Lime.Messaging.Contents;
+using Lime.Messaging.Resources;
 
 namespace Lime.Client.Windows.Converters
 {

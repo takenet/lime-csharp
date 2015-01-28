@@ -2,10 +2,9 @@
 using Lime.Protocol;
 using Lime.Protocol.Client;
 using Lime.Protocol.Network;
-using Lime.Protocol.Resources;
+using Lime.Messaging.Resources;
 using Lime.Protocol.Security;
 using Lime.Protocol.Serialization;
-using Lime.Protocol.Tcp;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -14,6 +13,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
+using Lime.Transport.Tcp.Protocol;
 
 namespace Lime.Client.Windows.ViewModels
 {

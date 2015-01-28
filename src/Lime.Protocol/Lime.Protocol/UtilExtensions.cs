@@ -18,6 +18,9 @@ namespace Lime.Protocol
 {
     public static class UtilExtensions
     {
+        public const string PING_URI_TEMPLATE = "/ping";
+
+
         /// <summary>
         /// Indicates if a command is
         /// a ping request
@@ -37,11 +40,11 @@ namespace Lime.Protocol
             {
                 if (command.Uri.IsRelative)
                 {
-                    return command.Uri.Path.Equals(Lime.Protocol.Resources.UriTemplates.PING, StringComparison.OrdinalIgnoreCase);
+                    return command.Uri.Path.Equals(PING_URI_TEMPLATE, StringComparison.OrdinalIgnoreCase);
                 }
                 else
                 {
-                    return command.Uri.ToUri().LocalPath.Equals(Lime.Protocol.Resources.UriTemplates.PING, StringComparison.OrdinalIgnoreCase);
+                    return command.Uri.ToUri().LocalPath.Equals(PING_URI_TEMPLATE, StringComparison.OrdinalIgnoreCase);
                 }
             }
 

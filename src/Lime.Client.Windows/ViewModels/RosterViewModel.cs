@@ -4,7 +4,7 @@ using Lime.Client.Windows.Mvvm;
 using Lime.Protocol;
 using Lime.Protocol.Network;
 using Lime.Protocol.Client;
-using Lime.Protocol.Resources;
+using Lime.Messaging.Resources;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -18,7 +18,7 @@ using System.Windows.Threading;
 using System.Collections.Specialized;
 using GalaSoft.MvvmLight.Command;
 using System.Threading;
-using Lime.Protocol.Contents;
+using Lime.Messaging.Contents;
 
 namespace Lime.Client.Windows.ViewModels
 {

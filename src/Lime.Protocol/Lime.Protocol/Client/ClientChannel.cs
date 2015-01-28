@@ -5,7 +5,6 @@ using System.Text;
 using System.Threading.Tasks;
 using Lime.Protocol.Security;
 using Lime.Protocol.Network;
-using Lime.Protocol.Resources;
 using System.Threading;
 
 namespace Lime.Protocol.Client
@@ -18,7 +17,7 @@ namespace Lime.Protocol.Client
     {
         #region Private fields
 
-        private bool _autoNotifyReceipt;
+        private readonly bool _autoNotifyReceipt;
 
         #endregion
 

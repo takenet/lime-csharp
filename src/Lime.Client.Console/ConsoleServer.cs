@@ -2,7 +2,6 @@
 using Lime.Protocol.Network;
 using Lime.Protocol.Serialization;
 using Lime.Protocol.Server;
-using Lime.Protocol.Tcp;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,8 +14,8 @@ using Lime.Protocol.Security;
 using System.Security.Cryptography;
 using System.Security.AccessControl;
 using System.Security.Principal;
+using Lime.Transport.Tcp.Protocol;
 using Notification = Lime.Protocol.Notification;
-using Lime.Protocol.Http;
 
 namespace Lime.Client.Console
 {

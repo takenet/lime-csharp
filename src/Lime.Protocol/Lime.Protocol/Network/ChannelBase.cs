@@ -1,5 +1,4 @@
-﻿using Lime.Protocol.Resources;
-using Lime.Protocol.Util;
+﻿using Lime.Protocol.Util;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -17,6 +16,8 @@ namespace Lime.Protocol.Network
 	public abstract class ChannelBase : IChannel, IDisposable
 	{
 		#region Fields
+
+	    public const string PING_MEDIA_TYPE = "application/vnd.lime.ping+json";
 
 		private readonly TimeSpan _sendTimeout;
 		private readonly bool _fillEnvelopeRecipients;
@@ -370,7 +371,7 @@ namespace Lime.Protocol.Network
 								To = envelope.From,
 								Status = CommandStatus.Success,
 								Method = CommandMethod.Get,
-								Resource = new Ping()
+								Resource = new JsonDocument(MediaType.Parse(PING_MEDIA_TYPE))
 							};
 
 							await SendCommandAsync(pingCommandResponse).ConfigureAwait(false);

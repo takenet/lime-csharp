@@ -1,5 +1,4 @@
-﻿using Lime.Protocol.Resources;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -15,7 +14,7 @@ namespace Lime.Protocol
     /// information related to the network nodes.
     /// </summary>
     [DataContract(Namespace = "http://limeprotocol.org/2014")]
-    public partial class Command : Envelope
+    public class Command : Envelope
     {
         public const string URI_KEY = "uri";
         public const string TYPE_KEY = Message.TYPE_KEY;

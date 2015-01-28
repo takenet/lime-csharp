@@ -1,6 +1,6 @@
 ﻿using Lime.Client.TestConsole.ViewModels;
 using Lime.Protocol;
-using Lime.Protocol.Resources;
+using Lime.Messaging.Resources;
 using System;
 using System.Collections.Generic;
 using System.Linq;

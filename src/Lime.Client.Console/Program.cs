@@ -1,12 +1,11 @@
 ﻿using Lime.Protocol;
 using Lime.Protocol.Client;
-using Lime.Protocol.Contents;
+using Lime.Messaging.Contents;
 using Lime.Protocol.Network;
-using Lime.Protocol.Resources;
+using Lime.Messaging.Resources;
 using Lime.Protocol.Security;
 using Lime.Protocol.Serialization;
 using Lime.Protocol.Server;
-using Lime.Protocol.Tcp;
 using System;
 using System.Collections.Generic;
 using System.Linq;

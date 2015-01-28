@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using System.Windows.Data;
 using System.Windows.Media;
 using Lime.Protocol;
-using Lime.Protocol.Resources;
+using Lime.Messaging.Resources;
 
 namespace Lime.Client.Windows.Converters
 {

@@ -1,6 +1,6 @@
 ﻿using GalaSoft.MvvmLight;
 using Lime.Protocol;
-using Lime.Protocol.Contents;
+using Lime.Messaging.Contents;
 using System;
 using System.Collections.Generic;
 using System.Linq;

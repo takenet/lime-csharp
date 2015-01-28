@@ -2,7 +2,7 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:vm="clr-namespace:Lime.Client.Windows.ViewModels"
                     xmlns:c="clr-namespace:Lime.Protocol;assembly=Lime.Protocol"
-                    xmlns:r="clr-namespace:Lime.Protocol.Resources;assembly=Lime.Protocol"
+                    xmlns:r="clr-namespace:Lime.Messaging.Resources;assembly=Lime.Messaging.Net45"
                     xml:lang="en-US"
                     IsBusy="True"
                     ErrorMessage="Sample error message"
@@ -13,7 +13,7 @@
                     Domain="takenet.com.br" />
     </vm:RosterViewModel.Identity>
     <vm:RosterViewModel.Account>
-        <r:Account FullName="André Bires Fonseca" />
+        <resources:Account FullName="André Bires Fonseca" />
     </vm:RosterViewModel.Account>
     <vm:RosterViewModel.Contacts>
         <vm:ContactViewModel>

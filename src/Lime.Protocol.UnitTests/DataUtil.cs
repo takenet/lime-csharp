@@ -1,5 +1,5 @@
-﻿using Lime.Protocol.Contents;
-using Lime.Protocol.Resources;
+﻿using Lime.Messaging.Contents;
+using Lime.Messaging.Resources;
 using Lime.Protocol.Security;
 using System;
 using System.Collections.Generic;

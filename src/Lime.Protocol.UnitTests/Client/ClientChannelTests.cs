@@ -1,4 +1,5 @@
 ﻿using System;
+using Lime.Messaging.Resources;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Threading.Tasks;
 using Lime.Protocol.Client;
@@ -6,7 +7,6 @@ using Lime.Protocol.Network;
 using Moq;
 using System.Threading;
 using Lime.Protocol.Security;
-using Lime.Protocol.Resources;
 using Shouldly;
 
 namespace Lime.Protocol.UnitTests.Client

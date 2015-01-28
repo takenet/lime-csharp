@@ -1,0 +1,27 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <SharedGUID>c6619a1e-e64c-425f-8560-e9b32e9a2887</SharedGUID>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <Import_RootNamespace>Lime.Messaging</Import_RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)Contents\BitmapImage.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Contents\ChatState.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Contents\PlainText.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Resources\Account.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Resources\Capability.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Resources\Contact.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Resources\Delegation.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Resources\Group.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Resources\Ping.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Resources\Presence.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Resources\Quota.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Resources\Receipt.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Resources\Subscription.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Resources\UriTemplates.cs" />
+  </ItemGroup>
+</Project>
