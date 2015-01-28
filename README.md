@@ -160,14 +160,8 @@ if (receivedSession.State == SessionState.Authenticating)
 
 if (session.State == SessionState.Established)
 {
-    // ...
+    // The session is established
 }
-
-// Requesting the session finishing
-await clientChannel.SendFinishingSessionAsync();
-
-// Awaits for the session end
-receivedSession = await clientChannel.ReceiveFinishedSessionAsync(CancellationToken.None);
 
 ```
 
@@ -303,3 +297,60 @@ if (getContactsCommandResponse.Id == getContactsCommand.Id &&
 The server is responsible for closing the session and it can do it any time, just sending a **finished session envelope** to the client. But the client can request the end of it, simply by sending an **finishing session envelope** to the server. 
 
 The server should close the transport after sending the finished or failed session envelope and the client after receiving they. The ```ClientChannel``` and ```ServerChannel``` classes already closes the transport in these cases.
+
+#### Examples
+##### Closing by the client side
+
+``` csharp
+// Do the session negotiation and establishment
+// ...
+
+if (session.State == SessionState.Established)
+{
+    // After the establishment of the session, the client should always  
+    // await for a session envelope from the server
+    var receivedSessionTask = clientChannel
+        .ReceiveFinishedSessionAsync(CancellationToken.None)
+        .ContinueWith(t => 
+        { 
+            // Do something when the server closes the session
+            if (t.Result.State == SessionState.Finished)
+            {
+                // Session gracefully finished
+            }
+            else
+            {
+                // Finished with error
+            }
+        });
+    
+    // Consumes the channel
+    // ...
+    
+    // Requesting the session finishing
+    await clientChannel.SendFinishingSessionAsync();
+    
+    await receivedSesionTask;
+}
+
+```
+
+##### Closing by the server side
+
+``` csharp
+// Do the session negotiation and establishment
+// ...
+
+// Establishes the session
+await serverChannel.SendEstablishedSessionAsync(Node.Parse("client@domain.com"));
+
+// Await for the finishing session envelope from the client
+// and sends a finished session envelope when it is received
+var receivedSessionEnvelopeTask = serverChannel
+    .ReceiveFinishingSessionAsync(CancellationToken.None)
+    .ContinueWith(t => serverChannel.SendFinishedSessionAsync());    
+
+// Consumes the channel
+// ...
+```
+
