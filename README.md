@@ -217,17 +217,41 @@ An originator can send an envelope addresses to any destination to the other par
 #### Examples
 ##### Messages and notifications
 ```csharp
-// Sending a text message
-var message = new Message()
+// Sending a plain text message to the remote party
+var textMessage = new Message()
 {
-    To = Node.Parse("destionation@domain.com"),
     Content = new PlainText()
     {
         Text = "Hello!"
     }
 };
-await clientChannel.SendMessageAsync(message);
-    
+await clientChannel.SendMessageAsync(textMessage);
+
+// Sending a typed JSON message
+var chatStateMessage = new Message()
+{
+    Content = new ChatState()               // The MIME type is application/vnd.lime.chatstate+json
+    {                                       // defined by the IDocument interface implementation
+        State = ChatStateEvent.Composing    
+    }
+};    
+await clientChannel.SendMessageAsync(chatStateMessage);
+
+
+// Sending a generic JSON message addressed to a specific node
+var jsonMessage = new Message()
+{
+    To = Node.Parse("anyone@domain.com"),
+    Content = new JsonDocument(MediaType.Parse("application/json")) 
+    {
+        { "property1", "string value" },
+        { "property2", 2 },
+        { "property3", true },
+
+    }
+};
+await clientChannel.SendMessageAsync(jsonMessage);
+
 // Receive a message
 var receivedMessage = await clientChannel.ReceiveMessageAsync(CancellationToken.None);
 Console.WriteLine("Message received from {0}: {1}", receivedMessage.From, receivedMessage.Content);
@@ -275,7 +299,7 @@ var getContactsCommand = new Command()
     Uri = new LimeUri(UriTemplates.CONTACTS)
 };
 
-// You can use the ProcessCommandMethodAsync instead
+// You can use the ProcessCommandMethodAsync helper method instead
 await clientChannel.SendCommandAsync(getContactsCommand);
 var getContactsCommandResponse = await clientChannel.ReceiveCommandAsync(CancellationToken.None);
 
