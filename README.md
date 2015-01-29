@@ -14,7 +14,9 @@ Finally it has built-in support for authentication, transport encryption and com
 ### Nuget packages
 
 - **Lime.Protocol**: Base protocol
-- **Lime.Protocol.Tcp**: TCP transport
+- **Lime.Transport.Tcp**: TCP transport implementation
+- **Lime.Transport.Http**: HTTP emulation layer (Lime over HTTP)
+- **Lime.Messaging**: Common content and resource types for instant messaging applications
 
 Protocol overview
 ---------------------
@@ -206,7 +208,7 @@ if (receivedSession.Authentication is PlainAuthentication &&
 
 ### Exchanging envelopes
 
-With an established session, the nodes can exchange messages, notifications and commands until any party finishes the session. The ```IChannel``` interface defines methods to send and receive all these envelopes, like the ```SendMessageAsync``` and ```ReceiveMessageAsync``` methods for messages.
+With an established session the nodes can exchange messages, notifications and commands until the server finishes the session. The ```IChannel``` interface defines methods to send and receive specific envelopes, like the ```SendMessageAsync``` and ```ReceiveMessageAsync``` for messages.
 
 ####Routing
 
@@ -318,9 +320,9 @@ if (getContactsCommandResponse.Id == getContactsCommand.Id &&
 
 ### Closing the session
 
-The server is responsible for closing the session and it can do it any time, just sending a **finished session envelope** to the client. But the client can request the end of it, simply by sending an **finishing session envelope** to the server. 
+The server is responsible for closing the session and it can do it any time by sending a **finished session envelope** to the client, but the client can ask the server to finish it simply by sending a **finishing session envelope**. 
 
-The server should close the transport after sending the finished or failed session envelope and the client after receiving they. The ```ClientChannel``` and ```ServerChannel``` classes already closes the transport in these cases.
+The server should close the transport after sending the finished or failed session envelope and the client after receiving any session envelope after the session was established. The ```ClientChannel``` and ```ServerChannel``` classes already closes the transport in these cases.
 
 #### Examples
 ##### Closing by the client side
