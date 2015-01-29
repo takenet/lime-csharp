@@ -17,9 +17,10 @@ namespace Lime.Protocol.UnitTests.Client
         private Mock<ITransport> _transport;
         private TimeSpan _sendTimeout;
 
-        #region Constructor
+        #region Scenario
 
-        public ClientChannelTests()
+        [SetUp]
+        public void Setup()
         {
             _transport = new Mock<ITransport>();
             _sendTimeout = TimeSpan.FromSeconds(30);

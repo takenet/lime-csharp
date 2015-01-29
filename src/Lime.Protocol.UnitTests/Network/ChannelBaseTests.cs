@@ -21,15 +21,25 @@ namespace Lime.Protocol.UnitTests.Network
 
         #endregion
 
-        #region Constructor
+        #region Scenario
 
-        public ChannelBaseTests()
+        [SetUp]
+        public void Setup()
         {
             _transport = new Mock<ITransport>();
             _sendTimeout = TimeSpan.FromSeconds(30);
         }
 
+        [TearDown]
+        public void Teardown()
+        {
+            _transport = null;
+            _sendTimeout = default(TimeSpan);
+        }
+
         #endregion
+
+
 
         public ChannelBase GetTarget(SessionState state, int buffersLimit = 5, bool fillEnvelopeRecipients = false, Node remoteNode = null, Node localNode = null)
         {

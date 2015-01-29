@@ -29,9 +29,10 @@ namespace Lime.Transport.Tcp.UnitTests
 
         #endregion
 
-        #region Constructor
+        #region Scenario
 
-        public TcpTransportTests()
+        [SetUp]
+        public void Setup()
         {
             _stream = new Mock<Stream>();
             _tcpClient = new Mock<ITcpClient>();
