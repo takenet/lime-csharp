@@ -2,7 +2,7 @@
 using Lime.Protocol;
 using Lime.Protocol.Serialization;
 
-namespace Lime.Transport.Http.Protocol.Serialization
+namespace Lime.Transport.Http.Serialization
 {
     public sealed class DocumentSerializer : IDocumentSerializer
     {

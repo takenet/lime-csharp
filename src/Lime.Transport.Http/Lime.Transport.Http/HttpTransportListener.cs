@@ -8,11 +8,11 @@ using System.Threading.Tasks.Dataflow;
 using Lime.Protocol;
 using Lime.Protocol.Network;
 using Lime.Protocol.Server;
-using Lime.Transport.Http.Protocol.Processors;
-using Lime.Transport.Http.Protocol.Serialization;
-using Lime.Transport.Http.Protocol.Storage;
+using Lime.Transport.Http.Processors;
+using Lime.Transport.Http.Serialization;
+using Lime.Transport.Http.Storage;
 
-namespace Lime.Transport.Http.Protocol
+namespace Lime.Transport.Http
 {
     /// <summary>
     /// Listens for HTTP requests emulating the

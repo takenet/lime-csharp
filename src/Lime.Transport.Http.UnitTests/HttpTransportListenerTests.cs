@@ -9,11 +9,11 @@ using System.Threading.Tasks.Dataflow;
 using Lime.Protocol;
 using Lime.Protocol.Network;
 using Lime.Protocol.UnitTests;
-using Lime.Transport.Http.Protocol;
+using Lime.Transport.Http;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Shouldly;
-using TransportEventArgs = Lime.Transport.Http.Protocol.TransportEventArgs;
+using TransportEventArgs = Lime.Transport.Http.TransportEventArgs;
 
 namespace Lime.Transport.Http.UnitTests
 {

@@ -14,7 +14,7 @@ using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Lime.Transport.Tcp.Protocol;
+using Lime.Transport.Tcp;
 
 namespace Lime.Client.Console
 {

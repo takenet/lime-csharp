@@ -6,7 +6,7 @@ using Lime.Protocol;
 using Lime.Protocol.Network;
 using Lime.Protocol.Serialization;
 
-namespace Lime.Transport.Http.Protocol.Processors
+namespace Lime.Transport.Http.Processors
 {
     public class SendNotificationHttpProcessor : SendEnvelopeHttpProcessorBase<Notification>
     {        

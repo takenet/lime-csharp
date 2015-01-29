@@ -52,9 +52,10 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Lime.Protocol.Tcp.nuspec" />
+    <None Include="Lime.Transport.Tcp.nuspec" />
   </ItemGroup>
   <Import Project="..\Lime.Protocol.Tcp\Lime.Protocol.Tcp.projitems" Label="Shared" Condition="Exists('..\Lime.Protocol.Tcp\Lime.Protocol.Tcp.projitems')" />
+  <Import Project="..\Lime.Transport.Tcp\Lime.Protocol.Tcp.projitems" Label="Shared" Condition="Exists('..\Lime.Transport.Tcp\Lime.Protocol.Tcp.projitems')" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

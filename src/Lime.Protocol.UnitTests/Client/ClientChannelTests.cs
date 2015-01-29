@@ -522,7 +522,7 @@ namespace Lime.Protocol.UnitTests.Client
                 t => t.SendAsync(It.Is<Command>(
                         c => c.Id == command.Id &&
                              c.To.Equals(command.From) &&
-                             c.Resource is Ping &&
+                             c.Resource.GetMediaType().ToString().Equals(Ping.MIME_TYPE, StringComparison.OrdinalIgnoreCase) &&
                              c.Status == CommandStatus.Success),
                     It.IsAny<CancellationToken>()),
                     Times.Once());
@@ -552,7 +552,7 @@ namespace Lime.Protocol.UnitTests.Client
                 t => t.SendAsync(It.Is<Command>(
                         c => c.Id == command.Id &&
                              c.To.Equals(command.From) &&
-                             c.Resource is Ping &&
+                             c.Resource.GetMediaType().ToString().Equals(Ping.MIME_TYPE, StringComparison.OrdinalIgnoreCase) &&
                              c.Status == CommandStatus.Success),
                     It.IsAny<CancellationToken>()),
                     Times.Once());

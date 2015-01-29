@@ -5,7 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Lime.Protocol;
 
-namespace Lime.Transport.Http.Protocol
+namespace Lime.Transport.Http
 {
     public sealed class HttpServer : IHttpServer, IDisposable
     {

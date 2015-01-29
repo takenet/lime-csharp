@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Lime.Transport.Http.Protocol
+namespace Lime.Transport.Http
 {
     public class HttpServerException : Exception
     {

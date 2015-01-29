@@ -20,7 +20,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lime.Protocol.Serialization
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Serialization", "Serialization", "{AFDCE25A-4480-4ED6-8C8F-A41E30ED6689}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lime.Transport.Tcp.UnitTests", "Lime.Protocol.Tcp.UnitTests\Lime.Transport.Tcp.UnitTests.csproj", "{690CB13D-5BFC-4D2E-B23C-64BD00B7AF6F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lime.Transport.Tcp.UnitTests", "Lime.Transport.Tcp.UnitTests\Lime.Transport.Tcp.UnitTests.csproj", "{690CB13D-5BFC-4D2E-B23C-64BD00B7AF6F}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{073E3A89-9952-4B92-80B2-DA9F443551AD}"
 	ProjectSection(SolutionItems) = preProject
@@ -60,9 +60,11 @@ EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		Lime.Messaging\Lime.Messaging\Lime.Messaging.projitems*{796a57b4-1fe0-4fe9-940f-e99083dc233a}*SharedItemsImports = 4
+		Lime.Transport.Tcp\Lime.Transport.Tcp\Lime.Protocol.Tcp.projitems*{d24b4ef4-9b8c-4f89-bfc6-f76007936382}*SharedItemsImports = 4
 		Lime.Messaging\Lime.Messaging\Lime.Messaging.projitems*{c6619a1e-e64c-425f-8560-e9b32e9a2887}*SharedItemsImports = 13
 		Lime.Protocol\Lime.Protocol\Lime.Protocol.projitems*{d12c1153-a423-40c6-a611-85c659caeb7b}*SharedItemsImports = 13
 		Lime.Transport.Http\Lime.Transport.Http\Lime.Protocol.Http.projitems*{797c3cab-166e-4821-a7c9-9d2b6d53ddc0}*SharedItemsImports = 13
+		Lime.Transport.Http\Lime.Transport.Http\Lime.Protocol.Http.projitems*{1095e1ba-c764-46b0-86d1-2290da9c07ad}*SharedItemsImports = 4
 		Lime.Protocol\Lime.Protocol\Lime.Protocol.projitems*{0cfee3a4-f914-4c45-be13-a344c9cfa134}*SharedItemsImports = 4
 		Lime.Transport.Tcp\Lime.Transport.Tcp\Lime.Protocol.Tcp.projitems*{968a35ef-0800-4f7e-9c93-f444d80a4da9}*SharedItemsImports = 13
 	EndGlobalSection

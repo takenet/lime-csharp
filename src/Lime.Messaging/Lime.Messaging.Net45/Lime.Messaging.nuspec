@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
+  <metadata>
+    <id>Lime.Messaging</id>
+    <version>$version$</version>
+    <title>Lime.Messaging</title>
+    <authors>takenet</authors>
+    <owners>takenet,andrebires</owners>
+    <projectUrl>http://limeprotocol.org</projectUrl>
+    <licenseUrl>https://raw.githubusercontent.com/takenet/lime/master/LICENSE</licenseUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Common content types and resource for LIME messaging applications.</description>
+    <copyright>Copyright ©  2014 Curupira S/A</copyright>
+    <tags>lime</tags>
+    <dependencies>
+      <dependency id="Lime.Protocol" />
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="bin\Release\Lime.Messaging.dll" target="lib\net45\Lime.Messaging.dll" />
+    <file src="bin\Release\Lime.Messaging.XML" target="lib\net45\Lime.Messaging.XML" />
+  </files>
+</package>

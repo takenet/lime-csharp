@@ -2,7 +2,7 @@
 using System.Net;
 using Lime.Protocol;
 
-namespace Lime.Transport.Http.Protocol
+namespace Lime.Transport.Http
 {
     public static class UtilExtensions
     {

@@ -66,6 +66,10 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Lime.Messaging\Lime.Messaging.Net45\Lime.Messaging.Net45.csproj">
+      <Project>{796a57b4-1fe0-4fe9-940f-e99083dc233a}</Project>
+      <Name>Lime.Messaging.Net45</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Lime.Protocol.Serialization.Newtonsoft\Lime.Protocol.Serialization.Newtonsoft.csproj">
       <Project>{07ef6707-b284-4068-9b2f-48998782bc9f}</Project>
       <Name>Lime.Protocol.Serialization.Newtonsoft</Name>

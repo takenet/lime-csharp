@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Lime.Protocol;
 
-namespace Lime.Transport.Http.Protocol.Storage
+namespace Lime.Transport.Http.Storage
 {
     public sealed class DictionaryEnvelopeStorage<T> : IEnvelopeStorage<T> where T : Envelope
     {

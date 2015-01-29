@@ -1,4 +1,6 @@
-﻿using Lime.Protocol.Security;
+﻿using Lime.Messaging.Contents;
+using Lime.Messaging.Resources;
+using Lime.Protocol.Security;
 using Lime.Protocol.Serialization;
 using Lime.Protocol.UnitTests;
 using Microsoft.VisualStudio.TestTools.UnitTesting;

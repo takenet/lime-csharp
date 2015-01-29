@@ -14,7 +14,7 @@ using Lime.Protocol.Security;
 using System.Security.Cryptography;
 using System.Security.AccessControl;
 using System.Security.Principal;
-using Lime.Transport.Tcp.Protocol;
+using Lime.Transport.Tcp;
 using Notification = Lime.Protocol.Notification;
 
 namespace Lime.Client.Console

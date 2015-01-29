@@ -2,10 +2,10 @@
 using System.Net;
 using System.Text;
 using Lime.Protocol;
-using Lime.Transport.Http.Protocol.Serialization;
-using Lime.Transport.Http.Protocol.Storage;
+using Lime.Transport.Http.Serialization;
+using Lime.Transport.Http.Storage;
 
-namespace Lime.Transport.Http.Protocol.Processors
+namespace Lime.Transport.Http.Processors
 {
     public sealed class GetMessageByIdHttpProcessor : GetEnvelopeByIdHttpProcessorBase<Message>
     {

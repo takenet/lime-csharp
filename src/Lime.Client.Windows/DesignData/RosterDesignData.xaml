@@ -1,8 +1,8 @@
 ﻿<vm:RosterViewModel xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:vm="clr-namespace:Lime.Client.Windows.ViewModels"
-                    xmlns:c="clr-namespace:Lime.Protocol;assembly=Lime.Protocol"
-                    xmlns:r="clr-namespace:Lime.Messaging.Resources;assembly=Lime.Messaging.Net45"
+                    xmlns:c="clr-namespace:Lime.Protocol;assembly=Lime.Protocol"                    
+                    xmlns:r="clr-namespace:Lime.Messaging.Resources;assembly=Lime.Messaging"
                     xml:lang="en-US"
                     IsBusy="True"
                     ErrorMessage="Sample error message"
@@ -13,7 +13,7 @@
                     Domain="takenet.com.br" />
     </vm:RosterViewModel.Identity>
     <vm:RosterViewModel.Account>
-        <resources:Account FullName="André Bires Fonseca" />
+        <r:Account FullName="André Bires Fonseca" />
     </vm:RosterViewModel.Account>
     <vm:RosterViewModel.Contacts>
         <vm:ContactViewModel>

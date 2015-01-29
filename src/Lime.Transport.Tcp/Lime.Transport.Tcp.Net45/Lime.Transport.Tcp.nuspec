@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
   <metadata>
-    <id>Lime.Protocol.Tcp</id>
+    <id>Lime.Transport.Tcp</id>
     <version>$version$</version>
     <title>Lime.Protocol.Tcp</title>
     <authors>takenet</authors>
@@ -9,7 +9,7 @@
     <projectUrl>http://limeprotocol.org</projectUrl>
     <licenseUrl>https://raw.githubusercontent.com/takenet/lime/master/LICENSE</licenseUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
-    <description>C# Lime protocol stack implementation.</description>
+    <description>TCP transport for LIME protocol.</description>
     <copyright>Copyright ©  2014 Curupira S/A</copyright>
     <tags>lime</tags>
     <dependencies>
@@ -17,7 +17,7 @@
     </dependencies>
   </metadata>
   <files>
-    <file src="bin\Release\Lime.Protocol.Tcp.dll" target="lib\net45\Lime.Protocol.Tcp.dll" />
-    <file src="bin\Release\Lime.Protocol.Tcp.XML" target="lib\net45\Lime.Protocol.Tcp.XML" />
+    <file src="bin\Release\Lime.Transport.Tcp.dll" target="lib\net45\Lime.Transport.Tcp.dll" />
+    <file src="bin\Release\Lime.Transport.Tcp.XML" target="lib\net45\Lime.Transport.Tcp.XML" />
   </files>
 </package>

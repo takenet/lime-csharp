@@ -9,7 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Lime.Protocol;
 using Lime.Protocol.UnitTests;
-using Lime.Transport.Http.Protocol;
+using Lime.Transport.Http;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 

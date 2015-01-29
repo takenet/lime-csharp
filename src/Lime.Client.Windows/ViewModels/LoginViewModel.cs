@@ -6,14 +6,11 @@ using Lime.Messaging.Resources;
 using Lime.Protocol.Security;
 using Lime.Protocol.Serialization;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Net;
-using System.Net.Sockets;
-using System.Text;
 using System.Threading.Tasks;
-using Lime.Transport.Tcp.Protocol;
+using Lime.Transport.Tcp;
 
 namespace Lime.Client.Windows.ViewModels
 {

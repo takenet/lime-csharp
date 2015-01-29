@@ -4,9 +4,9 @@ using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using Lime.Protocol;
-using Lime.Transport.Http.Protocol.Storage;
+using Lime.Transport.Http.Storage;
 
-namespace Lime.Transport.Http.Protocol.Processors
+namespace Lime.Transport.Http.Processors
 {
     public class DeleteEnvelopeByIdHttpProcessor<T> : IHttpProcessor
         where T : Envelope

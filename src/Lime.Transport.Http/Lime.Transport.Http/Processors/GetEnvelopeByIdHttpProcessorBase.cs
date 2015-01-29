@@ -4,10 +4,10 @@ using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using Lime.Protocol;
-using Lime.Transport.Http.Protocol.Serialization;
-using Lime.Transport.Http.Protocol.Storage;
+using Lime.Transport.Http.Serialization;
+using Lime.Transport.Http.Storage;
 
-namespace Lime.Transport.Http.Protocol.Processors
+namespace Lime.Transport.Http.Processors
 {
     public abstract class GetEnvelopeByIdHttpProcessorBase<T> : IHttpProcessor
         where T : Envelope

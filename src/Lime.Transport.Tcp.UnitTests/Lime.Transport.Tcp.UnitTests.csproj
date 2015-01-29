@@ -64,11 +64,11 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Lime.Messaging.Net45\Lime.Messaging.Net45.csproj">
+    <ProjectReference Include="..\Lime.Messaging\Lime.Messaging.Net45\Lime.Messaging.Net45.csproj">
       <Project>{796A57B4-1FE0-4FE9-940F-E99083DC233A}</Project>
       <Name>Lime.Messaging.Net45</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Lime.Protocol.Tcp\Lime.Protocol.Tcp.Net45\Lime.Transport.Tcp.Net45.csproj">
+    <ProjectReference Include="..\Lime.Transport.Tcp\Lime.Transport.Tcp.Net45\Lime.Transport.Tcp.Net45.csproj">
       <Project>{d24b4ef4-9b8c-4f89-bfc6-f76007936382}</Project>
       <Name>Lime.Transport.Tcp.Net45</Name>
     </ProjectReference>

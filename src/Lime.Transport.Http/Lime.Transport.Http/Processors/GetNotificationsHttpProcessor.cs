@@ -1,7 +1,7 @@
 ﻿using Lime.Protocol;
-using Lime.Transport.Http.Protocol.Storage;
+using Lime.Transport.Http.Storage;
 
-namespace Lime.Transport.Http.Protocol.Processors
+namespace Lime.Transport.Http.Processors
 {
     public sealed class GetNotificationsHttpProcessor : GetEnvelopesHttpProcessor<Notification>
     {

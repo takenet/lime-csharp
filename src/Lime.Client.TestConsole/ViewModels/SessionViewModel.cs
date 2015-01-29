@@ -22,7 +22,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Data;
 using System.Windows.Threading;
-using Lime.Transport.Tcp.Protocol;
+using Lime.Transport.Tcp;
 
 namespace Lime.Client.TestConsole.ViewModels
 {

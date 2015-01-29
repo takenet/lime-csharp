@@ -2,7 +2,7 @@
 using System.Security.Principal;
 using Lime.Protocol.Network;
 
-namespace Lime.Transport.Http.Protocol
+namespace Lime.Transport.Http
 {
     public interface IHttpTransportProvider
     {

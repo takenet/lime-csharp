@@ -6,9 +6,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using Lime.Protocol;
 using Lime.Protocol.Network;
-using Lime.Transport.Http.Protocol.Serialization;
+using Lime.Transport.Http.Serialization;
 
-namespace Lime.Transport.Http.Protocol.Processors
+namespace Lime.Transport.Http.Processors
 {
     public abstract class SendEnvelopeHttpProcessorBase<T> : IHttpProcessor
         where T : Envelope, new()

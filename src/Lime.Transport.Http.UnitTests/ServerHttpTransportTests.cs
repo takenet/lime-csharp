@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Lime.Messaging.Resources;
 using Lime.Protocol;
 using Lime.Protocol.Network;
 using Lime.Protocol.Security;
 using Lime.Protocol.UnitTests;
-using Lime.Transport.Http.Protocol.Storage;
+using Lime.Transport.Http.Storage;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Shouldly;

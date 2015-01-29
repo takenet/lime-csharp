@@ -3,7 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Lime.Protocol;
 
-namespace Lime.Transport.Http.Protocol
+namespace Lime.Transport.Http
 {
     /// <summary>
     /// Defines a transport-level 

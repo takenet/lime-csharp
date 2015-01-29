@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 using Lime.Protocol;
 
-namespace Lime.Transport.Http.Protocol.Storage
+namespace Lime.Transport.Http.Storage
 {
     public interface IEnvelopeStorage<T> where T : Envelope
     {

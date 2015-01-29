@@ -7,9 +7,9 @@ using System.Threading.Tasks.Dataflow;
 using Lime.Protocol;
 using Lime.Protocol.Network;
 using Lime.Protocol.Security;
-using Lime.Transport.Http.Protocol.Storage;
+using Lime.Transport.Http.Storage;
 
-namespace Lime.Transport.Http.Protocol
+namespace Lime.Transport.Http
 {
     /// <summary>
     /// Represents the server transport 

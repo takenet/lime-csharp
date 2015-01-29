@@ -5,7 +5,7 @@ using System.Net;
 using System.Security.Principal;
 using Lime.Protocol;
 
-namespace Lime.Transport.Http.Protocol
+namespace Lime.Transport.Http
 {
     /// <summary>
     /// Encapsulates a HTTP

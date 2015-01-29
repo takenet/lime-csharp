@@ -1,4 +1,4 @@
-﻿namespace Lime.Transport.Http.Protocol
+﻿namespace Lime.Transport.Http
 {
     internal static class Constants
     {

@@ -1,6 +1,6 @@
 ﻿using Lime.Protocol;
 
-namespace Lime.Transport.Http.Protocol.Serialization
+namespace Lime.Transport.Http.Serialization
 {
     public interface IDocumentSerializer
     {

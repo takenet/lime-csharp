@@ -7,10 +7,10 @@ using System.Timers;
 using Lime.Protocol;
 using Lime.Protocol.Network;
 using Lime.Protocol.Security;
-using Lime.Transport.Http.Protocol.Storage;
+using Lime.Transport.Http.Storage;
 using Timer = System.Timers.Timer;
 
-namespace Lime.Transport.Http.Protocol
+namespace Lime.Transport.Http
 {
     public sealed class HttpTransportProvider : IHttpTransportProvider, IDisposable
     {
