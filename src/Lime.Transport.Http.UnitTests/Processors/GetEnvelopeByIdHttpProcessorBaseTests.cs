@@ -8,13 +8,13 @@ using Lime.Protocol.UnitTests;
 using Lime.Transport.Http;
 using Lime.Transport.Http.Processors;
 using Lime.Transport.Http.Storage;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NUnit.Framework;
 using Moq;
 using Shouldly;
 
 namespace Lime.Transport.Http.UnitTests.Processors
 {
-    [TestClass]
+    [TestFixture]
     public class GetEnvelopeByIdHttpProcessorBaseTests
     {
         public Mock<IEnvelopeStorage<Envelope>> EnvelopeStorage { get; set; }
@@ -44,7 +44,7 @@ namespace Lime.Transport.Http.UnitTests.Processors
 
         public MockGetEnvelopeByIdHttpProcessorBase Target { get; private set; }
 
-        [TestInitialize]
+        [SetUp]
         public void Arrange()
         {
             EnvelopeStorage = new Mock<IEnvelopeStorage<Envelope>>();
@@ -68,7 +68,7 @@ namespace Lime.Transport.Http.UnitTests.Processors
             Target.GetEnvelopeResponseFunc = (m, r) => GetMessageHttpResponse;                      
         }
 
-        [TestMethod]
+        [Test]
         public async Task ProcessAsync_ExistingId_GetsFromStorageAndReturnsOKHttpResponse()
         {
             // Arrange
@@ -92,7 +92,7 @@ namespace Lime.Transport.Http.UnitTests.Processors
             actual.Headers[Constants.ENVELOPE_PP_HEADER].ShouldBe(Envelope.Pp.ToString());
         }
 
-        [TestMethod]
+        [Test]
         public async Task ProcessAsync_NonExistingId_ReturnsNotFoundHttpResponse()
         {
             // Arrange
@@ -110,7 +110,7 @@ namespace Lime.Transport.Http.UnitTests.Processors
             actual.StatusCode.ShouldBe(HttpStatusCode.NotFound);
         }
 
-        [TestMethod]
+        [Test]
         public async Task ProcessAsync_RequestUriWithoutId_RetunsBadRequestHttpResponse()
         {
             // Arrange
@@ -125,7 +125,7 @@ namespace Lime.Transport.Http.UnitTests.Processors
             EnvelopeStorage.Verify();
         }
 
-        [TestMethod]
+        [Test]
         public async Task ProcessAsync_InvalidPrincipalNameFormat_RetunsBadRequestHttpResponse()
         {
             // Arrange

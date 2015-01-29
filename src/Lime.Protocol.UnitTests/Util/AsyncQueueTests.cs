@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Linq;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NUnit.Framework;
 using Lime.Protocol.Util;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 
 namespace Lime.Protocol.UnitTests.Util
 {
-    [TestClass]
+    [TestFixture]
     public class AsyncQueueTests
     {
         private AsyncQueue<T> GetTarget<T>(int promisesLimit = 0, int bufferLimit = 0)
@@ -18,8 +18,8 @@ namespace Lime.Protocol.UnitTests.Util
         }
         #region Post
 
-        [TestMethod]
-        [TestCategory("Post")]
+        [Test]
+        [Category("Post")]
         public async Task Post_NoPromisses_GoesToBuffer()
         {
             var target = GetTarget<string>();
@@ -34,8 +34,8 @@ namespace Lime.Protocol.UnitTests.Util
             Assert.AreEqual(item1, actual);
         }
 
-        [TestMethod]
-        [TestCategory("Post")]
+        [Test]
+        [Category("Post")]
         public async Task Post_HasOnePromise_CompletePromise()
         {
             var target = GetTarget<string>();
@@ -52,8 +52,8 @@ namespace Lime.Protocol.UnitTests.Util
             Assert.AreEqual(item1, actual);
         }
 
-        [TestMethod]
-        [TestCategory("Post")]
+        [Test]
+        [Category("Post")]
         public void Post_HasOneCancelledPromise_GoesToBuffer()
         {
             var target = GetTarget<string>();
@@ -73,8 +73,8 @@ namespace Lime.Protocol.UnitTests.Util
             Assert.AreEqual(1, target.BufferCount);
         }
 
-        [TestMethod]
-        [TestCategory("Post")]
+        [Test]
+        [Category("Post")]
         public async Task Post_HasMultiplePromises_CompletePromises()
         {
             var target = GetTarget<string>();
@@ -104,8 +104,8 @@ namespace Lime.Protocol.UnitTests.Util
             }
         }
 
-        [TestMethod]
-        [TestCategory("Post")]
+        [Test]
+        [Category("Post")]
         public async Task Post_TwiceHasOnePromise_CompletePromiseAndGoesToBuffer()
         {
             var target = GetTarget<string>();
@@ -132,8 +132,8 @@ namespace Lime.Protocol.UnitTests.Util
             Assert.AreEqual(item2, actual2);
         }
 
-        [TestMethod]
-        [TestCategory("Post")]
+        [Test]
+        [Category("Post")]
 		public void Post_BufferLimitReached_ReturnsFalse()
         {
             var target = GetTarget<string>(
@@ -153,8 +153,8 @@ namespace Lime.Protocol.UnitTests.Util
 
         #region ReceiveAsync
 
-        [TestMethod]
-        [TestCategory("ReceiveAsync")]
+        [Test]
+        [Category("ReceiveAsync")]
         public async Task ReceiveAsync_HasBuffer_GetsFromTheBuffer()
         {
             var target = GetTarget<string>();
@@ -174,8 +174,8 @@ namespace Lime.Protocol.UnitTests.Util
             Assert.AreEqual(item1, actual1);
         }
 
-        [TestMethod]
-        [TestCategory("Dequeue")]
+        [Test]
+        [Category("Dequeue")]
         [ExpectedException(typeof(InvalidOperationException))]
         public void Dequeue_PromisesLimitReached_ThrowsInvalidOperationException()
         {
@@ -188,9 +188,9 @@ namespace Lime.Protocol.UnitTests.Util
             var promiseTask3 = target.ReceiveAsync(cancellationToken);
         }
 
-        [TestMethod]
-        [TestCategory("Dequeue")]
-        [TestCategory("Post")]
+        [Test]
+        [Category("Dequeue")]
+        [Category("Post")]
         public async Task DequeuePost_ConcurrentAccess_CompletePromises()
         {
             var count = DataUtil.CreateRandomInt(1000);

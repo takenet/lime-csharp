@@ -10,14 +10,14 @@ using Lime.Protocol;
 using Lime.Protocol.Network;
 using Lime.Protocol.UnitTests;
 using Lime.Transport.Http;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NUnit.Framework;
 using Moq;
 using Shouldly;
 using TransportEventArgs = Lime.Transport.Http.TransportEventArgs;
 
 namespace Lime.Transport.Http.UnitTests
 {
-    [TestClass]
+    [TestFixture]
     public class HttpTransportListenerTests
     {
         #region Public properties
@@ -81,7 +81,7 @@ namespace Lime.Transport.Http.UnitTests
 
         #endregion
 
-        [TestInitialize]
+        [SetUp]
         public void Arrange()
         {
             Host = "localhost";
@@ -150,7 +150,7 @@ namespace Lime.Transport.Http.UnitTests
 
         }
 
-        [TestCleanup]
+        [TearDown]
         public void Dispose()
         {
             if (Target != null)
@@ -159,7 +159,7 @@ namespace Lime.Transport.Http.UnitTests
             }
         }
 
-        [TestMethod]
+        [Test]
         public void ListenerUris_ValidHostAndPort_GetsRegisteredUris()
         {
             // Act
@@ -172,7 +172,7 @@ namespace Lime.Transport.Http.UnitTests
 
         }
 
-        [TestMethod]
+        [Test]
         public async Task StartAsync_ValidHostAndPort_ServerStarted()
         {
             // Act
@@ -182,7 +182,7 @@ namespace Lime.Transport.Http.UnitTests
             HttpServer.Verify(s => s.Start(), Times.Once());
         }
 
-        [TestMethod]
+        [Test]
         [ExpectedException(typeof(InvalidOperationException))]
         public async Task StartAsync_CallTwice_ThrowsInvalidOperationException()
         {
@@ -191,7 +191,7 @@ namespace Lime.Transport.Http.UnitTests
             await Target.StartAsync();
         }
 
-        [TestMethod]
+        [Test]
         public async Task AcceptTransportAsync_NewRequest_RetunsTransport()
         {
             // Act
@@ -203,7 +203,7 @@ namespace Lime.Transport.Http.UnitTests
             transport.ShouldBe(Transport.Object);
         }
 
-        [TestMethod]
+        [Test]
         [ExpectedException(typeof(InvalidOperationException))]
         public async Task AcceptTransportAsync_ListenerNotStarted_ThrowsInvalidOperationException()
         {
@@ -211,7 +211,7 @@ namespace Lime.Transport.Http.UnitTests
             var transport = await Target.AcceptTransportAsync(CancellationToken);
         }
 
-        [TestMethod]
+        [Test]
         public async Task StopAsync_ActiveListener_StopsListening()
         {
             // Act
@@ -223,7 +223,7 @@ namespace Lime.Transport.Http.UnitTests
             HttpServer.Verify(s => s.Stop(), Times.Once());
         }
 
-        [TestMethod]
+        [Test]
         [ExpectedException(typeof(InvalidOperationException))]
         public async Task StopAsync_ListenerNotStarted_ThrowsInvalidOperationException()
         {
@@ -231,7 +231,7 @@ namespace Lime.Transport.Http.UnitTests
             await Target.StopAsync();
         }
 
-        [TestMethod]
+        [Test]
         public async Task ProcessAsync_ValidUrlAuthenticatedUser_CallProcessorAndKeepSession()
         {
             // Arrange            
@@ -267,7 +267,7 @@ namespace Lime.Transport.Http.UnitTests
             HttpTransportProvider.Verify(h => h.GetTransport(Principal.Object, true), Times.Once());
         }
 
-        [TestMethod]
+        [Test]
         public async Task ProcessAsync_InvalidSessionAuthentication_ReturnsUnauthorized()
         {
             // Arrange
@@ -296,7 +296,7 @@ namespace Lime.Transport.Http.UnitTests
             actualResponse.StatusDescription.ShouldBe(session.Reason.Description);
         }
 
-        [TestMethod]
+        [Test]
         public async Task ProcessAsync_FailedSessionEmptyReason_ReturnsServiceUnavailable()
         {
             // Arrange
@@ -319,7 +319,7 @@ namespace Lime.Transport.Http.UnitTests
             actualResponse.StatusCode.ShouldBe(HttpStatusCode.ServiceUnavailable);
         }
 
-        [TestMethod]
+        [Test]
         public async Task ProcessAsync_RequestTimedOut_ReturnsTimeout()
         {
             // Arrange
@@ -336,7 +336,7 @@ namespace Lime.Transport.Http.UnitTests
             actualResponse.StatusCode.ShouldBe(HttpStatusCode.RequestTimeout);
         }
 
-        [TestMethod]
+        [Test]
         public async Task ProcessAsync_InvalidUrl_ReturnsNotFound()
         {
             // Arrange
@@ -354,7 +354,7 @@ namespace Lime.Transport.Http.UnitTests
             actualResponse.StatusCode.ShouldBe(HttpStatusCode.NotFound);
         }
 
-        [TestMethod]
+        [Test]
         public async Task ProcessAsync_ProcessorRaisesException_ReturnsInternalServerError()
         {
             // Arrange            
@@ -392,7 +392,7 @@ namespace Lime.Transport.Http.UnitTests
             Processor1.Verify();
         }
 
-        [TestMethod]
+        [Test]
         public async Task ProcessAsync_SessionCloseHeader_FinishTransport()
         {
             // Arrange            

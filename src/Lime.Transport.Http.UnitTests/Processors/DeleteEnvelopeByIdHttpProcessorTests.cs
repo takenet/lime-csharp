@@ -8,13 +8,13 @@ using Lime.Protocol.UnitTests;
 using Lime.Transport.Http;
 using Lime.Transport.Http.Processors;
 using Lime.Transport.Http.Storage;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NUnit.Framework;
 using Moq;
 using Shouldly;
 
 namespace Lime.Transport.Http.UnitTests.Processors
 {
-    [TestClass]
+    [TestFixture]
     public class DeleteEnvelopeByIdHttpProcessorTests
     {
 
@@ -38,7 +38,7 @@ namespace Lime.Transport.Http.UnitTests.Processors
 
         public DeleteEnvelopeByIdHttpProcessor<Message> Target { get; set; }
 
-        [TestInitialize]
+        [SetUp]
         public void Arrange()
         {
             MessageEnvelopeStorage = new Mock<IEnvelopeStorage<Message>>();
@@ -56,7 +56,7 @@ namespace Lime.Transport.Http.UnitTests.Processors
             Target = new DeleteEnvelopeByIdHttpProcessor<Message>(MessageEnvelopeStorage.Object, Constants.MESSAGES_PATH);
         }
 
-        [TestMethod]
+        [Test]
         public async Task ProcessAsync_ValidHttpRequest_RetunsOKHttpResponse()
         {
             // Arrange
@@ -74,7 +74,7 @@ namespace Lime.Transport.Http.UnitTests.Processors
             MessageEnvelopeStorage.Verify();
         }
 
-        [TestMethod]
+        [Test]
         public async Task ProcessAsync_UnknownEnvelopeId_RetunsNotFoundHttpResponse()
         {
             // Arrange
@@ -92,7 +92,7 @@ namespace Lime.Transport.Http.UnitTests.Processors
             MessageEnvelopeStorage.Verify();
         }
 
-        [TestMethod]
+        [Test]
         public async Task ProcessAsync_RequestUriWithoutId_RetunsBadRequestHttpResponse()
         {
             // Arrange
@@ -107,7 +107,7 @@ namespace Lime.Transport.Http.UnitTests.Processors
             MessageEnvelopeStorage.Verify();
         }
 
-        [TestMethod]
+        [Test]
         public async Task ProcessAsync_InvalidPrincipalNameFormat_RetunsBadRequestHttpResponse()
         {
             // Arrange

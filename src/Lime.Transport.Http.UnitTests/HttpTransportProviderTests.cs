@@ -7,13 +7,13 @@ using Lime.Protocol.Network;
 using Lime.Protocol.UnitTests;
 using Lime.Transport.Http;
 using Lime.Transport.Http.Storage;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NUnit.Framework;
 using Moq;
 using Shouldly;
 
 namespace Lime.Transport.Http.UnitTests
 {
-    [TestClass]
+    [TestFixture]
     public class HttpTransportProviderTests
     {
         public CancellationToken CancellationToken { get; private set; }
@@ -42,7 +42,7 @@ namespace Lime.Transport.Http.UnitTests
 
         public Lazy<HttpTransportProvider> Target { get; set; }
 
-        [TestInitialize]
+        [SetUp]
         public void Arrange()
         {
             CancellationToken = TimeSpan.FromSeconds(5).ToCancellationToken();
@@ -66,7 +66,7 @@ namespace Lime.Transport.Http.UnitTests
         }
 
 
-        [TestMethod]
+        [Test]
         public void GetTransport_NewSessionCacheInstance_ReturnsAndCacheTransport()
         {
             // Act
@@ -77,7 +77,7 @@ namespace Lime.Transport.Http.UnitTests
             second.ShouldBe(first);
         }
 
-        [TestMethod]
+        [Test]
         public void GetTransport_CacheInstanceAndCloseTransport_ReturnsNewTransport()
         {
             // Act
@@ -89,7 +89,7 @@ namespace Lime.Transport.Http.UnitTests
             second.ShouldNotBe(first);
         }
 
-        [TestMethod]
+        [Test]
         public void GetTransport_DoNotCacheInstance_ReturnsNewTransport()
         {
             CacheInstance = false;
@@ -102,7 +102,7 @@ namespace Lime.Transport.Http.UnitTests
             second.ShouldNotBe(first);
         }
 
-        [TestMethod]
+        [Test]
         public void GetTransport_CacheFirstAndDoNotCacheAfter_ReturnsCachedAndNewTransport()
         {
             // Act
@@ -115,7 +115,7 @@ namespace Lime.Transport.Http.UnitTests
             third.ShouldNotBe(second);
         }
 
-        [TestMethod]
+        [Test]
         public void ExpirationTimer_Elapsed_ExpiredTransport_CloseTransport()
         {
             // Arrange

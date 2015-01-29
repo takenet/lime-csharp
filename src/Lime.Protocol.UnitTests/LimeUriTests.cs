@@ -1,13 +1,13 @@
 ﻿using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NUnit.Framework;
 using Shouldly;
 
 namespace Lime.Protocol.UnitTests
 {
-    [TestClass]
+    [TestFixture]
     public class LimeUriTests
     {        
-        [TestMethod]
+        [Test]
         public void Parse_ValidRelativeString_ReturnsInstance()
         {
             var resourceName = DataUtil.CreateRandomString(10);
@@ -19,7 +19,7 @@ namespace Lime.Protocol.UnitTests
             actual.IsRelative.ShouldBe(true);
         }
 
-        [TestMethod]
+        [Test]
         public void Parse_ValidAbsoluteString_ReturnsInstance()
         {
             var identity = DataUtil.CreateIdentity();
@@ -32,7 +32,7 @@ namespace Lime.Protocol.UnitTests
             actual.IsRelative.ShouldBe(false);
         }
 
-        [TestMethod]
+        [Test]
         [ExpectedException(typeof(ArgumentNullException))]
         public void Parse_NullString_ThrowsArgumentNullException()
         {
@@ -40,7 +40,7 @@ namespace Lime.Protocol.UnitTests
             var actual = LimeUri.Parse(path);
         }
 
-        [TestMethod]
+        [Test]
         [ExpectedException(typeof(ArgumentException))]
         public void Parse_InvalidRelativeString_ThrowsArgumentException()
         {
@@ -49,7 +49,7 @@ namespace Lime.Protocol.UnitTests
             var actual = LimeUri.Parse(invalidPath);
         }
 
-        [TestMethod]
+        [Test]
         [ExpectedException(typeof(ArgumentException))]
         public void Parse_InvalidSchemeAbsoluteString_ThrowsArgumentException()
         {
@@ -57,7 +57,7 @@ namespace Lime.Protocol.UnitTests
             var actual = LimeUri.Parse(absolutePath);
         }
 
-        [TestMethod]
+        [Test]
         public void ToUri_AbsoluteInstance_ReturnsUri()
         {
             var identity = DataUtil.CreateIdentity();
@@ -75,7 +75,7 @@ namespace Lime.Protocol.UnitTests
             uri.PathAndQuery.ShouldBe("/" + resourceName);
         }
 
-        [TestMethod]
+        [Test]
         [ExpectedException(typeof(InvalidOperationException))]
         public void ToUri_RelativeInstance_ThrowsInvalidOperationException()
         {
@@ -88,7 +88,7 @@ namespace Lime.Protocol.UnitTests
         }
 
 
-        [TestMethod]
+        [Test]
         public void ToUriIdentity_RelativeInstance_ReturnsUri()
         {
             var identity = DataUtil.CreateIdentity();
@@ -108,7 +108,7 @@ namespace Lime.Protocol.UnitTests
             uri.PathAndQuery.ShouldBe("/" + resourceName);
         }
 
-        [TestMethod]
+        [Test]
         [ExpectedException(typeof(InvalidOperationException))]
         public void ToUriIdentity_AbsoluteInstance_ThrowsInvalidOperationException()
         {

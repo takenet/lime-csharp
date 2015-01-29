@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Linq;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NUnit.Framework;
 using Lime.Protocol.Serialization;
 using Lime.Protocol.UnitTests.Serialization;
 using Lime.Messaging.Contents;
@@ -13,7 +13,7 @@ using Shouldly;
 
 namespace Lime.Protocol.Serialization.Newtonsoft.UnitTests
 {
-    [TestClass]
+    [TestFixture]
     public class JsonNetSerializerTests
     {
         public JsonNetSerializer GetTarget()
@@ -24,8 +24,8 @@ namespace Lime.Protocol.Serialization.Newtonsoft.UnitTests
 
         #region Serialize
 
-        [TestMethod]
-        [TestCategory("Serialize")]
+        [Test]
+        [Category("Serialize")]
         public void Serialize_AbsoluteUriRequestCommand_ReturnsValidJsonString()
         {
             var target = GetTarget();
@@ -65,8 +65,8 @@ namespace Lime.Protocol.Serialization.Newtonsoft.UnitTests
             Assert.IsFalse(resultString.ContainsJsonKey(Command.RESOURCE_KEY));
         }
 
-        [TestMethod]
-        [TestCategory("Serialize")]
+        [Test]
+        [Category("Serialize")]
         public void Serialize_RelativeUriRequestCommand_ReturnsValidJsonString()
         {
             var target = GetTarget();
@@ -97,8 +97,8 @@ namespace Lime.Protocol.Serialization.Newtonsoft.UnitTests
         }
 
 
-        [TestMethod]
-        [TestCategory("Serialize")]
+        [Test]
+        [Category("Serialize")]
         public void Serialize_CapabilityRequestCommand_ReturnsValidJsonString()
         {
             var target = GetTarget();
@@ -137,8 +137,8 @@ namespace Lime.Protocol.Serialization.Newtonsoft.UnitTests
             Assert.IsFalse(resultString.ContainsJsonKey(Command.REASON_KEY));
         }
 
-        //[TestMethod]
-        //[TestCategory("Serialize")]        
+        //[Test]
+        //[Category("Serialize")]        
         public void Serialize_RosterResponseCommand_ReturnsValidJsonString()
         {
 
@@ -189,8 +189,8 @@ namespace Lime.Protocol.Serialization.Newtonsoft.UnitTests
             Assert.IsFalse(resultString.ContainsJsonKey(Command.REASON_KEY));
         }
 
-        [TestMethod]
-        [TestCategory("Serialize")]
+        [Test]
+        [Category("Serialize")]
         public void Serialize_FailurePingResponseCommand_ReturnsValidJsonString()
         {
             var target = GetTarget();
@@ -215,8 +215,8 @@ namespace Lime.Protocol.Serialization.Newtonsoft.UnitTests
             Assert.IsFalse(resultString.ContainsJsonKey(Command.RESOURCE_KEY));
         }
 
-        [TestMethod]
-        [TestCategory("Serialize")]
+        [Test]
+        [Category("Serialize")]
         public void Serialize_TextMessage_ReturnsValidJsonString()
         {
             var target = GetTarget();
@@ -250,8 +250,8 @@ namespace Lime.Protocol.Serialization.Newtonsoft.UnitTests
         /// <summary>
         /// TODO: JsonContent support
         /// </summary>
-        [TestMethod]
-        [TestCategory("Serialize")]
+        [Test]
+        [Category("Serialize")]
         [ExpectedException(typeof(NotSupportedException))]
         public void Serialize_UnknownJsonContentMessage_ReturnsValidJsonString()
         {
@@ -288,8 +288,8 @@ namespace Lime.Protocol.Serialization.Newtonsoft.UnitTests
             Assert.IsTrue(resultString.ContainsJsonProperty(metadataKey2, metadataValue2));
         }
 
-        [TestMethod]
-        [TestCategory("Serialize")]
+        [Test]
+        [Category("Serialize")]
         public void Serialize_UnknownPlainContentMessage_ReturnsValidJsonString()
         {
             var target = GetTarget();
@@ -320,8 +320,8 @@ namespace Lime.Protocol.Serialization.Newtonsoft.UnitTests
             Assert.IsTrue(resultString.ContainsJsonProperty(metadataKey2, metadataValue2));
         }
 
-        [TestMethod]
-        [TestCategory("Serialize")]
+        [Test]
+        [Category("Serialize")]
         public void Serialize_FireAndForgetTextMessage_ReturnsValidJsonString()
         {
             var target = GetTarget();
@@ -345,8 +345,8 @@ namespace Lime.Protocol.Serialization.Newtonsoft.UnitTests
             Assert.IsFalse(resultString.ContainsJsonKey(Envelope.METADATA_KEY));
         }
 
-        [TestMethod]
-        [TestCategory("Serialize")]
+        [Test]
+        [Category("Serialize")]
         public void Serialize_ReceivedNotification_ReturnsValidJsonString()
         {
             var target = GetTarget();
@@ -377,8 +377,8 @@ namespace Lime.Protocol.Serialization.Newtonsoft.UnitTests
             Assert.IsFalse(resultString.ContainsJsonKey(Notification.REASON_KEY));
         }
 
-        [TestMethod]
-        [TestCategory("Serialize")]
+        [Test]
+        [Category("Serialize")]
         public void Serialize_FailedNotification_ReturnsValidJsonString()
         {
             var target = GetTarget();
@@ -401,8 +401,8 @@ namespace Lime.Protocol.Serialization.Newtonsoft.UnitTests
             Assert.IsFalse(resultString.ContainsJsonKey(Envelope.METADATA_KEY));
         }
 
-        [TestMethod]
-        [TestCategory("Serialize")]
+        [Test]
+        [Category("Serialize")]
         public void Serialize_AuthenticatingSession_ReturnsValidJsonString()
         {
             var target = GetTarget();
@@ -436,8 +436,8 @@ namespace Lime.Protocol.Serialization.Newtonsoft.UnitTests
             Assert.IsFalse(resultString.ContainsJsonKey(Session.REASON_KEY));
         }
 
-        [TestMethod]
-        [TestCategory("Serialize")]
+        [Test]
+        [Category("Serialize")]
         public void Serialize_FailedSession_ReturnsValidJsonString()
         {
             var target = GetTarget();
@@ -466,8 +466,8 @@ namespace Lime.Protocol.Serialization.Newtonsoft.UnitTests
 
         #region Deserialize
 
-        [TestMethod]
-        [TestCategory("Deserialize")]
+        [Test]
+        [Category("Deserialize")]
         public void Deserialize_CapabilityRequestCommand_ReturnsValidInstance()
         {
             var target = GetTarget();
@@ -546,8 +546,8 @@ namespace Lime.Protocol.Serialization.Newtonsoft.UnitTests
             Assert.AreEqual(command.Uri, resourceUri);
         }
 
-        [TestMethod]
-        [TestCategory("Deserialize")]
+        [Test]
+        [Category("Deserialize")]
         public void Deserialize_AbsoluteUriRequestCommand_ReturnsValidInstance()
         {
             var target = GetTarget();
@@ -602,8 +602,8 @@ namespace Lime.Protocol.Serialization.Newtonsoft.UnitTests
             Assert.IsNull(command.Resource);
         }
 
-        [TestMethod]
-        [TestCategory("Deserialize")]
+        [Test]
+        [Category("Deserialize")]
         public void Deserialize_ReceiptRequestCommand_ReturnsValidInstance()
         {
             var target = GetTarget();
@@ -632,8 +632,8 @@ namespace Lime.Protocol.Serialization.Newtonsoft.UnitTests
             Assert.IsTrue(command.Resource is Receipt);
         }
 
-        [TestMethod]
-        [TestCategory("Deserialize")]
+        [Test]
+        [Category("Deserialize")]
         public void Deserialize_ContactCollectionResponseCommand_ReturnsValidInstance()
         {
             var target = GetTarget();
@@ -724,8 +724,8 @@ namespace Lime.Protocol.Serialization.Newtonsoft.UnitTests
             Assert.IsFalse(contacts[2].SharePresence.Value);
         }
 
-        [TestMethod]
-        [TestCategory("Deserialize")]
+        [Test]
+        [Category("Deserialize")]
         public void Deserialize_FailureCapabilityResponseCommand_ReturnsValidInstance()
         {
             var target = GetTarget();
@@ -767,8 +767,8 @@ namespace Lime.Protocol.Serialization.Newtonsoft.UnitTests
             Assert.AreEqual(reason.Description, command.Reason.Description);
         }
 
-        [TestMethod]
-        [TestCategory("Deserialize")]
+        [Test]
+        [Category("Deserialize")]
         public void Deserialize_TextMessage_ReturnsValidInstance()
         {
             var target = GetTarget();
@@ -820,8 +820,8 @@ namespace Lime.Protocol.Serialization.Newtonsoft.UnitTests
         }
 
 
-        [TestMethod]
-        [TestCategory("Deserialize")]
+        [Test]
+        [Category("Deserialize")]
         public void Deserialize_ChatStateMessage_ReturnsValidInstance()
         {
             var target = GetTarget();
@@ -874,8 +874,8 @@ namespace Lime.Protocol.Serialization.Newtonsoft.UnitTests
 
 
 
-        [TestMethod]
-        [TestCategory("Deserialize")]
+        [Test]
+        [Category("Deserialize")]
         public void Deserialize_UnknownContentMessage_ReturnsValidInstance()
         {
             var target = GetTarget();
@@ -946,8 +946,8 @@ namespace Lime.Protocol.Serialization.Newtonsoft.UnitTests
         }
 
 
-        [TestMethod]
-        [TestCategory("Deserialize")]
+        [Test]
+        [Category("Deserialize")]
         public void Deserialize_FireAndForgetTextMessage_ReturnsValidInstance()
         {
             var target = GetTarget();
@@ -982,8 +982,8 @@ namespace Lime.Protocol.Serialization.Newtonsoft.UnitTests
         }
 
 
-        [TestMethod]
-        [TestCategory("Deserialize")]
+        [Test]
+        [Category("Deserialize")]
         public void Deserialize_FireAndForgetChatStateMessage_ReturnsValidInstance()
         {
             var target = GetTarget();
@@ -1017,8 +1017,8 @@ namespace Lime.Protocol.Serialization.Newtonsoft.UnitTests
             Assert.AreEqual(state, textContent.State);
         }
 
-        [TestMethod]
-        [TestCategory("Deserialize")]
+        [Test]
+        [Category("Deserialize")]
         public void Deserialize_ReceivedNotification_ReturnsValidInstance()
         {
             var target = GetTarget();
@@ -1068,8 +1068,8 @@ namespace Lime.Protocol.Serialization.Newtonsoft.UnitTests
             Assert.IsNull(notification.Reason);
         }
 
-        [TestMethod]
-        [TestCategory("Deserialize")]
+        [Test]
+        [Category("Deserialize")]
         public void Deserialize_FailedNotification_ReturnsValidInstance()
         {
             var target = GetTarget();
@@ -1110,8 +1110,8 @@ namespace Lime.Protocol.Serialization.Newtonsoft.UnitTests
             Assert.AreEqual(reasonDescription, notification.Reason.Description);
         }
 
-        [TestMethod]
-        [TestCategory("Deserialize")]
+        [Test]
+        [Category("Deserialize")]
         public void Deserialize_AuthenticatingSession_ReturnsValidInstance()
         {
             var target = GetTarget();
@@ -1163,8 +1163,8 @@ namespace Lime.Protocol.Serialization.Newtonsoft.UnitTests
             Assert.IsNull(session.Reason);
         }
 
-        [TestMethod]
-        [TestCategory("Deserialize")]
+        [Test]
+        [Category("Deserialize")]
         public void Deserialize_FailedSessionNullProperties_ReturnsValidInstance()
         {
             var target = GetTarget();
@@ -1210,8 +1210,8 @@ namespace Lime.Protocol.Serialization.Newtonsoft.UnitTests
             Assert.IsNull(session.Metadata);
         }
 
-        [TestMethod]
-        [TestCategory("Deserialize")]
+        [Test]
+        [Category("Deserialize")]
         public void Deserialize_SessionAuthenticatingWithPlainAuthentication_ReturnsValidInstance()
         {
             // Arrange
@@ -1228,8 +1228,8 @@ namespace Lime.Protocol.Serialization.Newtonsoft.UnitTests
             plainAuthentication.Password.ShouldNotBeEmpty();
         }
 
-        [TestMethod]
-        [TestCategory("Deserialize")]
+        [Test]
+        [Category("Deserialize")]
         public void Deserialize_SessionAuthenticatingWithGuestAuthentication_ReturnsValidInstance()
         {
             // Arrange

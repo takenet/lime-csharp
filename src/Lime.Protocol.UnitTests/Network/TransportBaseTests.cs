@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Linq;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NUnit.Framework;
 using Lime.Protocol.Network;
 using Moq;
 using System.Threading.Tasks;
@@ -9,7 +9,7 @@ using System.Collections.Generic;
 
 namespace Lime.Protocol.UnitTests.Network
 {
-    [TestClass]
+    [TestFixture]
     public class TransportBaseTests
     {
         private TestTransportBase GetTarget()
@@ -17,8 +17,8 @@ namespace Lime.Protocol.UnitTests.Network
             return new TestTransportBase();
         }
 
-        [TestMethod]
-        [TestCategory("CloseAsync")]
+        [Test]
+        [Category("CloseAsync")]
         public async Task CloseAsync_Default_RaisesClosingAndCallsPerformCloseAndRaisesClosed()
         {
             var closingRaised = false;
@@ -38,8 +38,8 @@ namespace Lime.Protocol.UnitTests.Network
             Assert.IsTrue(closedRaised);
         }
 
-        [TestMethod]
-        [TestCategory("GetSupportedCompression")]
+        [Test]
+        [Category("GetSupportedCompression")]
         public void GetSupportedCompression_Default_GetsSessionCompressionNone()
         {
             var target = GetTarget();
@@ -52,8 +52,8 @@ namespace Lime.Protocol.UnitTests.Network
 
         #region SetCompressionAsync
 
-        [TestMethod]
-        [TestCategory("SetCompressionAsync")]
+        [Test]
+        [Category("SetCompressionAsync")]
         public async Task SetCompressionAsync_NoneCompression_SetsProperty()
         {
             var target = GetTarget();
@@ -66,8 +66,8 @@ namespace Lime.Protocol.UnitTests.Network
             Assert.IsTrue(target.Compression == compression);
         }
 
-        [TestMethod]
-        [TestCategory("SetCompressionAsync")]
+        [Test]
+        [Category("SetCompressionAsync")]
         [ExpectedException(typeof(NotSupportedException))]
         public async Task SetCompressionAsync_GZipCompression_ThrowsNotSupportedException()
         {
@@ -82,8 +82,8 @@ namespace Lime.Protocol.UnitTests.Network
         #endregion
 
 
-        [TestMethod]
-        [TestCategory("GetSupportedEncryption")]
+        [Test]
+        [Category("GetSupportedEncryption")]
         public void GetSupportedEncryption_Default_GetsSessionEncryptionNone()
         {
             var target = GetTarget();
@@ -96,8 +96,8 @@ namespace Lime.Protocol.UnitTests.Network
 
         #region SetEncryptionAsync
 
-        [TestMethod]
-        [TestCategory("SetEncryptionAsync")]
+        [Test]
+        [Category("SetEncryptionAsync")]
         public async Task SetEncryptionAsync_NoneEncryption_SetsProperty()
         {
             var target = GetTarget();
@@ -110,8 +110,8 @@ namespace Lime.Protocol.UnitTests.Network
             Assert.IsTrue(target.Encryption == encryption);
         }
 
-        [TestMethod]
-        [TestCategory("SetEncryptionAsync")]
+        [Test]
+        [Category("SetEncryptionAsync")]
         [ExpectedException(typeof(NotSupportedException))]
         public async Task SetEncryptionAsync_TLSEncryption_ThrowsNotSupportedException()
         {
@@ -127,8 +127,8 @@ namespace Lime.Protocol.UnitTests.Network
 
         #region OnClosingAsync
 
-        [TestMethod]
-        [TestCategory("OnClosingAsync")]
+        [Test]
+        [Category("OnClosingAsync")]
         public async Task OnClosingAsync_AnyException_RaisesClosing()
         {
             var target = GetTarget();
@@ -141,8 +141,8 @@ namespace Lime.Protocol.UnitTests.Network
             Assert.IsTrue(closingRaised);
         }
 
-        [TestMethod]
-        [TestCategory("OnClosingAsync")]
+        [Test]
+        [Category("OnClosingAsync")]
         public async Task OnClosingAsync_MultipleSubscribersOnClosingEvent_AwaitsForDeferral()
         {
             var target = GetTarget();
@@ -178,8 +178,8 @@ namespace Lime.Protocol.UnitTests.Network
 
         #region OnClosedAsync
 
-        [TestMethod]
-        [TestCategory("OnClosed")]
+        [Test]
+        [Category("OnClosed")]
         public void OnClosed_AnyException_RaisesClosed()
         {
             var target = GetTarget();

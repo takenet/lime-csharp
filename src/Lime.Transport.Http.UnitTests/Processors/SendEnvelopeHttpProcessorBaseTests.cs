@@ -11,13 +11,13 @@ using Lime.Protocol.UnitTests;
 using Lime.Transport.Http;
 using Lime.Transport.Http.Processors;
 using Lime.Transport.Http.Serialization;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NUnit.Framework;
 using Moq;
 using Shouldly;
 
 namespace Lime.Transport.Http.UnitTests.Processors
 {
-    [TestClass]
+    [TestFixture]
     public class SendEnvelopeHttpProcessorBaseTests
     {
         public Mock<IDocumentSerializer> DocumentSerializer { get; set; }
@@ -46,7 +46,7 @@ namespace Lime.Transport.Http.UnitTests.Processors
 
         public MockSendEnvelopeHttpProcessorBase Target { get; set; }
 
-        [TestInitialize]
+        [SetUp]
         public void Arrange()
         {
             DocumentSerializer = new Mock<IDocumentSerializer>();
@@ -70,7 +70,7 @@ namespace Lime.Transport.Http.UnitTests.Processors
             Target = new MockSendEnvelopeHttpProcessorBase(new HashSet<string>(), new UriTemplate("/"), DocumentSerializer.Object);
         }
 
-        [TestMethod]
+        [Test]
         public async Task ProcessAsync_ValidEnvelope_CallsTransport()
         {
             
