@@ -1,9 +1,9 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
   <metadata>
-    <id>Lime.Protocol.Http</id>
+    <id>Lime.Transport.Http</id>
     <version>$version$</version>
-    <title>Lime.Protocol.Http</title>
+    <title>Lime.Transport.Http</title>
     <authors>takenet</authors>
     <owners>takenet,andrebires</owners>
     <projectUrl>http://limeprotocol.org</projectUrl>
@@ -17,7 +17,7 @@
     </dependencies>
   </metadata>
   <files>
-    <file src="bin\Release\Lime.Protocol.Http.dll" target="lib\net45\Lime.Protocol.Http.dll" />
-    <file src="bin\Release\Lime.Protocol.Http.XML" target="lib\net45\Lime.Protocol.Http.XML" />
+    <file src="bin\Release\Lime.Transport.Http.dll" target="lib\net45\Lime.Transport.Http.dll" />
+    <file src="bin\Release\Lime.Transport.Http.XML" target="lib\net45\Lime.Transport.Http.XML" />
   </files>
 </package>

@@ -9,7 +9,7 @@
     <projectUrl>http://limeprotocol.org</projectUrl>
     <licenseUrl>https://raw.githubusercontent.com/takenet/lime/master/LICENSE</licenseUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
-    <description>C# Lime protocol stack implementation.</description>
+    <description>C# LIME protocol stack implementation.</description>
     <copyright>Copyright ©  2014 Curupira S/A</copyright>
     <tags>lime</tags>
     <dependencies>

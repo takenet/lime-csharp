@@ -57,7 +57,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Lime.Protocol.Http.nuspec" />
+    <None Include="Lime.Transport.Http.nuspec" />
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="..\Lime.Protocol.Http\Lime.Protocol.Http.projitems" Label="Shared" Condition="Exists('..\Lime.Protocol.Http\Lime.Protocol.Http.projitems')" />
