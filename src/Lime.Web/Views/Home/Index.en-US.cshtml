@@ -12,7 +12,7 @@
 
     <h3 id="xmpp">And why not just use XMPP?</h3>
     <p>XMPP is a protocol widely used for real-time communication but is complex due to the number of features and extensions that it implements. Just take a look at its <a href="http://xmpp.org/xmpp-protocols/xmpp-core/">specification</a> to understand that XMPP goes far beyond what LIME proposes.</p>
-    <p>The LIME protocol defines only a basic message structure and makes use of the MIME content type declarations to remain extensible, but is not mean to cover all the scenarios that XMPP supports.</p>
+    <p>This protocol defines only a basic message structure and makes use of the MIME content type declarations to remain extensible, but is not mean to cover all the scenarios that XMPP supports.</p>
 
     <h1 id="definitions" class="anchor">Definitions</h1>
     <h3 id="concepts">Concepts</h3>
@@ -39,27 +39,36 @@
         The protocol is asynchronous, so there's no guarantee of delivery order of the envelopes, except during the session negotiation, where only session envelopes are allowed. 
     </p>
 
-    <p>Every connected node must have an identity, presented in the <em>name@domain</em> format, as defined by the <a href="http://tools.ietf.org/html/rfc2822#section-3.4.1">RFC 2822, section 3.4.1</a>. The domain name should be a valid domain (i.e. can be resolved by a DNS server) and the name a valid user account identifier in the domain. The identity is authenticated by the server during the establishment of the session.</p>
-    <p>In addition to the identity, the connected node can suggest a name to the particular connection using a identifier called <em>instance</em>. This identifier should appears after the identity, separated by a slash (/) symbol, during the session authentication process. One identity can have more than one active connection in a domain so the <em>instance</em> should be used to differentiate these connections. Usually is used the name of the device (John-Cellphone, John-PC) but can be any valid string. If not provided, the server will set a default value.</p>
-    <p>Therewith, the complete format of a node identifier is <em>name@domain/instance</em>, similar to the <a href="http://xmpp.org/rfcs/rfc3920.html#rfc.section.3">XMPP's Jabber ID</a> (the difference is that the identifier located after the slash is called <em>instance</em> instead of <em>resource</em>). The node identifier must be unique in a LIME network and a envelope addressed to a specific node should be delivered to a connection with that identifier (except for <a href="http://limeprotocol.org/resourcetypes#presence">promiscuous sessions</a>). Envelopes addressed to an identity (<em>name@domain</em>) can be routed in different ways, according to the node presence configuration: A node can opt to always receive all messages sent to the identity, or to receive if it have the highest priority (like XMPP) or only receive if are addressed to the specific instance.</p>
-    
-    <p>When connected, a client node can be authenticated by the server node in two levels: </p>
-    <ul>
-        <li>
-            <strong>Identity</strong> - The connected node represents a single member of a domain.
-        </li>
-        <li>
-            <strong>Domain</strong> - The connected node represents all members of a domain. This authentication level allows the client to set the <em>domain</em> routing rule in the <a href="http://limeprotocol.org/resourcetypes#presence">presence</a> resource. In this case, the client node is able to originate and receive envelopes addressed to any member of the specified domain. 
-            For this level of authentication, the server node usually requires a trusted domain certificate from the client node. This level of authentication is useful for connecting servers in the same domain (cluster), in sub-domains (applications) or in different domains (gateways).
-        </li>
-    </ul>
+    <p>
+        Every connected node must have an identity, presented in the <em>name@domain</em> format, as defined by the <a href="http://tools.ietf.org/html/rfc2822#section-3.4.1">RFC 2822, section 3.4.1</a>. 
+        The domain name should be a valid domain (i.e. can be resolved by a DNS server) and the name a valid user account identifier in the domain. 
+        The identity is authenticated by the server during the establishment of the session.
+    </p>
+    <p>
+        In addition to the identity, the connected node can suggest a name to the particular connection using a identifier called <em>instance</em>. 
+        This identifier should appears after the identity, separated by a slash (/) symbol, during the session authentication process. 
+        One identity can have more than one active connection in a domain so the <em>instance</em> should be used to differentiate these connections. 
+        Usually is used the name of the device (John-Cellphone, John-PC) but can be any valid string. If not provided, the server will set a default value.
+    </p>
+    <p>
+        Therewith, the complete format of a node identifier is <em>name@domain/instance</em>, similar to the <a href="http://xmpp.org/rfcs/rfc3920.html#rfc.section.3">XMPP's Jabber ID</a> 
+        (the difference is that the identifier located after the slash is called <em>instance</em> instead of <em>resource</em>).
+    </p>
+    <p>
+        During a connection, there's a <strong>server</strong> which is the node that received the connection and the <strong>client</strong>, the node which started it.
+        The only difference between these roles is related to the session state management, where the server has full control of it. Besides that, they share the same set of functionality.
+        During the session establishment, the server provides besides the session id, the node identifier of the client. It can optionally authenticate the client using any authentication scheme or just give an arbitrary node identifier without asking any information of the client.
+     </p>
+
 
     <h3 id="envelope">Envelope</h3>
     <p>The JSON documents exchanged in a LIME conversation are called envelopes. The JSON data must be compliant with the <a href="http://tools.ietf.org/html/rfc4627">RFC 4627</a> specification, using the <a href="http://tools.ietf.org/html/rfc3629">UTF-8</a> encoding.</p>
     <p>Every envelope may contains the following properties:</p>
     <ul>
         <li>
-            <strong>from</strong> - Identifier of the sender node of the envelope, in the <em>name@domain/instance</em> format. 
+            <strong>from</strong> - Identifier of the sender node of the envelope, in the <em>name@domain/instance</em> format. Optional. 
+            If a node received an envelope without this value it means that the envelope was originated by the remote party. 
+            A node can receive an envelope with the value of this property different of the remote party identity; in this case, the receiver should decide if it trusts the remote party to send in behalf of the envelope node identity.
         </li>
         <li>
             <strong>to</strong> - Identifier of the destination node of the envelope, in the same format of the sender. 
