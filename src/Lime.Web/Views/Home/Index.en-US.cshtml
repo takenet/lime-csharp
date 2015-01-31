@@ -57,24 +57,34 @@
     <p>
         During a connection, there's a <strong>server</strong> which is the node that received the connection and the <strong>client</strong>, the node which started it.
         The only difference between these roles is related to the session state management, where the server has full control of it. Besides that, they share the same set of functionality.
-        During the session establishment, the server provides besides the session id, the node identifier of the client. It can optionally authenticate the client using any authentication scheme or just give an arbitrary node identifier without asking any information of the client.
+        During the session establishment, the server provides an session id, its own node identifier and the client node identifier. It can optionally authenticate the client using an authentication scheme or provide an arbitrary node identifier without asking any information of the client.
      </p>
-
+    <p>
+        Although both parties of a session knows each other's node identifier, they can receive and send envelopes with distinct node information of the remote party.
+        This means that a node can act as intermediate to be a envelopes switcher for nodes that are not directly connected. But it must be trusted by both sender and destination nodes for that.
+    </p>
+    <p>
+        For instance, in a session between <em>client@domain/instance</em> and <em>server@domain/instance</em> the first one can receive an envelope that the sender is <em>someone@domain/instance</em> in that session.
+        In this case, the client must decide if it trusts the remote party to send envelopes with that node identifier. Specifically, it should look if the remote party is trusted to originate envelopes in behalf of the specified node domain.
+        This trust should be built outside the protocol, using techniques like a DNS query to look for a SRV entry to connect in a specified domain and transport TLS authentication.
+        You can trust a remote party if the remote certificate is a valid <strong>domain certificate</strong>, emitted by a trusted issuer.
+        In the case of receiving an envelope addressed to a different node, the party that received it can forward to the destination, but only if it can directly reach it.
+        This means that the node must have a direct connection with that node or with a node that is trusted to receive this envelope, in the same conditions that are illustrated above.
+        And after the envelope has been forwarded, the actual envelope destination should decides if it trusts the remote party in the same way.
+    </p>
 
     <h3 id="envelope">Envelope</h3>
     <p>The JSON documents exchanged in a LIME conversation are called envelopes. The JSON data must be compliant with the <a href="http://tools.ietf.org/html/rfc4627">RFC 4627</a> specification, using the <a href="http://tools.ietf.org/html/rfc3629">UTF-8</a> encoding.</p>
     <p>Every envelope may contains the following properties:</p>
     <ul>
         <li>
-            <strong>from</strong> - Identifier of the sender node of the envelope, in the <em>name@domain/instance</em> format. Optional. 
-            If a node received an envelope without this value it means that the envelope was originated by the remote party. 
-            A node can receive an envelope with the value of this property different of the remote party identity; in this case, the receiver should decide if it trusts the remote party to send in behalf of the envelope node identity.
+            <strong>from</strong> - Identifier of the sender node of the envelope, in the <em>name@domain/instance</em> format. If a node receives an envelope without this value, it means that the envelope was originated by the remote party.                         
         </li>
         <li>
-            <strong>to</strong> - Identifier of the destination node of the envelope, in the same format of the sender. 
+            <strong>to</strong> - Identifier of the destination node of the envelope, in the same format of the sender. If a node receives an envelope without this value, it means that the envelope is addressed to itself.
         </li>
         <li>
-            <strong>pp</strong> - Acronym for <em>per procurationem</em>. Identifier of a delegate node (a node that received a permission to send on behalf of another), in the <em>name@domain/instance</em> format. Allows a node to send an envelope on behalf of another identity. The sender must have been delegated by this identity through a <a href="#">delegate</a> command.
+            <strong>pp</strong> - Acronym for <em>per procurationem</em>. Identifier of a delegate node (a node that received a permission to send on behalf of another), in the <em>name@domain/instance</em> format. Allows a node to send an envelope on behalf of another identity. 
         </li>
         <li>
             <strong>id</strong> - Unique identifier of the envelope, in the <a href="http://www.ietf.org/rfc/rfc4122.txt">UUID</a> format. 
