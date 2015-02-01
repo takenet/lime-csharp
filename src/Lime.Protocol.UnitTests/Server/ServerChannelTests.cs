@@ -426,24 +426,40 @@ namespace Lime.Protocol.UnitTests.Server
 
         [Test]
         [Category("SendEstablishedSessionAsync")]
+        public async Task SendEstablishedSessionAsync_ValidArgumentsNewState_CallsTransport()
+        {
+            var target = GetTarget();
+
+            var node = DataUtil.CreateNode();
+            await target.SendEstablishedSessionAsync(node);
+
+            _transport.Verify(
+                t => t.SendAsync(
+                    It.Is<Session>(e => e.State == SessionState.Established &&
+                                        e.Authentication == null &&
+                                        e.SchemeOptions == null &&
+                                        e.From.Equals(target.LocalNode) &&
+                                        e.To.Equals(node) &&
+                                        e.CompressionOptions == null &&
+                                        e.Compression == null &&
+                                        e.EncryptionOptions == null &&
+                                        e.Encryption == null &&
+                                        e.Id == target.SessionId),
+                    It.IsAny<CancellationToken>()),
+                    Times.Once());
+
+            Assert.AreEqual(target.State, SessionState.Established);
+            Assert.AreEqual(target.RemoteNode, node);
+        }        
+
+        [Test]
+        [Category("SendEstablishedSessionAsync")]
         [ExpectedException(typeof(ArgumentNullException))]
         public async Task SendEstablishedSessionAsync_NullNodeAuthenticatingState_ThrowsArgumentNullException()
         {
             var target = GetTarget(SessionState.Authenticating);
 
             Node node = null;
-
-            await target.SendEstablishedSessionAsync(node);
-        }
-
-        [Test]
-        [Category("SendEstablishedSessionAsync")]
-        [ExpectedException(typeof(InvalidOperationException))]
-        public async Task SendEstablishedSessionAsync_ValidArgumentsNewState_ThrowsInvalidOperationException()
-        {
-            var target = GetTarget();
-
-            var node = DataUtil.CreateNode();
 
             await target.SendEstablishedSessionAsync(node);
         }

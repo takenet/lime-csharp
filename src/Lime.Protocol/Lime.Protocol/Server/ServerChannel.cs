@@ -141,14 +141,14 @@ namespace Lime.Protocol.Server
 
             var session = new Session()
             {
-                Id = this.SessionId,
-                From = this.LocalNode,
+                Id = base.SessionId,
+                From = base.LocalNode,
                 State = base.State,
                 Compression = sessionCompression,
                 Encryption = sessionEncryption
             };
 
-            return this.SendSessionAsync(session);
+            return base.SendSessionAsync(session);
         }
 
         /// <summary>
@@ -248,7 +248,7 @@ namespace Lime.Protocol.Server
                 throw new ArgumentNullException("node");
             }
 
-            if (base.State != SessionState.Authenticating)
+            if (base.State > SessionState.Authenticating)
             {
                 throw new InvalidOperationException(string.Format("Cannot establish a session in the '{0}' state", this.State));
             }
