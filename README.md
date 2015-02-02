@@ -21,7 +21,7 @@ Finally it has built-in support for authentication, transport encryption and com
 Protocol overview
 ---------------------
 
-The basic protocol data package is called **envelope**. As mentioned before there are four types:
+The basic protocol data package is called **envelope**. As mentioned before, there are four types:
 
 * **Message** - Transports content between nodes
 * **Notification** - Notify about message events
@@ -30,26 +30,24 @@ The basic protocol data package is called **envelope**. As mentioned before ther
 
 All envelope types share some properties (like the ```id``` - the envelope unique identifier - and the ```from``` and ```to``` routing information) but there are some unique properties of each one that allows the proper deserialization when a JSON object is received by the transport.
 
-The ```ITransport``` interface represents a persistent transport connection that allows the management of the connection state besides sending and receiving envelopes. Currently, the library only provides the ```TcpTransport``` implementation but a ```WebSocketTransport``` is on the way.
+The ```ITransport``` interface represents a persistent transport connection that allows the management of the connection state, besides sending and receiving envelopes. Currently, the library only provides the ```TcpTransport``` implementation but a ```WebSocketTransport``` is on the way.
 
-A transport instance need an ```ISerializer``` to transform envelope objects into JSON strings. The library has a built-in serializer but it has partial support for the **Newtonsoft.Json** library (there is some limitations about some content types). We had support for the ServiceStack.Text library too, but we took it off due to licensing issues.
+A transport instance needs an ```ISerializer``` to transform envelope objects into JSON strings and vice-versa. The library has a built-in serializer but there is available an implementation that is based on the the **Newtonsoft.Json** library (with some limitations about some content types). Also, there is partial support for the **ServiceStack.Text** library.
 
-When two nodes are connected to each other a session can be established between they. To help the management of the session state, the library defines the ```IChannel``` interface, an abstraction of the session over the ```ITransport``` instance. The node that received the connection is the **server** and the one who is connecting is the **client**. There is specific implementations of the interface for the server (```ServerChannel``` that implements the derived ```IServerChannel``` interface) and the client (```ClientChannel``` that implements ```IClientChannel```), each one providing specific functionality for each role in the connection. The only difference between the client and the server is related to the session state management, where the server has full control of it. Besides that, they share the same set of funcionality. 
-
-A server uses an ```ITransportListener``` instance to listen for new transport connections. The library provides the ```TcpTransportListener``` for TCP socket transport connections.
+When two nodes are connected to each other a **session** can be established between they. To help the management of the session state, the library defines the ```IChannel``` interface, an abstraction of the session over the ```ITransport``` instance. The node that received the connection is the **server** and the one who is connecting is the **client**. There is specific implementations of the interface for the server (```ServerChannel``` that implements the derived ```IServerChannel``` interface) and the client (```ClientChannel``` that implements ```IClientChannel```), each one providing specific functionality for each role in the connection. The only difference between the client and the server is related to the session state management, where the server has full control of it. Besides that, they share the same set of funcionality. 
+A server uses an ```ITransportListener``` instance to listen for new transport connections. The library provides the ```TcpTransportListener``` for TCP servers implementation.
 
 ### Starting a connection
 
-For starting a connection with a server in a specific domain, the client can use **DNS queries** to check for a *lime* SRV entry and get the server address. This is not mandatory and the client can use static connection information, but its a good idea to rely on DNS since the protocol is domain based. To open the connection the method ```OpenAsync``` of ```ITransport``` should be called passing the remote URI (in the server, the URI parameter can be null). 
+To start a connection with a server in a specific domain, the client can use **DNS queries** to check for a *lime* SRV entry and get the server address. This is not mandatory and the client can use static connection information, but its a good idea to rely on DNS since the protocol is domain based. In the code, the method ```OpenAsync``` of ```ITransport``` should be called passing the remote URI (in the server, the URI parameter can be null). 
 
-After connecting the transport the client should send a **new session** envelope to starts the session negotiation. The ```IClientChannel``` interface provides the method ```StartNewSessionAsync``` for that.
+After connecting the transport, the client should send a **new session** envelope to starts the session negotiation. The ```IClientChannel``` interface provides the method ```StartNewSessionAsync``` for that.
 
 #### Examples
 ##### Creating a client channel
 ```csharp
 // Creates a new transport and connect to the server
 var serverUri = new Uri("net.tcp://localhost:55321");
-
 var transport = new TcpTransport();
 await transport.OpenAsync(serverUri, CancellationToken.None);
 
@@ -66,20 +64,22 @@ var clientChannel = new ClientChannel(
 ```csharp
 // Create and start a listener
 var listenerUri = new Uri("net.tcp://localhost:55321");
-X509Certificate2 serverCertificate = null;  // You should provide a value for TLS
-var serializer = new EnvelopeSerializer();  // Default serializer
+X509Certificate2 serverCertificate = null;  // You should provide a certificate for TLS
+var serializer = new EnvelopeSerializer();  // Built-in serializer
 
 var tcpTransportListener = new TcpTransportListener(
     listenerUri,
     serverCertificate,
     serializer);
 
+// Starts listening
 await tcpTransportListener.StartAsync();
             
-// Accept new transport connection           
+// Accept a new transport connection
+// (In a real server, this should be done in a loop)
 var transport = await tcpTransportListener.AcceptTransportAsync(CancellationToken.None);
 
-// Creates a new server channel
+// Creates a new server channel, setting the session parameters
 var sessionId = Guid.NewGuid();
 var serverNode = Node.Parse("server@domain.com/default");
 var sendTimeout = TimeSpan.FromSeconds(60);
@@ -93,13 +93,13 @@ var serverChannel = new ServerChannel(
 
 ### Session establishment
 
-The server is the responsible for establishment of the session and its parameters, like the ```id``` and node information. It can optionally negotiate transport options and authenticate the client using a supported scheme. To start the establishment process, the server calls the ```ReceiveNewSessionAsync``` method. Note that the protocol did not dictate that the session negotiation and authentication are mandatory. In fact, after receiving a **new session** envelope, the server can just send an **established session** envelope to the client to start the envelope exchanging.
+The server is the responsible for establishment of the session and its parameters, like the ```id``` and node information (both local and remote). It can optionally negotiate transport options and authenticate the client using a supported scheme. To start the establishment process, the server calls the ```ReceiveNewSessionAsync``` method. Note that the protocol did not dictate that the session negotiation and authentication are mandatory. In fact, after receiving a **new session** envelope, the server can just send an **established session** envelope to the client to start the envelope exchanging.
 
-During the transport options negotiation, the server sends to the client the available compression and encryption options and allows it to choose which one it wants to use in the session. This is done through the ```NegotiateSessionAsync``` method which allows the server to await for the client choices. The client select its options using the ```NegotiateSessionAsync``` method. After receiving and validating the client choices the server echoes they to the client to allow it to apply the transport options and does itself the same. The ```ITransport``` interface has the methods ```SetCompressionAsync``` and ```SetEncryptionAsync``` for this reason, but the ```ChannelBase``` implementation already does that automatically.
+During the transport options negotiation, the server sends to the client the available compression and encryption options and allows it to choose which one it wants to use in the session. This is done through the ```NegotiateSessionAsync``` method which allows the server to await for the client choices. The client select its options using the ```NegotiateSessionAsync``` method. After receiving and validating the client choices the server echoes they to the client to allow it to apply the transport options and does itself the same. The ```ITransport``` interface has the methods ```SetCompressionAsync``` and ```SetEncryptionAsync``` for this reason, but the ```ChannelBase``` implementation already handles that automatically.
 
 The most relevant transport option is the encryption. The library support **TLS encryption** for the ```TcpTransport``` implementation, allowing both server and client authentication via certificates.
 
-After the transport options negotiation, the server can request client authentication, calling the ```AuthenticateSessionAsync``` method. The server presents to the client the available schemes and the client A node identify itself with an identity, which is presented as **name@domain** (like an e-mail). Usually the domain is the same of the server if the client is using a local authentication scheme (username/password) but can be a stranger domain if the client is using transport authentication (TLS certificate). 
+After the transport options negotiation, the server can request client authentication, calling the ```AuthenticateSessionAsync``` method. The server presents to the client the available schemes and the client should provide the scheme specific authentication data and identify itself with an identity, which is presented as **name@domain** (like an e-mail). Usually the domain of the client identity is the same of the server if the client is using a local authentication scheme (username/password) but can be a stranger domain if the client is using transport authentication (TLS certificate). 
 
 When the server establishes the session, it assign to the client an unique node identifier, in the format **name@domain/instance** similar to the Jabber ID in the XMPP protocol. This identifier is important for envelope routing in multi-party server connection scenarios. 
 
@@ -208,7 +208,7 @@ if (receivedSession.Authentication is PlainAuthentication &&
 
 ### Exchanging envelopes
 
-With an established session the nodes can exchange messages, notifications and commands until the server finishes the session. The ```IChannel``` interface defines methods to send and receive specific envelopes, like the ```SendMessageAsync``` and ```ReceiveMessageAsync``` for messages.
+With an established session the nodes can exchange messages, notifications and commands until the server finishes the session. The ```IChannel``` interface defines methods to send and receive specific envelopes, like the ```SendMessageAsync``` and ```ReceiveMessageAsync``` for messages or ```SendCommandAsync``` and ```ReceiveCommandAsync``` for commands.
 
 ####Routing
 
@@ -238,7 +238,6 @@ var chatStateMessage = new Message()
     }
 };    
 await clientChannel.SendMessageAsync(chatStateMessage);
-
 
 // Sending a generic JSON message addressed to a specific node
 var jsonMessage = new Message()
