@@ -1,10 +1,10 @@
 ﻿using Lime.Protocol;
 using Lime.Protocol.Client;
-using Lime.Protocol.Contents;
+using Lime.Messaging.Contents;
 using Lime.Protocol.Network;
-using Lime.Protocol.Resources;
+using Lime.Messaging.Resources;
 using Lime.Protocol.Security;
-using Lime.Protocol.Tcp;
+using Lime.Transport.Tcp;
 using System;
 using System.Linq;
 using System.Net.NetworkInformation;
@@ -107,7 +107,7 @@ namespace Lime.Client.Console.Mono
 			var transport = new TcpTransport ();
 
 			await transport.OpenAsync (
-				new Uri ("net.tcp://iris.limeprotocol.org:55321"),
+				new Uri ("net.tcp://takenet-iris.cloudapp.net:55321"),
 				CancellationToken.None);
 
 			var channel = new ClientChannel (

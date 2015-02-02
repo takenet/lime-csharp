@@ -253,6 +253,13 @@ namespace Lime.Protocol.Serialization
             }
         }
 
+        /// <summary>
+        /// Tries to get the registered type for
+        /// the specified media type.
+        /// </summary>
+        /// <param name="mediaType"></param>
+        /// <param name="type"></param>
+        /// <returns></returns>
         public static bool TryGetTypeForMediaType(MediaType mediaType, out Type type)
         {
             return _documentMediaTypeDictionary.TryGetValue(mediaType, out type);            
@@ -352,6 +359,17 @@ namespace Lime.Protocol.Serialization
         public static bool IsKnownType(Type type)
         {
             return _knownTypes.Contains(type);
+        }
+
+        /// <summary>
+        /// Register a document type for serialization support.
+        /// </summary>
+        /// <typeparam name="TDocument"></typeparam>
+        public static void RegisterDocument<TDocument>() 
+            where TDocument : Document, new()
+        {
+            var document = (Document)CreateInstance(typeof(TDocument));
+            _documentMediaTypeDictionary.Add(document.GetMediaType(), typeof(TDocument));
         }
 
         /// <summary>

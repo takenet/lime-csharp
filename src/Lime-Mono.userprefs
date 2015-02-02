@@ -1,6 +1,11 @@
 ﻿<Properties GitUserInfo="UsingGIT">
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
-  <MonoDevelop.Ide.Workbench />
+  <MonoDevelop.Ide.Workbench ActiveDocument="d:\Projetos\lime-csharp\src\Lime.Messaging\Lime.Messaging\Contents\BitmapImage.cs">
+    <Files>
+      <File FileName="Lime.Client.Console.Mono\Program.cs" Line="51" Column="51" />
+      <File FileName="d:\Projetos\lime-csharp\src\Lime.Messaging\Lime.Messaging\Contents\BitmapImage.cs" Line="22" Column="22" />
+    </Files>
+  </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
     <BreakpointStore />
   </MonoDevelop.Ide.DebuggingService.Breakpoints>

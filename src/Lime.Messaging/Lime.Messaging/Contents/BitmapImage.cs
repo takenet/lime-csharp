@@ -1,12 +1,7 @@
 ﻿using System;
 using System.IO;
-#if MONO
-using Android.Graphics;
-using Java.Nio;
-#else
 using System.Drawing;
 using System.Drawing.Imaging;
-#endif
 using System.Runtime.Serialization;
 using Lime.Protocol;
 
@@ -40,19 +35,11 @@ namespace Lime.Messaging.Contents
         {
             if (this.Image != null)
             {
-#if MONO
-                using (var byteBuffer = ByteBuffer.Allocate(this.Image.ByteCount))
-                {
-                    this.Image.CopyPixelsToBuffer(byteBuffer);
-                    return Convert.ToBase64String(byteBuffer.ToArray<byte>());
-                }
-#else
                 using (var stream = new MemoryStream())
                 {
                     this.Image.Save(stream, ImageFormat.Bmp);
                     return Convert.ToBase64String(stream.ToArray());
                 }
-#endif
             }
 
             return null;            
@@ -69,14 +56,11 @@ namespace Lime.Messaging.Contents
             Bitmap image;
 
             var imageBytes = Convert.FromBase64String(value);
-#if MONO
-            image = BitmapFactory.DecodeByteArray(imageBytes, 0, imageBytes.Length);
-#else
+
             using (var stream = new MemoryStream(imageBytes))
             {
                 image = new Bitmap(stream);
             }
-#endif
 
             return new BitmapImage()
             {

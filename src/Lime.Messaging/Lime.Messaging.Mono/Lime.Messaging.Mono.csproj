@@ -1,12 +1,12 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{86D0A14F-B553-48DA-8146-94CF066BC63E}</ProjectGuid>
-    <OutputType>Exe</OutputType>
-    <RootNamespace>Lime.Client.Console.Mono</RootNamespace>
-    <AssemblyName>Lime.Client.Console.Mono</AssemblyName>
+    <ProjectGuid>{09736B02-7306-431B-948D-EC01CE537A59}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <RootNamespace>Lime.Messaging.Mono</RootNamespace>
+    <AssemblyName>Lime.Messaging.Mono</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -14,39 +14,33 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug</OutputPath>
-    <DefineConstants>DEBUG;</DefineConstants>
+    <DefineConstants>DEBUG;MONO</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <Externalconsole>true</Externalconsole>
+    <ConsolePause>false</ConsolePause>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>full</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release</OutputPath>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <Externalconsole>true</Externalconsole>
+    <ConsolePause>false</ConsolePause>
+    <DefineConstants>MONO</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Drawing" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
+  <Import Project="..\Lime.Messaging\Lime.Messaging.projitems" Label="Shared" Condition="Exists('..\Lime.Messaging\Lime.Messaging.projitems')" />
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
-    <ProjectReference Include="..\Lime.Protocol\Lime.Protocol.Mono\Lime.Protocol.Mono.csproj">
+    <ProjectReference Include="..\..\Lime.Protocol\Lime.Protocol.Mono\Lime.Protocol.Mono.csproj">
       <Project>{E381ED6F-01EE-419C-8D41-8193343F9AC2}</Project>
       <Name>Lime.Protocol.Mono</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Lime.Transport.Tcp\Lime.Transport.Tcp.Mono\Lime.Transport.Tcp.Mono.csproj">
-      <Project>{CB773EB7-5EA7-459A-9445-7052173FB47C}</Project>
-      <Name>Lime.Transport.Tcp.Mono</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Lime.Messaging\Lime.Messaging.Mono\Lime.Messaging.Mono.csproj">
-      <Project>{09736B02-7306-431B-948D-EC01CE537A59}</Project>
-      <Name>Lime.Messaging.Mono</Name>
     </ProjectReference>
   </ItemGroup>
 </Project>
