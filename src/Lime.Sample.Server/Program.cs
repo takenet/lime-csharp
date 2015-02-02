@@ -150,7 +150,11 @@ namespace Lime.Sample.Server
         {
             while (!cancellationToken.IsCancellationRequested)
             {
+                Console.ResetColor();
+
                 var message = await serverChannel.ReceiveMessageAsync(cancellationToken);
+
+                Console.ForegroundColor = ConsoleColor.DarkRed;
 
                 IServerChannel destinationServerChannel;
                 // Check the destination of the envelope
@@ -170,6 +174,7 @@ namespace Lime.Sample.Server
                 else if (_nodeChannelsDictionary.TryGetValue(message.To, out destinationServerChannel))
                 {
                     // Destination is a node that has a session with the server
+                    message.From = serverChannel.RemoteNode;
                     await destinationServerChannel.SendMessageAsync(message);
                     Console.WriteLine("Message forwarded from '{0}' to '{1}'", serverChannel.RemoteNode, destinationServerChannel.RemoteNode);
                 }
@@ -197,7 +202,12 @@ namespace Lime.Sample.Server
         {
             while (!cancellationToken.IsCancellationRequested)
             {
+                Console.ResetColor();
+
                 var command = await serverChannel.ReceiveCommandAsync(cancellationToken);
+
+                Console.ForegroundColor = ConsoleColor.DarkGreen;
+
 
                 IServerChannel destinationServerChannel;
                 // Check the destination of the envelope
@@ -222,6 +232,7 @@ namespace Lime.Sample.Server
                 else if (_nodeChannelsDictionary.TryGetValue(command.To, out destinationServerChannel))
                 {
                     // Destination is a node that has a session with the server
+                    command.From = serverChannel.RemoteNode;
                     await destinationServerChannel.SendCommandAsync(command);
                     Console.WriteLine("Command forwarded from '{0}' to '{1}'", serverChannel.RemoteNode, destinationServerChannel.RemoteNode);
                 }
@@ -249,7 +260,12 @@ namespace Lime.Sample.Server
         {
             while (!cancellationToken.IsCancellationRequested)
             {
+                Console.ResetColor();
+
                 var notification = await serverChannel.ReceiveNotificationAsync(cancellationToken);
+
+                Console.ForegroundColor = ConsoleColor.DarkBlue;
+
                 IServerChannel destinationServerChannel;
                 // Check the destination of the envelope
                 if (notification.To == null ||
@@ -260,6 +276,7 @@ namespace Lime.Sample.Server
                 else if (_nodeChannelsDictionary.TryGetValue(notification.To, out destinationServerChannel))
                 {
                     // Destination is a node that has a session with the server
+                    notification.From = serverChannel.RemoteNode;
                     await destinationServerChannel.SendNotificationAsync(notification);
                 }
             }

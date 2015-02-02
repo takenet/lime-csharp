@@ -53,7 +53,7 @@ namespace Lime.Sample.Client
                 transport,
                 sendTimeout);
 
-            // TODO Support for negotiation and authentication
+            // TODO Support for session authentication
             var session = await clientChannel.EstablishSessionAsync(
                 (compressionOptions) => compressionOptions.First(),     // Compression selector 
                 (encryptionOptions) => encryptionOptions.First(),       // Encryption selector
@@ -64,13 +64,13 @@ namespace Lime.Sample.Client
 
             if (session.State == SessionState.Established)
             {
-                var cts = new CancellationTokenSource();
-                var consumeMessagesTask = ConsumeMessagesAsync(clientChannel, cts.Token).WithPassiveCancellation();
-                var consumeCommandsTask = ConsumeCommandsAsync(clientChannel, cts.Token).WithPassiveCancellation();
-                var consumeNotificationsTask = ConsumeNotificationsAsync(clientChannel, cts.Token).WithPassiveCancellation();
+                var consumerCts = new CancellationTokenSource();
+                var consumeMessagesTask = ConsumeMessagesAsync(clientChannel, consumerCts.Token).WithPassiveCancellation();
+                var consumeCommandsTask = ConsumeCommandsAsync(clientChannel, consumerCts.Token).WithPassiveCancellation();
+                var consumeNotificationsTask = ConsumeNotificationsAsync(clientChannel, consumerCts.Token).WithPassiveCancellation();
 
                 var finishedSessionTask = clientChannel
-                    .ReceiveFinishedSessionAsync(cts.Token)
+                    .ReceiveFinishedSessionAsync(CancellationToken.None)
                     .ContinueWith(t =>
                     {
                         Console.Write("The session was finished. ");
@@ -93,30 +93,29 @@ namespace Lime.Sample.Client
                         break;
                     }
                     
-                    Node to;
-                    if (Node.TryParse(toInput, out to))
+                    Node to = null;
+                    if (string.IsNullOrEmpty(toInput) || Node.TryParse(toInput, out to))
                     {
-                        Console.Write("Message text: ");
-                        var messageText = Console.ReadLine();
-
+                        Console.Write("Message text: ");                        
                         var message = new Message()
                         {
                             To = to,
                             Content = new PlainText()
                             {
-                                Text = messageText
+                                Text = Console.ReadLine()
                             }
                         };
 
                         await clientChannel.SendMessageAsync(message);
                     }
+
                 }
 
                 Console.WriteLine("Finishing...");
-                cts.Cancel();
+                consumerCts.Cancel();
                 await Task.WhenAll(consumeMessagesTask, consumeCommandsTask, consumeNotificationsTask);
                 await clientChannel.SendFinishingSessionAsync();
-                await finishedSessionTask;
+                await finishedSessionTask.WithCancellation(TimeSpan.FromSeconds(30).ToCancellationToken());
             }
             else
             {
@@ -137,16 +136,21 @@ namespace Lime.Sample.Client
             while (!cancellationToken.IsCancellationRequested)
             {
                 var message = await clientChannel.ReceiveMessageAsync(cancellationToken);
+
+                Console.ForegroundColor = ConsoleColor.DarkRed;
                 Console.WriteLine("Message with id '{0}' received from '{1}': {2}", message.Id, message.From ?? clientChannel.RemoteNode, message.Content);
+                Console.ResetColor();
             }
         }
 
         static async Task ConsumeCommandsAsync(IClientChannel clientChannel, CancellationToken cancellationToken)
         {
             while (!cancellationToken.IsCancellationRequested)
-            {
+            {                
                 var command = await clientChannel.ReceiveCommandAsync(cancellationToken);
+                Console.ForegroundColor = ConsoleColor.DarkGreen;
                 Console.WriteLine("Command with id '{0}' received from '{1}' - Method: {2} - URI: {3}", command.Id, command.From ?? clientChannel.RemoteNode, command.Method, command.Uri);
+                Console.ResetColor();
             }
         }
 
@@ -155,13 +159,16 @@ namespace Lime.Sample.Client
             while (!cancellationToken.IsCancellationRequested)
             {
                 var notification = await clientChannel.ReceiveNotificationAsync(cancellationToken);
+
+                Console.ForegroundColor = ConsoleColor.DarkBlue;                
                 Console.WriteLine("Notification with id {0} received from '{1}' - Event: {2}", notification.Id, notification.From ?? clientChannel.RemoteNode, notification.Event);
+                Console.ResetColor();
             }
         }                            
     }
 
     public static class TaskExtensions
-    {
+    {        
         public static Task WithPassiveCancellation(this Task task)
         {
             return task.ContinueWith(t => t, TaskContinuationOptions.OnlyOnCanceled);
