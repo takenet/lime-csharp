@@ -81,6 +81,11 @@ namespace Lime.Protocol.Client
             // Session authentication
             if (receivedSession.State == SessionState.Authenticating)
             {
+                if (identity == null)
+                {
+                    throw new ArgumentNullException("identity");
+                }
+
                 do
                 {
                     Authentication roundtrip = null;
