@@ -11,12 +11,14 @@ Besides that there's a **REST capable** command interface with verbs (*get, set 
 
 Finally it has built-in support for authentication, transport encryption and compression.
 
-### Nuget packages
+### Solution structure
 
-- **Lime.Protocol**: Base protocol
-- **Lime.Transport.Tcp**: TCP transport implementation
-- **Lime.Transport.Http**: HTTP emulation layer (Lime over HTTP)
-- **Lime.Messaging**: Common content and resource types for instant messaging applications
+- **Lime.Protocol**: Base protocol ([NuGet](https://www.nuget.org/Packages/Lime.Protocol))
+- **Lime.Transport.Tcp**: TCP transport implementation ([NuGet](https://www.nuget.org/Packages/Lime.Transport.Tcp))
+- **Lime.Transport.Http**: HTTP emulation layer (LIME over HTTP) ([NuGet](https://www.nuget.org/Packages/Lime.Transport.Http))
+- **Lime.Messaging**: Common content and resource types for instant messaging applications ([NuGet](https://www.nuget.org/Packages/Lime.Messaging))
+- **Lime.Client.TestConsole**: Client console for server testing
+- **Lime.Client.Windows**: Instant messaging client built with WPF
 
 Protocol overview
 ---------------------
