@@ -19,6 +19,8 @@ Finally it has built-in support for authentication, transport encryption and com
 - **Lime.Messaging**: Common content and resource types for instant messaging applications ([NuGet](https://www.nuget.org/Packages/Lime.Messaging))
 - **Lime.Client.TestConsole**: Client console for server testing
 - **Lime.Client.Windows**: Instant messaging client built with WPF
+- **Lime.Sample.Server**: Sample server implementation with very basic functionality
+- **Lime.Sample.Client**: Sample client implementation
 
 Protocol overview
 ---------------------
