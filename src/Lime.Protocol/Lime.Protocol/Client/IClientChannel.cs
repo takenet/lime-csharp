@@ -11,7 +11,7 @@ namespace Lime.Protocol.Client
 {
     /// <summary>
     /// Defines the communication channel
-    /// between a node and a server
+    /// between a client node and a server.
     /// </summary>
     public interface IClientChannel : IChannel
     {

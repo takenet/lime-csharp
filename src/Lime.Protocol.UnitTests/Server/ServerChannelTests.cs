@@ -38,7 +38,7 @@ namespace Lime.Protocol.UnitTests.Server
 
             if (serverNode == null)
             {
-                serverNode = DataUtil.CreateNode();
+                serverNode = Dummy.CreateNode();
             }
 
             return new TestServerChannel(
@@ -58,8 +58,8 @@ namespace Lime.Protocol.UnitTests.Server
         {
             var target = GetTarget(SessionState.New);
 
-            var session = DataUtil.CreateSession();
-            var cancellationToken = DataUtil.CreateCancellationToken();
+            var session = Dummy.CreateSession();
+            var cancellationToken = Dummy.CreateCancellationToken();
 
             _transport
                 .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
@@ -79,7 +79,7 @@ namespace Lime.Protocol.UnitTests.Server
         {
             var target = GetTarget(SessionState.Established);
 
-            var cancellationToken = DataUtil.CreateCancellationToken();
+            var cancellationToken = Dummy.CreateCancellationToken();
 
             var actual = await target.ReceiveNewSessionAsync(cancellationToken);
         }
@@ -92,7 +92,7 @@ namespace Lime.Protocol.UnitTests.Server
         [Category("NegotiateSessionAsync")]
         public async Task NegotiateSessionAsync_NewStateValidOptions_CallsTransportAndReadsFromBuffer()
         {
-            var session = DataUtil.CreateSession(SessionState.Negotiating);
+            var session = Dummy.CreateSession(SessionState.Negotiating);
 
 
             var target = GetTarget(sessionId: session.Id);           
@@ -100,7 +100,7 @@ namespace Lime.Protocol.UnitTests.Server
             var compressionOptions = new SessionCompression[] { SessionCompression.None };
             var encryptionOptions = new SessionEncryption[] { SessionEncryption.None, SessionEncryption.TLS };
 
-            var cancellationToken = DataUtil.CreateCancellationToken();
+            var cancellationToken = Dummy.CreateCancellationToken();
 
             _transport
                 .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
@@ -140,7 +140,7 @@ namespace Lime.Protocol.UnitTests.Server
             var compressionOptions = new SessionCompression[] { SessionCompression.None };
             var encryptionOptions = new SessionEncryption[] { SessionEncryption.None, SessionEncryption.TLS };
 
-            var cancellationToken = DataUtil.CreateCancellationToken();
+            var cancellationToken = Dummy.CreateCancellationToken();
 
             var actual = await target.NegotiateSessionAsync(compressionOptions, encryptionOptions, cancellationToken);
         }
@@ -155,7 +155,7 @@ namespace Lime.Protocol.UnitTests.Server
             SessionCompression[] compressionOptions = null;
             var encryptionOptions = new SessionEncryption[] { SessionEncryption.None, SessionEncryption.TLS };
 
-            var cancellationToken = DataUtil.CreateCancellationToken();
+            var cancellationToken = Dummy.CreateCancellationToken();
 
             var actual = await target.NegotiateSessionAsync(compressionOptions, encryptionOptions, cancellationToken);
         }
@@ -170,7 +170,7 @@ namespace Lime.Protocol.UnitTests.Server
             var compressionOptions = new SessionCompression[0];
             var encryptionOptions = new SessionEncryption[] { SessionEncryption.None, SessionEncryption.TLS };
 
-            var cancellationToken = DataUtil.CreateCancellationToken();
+            var cancellationToken = Dummy.CreateCancellationToken();
 
             var actual = await target.NegotiateSessionAsync(compressionOptions, encryptionOptions, cancellationToken);
         }
@@ -185,7 +185,7 @@ namespace Lime.Protocol.UnitTests.Server
             var compressionOptions = new SessionCompression[] { SessionCompression.None };
             SessionEncryption[] encryptionOptions = null;
 
-            var cancellationToken = DataUtil.CreateCancellationToken();
+            var cancellationToken = Dummy.CreateCancellationToken();
 
             var actual = await target.NegotiateSessionAsync(compressionOptions, encryptionOptions, cancellationToken);
         }
@@ -200,7 +200,7 @@ namespace Lime.Protocol.UnitTests.Server
             var compressionOptions = new SessionCompression[] { SessionCompression.None };
             var encryptionOptions = new SessionEncryption[0];
 
-            var cancellationToken = DataUtil.CreateCancellationToken();
+            var cancellationToken = Dummy.CreateCancellationToken();
 
             var actual = await target.NegotiateSessionAsync(compressionOptions, encryptionOptions, cancellationToken);
         }
@@ -245,13 +245,13 @@ namespace Lime.Protocol.UnitTests.Server
         [Category("AuthenticateSessionAsync")]
         public async Task AuthenticateSessionAsync_NegotiatingStateValidOptions_CallsTransportAndReadsFromBuffer()
         {
-            var session = DataUtil.CreateSession(SessionState.Authenticating);
+            var session = Dummy.CreateSession(SessionState.Authenticating);
                         
             var target = GetTarget(SessionState.Negotiating, sessionId: session.Id);
 
-            var schemeOptions = DataUtil.CreateSchemeOptions();
+            var schemeOptions = Dummy.CreateSchemeOptions();
            
-            var cancellationToken = DataUtil.CreateCancellationToken();
+            var cancellationToken = Dummy.CreateCancellationToken();
 
             _transport
                 .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
@@ -288,9 +288,9 @@ namespace Lime.Protocol.UnitTests.Server
         {
             var target = GetTarget(SessionState.Established);
 
-            var schemeOptions = DataUtil.CreateSchemeOptions();            
+            var schemeOptions = Dummy.CreateSchemeOptions();            
 
-            var cancellationToken = DataUtil.CreateCancellationToken();
+            var cancellationToken = Dummy.CreateCancellationToken();
 
             var actual = await target.AuthenticateSessionAsync(schemeOptions, cancellationToken);
         }
@@ -304,7 +304,7 @@ namespace Lime.Protocol.UnitTests.Server
 
             AuthenticationScheme[] schemeOptions = null;
 
-            var cancellationToken = DataUtil.CreateCancellationToken();
+            var cancellationToken = Dummy.CreateCancellationToken();
 
             var actual = await target.AuthenticateSessionAsync(schemeOptions, cancellationToken);
         }
@@ -318,7 +318,7 @@ namespace Lime.Protocol.UnitTests.Server
 
             AuthenticationScheme[] schemeOptions = new AuthenticationScheme[0];
 
-            var cancellationToken = DataUtil.CreateCancellationToken();
+            var cancellationToken = Dummy.CreateCancellationToken();
 
             var actual = await target.AuthenticateSessionAsync(schemeOptions, cancellationToken);
         }
@@ -327,13 +327,13 @@ namespace Lime.Protocol.UnitTests.Server
         [Category("AuthenticateSessionAsync")]
         public async Task AuthenticateSessionAsync_AuthenticatingStateValidRoundtrip_CallsTransportAndReadsFromBuffer()
         {
-            var session = DataUtil.CreateSession(SessionState.Authenticating);
+            var session = Dummy.CreateSession(SessionState.Authenticating);
 
             var target = GetTarget(SessionState.Authenticating, sessionId: session.Id);
 
-            var authenticationRoundtrip = DataUtil.CreatePlainAuthentication();
+            var authenticationRoundtrip = Dummy.CreatePlainAuthentication();
             
-            var cancellationToken = DataUtil.CreateCancellationToken();
+            var cancellationToken = Dummy.CreateCancellationToken();
 
             _transport
                 .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
@@ -372,7 +372,7 @@ namespace Lime.Protocol.UnitTests.Server
 
             Authentication authenticationRoundtrip = null;
 
-            var cancellationToken = DataUtil.CreateCancellationToken();
+            var cancellationToken = Dummy.CreateCancellationToken();
 
             var actual = await target.AuthenticateSessionAsync(authenticationRoundtrip, cancellationToken);
         }
@@ -384,9 +384,9 @@ namespace Lime.Protocol.UnitTests.Server
         {
             var target = GetTarget(SessionState.New);
 
-            var authenticationRoundtrip = DataUtil.CreatePlainAuthentication();
+            var authenticationRoundtrip = Dummy.CreatePlainAuthentication();
 
-            var cancellationToken = DataUtil.CreateCancellationToken();
+            var cancellationToken = Dummy.CreateCancellationToken();
 
             var actual = await target.AuthenticateSessionAsync(authenticationRoundtrip, cancellationToken);
         }
@@ -401,7 +401,7 @@ namespace Lime.Protocol.UnitTests.Server
         {
             var target = GetTarget(SessionState.Authenticating);
 
-            var node = DataUtil.CreateNode();
+            var node = Dummy.CreateNode();
 
             await target.SendEstablishedSessionAsync(node);
 
@@ -430,7 +430,7 @@ namespace Lime.Protocol.UnitTests.Server
         {
             var target = GetTarget();
 
-            var node = DataUtil.CreateNode();
+            var node = Dummy.CreateNode();
             await target.SendEstablishedSessionAsync(node);
 
             _transport.Verify(
@@ -472,9 +472,9 @@ namespace Lime.Protocol.UnitTests.Server
         [Category("ReceiveFinishingSessionAsync")]
         public async Task ReceiveFinishingSessionAsync_EstablishedState_ReadsTransport()
         {            
-            var session = DataUtil.CreateSession(SessionState.Finishing);
+            var session = Dummy.CreateSession(SessionState.Finishing);
             
-            var cancellationToken = DataUtil.CreateCancellationToken();
+            var cancellationToken = Dummy.CreateCancellationToken();
 
             var tcs = new TaskCompletionSource<Envelope>();
             _transport
@@ -499,7 +499,7 @@ namespace Lime.Protocol.UnitTests.Server
         {
             var target = GetTarget(SessionState.Authenticating);
 
-            var cancellationToken = DataUtil.CreateCancellationToken();
+            var cancellationToken = Dummy.CreateCancellationToken();
 
             var actual = await target.ReceiveFinishingSessionAsync(cancellationToken);
         }
@@ -512,7 +512,7 @@ namespace Lime.Protocol.UnitTests.Server
         [Category("SendFinishedSessionAsync")]
         public async Task SendFinishedSessionAsync_EstablishedState_CallsAndClosesTransport()
         {
-            var remoteNode = DataUtil.CreateNode();
+            var remoteNode = Dummy.CreateNode();
 
             var target = GetTarget(SessionState.Established, remoteNode);
 
@@ -563,11 +563,11 @@ namespace Lime.Protocol.UnitTests.Server
         [Category("SendFailedSessionAsync")]
         public async Task SendFailedSessionAsync_EstablishedState_CallsAndClosesTransport()
         {
-            var remoteNode = DataUtil.CreateNode();
+            var remoteNode = Dummy.CreateNode();
 
             var target = GetTarget(SessionState.Established, remoteNode);
 
-            var reason = DataUtil.CreateReason();
+            var reason = Dummy.CreateReason();
 
             await target.SendFailedSessionAsync(reason);
 

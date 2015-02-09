@@ -34,7 +34,7 @@ namespace Lime.Protocol.Network
     public enum DataOperation
     {
         /// <summary>
-        /// A tranport send operation
+        /// A transport send operation
         /// </summary>
         Send,
         /// <summary>

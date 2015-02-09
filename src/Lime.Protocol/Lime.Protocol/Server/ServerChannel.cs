@@ -296,19 +296,18 @@ namespace Lime.Protocol.Server
         /// <returns></returns>
         /// <exception cref="System.InvalidOperationException"></exception>
         public async Task SendFinishedSessionAsync()
-        {
-            base.State = SessionState.Finished;
-
+        {            
             var session = new Session()
             {
                 Id = base.SessionId,
                 From = base.LocalNode,
                 To = base.RemoteNode,
-                State = base.State,
+                State = SessionState.Finished,
             };
 
             await base.SendSessionAsync(session).ConfigureAwait(false);
             await base.Transport.CloseAsync(CancellationToken.None).ConfigureAwait(false);
+            base.State = session.State;
         }
 
         /// <summary>
@@ -326,21 +325,20 @@ namespace Lime.Protocol.Server
             if (reason == null)
             {
                 throw new ArgumentNullException("reason");
-            }
-
-            base.State = SessionState.Failed;
+            }            
 
             var session = new Session()
             {
                 Id = base.SessionId,
                 From = base.LocalNode,
                 To = base.RemoteNode,
-                State = base.State,
+                State = SessionState.Failed,
                 Reason = reason
             };
 
             await base.SendSessionAsync(session).ConfigureAwait(false);
             await base.Transport.CloseAsync(CancellationToken.None).ConfigureAwait(false);
+            base.State = session.State;
         }
 
         /// <summary>

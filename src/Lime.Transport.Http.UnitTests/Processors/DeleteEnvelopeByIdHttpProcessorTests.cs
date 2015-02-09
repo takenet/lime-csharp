@@ -45,11 +45,11 @@ namespace Lime.Transport.Http.UnitTests.Processors
             Principal = new Mock<IPrincipal>();
             PrincipalIdentity = new Mock<System.Security.Principal.IIdentity>();
             Principal.SetupGet(p => p.Identity).Returns(() => PrincipalIdentity.Object);
-            Identity = DataUtil.CreateIdentity();
+            Identity = Dummy.CreateIdentity();
             PrincipalIdentityName = Identity.ToString();
             PrincipalIdentity.SetupGet(p => p.Name).Returns(() => PrincipalIdentityName);                        
             MessageId = Guid.NewGuid();
-            DeleteMessageUri = new Uri("http://" + Constants.MESSAGES_PATH + ":" + DataUtil.CreateRandomInt(50000) + "/" + MessageId);
+            DeleteMessageUri = new Uri("http://" + Constants.MESSAGES_PATH + ":" + Dummy.CreateRandomInt(50000) + "/" + MessageId);
             DeleteMessageHttpRequest = new HttpRequest("DELETE", DeleteMessageUri, Principal.Object, Guid.NewGuid());
             DeleteMessageUriTemplateMatch = new UriTemplateMatch();
             DeleteMessageUriTemplateMatch.BoundVariables.Add("id", MessageId.ToString());

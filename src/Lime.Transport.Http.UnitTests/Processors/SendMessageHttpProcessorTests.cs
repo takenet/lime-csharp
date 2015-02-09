@@ -60,21 +60,21 @@ namespace Lime.Transport.Http.UnitTests.Processors
             Principal = new Mock<IPrincipal>();
             PrincipalIdentity = new Mock<System.Security.Principal.IIdentity>();
             Principal.SetupGet(p => p.Identity).Returns(() => PrincipalIdentity.Object);
-            Identity = DataUtil.CreateIdentity();
+            Identity = Dummy.CreateIdentity();
             PrincipalIdentityName = Identity.ToString();
             PrincipalIdentity.SetupGet(p => p.Name).Returns(() => PrincipalIdentityName);
             
-            Message = DataUtil.CreateMessage(DataUtil.CreateTextContent());
-            DispatchedNotification = DataUtil.CreateNotification(Event.Dispatched);
+            Message = Dummy.CreateMessage(Dummy.CreateTextContent());
+            DispatchedNotification = Dummy.CreateNotification(Event.Dispatched);
             DispatchedNotification.Id = Message.Id;
-            FailedNotification = DataUtil.CreateNotification(Event.Failed);
-            FailedNotification.Reason = DataUtil.CreateReason();
+            FailedNotification = Dummy.CreateNotification(Event.Failed);
+            FailedNotification.Reason = Dummy.CreateReason();
             FailedNotification.Id = Message.Id;
             WaitUntilEvent = DispatchedNotification.Event;
-            Content = DataUtil.CreateRandomString(100);
+            Content = Dummy.CreateRandomString(100);
             BodyStream = new MemoryStream(Encoding.UTF8.GetBytes(Content));
             BodyStream.Seek(0, SeekOrigin.Begin);
-            SendMessageUri = new Uri("http://" + Constants.MESSAGES_PATH + ":" + DataUtil.CreateRandomInt(50000) + "/" + Constants.MESSAGES_PATH);
+            SendMessageUri = new Uri("http://" + Constants.MESSAGES_PATH + ":" + Dummy.CreateRandomInt(50000) + "/" + Constants.MESSAGES_PATH);
             QueryString = new NameValueCollection();
             QueryString.Add(Constants.WAIT_UNTIL_QUERY, WaitUntilEvent.ToString().ToCamelCase());
             SendMessageHttpRequest = new HttpRequest("POST", SendMessageUri, Principal.Object, Message.Id, bodyStream: BodyStream, queryString: QueryString, contentType: MediaType.Parse(Constants.TEXT_PLAIN_HEADER_VALUE));

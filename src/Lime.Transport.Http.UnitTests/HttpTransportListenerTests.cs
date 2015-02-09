@@ -85,22 +85,22 @@ namespace Lime.Transport.Http.UnitTests
         public void Arrange()
         {
             Host = "localhost";
-            Port = 8080 + DataUtil.CreateRandomInt(10000);
+            Port = 8080 + Dummy.CreateRandomInt(10000);
             CancellationToken = TimeSpan.FromSeconds(5).ToCancellationToken();
-            ClientNode = DataUtil.CreateNode();
+            ClientNode = Dummy.CreateNode();
             User = ClientNode.ToIdentity().ToString();
-            Password = DataUtil.CreateRandomString(20);
+            Password = Dummy.CreateRandomString(20);
             MessagesUrl = "http://" + Host + ":" + Port + "/messages";
 
             SessionId = Guid.NewGuid();
-            ServerNode = DataUtil.CreateNode();
+            ServerNode = Dummy.CreateNode();
             SendTimeout = TimeSpan.FromSeconds(5);
-            Reason = DataUtil.CreateReason();
+            Reason = Dummy.CreateReason();
 
             SentMessage = new Message()
             {
-                To = DataUtil.CreateNode(),
-                Content = DataUtil.CreateTextContent()
+                To = Dummy.CreateNode(),
+                Content = Dummy.CreateTextContent()
             };
 
             HttpServer = new Mock<IHttpServer>();
@@ -127,7 +127,7 @@ namespace Lime.Transport.Http.UnitTests
                 .Returns(() => EmulatedTransport.Object);
 
             Processor1Methods = new HashSet<string> { "GET" };
-            Processor1Template = new UriTemplate("/" + DataUtil.CreateRandomString(10));
+            Processor1Template = new UriTemplate("/" + Dummy.CreateRandomString(10));
             Processor1 = new Mock<IHttpProcessor>();
             Processor1.SetupGet(p => p.Methods).Returns(Processor1Methods);
             Processor1.SetupGet(p => p.Template).Returns(Processor1Template);
@@ -136,7 +136,7 @@ namespace Lime.Transport.Http.UnitTests
             Processor1HttpRequest = new HttpRequest("GET", uri, Principal.Object);
 
             Processor2Methods = new HashSet<string> { "POST", "DELETE", "GET" };
-            Processor2Template = new UriTemplate("/" + DataUtil.CreateRandomString(10) + "/{id}");
+            Processor2Template = new UriTemplate("/" + Dummy.CreateRandomString(10) + "/{id}");
             Processor2 = new Mock<IHttpProcessor>();
             Processor2.SetupGet(p => p.Methods).Returns(Processor2Methods);
             Processor2.SetupGet(p => p.Template).Returns(Processor2Template);
@@ -278,7 +278,7 @@ namespace Lime.Transport.Http.UnitTests
                 Reason = new Reason()
                 {
                     Code = ReasonCodes.SESSION_AUTHENTICATION_FAILED,
-                    Description = DataUtil.CreateRandomString(50)
+                    Description = Dummy.CreateRandomString(50)
                 }
             };
 
@@ -342,7 +342,7 @@ namespace Lime.Transport.Http.UnitTests
             // Arrange
             var invalidHttpRequest = new HttpRequest(
                 "GET", 
-                new Uri("http://" + Host + ":" + Port + "/" + DataUtil.CreateRandomString(10)), 
+                new Uri("http://" + Host + ":" + Port + "/" + Dummy.CreateRandomString(10)), 
                 Principal.Object);
 
             // Act
@@ -368,7 +368,7 @@ namespace Lime.Transport.Http.UnitTests
                 .Setup(e => e.GetSessionAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(session);
 
-            var exceptionMessage = DataUtil.CreateRandomString(100);
+            var exceptionMessage = Dummy.CreateRandomString(100);
 
             Processor1
                 .Setup(p => p.ProcessAsync(Processor1HttpRequest, It.IsAny<UriTemplateMatch>(), It.IsAny<ITransportSession>(), It.IsAny<CancellationToken>()))

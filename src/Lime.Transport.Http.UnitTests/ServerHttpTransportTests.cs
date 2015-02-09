@@ -69,8 +69,8 @@ namespace Lime.Transport.Http.UnitTests
         [SetUp]
         public void Arrange()
         {
-            Identity = DataUtil.CreateIdentity();
-            Authentication = DataUtil.CreateAuthentication(AuthenticationScheme.Plain);
+            Identity = Dummy.CreateIdentity();
+            Authentication = Dummy.CreateAuthentication(AuthenticationScheme.Plain);
             UseHttps = true;
 
             MessageStorage = new Mock<IEnvelopeStorage<Message>>();
@@ -80,48 +80,48 @@ namespace Lime.Transport.Http.UnitTests
 
             CancellationToken = TimeSpan.FromSeconds(5).ToCancellationToken();
 
-            TextMessage = DataUtil.CreateMessage(DataUtil.CreateTextContent());
+            TextMessage = Dummy.CreateMessage(Dummy.CreateTextContent());
 
-            AcceptedNotification = DataUtil.CreateNotification(Event.Accepted);
+            AcceptedNotification = Dummy.CreateNotification(Event.Accepted);
             AcceptedNotification.Id = TextMessage.Id;
             AcceptedNotification.To = TextMessage.From;
 
-            DispatchedNotification = DataUtil.CreateNotification(Event.Dispatched);
+            DispatchedNotification = Dummy.CreateNotification(Event.Dispatched);
             DispatchedNotification.Id = TextMessage.Id;
             DispatchedNotification.To = TextMessage.From;
 
-            FailedNotification = DataUtil.CreateNotification(Event.Failed);
+            FailedNotification = Dummy.CreateNotification(Event.Failed);
             FailedNotification.Id = TextMessage.Id;
             FailedNotification.To = TextMessage.From;
-            FailedNotification.Reason = DataUtil.CreateReason();
+            FailedNotification.Reason = Dummy.CreateReason();
 
             WaitUntilEvent = DispatchedNotification.Event;
 
-            PresenceRequestCommand = DataUtil.CreateCommand();
+            PresenceRequestCommand = Dummy.CreateCommand();
             PresenceRequestCommand.Uri = new LimeUri(UriTemplates.PRESENCE);            
-            PresenceResponseCommand = DataUtil.CreateCommand(DataUtil.CreatePresence(), status: CommandStatus.Success);
+            PresenceResponseCommand = Dummy.CreateCommand(Dummy.CreatePresence(), status: CommandStatus.Success);
             PresenceResponseCommand.Id = PresenceRequestCommand.Id;
 
-            PingRequestCommand = DataUtil.CreateCommand();
+            PingRequestCommand = Dummy.CreateCommand();
             PingRequestCommand.Uri = new LimeUri(UriTemplates.PING);            
 
-            OptionsNegotiatingSession = DataUtil.CreateSession(SessionState.Negotiating);
+            OptionsNegotiatingSession = Dummy.CreateSession(SessionState.Negotiating);
             OptionsNegotiatingSession.CompressionOptions = new[] { SessionCompression.None };
             OptionsNegotiatingSession.EncryptionOptions = new[] { SessionEncryption.None, SessionEncryption.TLS };            
-            ConfirmationNegotiatingSession = DataUtil.CreateSession(SessionState.Negotiating);
+            ConfirmationNegotiatingSession = Dummy.CreateSession(SessionState.Negotiating);
             ConfirmationNegotiatingSession.Id = OptionsNegotiatingSession.Id;
             ConfirmationNegotiatingSession.Compression = SessionCompression.None;
             ConfirmationNegotiatingSession.Encryption = SessionEncryption.TLS;
-            OptionsAuthenticatingSession = DataUtil.CreateSession(SessionState.Authenticating);
+            OptionsAuthenticatingSession = Dummy.CreateSession(SessionState.Authenticating);
             OptionsAuthenticatingSession.Id = OptionsNegotiatingSession.Id;
             OptionsAuthenticatingSession.SchemeOptions = new[] { AuthenticationScheme.Plain };
-            EstablishedSession = DataUtil.CreateSession(SessionState.Established);
+            EstablishedSession = Dummy.CreateSession(SessionState.Established);
             EstablishedSession.Id = OptionsNegotiatingSession.Id;
-            FinishedSession = DataUtil.CreateSession(SessionState.Finished);
+            FinishedSession = Dummy.CreateSession(SessionState.Finished);
             FinishedSession.Id = OptionsNegotiatingSession.Id;
-            FailedSession = DataUtil.CreateSession(SessionState.Failed);
+            FailedSession = Dummy.CreateSession(SessionState.Failed);
             FailedSession.Id = OptionsNegotiatingSession.Id;
-            FailedSession.Reason = DataUtil.CreateReason();
+            FailedSession.Reason = Dummy.CreateReason();
 
 
             Target = new Lazy<ServerHttpTransport>(() =>

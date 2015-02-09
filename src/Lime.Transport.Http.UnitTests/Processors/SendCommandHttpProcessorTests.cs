@@ -63,18 +63,18 @@ namespace Lime.Transport.Http.UnitTests.Processors
             Principal = new Mock<IPrincipal>();
             PrincipalIdentity = new Mock<System.Security.Principal.IIdentity>();
             Principal.SetupGet(p => p.Identity).Returns(() => PrincipalIdentity.Object);
-            Identity = DataUtil.CreateIdentity();
+            Identity = Dummy.CreateIdentity();
             PrincipalIdentityName = Identity.ToString();
             PrincipalIdentity.SetupGet(p => p.Name).Returns(() => PrincipalIdentityName);
-            Resource = DataUtil.CreatePresence();
-            RequestCommand = DataUtil.CreateCommand(Resource, CommandMethod.Set, uri: new LimeUri(UriTemplates.PRESENCE));
-            SuccessResponseCommand = DataUtil.CreateCommand(status: CommandStatus.Success);
+            Resource = Dummy.CreatePresence();
+            RequestCommand = Dummy.CreateCommand(Resource, CommandMethod.Set, uri: new LimeUri(UriTemplates.PRESENCE));
+            SuccessResponseCommand = Dummy.CreateCommand(status: CommandStatus.Success);
             SuccessResponseCommand.Id = RequestCommand.Id;
-            ResourceSuccessResponseCommand = DataUtil.CreateCommand(status: CommandStatus.Success);
-            ResourceSuccessResponseCommand.Resource = DataUtil.CreatePresence();
+            ResourceSuccessResponseCommand = Dummy.CreateCommand(status: CommandStatus.Success);
+            ResourceSuccessResponseCommand.Resource = Dummy.CreatePresence();
             ResourceSuccessResponseCommand.Id = RequestCommand.Id;
-            FailedResponseCommand = DataUtil.CreateCommand(status: CommandStatus.Failure);
-            FailedResponseCommand.Reason = DataUtil.CreateReason();
+            FailedResponseCommand = Dummy.CreateCommand(status: CommandStatus.Failure);
+            FailedResponseCommand.Reason = Dummy.CreateReason();
             FailedResponseCommand.Id = RequestCommand.Id;
 
             RequestContent = JsonSerializer<Presence>.Serialize((Presence)Resource);
@@ -82,7 +82,7 @@ namespace Lime.Transport.Http.UnitTests.Processors
             ResponseContent = JsonSerializer<Presence>.Serialize((Presence)ResourceSuccessResponseCommand.Resource);
 
             BodyStream.Seek(0, SeekOrigin.Begin);
-            SendCommandUri = new Uri("http://" + Constants.COMMANDS_PATH + ":" + DataUtil.CreateRandomInt(50000) + "/" + Constants.COMMANDS_PATH + RequestCommand.Uri.ToString());
+            SendCommandUri = new Uri("http://" + Constants.COMMANDS_PATH + ":" + Dummy.CreateRandomInt(50000) + "/" + Constants.COMMANDS_PATH + RequestCommand.Uri.ToString());
             SendCommandHttpRequest = new HttpRequest("POST", SendCommandUri, Principal.Object, RequestCommand.Id, bodyStream: BodyStream, contentType: Resource.GetMediaType());
             SendCommandHttpRequest.Headers.Add(Constants.ENVELOPE_FROM_HEADER, RequestCommand.From.ToString());
             SendCommandHttpRequest.Headers.Add(Constants.ENVELOPE_TO_HEADER, RequestCommand.To.ToString());

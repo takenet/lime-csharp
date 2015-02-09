@@ -74,39 +74,39 @@ namespace Lime.Transport.Http.UnitTests
         [SetUp]
         public void Arrange()
         {
-            Path = "/" + DataUtil.CreateRandomString(15);
-            Port = 50000 + DataUtil.CreateRandomInt(1000);            
+            Path = "/" + Dummy.CreateRandomString(15);
+            Port = 50000 + Dummy.CreateRandomInt(1000);            
             Prefixes = new[]
             {
                 "http://*:" + Port  + Path + "/"
             };
             AuthenticationSchemes = AuthenticationSchemes.Basic;
             TcpClient = new TcpClient();
-            Identity = DataUtil.CreateIdentity();
-            Password = DataUtil.CreateRandomString(20);
+            Identity = Dummy.CreateIdentity();
+            Password = Dummy.CreateRandomString(20);
             Credential = new NetworkCredential(Identity.ToString(), Password);
             HttpClientHandler = new HttpClientHandler() { Credentials = Credential };
             HttpClient = new HttpClient(HttpClientHandler);
             EnvelopeId = Guid.NewGuid();
-            QueryStringValue1 = DataUtil.CreateRandomString(10);
-            QueryStringValue2 = DataUtil.CreateRandomInt(100);
+            QueryStringValue1 = Dummy.CreateRandomString(10);
+            QueryStringValue2 = Dummy.CreateRandomInt(100);
             RequestUri = new System.Uri("http://localhost:" + Port + Path + "/?value1=" + QueryStringValue1 + "&value2=" + QueryStringValue2);
             GetHttpRequestMessage = new HttpRequestMessage(HttpMethod.Get, RequestUri);
             GetHttpRequestMessage.Headers.Add(Constants.ENVELOPE_ID_HEADER, EnvelopeId.ToString());
 
-            RequestBodyMediaType = DataUtil.CreateJsonMediaType();
-            RequestBody = DataUtil.CreateMessageJson();
+            RequestBodyMediaType = Dummy.CreateJsonMediaType();
+            RequestBody = Dummy.CreateMessageJson();
             PostHttpRequestMessage = new HttpRequestMessage(HttpMethod.Post, RequestUri);
             PostHttpRequestMessage.Content = new StringContent(RequestBody, Encoding.UTF8, RequestBodyMediaType.ToString());
 
             HttpResponseHeaders = new WebHeaderCollection();
-            HttpResponseHeaders.Add(DataUtil.CreateRandomString(10), DataUtil.CreateRandomString(10));
-            HttpResponseHeaders.Add(DataUtil.CreateRandomString(10), DataUtil.CreateRandomString(10));
-            HttpResponseHeaders.Add(DataUtil.CreateRandomString(10), DataUtil.CreateRandomString(10));
-            ResponseBodyMediaType = DataUtil.CreateJsonMediaType();
-            ResponseBody = DataUtil.CreateMessageJson();
+            HttpResponseHeaders.Add(Dummy.CreateRandomString(10), Dummy.CreateRandomString(10));
+            HttpResponseHeaders.Add(Dummy.CreateRandomString(10), Dummy.CreateRandomString(10));
+            HttpResponseHeaders.Add(Dummy.CreateRandomString(10), Dummy.CreateRandomString(10));
+            ResponseBodyMediaType = Dummy.CreateJsonMediaType();
+            ResponseBody = Dummy.CreateMessageJson();
             ResponseBodyStream = new MemoryStream(Encoding.UTF8.GetBytes(ResponseBody));
-            HttpResponse = new HttpResponse(EnvelopeId, HttpStatusCode.OK, DataUtil.CreateRandomString(50), HttpResponseHeaders, ResponseBodyMediaType, ResponseBodyStream);
+            HttpResponse = new HttpResponse(EnvelopeId, HttpStatusCode.OK, Dummy.CreateRandomString(50), HttpResponseHeaders, ResponseBodyMediaType, ResponseBodyStream);
 
             CancellationToken = TimeSpan.FromSeconds(5).ToCancellationToken();
             Target = new Lazy<HttpServer>(() => new HttpServer(Prefixes, AuthenticationSchemes));

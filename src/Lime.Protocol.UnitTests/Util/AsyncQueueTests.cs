@@ -24,8 +24,8 @@ namespace Lime.Protocol.UnitTests.Util
         {
             var target = GetTarget<string>();
 
-            var item1 = DataUtil.CreateRandomString(100);
-            var cancellationToken = DataUtil.CreateCancellationToken();
+            var item1 = Dummy.CreateRandomString(100);
+            var cancellationToken = Dummy.CreateCancellationToken();
 
 			Assert.IsTrue(target.Post(item1));
 
@@ -40,11 +40,11 @@ namespace Lime.Protocol.UnitTests.Util
         {
             var target = GetTarget<string>();
 
-            var cancellationToken = DataUtil.CreateCancellationToken();
+            var cancellationToken = Dummy.CreateCancellationToken();
 
             var promiseTask = target.ReceiveAsync(cancellationToken);
 
-            var item1 = DataUtil.CreateRandomString(100);
+            var item1 = Dummy.CreateRandomString(100);
 			Assert.IsTrue(target.Post(item1));
 
             var actual = await promiseTask;
@@ -58,7 +58,7 @@ namespace Lime.Protocol.UnitTests.Util
         {
             var target = GetTarget<string>();
 
-            var cancellationTokenSource = DataUtil.CreateCancellationTokenSource();
+            var cancellationTokenSource = Dummy.CreateCancellationTokenSource();
 
             var promiseTask = target.ReceiveAsync(cancellationTokenSource.Token);
 
@@ -67,7 +67,7 @@ namespace Lime.Protocol.UnitTests.Util
             Assert.IsTrue(promiseTask.IsCanceled);
             Assert.IsFalse(target.HasPromises);
 
-            var item1 = DataUtil.CreateRandomString(100);
+            var item1 = Dummy.CreateRandomString(100);
 			Assert.IsTrue(target.Post(item1));
 
             Assert.AreEqual(1, target.BufferCount);
@@ -79,9 +79,9 @@ namespace Lime.Protocol.UnitTests.Util
         {
             var target = GetTarget<string>();
 
-            var cancellationToken = DataUtil.CreateCancellationToken();
+            var cancellationToken = Dummy.CreateCancellationToken();
 
-            int promisesCount = DataUtil.CreateRandomInt(50);
+            int promisesCount = Dummy.CreateRandomInt(50);
             var promiseTaskArray = new Task<string>[promisesCount];
 
             for (int i = 0; i < promisesCount; i++)
@@ -93,7 +93,7 @@ namespace Lime.Protocol.UnitTests.Util
             {
                 Assert.IsFalse(promiseTaskArray[i].IsCompleted);
 
-                var item1 = DataUtil.CreateRandomString(100);
+                var item1 = Dummy.CreateRandomString(100);
 				Assert.IsTrue(target.Post(item1));
 
                 Assert.IsTrue(promiseTaskArray[i].IsCompleted);
@@ -110,12 +110,12 @@ namespace Lime.Protocol.UnitTests.Util
         {
             var target = GetTarget<string>();
 
-            var cancellationToken = DataUtil.CreateCancellationToken();
+            var cancellationToken = Dummy.CreateCancellationToken();
 
             var promiseTask1 = target.ReceiveAsync(cancellationToken);
 
-            var item1 = DataUtil.CreateRandomString(100);
-            var item2 = DataUtil.CreateRandomString(100);
+            var item1 = Dummy.CreateRandomString(100);
+            var item2 = Dummy.CreateRandomString(100);
 
             Assert.IsFalse(promiseTask1.IsCompleted);
 
@@ -140,9 +140,9 @@ namespace Lime.Protocol.UnitTests.Util
                 bufferLimit: 2
                 );
 
-            var item1 = DataUtil.CreateRandomString(100);
-            var item2 = DataUtil.CreateRandomString(100);
-            var item3 = DataUtil.CreateRandomString(100);
+            var item1 = Dummy.CreateRandomString(100);
+            var item2 = Dummy.CreateRandomString(100);
+            var item3 = Dummy.CreateRandomString(100);
 
 			Assert.IsTrue(target.Post(item1));
 			Assert.IsTrue(target.Post(item2));
@@ -158,9 +158,9 @@ namespace Lime.Protocol.UnitTests.Util
         public async Task ReceiveAsync_HasBuffer_GetsFromTheBuffer()
         {
             var target = GetTarget<string>();
-            var cancellationToken = DataUtil.CreateCancellationToken();
+            var cancellationToken = Dummy.CreateCancellationToken();
 
-            var item1 = DataUtil.CreateRandomString(100);
+            var item1 = Dummy.CreateRandomString(100);
             target.Post(item1);
 
             Assert.IsTrue(target.BufferCount == 1);
@@ -181,7 +181,7 @@ namespace Lime.Protocol.UnitTests.Util
         {
             var target = GetTarget<string>(
                 promisesLimit: 2);
-            var cancellationToken = DataUtil.CreateCancellationToken();
+            var cancellationToken = Dummy.CreateCancellationToken();
 
             var promiseTask1 = target.ReceiveAsync(cancellationToken);
             var promiseTask2 = target.ReceiveAsync(cancellationToken);
@@ -193,8 +193,8 @@ namespace Lime.Protocol.UnitTests.Util
         [Category("Post")]
         public async Task DequeuePost_ConcurrentAccess_CompletePromises()
         {
-            var count = DataUtil.CreateRandomInt(1000);
-            var cancellationToken = DataUtil.CreateCancellationToken();
+            var count = Dummy.CreateRandomInt(1000);
+            var cancellationToken = Dummy.CreateCancellationToken();
 
             var target = GetTarget<string>(count, count);
 
@@ -205,7 +205,7 @@ namespace Lime.Protocol.UnitTests.Util
                 {
                     for (int i = 0; i < count; i++)
                     {
-                        var item = DataUtil.CreateRandomString(100);
+                        var item = Dummy.CreateRandomString(100);
                         PostTasks[i] = Task.Run(() => target.Post(item));
                     }
                 });
@@ -214,7 +214,7 @@ namespace Lime.Protocol.UnitTests.Util
             {
                 for (int i = 0; i < count; i++)
                 {
-                    var item = DataUtil.CreateRandomString(100);
+                    var item = Dummy.CreateRandomString(100);
                     dequeueTasks[i] = target.ReceiveAsync(cancellationToken);
                 }
             });

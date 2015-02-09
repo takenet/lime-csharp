@@ -53,12 +53,12 @@ namespace Lime.Transport.Http.UnitTests.Processors
             Principal = new Mock<IPrincipal>();
             PrincipalIdentity = new Mock<System.Security.Principal.IIdentity>();
             Principal.SetupGet(p => p.Identity).Returns(() => PrincipalIdentity.Object);
-            Identity = DataUtil.CreateIdentity();
+            Identity = Dummy.CreateIdentity();
             PrincipalIdentityName = Identity.ToString();
             PrincipalIdentity.SetupGet(p => p.Name).Returns(() => PrincipalIdentityName);
-            SendMessageUri = new Uri("http://" + Constants.MESSAGES_PATH + ":" + DataUtil.CreateRandomInt(50000) + "/" + Constants.MESSAGES_PATH);
-            Envelope = DataUtil.CreateMessage(DataUtil.CreateTextContent());
-            Content = DataUtil.CreateRandomString(100);
+            SendMessageUri = new Uri("http://" + Constants.MESSAGES_PATH + ":" + Dummy.CreateRandomInt(50000) + "/" + Constants.MESSAGES_PATH);
+            Envelope = Dummy.CreateMessage(Dummy.CreateTextContent());
+            Content = Dummy.CreateRandomString(100);
             BodyStream = new MemoryStream(Encoding.UTF8.GetBytes(Content));
             BodyStream.Seek(0, SeekOrigin.Begin);
             SendMessageHttpRequest = new HttpRequest("POST", SendMessageUri, Principal.Object, Envelope.Id, bodyStream: BodyStream, contentType: MediaType.Parse(Constants.TEXT_PLAIN_HEADER_VALUE));

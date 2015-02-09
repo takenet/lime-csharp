@@ -1,8 +1,8 @@
-﻿<Properties>
+﻿<Properties StartupItem="Lime.Web\Lime.Web.csproj">
   <DisabledProjects>
     <String>Lime.Web/Lime.Web.csproj</String>
   </DisabledProjects>
-  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" PreferredExecutionTarget="ChromeHTML" />
   <MonoDevelop.Ide.Workbench />
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
     <BreakpointStore />

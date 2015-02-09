@@ -62,8 +62,8 @@ namespace Lime.Protocol.UnitTests.Network
         {
             var target = GetTarget(SessionState.Established);
 
-            var content = DataUtil.CreateTextContent();
-            var message = DataUtil.CreateMessage(content);
+            var content = Dummy.CreateTextContent();
+            var message = Dummy.CreateMessage(content);
 
             await target.SendMessageAsync(message);
 
@@ -97,8 +97,8 @@ namespace Lime.Protocol.UnitTests.Network
         {
             var target = GetTarget(SessionState.New);
 
-            var content = DataUtil.CreateTextContent();
-            var message = DataUtil.CreateMessage(content);
+            var content = Dummy.CreateTextContent();
+            var message = Dummy.CreateMessage(content);
 
             await target.SendMessageAsync(message);
         }
@@ -111,10 +111,10 @@ namespace Lime.Protocol.UnitTests.Network
         [Category("ReceiveMessageAsync")]
         public async Task ReceiveMessageAsync_EstablishedState_ReadsTransport()
         {            
-            var content = DataUtil.CreateTextContent();
-            var message = DataUtil.CreateMessage(content);
+            var content = Dummy.CreateTextContent();
+            var message = Dummy.CreateMessage(content);
 
-            var cancellationToken = DataUtil.CreateCancellationToken();
+            var cancellationToken = Dummy.CreateCancellationToken();
 
             var tcs = new TaskCompletionSource<Envelope>();
 
@@ -137,10 +137,10 @@ namespace Lime.Protocol.UnitTests.Network
         {
             var target = GetTarget(SessionState.New);
 
-            var content = DataUtil.CreateTextContent();
-            var message = DataUtil.CreateMessage(content);
+            var content = Dummy.CreateTextContent();
+            var message = Dummy.CreateMessage(content);
 
-            var cancellationToken = DataUtil.CreateCancellationToken();
+            var cancellationToken = Dummy.CreateCancellationToken();
 
             _transport
                 .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
@@ -157,10 +157,10 @@ namespace Lime.Protocol.UnitTests.Network
         {
             int buffersLimit = 1;
 
-            var cancellationToken = DataUtil.CreateCancellationToken();
+            var cancellationToken = Dummy.CreateCancellationToken();
 
-            var content = DataUtil.CreateTextContent();
-            var message = DataUtil.CreateMessage(content);
+            var content = Dummy.CreateTextContent();
+            var message = Dummy.CreateMessage(content);
 
             _transport
                 .SetupSequence(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
@@ -177,14 +177,14 @@ namespace Lime.Protocol.UnitTests.Network
         [Category("ReceiveMessageAsync")]
         public async Task ReceiveMessageAsync_NoRecipients_FillsFromTheSession()
         {
-            var remoteNode = DataUtil.CreateNode();
-            var localNode = DataUtil.CreateNode();
-            var content = DataUtil.CreateTextContent();
-            var message = DataUtil.CreateMessage(content);
+            var remoteNode = Dummy.CreateNode();
+            var localNode = Dummy.CreateNode();
+            var content = Dummy.CreateTextContent();
+            var message = Dummy.CreateMessage(content);
             message.From = null;
             message.To = null;
 
-            var cancellationToken = DataUtil.CreateCancellationToken();
+            var cancellationToken = Dummy.CreateCancellationToken();
             var tcs = new TaskCompletionSource<Envelope>();
 
             _transport
@@ -214,11 +214,11 @@ namespace Lime.Protocol.UnitTests.Network
         [Category("ReceiveMessageAsync")]
         public async Task ReceiveMessageAsync_IncompleteRecipients_FillsFromTheSession()
         {
-            var remoteNode = DataUtil.CreateNode();
-            var localNode = DataUtil.CreateNode();
+            var remoteNode = Dummy.CreateNode();
+            var localNode = Dummy.CreateNode();
 
-            var content = DataUtil.CreateTextContent();
-            var message = DataUtil.CreateMessage(content);
+            var content = Dummy.CreateTextContent();
+            var message = Dummy.CreateMessage(content);
             message.From = remoteNode.Copy();
             message.To = localNode.Copy();
             message.From.Domain = null;
@@ -226,7 +226,7 @@ namespace Lime.Protocol.UnitTests.Network
             message.From.Instance = null;
             message.To.Instance = null;
 
-            var cancellationToken = DataUtil.CreateCancellationToken();
+            var cancellationToken = Dummy.CreateCancellationToken();
 
             var tcs = new TaskCompletionSource<Envelope>();
 
@@ -262,8 +262,8 @@ namespace Lime.Protocol.UnitTests.Network
         {
             var target = GetTarget(SessionState.Established);
 
-            var resource = DataUtil.CreatePing();
-            var command = DataUtil.CreateCommand(resource);
+            var resource = Dummy.CreatePing();
+            var command = Dummy.CreateCommand(resource);
 
             await target.SendCommandAsync(command);
 
@@ -296,8 +296,8 @@ namespace Lime.Protocol.UnitTests.Network
         {
             var target = GetTarget(SessionState.New);
 
-            var content = DataUtil.CreateTextContent();
-            var command = DataUtil.CreateCommand(content);
+            var content = Dummy.CreateTextContent();
+            var command = Dummy.CreateCommand(content);
 
             await target.SendCommandAsync(command);
         }
@@ -310,10 +310,10 @@ namespace Lime.Protocol.UnitTests.Network
         [Category("ReceiveCommandAsync")]
         public async Task ReceiveCommandAsync_EstablishedState_ReadsTransport()
         {            
-            var content = DataUtil.CreateTextContent();
-            var command = DataUtil.CreateCommand(content);
+            var content = Dummy.CreateTextContent();
+            var command = Dummy.CreateCommand(content);
 
-            var cancellationToken = DataUtil.CreateCancellationToken();
+            var cancellationToken = Dummy.CreateCancellationToken();
 
             var tcs = new TaskCompletionSource<Envelope>();
             _transport
@@ -335,10 +335,10 @@ namespace Lime.Protocol.UnitTests.Network
         {
             var target = GetTarget(SessionState.New);
 
-            var resource = DataUtil.CreatePing();
-            var command = DataUtil.CreateCommand(resource);
+            var resource = Dummy.CreatePing();
+            var command = Dummy.CreateCommand(resource);
 
-            var cancellationToken = DataUtil.CreateCancellationToken();
+            var cancellationToken = Dummy.CreateCancellationToken();
 
             _transport
                 .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
@@ -355,10 +355,10 @@ namespace Lime.Protocol.UnitTests.Network
         {
             int buffersLimit = 5;
 
-            var resource = DataUtil.CreatePing();
-            var command = DataUtil.CreateCommand(resource);
+            var resource = Dummy.CreatePing();
+            var command = Dummy.CreateCommand(resource);
 
-            var cancellationToken = DataUtil.CreateCancellationToken();
+            var cancellationToken = Dummy.CreateCancellationToken();
 
             _transport
                 .SetupSequence(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
@@ -385,7 +385,7 @@ namespace Lime.Protocol.UnitTests.Network
         {
             var target = GetTarget(SessionState.Established);
 
-            var notification = DataUtil.CreateNotification(Event.Received);
+            var notification = Dummy.CreateNotification(Event.Received);
 
             await target.SendNotificationAsync(notification);
 
@@ -418,7 +418,7 @@ namespace Lime.Protocol.UnitTests.Network
         {
             var target = GetTarget(SessionState.New);
 
-            var notification = DataUtil.CreateNotification(Event.Received);
+            var notification = Dummy.CreateNotification(Event.Received);
 
             await target.SendNotificationAsync(notification);
         }
@@ -432,9 +432,9 @@ namespace Lime.Protocol.UnitTests.Network
         public async Task ReceiveNotificationAsync_EstablishedState_ReadsTransport()
         {
 
-            var notification = DataUtil.CreateNotification(Event.Received);
+            var notification = Dummy.CreateNotification(Event.Received);
 
-            var cancellationToken = DataUtil.CreateCancellationToken();
+            var cancellationToken = Dummy.CreateCancellationToken();
 
             var tcs = new TaskCompletionSource<Envelope>();
 
@@ -457,9 +457,9 @@ namespace Lime.Protocol.UnitTests.Network
         {
             var target = GetTarget(SessionState.New);
 
-            var notification = DataUtil.CreateNotification(Event.Received);
+            var notification = Dummy.CreateNotification(Event.Received);
 
-            var cancellationToken = DataUtil.CreateCancellationToken();
+            var cancellationToken = Dummy.CreateCancellationToken();
 
             _transport
                 .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
@@ -476,9 +476,9 @@ namespace Lime.Protocol.UnitTests.Network
         {
             int buffersLimit = 5;
 
-            var notification = DataUtil.CreateNotification(Event.Received);
+            var notification = Dummy.CreateNotification(Event.Received);
 
-            var cancellationToken = DataUtil.CreateCancellationToken();
+            var cancellationToken = Dummy.CreateCancellationToken();
 
             var tcs = new TaskCompletionSource<Envelope>();
             _transport
@@ -506,7 +506,7 @@ namespace Lime.Protocol.UnitTests.Network
         {
             var target = (ISessionChannel)GetTarget(SessionState.Established);
 
-            var session = DataUtil.CreateSession();
+            var session = Dummy.CreateSession();
 
             await target.SendSessionAsync(session);
 
@@ -540,9 +540,9 @@ namespace Lime.Protocol.UnitTests.Network
         [Category("ReceiveSessionAsync")]
         public async Task ReceiveSessionAsync_EstablishedState_ReadsTransport()
         {           
-            var session = DataUtil.CreateSession();
+            var session = Dummy.CreateSession();
 
-            var cancellationToken = DataUtil.CreateCancellationToken();
+            var cancellationToken = Dummy.CreateCancellationToken();
 
             var tcs = new TaskCompletionSource<Envelope>();
             _transport
@@ -564,9 +564,9 @@ namespace Lime.Protocol.UnitTests.Network
         {
             var target = (ISessionChannel)GetTarget(SessionState.Finished);
 
-            var session = DataUtil.CreateSession();
+            var session = Dummy.CreateSession();
 
-            var cancellationToken = DataUtil.CreateCancellationToken();
+            var cancellationToken = Dummy.CreateCancellationToken();
 
             _transport
                 .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
@@ -580,9 +580,9 @@ namespace Lime.Protocol.UnitTests.Network
         [ExpectedException(typeof(InvalidOperationException))]
         public async Task ReceiveSessionAsync_LimitedBuffers_ThrowsInvalidOperationException()
         {
-            var session = DataUtil.CreateSession(SessionState.Finished);
+            var session = Dummy.CreateSession(SessionState.Finished);
 
-            var cancellationToken = DataUtil.CreateCancellationToken();
+            var cancellationToken = Dummy.CreateCancellationToken();
 
 
             var taskCompletionSource = new TaskCompletionSource<Envelope>();
@@ -604,8 +604,8 @@ namespace Lime.Protocol.UnitTests.Network
         [Category("EnvelopeAsyncBuffer_PromiseAdded")]
         public void EnvelopeAsyncBuffer_PromiseAdded_TransportThrowsException_CallsTransportCloseAsyncAndThrowsException()
         {
-            var exception = DataUtil.CreateException<InvalidOperationException>();
-            var cancellationToken = DataUtil.CreateCancellationToken();
+            var exception = Dummy.CreateException<InvalidOperationException>();
+            var cancellationToken = Dummy.CreateCancellationToken();
 
             _transport
                 .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
@@ -637,15 +637,15 @@ namespace Lime.Protocol.UnitTests.Network
         [Category("EnvelopeAsyncBuffer_PromiseAdded")]
         public void EnvelopeAsyncBuffer_PromiseAdded_BufferHasPromises_ConsumersFromTransport()
         {
-            var cancellationToken = DataUtil.CreateCancellationToken();
+            var cancellationToken = Dummy.CreateCancellationToken();
 
-            var content = DataUtil.CreateTextContent();
-            var message = DataUtil.CreateMessage(content);
-            var resource = DataUtil.CreatePing();
-            var command = DataUtil.CreateCommand(resource);
-            var notification = DataUtil.CreateNotification(Event.Received);
+            var content = Dummy.CreateTextContent();
+            var message = Dummy.CreateMessage(content);
+            var resource = Dummy.CreatePing();
+            var command = Dummy.CreateCommand(resource);
+            var notification = Dummy.CreateNotification(Event.Received);
 
-            var session = DataUtil.CreateSession();
+            var session = Dummy.CreateSession();
 
             var tcs = new TaskCompletionSource<Envelope>();
 
@@ -685,15 +685,15 @@ namespace Lime.Protocol.UnitTests.Network
         [Category("EnvelopeAsyncBuffer_PromiseAdded")]
         public void EnvelopeAsyncBuffer_PromiseAdded_BufferHasPromises_ConsumersFromTransportInverted()
         {
-            var cancellationToken = DataUtil.CreateCancellationToken();
+            var cancellationToken = Dummy.CreateCancellationToken();
 
-            var content = DataUtil.CreateTextContent();
-            var message = DataUtil.CreateMessage(content);
-            var resource = DataUtil.CreatePing();
-            var command = DataUtil.CreateCommand(resource);
-            var notification = DataUtil.CreateNotification(Event.Received);
+            var content = Dummy.CreateTextContent();
+            var message = Dummy.CreateMessage(content);
+            var resource = Dummy.CreatePing();
+            var command = Dummy.CreateCommand(resource);
+            var notification = Dummy.CreateNotification(Event.Received);
 
-            var session = DataUtil.CreateSession();
+            var session = Dummy.CreateSession();
 
             var tcs = new TaskCompletionSource<Envelope>();
             _transport
@@ -738,7 +738,7 @@ namespace Lime.Protocol.UnitTests.Network
         {
             var disposableTransport = _transport.As<IDisposable>();
 
-            var cancellationToken = DataUtil.CreateCancellationToken();
+            var cancellationToken = Dummy.CreateCancellationToken();
             var tcs = new TaskCompletionSource<Envelope>();
 
             _transport
@@ -764,7 +764,7 @@ namespace Lime.Protocol.UnitTests.Network
         {
             var disposableTransport = _transport.As<IDisposable>();
 
-            var cancellationToken = DataUtil.CreateCancellationToken();
+            var cancellationToken = Dummy.CreateCancellationToken();
             var tcs = new TaskCompletionSource<Envelope>();
 
             _transport
@@ -790,7 +790,7 @@ namespace Lime.Protocol.UnitTests.Network
         {
             var disposableTransport = _transport.As<IDisposable>();
 
-            var cancellationToken = DataUtil.CreateCancellationToken();
+            var cancellationToken = Dummy.CreateCancellationToken();
             var tcs = new TaskCompletionSource<Envelope>();
 
             _transport
@@ -816,7 +816,7 @@ namespace Lime.Protocol.UnitTests.Network
         {
             var disposableTransport = _transport.As<IDisposable>();
 
-            var cancellationToken = DataUtil.CreateCancellationToken();
+            var cancellationToken = Dummy.CreateCancellationToken();
             var tcs = new TaskCompletionSource<Envelope>();
 
             _transport

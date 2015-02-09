@@ -44,6 +44,9 @@
     <Reference Include="nunit.framework">
       <HintPath>..\packages\NUnit.2.6.4\lib\nunit.framework.dll</HintPath>
     </Reference>
+    <Reference Include="Shouldly">
+      <HintPath>..\packages\Shouldly.2.4.0\lib\net40\Shouldly.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
   </ItemGroup>
   <Choose>
@@ -55,8 +58,8 @@
     <Otherwise />
   </Choose>
   <ItemGroup>
-    <Compile Include="..\Lime.Protocol.UnitTests\DataUtil.cs">
-      <Link>DataUtil.cs</Link>
+    <Compile Include="..\Lime.Protocol.UnitTests\Dummy.cs">
+      <Link>Dummy.cs</Link>
     </Compile>
     <Compile Include="TcpTransportTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

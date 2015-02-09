@@ -28,16 +28,16 @@ namespace Lime.Protocol.UnitTests.Serialization
 		{
 			var target = GetTarget();
 
-			var command = DataUtil.CreateCommand();
-			command.Pp = DataUtil.CreateNode();
+			var command = Dummy.CreateCommand();
+			command.Pp = Dummy.CreateNode();
 			command.Method = CommandMethod.Get;
-			command.Uri = DataUtil.CreateAbsoluteLimeUri();
+			command.Uri = Dummy.CreateAbsoluteLimeUri();
 
 
 			var metadataKey1 = "randomString1";
-			var metadataValue1 = DataUtil.CreateRandomString(50);
+			var metadataValue1 = Dummy.CreateRandomString(50);
 			var metadataKey2 = "randomString2";
-			var metadataValue2 = DataUtil.CreateRandomString(50);
+			var metadataValue2 = Dummy.CreateRandomString(50);
 			command.Metadata = new Dictionary<string, string>();
 			command.Metadata.Add(metadataKey1, metadataValue1);
 			command.Metadata.Add(metadataKey2, metadataValue2);
@@ -69,12 +69,12 @@ namespace Lime.Protocol.UnitTests.Serialization
 		{
 			var target = GetTarget();
 
-			var resource = DataUtil.CreateJsonDocument();
+			var resource = Dummy.CreateJsonDocument();
 
-			var command = DataUtil.CreateCommand(resource);
-			command.Pp = DataUtil.CreateNode();
+			var command = Dummy.CreateCommand(resource);
+			command.Pp = Dummy.CreateNode();
 			command.Method = CommandMethod.Set;
-			command.Uri = DataUtil.CreateRelativeLimeUri();
+			command.Uri = Dummy.CreateRelativeLimeUri();
 
 			var resultString = target.Serialize(command);
 
@@ -100,16 +100,16 @@ namespace Lime.Protocol.UnitTests.Serialization
 		{
 			var target = GetTarget();
 
-			var resource = DataUtil.CreateCapability();
-			var command = DataUtil.CreateCommand(resource);
-			command.Pp = DataUtil.CreateNode();
+			var resource = Dummy.CreateCapability();
+			var command = Dummy.CreateCommand(resource);
+			command.Pp = Dummy.CreateNode();
 			command.Method = CommandMethod.Get;
 			
 			
 			var metadataKey1 = "randomString1";
-			var metadataValue1 = DataUtil.CreateRandomString(50);
+			var metadataValue1 = Dummy.CreateRandomString(50);
 			var metadataKey2 = "randomString2";
-			var metadataValue2 = DataUtil.CreateRandomString(50);
+			var metadataValue2 = Dummy.CreateRandomString(50);
 			command.Metadata = new Dictionary<string, string>();
 			command.Metadata.Add(metadataKey1, metadataValue1);
 			command.Metadata.Add(metadataKey2, metadataValue2);
@@ -141,16 +141,16 @@ namespace Lime.Protocol.UnitTests.Serialization
 		{
 			var target = GetTarget();
 
-			var resource = DataUtil.CreateRoster();
-			var command = DataUtil.CreateCommand(resource);
-			command.Pp = DataUtil.CreateNode();
+			var resource = Dummy.CreateRoster();
+			var command = Dummy.CreateCommand(resource);
+			command.Pp = Dummy.CreateNode();
 			command.Method = CommandMethod.Get;
 			command.Status = CommandStatus.Success;
 
 			var metadataKey1 = "randomString1";
-			var metadataValue1 = DataUtil.CreateRandomString(50);
+			var metadataValue1 = Dummy.CreateRandomString(50);
 			var metadataKey2 = "randomString2";
-			var metadataValue2 = DataUtil.CreateRandomString(50);
+			var metadataValue2 = Dummy.CreateRandomString(50);
 			command.Metadata = new Dictionary<string, string>();
 			command.Metadata.Add(metadataKey1, metadataValue1);
 			command.Metadata.Add(metadataKey2, metadataValue2);
@@ -191,27 +191,27 @@ namespace Lime.Protocol.UnitTests.Serialization
 		{
 			var target = GetTarget();
 
-			var contact1 = DataUtil.CreateContact();
+			var contact1 = Dummy.CreateContact();
 			contact1.ShareAccountInfo = true;
 			contact1.SharePresence = true;
-			var contact2 = DataUtil.CreateContact();
+			var contact2 = Dummy.CreateContact();
 			contact2.SharePresence = true;
-			var contact3 = DataUtil.CreateContact();
+			var contact3 = Dummy.CreateContact();
 
-			var resource = DataUtil.CreateDocumentCollection<Contact>(
+			var resource = Dummy.CreateDocumentCollection<Contact>(
 				contact1,
 				contact2,
 				contact3);
 
-			var command = DataUtil.CreateCommand(resource);
-			command.Pp = DataUtil.CreateNode();
+			var command = Dummy.CreateCommand(resource);
+			command.Pp = Dummy.CreateNode();
 			command.Method = CommandMethod.Get;
 			command.Status = CommandStatus.Success;
 
 			var metadataKey1 = "randomString1";
-			var metadataValue1 = DataUtil.CreateRandomString(50);
+			var metadataValue1 = Dummy.CreateRandomString(50);
 			var metadataKey2 = "randomString2";
-			var metadataValue2 = DataUtil.CreateRandomString(50);
+			var metadataValue2 = Dummy.CreateRandomString(50);
 			command.Metadata = new Dictionary<string, string>();
 			command.Metadata.Add(metadataKey1, metadataValue1);
 			command.Metadata.Add(metadataKey2, metadataValue2);
@@ -244,8 +244,8 @@ namespace Lime.Protocol.UnitTests.Serialization
 		{
 			var target = GetTarget();
 
-			var command = DataUtil.CreateCommand(status: CommandStatus.Failure);
-			command.Reason = DataUtil.CreateReason();
+			var command = Dummy.CreateCommand(status: CommandStatus.Failure);
+			command.Reason = Dummy.CreateReason();
 
 			var resultString = target.Serialize(command);
 
@@ -270,14 +270,14 @@ namespace Lime.Protocol.UnitTests.Serialization
 		{
 			var target = GetTarget();
 
-			var content = DataUtil.CreateTextContent();
-			var message = DataUtil.CreateMessage(content);
-			message.Pp = DataUtil.CreateNode();
+			var content = Dummy.CreateTextContent();
+			var message = Dummy.CreateMessage(content);
+			message.Pp = Dummy.CreateNode();
 
 			var metadataKey1 = "randomString1";
-			var metadataValue1 = DataUtil.CreateRandomString(50);
+			var metadataValue1 = Dummy.CreateRandomString(50);
 			var metadataKey2 = "randomString2";
-			var metadataValue2 = DataUtil.CreateRandomString(50);
+			var metadataValue2 = Dummy.CreateRandomString(50);
 			message.Metadata = new Dictionary<string, string>();
 			message.Metadata.Add(metadataKey1, metadataValue1);
 			message.Metadata.Add(metadataKey2, metadataValue2);
@@ -301,14 +301,14 @@ namespace Lime.Protocol.UnitTests.Serialization
 		{
 			var target = GetTarget();
 
-			var content = DataUtil.CreateJsonDocument();
-			var message = DataUtil.CreateMessage(content);
-			message.Pp = DataUtil.CreateNode();
+			var content = Dummy.CreateJsonDocument();
+			var message = Dummy.CreateMessage(content);
+			message.Pp = Dummy.CreateNode();
 
 			var metadataKey1 = "randomString1";
-			var metadataValue1 = DataUtil.CreateRandomString(50);
+			var metadataValue1 = Dummy.CreateRandomString(50);
 			var metadataKey2 = "randomString2";
-			var metadataValue2 = DataUtil.CreateRandomString(50);
+			var metadataValue2 = Dummy.CreateRandomString(50);
 			message.Metadata = new Dictionary<string, string>();
 			message.Metadata.Add(metadataKey1, metadataValue1);
 			message.Metadata.Add(metadataKey2, metadataValue2);
@@ -338,14 +338,14 @@ namespace Lime.Protocol.UnitTests.Serialization
 		{
 			var target = GetTarget();
 
-			var content = DataUtil.CreatePlainDocument();
-			var message = DataUtil.CreateMessage(content);
-			message.Pp = DataUtil.CreateNode();
+			var content = Dummy.CreatePlainDocument();
+			var message = Dummy.CreateMessage(content);
+			message.Pp = Dummy.CreateNode();
 
 			var metadataKey1 = "randomString1";
-			var metadataValue1 = DataUtil.CreateRandomString(50);
+			var metadataValue1 = Dummy.CreateRandomString(50);
 			var metadataKey2 = "randomString2";
-			var metadataValue2 = DataUtil.CreateRandomString(50);
+			var metadataValue2 = Dummy.CreateRandomString(50);
 			message.Metadata = new Dictionary<string, string>();
 			message.Metadata.Add(metadataKey1, metadataValue1);
 			message.Metadata.Add(metadataKey2, metadataValue2);
@@ -370,8 +370,8 @@ namespace Lime.Protocol.UnitTests.Serialization
 		{
 			var target = GetTarget();
 
-			var content = DataUtil.CreateTextContent();
-			var message = DataUtil.CreateMessage(content);
+			var content = Dummy.CreateTextContent();
+			var message = Dummy.CreateMessage(content);
 			message.Id = Guid.Empty;
 
 			var resultString = target.Serialize(message);
@@ -395,14 +395,14 @@ namespace Lime.Protocol.UnitTests.Serialization
 		{
 			var target = GetTarget();
 
-			var notification = DataUtil.CreateNotification(Event.Received);
+			var notification = Dummy.CreateNotification(Event.Received);
 			notification.Id = Guid.NewGuid();
-			notification.Pp = DataUtil.CreateNode();
+			notification.Pp = Dummy.CreateNode();
 
 			var metadataKey1 = "randomString1";
-			var metadataValue1 = DataUtil.CreateRandomString(50);
+			var metadataValue1 = Dummy.CreateRandomString(50);
 			var metadataKey2 = "randomString2";
-			var metadataValue2 = DataUtil.CreateRandomString(50);
+			var metadataValue2 = Dummy.CreateRandomString(50);
 			notification.Metadata = new Dictionary<string, string>();
 			notification.Metadata.Add(metadataKey1, metadataValue1);
 			notification.Metadata.Add(metadataKey2, metadataValue2);
@@ -427,9 +427,9 @@ namespace Lime.Protocol.UnitTests.Serialization
 		{
 			var target = GetTarget();
 
-			var notification = DataUtil.CreateNotification(Event.Failed);
+			var notification = Dummy.CreateNotification(Event.Failed);
 			notification.Id = Guid.NewGuid();
-			notification.Reason = DataUtil.CreateReason();
+			notification.Reason = Dummy.CreateReason();
 
 			var resultString = target.Serialize(notification);
 
@@ -451,15 +451,15 @@ namespace Lime.Protocol.UnitTests.Serialization
 		{
 			var target = GetTarget();
 
-			var session = DataUtil.CreateSession();
-			var plainAuthentication = DataUtil.CreatePlainAuthentication();
+			var session = Dummy.CreateSession();
+			var plainAuthentication = Dummy.CreatePlainAuthentication();
 			session.Authentication = plainAuthentication;
 			session.State = SessionState.Authenticating;
 
 			var metadataKey1 = "randomString1";
-			var metadataValue1 = DataUtil.CreateRandomString(50);
+			var metadataValue1 = Dummy.CreateRandomString(50);
 			var metadataKey2 = "randomString2";
-			var metadataValue2 = DataUtil.CreateRandomString(50);
+			var metadataValue2 = Dummy.CreateRandomString(50);
 			session.Metadata = new Dictionary<string, string>();
 			session.Metadata.Add(metadataKey1, metadataValue1);
 			session.Metadata.Add(metadataKey2, metadataValue2);
@@ -486,9 +486,9 @@ namespace Lime.Protocol.UnitTests.Serialization
 		{
 			var target = GetTarget();
 
-			var session = DataUtil.CreateSession();
+			var session = Dummy.CreateSession();
 			session.State = SessionState.Failed;
-			session.Reason = DataUtil.CreateReason();
+			session.Reason = Dummy.CreateReason();
 
 			var resultString = target.Serialize(session);
 
@@ -516,26 +516,26 @@ namespace Lime.Protocol.UnitTests.Serialization
 		{
 			var target = GetTarget();
 
-			var contentType1 = DataUtil.CreateJsonMediaType();
-			var contentType2 = DataUtil.CreateJsonMediaType();
-			var contentType3 = DataUtil.CreateJsonMediaType();
+			var contentType1 = Dummy.CreateJsonMediaType();
+			var contentType2 = Dummy.CreateJsonMediaType();
+			var contentType3 = Dummy.CreateJsonMediaType();
 
-			var resourceType1 = DataUtil.CreateJsonMediaType();
-			var resourceType2 = DataUtil.CreateJsonMediaType();
-			var resourceType3 = DataUtil.CreateJsonMediaType();
+			var resourceType1 = Dummy.CreateJsonMediaType();
+			var resourceType2 = Dummy.CreateJsonMediaType();
+			var resourceType3 = Dummy.CreateJsonMediaType();
 
 			var method = CommandMethod.Get;
 
 			var id = Guid.NewGuid();
 
-			var from = DataUtil.CreateNode();
-			var pp = DataUtil.CreateNode();
-			var to = DataUtil.CreateNode();
+			var from = Dummy.CreateNode();
+			var pp = Dummy.CreateNode();
+			var to = Dummy.CreateNode();
 
 			string randomKey1 = "randomString1";
 			string randomKey2 = "randomString2";
-			string randomString1 = DataUtil.CreateRandomString(50);
-			string randomString2 = DataUtil.CreateRandomString(50);
+			string randomString1 = Dummy.CreateRandomString(50);
+			string randomString2 = Dummy.CreateRandomString(50);
 
 			var resourceUri = new LimeUri("/capability");
 
@@ -600,16 +600,16 @@ namespace Lime.Protocol.UnitTests.Serialization
 
 			var id = Guid.NewGuid();
 
-			var from = DataUtil.CreateNode();
-			var pp = DataUtil.CreateNode();
-			var to = DataUtil.CreateNode();
+			var from = Dummy.CreateNode();
+			var pp = Dummy.CreateNode();
+			var to = Dummy.CreateNode();
 
 			string randomKey1 = "randomString1";
 			string randomKey2 = "randomString2";
-			string randomString1 = DataUtil.CreateRandomString(50);
-			string randomString2 = DataUtil.CreateRandomString(50);
+			string randomString1 = Dummy.CreateRandomString(50);
+			string randomString2 = Dummy.CreateRandomString(50);
 
-			var resourceUri = DataUtil.CreateAbsoluteLimeUri();
+			var resourceUri = Dummy.CreateAbsoluteLimeUri();
 
 			string json = string.Format(
 				"{{\"uri\":\"{0}\",\"method\":\"get\",\"id\":\"{1}\",\"from\":\"{2}\",\"pp\":\"{3}\",\"to\":\"{4}\",\"metadata\":{{\"{5}\":\"{6}\",\"{7}\":\"{8}\"}}}}",
@@ -682,25 +682,25 @@ namespace Lime.Protocol.UnitTests.Serialization
 		{
 			var target = GetTarget();
 
-			var identity1 = DataUtil.CreateIdentity();
-			var name1 = DataUtil.CreateRandomString(50);
-			var identity2 = DataUtil.CreateIdentity();
-			var name2 = DataUtil.CreateRandomString(50);
-			var identity3 = DataUtil.CreateIdentity();
-			var name3 = DataUtil.CreateRandomString(50);
+			var identity1 = Dummy.CreateIdentity();
+			var name1 = Dummy.CreateRandomString(50);
+			var identity2 = Dummy.CreateIdentity();
+			var name2 = Dummy.CreateRandomString(50);
+			var identity3 = Dummy.CreateIdentity();
+			var name3 = Dummy.CreateRandomString(50);
 
 			var method = CommandMethod.Get;
 
 			var id = Guid.NewGuid();
 
-			var from = DataUtil.CreateNode();
-			var pp = DataUtil.CreateNode();
-			var to = DataUtil.CreateNode();
+			var from = Dummy.CreateNode();
+			var pp = Dummy.CreateNode();
+			var to = Dummy.CreateNode();
 
 			string randomKey1 = "randomString1";
 			string randomKey2 = "randomString2";
-			string randomString1 = DataUtil.CreateRandomString(50);
-			string randomString2 = DataUtil.CreateRandomString(50);
+			string randomString1 = Dummy.CreateRandomString(50);
+			string randomString2 = Dummy.CreateRandomString(50);
 
 			string json = string.Format(
 				"{{\"type\":\"application/vnd.lime.collection+json\",\"resource\":{{\"itemType\":\"application/vnd.lime.contact+json\",\"total\":3,\"items\":[{{\"identity\":\"{0}\",\"name\":\"{1}\",\"isPending\":true,\"shareAccountInfo\":false}},{{\"identity\":\"{2}\",\"name\":\"{3}\",\"sharePresence\":false}},{{\"identity\":\"{4}\",\"name\":\"{5}\",\"isPending\":true,\"sharePresence\":false}}]}},\"method\":\"get\",\"status\":\"success\",\"id\":\"{6}\",\"from\":\"{7}\",\"pp\":\"{8}\",\"to\":\"{9}\",\"metadata\":{{\"{10}\":\"{11}\",\"{12}\":\"{13}\"}}}}",
@@ -778,10 +778,10 @@ namespace Lime.Protocol.UnitTests.Serialization
 
 			var method = CommandMethod.Get;
 			var status = CommandStatus.Failure;
-			var reason = DataUtil.CreateReason();
+			var reason = Dummy.CreateReason();
 			var id = Guid.NewGuid();
-			var from = DataUtil.CreateNode();
-			var to = DataUtil.CreateNode();
+			var from = Dummy.CreateNode();
+			var to = Dummy.CreateNode();
 
 			string json = string.Format(
 				"{{\"method\":\"{0}\",\"id\":\"{1}\",\"from\":\"{2}\",\"to\":\"{3}\",\"status\":\"{4}\",\"reason\":{{\"code\":{5},\"description\":\"{6}\"}}}}",
@@ -820,16 +820,16 @@ namespace Lime.Protocol.UnitTests.Serialization
 			var target = GetTarget();
 
 			var id = Guid.NewGuid();
-			var from = DataUtil.CreateNode();
-			var pp = DataUtil.CreateNode();
-			var to = DataUtil.CreateNode();
+			var from = Dummy.CreateNode();
+			var pp = Dummy.CreateNode();
+			var to = Dummy.CreateNode();
 			
 			string randomKey1 = "randomString1";
 			string randomKey2 = "randomString2";
-			string randomString1 = DataUtil.CreateRandomString(50);
-			string randomString2 = DataUtil.CreateRandomString(50);
+			string randomString1 = Dummy.CreateRandomString(50);
+			string randomString2 = Dummy.CreateRandomString(50);
 
-			var text = DataUtil.CreateRandomString(50);
+			var text = Dummy.CreateRandomString(50);
 
 			string json = string.Format(
 				"{{\"type\":\"text/plain\",\"content\":\"{0}\",\"id\":\"{1}\",\"from\":\"{2}\",\"pp\":\"{3}\",\"to\":\"{4}\",\"metadata\":{{\"{5}\":\"{6}\",\"{7}\":\"{8}\"}}}}",
@@ -872,14 +872,14 @@ namespace Lime.Protocol.UnitTests.Serialization
 			var target = GetTarget();
 
 			var id = Guid.NewGuid();
-			var from = DataUtil.CreateNode();
-			var pp = DataUtil.CreateNode();
-			var to = DataUtil.CreateNode();
+			var from = Dummy.CreateNode();
+			var pp = Dummy.CreateNode();
+			var to = Dummy.CreateNode();
 
 			string randomKey1 = "randomString1";
 			string randomKey2 = "randomString2";
-			string randomString1 = DataUtil.CreateRandomString(50);
-			string randomString2 = DataUtil.CreateRandomString(50);
+			string randomString1 = Dummy.CreateRandomString(50);
+			string randomString2 = Dummy.CreateRandomString(50);
 
 			var state = ChatStateEvent.Deleting;
 
@@ -924,17 +924,17 @@ namespace Lime.Protocol.UnitTests.Serialization
 			var target = GetTarget();
 
 			var id = Guid.NewGuid();
-			var from = DataUtil.CreateNode();
-			var pp = DataUtil.CreateNode();
-			var to = DataUtil.CreateNode();
+			var from = Dummy.CreateNode();
+			var pp = Dummy.CreateNode();
+			var to = Dummy.CreateNode();
 
 			string randomKey1 = "randomString1";
 			string randomKey2 = "randomString2";
-			string randomString1 = DataUtil.CreateRandomString(50);
-			string randomString2 = DataUtil.CreateRandomString(50);
+			string randomString1 = Dummy.CreateRandomString(50);
+			string randomString2 = Dummy.CreateRandomString(50);
 
-			var type = DataUtil.CreatePlainMediaType();
-			var text = DataUtil.CreateRandomString(50);
+			var type = Dummy.CreatePlainMediaType();
+			var text = Dummy.CreateRandomString(50);
 
 			string json = string.Format(
 				"{{\"type\":\"{0}\",\"content\":\"{1}\",\"id\":\"{2}\",\"from\":\"{3}\",\"pp\":\"{4}\",\"to\":\"{5}\",\"metadata\":{{\"{6}\":\"{7}\",\"{8}\":\"{9}\"}}}}",
@@ -982,22 +982,22 @@ namespace Lime.Protocol.UnitTests.Serialization
 			var target = GetTarget();
 
 			var id = Guid.NewGuid();
-			var from = DataUtil.CreateNode();
-			var pp = DataUtil.CreateNode();
-			var to = DataUtil.CreateNode();
+			var from = Dummy.CreateNode();
+			var pp = Dummy.CreateNode();
+			var to = Dummy.CreateNode();
 
 			string randomKey1 = "randomString1";
 			string randomKey2 = "randomString2";
-			string randomString1 = DataUtil.CreateRandomString(50);
-			string randomString2 = DataUtil.CreateRandomString(50);
+			string randomString1 = Dummy.CreateRandomString(50);
+			string randomString2 = Dummy.CreateRandomString(50);
 
 		   
-			var type = DataUtil.CreateJsonMediaType();
+			var type = Dummy.CreateJsonMediaType();
 
-			var propertyName1 = DataUtil.CreateRandomString(10);
-			var propertyName2 = DataUtil.CreateRandomString(10);
-			var propertyValue1 = DataUtil.CreateRandomString(10);
-			var propertyValue2 = (long)DataUtil.CreateRandomInt(1000);
+			var propertyName1 = Dummy.CreateRandomString(10);
+			var propertyName2 = Dummy.CreateRandomString(10);
+			var propertyValue1 = Dummy.CreateRandomString(10);
+			var propertyValue2 = (long)Dummy.CreateRandomInt(1000);
 			
 
 			string json = string.Format(
@@ -1053,21 +1053,21 @@ namespace Lime.Protocol.UnitTests.Serialization
 			var target = GetTarget();
 
 			var id = Guid.NewGuid();
-			var from = DataUtil.CreateNode();
-			var pp = DataUtil.CreateNode();
-			var to = DataUtil.CreateNode();
+			var from = Dummy.CreateNode();
+			var pp = Dummy.CreateNode();
+			var to = Dummy.CreateNode();
 
 			string randomKey1 = "randomString1";
 			string randomKey2 = "randomString2";
-			string randomString1 = DataUtil.CreateRandomString(50);
-			string randomString2 = DataUtil.CreateRandomString(50);
+			string randomString1 = Dummy.CreateRandomString(50);
+			string randomString2 = Dummy.CreateRandomString(50);
 
 			var type = new MediaType(MediaType.DiscreteTypes.Application, MediaType.SubTypes.JSON, null);
 
-			var propertyName1 = DataUtil.CreateRandomString(10);
-			var propertyName2 = DataUtil.CreateRandomString(10);
-			var propertyValue1 = DataUtil.CreateRandomString(10);
-			var propertyValue2 = (long)DataUtil.CreateRandomInt(1000);
+			var propertyName1 = Dummy.CreateRandomString(10);
+			var propertyName2 = Dummy.CreateRandomString(10);
+			var propertyValue1 = Dummy.CreateRandomString(10);
+			var propertyValue2 = (long)Dummy.CreateRandomInt(1000);
 
 
 			string json = string.Format(
@@ -1122,10 +1122,10 @@ namespace Lime.Protocol.UnitTests.Serialization
 		{
 			var target = GetTarget();
 
-			var from = DataUtil.CreateNode();
-			var to = DataUtil.CreateNode();
+			var from = Dummy.CreateNode();
+			var to = Dummy.CreateNode();
 
-			var text = DataUtil.CreateRandomString(50);
+			var text = Dummy.CreateRandomString(50);
 
 			string json = string.Format(
 				"{{\"type\":\"text/plain\",\"content\":\"{0}\",\"from\":\"{1}\",\"to\":\"{2}\"}}",
@@ -1157,8 +1157,8 @@ namespace Lime.Protocol.UnitTests.Serialization
 		{
 			var target = GetTarget();
 
-			var from = DataUtil.CreateNode();
-			var to = DataUtil.CreateNode();
+			var from = Dummy.CreateNode();
+			var to = Dummy.CreateNode();
 
 			var state = ChatStateEvent.Composing;
 
@@ -1193,14 +1193,14 @@ namespace Lime.Protocol.UnitTests.Serialization
 			var target = GetTarget();
 
 			var id = Guid.NewGuid();
-			var from = DataUtil.CreateNode();
-			var pp = DataUtil.CreateNode();
-			var to = DataUtil.CreateNode();
+			var from = Dummy.CreateNode();
+			var pp = Dummy.CreateNode();
+			var to = Dummy.CreateNode();
 
 			string randomKey1 = "randomString1";
 			string randomKey2 = "randomString2";
-			string randomString1 = DataUtil.CreateRandomString(50);
-			string randomString2 = DataUtil.CreateRandomString(50);
+			string randomString1 = Dummy.CreateRandomString(50);
+			string randomString2 = Dummy.CreateRandomString(50);
 
 			var @event = Event.Received;
 
@@ -1245,12 +1245,12 @@ namespace Lime.Protocol.UnitTests.Serialization
 
 			var @event = Event.Received;
 
-			var reasonCode = DataUtil.CreateRandomInt(100);
-			var reasonDescription = DataUtil.CreateRandomString(100);
+			var reasonCode = Dummy.CreateRandomInt(100);
+			var reasonDescription = Dummy.CreateRandomString(100);
 
 			var id = Guid.NewGuid();
-			var from = DataUtil.CreateNode();
-			var to = DataUtil.CreateNode();
+			var from = Dummy.CreateNode();
+			var to = Dummy.CreateNode();
 
 			string json = string.Format(
 				"{{\"event\":\"{0}\",\"id\":\"{1}\",\"from\":\"{2}\",\"to\":\"{3}\",\"reason\":{{\"code\":{4},\"description\":\"{5}\"}}}}",
@@ -1286,16 +1286,16 @@ namespace Lime.Protocol.UnitTests.Serialization
 			var target = GetTarget();
 
 			var id = Guid.NewGuid();
-			var from = DataUtil.CreateNode();
-			var pp = DataUtil.CreateNode();
-			var to = DataUtil.CreateNode();
+			var from = Dummy.CreateNode();
+			var pp = Dummy.CreateNode();
+			var to = Dummy.CreateNode();
 
-			var password = DataUtil.CreateRandomString(10).ToBase64();
+			var password = Dummy.CreateRandomString(10).ToBase64();
 
 			string randomKey1 = "randomString1";
 			string randomKey2 = "randomString2";
-			string randomString1 = DataUtil.CreateRandomString(50);
-			string randomString2 = DataUtil.CreateRandomString(50);
+			string randomString1 = Dummy.CreateRandomString(50);
+			string randomString2 = Dummy.CreateRandomString(50);
 
 			var state = SessionState.Authenticating;
 
@@ -1339,16 +1339,16 @@ namespace Lime.Protocol.UnitTests.Serialization
 			var target = GetTarget();
 
 			var id = Guid.NewGuid();
-			var from = DataUtil.CreateNode();
-			var pp = DataUtil.CreateNode();
-			var to = DataUtil.CreateNode();
+			var from = Dummy.CreateNode();
+			var pp = Dummy.CreateNode();
+			var to = Dummy.CreateNode();
 
-			var password = DataUtil.CreateRandomString(10).ToBase64();
+			var password = Dummy.CreateRandomString(10).ToBase64();
 
 			var state = SessionState.Authenticating;
 
-			var reasonCode = DataUtil.CreateRandomInt(100);
-			var reasonDescription = DataUtil.CreateRandomString(100);
+			var reasonCode = Dummy.CreateRandomInt(100);
+			var reasonDescription = Dummy.CreateRandomString(100);
 
 			string json = string.Format(
 				"{{\"state\":\"{0}\",\"id\":\"{1}\",\"from\":\"{2}\",\"to\":\"{3}\",\"reason\":{{\"code\":{4},\"description\":\"{5}\"}},\"encryptionOptions\":null,\"compressionOptions\":null,\"compression\":null,\"encryption\":null}}",

@@ -71,7 +71,7 @@
   </Choose>
   <ItemGroup>
     <Compile Include="Client\ClientChannelTests.cs" />
-    <Compile Include="DataUtil.cs" />
+    <Compile Include="Dummy.cs" />
     <Compile Include="Network\ChannelBaseTests.cs" />
     <Compile Include="Network\TransportBaseTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

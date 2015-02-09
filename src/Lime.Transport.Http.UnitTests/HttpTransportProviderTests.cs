@@ -52,8 +52,8 @@ namespace Lime.Transport.Http.UnitTests
             MessageStorage = new Mock<IEnvelopeStorage<Message>>();
             NotificationStorage = new Mock<IEnvelopeStorage<Notification>>();
 
-            Identity = DataUtil.CreateIdentity();
-            Password = DataUtil.CreateRandomString(12);
+            Identity = Dummy.CreateIdentity();
+            Password = Dummy.CreateRandomString(12);
             HttpListenerBasicIdentity = new HttpListenerBasicIdentity(Identity.ToString(), Password);
             Principal = new Mock<IPrincipal>();
             Principal.SetupGet(p => p.Identity).Returns(HttpListenerBasicIdentity);

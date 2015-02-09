@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace Lime.Protocol.UnitTests
 {
-    public class DataUtil
+    public class Dummy
     {
         private static Random _random = new Random();
         private static string _chars = "abcdefghijklmnopqrstuvwxyz0123456789";
@@ -30,19 +30,19 @@ namespace Lime.Protocol.UnitTests
         public static string CreateMessageJson()
         {
             var id = Guid.NewGuid();
-            var from = DataUtil.CreateNode();
-            var pp = DataUtil.CreateNode();
-            var to = DataUtil.CreateNode();
+            var from = Dummy.CreateNode();
+            var pp = Dummy.CreateNode();
+            var to = Dummy.CreateNode();
 
             string randomKey1 = "randomString1";
             string randomKey2 = "randomString2";
-            string randomString1 = DataUtil.CreateRandomString(DataUtil.CreateRandomInt(50));
-            string randomString2 = DataUtil.CreateRandomString(DataUtil.CreateRandomInt(50));
+            string randomString1 = Dummy.CreateRandomString(Dummy.CreateRandomInt(50));
+            string randomString2 = Dummy.CreateRandomString(Dummy.CreateRandomInt(50));
 
-            var text = DataUtil.CreateRandomString(DataUtil.CreateRandomInt(50));
+            var text = Dummy.CreateRandomString(Dummy.CreateRandomInt(50));
 
             return string.Format(
-                "{{\"type\":\"application/vnd.lime.text+json\",\"content\":{{\"text\":\"{0}\"}},\"id\":\"{1}\",\"from\":\"{2}\",\"pp\":\"{3}\",\"to\":\"{4}\",\"metadata\":{{\"{5}\":\"{6}\",\"{7}\":\"{8}\"}}}}",
+                "{{\"type\":\"text/plain\",\"content\":\"{0}\",\"id\":\"{1}\",\"from\":\"{2}\",\"pp\":\"{3}\",\"to\":\"{4}\",\"metadata\":{{\"{5}\":\"{6}\",\"{7}\":\"{8}\"}}}}",
                 text,
                 id,
                 from,

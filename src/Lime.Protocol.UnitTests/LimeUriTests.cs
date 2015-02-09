@@ -10,7 +10,7 @@ namespace Lime.Protocol.UnitTests
         [Test]
         public void Parse_ValidRelativeString_ReturnsInstance()
         {
-            var resourceName = DataUtil.CreateRandomString(10);
+            var resourceName = Dummy.CreateRandomString(10);
             var relativePath = string.Format("/{0}", resourceName);
             var actual = LimeUri.Parse(relativePath);
 
@@ -22,8 +22,8 @@ namespace Lime.Protocol.UnitTests
         [Test]
         public void Parse_ValidAbsoluteString_ReturnsInstance()
         {
-            var identity = DataUtil.CreateIdentity();
-            var resourceName = DataUtil.CreateRandomString(10);
+            var identity = Dummy.CreateIdentity();
+            var resourceName = Dummy.CreateRandomString(10);
             var absolutePath = string.Format("{0}://{1}/{2}", LimeUri.LIME_URI_SCHEME, identity, resourceName);
             var actual = LimeUri.Parse(absolutePath);
 
@@ -44,7 +44,7 @@ namespace Lime.Protocol.UnitTests
         [ExpectedException(typeof(ArgumentException))]
         public void Parse_InvalidRelativeString_ThrowsArgumentException()
         {
-            var resourceName = DataUtil.CreateRandomString(10);
+            var resourceName = Dummy.CreateRandomString(10);
             var invalidPath = string.Format("\\{0}", resourceName);            
             var actual = LimeUri.Parse(invalidPath);
         }
@@ -60,8 +60,8 @@ namespace Lime.Protocol.UnitTests
         [Test]
         public void ToUri_AbsoluteInstance_ReturnsUri()
         {
-            var identity = DataUtil.CreateIdentity();
-            var resourceName = DataUtil.CreateRandomString(10);
+            var identity = Dummy.CreateIdentity();
+            var resourceName = Dummy.CreateRandomString(10);
             var absolutePath = string.Format("{0}://{1}/{2}", LimeUri.LIME_URI_SCHEME, identity, resourceName);
             var limeUri = LimeUri.Parse(absolutePath);
             
@@ -79,7 +79,7 @@ namespace Lime.Protocol.UnitTests
         [ExpectedException(typeof(InvalidOperationException))]
         public void ToUri_RelativeInstance_ThrowsInvalidOperationException()
         {
-            var resourceName = DataUtil.CreateRandomString(10);
+            var resourceName = Dummy.CreateRandomString(10);
             var relativePath = string.Format("/{0}", resourceName);
             var limeUri = LimeUri.Parse(relativePath);
 
@@ -91,9 +91,9 @@ namespace Lime.Protocol.UnitTests
         [Test]
         public void ToUriIdentity_RelativeInstance_ReturnsUri()
         {
-            var identity = DataUtil.CreateIdentity();
+            var identity = Dummy.CreateIdentity();
 
-            var resourceName = DataUtil.CreateRandomString(10);
+            var resourceName = Dummy.CreateRandomString(10);
             var relativePath = string.Format("/{0}", resourceName);
 
             var limeUri = LimeUri.Parse(relativePath);
@@ -112,8 +112,8 @@ namespace Lime.Protocol.UnitTests
         [ExpectedException(typeof(InvalidOperationException))]
         public void ToUriIdentity_AbsoluteInstance_ThrowsInvalidOperationException()
         {
-            var identity = DataUtil.CreateIdentity();
-            var resourceName = DataUtil.CreateRandomString(10);
+            var identity = Dummy.CreateIdentity();
+            var resourceName = Dummy.CreateRandomString(10);
             var absolutePath = string.Format("{0}://{1}/{2}", LimeUri.LIME_URI_SCHEME, identity, resourceName);
             var limeUri = LimeUri.Parse(absolutePath);
 

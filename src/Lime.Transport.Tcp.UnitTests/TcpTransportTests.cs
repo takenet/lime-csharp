@@ -14,6 +14,7 @@ using Lime.Protocol.UnitTests;
 using Lime.Transport.Tcp;
 using NUnit.Framework;
 using Moq;
+using Shouldly;
 
 namespace Lime.Transport.Tcp.UnitTests
 {
@@ -57,14 +58,14 @@ namespace Lime.Transport.Tcp.UnitTests
                 bufferSize,
                 _traceWriter.Object);
         }
-        private async Task<TcpTransport> GetTargetAndOpenAsync(int bufferSize = TcpTransport.DEFAULT_BUFFER_SIZE, Stream stream = null)
+        private async Task<TcpTransport> GetAndOpenTargetAsync(int bufferSize = TcpTransport.DEFAULT_BUFFER_SIZE, Stream stream = null)
         {
             if (stream == null)
             {
                 stream = _stream.Object;
             }
 
-            var uri = DataUtil.CreateUri(Uri.UriSchemeNetTcp);
+            var uri = Dummy.CreateUri(Uri.UriSchemeNetTcp);
             var cancellationToken = CancellationToken.None;
 
             var readTcs = new TaskCompletionSource<int>();
@@ -92,9 +93,9 @@ namespace Lime.Transport.Tcp.UnitTests
         [Category("OpenAsync")]
         public async Task OpenAsync_NotConnectedValidUri_ConnectsClientAndCallsGetStream()
         {
-            var uri = DataUtil.CreateUri(Uri.UriSchemeNetTcp);
+            var uri = Dummy.CreateUri(Uri.UriSchemeNetTcp);
             var cancellationToken = CancellationToken.None;
-            int bufferSize = DataUtil.CreateRandomInt(10000);
+            int bufferSize = Dummy.CreateRandomInt(10000);
 
             var readTcs = new TaskCompletionSource<int>();
 
@@ -124,9 +125,9 @@ namespace Lime.Transport.Tcp.UnitTests
         [Test]
         [Category("OpenAsync")]
         [ExpectedException(typeof(ArgumentException))]
-        public async Task OpenAsync_NotConnectedInvalidSchemeUri_ThrowsArgumentException()
+        public async Task OpenAsync_NotConnectedInvalidUriScheme_ThrowsArgumentException()
         {
-            var uri = DataUtil.CreateUri(Uri.UriSchemeHttp);
+            var uri = Dummy.CreateUri(Uri.UriSchemeHttp);
             var cancellationToken = CancellationToken.None;
 
             _tcpClient
@@ -143,9 +144,9 @@ namespace Lime.Transport.Tcp.UnitTests
         [Category("OpenAsync")]
         public async Task OpenAsync_AlreadyConnectedValidUri_CallsGetStream()
         {
-            var uri = DataUtil.CreateUri(Uri.UriSchemeNetTcp);
+            var uri = Dummy.CreateUri(Uri.UriSchemeNetTcp);
             var cancellationToken = CancellationToken.None;
-            int bufferSize = DataUtil.CreateRandomInt(10000);
+            int bufferSize = Dummy.CreateRandomInt(10000);
 
             var readTcs = new TaskCompletionSource<int>();
 
@@ -180,11 +181,11 @@ namespace Lime.Transport.Tcp.UnitTests
         [Category("SendAsync")]
         public async Task SendAsync_ValidArgumentsAndOpenStreamAndTraceEnabled_CallsWriteAsyncAndTraces()
         {
-            var target = await this.GetTargetAndOpenAsync();
+            var target = await this.GetAndOpenTargetAsync();
 
-            var content = DataUtil.CreateTextContent();
-            var message = DataUtil.CreateMessage(content);
-            var serializedMessage = DataUtil.CreateRandomString(200);
+            var content = Dummy.CreateTextContent();
+            var message = Dummy.CreateMessage(content);
+            var serializedMessage = Dummy.CreateRandomString(200);
             var serializedMessageBytes = Encoding.UTF8.GetBytes(serializedMessage);
 
             var cancellationToken = CancellationToken.None;
@@ -248,12 +249,12 @@ namespace Lime.Transport.Tcp.UnitTests
         [Test]
         [Category("SendAsync")]
         [ExpectedException(typeof(InvalidOperationException))]
-        public async Task SendAsync_ClosedStream_ThrowsInvalidOperationException()
+        public async Task SendAsync_ClosedTransport_ThrowsInvalidOperationException()
         {
             var target = this.GetTarget();
 
-            var content = DataUtil.CreateTextContent();
-            var message = DataUtil.CreateMessage(content);
+            var content = Dummy.CreateTextContent();
+            var message = Dummy.CreateMessage(content);
 
             var cancellationToken = CancellationToken.None;
 
@@ -268,17 +269,17 @@ namespace Lime.Transport.Tcp.UnitTests
         [Category("ReceiveAsync")]
         public async Task ReceiveAsync_OneRead_ReadEnvelopeJsonFromStream()
         {
-            var content = DataUtil.CreateTextContent();
-            var message = DataUtil.CreateMessage(content);
-            var messageJson = DataUtil.CreateMessageJson();
-            var cancelationToken = DataUtil.CreateCancellationToken();
+            var content = Dummy.CreateTextContent();
+            var message = Dummy.CreateMessage(content);
+            var messageJson = Dummy.CreateMessageJson();
+            var cancelationToken = Dummy.CreateCancellationToken();
 
             byte[] messageBuffer = Encoding.UTF8.GetBytes(
                 messageJson);
 
-            int bufferSize = messageBuffer.Length + DataUtil.CreateRandomInt(1000);
+            int bufferSize = messageBuffer.Length + Dummy.CreateRandomInt(1000);
             var stream = new TestStream(messageBuffer);
-            var target = await GetTargetAndOpenAsync(bufferSize, stream);
+            var target = await GetAndOpenTargetAsync(bufferSize, stream);
 
             _envelopeSerializer
                 .Setup(e => e.Deserialize(messageJson))
@@ -300,7 +301,7 @@ namespace Lime.Transport.Tcp.UnitTests
         [ExpectedException(typeof(InvalidOperationException))]
         public async Task ReceiveAsync_NotStarted_ThrowsInvalidOperationException()
         {
-            var cancelationToken = DataUtil.CreateCancellationToken();
+            var cancelationToken = Dummy.CreateCancellationToken();
             var target = GetTarget();
 
             var actual = await target.ReceiveAsync(cancelationToken);
@@ -310,42 +311,20 @@ namespace Lime.Transport.Tcp.UnitTests
         [Category("ReceiveAsync")]
         public async Task ReceiveAsync_MultipleReads_ReadEnvelopeJsonFromStream()
         {
-            var content = DataUtil.CreateTextContent();
-            var message = DataUtil.CreateMessage(content);
-            var messageJson = DataUtil.CreateMessageJson();
-            var cancelationToken = DataUtil.CreateCancellationToken();
+            var content = Dummy.CreateTextContent();
+            var message = Dummy.CreateMessage(content);
+            var messageJson = Dummy.CreateMessageJson();
+            var cancelationToken = Dummy.CreateCancellationToken();
 
-            var bufferParts = DataUtil.CreateRandomInt(10) + 1;
+            var bufferParts = Dummy.CreateRandomInt(10) + 1;
 
             byte[] messageBuffer = Encoding.UTF8.GetBytes(
                 messageJson);
 
-            var bufferPartSize = messageBuffer.Length / bufferParts;
-
-            
-
-            byte[][] messageBufferParts = new byte[bufferParts][];
-
-            for (int i = 0; i < bufferParts; i++)
-            {
-                if (i + 1 == bufferParts)
-                {
-                    messageBufferParts[i] = messageBuffer
-                        .Skip(i * bufferPartSize)
-                        .ToArray();
-                }
-                else
-                {
-                    messageBufferParts[i] = messageBuffer
-                    .Skip(i * bufferPartSize)
-                    .Take(bufferPartSize)
-                    .ToArray();
-                }
-            }
-
-            int bufferSize = messageBuffer.Length + DataUtil.CreateRandomInt(1000);
+            var messageBufferParts = SplitBuffer(messageBuffer);
+            int bufferSize = messageBuffer.Length + Dummy.CreateRandomInt(1000);
             var stream = new TestStream(messageBufferParts);
-            var target = await GetTargetAndOpenAsync(bufferSize, stream);
+            var target = await GetAndOpenTargetAsync(bufferSize, stream);
 
             _envelopeSerializer
                 .Setup(e => e.Deserialize(messageJson))
@@ -361,16 +340,13 @@ namespace Lime.Transport.Tcp.UnitTests
             Assert.AreEqual(messageBufferParts.Length, stream.ReadCount);
         }
 
-
         [Test]
         [Category("ReceiveAsync")]
-        public async Task ReceiveAsync_MultipleReadsMultipleEnvelopes_ReadEnvelopeJsonFromStream()
+        public async Task ReceiveAsync_MultipleReadsMultipleEnvelopes_ReadEnvelopesJsonFromStream()
         {
-            var content = DataUtil.CreateTextContent();
-            var message = DataUtil.CreateMessage(content);
-
-            int messagesCount = DataUtil.CreateRandomInt(100) + 1;
-
+            var content = Dummy.CreateTextContent();
+            var message = Dummy.CreateMessage(content);
+            int messagesCount = Dummy.CreateRandomInt(100) + 1;
             var messageJsonQueue = new Queue<string>();
 
             for (int i = 0; i < messagesCount; i++)
@@ -379,46 +355,19 @@ namespace Lime.Transport.Tcp.UnitTests
 
                 do
                 {
-                    messageJson = DataUtil.CreateMessageJson();
+                    messageJson = Dummy.CreateMessageJson();
                 } while (messageJsonQueue.Contains(messageJson));
               
                 messageJsonQueue.Enqueue(messageJson);
             }
 
-            var messagesJsons = string.Join("", messageJsonQueue);
-                                    
-            var cancelationToken = DataUtil.CreateCancellationToken();
-
-            var bufferParts = DataUtil.CreateRandomInt(1000) + 1;
-
-            byte[] messageBuffer = Encoding.UTF8.GetBytes(
-                messagesJsons);
-
-            var bufferPartSize = messageBuffer.Length / bufferParts;
-
-
-            byte[][] messageBufferParts = new byte[bufferParts][];
-
-            for (int i = 0; i < bufferParts; i++)
-            {
-                if (i + 1 == bufferParts)
-                {
-                    messageBufferParts[i] = messageBuffer
-                        .Skip(i * bufferPartSize)
-                        .ToArray();
-                }
-                else
-                {
-                    messageBufferParts[i] = messageBuffer
-                    .Skip(i * bufferPartSize)
-                    .Take(bufferPartSize)
-                    .ToArray();
-                }
-            }            
-
-            int bufferSize = messageBuffer.Length + DataUtil.CreateRandomInt(1000);
+            var messagesJsons = string.Join("", messageJsonQueue);                                    
+            var cancelationToken = Dummy.CreateCancellationToken();
+            byte[] messageBuffer = Encoding.UTF8.GetBytes(messagesJsons);
+            var messageBufferParts = SplitBuffer(messageBuffer);         
+            int bufferSize = messageBuffer.Length + Dummy.CreateRandomInt(1000);
             var stream = new TestStream(messageBufferParts);
-            var target = await GetTargetAndOpenAsync(bufferSize, stream);
+            var target = await GetAndOpenTargetAsync(bufferSize, stream);
 
             _envelopeSerializer
                 .Setup(e => e.Deserialize(It.Is<string>(s => messageJsonQueue.Contains(s))))
@@ -443,7 +392,6 @@ namespace Lime.Transport.Tcp.UnitTests
             catch (Exception)
             {
                 Debug.WriteLine("Buffer parts: {0}", messageBuffer.Length);
-                Debug.WriteLine("Buffer part size: {0}", bufferPartSize);
                 Debug.WriteLine("Buffer: ");
                 Debug.Write(messagesJsons);
                 Debug.WriteLine("");
@@ -457,11 +405,9 @@ namespace Lime.Transport.Tcp.UnitTests
         [Category("ReceiveAsync")]
         public async Task ReceiveAsync_MultipleReadsMultipleEnvelopesWithInvalidCharsBetween_ReadEnvelopeJsonFromStream()
         {
-            var content = DataUtil.CreateTextContent();
-            var message = DataUtil.CreateMessage(content);
-
-            int messagesCount = DataUtil.CreateRandomInt(100) + 1;
-
+            var content = Dummy.CreateTextContent();
+            var message = Dummy.CreateMessage(content);
+            int messagesCount = Dummy.CreateRandomInt(100) + 1;
             var messageJsonQueue = new Queue<string>();
 
             for (int i = 0; i < messagesCount; i++)
@@ -470,46 +416,19 @@ namespace Lime.Transport.Tcp.UnitTests
 
                 do
                 {
-                    messageJson = DataUtil.CreateMessageJson();
+                    messageJson = Dummy.CreateMessageJson();
                 } while (messageJsonQueue.Contains(messageJson));
 
                 messageJsonQueue.Enqueue(messageJson);
             }
 
             var messagesJsons = "  \t\t " + string.Join("\r\n   ", messageJsonQueue);
-
-            var cancelationToken = DataUtil.CreateCancellationToken();
-
-            var bufferParts = DataUtil.CreateRandomInt(1000) + 1;
-
-            byte[] messageBuffer = Encoding.UTF8.GetBytes(
-                messagesJsons);
-
-            var bufferPartSize = messageBuffer.Length / bufferParts;
-
-
-            byte[][] messageBufferParts = new byte[bufferParts][];
-
-            for (int i = 0; i < bufferParts; i++)
-            {
-                if (i + 1 == bufferParts)
-                {
-                    messageBufferParts[i] = messageBuffer
-                        .Skip(i * bufferPartSize)
-                        .ToArray();
-                }
-                else
-                {
-                    messageBufferParts[i] = messageBuffer
-                    .Skip(i * bufferPartSize)
-                    .Take(bufferPartSize)
-                    .ToArray();
-                }
-            }
-
-            int bufferSize = messageBuffer.Length + DataUtil.CreateRandomInt(1000);
+            var cancelationToken = Dummy.CreateCancellationToken();            
+            byte[] messageBuffer = Encoding.UTF8.GetBytes(messagesJsons);
+            var messageBufferParts = SplitBuffer(messageBuffer);
+            int bufferSize = messageBuffer.Length + Dummy.CreateRandomInt(1000);
             var stream = new TestStream(messageBufferParts);
-            var target = await GetTargetAndOpenAsync(bufferSize, stream);
+            var target = await GetAndOpenTargetAsync(bufferSize, stream);
 
             _envelopeSerializer
                 .Setup(e => e.Deserialize(It.Is<string>(s => messageJsonQueue.Contains(s))))
@@ -534,7 +453,6 @@ namespace Lime.Transport.Tcp.UnitTests
             catch (Exception)
             {
                 Debug.WriteLine("Buffer parts: {0}", messageBuffer.Length);
-                Debug.WriteLine("Buffer part size: {0}", bufferPartSize);
                 Debug.WriteLine("Buffer: ");
                 Debug.Write(messagesJsons);
                 Debug.WriteLine("");
@@ -544,27 +462,24 @@ namespace Lime.Transport.Tcp.UnitTests
             }
         }
 
+
         [Test]
         [Category("ReceiveAsync")]
         public async Task ReceiveAsync_SingleReadBiggerThenBuffer_ClosesStreamAndThrowsInvalidOperationException()
         {
-            var content = DataUtil.CreateTextContent();
-            var message = DataUtil.CreateMessage(content);
-            var messageJson = DataUtil.CreateMessageJson();
-            var cancelationToken = DataUtil.CreateCancellationToken();
-
-            byte[] messageBuffer = Encoding.UTF8.GetBytes(
-                messageJson);
-
+            var content = Dummy.CreateTextContent();
+            var message = Dummy.CreateMessage(content);
+            var messageJson = Dummy.CreateMessageJson();
+            var cancelationToken = Dummy.CreateCancellationToken();
+            byte[] messageBuffer = Encoding.UTF8.GetBytes(messageJson);
             int bufferSize = messageBuffer.Length - 1;
             var stream = new TestStream(messageBuffer);
-            var target = await GetTargetAndOpenAsync(bufferSize, stream);
+            var target = await GetAndOpenTargetAsync(bufferSize, stream);
 
             _envelopeSerializer
                 .Setup(e => e.Deserialize(messageJson))
                 .Returns(message)
                 .Verifiable();
-
 
             _envelopeSerializer
                 .Setup(e => e.Deserialize(messageJson))
@@ -579,26 +494,49 @@ namespace Lime.Transport.Tcp.UnitTests
             }
             catch (Exception ex)
             {
-                Assert.IsTrue(ex is InvalidOperationException);
-                Assert.IsTrue(stream.CloseInvoked);
+                ex.ShouldBeOfType<BufferOverflowException>();
+                stream.CloseInvoked.ShouldBe(true);
             }
 
         }
 
         [Test]
         [Category("ReceiveAsync")]
-        public async Task ReceiveAsync_MultipleReadsBiggerThenBuffer_RaisesFailedAndThrowsInvalidOperationException()
+        public async Task ReceiveAsync_MultipleReadsBiggerThenBuffer_ClosesTheTransportAndThrowsInvalidOperationException()
         {
-            var content = DataUtil.CreateTextContent();
-            var message = DataUtil.CreateMessage(content);
-            var messageJson = DataUtil.CreateMessageJson();
-            var cancelationToken = DataUtil.CreateCancellationToken();
+            var content = Dummy.CreateTextContent();
+            var message = Dummy.CreateMessage(content);
+            var messageJson = Dummy.CreateMessageJson();
+            var cancelationToken = Dummy.CreateCancellationToken();
+            byte[] messageBuffer = Encoding.UTF8.GetBytes(messageJson);
+            var messageBufferParts = SplitBuffer(messageBuffer);
+            int bufferSize = messageBuffer.Length - 1;
+            var stream = new TestStream(messageBufferParts);
+            var target = await GetAndOpenTargetAsync(bufferSize, stream);
 
-            var bufferParts = DataUtil.CreateRandomInt(10) + 1;
+            _envelopeSerializer
+                .Setup(e => e.Deserialize(messageJson))
+                .Returns(message)
+                .Verifiable();
 
-            byte[] messageBuffer = Encoding.UTF8.GetBytes(
-                messageJson);
+            try
+            {
+                var actual = await target.ReceiveAsync(cancelationToken);
 
+                Assert.Fail();
+            }
+            catch (Exception ex)
+            {
+                Assert.IsTrue(ex is BufferOverflowException);
+                Assert.IsTrue(stream.CloseInvoked);
+            }
+            
+        }
+
+
+        private static byte[][] SplitBuffer(byte[] messageBuffer)
+        {
+            var bufferParts = Dummy.CreateRandomInt(1000) + 1;
             var bufferPartSize = messageBuffer.Length / bufferParts;
 
             byte[][] messageBufferParts = new byte[bufferParts][];
@@ -614,36 +552,13 @@ namespace Lime.Transport.Tcp.UnitTests
                 else
                 {
                     messageBufferParts[i] = messageBuffer
-                    .Skip(i * bufferPartSize)
-                    .Take(bufferPartSize)
-                    .ToArray();
+                        .Skip(i * bufferPartSize)
+                        .Take(bufferPartSize)
+                        .ToArray();
                 }
             }
-
-            int bufferSize = messageBuffer.Length - 1;
-            var stream = new TestStream(messageBufferParts);
-            var target = await GetTargetAndOpenAsync(bufferSize, stream);
-
-
-            _envelopeSerializer
-                .Setup(e => e.Deserialize(messageJson))
-                .Returns(message)
-                .Verifiable();
-
-            try
-            {
-                var actual = await target.ReceiveAsync(cancelationToken);
-
-                Assert.Fail();
-            }
-            catch (Exception ex)
-            {
-                Assert.IsTrue(ex is InvalidOperationException);
-                Assert.IsTrue(stream.CloseInvoked);
-            }
-            
-        }
-        
+            return messageBufferParts;
+        }        
         #endregion
 
         #region PerformCloseAsync
@@ -662,7 +577,7 @@ namespace Lime.Transport.Tcp.UnitTests
                 .Setup(s => s.Close())
                 .Verifiable();
 
-            var target = await GetTargetAndOpenAsync();
+            var target = await GetAndOpenTargetAsync();
 
             await target.CloseAsync(cancellationToken);
 
@@ -700,7 +615,7 @@ namespace Lime.Transport.Tcp.UnitTests
 
             var actual = target.GetSupportedEncryption();
 
-            Assert.IsTrue(actual.Length == 2);
+            Assert.AreEqual(2, actual.Length);
             Assert.IsTrue(actual.Contains(SessionEncryption.None));
             Assert.IsTrue(actual.Contains(SessionEncryption.TLS));
 

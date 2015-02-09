@@ -92,7 +92,7 @@ namespace Lime.Protocol
     }
 
     /// <summary>
-    /// Defines method for the manipulation 
+    /// Defines methods for the manipulation 
     /// of resources.
     /// </summary>
     [DataContract(Namespace = "http://limeprotocol.org/2014")]
@@ -134,18 +134,18 @@ namespace Lime.Protocol
     public enum CommandStatus
     {
         /// <summary>
-        /// The resource action is pending
+        /// The resource action is pending.
         /// </summary>
         [EnumMember(Value = "pending")]
         Pending,
         /// <summary>
         /// The resource action was 
-        /// sucessfully
+        /// sucessfully executed.
         /// </summary>
         [EnumMember(Value = "success")]
         Success,
         /// <summary>
-        /// 
+        /// The resource action has failed.
         /// </summary>
         [EnumMember(Value = "failure")]
         Failure

@@ -13,27 +13,27 @@ namespace Lime.Protocol.Network
     public interface IChannel : IMessageChannel, ICommandChannel, INotificationChannel, ISessionChannel
     {
         /// <summary>
-        /// The current session transport
+        /// Gets the current session transport.
         /// </summary>
         ITransport Transport { get; }
 
         /// <summary>
-        /// Remote node identifier
+        /// Gets the remote node identifier.
         /// </summary>
         Node RemoteNode { get; }
 
         /// <summary>
-        /// Remote node identifier
+        /// Gets the local node identifier.
         /// </summary>
         Node LocalNode { get; }
 
         /// <summary>
-        /// The session Id
+        /// Gets the current session Id.
         /// </summary>
         Guid SessionId { get; }
 
         /// <summary>
-        /// Current session state
+        /// Gets the current session state.
         /// </summary>
         SessionState State { get; }
 

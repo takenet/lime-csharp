@@ -15,8 +15,8 @@ namespace Lime.Protocol.UnitTests
         {
             var identity1 = new Identity()
             {
-                Name = DataUtil.CreateRandomString(10),
-                Domain = DataUtil.CreateRandomString(10)
+                Name = Dummy.CreateRandomString(10),
+                Domain = Dummy.CreateRandomString(10)
             };
 
             var identity2 = new Identity()
@@ -36,8 +36,8 @@ namespace Lime.Protocol.UnitTests
         {
             var identity1 = new Identity()
             {
-                Name = DataUtil.CreateRandomString(10).ToUpper(),
-                Domain = DataUtil.CreateRandomString(10).ToUpper()
+                Name = Dummy.CreateRandomString(10).ToUpper(),
+                Domain = Dummy.CreateRandomString(10).ToUpper()
             };
 
             var identity2 = new Identity()
@@ -57,7 +57,7 @@ namespace Lime.Protocol.UnitTests
         {
             var identity1 = new Identity()
             {
-                Name = DataUtil.CreateRandomString(10),
+                Name = Dummy.CreateRandomString(10),
                 Domain = null
             };
 
@@ -78,7 +78,7 @@ namespace Lime.Protocol.UnitTests
             var identity1 = new Identity()
             {
                 Name = null,
-                Domain = DataUtil.CreateRandomString(10)
+                Domain = Dummy.CreateRandomString(10)
             };
 
             var identity2 = new Identity()
@@ -98,14 +98,14 @@ namespace Lime.Protocol.UnitTests
         {
             var identity1 = new Identity()
             {
-                Name = DataUtil.CreateRandomString(10),
-                Domain = DataUtil.CreateRandomString(10)
+                Name = Dummy.CreateRandomString(10),
+                Domain = Dummy.CreateRandomString(10)
             };
 
             var identity2 = new Identity()
             {
-                Name = DataUtil.CreateRandomString(10),
-                Domain = DataUtil.CreateRandomString(10)
+                Name = Dummy.CreateRandomString(10),
+                Domain = Dummy.CreateRandomString(10)
             };
 
 
@@ -120,13 +120,13 @@ namespace Lime.Protocol.UnitTests
             var identity1 = new Identity()
             {
                 Name = null,
-                Domain = DataUtil.CreateRandomString(10)
+                Domain = Dummy.CreateRandomString(10)
             };
 
             var identity2 = new Identity()
             {
-                Name = DataUtil.CreateRandomString(10),
-                Domain = DataUtil.CreateRandomString(10)
+                Name = Dummy.CreateRandomString(10),
+                Domain = Dummy.CreateRandomString(10)
             };
 
 
@@ -140,14 +140,14 @@ namespace Lime.Protocol.UnitTests
         {
             var identity1 = new Identity()
             {
-                Name = DataUtil.CreateRandomString(10),
+                Name = Dummy.CreateRandomString(10),
                 Domain = null
             };
 
             var identity2 = new Identity()
             {
-                Name = DataUtil.CreateRandomString(10),
-                Domain = DataUtil.CreateRandomString(10)
+                Name = Dummy.CreateRandomString(10),
+                Domain = Dummy.CreateRandomString(10)
             };
 
 
@@ -167,8 +167,8 @@ namespace Lime.Protocol.UnitTests
 
             var identity2 = new Identity()
             {
-                Name = DataUtil.CreateRandomString(10),
-                Domain = DataUtil.CreateRandomString(10)
+                Name = Dummy.CreateRandomString(10),
+                Domain = Dummy.CreateRandomString(10)
             };
 
 
@@ -186,8 +186,8 @@ namespace Lime.Protocol.UnitTests
         {
             var identity1 = new Identity()
             {
-                Name = DataUtil.CreateRandomString(10),
-                Domain = DataUtil.CreateRandomString(10)
+                Name = Dummy.CreateRandomString(10),
+                Domain = Dummy.CreateRandomString(10)
             };
 
             var identity2 = new Identity()
@@ -206,8 +206,8 @@ namespace Lime.Protocol.UnitTests
         {
             var identity1 = new Identity()
             {
-                Name = DataUtil.CreateRandomString(10).ToUpper(),
-                Domain = DataUtil.CreateRandomString(10).ToUpper()
+                Name = Dummy.CreateRandomString(10).ToUpper(),
+                Domain = Dummy.CreateRandomString(10).ToUpper()
             };
 
             var identity2 = new Identity()
@@ -226,14 +226,14 @@ namespace Lime.Protocol.UnitTests
         {
             var identity1 = new Identity()
             {
-                Name = DataUtil.CreateRandomString(10),
-                Domain = DataUtil.CreateRandomString(10)
+                Name = Dummy.CreateRandomString(10),
+                Domain = Dummy.CreateRandomString(10)
             };
 
             var identity2 = new Identity()
             {
-                Name = new string(identity1.Name.Reverse().ToArray()) + DataUtil.CreateRandomString(5),
-                Domain = new string(identity1.Domain.Reverse().ToArray()) + DataUtil.CreateRandomString(5),
+                Name = new string(identity1.Name.Reverse().ToArray()) + Dummy.CreateRandomString(5),
+                Domain = new string(identity1.Domain.Reverse().ToArray()) + Dummy.CreateRandomString(5),
             };
 
 
@@ -249,8 +249,8 @@ namespace Lime.Protocol.UnitTests
         [Category("ToString")]
         public void ToString_CompleteIdentity_ReturnsValidString()
         {
-            var name = DataUtil.CreateRandomString(10);
-            var domain = DataUtil.CreateRandomString(10);
+            var name = Dummy.CreateRandomString(10);
+            var domain = Dummy.CreateRandomString(10);
 
             var identity1 = new Identity()
             {
@@ -267,7 +267,7 @@ namespace Lime.Protocol.UnitTests
         [Category("ToString")]
         public void ToString_OnlyNameIdentity_ReturnsValidString()
         {
-            var name = DataUtil.CreateRandomString(10);
+            var name = Dummy.CreateRandomString(10);
             string domain = null;
 
             var identity1 = new Identity()
@@ -286,7 +286,7 @@ namespace Lime.Protocol.UnitTests
         public void ToString_OnlyDomainIdentity_ReturnsValidString()
         {
             string name = null;
-            var domain = DataUtil.CreateRandomString(10);
+            var domain = Dummy.CreateRandomString(10);
 
             var identity1 = new Identity()
             {
@@ -307,8 +307,8 @@ namespace Lime.Protocol.UnitTests
         [Category("Parse")]
         public void Parse_CompleteString_ReturnsValidIdentity()
         {
-            var name = DataUtil.CreateRandomString(10);
-            var domain = DataUtil.CreateRandomString(10);
+            var name = Dummy.CreateRandomString(10);
+            var domain = Dummy.CreateRandomString(10);
 
             var identityString = string.Format("{0}@{1}", name, domain);
 
@@ -323,7 +323,7 @@ namespace Lime.Protocol.UnitTests
         [Category("Parse")]
         public void Parse_OnlyNameString_ReturnsValidIdentity()
         {
-            var name = DataUtil.CreateRandomString(10);
+            var name = Dummy.CreateRandomString(10);
 
             var identity = Identity.Parse(name);
 
@@ -335,7 +335,7 @@ namespace Lime.Protocol.UnitTests
         [Category("Parse")]
         public void Parse_OnlyDomain_ReturnsValidIdentity()
         {
-            var domain = DataUtil.CreateRandomString(10);
+            var domain = Dummy.CreateRandomString(10);
 
             var identityString = string.Format("@{0}", domain);
 
