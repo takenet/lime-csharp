@@ -201,9 +201,8 @@ namespace Lime.Protocol.UnitTests.Network
             var actual = await target.ReceiveMessageAsync(cancellationToken);
 
             Assert.AreEqual(message, actual);
-
-            Assert.AreEqual(message.To, localNode);
-            Assert.AreEqual(message.From, remoteNode);
+            Assert.AreEqual(localNode, message.To);
+            Assert.AreEqual(remoteNode, message.From);
             Assert.IsNull(message.Pp);
 
             _transport.Verify();

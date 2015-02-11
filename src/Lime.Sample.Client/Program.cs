@@ -33,10 +33,8 @@ namespace Lime.Sample.Client
 
             System.Console.Write("Port number (ENTER for default): ");
 
-            var portNumberString = Console.ReadLine();
             int portNumber;
-
-            if (!int.TryParse(portNumberString, out portNumber))
+            if (!int.TryParse(Console.ReadLine(), out portNumber))
             {
                 portNumber = 55321;
             }

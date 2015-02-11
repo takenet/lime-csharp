@@ -111,6 +111,7 @@ namespace Lime.Protocol.Client
         /// <exception cref="System.InvalidOperationException">
         /// Cannot await for a session response since there's already a listener.
         /// </exception>
+        [Obsolete("Use ReceiveSessionAsync instead")]
         public async Task<Session> ReceiveAuthenticatingSessionAsync(CancellationToken cancellationToken)
         {
             if (base.State != SessionState.Negotiating)
@@ -286,9 +287,7 @@ namespace Lime.Protocol.Client
             {
                 this.LocalNode = session.To;
                 this.RemoteNode = session.From;
-            }            
-
-            if (session.State == SessionState.Finished ||
+            } else if (session.State == SessionState.Finished ||
                 session.State == SessionState.Failed)
             {
                 await this.Transport.CloseAsync(cancellationToken).ConfigureAwait(false);
