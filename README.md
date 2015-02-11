@@ -1,4 +1,4 @@
-LIME - A lightweight messaging library
+LIME - A lightweight messaging library  ![TC](http://take-teamcity.cloudapp.net/app/rest/builds/buildType:(id:Lime_Master)/statusIcon)
 ================================
 
 LIME allows you to build scalable, real-time messaging applications using a JSON-based [open protocol](http://limeprotocol.org). It's **fully asynchronous** and supports any persistent transport like TCP or Websockets.
