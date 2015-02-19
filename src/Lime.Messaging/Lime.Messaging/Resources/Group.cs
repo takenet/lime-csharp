@@ -75,33 +75,45 @@ namespace Lime.Messaging.Resources
 
     }
 
+    /// <summary>
+    /// Represents a member of a group.
+    /// </summary>
     [DataContract(Namespace = "http://limeprotocol.org/2014")]
-    [DebuggerDisplay("Identity = {Identity}, Role = {Role}")]
-    public partial class GroupMember : Document
+    [DebuggerDisplay("Address = {Address}, Role = {Role}")]
+    public class GroupMember : Document
     {
-
+        public const string ADDRESS_KEY = "address";
+        public const string ROLE_KEY = "role";
 
         public const string MIME_TYPE = "application/vnd.lime.groupmember+json";
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="GroupMember"/> class.
+        /// </summary>
         public GroupMember()
             : base(MediaType.Parse(MIME_TYPE))
         {
 
         }
+
         /// <summary>
-        /// The identity of the member, in the name@domain format. 
+        /// The address of the member, in the name@domain/instance format,
+        /// being the instance information optional.
         /// </summary>
-        [DataMember(Name = "identity")]
-        public Identity Identity { get; set; }
+        [DataMember(Name = ADDRESS_KEY)]
+        public Node Address { get; set; }
 
         /// <summary>
         /// The role of the identity in the group. 
         /// </summary>
-        [DataMember(Name = "role")]
+        [DataMember(Name = ROLE_KEY)]
         public GroupMemberRole Role { get; set; }
-
     }
 
+    /// <summary>
+    /// Enumerates the roles that the members 
+    /// can have in a group.
+    /// </summary>
     [DataContract(Namespace = "http://limeprotocol.org/2014")]
     public enum GroupMemberRole
     {
