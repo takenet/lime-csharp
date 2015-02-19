@@ -57,6 +57,13 @@
         public const string GROUP_MEMBER = "/groups/{groupIdentity}/members/{memberIdentity}";
 
         /// <summary>
+        /// Template for a 
+        /// specific group member
+        /// resource
+        /// </summary>
+        public const string GROUP_MEMBER_INSTANCE = "/groups/{groupIdentity}/members/{memberIdentity}/{memberInstance}";
+
+        /// <summary>
         /// Template for the
         /// ping resource
         /// </summary>
