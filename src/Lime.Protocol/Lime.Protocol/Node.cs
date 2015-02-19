@@ -118,8 +118,7 @@ namespace Lime.Protocol
         }
 
         /// <summary>
-        /// Creates an Identity instance
-        /// based on the Node identity
+        /// Creates an Identity instance based on the Node identity.
         /// </summary>
         /// <returns></returns>
         public Identity ToIdentity()
@@ -132,9 +131,8 @@ namespace Lime.Protocol
         }
 
         /// <summary>
-        /// Indicates if the node is
-        /// a complete representation, with
-        /// name, domain and instance.
+        /// Indicates if the node is a complete representation, 
+        /// with name, domain and instance.
         /// </summary>
         public bool IsComplete
         {

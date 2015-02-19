@@ -73,6 +73,21 @@ namespace Lime.Protocol
                    ((this.Domain == null && identity.Domain == null) || (this.Domain != null && this.Domain.Equals(identity.Domain, StringComparison.CurrentCultureIgnoreCase)));
         }
 
+
+        /// <summary>
+        /// Creates a Node instance based on the identity,
+        /// with a null value for the instance property.
+        /// </summary>
+        /// <returns></returns>
+        public Node ToNode()
+        {
+            return new Node()
+            {
+                Name = this.Name,
+                Domain = this.Domain
+            };
+        }
+
         /// <summary>
         /// Parses the string to a valid Identity.
         /// </summary>

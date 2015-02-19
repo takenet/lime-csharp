@@ -716,6 +716,7 @@ S:
 <pre>
     lime://{ownerIdentity}/groups/{groupIdentity}/members
     lime://{ownerIdentity}/groups/{groupIdentity}/members/{memberIdentity}
+    lime://{ownerIdentity}/groups/{groupIdentity}/members/{memberIdentity}/{memberInstance}
 </pre>
 
     <h4>MIME type</h4>
@@ -733,9 +734,9 @@ S:
     "type": "object",
     "properties": {
         "identity": {
-            "title": "identity",
+            "title": "address",
             "type": "string",
-            "pattern": "^(?:([^\"&'/:<>@@]{1,1023})@@)?([^/@@]{1,1023})$"
+            "pattern": "^(?:([^\"&'/:<>@@]{1,1023})@@)?([^/@@]{1,1023})(?:/(.{1,1023}))?$"
         },
         "role": {
             "enum": [ "listener", "member", "moderator", "owner" ]
@@ -750,7 +751,7 @@ S:
 
     <ul>
         <li>
-            <strong>identity</strong> - The identity of the member, in the <em>name@domain</em> format.
+            <strong>address</strong> - The address of the member, in the <em>name@domain/instance</em> format, being the instance information optional.
         </li>
         <li>
             <strong>role</strong> - The role of the identity in the group. The possible values are:
@@ -799,20 +800,20 @@ S:
         "itemType": "application/vnd.lime.groupmember+json",
         "items": [
             {
-                "identity": "mike@breakingbad.com",
+                "address": "mike@breakingbad.com",
                 "role": "moderator"
             },
             {
-                "identity": "ww@breakingbad.com"
+                "address": "ww@breakingbad.com"
             },
             {
-                "identity": "jesse@breakingbad.com"
+                "address": "jesse@breakingbad.com"
             },
             {
-                "identity": "gale@breakingbad.com"
+                "address": "gale@breakingbad.com"
             },
             {
-                "identity": "victor@breakingbad.com",
+                "address": "victor@breakingbad.com",
                 "role": "listener"
             }
         ]
