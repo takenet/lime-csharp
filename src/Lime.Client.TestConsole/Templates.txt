@@ -26,5 +26,5 @@ Get groups	Command	{"id":"%commandId","method":"get","type":"application/vnd.lim
 Get group	Command	{"id":"%commandId","method":"get","type":"application/vnd.lime.group+json","uri": "/groups/%groupIdentity"}
 Set group	Command	{"id":"%commandId","method":"set","type":"application/vnd.lime.group+json","uri": "/groups","resource":{"identity":"%groupIdentity","name":"%groupName","type":"public"}}
 Get group members	Command	{"id":"%commandId","method":"get","uri": "/groups/%groupIdentity/members"}
-Set group member	Command	{"id":"%commandId","method":"set","type":"application/vnd.lime.groupmember+json","uri": "/groups/%groupIdentity/members","resource":{"identity":"<member>@any.com","role":"listener"}}
+Set group member	Command	{"id":"%commandId","method":"set","type":"application/vnd.lime.groupmember+json","uri": "/groups/%groupIdentity/members","resource":{"address":"%groupMemberAddress","role":"%groupMemberRole"}}
 Get contacts	Command	{"id":"%commandId","method":"get","uri": "/contacts"}

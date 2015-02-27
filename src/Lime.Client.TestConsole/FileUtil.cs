@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -26,6 +27,11 @@ namespace Lime.Client.TestConsole
                     }
                 }
             }
+        }
+
+        public static void SaveFile(IEnumerable<string[]> content, string fileName, char separator)
+        {
+            File.WriteAllLines(fileName, content.Select(s => string.Join(separator.ToString(CultureInfo.InvariantCulture), s)));
         }
     }
 }

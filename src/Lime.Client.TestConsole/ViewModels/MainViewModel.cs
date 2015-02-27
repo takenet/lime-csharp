@@ -1,4 +1,5 @@
 ﻿using GalaSoft.MvvmLight;
+using GalaSoft.MvvmLight.Command;
 using Lime.Client.TestConsole.Mvvm;
 using System;
 using System.Collections.Generic;
@@ -14,13 +15,15 @@ namespace Lime.Client.TestConsole.ViewModels
     {
         public MainViewModel()
         {
-            this.SelectedSession = new SessionViewModel();
+            SelectedSession = new SessionViewModel();
 
-            this.Title = string.Format(
+            Title = string.Format(
                 "Lime Test Console v{0}",
                 Assembly.GetEntryAssembly().GetName().Version);
-        }
 
+            ClosingCommand = new RelayCommand(Closing);
+            ClosedCommand = new RelayCommand(Closed);
+        }
 
 
         private string _title;
@@ -59,6 +62,27 @@ namespace Lime.Client.TestConsole.ViewModels
                 RaisePropertyChanged(() => Sessions);
             }
         }
+
+        #region Commands
+
+        public RelayCommand ClosingCommand { get; private set; }
+
+        private void Closing()
+        {
+            if (SelectedSession != null)
+            {
+                SelectedSession.SavePreferences();
+            }
+        }
+
+        public RelayCommand ClosedCommand { get; private set; }
+
+        private void Closed()
+        {
+
+        }
+
+        #endregion
 
     }
 }

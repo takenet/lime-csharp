@@ -842,9 +842,16 @@ namespace Lime.Client.TestConsole.ViewModels
                         Value = lineValues[1]
                     };
 
-                    this.Variables.Add(variableViewModel);
+                    Variables.Add(variableViewModel);
                 }
             }
+        }
+
+        private void SaveVariables()
+        {
+            var lineValues = Variables.Select(v => new [] {v.Name, v.Value});
+            FileUtil.SaveFile(lineValues, VARIABLES_FILE_NAME, VARIABLES_FILE_SEPARATOR);            
+
         }
 
         private static string ParseInput(string input, IEnumerable<VariableViewModel> variables)
@@ -868,19 +875,21 @@ namespace Lime.Client.TestConsole.ViewModels
                     Type = type
                 };
 
-                this.Macros.Add(macroViewModel);
+                Macros.Add(macroViewModel);
             }
         }
 
         private async Task ReceiveEnvelopeAsync(Envelope envelope, Dispatcher dispatcher)
         {
-            var envelopeViewModel = new EnvelopeViewModel();
-            envelopeViewModel.Envelope = envelope;
-            envelopeViewModel.Direction = DataOperation.Receive;
+            var envelopeViewModel = new EnvelopeViewModel
+            {
+                Envelope = envelope, 
+                Direction = DataOperation.Receive
+            };
 
             await await dispatcher.InvokeAsync(async () => 
                 {
-                    this.Envelopes.Add(envelopeViewModel);
+                    Envelopes.Add(envelopeViewModel);
 
                     foreach (var macro in Macros.Where(m => m.IsActive))
                     {
@@ -891,7 +900,7 @@ namespace Lime.Client.TestConsole.ViewModels
 
         private void AddStatusMessage(string message, bool isError = false)
         {
-            this.StatusMessage = message;
+            StatusMessage = message;
 
             var statusMessageViewModel = new StatusMessageViewModel()
             {
@@ -900,7 +909,7 @@ namespace Lime.Client.TestConsole.ViewModels
                 IsError  = isError
             };
 
-            this.StatusMessages.Add(statusMessageViewModel);
+            StatusMessages.Add(statusMessageViewModel);
         }
 
         #endregion
@@ -925,6 +934,15 @@ namespace Lime.Client.TestConsole.ViewModels
         }
 
         #endregion
+
+        public void SavePreferences()
+        {
+            if (!IsInDesignMode)
+            {
+                SaveVariables();
+            }
+        }
+
     }
 
     public static class VariablesExtensions
