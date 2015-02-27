@@ -64,11 +64,13 @@ namespace Lime.Client.TestConsole.ViewModels
 
             if (!IsInDesignMode)
             {
+                LoadHost();
                 LoadVariables();
                 LoadTemplates();
                 LoadMacros();
             }
         }
+
 
         #endregion
 
@@ -525,6 +527,7 @@ namespace Lime.Client.TestConsole.ViewModels
                         Transport,
                         (e) => ReceiveEnvelopeAsync(e, dispatcher),
                         _connectionCts.Token)
+                    .WithCancellation(_connectionCts.Token)
                     .ContinueWith(t => 
                     {
                         IsConnected = false;
@@ -805,6 +808,24 @@ namespace Lime.Client.TestConsole.ViewModels
             catch (OperationCanceledException) { }            
         }
 
+        public const string HOST_FILE_NAME = "Host.txt";
+
+        private void LoadHost()
+        {
+            if (File.Exists(HOST_FILE_NAME))
+            {
+                Host = File.ReadAllText(HOST_FILE_NAME);
+            }
+        }
+
+        private void SaveHost()
+        {
+            if (!string.IsNullOrEmpty(Host))
+            {
+                File.WriteAllText(HOST_FILE_NAME, Host);
+            }
+        }
+
         public const string TEMPLATES_FILE_NAME = "Templates.txt";
         public const char TEMPLATES_FILE_SEPARATOR = '\t';
 
@@ -939,7 +960,8 @@ namespace Lime.Client.TestConsole.ViewModels
         {
             if (!IsInDesignMode)
             {
-                SaveVariables();
+                SaveHost();
+                SaveVariables();                
             }
         }
 
