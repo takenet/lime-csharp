@@ -846,7 +846,7 @@ namespace Lime.Protocol.UnitTests.Serialization
 
 			var envelope = target.Deserialize(json);
 
-			Assert.IsTrue(envelope is Message);
+            envelope.ShouldBeOfType<Message>();
 
 			var message = (Message)envelope;
 			Assert.AreEqual(id, message.Id);
@@ -859,7 +859,7 @@ namespace Lime.Protocol.UnitTests.Serialization
 			Assert.IsTrue(message.Metadata.ContainsKey(randomKey2));
 			Assert.AreEqual(message.Metadata[randomKey2], randomString2);
 
-			Assert.IsTrue(message.Content is PlainText);
+            message.Content.ShouldBeOfType<PlainText>();
 
 			var textContent = (PlainText)message.Content;
 			Assert.AreEqual(text, textContent.Text);
@@ -911,7 +911,7 @@ namespace Lime.Protocol.UnitTests.Serialization
 			Assert.IsTrue(message.Metadata.ContainsKey(randomKey2));
 			Assert.AreEqual(message.Metadata[randomKey2], randomString2);
 
-			Assert.IsTrue(message.Content is ChatState);
+            message.Content.ShouldBeOfType<ChatState>();
 
 			var textContent = (ChatState)message.Content;
 			Assert.AreEqual(state, textContent.State);
@@ -968,7 +968,7 @@ namespace Lime.Protocol.UnitTests.Serialization
 			Assert.IsNotNull(message.Type);
 			Assert.AreEqual(message.Type, type);
 
-			Assert.IsTrue(message.Content is PlainDocument);
+            message.Content.ShouldBeOfType<PlainDocument>();
 
 			var content = (PlainDocument)message.Content;
 			Assert.AreEqual(text, content.Value);
@@ -1035,7 +1035,7 @@ namespace Lime.Protocol.UnitTests.Serialization
 			Assert.IsNotNull(message.Type);
 			Assert.AreEqual(message.Type, type);
 
-			Assert.IsTrue(message.Content is JsonDocument);
+            message.Content.ShouldBeOfType<JsonDocument>();
 
 			var content = (JsonDocument)message.Content;
 
@@ -1105,7 +1105,7 @@ namespace Lime.Protocol.UnitTests.Serialization
 			Assert.IsNotNull(message.Type);
 			Assert.AreEqual(message.Type, type);
 
-			Assert.IsTrue(message.Content is JsonDocument);
+            message.Content.ShouldBeOfType<JsonDocument>();
 
 			var content = (JsonDocument)message.Content;
 

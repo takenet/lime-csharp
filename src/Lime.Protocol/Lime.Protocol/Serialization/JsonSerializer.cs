@@ -184,15 +184,25 @@ namespace Lime.Protocol.Serialization
                                 j[DocumentCollection.ITEM_TYPE_KEY] is string)
                             {
                                 var mediaType = MediaType.Parse((string)j[DocumentCollection.ITEM_TYPE_KEY]);
-                                
-                                Type itemPropertyType;
-                                
 
-                                if (TypeUtil.TryGetTypeForMediaType(mediaType, out itemPropertyType) &&
-                                    j.ContainsKey(memberName) &&
+                                if (j.ContainsKey(memberName) &&
                                     j[memberName] is IEnumerable)
                                 {
-                                    var value = j.GetArrayOrNull(propertyType, memberName, i => JsonSerializer.ParseJson(itemPropertyType, (JsonObject)i));
+                                    Array value;
+                                    Type itemPropertyType;
+                                    if (TypeUtil.TryGetTypeForMediaType(mediaType, out itemPropertyType))
+                                    {
+                                        value = j.GetArrayOrNull(propertyType, memberName,
+                                            i => JsonSerializer.ParseJson(itemPropertyType, (JsonObject) i));
+                                    }
+                                    else if (mediaType.IsJson)
+                                    {
+                                        value = j.GetArrayOrNull(propertyType, memberName, i => new JsonDocument((JsonObject)i, mediaType));
+                                    }
+                                    else
+                                    {
+                                        value = j.GetArrayOrNull(propertyType, memberName, i => new PlainDocument(i.ToString(), mediaType));                                        
+                                    }                                    
 
                                     if (value != null)
                                     {
@@ -207,7 +217,7 @@ namespace Lime.Protocol.Serialization
                         throw new NotSupportedException(string.Format("The type '{0}' of the property '{1}' is not supported", propertyType, memberName));
                     }
                 }
-                else if (TypeUtil.IsKnownType(propertyType))
+                else if (TypeUtil.IsDataContractType(propertyType))
                 {
                     // In this case, the dictionary has a JsonObject entry
                     // for the property, so it must be parsed
@@ -344,7 +354,7 @@ namespace Lime.Protocol.Serialization
                     throw new NotSupportedException(string.Format("The type '{0}' of the property '{1}' is not supported", propertyType, memberName));
                 }
             }
-            else if (TypeUtil.IsKnownType(propertyType))
+            else if (TypeUtil.IsDataContractType(propertyType))
             {
                 // In this case, the dictionary has a JsonObject entry
                 // for the property, so it must be parsed

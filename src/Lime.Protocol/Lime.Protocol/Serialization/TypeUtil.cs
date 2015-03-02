@@ -1,4 +1,5 @@
-﻿using Lime.Protocol.Security;
+﻿using System.IO;
+using Lime.Protocol.Security;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -23,7 +24,7 @@ namespace Lime.Protocol.Serialization
         private static IDictionary<AuthenticationScheme, Type> _authenticationSchemeDictionary;
         private static IDictionary<Type, IDictionary<string, object>> _enumTypeValueDictionary;
         private static ConcurrentDictionary<Type, Func<string, object>> _typeParseFuncDictionary;
-        private static HashSet<Type> _knownTypes;
+        private static HashSet<Type> _dataContractTypes;
 
         #endregion
         
@@ -35,58 +36,16 @@ namespace Lime.Protocol.Serialization
             _authenticationSchemeDictionary = new Dictionary<AuthenticationScheme, Type>();
             _enumTypeValueDictionary = new Dictionary<Type, IDictionary<string, object>>();
             _typeParseFuncDictionary = new ConcurrentDictionary<Type, Func<string, object>>();
-            _knownTypes = new HashSet<Type>();
+            _dataContractTypes = new HashSet<Type>();
 
             // Caches the known type (types decorated with DataContract in all loaded assemblies)
-            foreach (var knownType in GetAllTypesFromApplication().Where(t => t.GetCustomAttribute<DataContractAttribute>() != null))
+            foreach (var type in GetAllTypesFromApplication().Where(t => t.GetCustomAttribute<DataContractAttribute>() != null))
             {
-                _knownTypes.Add(knownType);
-            }
-
-            // Caches the documents (contents and resources)
-            var documentTypes = _knownTypes
-                .Where(t => !t.IsAbstract && typeof(Document).IsAssignableFrom(t));
-
-            foreach (var documentType in documentTypes)
-            {
-                var document = Activator.CreateInstance(documentType) as Document;
-
-                if (document != null)
-                {
-                    _documentMediaTypeDictionary.Add(document.GetMediaType(), documentType);
-                }
-            }
-
-            // Caches the Authentication schemes
-            var authenticationTypes = _knownTypes
-                .Where(t => !t.IsAbstract && typeof(Authentication).IsAssignableFrom(t));
-
-            foreach (var authenticationType in authenticationTypes)
-            {
-                var authentication = Activator.CreateInstance(authenticationType) as Authentication;
-
-                if (authentication != null)
-                {
-                    _authenticationSchemeDictionary.Add(authentication.GetAuthenticationScheme(), authenticationType);
-                }
-            }
-
-            // Caches the enums
-            var enumTypes = _knownTypes
-                .Where(t => t.IsEnum);
-
-            foreach (var enumType in enumTypes)
-            {
-                var enumNames = Enum.GetNames(enumType);
-                var memberValueDictionary = new Dictionary<string, object>();
-
-                foreach (var enumName in enumNames)
-                {
-                    memberValueDictionary.Add(enumName.ToLowerInvariant(), Enum.Parse(enumType, enumName));
-                }
-                _enumTypeValueDictionary.Add(enumType, memberValueDictionary);
-            }
+                AddDataContractType(type);
+            }          
         }
+
+
 
         #endregion
 
@@ -356,9 +315,9 @@ namespace Lime.Protocol.Serialization
         /// </summary>
         /// <param name="type"></param>
         /// <returns></returns>
-        public static bool IsKnownType(Type type)
+        public static bool IsDataContractType(Type type)
         {
-            return _knownTypes.Contains(type);
+            return _dataContractTypes.Contains(type);
         }
 
         /// <summary>
@@ -495,11 +454,72 @@ namespace Lime.Protocol.Serialization
 
         private static IEnumerable<Type> GetAllTypesFromApplication()
         {
+            LoadReferencedAssemblies();
             return AppDomain
                     .CurrentDomain
                     .GetAssemblies()
                     .SelectMany(a => a.GetTypes())
                     .Where(t => !t.FullName.StartsWith("System."));
+        }
+
+        private static void LoadReferencedAssemblies()
+        {
+            foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+            {
+                LoadReferencedAssembly(assembly);
+            }
+        }
+
+        private static void LoadReferencedAssembly(Assembly assembly)
+        {
+            foreach (var name in assembly.GetReferencedAssemblies())
+            {
+                if (AppDomain.CurrentDomain.GetAssemblies().All(a => a.FullName != name.FullName))
+                {
+                    LoadReferencedAssembly(Assembly.Load(name));
+                }
+            }
+        }
+
+        private static void AddDataContractType(Type type)
+        {
+            _dataContractTypes.Add(type);
+
+            if (!type.IsAbstract)
+            {
+                // Caches the documents (contents and resources)
+                if (typeof(Document).IsAssignableFrom(type))
+                {
+                    var document = Activator.CreateInstance(type) as Document;
+                    if (document != null)
+                    {
+                        _documentMediaTypeDictionary.Add(document.GetMediaType(), type);
+                    }
+                }
+
+                // Caches the Authentication schemes
+                if (typeof(Authentication).IsAssignableFrom(type))
+                {
+                    var authentication = Activator.CreateInstance(type) as Authentication;
+                    if (authentication != null)
+                    {
+                        _authenticationSchemeDictionary.Add(authentication.GetAuthenticationScheme(), type);
+                    }
+                }
+            }
+
+            // Caches the enums
+            if (type.IsEnum)
+            {
+                var enumNames = Enum.GetNames(type);
+                var memberValueDictionary = new Dictionary<string, object>();
+
+                foreach (var enumName in enumNames)
+                {
+                    memberValueDictionary.Add(enumName.ToLowerInvariant(), Enum.Parse(type, enumName));
+                }
+                _enumTypeValueDictionary.Add(type, memberValueDictionary);
+            }
         }
     }
 }

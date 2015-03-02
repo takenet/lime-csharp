@@ -1,5 +1,6 @@
 ﻿using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
+using Lime.Messaging;
 using Lime.Client.TestConsole.Mvvm;
 using System;
 using System.Collections.Generic;

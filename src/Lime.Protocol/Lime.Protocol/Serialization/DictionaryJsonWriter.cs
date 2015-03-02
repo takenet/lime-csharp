@@ -77,7 +77,7 @@ namespace Lime.Protocol.Serialization
                 
                 foreach (var item in items)
                 {                    
-                    if (TypeUtil.IsKnownType(item.GetType()))
+                    if (TypeUtil.IsDataContractType(item.GetType()))
                     {                        
                         var writer = new DictionaryJsonWriter();
                         JsonSerializer.Write(item, writer);
@@ -156,7 +156,7 @@ namespace Lime.Protocol.Serialization
             {
                 WriteGuidProperty(propertyName, (Guid)value);
             }
-            else if (TypeUtil.IsKnownType(value.GetType()))
+            else if (TypeUtil.IsDataContractType(value.GetType()))
             {
                 WriteJsonProperty(propertyName, value);
             }

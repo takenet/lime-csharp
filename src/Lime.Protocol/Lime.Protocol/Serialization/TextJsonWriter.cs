@@ -244,38 +244,7 @@ namespace Lime.Protocol.Serialization
             }
         }
 
-        private void WriteJsonArrayProperty(string propertyName, IEnumerable jsonItems)
-        {
-            if (jsonItems != null)
-            {
-                if (_commaNeeded)
-                {
-                    WriteComma();
-                }
-
-                WritePropertyName(propertyName);
-
-                WriteOpenArray();
-
-                foreach (var json in jsonItems)
-                {
-                    if (json != null)
-                    {
-                        if (_commaNeeded)
-                        {
-                            WriteComma();
-                        }
-
-                        WriteJson(json);
-                        _commaNeeded = true;
-                    }
-                }
-
-                WriteCloseArray();
-
-                _commaNeeded = true;
-            }
-        }
+ 
 
         #endregion
 
@@ -301,7 +270,7 @@ namespace Lime.Protocol.Serialization
                 {
                     WriteStringProperty(propertyName, value.ToString().ToCamelCase());
                 }
-                else if (TypeUtil.IsKnownType(value.GetType()))
+                else if (TypeUtil.IsDataContractType(value.GetType()))
                 {
                     WriteJsonProperty(propertyName, value);
                 }
@@ -425,11 +394,40 @@ namespace Lime.Protocol.Serialization
                         {
                             WriteStringValue(item.ToString().ToCamelCase());
                         }
-                        else if (TypeUtil.IsKnownType(item.GetType()))
+                        else if (TypeUtil.IsDataContractType(item.GetType()))
                         {
                             WriteJson(item);
                         }
+                        else if (item is IDictionary<string, object>)
+                        {
+                            WriteOpenBrackets();
 
+                            foreach (var kv in (IDictionary<string, object>)item)
+                            {
+                                WriteProperty(kv.Key, kv.Value);
+                            }
+
+                            WriteCloseBrackets();
+                        }
+                        else if (item is IDictionary<string, string>)
+                        {
+                            WriteOpenBrackets();
+
+                            foreach (var kv in (IDictionary<string, string>)item)
+                            {
+                                WriteProperty(kv.Key, kv.Value);
+                            }
+
+                            WriteCloseBrackets();
+                        }
+                        else if (item is DateTime)
+                        {
+                            WriteStringValue(((DateTime)item).ToString("o", CultureInfo.InvariantCulture));
+                        }
+                        else if (item is DateTimeOffset)
+                        {
+                            WriteStringValue(((DateTimeOffset)item).ToString("o", CultureInfo.InvariantCulture));
+                        }
                         else
                         {
                             WriteStringValue(item.ToString());
