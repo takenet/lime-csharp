@@ -1,9 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.Serialization;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Lime.Protocol
 {
@@ -32,14 +27,11 @@ namespace Lime.Protocol
         /// </returns>
         public override string ToString()
         {
-            if (string.IsNullOrWhiteSpace(this.Domain))
+            if (string.IsNullOrWhiteSpace(Domain))
             {
-                return this.Name;
+                return Name;
             }
-            else
-            {
-                return string.Format("{0}@{1}", Name, Domain);
-            }            
+            return string.Format("{0}@{1}", Name, Domain);
         }
 
         /// <summary>
@@ -50,7 +42,7 @@ namespace Lime.Protocol
         /// </returns>
         public override int GetHashCode()
         {
-            return this.ToString().ToLower().GetHashCode();
+            return ToString().ToLower().GetHashCode();
         }
 
         /// <summary>
@@ -69,8 +61,8 @@ namespace Lime.Protocol
                 return false;
             }
 
-            return ((this.Name == null && identity.Name == null) || (this.Name != null && this.Name.Equals(identity.Name, StringComparison.CurrentCultureIgnoreCase))) &&
-                   ((this.Domain == null && identity.Domain == null) || (this.Domain != null && this.Domain.Equals(identity.Domain, StringComparison.CurrentCultureIgnoreCase)));
+            return ((Name == null && identity.Name == null) || (Name != null && Name.Equals(identity.Name, StringComparison.CurrentCultureIgnoreCase))) &&
+                   ((Domain == null && identity.Domain == null) || (Domain != null && Domain.Equals(identity.Domain, StringComparison.CurrentCultureIgnoreCase)));
         }
 
 
@@ -81,10 +73,10 @@ namespace Lime.Protocol
         /// <returns></returns>
         public Node ToNode()
         {
-            return new Node()
+            return new Node
             {
-                Name = this.Name,
-                Domain = this.Domain
+                Name = Name,
+                Domain = Domain
             };
         }
 
@@ -104,7 +96,7 @@ namespace Lime.Protocol
 
             var splittedIdentity = s.Split('@');
 
-            return new Identity()
+            return new Identity
             {
                 Name = !string.IsNullOrWhiteSpace(splittedIdentity[0]) ? splittedIdentity[0] : null,
                 Domain = splittedIdentity.Length > 1 ? splittedIdentity[1] : null

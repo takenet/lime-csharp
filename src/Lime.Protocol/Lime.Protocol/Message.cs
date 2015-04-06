@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
 using System.Runtime.Serialization;
-using System.Text;
 
 namespace Lime.Protocol
 {
@@ -12,7 +8,7 @@ namespace Lime.Protocol
     /// between nodes in a network.
     /// </summary>
     [DataContract(Namespace = "http://limeprotocol.org/2014")]
-    public partial class Message : Envelope
+    public class Message : Envelope
     {
         public const string TYPE_KEY = "type";
         public const string CONTENT_KEY = "content";
@@ -38,9 +34,9 @@ namespace Lime.Protocol
         {
             get 
             {
-                if (this.Content != null)
+                if (Content != null)
                 {
-                    return this.Content.GetMediaType();
+                    return Content.GetMediaType();
                 }
 
                 return null;

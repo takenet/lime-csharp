@@ -255,7 +255,7 @@ namespace Lime.Transport.Tcp
 
 					byte[] json;
 
-					if (this.TryExtractJsonFromBuffer(out json))
+					if (TryExtractJsonFromBuffer(out json))
 					{
 						var jsonString = Encoding.UTF8.GetString(json);
 
@@ -271,7 +271,7 @@ namespace Lime.Transport.Tcp
 					if (envelope == null &&
 						_stream.CanRead)
 					{
-                        // The NetworkStream ReceiveAsync doesn't support cancellation
+                        // The NetworkStream ReceiveAsync method doesn't supports cancellation
                         // http://stackoverflow.com/questions/21468137/async-network-operations-never-finish
                         // http://referencesource.microsoft.com/#mscorlib/system/io/stream.cs,421
 						_bufferCurPos += await _stream
@@ -281,7 +281,7 @@ namespace Lime.Transport.Tcp
 
 						if (_bufferCurPos >= _buffer.Length)
 						{
-							await base.CloseAsync(CancellationToken.None).ConfigureAwait(false);
+							await CloseAsync(CancellationToken.None).ConfigureAwait(false);
 							throw new BufferOverflowException("Maximum buffer size reached");
 						}
 					}
@@ -321,26 +321,23 @@ namespace Lime.Transport.Tcp
 		/// <returns></returns>
 		public override SessionEncryption[] GetSupportedEncryption()
 		{
-			// Server or client mode
+		    // Server or client mode
 			if (_serverCertificate != null || 
 				string.IsNullOrWhiteSpace(_hostName))
 			{
-				return new SessionEncryption[]
+				return new[]
 				{
 					SessionEncryption.None,
 					SessionEncryption.TLS
 				};
 			}
-			else
-			{
-				return new SessionEncryption[]
-				{
-					SessionEncryption.None
-				};
-			}
+		    return new[]
+		    {
+		        SessionEncryption.None
+		    };
 		}
 
-		/// <summary>
+	    /// <summary>
 		/// Defines the encryption mode
 		/// for the transport
 		/// </summary>
@@ -352,12 +349,12 @@ namespace Lime.Transport.Tcp
 		{
 			if (_sendSemaphore.CurrentCount == 0)
 			{
-				System.Console.WriteLine("Send semaphore being used");
+				Console.WriteLine("Send semaphore being used");
 			}
 
 			if (_receiveSemaphore.CurrentCount == 0)
 			{
-				System.Console.WriteLine("Receive semaphore being used");
+				Console.WriteLine("Receive semaphore being used");
 			}
 
 			await _sendSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
@@ -438,7 +435,7 @@ namespace Lime.Transport.Tcp
 							throw new NotSupportedException();
 					}
 
-					this.Encryption = encryption;
+					Encryption = encryption;
 				}
 				finally
 				{
@@ -548,7 +545,7 @@ namespace Lime.Transport.Tcp
 		private int _jsonStartPos;
 		private int _jsonCurPos;
 		private int _jsonStackedBrackets;
-		private bool _jsonStarted = false;
+		private bool _jsonStarted;
 
 		#endregion
 

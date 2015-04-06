@@ -1,10 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
 using System.Runtime.Serialization;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Lime.Protocol
 {
@@ -52,9 +48,9 @@ namespace Lime.Protocol
         {
             get
             {
-                if (this.Resource != null)
+                if (Resource != null)
                 {
-                    return this.Resource.GetMediaType();
+                    return Resource.GetMediaType();
                 }
 
                 return null;

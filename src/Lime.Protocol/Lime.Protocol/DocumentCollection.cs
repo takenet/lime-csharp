@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections;
 using System.Runtime.Serialization;
-using System.Text;
 
 namespace Lime.Protocol
 {
@@ -46,9 +43,9 @@ namespace Lime.Protocol
 
         public IEnumerator GetEnumerator()
         {
-            if (this.Items != null)
+            if (Items != null)
             {
-                return this.Items.GetEnumerator();
+                return Items.GetEnumerator();
             }
 
             return null;

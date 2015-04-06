@@ -41,7 +41,7 @@ namespace Lime.Transport.Tcp
                 throw new ArgumentException("Invalid URI scheme. The expected value is 'net.tcp'.");
             }
 
-            this.ListenerUris = new Uri[] { listenerUri };
+            ListenerUris = new[] { listenerUri };
 
             if (sslCertificate != null)
             {
@@ -94,38 +94,37 @@ namespace Lime.Transport.Tcp
                 throw new InvalidOperationException("The listener is already active");
             }
 
-            if (this.ListenerUris.Length == 0)
+            if (ListenerUris.Length == 0)
             {
                 throw new InvalidOperationException("The listener URIs list is empty");
             }
 
-            var listenerUri = this.ListenerUris[0];
+            var listenerUri = ListenerUris[0];
 
             IPEndPoint listenerEndPoint;
             if (listenerUri.IsLoopback)
             {
                 listenerEndPoint = new IPEndPoint(IPAddress.Any, listenerUri.Port);
             }
-            else if (listenerUri.HostNameType == UriHostNameType.Dns)
+            else switch (listenerUri.HostNameType)
             {
-                var dnsEntry = await Dns.GetHostEntryAsync(listenerUri.Host).ConfigureAwait(false);
-                if (dnsEntry.AddressList.Any(a => a.AddressFamily == AddressFamily.InterNetwork))
-                {
-                    listenerEndPoint = new IPEndPoint(dnsEntry.AddressList.First(a => a.AddressFamily == AddressFamily.InterNetwork), listenerUri.Port);
-                }
-                else
-                {
-                    throw new ArgumentException(string.Format("Could not resolve the IPAddress for the host '{0}'", listenerUri.Host));
-                }                
-            }
-            else if (listenerUri.HostNameType == UriHostNameType.IPv4 || 
-                     listenerUri.HostNameType == UriHostNameType.IPv6)
-            {
-                listenerEndPoint = new IPEndPoint(IPAddress.Parse(listenerUri.Host), listenerUri.Port);
-            }
-            else
-            {
-                throw new ArgumentException(string.Format("The host name type for '{0}' is not supported", listenerUri.Host));
+                case UriHostNameType.Dns:
+                    var dnsEntry = await Dns.GetHostEntryAsync(listenerUri.Host).ConfigureAwait(false);
+                    if (dnsEntry.AddressList.Any(a => a.AddressFamily == AddressFamily.InterNetwork))
+                    {
+                        listenerEndPoint = new IPEndPoint(dnsEntry.AddressList.First(a => a.AddressFamily == AddressFamily.InterNetwork), listenerUri.Port);
+                    }
+                    else
+                    {
+                        throw new ArgumentException(string.Format("Could not resolve the IPAddress for the host '{0}'", listenerUri.Host));
+                    }
+                    break;
+                case UriHostNameType.IPv4:
+                case UriHostNameType.IPv6:
+                    listenerEndPoint = new IPEndPoint(IPAddress.Parse(listenerUri.Host), listenerUri.Port);
+                    break;
+                default:
+                    throw new ArgumentException(string.Format("The host name type for '{0}' is not supported", listenerUri.Host));
             }
             
             _tcpListener = new TcpListener(listenerEndPoint);
@@ -156,8 +155,8 @@ namespace Lime.Transport.Tcp
 
             return new TcpTransport(
                 new TcpClientAdapter(tcpClient),
-                _envelopeSerializer,
-                serverCertificate: _sslCertificate,
+                _envelopeSerializer, 
+                _sslCertificate,
                 traceWriter: _traceWriter);            
         }
 

@@ -1,9 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.Serialization;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Lime.Protocol
 {
@@ -14,11 +9,6 @@ namespace Lime.Protocol
     public class Node : Identity
     {
         #region Constructor
-
-        public Node()
-        {
-
-        }
 
         #endregion
 
@@ -48,16 +38,16 @@ namespace Lime.Protocol
         /// </returns>
         public override bool Equals(object obj)
         {
-            Node node = obj as Node;
+            var node = obj as Node;
 
             if (node == null)
             {
                 return false;
             }
 
-            return ((this.Name == null && node.Name == null) || (this.Name != null && this.Name.Equals(node.Name, StringComparison.CurrentCultureIgnoreCase))) &&
-                   ((this.Domain == null && node.Domain == null) || (this.Domain != null && this.Domain.Equals(node.Domain, StringComparison.CurrentCultureIgnoreCase))) &&
-                   ((this.Instance == null && node.Instance == null) || (this.Instance != null && this.Instance.Equals(node.Instance, StringComparison.CurrentCultureIgnoreCase)));
+            return ((Name == null && node.Name == null) || (Name != null && Name.Equals(node.Name, StringComparison.CurrentCultureIgnoreCase))) &&
+                   ((Domain == null && node.Domain == null) || (Domain != null && Domain.Equals(node.Domain, StringComparison.CurrentCultureIgnoreCase))) &&
+                   ((Instance == null && node.Instance == null) || (Instance != null && Instance.Equals(node.Instance, StringComparison.CurrentCultureIgnoreCase)));
         }
 
         /// <summary>
@@ -89,7 +79,7 @@ namespace Lime.Protocol
 
             var splittedDomain = identity.Domain != null ? identity.Domain.Split('/') : null;
 
-            return new Node()
+            return new Node
             {
                 Name = identity.Name,
                 Domain = splittedDomain != null ? splittedDomain[0] : null,
@@ -123,10 +113,10 @@ namespace Lime.Protocol
         /// <returns></returns>
         public Identity ToIdentity()
         {
-            return new Identity()
+            return new Identity
             {
-                Name = this.Name,
-                Domain = this.Domain
+                Name = Name,
+                Domain = Domain
             };
         }
 
@@ -156,11 +146,11 @@ namespace Lime.Protocol
         /// </returns>
         public Node Copy()
         {
-            return new Node()
+            return new Node
             {
-                Name = this.Name,
-                Domain = this.Domain,
-                Instance = this.Instance
+                Name = Name,
+                Domain = Domain,
+                Instance = Instance
             };
         }
 

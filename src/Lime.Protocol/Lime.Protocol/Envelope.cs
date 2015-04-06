@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.Serialization;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Lime.Protocol
 {
@@ -12,7 +9,7 @@ namespace Lime.Protocol
     /// communication documents
     /// </summary>
     [DataContract(Namespace = "http://limeprotocol.org/2014")]
-    public abstract partial class Envelope
+    public abstract class Envelope
     {
         public const string ID_KEY = "id";
         public const string FROM_KEY = "from";
@@ -29,7 +26,7 @@ namespace Lime.Protocol
 
         protected Envelope(Guid id)
         {
-            this.Id = id;
+            Id = id;
         }
 
         #endregion

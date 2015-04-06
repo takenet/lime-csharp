@@ -1,11 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Lime.Protocol.Security;
-using Lime.Protocol.Network;
 using System.Threading;
+using System.Threading.Tasks;
+using Lime.Protocol.Network;
+using Lime.Protocol.Security;
 
 namespace Lime.Protocol.Client
 {
@@ -55,18 +52,18 @@ namespace Lime.Protocol.Client
         /// <exception cref="System.InvalidOperationException">Cannot await for a session response since there's already a listener.</exception>
         public async Task<Session> StartNewSessionAsync(CancellationToken cancellationToken)
         {
-            if (base.State != SessionState.New)
+            if (State != SessionState.New)
             {
-                throw new InvalidOperationException(string.Format("Cannot start a session in the '{0}' state.", base.State));
+                throw new InvalidOperationException(string.Format("Cannot start a session in the '{0}' state.", State));
             }
 
-            var session = new Session()
+            var session = new Session
             {
                 State = SessionState.New
             };
 
-            await base.SendSessionAsync(session).ConfigureAwait(false);
-            return await this.ReceiveSessionAsync(cancellationToken).ConfigureAwait(false);            
+            await SendSessionAsync(session).ConfigureAwait(false);
+            return await ReceiveSessionAsync(cancellationToken).ConfigureAwait(false);            
         }
 
         /// <summary>
@@ -83,21 +80,21 @@ namespace Lime.Protocol.Client
         /// </exception>
         public async Task<Session> NegotiateSessionAsync(SessionCompression sessionCompression, SessionEncryption sessionEncryption, CancellationToken cancellationToken)
         {
-            if (this.State != SessionState.Negotiating)
+            if (State != SessionState.Negotiating)
             {
-                throw new InvalidOperationException(string.Format("Cannot negotiate a session in the '{0}' state", this.State));
+                throw new InvalidOperationException(string.Format("Cannot negotiate a session in the '{0}' state", State));
             }
 
-            var session = new Session()
+            var session = new Session
             {
-                Id = this.SessionId,
+                Id = SessionId,
                 State = SessionState.Negotiating,
                 Compression = sessionCompression,
                 Encryption = sessionEncryption
             };
 
-            await base.SendSessionAsync(session).ConfigureAwait(false);
-            return await this.ReceiveSessionAsync(cancellationToken).ConfigureAwait(false);
+            await SendSessionAsync(session).ConfigureAwait(false);
+            return await ReceiveSessionAsync(cancellationToken).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -114,12 +111,12 @@ namespace Lime.Protocol.Client
         [Obsolete("Use ReceiveSessionAsync instead")]
         public async Task<Session> ReceiveAuthenticatingSessionAsync(CancellationToken cancellationToken)
         {
-            if (base.State != SessionState.Negotiating)
+            if (State != SessionState.Negotiating)
             {
-                throw new InvalidOperationException(string.Format("Cannot receive a authenticating session in the '{0}' state", base.State));
+                throw new InvalidOperationException(string.Format("Cannot receive a authenticating session in the '{0}' state", State));
             }
 
-            return await this.ReceiveSessionAsync(cancellationToken).ConfigureAwait(false);      
+            return await ReceiveSessionAsync(cancellationToken).ConfigureAwait(false);      
         }
 
         /// <summary>
@@ -144,9 +141,9 @@ namespace Lime.Protocol.Client
         /// </exception>
         public async Task<Session> AuthenticateSessionAsync(Identity identity, Authentication authentication, string instance, CancellationToken cancellationToken)
         {
-            if (base.State != SessionState.Authenticating)
+            if (State != SessionState.Authenticating)
             {
-                throw new InvalidOperationException(string.Format("Cannot authenticate a session in the '{0}' state", base.State));
+                throw new InvalidOperationException(string.Format("Cannot authenticate a session in the '{0}' state", State));
             }
 
             if (identity == null)
@@ -159,10 +156,10 @@ namespace Lime.Protocol.Client
                 throw new ArgumentNullException("authentication");
             }
 
-            var session = new Session()
+            var session = new Session
             {
-                Id = base.SessionId,
-                From = new Node()
+                Id = SessionId,
+                From = new Node
                 {
                     Name = identity.Name,
                     Domain = identity.Domain,
@@ -172,8 +169,8 @@ namespace Lime.Protocol.Client
                 Authentication = authentication
             };
 
-            await base.SendSessionAsync(session).ConfigureAwait(false);
-            return await this.ReceiveSessionAsync(cancellationToken).ConfigureAwait(false);
+            await SendSessionAsync(session).ConfigureAwait(false);
+            return await ReceiveSessionAsync(cancellationToken).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -192,14 +189,14 @@ namespace Lime.Protocol.Client
                 throw new ArgumentNullException("to");
             }
 
-            var notification = new Notification()
+            var notification = new Notification
             {
                 Id = messageId,
                 To = to,
                 Event = Event.Received
             };
 
-            return base.SendNotificationAsync(notification);
+            return SendNotificationAsync(notification);
         }
 
         /// <summary>
@@ -210,18 +207,18 @@ namespace Lime.Protocol.Client
         /// <exception cref="System.InvalidOperationException"></exception>
         public Task SendFinishingSessionAsync()
         {
-            if (base.State != SessionState.Established)
+            if (State != SessionState.Established)
             {
-                throw new InvalidOperationException(string.Format("Cannot finish a session in the '{0}' state", base.State));
+                throw new InvalidOperationException(string.Format("Cannot finish a session in the '{0}' state", State));
             }
 
-            var session = new Session()
+            var session = new Session
             {
-                Id = base.SessionId,
+                Id = SessionId,
                 State = SessionState.Finishing
             };
 
-            return base.SendSessionAsync(session);
+            return SendSessionAsync(session);
         }
 
         /// <summary>
@@ -235,12 +232,12 @@ namespace Lime.Protocol.Client
         /// </exception>
         public Task<Session> ReceiveFinishedSessionAsync(CancellationToken cancellationToken)
         {
-            if (base.State != SessionState.Established)
+            if (State != SessionState.Established)
             {
-                throw new InvalidOperationException(string.Format("Cannot receive a finished session in the '{0}' state", base.State));
+                throw new InvalidOperationException(string.Format("Cannot receive a finished session in the '{0}' state", State));
             }
 
-            return this.ReceiveSessionAsync(cancellationToken);
+            return ReceiveSessionAsync(cancellationToken);
         }
 
         #endregion
@@ -279,18 +276,18 @@ namespace Lime.Protocol.Client
         {
             var session = await base.ReceiveSessionAsync(cancellationToken).ConfigureAwait(false);
 
-            this.SessionId = session.Id;
-            this.State = session.State;
+            SessionId = session.Id;
+            State = session.State;
 
             if (session.State == SessionState.Established &&
                 session.Id != Guid.Empty)
             {
-                this.LocalNode = session.To;
-                this.RemoteNode = session.From;
+                LocalNode = session.To;
+                RemoteNode = session.From;
             } else if (session.State == SessionState.Finished ||
                 session.State == SessionState.Failed)
             {
-                await this.Transport.CloseAsync(cancellationToken).ConfigureAwait(false);
+                await Transport.CloseAsync(cancellationToken).ConfigureAwait(false);
             } 
 
             return session;
@@ -306,19 +303,19 @@ namespace Lime.Protocol.Client
             base.FillEnvelope(envelope, isSending);
 
             if (isSending &&
-                this.LocalNode != null)
+                LocalNode != null)
             {
                 if (envelope.Pp == null)
                 {
                     if (envelope.From != null &&
-                        !envelope.From.Equals(this.LocalNode))
+                        !envelope.From.Equals(LocalNode))
                     {
-                        envelope.Pp = this.LocalNode.Copy();
+                        envelope.Pp = LocalNode.Copy();
                     }
                 }
                 else if (string.IsNullOrWhiteSpace(envelope.Pp.Domain))
                 {
-                    envelope.Pp.Domain = this.LocalNode.Domain;
+                    envelope.Pp.Domain = LocalNode.Domain;
                 }
             }
         }
