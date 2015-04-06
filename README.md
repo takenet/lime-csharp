@@ -1,6 +1,8 @@
 LIME - A lightweight messaging library  ![TC](http://take-teamcity.cloudapp.net/app/rest/builds/buildType:(id:Lime_Master)/statusIcon)
 ================================
 
+[![Join the chat at https://gitter.im/takenet/lime-csharp](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/takenet/lime-csharp?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 LIME allows you to build scalable, real-time messaging applications using a JSON-based [open protocol](http://limeprotocol.org). It's **fully asynchronous** and supports any persistent transport like TCP or Websockets.
 
 You can send and receive any type of object into the wire as long it can be represented as JSON or text (plain or encoded with base64) and it has a **MIME type** to allow the other party handle it in the right way. 
