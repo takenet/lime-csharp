@@ -1413,6 +1413,32 @@ namespace Lime.Protocol.UnitTests.Serialization
 			session.Scheme.ShouldBe(AuthenticationScheme.Guest);
 			session.Authentication.ShouldBeOfType<GuestAuthentication>();
 		}
+
+        [Test]
+        [Category("Deserialize")]
+        public void Deserialize_RandomResourceRequestCommand_ReturnsValidInstance()
+        {
+            var target = GetTarget();
+
+            var method = CommandMethod.Set;
+            var id = Guid.NewGuid();
+
+            string json = string.Format(
+                "{{\"type\":\"application/vnd.takenet.testdocument+json\",\"resource\":{{\"double\":10.1, \"NullableDouble\": 10.2}},\"method\":\"{0}\",\"id\":\"{1}\"}}",
+                method.ToString().ToCamelCase(),
+                id);
+
+            var envelope = target.Deserialize(json);
+
+            var command = envelope.ShouldBeOfType<Command>();
+            command.Type.ToString().ShouldBe(TestDocument.MIME_TYPE);
+            command.Resource.ShouldNotBe(null);
+            var document = command.Resource.ShouldBeOfType<TestDocument>();
+            document.Double.ShouldBe(10.1d);
+            document.NullableDouble.ShouldBe(10.2d);
+        }
+
+
 		#endregion
 	}
 }
