@@ -76,6 +76,7 @@
     <Compile Include="Network\TransportBaseTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Serialization\EnvelopeSerializerTests.cs" />
+    <Compile Include="Serialization\JsonSerializerTests.cs" />
     <Compile Include="Serialization\StringJsonExtensions.cs" />
     <Compile Include="Server\ServerChannelTests.cs" />
     <Compile Include="IdentityTests.cs" />
