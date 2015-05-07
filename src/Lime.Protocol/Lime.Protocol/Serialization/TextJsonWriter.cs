@@ -262,6 +262,10 @@ namespace Lime.Protocol.Serialization
                 {
                     WriteLongProperty(propertyName, (long)value);
                 }
+                else if (value is double || value is double?)
+                {
+                    WriteDoubleProperty(propertyName, (double)value);
+                }
                 else if (value is bool || value is bool?)
                 {
                     WriteBooleanProperty(propertyName, (bool)value);
@@ -324,6 +328,11 @@ namespace Lime.Protocol.Serialization
         }
 
         public void WriteLongProperty(string propertyName, long value)
+        {
+            WriteValueProperty(propertyName, value.ToString(CultureInfo.InvariantCulture));
+        }
+
+        public void WriteDoubleProperty(string propertyName, double value)
         {
             WriteValueProperty(propertyName, value.ToString(CultureInfo.InvariantCulture));
         }
