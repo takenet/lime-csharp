@@ -169,8 +169,9 @@ namespace Lime.Protocol.UnitTests.Serialization
 			Assert.IsTrue(resultString.ContainsJsonProperty(metadataKey1, metadataValue1));
 			Assert.IsTrue(resultString.ContainsJsonProperty(metadataKey2, metadataValue2));
 
-			Assert.IsTrue(resultString.ContainsJsonKey(DocumentCollection.ITEMS_KEY));
-			var contacts = resource.Items.Cast<Contact>().ToArray();
+            Assert.IsTrue(resultString.ContainsJsonKey(DocumentCollection.ITEMS_KEY));
+            Assert.IsTrue(resultString.ContainsJsonKey(DocumentCollection.TOTAL_KEY));
+            var contacts = resource.Items.Cast<Contact>().ToArray();
 			Assert.IsTrue(resultString.ContainsJsonProperty(Contact.IDENTITY_KEY, contacts[0].Identity));
 			Assert.IsTrue(resultString.ContainsJsonProperty(Contact.NAME_KEY, contacts[0].Name));
 			Assert.IsTrue(resultString.ContainsJsonProperty(Contact.IS_PENDING_KEY, contacts[0].IsPending));
