@@ -28,3 +28,5 @@ Set group	Command	{"id":"%commandId","method":"set","type":"application/vnd.lime
 Get group members	Command	{"id":"%commandId","method":"get","uri": "/groups/%groupIdentity/members"}
 Set group member	Command	{"id":"%commandId","method":"set","type":"application/vnd.lime.groupmember+json","uri": "/groups/%groupIdentity/members","resource":{"address":"%groupMemberAddress","role":"%groupMemberRole"}}
 Get contacts	Command	{"id":"%commandId","method":"get","uri": "/contacts"}
+Set location	Command	{"id":  "%commandId","to":"postmaster@location.take.io","method":"set","type":"application/vnd.iris.location+json","uri":"/location","resource":{"latitude":10.1,"longitude":10.2}}
+Get location	Command	{"id":  "%commandId","to":"postmaster@location.take.io","method":"get","type":"application/vnd.iris.location+json","uri":"/location"}
