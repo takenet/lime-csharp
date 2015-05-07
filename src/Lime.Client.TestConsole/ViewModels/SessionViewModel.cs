@@ -23,6 +23,7 @@ using System.Windows;
 using System.Windows.Data;
 using System.Windows.Threading;
 using Lime.Transport.Tcp;
+using System.Windows.Controls;
 
 namespace Lime.Client.TestConsole.ViewModels
 {
@@ -932,7 +933,7 @@ namespace Lime.Client.TestConsole.ViewModels
 
             StatusMessages.Add(statusMessageViewModel);
         }
-
+      
         #endregion
 
         #region ITraceWriter Members
