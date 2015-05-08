@@ -15,5 +15,7 @@ namespace Lime.Protocol.UnitTests.Serialization
         public double Double { get; set; }
         [DataMember]
         public double? NullableDouble { get; set; }
+        [DataMember]
+        public Node Address { get; set; }
     }
 }

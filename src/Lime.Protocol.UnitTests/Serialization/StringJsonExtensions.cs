@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Lime.Protocol.Serialization;
 using System.Collections;
+using System.Globalization;
 
 namespace Lime.Protocol.UnitTests.Serialization
 {
@@ -42,6 +43,13 @@ namespace Lime.Protocol.UnitTests.Serialization
                     string.Format("\"{0}\":{1}",
                         key,
                         value.ToString().ToLower()));
+            }
+            if (value is double)
+            {
+                return json.Contains(
+                    string.Format("\"{0}\":{1}",
+                        key,
+                        ((double)value).ToString(CultureInfo.InvariantCulture)));
             }
             else if (value.GetType().IsEnum)
             {
