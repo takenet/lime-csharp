@@ -328,13 +328,17 @@ namespace Lime.Protocol.Serialization
             where TDocument : Document, new()
         {
             var documentType = typeof(TDocument);
-            var document = (Document)CreateInstance(documentType);
-            _documentMediaTypeDictionary.Add(document.GetMediaType(), documentType);
 
             if (documentType.GetCustomAttribute<DataContractAttribute>() != null)
             {
                 AddDataContractType(documentType);
-            }          
+            }
+            else
+            {
+                var document = (Document)CreateInstance(documentType);
+                _documentMediaTypeDictionary.Add(document.GetMediaType(), documentType);
+
+            }
         }
 
         /// <summary>
