@@ -27,6 +27,7 @@ namespace Lime.Messaging.Resources
         public const string ALLOW_ANONYMOUS_SENDER_KEY = "allowAnonymousSender";
         public const string ALLOW_UNKNOWN_SENDER_KEY = "allowUnknownSender";
         public const string STORE_MESSAGE_CONTENT_KEY = "storeMessageContent";
+        public const string ACCESS_KEY_KEY = "accessKey";
 
         public Account()
             : base(MediaType.Parse(MIME_TYPE))
@@ -71,9 +72,7 @@ namespace Lime.Messaging.Resources
         public string CellPhoneNumber { get; set; }
 
         /// <summary>
-        /// Indicates that the account is
-        /// temporary is valid only in
-        /// the current session
+        /// Indicates that the account is temporary is valid only in the current session.
         /// </summary>
         [DataMember(Name = IS_TEMPORARY_KEY)]
         public bool? IsTemporary { get; set; }
@@ -83,8 +82,7 @@ namespace Lime.Messaging.Resources
         public SecureString SecurePassword { get; private set; }
 
         /// <summary>
-        /// Base64 representation of the 
-        /// account password
+        /// Base64 representation of the account password.
         /// </summary>
         [DataMember(Name = PASSWORD_KEY)]
         public string Password
@@ -116,10 +114,8 @@ namespace Lime.Messaging.Resources
         public SecureString SecureOldPassword { get; private set; }
 
         /// <summary>
-        /// Base64 representation of the 
-        /// account password. Mandatory
-        /// in case of updating account
-        /// password.
+        /// Base64 representation of the account password. 
+        /// Mandatory in case of updating account password.
         /// </summary>
         [DataMember(Name = OLD_PASSWORD_KEY)]
         public string OldPassword
@@ -146,6 +142,9 @@ namespace Lime.Messaging.Resources
                 }
             }
         }  
+
+
+
 #else
         /// <summary>
         /// Base64 representation of the 
@@ -163,6 +162,12 @@ namespace Lime.Messaging.Resources
         [DataMember(Name = OLD_PASSWORD_KEY)]
         public string OldPassword { get; set; }
 #endif
+
+        /// <summary>
+        /// Access key for updating the account without knowing the old password.
+        /// </summary>
+        [DataMember(Name = ACCESS_KEY_KEY)]
+        public string AccessKey { get; set; }
 
         /// <summary>
         /// Size of account inbox
