@@ -319,6 +319,7 @@ namespace Lime.Protocol.UnitTests
             return new DocumentCollection()
             {
                 ItemType = MediaType.Parse(Contact.MIME_TYPE),
+                Total = 3,
                 Items = new[]
                 {
                     new Contact()

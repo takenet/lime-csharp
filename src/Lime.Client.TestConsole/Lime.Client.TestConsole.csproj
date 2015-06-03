@@ -17,7 +17,7 @@
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
     <RestorePackages>true</RestorePackages>
     <IsWebBootstrapper>false</IsWebBootstrapper>
-    <PublishUrl>\\smc2\Departamentos\Tecnologia\Binarios\Plataformas\Iris\Lime.Client.TestConsole\</PublishUrl>
+    <PublishUrl>\\smc2.takenet.com.br\Departamentos\Tecnologia\Binarios\Plataformas\Iris\Lime.Client.TestConsole\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Unc</InstallFrom>
     <UpdateEnabled>true</UpdateEnabled>
@@ -27,14 +27,14 @@
     <UpdatePeriodically>false</UpdatePeriodically>
     <UpdateRequired>false</UpdateRequired>
     <MapFileExtensions>true</MapFileExtensions>
-    <InstallUrl>\\smc2\Departamentos\Tecnologia\Binarios\Plataformas\Iris\Lime.Client.TestConsole\</InstallUrl>
+    <InstallUrl>\\smc2.takenet.com.br\Departamentos\Tecnologia\Binarios\Plataformas\Iris\Lime.Client.TestConsole\</InstallUrl>
     <ProductName>Lime Test Console</ProductName>
     <PublisherName>Take.net</PublisherName>
     <SuiteName>Lime</SuiteName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
     <OpenBrowserOnPublish>false</OpenBrowserOnPublish>
-    <ApplicationRevision>4</ApplicationRevision>
+    <ApplicationRevision>7</ApplicationRevision>
     <ApplicationVersion>0.1.7.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>

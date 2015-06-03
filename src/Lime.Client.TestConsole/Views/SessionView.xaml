@@ -157,7 +157,7 @@
                         </Grid.RowDefinitions>
 
                         <Label Grid.Row="0" Content="Variables" FontWeight="Bold" />
-                        <ScrollViewer Grid.Row="1">
+                        <ScrollViewer Grid.Row="1" PreviewMouseWheel="ScrollViewer_PreviewMouseWheel">
                             <DataGrid AutoGenerateColumns="False" ItemsSource="{Binding Variables}">
                                 <DataGrid.Columns>
                                     <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="50*" />
@@ -175,7 +175,7 @@
                         </Grid.RowDefinitions>
 
                         <Label Grid.Row="0" Content="Templates" FontWeight="Bold"  />
-                        <ScrollViewer Grid.Row="1">
+                        <ScrollViewer Grid.Row="1" PreviewMouseWheel="ScrollViewer_PreviewMouseWheel">
                             <ListBox ItemsSource="{Binding TemplatesView}" SelectedValue="{Binding SelectedTemplate}">
                                 <i:Interaction.Triggers>
                                     <i:EventTrigger EventName="MouseDoubleClick">
@@ -209,7 +209,7 @@
                             <RowDefinition Height="*" />
                         </Grid.RowDefinitions>
                         <Label Grid.Row="0" Content="Macros" FontWeight="Bold"  />
-                        <ScrollViewer Grid.Row="1">
+                        <ScrollViewer Grid.Row="1" PreviewMouseWheel="ScrollViewer_PreviewMouseWheel">
                             <ListBox ItemsSource="{Binding MacrosView}" SelectedValue="{Binding SelectedMacro}">
                                 <i:Interaction.Triggers>
                                     <i:EventTrigger EventName="MouseDoubleClick">

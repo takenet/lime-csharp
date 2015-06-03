@@ -327,8 +327,18 @@ namespace Lime.Protocol.Serialization
         public static void RegisterDocument<TDocument>() 
             where TDocument : Document, new()
         {
-            var document = (Document)CreateInstance(typeof(TDocument));
-            _documentMediaTypeDictionary.Add(document.GetMediaType(), typeof(TDocument));
+            var documentType = typeof(TDocument);
+
+            if (documentType.GetCustomAttribute<DataContractAttribute>() != null)
+            {
+                AddDataContractType(documentType);
+            }
+            else
+            {
+                var document = (Document)CreateInstance(documentType);
+                _documentMediaTypeDictionary.Add(document.GetMediaType(), documentType);
+
+            }
         }
 
         /// <summary>

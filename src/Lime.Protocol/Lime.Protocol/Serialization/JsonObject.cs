@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -326,6 +327,7 @@ namespace Lime.Protocol.Serialization
             {
                 bool boolResult;
                 long longResult;
+                double doubleResult;
 
                 if (bool.TryParse(value, out boolResult))
                 {
@@ -334,6 +336,10 @@ namespace Lime.Protocol.Serialization
                 else if (long.TryParse(value, out longResult))
                 {
                     return longResult;
+                }
+                else if (double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out doubleResult))
+                {
+                    return doubleResult;
                 }
                 else
                 {

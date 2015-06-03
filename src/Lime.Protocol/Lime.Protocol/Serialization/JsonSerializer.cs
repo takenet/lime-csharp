@@ -44,7 +44,7 @@ namespace Lime.Protocol.Serialization
             {
                 var property = properties[i];
                 var dataMemberAttribute = property.GetCustomAttribute<DataMemberAttribute>();
-                var memberName = dataMemberAttribute.Name;
+                var memberName = dataMemberAttribute.Name ?? property.Name;
                 var emitDefaultValue = dataMemberAttribute.EmitDefaultValue;
                 
                 object defaultValue;
@@ -283,6 +283,17 @@ namespace Lime.Protocol.Serialization
                 deserializePropertyAction = (v, j) =>
                 {
                     var value = j.GetValueOrNull<long>(memberName) ?? defaultValue;
+                    if (isNullable || value != null)
+                    {
+                        setFunc(v, value);
+                    }
+                };
+            }
+            else if (propertyType == typeof(double))
+            {
+                deserializePropertyAction = (v, j) =>
+                {
+                    var value = j.GetValueOrNull<double>(memberName, o => Convert.ToDouble(o)) ?? defaultValue;
                     if (isNullable || value != null)
                     {
                         setFunc(v, value);

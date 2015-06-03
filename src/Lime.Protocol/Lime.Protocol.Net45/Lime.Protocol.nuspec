@@ -17,6 +17,7 @@
     </dependencies>
   </metadata>
   <files>
+	<file src="bin\Release\Lime.Protocol.pdb" target="lib\s45\Lime.Protocol.pdb" />
     <file src="bin\Release\Lime.Protocol.dll" target="lib\net45\Lime.Protocol.dll" />
     <file src="bin\Release\Lime.Protocol.XML" target="lib\net45\Lime.Protocol.XML" />
   </files>
