@@ -158,10 +158,7 @@ namespace Lime.Protocol.Network
                 throw new InvalidOperationException(string.Format("Cannot receive a message in the '{0}' session state", State));
             }
 
-            if (_consumeTransportTask.IsFaulted)
-            {
-                throw _consumeTransportTask.Exception.InnerException;
-            }
+            EnsureConsumerTaskIsNotFaulted();
 
             var combinedCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(
                 _channelCancellationTokenSource.Token,
@@ -211,10 +208,7 @@ namespace Lime.Protocol.Network
                 throw new InvalidOperationException(string.Format("Cannot receive a command in the '{0}' session state", State));
             }
 
-            if (_consumeTransportTask.IsFaulted)
-            {
-                throw _consumeTransportTask.Exception.InnerException;
-            }
+            EnsureConsumerTaskIsNotFaulted();
 
             var combinedCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(
                 _channelCancellationTokenSource.Token,
@@ -222,6 +216,7 @@ namespace Lime.Protocol.Network
 
             return _commandBuffer.ReceiveAsync(combinedCancellationTokenSource.Token);
         }
+
 
         #endregion
 
@@ -264,10 +259,7 @@ namespace Lime.Protocol.Network
                 throw new InvalidOperationException(string.Format("Cannot receive a notification in the '{0}' session state", State));
             }
 
-            if (_consumeTransportTask.IsFaulted)
-            {
-                throw _consumeTransportTask.Exception.InnerException;
-            }
+            EnsureConsumerTaskIsNotFaulted();
 
             var combinedCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(
                 _channelCancellationTokenSource.Token,
@@ -314,33 +306,26 @@ namespace Lime.Protocol.Network
         /// <returns></returns>
         public virtual async Task<Session> ReceiveSessionAsync(CancellationToken cancellationToken)
         {
-            if (State == SessionState.Finished)
+            switch (State)
             {
-                throw new InvalidOperationException(string.Format("Cannot receive a session in the '{0}' session state", State));
+                case SessionState.Finished:
+                    throw new InvalidOperationException(string.Format("Cannot receive a session in the '{0}' session state", State));
+                case SessionState.Established:
+                    var combinedCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(
+                        _channelCancellationTokenSource.Token,
+                        cancellationToken);
+
+                    EnsureConsumerTaskIsNotFaulted();
+
+                    return await _sessionBuffer.ReceiveAsync(combinedCancellationTokenSource.Token).ConfigureAwait(false);
             }
 
-            if (State == SessionState.Established)
-            {
-                var combinedCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(
-                    _channelCancellationTokenSource.Token,
-                    cancellationToken);
-
-                if (_consumeTransportTask.IsFaulted)
-                {
-                    throw _consumeTransportTask.Exception.InnerException;
-                }
-
-                return await _sessionBuffer.ReceiveAsync(combinedCancellationTokenSource.Token).ConfigureAwait(false);
-            }
             var result = await ReceiveAsync(cancellationToken).ConfigureAwait(false);
 
-            if (!(result is Session))
-            {
-                await Transport.CloseAsync(_channelCancellationTokenSource.Token).ConfigureAwait(false);
-                throw new InvalidOperationException("An unexpected envelope type was received from the transport.");
-            }
-
-            return (Session)result;
+            var session = result as Session;
+            if (session != null) return session;
+            await Transport.CloseAsync(_channelCancellationTokenSource.Token).ConfigureAwait(false);
+            throw new InvalidOperationException("An unexpected envelope type was received from the transport.");
         }
 
         #endregion
@@ -585,6 +570,17 @@ namespace Lime.Protocol.Network
 
             return envelope;
         }
+
+        private void EnsureConsumerTaskIsNotFaulted()
+        {
+            if (_consumeTransportTask.IsFaulted)
+            {
+                if (_consumeTransportTask.Exception == null)
+                    throw new InvalidOperationException("The consumer task is faulted");
+                throw _consumeTransportTask.Exception.InnerException ?? _consumeTransportTask.Exception;
+            }
+        }
+
 
         #endregion
 
