@@ -23,7 +23,8 @@ namespace Lime.Transport.WebSocket
         public static readonly string UriSchemeWebSocketSecure = "wss";
 
         private readonly X509Certificate2 _sslCertificate;
-        private readonly IEnvelopeSerializer _envelopeSerializer;        
+        private readonly IEnvelopeSerializer _envelopeSerializer;
+        private readonly ITraceWriter _traceWriter;
         private readonly SemaphoreSlim _semaphore;
 
         private WebSocketListener _webSocketListener;
@@ -74,6 +75,7 @@ namespace Lime.Transport.WebSocket
             }
             _sslCertificate = sslCertificate;
             _envelopeSerializer = envelopeSerializer;
+            _traceWriter = traceWriter;
             _semaphore = new SemaphoreSlim(1);
         }
 
@@ -153,7 +155,7 @@ namespace Lime.Transport.WebSocket
             var webSocket = await _webSocketListener
                 .AcceptWebSocketAsync(cancellationToken)
                 .ConfigureAwait(false);
-            return new WebSocketTransport(webSocket, _envelopeSerializer);
+            return new ServerWebSocketTransport(webSocket, _envelopeSerializer, _traceWriter);
         }
 
         public async Task StopAsync()

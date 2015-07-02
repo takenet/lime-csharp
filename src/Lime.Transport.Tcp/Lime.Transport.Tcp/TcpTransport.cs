@@ -257,15 +257,15 @@ namespace Lime.Transport.Tcp
 
 					if (TryExtractJsonFromBuffer(out json))
 					{
-						var jsonString = Encoding.UTF8.GetString(json);
+						var envelopeJson = Encoding.UTF8.GetString(json);
 
 						if (_traceWriter != null &&
 							_traceWriter.IsEnabled)
 						{
-							await _traceWriter.TraceAsync(jsonString, DataOperation.Receive).ConfigureAwait(false);
+							await _traceWriter.TraceAsync(envelopeJson, DataOperation.Receive).ConfigureAwait(false);
 						}
 
-						envelope = _envelopeSerializer.Deserialize(jsonString);
+						envelope = _envelopeSerializer.Deserialize(envelopeJson);
 					}
 
 					if (envelope == null &&

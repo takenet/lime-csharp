@@ -59,7 +59,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="WebSocketTransport.cs" />
+    <Compile Include="ServerWebSocketTransport.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="WebSocketTransportListener.cs" />
   </ItemGroup>
