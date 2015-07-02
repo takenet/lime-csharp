@@ -13,11 +13,15 @@ namespace Lime.Messaging.Resources
     /// </summary>
     [DataContract(Namespace = "http://limeprotocol.org/2014")]
     public class Subscription : Document
-    {
+    {   
         public const string MIME_TYPE = "application/vnd.lime.subscription+json";
+        public static readonly MediaType MediaType = MediaType.Parse(MIME_TYPE);
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Subscription"/> class.
+        /// </summary>
         public Subscription()
-            : base(MediaType.Parse(MIME_TYPE))
+            : base(MediaType)
         {
 
         }

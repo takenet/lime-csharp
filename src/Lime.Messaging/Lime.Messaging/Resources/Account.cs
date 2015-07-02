@@ -13,6 +13,7 @@ namespace Lime.Messaging.Resources
         public const string RESOURCE_PATH = "/account";
 
         public const string MIME_TYPE = "application/vnd.lime.account+json";
+        public static readonly MediaType MediaType = MediaType.Parse(MIME_TYPE);
 
         public const string FULL_NAME_KEY = "fullName";
         public const string ADDRESS_KEY = "address";
@@ -28,39 +29,43 @@ namespace Lime.Messaging.Resources
         public const string ALLOW_UNKNOWN_SENDER_KEY = "allowUnknownSender";
         public const string STORE_MESSAGE_CONTENT_KEY = "storeMessageContent";
         public const string ACCESS_KEY_KEY = "accessKey";
+        public const string ALTERNATIVE_ACCOUNT_KEY = "alternativeAccount";
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Account"/> class.
+        /// </summary>
         public Account()
-            : base(MediaType.Parse(MIME_TYPE))
+            : base(MediaType)
         {
 
         }
 
         /// <summary>
-        /// The user full name
+        /// The user full name.
         /// </summary>
         [DataMember(Name = FULL_NAME_KEY)]
         public string FullName { get; set; }
 
         /// <summary>
-        ///  The user address
+        /// The user street address.
         /// </summary>
         [DataMember(Name = ADDRESS_KEY)]
         public string Address { get; set; }
 
         /// <summary>
-        /// The user city
+        /// The user city.
         /// </summary>
         [DataMember(Name = CITY_KEY)]
         public string City { get; set; }
 
         /// <summary>
-        /// The user e-mail address
+        /// The user e-mail address.
         /// </summary>
         [DataMember(Name = EMAIL_KEY)]
         public string Email { get; set; }
 
         /// <summary>
-        /// The user phone number
+        /// The user phone number.
         /// </summary>
         [DataMember(Name = PHONE_NUMBER_KEY)]
         public string PhoneNumber { get; set; }
@@ -76,10 +81,6 @@ namespace Lime.Messaging.Resources
         /// </summary>
         [DataMember(Name = IS_TEMPORARY_KEY)]
         public bool? IsTemporary { get; set; }
-
-#if !PCL
-        [IgnoreDataMember]
-        public SecureString SecurePassword { get; private set; }
 
         /// <summary>
         /// Base64 representation of the account password.
@@ -111,7 +112,7 @@ namespace Lime.Messaging.Resources
         }
 
         [IgnoreDataMember]
-        public SecureString SecureOldPassword { get; private set; }
+        public SecureString SecurePassword { get; private set; }
 
         /// <summary>
         /// Base64 representation of the account password. 
@@ -143,25 +144,8 @@ namespace Lime.Messaging.Resources
             }
         }  
 
-
-
-#else
-        /// <summary>
-        /// Base64 representation of the 
-        /// account password
-        /// </summary>
-        [DataMember(Name = PASSWORD_KEY)]
-        public string Password { get; set; }
-
-        /// <summary>
-        /// Base64 representation of the 
-        /// account password. Mandatory
-        /// in case of updating account
-        /// password.
-        /// </summary>
-        [DataMember(Name = OLD_PASSWORD_KEY)]
-        public string OldPassword { get; set; }
-#endif
+        [IgnoreDataMember]
+        public SecureString SecureOldPassword { get; private set; }
 
         /// <summary>
         /// Access key for updating the account without knowing the old password.
@@ -170,36 +154,34 @@ namespace Lime.Messaging.Resources
         public string AccessKey { get; set; }
 
         /// <summary>
-        /// Size of account inbox
-        /// for storing offline messages
+        /// Size of account inbox for storing offline messages.
         /// </summary>
         [DataMember(Name = INBOX_SIZE_KEY)]
         public int? InboxSize { get; set; }
 
         /// <summary>
-        /// Indicates if this account
-        /// allows receive messages from
-        /// anonymous users
+        /// Indicates if this account allows receive messages from anonymous users.
         /// </summary>
         [DataMember(Name = ALLOW_ANONYMOUS_SENDER_KEY)]
         public bool? AllowAnonymousSender { get; set; }
 
         /// <summary>
-        /// Indicates if this account
-        /// allows receive messages from
-        /// users that are not in
-        /// the account contact list
+        /// Indicates if this account allows receive messages from users that are not in the account contact list.
         /// </summary>
         [DataMember(Name = ALLOW_UNKNOWN_SENDER_KEY)]
         public bool? AllowUnknownSender { get; set; }
 
         /// <summary>
-        /// Indicates if the content of messages 
-        /// from this account should be stored in 
-        /// the server. Note that for offline messages,
-        /// this will always happens.
+        /// Indicates if the content of messages from this account should be stored in the server. 
+        /// Note that for offline messages, this will always happens.
         /// </summary>
         [DataMember(Name = STORE_MESSAGE_CONTENT_KEY, EmitDefaultValue = false)]
         public bool? StoreMessageContent { get; set; }
+
+        /// <summary>
+        /// Alternative account address.
+        /// </summary>
+        [DataMember(Name = ALTERNATIVE_ACCOUNT_KEY)]
+        public Identity AlternativeAccount { get; set; }
     }
 }

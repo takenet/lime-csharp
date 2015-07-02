@@ -16,11 +16,15 @@ namespace Lime.Messaging.Contents
     public class ChatState : Document
     {
         public const string MIME_TYPE = "application/vnd.lime.chatstate+json";
+        public static readonly MediaType MediaType = MediaType.Parse(MIME_TYPE);
 
         public const string STATE_KEY = "state";
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ChatState"/> class.
+        /// </summary>
         public ChatState()
-            : base(MediaType.Parse(MIME_TYPE))            
+            : base(MediaType)            
         {
         }
 

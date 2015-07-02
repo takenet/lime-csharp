@@ -14,10 +14,13 @@ namespace Lime.Messaging.Contents
     public class BitmapImage : Document
     {
         public const string MIME_TYPE = "image/bmp";
+        public static readonly MediaType MediaType = MediaType.Parse(MIME_TYPE);
 
-
+        /// <summary>
+        /// Initializes a new instance of the <see cref="BitmapImage"/> class.
+        /// </summary>
         public BitmapImage()
-            : base(MediaType.Parse(MIME_TYPE))
+            : base(MediaType)
         {
 
         }

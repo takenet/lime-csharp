@@ -18,6 +18,7 @@ namespace Lime.Messaging.Resources
     public class Presence : Document
     {
         public const string MIME_TYPE = "application/vnd.lime.presence+json";
+        public static MediaType MediaType = MediaType.Parse(MIME_TYPE);
 
         public const string STATUS_KEY = "status";
         public const string MESSAGE_KEY = "message";
@@ -26,8 +27,11 @@ namespace Lime.Messaging.Resources
         public const string PRIORITY_KEY = "priority";
         public const string INSTANCES_KEY = "instances";
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Presence"/> class.
+        /// </summary>
         public Presence()
-            : base(MediaType.Parse(MIME_TYPE))
+            : base(MediaType)
         {
 
         }
@@ -39,15 +43,13 @@ namespace Lime.Messaging.Resources
         public PresenceStatus? Status { get; set; }
 
         /// <summary>
-        /// A status message associated 
-        /// to the presence status.
+        /// A status message associated to the presence status.
         /// </summary>
         [DataMember(Name = MESSAGE_KEY)]
         public string Message { get; set; }
 
         /// <summary>
-        /// Rule to the server route envelopes 
-        /// addressed to the identity. 
+        /// Rule to the server route envelopes addressed to the identity. 
         /// </summary>
         [DataMember(Name = ROUTING_RULE_KEY)]
         public RoutingRule? RoutingRule { get; set; }
@@ -56,15 +58,13 @@ namespace Lime.Messaging.Resources
         public DateTimeOffset? LastSeen { get; set; }
 
         /// <summary>
-        /// The value of the priority for 
-        /// the identityByPriority routing rule.
+        /// The value of the priority for the identityByPriority routing rule.
         /// </summary>
         [DataMember(Name = PRIORITY_KEY, EmitDefaultValue = false)]
         public int Priority { get; set; }
 
         /// <summary>
-        /// Present instances for
-        /// a identity.
+        /// Present instances for a identity.
         /// </summary>
         [DataMember(Name = INSTANCES_KEY)]
         public string[] Instances { get; set; }
@@ -130,7 +130,7 @@ namespace Lime.Messaging.Resources
     {
         /// <summary>
         /// The node is not available for messaging and 
-        /// SHOULD not receive any envelope by any node, 
+        /// should not receive any envelope by any node, 
         /// except by the connected server.
         /// </summary>
         [EnumMember]
@@ -156,6 +156,12 @@ namespace Lime.Messaging.Resources
         /// the received envelopes.
         /// </summary>
         [EnumMember]
-        Away
+        Away,
+        /// <summary>
+        /// The node is available for messaging but the 
+        /// actual stored presence value is unavailable.
+        /// </summary>
+        [EnumMember]
+        Invisible
     }
 }
