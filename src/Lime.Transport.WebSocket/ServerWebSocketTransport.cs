@@ -46,17 +46,14 @@ namespace Lime.Transport.WebSocket
                 {
                     throw new NotSupportedException("An unsupported binary message was received");
                 }
-
-                Envelope envelope;
+                
                 using (var reader = new StreamReader(stream, Encoding.UTF8))
                 {
                     var envelopeJson = await reader.ReadToEndAsync().ConfigureAwait(false);
                     await TraceDataIfEnabledAsync(envelopeJson, DataOperation.Receive).ConfigureAwait(false);
-                    envelope = _envelopeSerializer.Deserialize(envelopeJson);
+                    return _envelopeSerializer.Deserialize(envelopeJson);
                 }
-
-                return envelope;
-            }            
+            }
         }
 
         public override Task OpenAsync(Uri uri, CancellationToken cancellationToken)

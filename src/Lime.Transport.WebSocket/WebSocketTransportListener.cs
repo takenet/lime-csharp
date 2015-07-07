@@ -9,6 +9,7 @@ using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Lime.Protocol;
 using Lime.Protocol.Network;
 using Lime.Protocol.Serialization;
 using Lime.Protocol.Server;
@@ -127,7 +128,12 @@ namespace Lime.Transport.WebSocket
                                 listenerUri.Host));
                     }
 
-                _webSocketListener = new WebSocketListener(listenerEndPoint);
+                _webSocketListener = new WebSocketListener(
+                    listenerEndPoint, 
+                    new WebSocketListenerOptions()
+                    {
+                      SubProtocols = new[] { LimeUri.LIME_URI_SCHEME }
+                    });
                 var rfc6455 = new vtortola.WebSockets.Rfc6455.WebSocketFactoryRfc6455(_webSocketListener);
                 _webSocketListener.Standards.RegisterStandard(rfc6455);
                 if (_sslCertificate != null)
