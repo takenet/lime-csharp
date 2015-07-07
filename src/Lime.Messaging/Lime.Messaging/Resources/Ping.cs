@@ -11,9 +11,13 @@ namespace Lime.Messaging.Resources
     public class Ping : Document
     {
         public const string MIME_TYPE = "application/vnd.lime.ping+json";
+        public static readonly MediaType MediaType = MediaType.Parse(MIME_TYPE);
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Ping"/> class.
+        /// </summary>
         public Ping()
-            : base(MediaType.Parse(MIME_TYPE))
+            : base(MediaType)
         {
 
         }

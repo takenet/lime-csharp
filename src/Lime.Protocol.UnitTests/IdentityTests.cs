@@ -104,7 +104,7 @@ namespace Lime.Protocol.UnitTests
 
             var identity2 = new Identity()
             {
-                Name = Dummy.CreateRandomString(10),
+                Name = Dummy.CreateRandomString(11),
                 Domain = Dummy.CreateRandomString(10)
             };
 

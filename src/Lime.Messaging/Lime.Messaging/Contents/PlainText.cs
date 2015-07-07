@@ -15,10 +15,13 @@ namespace Lime.Messaging.Contents
     public class PlainText : Document
     {
         public const string MIME_TYPE = "text/plain";
+        public static readonly MediaType MediaType = MediaType.Parse(MIME_TYPE);
 
-
+        /// <summary>
+        /// Initializes a new instance of the <see cref="PlainText"/> class.
+        /// </summary>
         public PlainText()
-            : base(MediaType.Parse(MIME_TYPE))
+            : base(MediaType)
         {
 
         }

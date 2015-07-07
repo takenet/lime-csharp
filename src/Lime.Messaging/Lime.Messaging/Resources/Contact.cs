@@ -11,7 +11,7 @@ namespace Lime.Messaging.Resources
     public class Contact : Document, IIdentity
     {
         public const string MIME_TYPE = "application/vnd.lime.contact+json";
-        private static readonly MediaType _contacMediaType = MediaType.Parse(MIME_TYPE);
+        public static readonly MediaType MediaType = MediaType.Parse(MIME_TYPE);
 
         public const string IDENTITY_KEY = "identity";
         public const string NAME_KEY = "name";
@@ -20,8 +20,11 @@ namespace Lime.Messaging.Resources
         public const string SHARE_ACCOUNT_INFO_KEY = "shareAccountInfo";
         public const string PRIORITY_KEY = "priority";
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Contact"/> class.
+        /// </summary>
         public Contact()
-            : base(_contacMediaType)
+            : base(MediaType)
         {
 
         }

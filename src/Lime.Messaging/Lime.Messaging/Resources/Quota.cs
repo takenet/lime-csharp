@@ -11,9 +11,13 @@ namespace Lime.Messaging.Resources
     public class Quota : Document
     {
         public const string MIME_TYPE = "application/vnd.lime.quota+json";
+        public static readonly MediaType MediaType = MediaType.Parse(MIME_TYPE);
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Quota"/> class.
+        /// </summary>
         public Quota()
-            : base(MediaType.Parse(MIME_TYPE))
+            : base(MediaType)
         {
 
         }

@@ -13,11 +13,15 @@ namespace Lime.Messaging.Resources
     public class Receipt : Document
     {
         public const string MIME_TYPE = "application/vnd.lime.receipt+json";
+        public static readonly MediaType MediaType = MediaType.Parse(MIME_TYPE);
 
         public const string EVENTS_KEY = "events";
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Receipt"/> class.
+        /// </summary>
         public Receipt()
-            : base(MediaType.Parse(MIME_TYPE))
+            : base(MediaType)
         {
 
         }

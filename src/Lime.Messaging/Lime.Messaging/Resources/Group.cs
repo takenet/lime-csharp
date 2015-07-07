@@ -11,15 +11,18 @@ namespace Lime.Messaging.Resources
     public class Group : Document
     {
         public const string MIME_TYPE = "application/vnd.lime.group+json";
+        public static readonly MediaType MediaType = MediaType.Parse(MIME_TYPE);
 
         public const string IDENTITY_KEY = "identity";
         public const string NAME_KEY = "name";
         public const string TYPE_KEY = "type";
         public const string MEMBERS_KEY = "members";
 
-
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Group"/> class.
+        /// </summary>
         public Group()
-            : base(MediaType.Parse(MIME_TYPE))
+            : base(MediaType)
         {
 
         }

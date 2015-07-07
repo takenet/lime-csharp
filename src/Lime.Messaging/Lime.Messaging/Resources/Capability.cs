@@ -11,10 +11,14 @@ namespace Lime.Messaging.Resources
     public class Capability : Document
     {
         public const string MIME_TYPE = "application/vnd.lime.capability+json";
+        public static readonly MediaType MediaType = MediaType.Parse(MIME_TYPE);
 
         public const string CONTENT_TYPES_KEY = "contentTypes";
         public const string RESOURCE_TYPES_KEY = "resourceTypes";
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Capability"/> class.
+        /// </summary>
         public Capability()
             : base(MediaType.Parse(MIME_TYPE))
         {

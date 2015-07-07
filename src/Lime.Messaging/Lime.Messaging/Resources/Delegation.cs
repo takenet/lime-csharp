@@ -14,14 +14,18 @@ namespace Lime.Messaging.Resources
     public class Delegation : Document
     {
         public const string MIME_TYPE = "application/vnd.lime.delegation+json";
+        public static readonly MediaType MediaType = MediaType.Parse(MIME_TYPE);
 
         public const string TARGET_KEY = "target";
         public const string DESTINATIONS_KEY = "destinations";
         public const string COMMANDS_KEY = "commands";
         public const string MESSAGES_KEY = "messages";
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Delegation"/> class.
+        /// </summary>
         public Delegation()
-            : base(MediaType.Parse(MIME_TYPE))
+            : base(MediaType)
         {
 
         }
