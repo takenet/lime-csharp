@@ -322,6 +322,17 @@ namespace Lime.Protocol.Serialization
                     }
                 };
             }
+            else if (propertyType == typeof(Uri))
+            {
+                deserializePropertyAction = (v, j) =>
+                {
+                    var value = j.GetValueOrDefault<Uri>(memberName, o => new Uri(o.ToString())) ?? defaultValue;
+                    if (value != null)
+                    {
+                        setFunc(v, value);
+                    }
+                };
+            }
             else if (typeof(IDictionary<string, string>).IsAssignableFrom(propertyType))
             {
                 // Metadata property

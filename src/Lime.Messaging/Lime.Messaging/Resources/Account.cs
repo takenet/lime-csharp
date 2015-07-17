@@ -1,6 +1,7 @@
 ﻿using System.Runtime.Serialization;
 using System.Security;
 using Lime.Protocol;
+using System;
 
 namespace Lime.Messaging.Resources
 {
@@ -20,6 +21,7 @@ namespace Lime.Messaging.Resources
         public const string CITY_KEY = "city";
         public const string EMAIL_KEY = "email";
         public const string PHONE_NUMBER_KEY = "phoneNumber";
+        public const string PHOTO_URI_KEY = "photoUri";
         public const string CELL_PHONE_NUMBER_KEY = "cellPhoneNumber";
         public const string IS_TEMPORARY_KEY = "isTemporary";
         public const string PASSWORD_KEY = "password";
@@ -69,6 +71,12 @@ namespace Lime.Messaging.Resources
         /// </summary>
         [DataMember(Name = PHONE_NUMBER_KEY)]
         public string PhoneNumber { get; set; }
+
+        /// <summary>
+        /// The user photo URI.
+        /// </summary>
+        [DataMember(Name = PHOTO_URI_KEY)]
+        public Uri PhotoUri { get; set; }
 
         /// <summary>
         /// The user cellphone number

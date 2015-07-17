@@ -285,6 +285,15 @@ namespace Lime.Protocol.UnitTests
 
         }
 
+        public static Account CreateAccount()
+        {
+            return new Account
+            {
+                FullName = CreateRandomString(20),
+                PhotoUri = CreateUri()
+            };
+        }
+
         public static Contact CreateContact()
         {
             return new Contact()
@@ -372,5 +381,6 @@ namespace Lime.Protocol.UnitTests
                 string.Format("{0}://{1}:{2}",
                     scheme, CreateDomainName(), port));
         }
+
     }
 }

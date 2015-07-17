@@ -104,8 +104,8 @@ namespace Lime.Protocol.UnitTests.Serialization
 			var command = Dummy.CreateCommand(resource);
 			command.Pp = Dummy.CreateNode();
 			command.Method = CommandMethod.Get;
-			
-			
+
+
 			var metadataKey1 = "randomString1";
 			var metadataValue1 = Dummy.CreateRandomString(50);
 			var metadataKey2 = "randomString2";
@@ -131,6 +131,36 @@ namespace Lime.Protocol.UnitTests.Serialization
 			Assert.IsTrue(resultString.ContainsJsonProperty(Capability.CONTENT_TYPES_KEY, resource.ContentTypes));
 			Assert.IsTrue(resultString.ContainsJsonProperty(Capability.RESOURCE_TYPES_KEY, resource.ResourceTypes));
 
+			Assert.IsFalse(resultString.ContainsJsonKey(Command.STATUS_KEY));
+			Assert.IsFalse(resultString.ContainsJsonKey(Command.REASON_KEY));
+		}
+
+		[Test]
+		[Category("Serialize")]
+		public void Serialize_AccountRequestCommand_ReturnsValidJsonString()
+		{
+			var target = GetTarget();
+
+			var resource = Dummy.CreateAccount();
+			var command = Dummy.CreateCommand(resource);
+			command.Method = CommandMethod.Get;
+
+			var resultString = target.Serialize(command);
+
+			Assert.IsTrue(resultString.HasValidJsonStackedBrackets());
+			Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.ID_KEY, command.Id));
+			Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.FROM_KEY, command.From));
+			Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.TO_KEY, command.To));
+			Assert.IsTrue(resultString.ContainsJsonProperty(Command.METHOD_KEY, command.Method));
+			Assert.IsTrue(resultString.ContainsJsonProperty(Command.TYPE_KEY, command.Resource.GetMediaType()));
+			Assert.IsTrue(resultString.ContainsJsonKey(Command.RESOURCE_KEY));
+			Assert.IsTrue(resultString.ContainsJsonProperty(Command.METHOD_KEY, command.Method));
+
+			Assert.IsTrue(resultString.ContainsJsonProperty(Account.FULL_NAME_KEY, resource.FullName));
+			Assert.IsTrue(resultString.ContainsJsonProperty(Account.PHOTO_URI_KEY, resource.PhotoUri));
+
+			Assert.IsFalse(resultString.ContainsJsonKey(Envelope.PP_KEY));
+			Assert.IsFalse(resultString.ContainsJsonKey(Command.METADATA_KEY));
 			Assert.IsFalse(resultString.ContainsJsonKey(Command.STATUS_KEY));
 			Assert.IsFalse(resultString.ContainsJsonKey(Command.REASON_KEY));
 		}
@@ -169,9 +199,9 @@ namespace Lime.Protocol.UnitTests.Serialization
 			Assert.IsTrue(resultString.ContainsJsonProperty(metadataKey1, metadataValue1));
 			Assert.IsTrue(resultString.ContainsJsonProperty(metadataKey2, metadataValue2));
 
-            Assert.IsTrue(resultString.ContainsJsonKey(DocumentCollection.ITEMS_KEY));
-            Assert.IsTrue(resultString.ContainsJsonKey(DocumentCollection.TOTAL_KEY));
-            var contacts = resource.Items.Cast<Contact>().ToArray();
+			Assert.IsTrue(resultString.ContainsJsonKey(DocumentCollection.ITEMS_KEY));
+			Assert.IsTrue(resultString.ContainsJsonKey(DocumentCollection.TOTAL_KEY));
+			var contacts = resource.Items.Cast<Contact>().ToArray();
 			Assert.IsTrue(resultString.ContainsJsonProperty(Contact.IDENTITY_KEY, contacts[0].Identity));
 			Assert.IsTrue(resultString.ContainsJsonProperty(Contact.NAME_KEY, contacts[0].Name));
 			Assert.IsTrue(resultString.ContainsJsonProperty(Contact.IS_PENDING_KEY, contacts[0].IsPending));
@@ -593,6 +623,50 @@ namespace Lime.Protocol.UnitTests.Serialization
 
 		[Test]
 		[Category("Deserialize")]
+		public void Deserialize_AccountRequestCommand_ReturnsValidInstance()
+		{
+			var target = GetTarget();
+
+			var method = CommandMethod.Get;
+
+			var id = Guid.NewGuid();
+
+			var from = Dummy.CreateNode();
+			var to = Dummy.CreateNode();
+
+			var resourceUri = new LimeUri("/account");
+            var fullName = Dummy.CreateRandomString(25);
+            var photoUri = Dummy.CreateUri();
+
+			string json = string.Format(
+				"{{\"uri\":\"{0}\",\"type\":\"application/vnd.lime.account+json\",\"resource\":{{\"fullName\": \"{1}\", \"photoUri\": \"{2}\"}},\"method\":\"{3}\",\"id\":\"{4}\",\"from\":\"{5}\",\"to\":\"{6}\"}}",
+				resourceUri,
+                fullName,
+                photoUri,
+				method.ToString().ToCamelCase(),
+				id,
+				from,
+				to);
+
+			var envelope = target.Deserialize(json);
+
+			var command = envelope.ShouldBeOfType<Command>();
+			command.Id.ShouldBe(id);
+			command.From.ShouldBe(from);
+			command.To.ShouldBe(to);
+			command.Pp.ShouldBe(null);
+			command.Metadata.ShouldBe(null);
+
+			command.Method.ShouldBe(method);
+            command.Uri.ShouldBe(resourceUri);
+
+			var account = command.Resource.ShouldBeOfType<Account>();
+            account.PhotoUri.ShouldBe(photoUri);
+
+		}
+
+		[Test]
+		[Category("Deserialize")]
 		public void Deserialize_AbsoluteUriRequestCommand_ReturnsValidInstance()
 		{
 			var target = GetTarget();
@@ -847,7 +921,7 @@ namespace Lime.Protocol.UnitTests.Serialization
 
 			var envelope = target.Deserialize(json);
 
-            envelope.ShouldBeOfType<Message>();
+			envelope.ShouldBeOfType<Message>();
 
 			var message = (Message)envelope;
 			Assert.AreEqual(id, message.Id);
@@ -860,7 +934,7 @@ namespace Lime.Protocol.UnitTests.Serialization
 			Assert.IsTrue(message.Metadata.ContainsKey(randomKey2));
 			Assert.AreEqual(message.Metadata[randomKey2], randomString2);
 
-            message.Content.ShouldBeOfType<PlainText>();
+			message.Content.ShouldBeOfType<PlainText>();
 
 			var textContent = (PlainText)message.Content;
 			Assert.AreEqual(text, textContent.Text);
@@ -912,7 +986,7 @@ namespace Lime.Protocol.UnitTests.Serialization
 			Assert.IsTrue(message.Metadata.ContainsKey(randomKey2));
 			Assert.AreEqual(message.Metadata[randomKey2], randomString2);
 
-            message.Content.ShouldBeOfType<ChatState>();
+			message.Content.ShouldBeOfType<ChatState>();
 
 			var textContent = (ChatState)message.Content;
 			Assert.AreEqual(state, textContent.State);
@@ -969,7 +1043,7 @@ namespace Lime.Protocol.UnitTests.Serialization
 			Assert.IsNotNull(message.Type);
 			Assert.AreEqual(message.Type, type);
 
-            message.Content.ShouldBeOfType<PlainDocument>();
+			message.Content.ShouldBeOfType<PlainDocument>();
 
 			var content = (PlainDocument)message.Content;
 			Assert.AreEqual(text, content.Value);
@@ -1036,7 +1110,7 @@ namespace Lime.Protocol.UnitTests.Serialization
 			Assert.IsNotNull(message.Type);
 			Assert.AreEqual(message.Type, type);
 
-            message.Content.ShouldBeOfType<JsonDocument>();
+			message.Content.ShouldBeOfType<JsonDocument>();
 
 			var content = (JsonDocument)message.Content;
 
@@ -1106,7 +1180,7 @@ namespace Lime.Protocol.UnitTests.Serialization
 			Assert.IsNotNull(message.Type);
 			Assert.AreEqual(message.Type, type);
 
-            message.Content.ShouldBeOfType<JsonDocument>();
+			message.Content.ShouldBeOfType<JsonDocument>();
 
 			var content = (JsonDocument)message.Content;
 
@@ -1415,29 +1489,29 @@ namespace Lime.Protocol.UnitTests.Serialization
 			session.Authentication.ShouldBeOfType<GuestAuthentication>();
 		}
 
-        [Test]
-        [Category("Deserialize")]
-        public void Deserialize_RandomResourceRequestCommand_ReturnsValidInstance()
-        {
-            var target = GetTarget();
+		[Test]
+		[Category("Deserialize")]
+		public void Deserialize_RandomResourceRequestCommand_ReturnsValidInstance()
+		{
+			var target = GetTarget();
 
-            var method = CommandMethod.Set;
-            var id = Guid.NewGuid();
+			var method = CommandMethod.Set;
+			var id = Guid.NewGuid();
 
-            string json = string.Format(
-                "{{\"type\":\"application/vnd.takenet.testdocument+json\",\"resource\":{{\"double\":10.1, \"NullableDouble\": 10.2}},\"method\":\"{0}\",\"id\":\"{1}\"}}",
-                method.ToString().ToCamelCase(),
-                id);
+			string json = string.Format(
+				"{{\"type\":\"application/vnd.takenet.testdocument+json\",\"resource\":{{\"double\":10.1, \"NullableDouble\": 10.2}},\"method\":\"{0}\",\"id\":\"{1}\"}}",
+				method.ToString().ToCamelCase(),
+				id);
 
-            var envelope = target.Deserialize(json);
+			var envelope = target.Deserialize(json);
 
-            var command = envelope.ShouldBeOfType<Command>();
-            command.Type.ToString().ShouldBe(TestDocument.MIME_TYPE);
-            command.Resource.ShouldNotBe(null);
-            var document = command.Resource.ShouldBeOfType<TestDocument>();
-            document.Double.ShouldBe(10.1d);
-            document.NullableDouble.ShouldBe(10.2d);
-        }
+			var command = envelope.ShouldBeOfType<Command>();
+			command.Type.ToString().ShouldBe(TestDocument.MIME_TYPE);
+			command.Resource.ShouldNotBe(null);
+			var document = command.Resource.ShouldBeOfType<TestDocument>();
+			document.Double.ShouldBe(10.1d);
+			document.NullableDouble.ShouldBe(10.2d);
+		}
 
 
 		#endregion
