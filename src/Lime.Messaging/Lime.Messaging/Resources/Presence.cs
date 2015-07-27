@@ -70,12 +70,14 @@ namespace Lime.Messaging.Resources
         public string[] Instances { get; set; }
     }
 
+    /// <summary>
+    /// Defines the envelope routing rules.
+    /// </summary>
     [DataContract(Namespace = "http://limeprotocol.org/2014")]
     public enum RoutingRule
     {
         /// <summary>
-        /// Only deliver envelopes addressed 
-        /// to the current session instance (name@domain/instance).
+        /// Only deliver envelopes addressed to the current session instance (name@domain/instance).
         /// </summary>
         [EnumMember(Value = "instance")]
         Instance,
@@ -90,7 +92,7 @@ namespace Lime.Messaging.Resources
         /// Deliver envelopes addressed to the current session 
         /// instance (name@domain/instance) and envelopes addressed 
         /// to the identity (name@domain) if the distance from the 
-        /// origitator is the smallest among the available 
+        /// originator is the smallest among the available 
         /// nodes of the identity with this setting.
         /// </summary>
         [EnumMember(Value = "identityByDistance")]
@@ -103,23 +105,41 @@ namespace Lime.Messaging.Resources
         /// nodes of the identity with this setting.
         /// </summary>
         [EnumMember(Value = "identityByPriority")]
-        IdentityByPriority,
-
+        IdentityByPriority,    
         /// <summary>
         /// Deliver any envelopes addressed to the identity name@domain, 
         /// including the envelopes addressed to any specific instance.
         /// </summary>
         [EnumMember(Value = "promiscuous")]
         Promiscuous,
-
         /// <summary>
+        ///  Deliver envelopes addressed to the current session 
+        /// instance (name@domain/instance) and envelopes addresses to the node domain.
         /// This rule is intended to be used only for external domain authorities
-        /// (gateways) and sub-domain authorities (applications), in order to 
-        /// deliver envelopes addressed to their domain using the smallest distance 
-        /// from the origitator among the available connected nodes for these authorities.
+        /// (gateways) and sub-domain authorities (applications).
+        /// </summary>
+        [EnumMember(Value = "domain")]
+        Domain,
+        /// <summary>
+        /// Deliver envelopes addressed to the current session 
+        /// instance (name@domain/instance) and envelopes addresses to the node domain
+        /// if the distance from the originator is the smallest among the available 
+        /// nodes of the domain with this setting.
+        /// This rule is intended to be used only for external domain authorities
+        /// (gateways) and sub-domain authorities (applications)
         /// </summary>
         [EnumMember(Value = "domainByDistance")]
-        DomainByDistance
+        DomainByDistance,
+        /// <summary>
+        /// Deliver envelopes addressed to the current session 
+        /// instance (name@domain/instance) and envelopes addresses to the node domain
+        /// if the value of the priority property is the largest among the available 
+        /// nodes of the domain with this setting.
+        /// This rule is intended to be used only for external domain authorities
+        /// (gateways) and sub-domain authorities (applications)
+        /// </summary>
+        [EnumMember(Value = "domainByPriority")]
+        DomainByPriority
     }
 
     /// <summary>
@@ -129,39 +149,30 @@ namespace Lime.Messaging.Resources
     public enum PresenceStatus
     {
         /// <summary>
-        /// The node is not available for messaging and 
-        /// should not receive any envelope by any node, 
-        /// except by the connected server.
+        /// The node is not available for messaging and should not receive any envelope by any node, except by the connected server.
         /// </summary>
-        [EnumMember]
+        [EnumMember(Value = "unavailable")]
         Unavailable,
         /// <summary>
-        /// The node is available for messaging 
-        /// and envelopes can be routed to the node 
-        /// according to the defined routing rule.
+        /// The node is available for messaging and envelopes can be routed to the node according to the defined routing rule.
         /// </summary>
-        [EnumMember]
+        [EnumMember(Value = "available")]
         Available,
         /// <summary>
-        /// The node is available but the senders should notice 
-        /// that it is busy and doesn't want to the disturbed 
-        /// or it is on heavy load and don't want to receive 
-        /// any envelope.
+        /// The node is available but the senders should notice that it is busy and doesn't want to the disturbed 
+        /// or it is on heavy load and don't want to receive any envelope.
         /// </summary>
-        [EnumMember]
+        [EnumMember(Value = "busy")]
         Busy,
         /// <summary>
-        /// The node is available but the senders should notice
-        /// that it may not be reading or processing 
-        /// the received envelopes.
+        /// The node is available but the senders should notice that it may not be reading or processing the received envelopes.
         /// </summary>
-        [EnumMember]
+        [EnumMember(Value = "away")]
         Away,
         /// <summary>
-        /// The node is available for messaging but the 
-        /// actual stored presence value is unavailable.
+        /// The node is available for messaging but the actual stored presence value is unavailable.
         /// </summary>
-        [EnumMember]
+        [EnumMember(Value = "invisible")]
         Invisible
     }
 }
