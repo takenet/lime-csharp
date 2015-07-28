@@ -5,9 +5,7 @@ using System.Runtime.Serialization;
 namespace Lime.Protocol
 {
     /// <summary>
-    /// Allows the manipulation of node resources, 
-    /// like server session parameters or 
-    /// information related to the network nodes.
+    /// Allows the manipulation of node resources, like server session parameters or information related to the network nodes.
     /// </summary>
     [DataContract(Namespace = "http://limeprotocol.org/2014")]
     public class Command : Envelope
@@ -31,7 +29,6 @@ namespace Lime.Protocol
         }
 
         #endregion
-
 
         /// <summary>
         /// The universal identifier
@@ -88,8 +85,7 @@ namespace Lime.Protocol
     }
 
     /// <summary>
-    /// Defines methods for the manipulation 
-    /// of resources.
+    /// Defines methods for the manipulation of resources.
     /// </summary>
     [DataContract(Namespace = "http://limeprotocol.org/2014")]
     public enum CommandMethod
@@ -99,27 +95,39 @@ namespace Lime.Protocol
         /// </summary>
         [EnumMember(Value = "get")]
         Get,
+
         /// <summary>
-        /// Sets or updates a for the resource.
+        /// Creates or updates the value of the resource.
         /// </summary>
         [EnumMember(Value = "set")]
         Set,
+
         /// <summary>
-        /// Deletes a value of the resource 
-        /// or the resource itself.
+        /// Deletes a value of the resource or the resource itself.
         /// </summary>
         [EnumMember(Value = "delete")]
         Delete,
+
         /// <summary>
-        /// Notify the destination about a change 
-        /// in the resource value of the sender. 
-        /// This method is one way and the destination 
-        /// SHOULD NOT send a response for it. 
-        /// Because of that, a command envelope with this 
-        /// method MAY NOT have an id.
+        /// Subscribes to the resource, allowing the originator to be notified when the value of the resource changes in the destination.
+        /// </summary>
+        [EnumMember(Value = "subscribe")]
+        Subscribe,
+
+        /// <summary>
+        /// Unsubscribes to the resource, signaling to the destination that the originator do not want to receive further notifications about the resource.
+        /// </summary>
+        [EnumMember(Value = "unsubscribe")]
+        Unsubscribe,
+
+        /// <summary>
+        /// Notify the destination about a change in the resource value of the sender. 
+        /// If the resource value is absent, it represent that the resource in the specified URI was deleted in the originator.
+        /// This method is one way and the destination  SHOULD NOT send a response for it. 
+        /// Because of that, a command envelope with this method MAY NOT have an id.
         /// </summary>
         [EnumMember(Value = "observe")]
-        Observe
+        Observe,
     }
 
     /// <summary>
@@ -134,12 +142,13 @@ namespace Lime.Protocol
         /// </summary>
         [EnumMember(Value = "pending")]
         Pending,
+
         /// <summary>
-        /// The resource action was 
-        /// sucessfully executed.
+        /// The resource action was successfully executed.
         /// </summary>
         [EnumMember(Value = "success")]
         Success,
+
         /// <summary>
         /// The resource action has failed.
         /// </summary>

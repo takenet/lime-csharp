@@ -21,7 +21,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)Resources\Presence.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Resources\Quota.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Resources\Receipt.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Resources\Subscription.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Resources\UriTemplates.cs" />
   </ItemGroup>
 </Project>
