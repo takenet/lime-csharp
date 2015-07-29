@@ -278,11 +278,6 @@ namespace Lime.Protocol
                 throw new ArgumentException("The uri hostname must be a dns value");
             }
 
-            if (string.IsNullOrWhiteSpace(uri.UserInfo))
-            {
-                throw new ArgumentException("The uri user info is empty");
-            }
-
             return new Identity()
             {
                 Name = uri.UserInfo,
