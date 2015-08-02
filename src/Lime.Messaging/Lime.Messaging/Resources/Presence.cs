@@ -58,7 +58,8 @@ namespace Lime.Messaging.Resources
         public DateTimeOffset? LastSeen { get; set; }
 
         /// <summary>
-        /// The value of the priority for the identityByPriority routing rule.
+        /// The value of the priority of the presence.
+        /// Setting this value can affect the way the envelopes are routed to the current session.
         /// </summary>
         [DataMember(Name = PRIORITY_KEY, EmitDefaultValue = false)]
         public int Priority { get; set; }
@@ -98,15 +99,6 @@ namespace Lime.Messaging.Resources
         [EnumMember(Value = "identityByDistance")]
         IdentityByDistance,
         /// <summary>
-        /// Deliver envelopes addressed to the current session 
-        /// instance (name@domain/instance) and envelopes addressed 
-        /// to the identity (name@domain) if the value of the 
-        /// priority property is the largest among the available 
-        /// nodes of the identity with this setting.
-        /// </summary>
-        [EnumMember(Value = "identityByPriority")]
-        IdentityByPriority,    
-        /// <summary>
         /// Deliver any envelopes addressed to the identity name@domain, 
         /// including the envelopes addressed to any specific instance.
         /// </summary>
@@ -129,17 +121,7 @@ namespace Lime.Messaging.Resources
         /// (gateways) and sub-domain authorities (applications)
         /// </summary>
         [EnumMember(Value = "domainByDistance")]
-        DomainByDistance,
-        /// <summary>
-        /// Deliver envelopes addressed to the current session 
-        /// instance (name@domain/instance) and envelopes addresses to the node domain
-        /// if the value of the priority property is the largest among the available 
-        /// nodes of the domain with this setting.
-        /// This rule is intended to be used only for external domain authorities
-        /// (gateways) and sub-domain authorities (applications)
-        /// </summary>
-        [EnumMember(Value = "domainByPriority")]
-        DomainByPriority
+        DomainByDistance
     }
 
     /// <summary>
