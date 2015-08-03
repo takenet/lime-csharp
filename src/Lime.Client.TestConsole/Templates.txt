@@ -12,15 +12,20 @@ Received notification	Notification	{"id":"%messageId","from":"%from","to":"%to",
 Consumed notification	Notification	{"id":"%messageId","from":"%from","to":"%to","event":"consumed"}
 Failed notification	Notification	{"id":"%messageId","from":"%from","to":"%to","event":"failed","reason":{"code":%reasonCode,"description":"%reasonDescription"}}
 Set presence available	Command	{"id":"%commandId","method":"set","type":"application/vnd.lime.presence+json","uri":"/presence","resource":{"status":"available"}}
-Set presence unavailable	Command	{"id":"%commandId","method":"set","type":"application/vnd.lime.presence+json","uri":"/presence","resource":{"status":"unavailable"}}
 Set presence available identity	Command	{"id":"%commandId","method":"set","type":"application/vnd.lime.presence+json","uri":"/presence","resource":{"status":"available","routingRule":"identity"}}
 Set presence available promiscuous	Command	{"id":"%commandId","method":"set","type":"application/vnd.lime.presence+json","uri":"/presence","resource":{"status":"available","routingRule":"promiscuous"}}
+Set presence invisible	Command	{"id":"%commandId","method":"set","type":"application/vnd.lime.presence+json","uri":"/presence","resource":{"status":"invisible"}}
+Set presence unavailable	Command	{"id":"%commandId","method":"set","type":"application/vnd.lime.presence+json","uri":"/presence","resource":{"status":"unavailable"}}
 Get own presence	Command	{"id":"%commandId","method":"get","type":"application/vnd.lime.presence+json","uri":"/presence"}
-Get presence	Command	{"id":"%commandId","from":"%from","method":"get","type":"application/vnd.lime.presence+json","uri":"/presence"}
+Get presence	Command	{"id":"%commandId","from":"%from","method":"get","uri":"/presence"}
+Subscribe own presence	Command	{"id":"%commandId","method":"subscribe","uri":"/presence"}
+Subscribe presence	Command	{"id":"%commandId","method":"subscribe","uri":"lime://%presenceIdentity/presence"}
 Get account	Command	{"id":"%commandId","from":"%from","method":"get","type":"application/vnd.lime.account+json","uri":"/account"}
 Get own account	Command	{"id":"%commandId","method":"get","type":"application/vnd.lime.account+json","uri":"/account"}
 Set account	Command	{"id":"%commandId","from":"%accountIdentity","pp":"%from","method":"set","type":"application/vnd.lime.account+json","uri":"/account","resource":{"fullName":"%fullName","phoneNumber":"%phoneNumber","city":"%city","password":"%newPassword"}}
 Set account password	Command	{"id":"%commandId","method":"set","type":"application/vnd.lime.account+json","uri":"/account","resource":{"password":"%newPassword","oldPassword":"%oldPassword"}}
+Subscribe own account	Command	{"id":"%commandId","method":"subscribe","uri":"/acount"}
+Subscribe account	Command	{"id":"%commandId","method":"subscribe","uri":"lime://%accountIdentity/presence"}
 Set receipts all events	Command	{"id":"%commandId","method":"set","type":"application/vnd.lime.receipt+json","uri":"/receipt","resource":{"events":["failed","accepted","validated","authorized","dispatched","received","consumed"]}}
 Get groups	Command	{"id":"%commandId","method":"get","type":"application/vnd.lime.group+json","uri": "/groups"}
 Get group	Command	{"id":"%commandId","method":"get","type":"application/vnd.lime.group+json","uri": "/groups/%groupIdentity"}
@@ -28,5 +33,7 @@ Set group	Command	{"id":"%commandId","method":"set","type":"application/vnd.lime
 Get group members	Command	{"id":"%commandId","method":"get","uri": "/groups/%groupIdentity/members"}
 Set group member	Command	{"id":"%commandId","method":"set","type":"application/vnd.lime.groupmember+json","uri": "/groups/%groupIdentity/members","resource":{"address":"%groupMemberAddress","role":"%groupMemberRole"}}
 Get contacts	Command	{"id":"%commandId","method":"get","uri": "/contacts"}
+Set contact	Command	{"id":"%commandId","method":"set","type":"application/vnd.lime.contact+json","uri":"/contacts","resource":{"identity":"%contactIdentity","name":"%contactName","sharePresence":true,"shareAccountInfo":true}}
+Delete contact	Command	{"id":"%commandId","method":"delete","uri": "/contacts/%contactIdentity"}
 Set location	Command	{"id":  "%commandId","to":"postmaster@location.take.io","method":"set","type":"application/vnd.iris.location+json","uri":"/location","resource":{"latitude":10.1,"longitude":10.2}}
 Get location	Command	{"id":  "%commandId","to":"postmaster@location.take.io","method":"get","type":"application/vnd.iris.location+json","uri":"/location"}
