@@ -294,6 +294,10 @@ namespace Lime.Protocol.Serialization
                 {
                     WriteDateTimeOffsetProperty(propertyName, (DateTimeOffset)value);
                 }
+                else if (!(value is string) && value is IEnumerable)
+                {
+                    WriteArrayProperty(propertyName, (IEnumerable)value);
+                }
                 else
                 {
                     WriteStringProperty(propertyName, value.ToString());

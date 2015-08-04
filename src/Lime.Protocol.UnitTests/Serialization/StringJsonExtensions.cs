@@ -58,6 +58,10 @@ namespace Lime.Protocol.UnitTests.Serialization
                         key,
                         value.ToString().ToCamelCase()));
             }
+            else if (value is IDictionary<string, object>)
+            {
+                throw new NotSupportedException("Cannot check for dictionary properties");
+            }
             else if (value.GetType().IsArray)
             {
                 var stringBuilder = new StringBuilder();
@@ -72,6 +76,10 @@ namespace Lime.Protocol.UnitTests.Serialization
                     else if (v.GetType().IsEnum)
                     {
                         stringBuilder.AppendFormat("\"{0}\",", v.ToString().ToCamelCase());
+                    }
+                    else if (v.GetType().IsArray)
+                    {
+                        throw new NotSupportedException("Cannot check for array properties");
                     }
                     else
                     {

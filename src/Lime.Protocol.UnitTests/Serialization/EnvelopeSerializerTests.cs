@@ -7,6 +7,7 @@ using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using Shouldly;
 
@@ -356,7 +357,18 @@ namespace Lime.Protocol.UnitTests.Serialization
 			
 			foreach (var keyValuePair in content)
 			{
-				Assert.IsTrue(resultString.ContainsJsonProperty(keyValuePair.Key, keyValuePair.Value));
+			    if (keyValuePair.Value.GetType().IsArray)
+			    {
+                    // TODO: Verify for array properties
+                }
+                else if (keyValuePair.Value is IDictionary<string, object>)
+                {
+                    // TODO: Verify for dictionary properties
+                }
+                else
+			    {
+                    Assert.IsTrue(resultString.ContainsJsonProperty(keyValuePair.Key, keyValuePair.Value));
+                }				
 			}            
 			
 			Assert.IsTrue(resultString.ContainsJsonProperty(metadataKey1, metadataValue1));
@@ -1071,18 +1083,38 @@ namespace Lime.Protocol.UnitTests.Serialization
 
 			var propertyName1 = Dummy.CreateRandomString(10);
 			var propertyName2 = Dummy.CreateRandomString(10);
-			var propertyValue1 = Dummy.CreateRandomString(10);
-			var propertyValue2 = (long)Dummy.CreateRandomInt(1000);
-			
+            var propertyName3 = Dummy.CreateRandomString(10);
 
-			string json = string.Format(
-				"{{\"type\":\"{0}\",\"content\":{{\"{1}\":\"{2}\",\"{3}\":{4}}},\"id\":\"{5}\",\"from\":\"{6}\",\"pp\":\"{7}\",\"to\":\"{8}\",\"metadata\":{{\"{9}\":\"{10}\",\"{11}\":\"{12}\"}}}}",
+            var arrayPropertyName1 = Dummy.CreateRandomString(10);
+            var arrayPropertyName2 = Dummy.CreateRandomString(10);
+            var arrayPropertyName3 = Dummy.CreateRandomString(10);
+            var arrayPropertyName4 = Dummy.CreateRandomString(10);
+            var arrayPropertyValue1 = Dummy.CreateRandomString(10);            
+            var arrayPropertyValue2 = (long)Dummy.CreateRandomInt(1000);
+            var arrayPropertyValue3 = Dummy.CreateRandomString(10);
+		    var arrayPropertyValue4 = false;
+
+            var propertyValue1 = Dummy.CreateRandomString(10);
+			var propertyValue2 = (long)Dummy.CreateRandomInt(1000);
+            
+
+            string json = string.Format(
+                "{{\"type\":\"{0}\",\"content\":{{\"{1}\":\"{2}\",\"{3}\":{4},\"{5}\":[{{\"{6}\":\"{7}\",\"{8}\":{9}}},{{\"{10}\":\"{11}\",\"{12}\":{13}}}]}},\"id\":\"{14}\",\"from\":\"{15}\",\"pp\":\"{16}\",\"to\":\"{17}\",\"metadata\":{{\"{18}\":\"{19}\",\"{20}\":\"{21}\"}}}}",
 				type,
 				propertyName1,
 				propertyValue1,
 				propertyName2,
 				propertyValue2,
-				id,
+                propertyName3,
+                arrayPropertyName1,
+                arrayPropertyValue1,
+                arrayPropertyName2,
+                arrayPropertyValue2,
+                arrayPropertyName3,
+                arrayPropertyValue3,
+                arrayPropertyName4,
+                arrayPropertyValue4,
+                id,
 				from,
 				pp,
 				to,
@@ -1118,8 +1150,31 @@ namespace Lime.Protocol.UnitTests.Serialization
 			Assert.AreEqual(content[propertyName1], propertyValue1);
 			Assert.IsTrue(content.ContainsKey(propertyName2));            
 			Assert.AreEqual(content[propertyName2], propertyValue2);
-			
-		}
+            Assert.IsTrue(content.ContainsKey(propertyName3));
+            Assert.IsTrue(content[propertyName3] is IList<object>);
+
+		    var list = (IList<object>) content[propertyName3];
+            Assert.AreEqual(2, list.Count);
+
+		    for (int i = 0; i < list.Count; i++)
+		    {
+		        var item = (IDictionary<string, object>)list[i];
+		        if (i == 0)
+		        {
+                    Assert.IsTrue(item.ContainsKey(arrayPropertyName1));
+                    Assert.AreEqual(arrayPropertyValue1, item[arrayPropertyName1]);
+                    Assert.IsTrue(item.ContainsKey(arrayPropertyName2));
+                    Assert.AreEqual(arrayPropertyValue2, item[arrayPropertyName2]);
+                }
+                else if (i == 1)
+                {
+                    Assert.IsTrue(item.ContainsKey(arrayPropertyName3));
+                    Assert.AreEqual(arrayPropertyValue3, item[arrayPropertyName3]);
+                    Assert.IsTrue(item.ContainsKey(arrayPropertyName4));
+                    Assert.AreEqual(arrayPropertyValue4, item[arrayPropertyName4]);
+                }
+            }
+        }
 
 		[Test]
 		[Category("Deserialize")]

@@ -194,13 +194,33 @@ namespace Lime.Protocol.UnitTests
 
         public static JsonDocument CreateJsonDocument()
         {
-            return new JsonDocument(                
-                new Dictionary<string, object>
-                {
-                    { CreateRandomString(10), CreateRandomString(50) },
-                    { CreateRandomString(10), CreateRandomInt(50) }
-                },
+            return new JsonDocument(
+                CreateStringObjectDictionary(),
                 CreateJsonMediaType());
+        }
+
+        public static IDictionary<string, object> CreateStringObjectDictionary(bool includeDeepMembers = true)
+        {
+            var dictionary = new Dictionary<string, object>
+            {
+                {CreateRandomString(10), CreateRandomString(50)},
+                {CreateRandomString(10), CreateRandomInt(50)}                
+            };
+
+            if (includeDeepMembers)
+            {
+                dictionary.Add(CreateRandomString(10), CreateStringObjectDictionary(false));
+
+                var list = new object[]
+                {
+                    CreateStringObjectDictionary(false),
+                    CreateStringObjectDictionary(false),
+                    CreateStringObjectDictionary(false)
+                };
+                dictionary.Add(CreateRandomString(10), list);
+            }
+
+            return dictionary;
         }
 
         public static PlainDocument CreatePlainDocument()
