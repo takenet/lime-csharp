@@ -437,7 +437,7 @@ namespace Lime.Protocol.UnitTests.Serialization
 			
 			Assert.IsTrue(resultString.ContainsJsonProperty(metadataKey1, metadataValue1));
 			Assert.IsTrue(resultString.ContainsJsonProperty(metadataKey2, metadataValue2));
-		}
+        }
 
 		[Test]
 		[Category("Serialize")]
@@ -1202,6 +1202,7 @@ namespace Lime.Protocol.UnitTests.Serialization
 			var propertyName1 = Dummy.CreateRandomString(10);
 			var propertyName2 = Dummy.CreateRandomString(10);
             var propertyName3 = Dummy.CreateRandomString(10);
+            var propertyName4 = Dummy.CreateRandomString(10);
 
             var arrayPropertyName1 = Dummy.CreateRandomString(10);
             var arrayPropertyName2 = Dummy.CreateRandomString(10);
@@ -1214,10 +1215,11 @@ namespace Lime.Protocol.UnitTests.Serialization
 
             var propertyValue1 = Dummy.CreateRandomString(10);
 			var propertyValue2 = (long)Dummy.CreateRandomInt(1000);
-            
+            var propertyValue4 = DateTime.Now;
+
 
             string json = string.Format(
-                "{{\"type\":\"{0}\",\"content\":{{\"{1}\":\"{2}\",\"{3}\":{4},\"{5}\":[{{\"{6}\":\"{7}\",\"{8}\":{9}}},{{\"{10}\":\"{11}\",\"{12}\":{13}}}]}},\"id\":\"{14}\",\"from\":\"{15}\",\"pp\":\"{16}\",\"to\":\"{17}\",\"metadata\":{{\"{18}\":\"{19}\",\"{20}\":\"{21}\"}}}}",
+                "{{\"type\":\"{0}\",\"content\":{{\"{1}\":\"{2}\",\"{3}\":{4},\"{5}\":[{{\"{6}\":\"{7}\",\"{8}\":{9}}},{{\"{10}\":\"{11}\",\"{12}\":{13}}}],\"{14}\":\"{15}\"}},\"id\":\"{16}\",\"from\":\"{17}\",\"pp\":\"{18}\",\"to\":\"{19}\",\"metadata\":{{\"{20}\":\"{21}\",\"{22}\":\"{23}\"}}}}",
 				type,
 				propertyName1,
 				propertyValue1,
@@ -1232,6 +1234,8 @@ namespace Lime.Protocol.UnitTests.Serialization
                 arrayPropertyValue3,
                 arrayPropertyName4,
                 arrayPropertyValue4,
+                propertyName4,
+                propertyValue4.ToUniversalTime().ToString(TextJsonWriter.DATE_FORMAT, CultureInfo.InvariantCulture),
                 id,
 				from,
 				pp,
@@ -1267,7 +1271,7 @@ namespace Lime.Protocol.UnitTests.Serialization
 			Assert.IsTrue(content.ContainsKey(propertyName1));
 			Assert.AreEqual(content[propertyName1], propertyValue1);
 			Assert.IsTrue(content.ContainsKey(propertyName2));            
-			Assert.AreEqual(content[propertyName2], propertyValue2);
+			Assert.AreEqual(content[propertyName2], propertyValue2);            
             Assert.IsTrue(content.ContainsKey(propertyName3));
             Assert.IsTrue(content[propertyName3] is IList<object>);
 
@@ -1292,6 +1296,18 @@ namespace Lime.Protocol.UnitTests.Serialization
                     Assert.AreEqual(arrayPropertyValue4, item[arrayPropertyName4]);
                 }
             }
+
+            Assert.IsTrue(content.ContainsKey(propertyName4));
+
+		    DateTime dateTime;
+		    DateTime.TryParse((string) content[propertyName4], out dateTime).ShouldBe(true);
+            dateTime.Year.ShouldBe(propertyValue4.Year);
+            dateTime.Month.ShouldBe(propertyValue4.Month);
+            dateTime.Day.ShouldBe(propertyValue4.Day);
+            dateTime.Hour.ShouldBe(propertyValue4.Hour);
+            dateTime.Minute.ShouldBe(propertyValue4.Minute);
+            dateTime.Second.ShouldBe(propertyValue4.Second);
+            dateTime.Millisecond.ShouldBe(propertyValue4.Millisecond);
         }
 
 		[Test]

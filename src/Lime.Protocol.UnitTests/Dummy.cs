@@ -204,7 +204,8 @@ namespace Lime.Protocol.UnitTests
             var dictionary = new Dictionary<string, object>
             {
                 {CreateRandomString(10), CreateRandomString(50)},
-                {CreateRandomString(10), CreateRandomInt(50)}                
+                {CreateRandomString(10), CreateRandomInt(50)},
+                {CreateRandomString(10), DateTimeOffset.UtcNow},
             };
 
             if (includeDeepMembers)
