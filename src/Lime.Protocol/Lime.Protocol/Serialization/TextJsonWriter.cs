@@ -13,6 +13,8 @@ namespace Lime.Protocol.Serialization
     {
         #region Private fields
 
+        public const string DATE_FORMAT = "yyyy'-'MM'-'dd'T'HH':'mm':'ss'.'fff'Z'";
+
         private TextWriter _writer;
         private short _stackedBrackets;
         private bool _commaNeeded;
@@ -307,12 +309,12 @@ namespace Lime.Protocol.Serialization
 
         public void WriteDateTimeProperty(string propertyName, DateTime value)
         {
-            WriteStringProperty(propertyName, value.ToString("o", CultureInfo.InvariantCulture));
+            WriteStringProperty(propertyName, value.ToUniversalTime().ToString(DATE_FORMAT, CultureInfo.InvariantCulture));
         }
 
         public void WriteDateTimeOffsetProperty(string propertyName, DateTimeOffset value)
         {
-            WriteStringProperty(propertyName, value.ToString("o", CultureInfo.InvariantCulture));
+            WriteStringProperty(propertyName, value.ToUniversalTime().ToString(DATE_FORMAT, CultureInfo.InvariantCulture));
         }
 
         public void WriteStringProperty(string propertyName, string value)

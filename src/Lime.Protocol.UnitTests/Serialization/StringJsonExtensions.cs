@@ -51,6 +51,20 @@ namespace Lime.Protocol.UnitTests.Serialization
                         key,
                         ((double)value).ToString(CultureInfo.InvariantCulture)));
             }
+            if (value is DateTime)
+            {
+                return json.Contains(
+                    string.Format("\"{0}\":\"{1}\"",
+                        key,
+                        ((DateTime)value).ToUniversalTime().ToString(TextJsonWriter.DATE_FORMAT, CultureInfo.InvariantCulture)));
+            }
+            if (value is DateTimeOffset)
+            {
+                return json.Contains(
+                    string.Format("\"{0}\":\"{1}\"",
+                        key,
+                        ((DateTimeOffset)value).ToUniversalTime().ToString(TextJsonWriter.DATE_FORMAT, CultureInfo.InvariantCulture)));
+            }
             else if (value.GetType().IsEnum)
             {
                 return json.Contains(

@@ -6,6 +6,7 @@ using Lime.Protocol.UnitTests;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -270,7 +271,70 @@ namespace Lime.Protocol.UnitTests.Serialization
 			Assert.IsFalse(resultString.ContainsJsonKey(Command.REASON_KEY));
 		}
 
-		[Test]
+        [Test]
+        [Category("Serialize")]
+        public void Serialize_PresenceRequestCommand_ReturnsValidJsonString()
+        {
+            var target = GetTarget();
+
+            var resource = Dummy.CreatePresence();
+            var command = Dummy.CreateCommand(resource);
+            command.Method = CommandMethod.Get;
+
+            var resultString = target.Serialize(command);
+
+            Assert.IsTrue(resultString.HasValidJsonStackedBrackets());
+            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.ID_KEY, command.Id));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.FROM_KEY, command.From));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.TO_KEY, command.To));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Command.METHOD_KEY, command.Method));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Command.TYPE_KEY, command.Resource.GetMediaType()));
+            Assert.IsTrue(resultString.ContainsJsonKey(Command.RESOURCE_KEY));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Command.METHOD_KEY, command.Method));
+
+            Assert.IsTrue(resultString.ContainsJsonProperty(Presence.MESSAGE_KEY, resource.Message));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Presence.LAST_SEEN_KEY, resource.LastSeen));
+
+
+            Assert.IsFalse(resultString.ContainsJsonKey(Envelope.PP_KEY));
+            Assert.IsFalse(resultString.ContainsJsonKey(Command.METADATA_KEY));
+            Assert.IsFalse(resultString.ContainsJsonProperty(Command.STATUS_KEY, "pending"));
+            Assert.IsFalse(resultString.ContainsJsonKey(Command.REASON_KEY));
+        }
+
+        [Test]
+        [Category("Serialize")]
+        public void Serialize_PresenceRequestWithOffsetDateCommand_ReturnsValidJsonString()
+        {
+            var target = GetTarget();
+
+            var resource = Dummy.CreatePresence();
+            resource.LastSeen = DateTimeOffset.UtcNow.ToOffset(TimeSpan.FromHours(-5));
+            var command = Dummy.CreateCommand(resource);
+            command.Method = CommandMethod.Get;
+
+            var resultString = target.Serialize(command);
+
+            Assert.IsTrue(resultString.HasValidJsonStackedBrackets());
+            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.ID_KEY, command.Id));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.FROM_KEY, command.From));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.TO_KEY, command.To));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Command.METHOD_KEY, command.Method));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Command.TYPE_KEY, command.Resource.GetMediaType()));
+            Assert.IsTrue(resultString.ContainsJsonKey(Command.RESOURCE_KEY));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Command.METHOD_KEY, command.Method));
+
+            Assert.IsTrue(resultString.ContainsJsonProperty(Presence.MESSAGE_KEY, resource.Message));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Presence.LAST_SEEN_KEY, resource.LastSeen));
+
+
+            Assert.IsFalse(resultString.ContainsJsonKey(Envelope.PP_KEY));
+            Assert.IsFalse(resultString.ContainsJsonKey(Command.METADATA_KEY));
+            Assert.IsFalse(resultString.ContainsJsonProperty(Command.STATUS_KEY, "pending"));
+            Assert.IsFalse(resultString.ContainsJsonKey(Command.REASON_KEY));
+        }
+
+        [Test]
 		[Category("Serialize")]
 		public void Serialize_FailurePingResponseCommand_ReturnsValidJsonString()
 		{
@@ -640,12 +704,9 @@ namespace Lime.Protocol.UnitTests.Serialization
 			var target = GetTarget();
 
 			var method = CommandMethod.Get;
-
 			var id = Guid.NewGuid();
-
 			var from = Dummy.CreateNode();
 			var to = Dummy.CreateNode();
-
 			var resourceUri = new LimeUri("/account");
             var fullName = Dummy.CreateRandomString(25);
             var photoUri = Dummy.CreateUri();
@@ -674,10 +735,67 @@ namespace Lime.Protocol.UnitTests.Serialization
 
 			var account = command.Resource.ShouldBeOfType<Account>();
             account.PhotoUri.ShouldBe(photoUri);
-
 		}
 
-		[Test]
+
+        [Test]
+        [Category("Deserialize")]
+        public void Deserialize_PresenceRequestCommand_ReturnsValidInstance()
+        {
+            var target = GetTarget();
+
+            var method = CommandMethod.Get;
+            var id = Guid.NewGuid();
+            var from = Dummy.CreateNode();
+            var to = Dummy.CreateNode();
+            var resourceUri = new LimeUri("/presence");
+            var status = PresenceStatus.Available;
+            var message = Dummy.CreateRandomString(100);
+            var routingRule = RoutingRule.IdentityByDistance;
+            var lastSeen = DateTimeOffset.UtcNow;
+            var priority = Dummy.CreateRandomInt(100);
+            
+            string json = string.Format(
+                "{{\"uri\":\"{0}\",\"type\":\"application/vnd.lime.presence+json\",\"resource\":{{\"status\": \"{1}\",\"message\":\"{2}\",\"routingRule\":\"{3}\",\"lastSeen\":\"{4}\",\"priority\":{5}}},\"method\":\"{6}\",\"id\":\"{7}\",\"from\":\"{8}\",\"to\":\"{9}\"}}",
+                resourceUri,
+                status.ToString().ToCamelCase(),
+                message,
+                routingRule.ToString().ToCamelCase(),
+                lastSeen.ToUniversalTime().ToString(TextJsonWriter.DATE_FORMAT, CultureInfo.InvariantCulture),
+                priority,
+                method.ToString().ToCamelCase(),
+                id,
+                from,
+                to);
+
+            var envelope = target.Deserialize(json);
+
+            var command = envelope.ShouldBeOfType<Command>();
+            command.Id.ShouldBe(id);
+            command.From.ShouldBe(from);
+            command.To.ShouldBe(to);
+            command.Pp.ShouldBe(null);
+            command.Metadata.ShouldBe(null);
+
+            command.Method.ShouldBe(method);
+            command.Uri.ShouldBe(resourceUri);
+
+            var presence = command.Resource.ShouldBeOfType<Presence>();
+            presence.Status.ShouldBe(status);
+            presence.Message.ShouldBe(message);
+            presence.RoutingRule.ShouldBe(routingRule);
+            presence.LastSeen.ShouldNotBe(null);            
+            presence.LastSeen.Value.Year.ShouldBe(lastSeen.Year);
+            presence.LastSeen.Value.Month.ShouldBe(lastSeen.Month);
+            presence.LastSeen.Value.Day.ShouldBe(lastSeen.Day);
+            presence.LastSeen.Value.Hour.ShouldBe(lastSeen.Hour);
+            presence.LastSeen.Value.Minute.ShouldBe(lastSeen.Minute);
+            presence.LastSeen.Value.Second.ShouldBe(lastSeen.Second);
+            presence.LastSeen.Value.Millisecond.ShouldBe(lastSeen.Millisecond);
+            presence.Priority.ShouldBe(priority);
+        }
+
+        [Test]
 		[Category("Deserialize")]
 		public void Deserialize_AbsoluteUriRequestCommand_ReturnsValidInstance()
 		{

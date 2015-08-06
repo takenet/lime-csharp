@@ -280,7 +280,8 @@ namespace Lime.Protocol.UnitTests
                 Message = CreateRandomString(50),
                 Priority = 1,
                 RoutingRule = RoutingRule.IdentityByDistance,
-                Status = PresenceStatus.Available
+                Status = PresenceStatus.Available,
+                LastSeen = DateTimeOffset.UtcNow
             };
         }
 
