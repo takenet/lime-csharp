@@ -36,8 +36,7 @@ namespace Lime.Protocol.Server
         #region IServerChannel Members
 
         /// <summary>
-        /// Receives a new session envelope
-        /// from the client node.
+        /// Receives a new session envelope from the client node.
         /// </summary>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
@@ -55,11 +54,8 @@ namespace Lime.Protocol.Server
         }
 
         /// <summary>
-        /// Changes the session state and 
-        /// sends a negotiate session envelope
-        /// to the node with the available 
-        /// options and awaits for the client
-        /// selected option.
+        /// Changes the session state and sends a negotiate session envelope
+        /// to the node with the available options and awaits for the client selected option.
         /// </summary>
         /// <param name="cancellationToken"></param>
         /// <param name="compressionOptions">The session compression options.</param>
@@ -121,8 +117,7 @@ namespace Lime.Protocol.Server
         }
 
         /// <summary>
-        /// Send a negotiate session envelope
-        /// to the remote node to confirm the 
+        /// Send a negotiate session envelope to the remote node to confirm the 
         /// session negotiation options.
         /// </summary>
         /// <param name="sessionCompression">The session compression option</param>
@@ -149,15 +144,13 @@ namespace Lime.Protocol.Server
         }
 
         /// <summary>
-        /// Changes the session state and 
-        /// sends an authenticat envelope
-        /// to the node with the available options 
+        /// Changes the session state and sends an authenticate envelope to the node with the available options 
         /// and awaits for the client authentication.
         /// </summary>
         /// <param name="cancellationToken"></param>
         /// <param name="schemeOptions"></param>
         /// <returns>
-        /// A autheticating session envelope with the authentication information.
+        /// An authenticating session envelope with the authentication information.
         /// </returns>
         /// <exception cref="System.ArgumentNullException">authentication</exception>
         /// <exception cref="System.ArgumentException">No available options for authentication</exception>
@@ -195,13 +188,11 @@ namespace Lime.Protocol.Server
         }
 
         /// <summary>
-        /// Sends authentication roundtrip information
-        /// to the connected node and awaits
-        /// for the client authentication.
+        /// Sends authentication round-trip information to the connected node and awaits for the client authentication.
         /// </summary>
-        /// <param name="authenticationRoundtrip">The authentication roundtrip data.</param>
+        /// <param name="authenticationRoundtrip">The authentication round-trip data.</param>
         /// <returns>
-        /// A autheticating session envelope with the authentication information.
+        /// A authenticating session envelope with the authentication information.
         /// </returns>
         /// <exception cref="System.ArgumentNullException">authenticationRoundtrip</exception>
         /// <exception cref="System.InvalidOperationException"></exception>
@@ -214,7 +205,7 @@ namespace Lime.Protocol.Server
 
             if (State != SessionState.Authenticating)
             {
-                throw new InvalidOperationException(string.Format("Cannot send an authentication roundtrip for a session in the '{0}' state", State));
+                throw new InvalidOperationException(string.Format("Cannot send an authentication round-trip for a session in the '{0}' state", State));
             }
 
             var session = new Session
@@ -230,10 +221,8 @@ namespace Lime.Protocol.Server
         }
 
         /// <summary>
-        /// Changes the session state and 
-        /// sends a finished session envelope
-        /// to the node to comunicate the
-        /// end of the session
+        /// Changes the session state and sends a finished session envelope
+        /// to the node to communicate the end of the session.
         /// </summary>
         /// <param name="node"></param>
         /// <returns></returns>
@@ -265,8 +254,7 @@ namespace Lime.Protocol.Server
         }
 
         /// <summary>
-        /// Receives a finishing session envelope
-        /// from the client node.
+        /// Receives a finishing session envelope from the client node.
         /// </summary>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
@@ -284,11 +272,8 @@ namespace Lime.Protocol.Server
         }
 
         /// <summary>
-        /// Changes the session state and 
-        /// sends a finished session envelope
-        /// to the node to comunicate the
-        /// end of the session and closes
-        /// the transport
+        /// Changes the session state and sends a finished session envelope to the node to communicate the
+        /// end of the session and closes the transport.
         /// </summary>
         /// <returns></returns>
         /// <exception cref="System.InvalidOperationException"></exception>
@@ -308,11 +293,8 @@ namespace Lime.Protocol.Server
         }
 
         /// <summary>
-        /// Changes the session state and 
-        /// sends a failed session envelope
-        /// to the node to comunicate the
-        /// finished session and closes
-        /// the transport
+        /// Changes the session state and sends a failed session envelope to the node to communicate the
+        /// finished session and closes the transport.
         /// </summary>
         /// <param name="reason"></param>
         /// <returns></returns>
@@ -339,10 +321,8 @@ namespace Lime.Protocol.Server
         }
 
         /// <summary>
-        /// Receives a session
-        /// from the remote node.
-        /// Avoid to use this method directly. Instead,
-        /// use the Server or Client channel methods.
+        /// Receives a session from the remote node.
+        /// Avoid to use this method directly. Instead, use the Server or Client channel methods.
         /// </summary>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns></returns>
