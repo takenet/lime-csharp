@@ -1,4 +1,5 @@
-﻿using System.Runtime.Serialization;
+﻿using System;
+using System.Runtime.Serialization;
 
 namespace Lime.Protocol.UnitTests.Serialization
 {
@@ -11,8 +12,10 @@ namespace Lime.Protocol.UnitTests.Serialization
             : base(MediaType.Parse(MIME_TYPE))
         { }
 
-        [DataMember(Name="double")]
+        [DataMember(Name = "double")]
         public double Double { get; set; }
+        [DataMember(Name = "date")]
+        public DateTime Date { get; set; }
         [DataMember]
         public double? NullableDouble { get; set; }
         [DataMember]

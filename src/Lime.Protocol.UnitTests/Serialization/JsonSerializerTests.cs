@@ -1,6 +1,7 @@
 ﻿using Lime.Protocol.Serialization;
 using NUnit.Framework;
 using Shouldly;
+using System;
 
 namespace Lime.Protocol.UnitTests.Serialization
 {
@@ -12,19 +13,22 @@ namespace Lime.Protocol.UnitTests.Serialization
         {
             // Arrange
             var nodeAddresss = "andre@takenet.com.br";
+            var date = DateTime.UtcNow;
             var document = new TestDocument
             {
                 Double = 1.12,
-                Address = Node.Parse(nodeAddresss)
+                Address = Node.Parse(nodeAddresss),
+                Date = date
             };
 
             // Act
             var json = JsonSerializer<TestDocument>.Serialize(document);
 
             // Assert
-            Assert.IsTrue(json.HasValidJsonStackedBrackets());
-            Assert.IsTrue(json.ContainsJsonProperty("Address", nodeAddresss));
-            Assert.IsTrue(json.ContainsJsonProperty("double", 1.12d));
+            json.HasValidJsonStackedBrackets().ShouldBe(true);
+            json.ContainsJsonProperty("Address", nodeAddresss).ShouldBe(true);
+            json.ContainsJsonProperty("double", 1.12d).ShouldBe(true);
+            json.ContainsJsonProperty("date", date).ShouldBe(true);
         }
 
         [Test]
@@ -49,16 +53,17 @@ namespace Lime.Protocol.UnitTests.Serialization
             var json = JsonSerializer<DocumentCollection>.Serialize(collection);
 
             // Assert
-            Assert.IsTrue(json.HasValidJsonStackedBrackets());
-            Assert.IsTrue(json.ContainsJsonProperty("Address", nodeAddresss));
-            Assert.IsTrue(json.ContainsJsonProperty("double", 1.12d));
+            json.HasValidJsonStackedBrackets().ShouldBe(true);
+            json.ContainsJsonProperty("Address", nodeAddresss).ShouldBe(true);
+            json.ContainsJsonProperty("double", 1.12d).ShouldBe(true);
         }
 
         [Test]
         public void Deserialize_RandomObject_ReturnsValidInstance()
         {
             // Arrange
-            var json = "{\"double\":10.1, \"NullableDouble\": 10.2}";
+            var dateString = "2015-10-01T13:20:45.123456Z";
+            var json = string.Format("{{\"double\":10.1, \"NullableDouble\": 10.2, \"date\": \"{0}\"}}", dateString);
 
             // Act
             var document = JsonSerializer<TestDocument>.Deserialize(json);
@@ -66,6 +71,7 @@ namespace Lime.Protocol.UnitTests.Serialization
             // Assert
             document.Double.ShouldBe(10.1d);
             document.NullableDouble.ShouldBe(10.2d);
+            document.Date.ShouldBe(DateTime.Parse(dateString));
         }
 
         [Test]
