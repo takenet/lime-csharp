@@ -32,6 +32,7 @@ namespace Lime.Messaging.Resources
         public const string STORE_MESSAGE_CONTENT_KEY = "storeMessageContent";
         public const string ACCESS_KEY_KEY = "accessKey";
         public const string ALTERNATIVE_ACCOUNT_KEY = "alternativeAccount";
+        public const string PUBLISH_TO_DIRECTORY_KEY = "publishToDirectory";
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Account"/> class.
@@ -191,5 +192,11 @@ namespace Lime.Messaging.Resources
         /// </summary>
         [DataMember(Name = ALTERNATIVE_ACCOUNT_KEY)]
         public Identity AlternativeAccount { get; set; }
+
+        /// <summary>
+        /// Indicates if the account info should be published to the domain directory.
+        /// </summary>
+        [DataMember(Name = PUBLISH_TO_DIRECTORY_KEY)]
+        public bool? PublishToDirectory { get; set; }
     }
 }
