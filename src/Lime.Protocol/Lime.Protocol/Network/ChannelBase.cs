@@ -153,18 +153,7 @@ namespace Lime.Protocol.Network
         /// <returns></returns>
         public virtual Task<Message> ReceiveMessageAsync(CancellationToken cancellationToken)
         {
-            if (State != SessionState.Established)
-            {
-                throw new InvalidOperationException(string.Format("Cannot receive a message in the '{0}' session state", State));
-            }
-
-            EnsureConsumerTaskIsNotFaulted();
-
-            var combinedCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(
-                _channelCancellationTokenSource.Token,
-                cancellationToken);
-
-            return _messageBuffer.ReceiveAsync(combinedCancellationTokenSource.Token);
+            return ReceiveFromBufferAsync(_messageBuffer, cancellationToken);
         }
 
         #endregion
@@ -203,20 +192,8 @@ namespace Lime.Protocol.Network
         /// <exception cref="System.NotImplementedException"></exception>
         public virtual Task<Command> ReceiveCommandAsync(CancellationToken cancellationToken)
         {
-            if (State != SessionState.Established)
-            {
-                throw new InvalidOperationException(string.Format("Cannot receive a command in the '{0}' session state", State));
-            }
-
-            EnsureConsumerTaskIsNotFaulted();
-
-            var combinedCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(
-                _channelCancellationTokenSource.Token,
-                cancellationToken);
-
-            return _commandBuffer.ReceiveAsync(combinedCancellationTokenSource.Token);
+            return ReceiveFromBufferAsync(_commandBuffer, cancellationToken);
         }
-
 
         #endregion
 
@@ -254,18 +231,7 @@ namespace Lime.Protocol.Network
         /// <exception cref="System.NotImplementedException"></exception>
         public virtual Task<Notification> ReceiveNotificationAsync(CancellationToken cancellationToken)
         {
-            if (State != SessionState.Established)
-            {
-                throw new InvalidOperationException(string.Format("Cannot receive a notification in the '{0}' session state", State));
-            }
-
-            EnsureConsumerTaskIsNotFaulted();
-
-            var combinedCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(
-                _channelCancellationTokenSource.Token,
-                cancellationToken);
-
-            return _notificationBuffer.ReceiveAsync(combinedCancellationTokenSource.Token);
+            return ReceiveFromBufferAsync(_notificationBuffer, cancellationToken);
         }
 
         #endregion
@@ -313,11 +279,8 @@ namespace Lime.Protocol.Network
                 case SessionState.Established:
                     var combinedCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(
                         _channelCancellationTokenSource.Token,
-                        cancellationToken);
-
-                    EnsureConsumerTaskIsNotFaulted();
-
-                    return await _sessionBuffer.ReceiveAsync(combinedCancellationTokenSource.Token).ConfigureAwait(false);
+                        cancellationToken);                    
+                    return await ReceiveFromBufferAsync(_sessionBuffer, combinedCancellationTokenSource.Token).ConfigureAwait(false);
             }
 
             var result = await ReceiveAsync(cancellationToken).ConfigureAwait(false);
@@ -331,6 +294,8 @@ namespace Lime.Protocol.Network
         #endregion
 
         #region Private Methods
+
+        private bool _isConsumeTransportTaskFaulting;
 
         private async Task ConsumeTransportAsync()
         {
@@ -347,7 +312,7 @@ namespace Lime.Protocol.Network
 
                         if (_autoReplyPings &&
                             envelope is Command &&
-                            ((Command)envelope).IsPingRequest())
+                            ((Command) envelope).IsPingRequest())
                         {
                             var pingCommandResponse = new Command
                             {
@@ -365,21 +330,25 @@ namespace Lime.Protocol.Network
                             await PostEnvelopeToBufferAsync(envelope);
                         }
                     }
-                    catch (OperationCanceledException) { }
-                    catch (ObjectDisposedException)
+                    catch (OperationCanceledException ex)
                     {
-                        if (!_isDisposing)
+                        if (!_channelCancellationTokenSource.IsCancellationRequested)
                         {
-                            throw;
+                            exception = ex;
                         }
+                    }
+                    catch (ObjectDisposedException ex)
+                    {
+                        if (!_isDisposing) exception = ex;
                     }
                     catch (Exception ex)
                     {
                         exception = ex;
-                    }
+                    }                    
 
                     if (exception != null)
                     {
+                        _isConsumeTransportTaskFaulting = true;
                         var cts = new CancellationTokenSource(_sendTimeout);
                         await Transport.CloseAsync(cts.Token).ConfigureAwait(false);
                         throw exception;
@@ -571,16 +540,39 @@ namespace Lime.Protocol.Network
             return envelope;
         }
 
-        private void EnsureConsumerTaskIsNotFaulted()
+        /// <summary>
+        /// Receives an envelope from the buffer.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="buffer"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        private async Task<T> ReceiveFromBufferAsync<T>(IAsyncQueue<T> buffer, CancellationToken cancellationToken) where T : Envelope
         {
+            if (State != SessionState.Established)
+            {
+                throw new InvalidOperationException(string.Format("Cannot receive in the '{0}' session state", State));
+            }
+
             if (_consumeTransportTask.IsFaulted)
             {
-                if (_consumeTransportTask.Exception == null)
-                    throw new InvalidOperationException("The consumer task is faulted");
-                throw _consumeTransportTask.Exception.InnerException ?? _consumeTransportTask.Exception;
+                await _consumeTransportTask;
+            }
+
+            var combinedCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(
+                _channelCancellationTokenSource.Token,
+                cancellationToken);
+
+            try
+            {
+                return await buffer.ReceiveAsync(combinedCancellationTokenSource.Token).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException)
+            {
+                if (_isConsumeTransportTaskFaulting) await _consumeTransportTask;
+                throw;
             }
         }
-
 
         #endregion
 
