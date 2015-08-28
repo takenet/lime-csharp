@@ -138,17 +138,18 @@ namespace Lime.Transport.Http
             return Task.FromResult<object>(null);
         }
 
-        public Task<ITransport> AcceptTransportAsync(CancellationToken cancellationToken)
+        public async Task<ITransport> AcceptTransportAsync(CancellationToken cancellationToken)
         {
             if (_httpServerListenerTask == null)
             {
                 throw new InvalidOperationException("The listener was not started.");
             }
 
-            var linkedCancellationToken = CancellationTokenSource.CreateLinkedTokenSource(
-                cancellationToken, _listenerCancellationTokenSource.Token);
-
-            return _transportBufferBlock.ReceiveAsync(linkedCancellationToken.Token);
+            using (var linkedCancellationToken = CancellationTokenSource.CreateLinkedTokenSource(
+                cancellationToken, _listenerCancellationTokenSource.Token))
+            {
+                return await _transportBufferBlock.ReceiveAsync(linkedCancellationToken.Token);
+            }
         }        
 
         public async Task StopAsync()
@@ -179,6 +180,7 @@ namespace Lime.Transport.Http
         public void Dispose()
         {
             _httpServer.DisposeIfDisposable();
+            _listenerCancellationTokenSource.DisposeIfDisposable();
         }
 
         #endregion

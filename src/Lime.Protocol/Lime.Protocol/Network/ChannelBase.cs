@@ -151,7 +151,7 @@ namespace Lime.Protocol.Network
         /// </summary>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns></returns>
-        public virtual Task<Message> ReceiveMessageAsync(CancellationToken cancellationToken)
+        public virtual async Task<Message> ReceiveMessageAsync(CancellationToken cancellationToken)
         {
             if (State != SessionState.Established)
             {
@@ -160,11 +160,12 @@ namespace Lime.Protocol.Network
 
             EnsureConsumerTaskIsNotFaulted();
 
-            var combinedCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(
+            using (var combinedCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(
                 _channelCancellationTokenSource.Token,
-                cancellationToken);
-
-            return _messageBuffer.ReceiveAsync(combinedCancellationTokenSource.Token);
+                cancellationToken))
+            {
+                return await _messageBuffer.ReceiveAsync(combinedCancellationTokenSource.Token);
+            }
         }
 
         #endregion
@@ -201,7 +202,7 @@ namespace Lime.Protocol.Network
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns></returns>
         /// <exception cref="System.NotImplementedException"></exception>
-        public virtual Task<Command> ReceiveCommandAsync(CancellationToken cancellationToken)
+        public virtual async Task<Command> ReceiveCommandAsync(CancellationToken cancellationToken)
         {
             if (State != SessionState.Established)
             {
@@ -210,11 +211,13 @@ namespace Lime.Protocol.Network
 
             EnsureConsumerTaskIsNotFaulted();
 
-            var combinedCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(
+            using (var combinedCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(
                 _channelCancellationTokenSource.Token,
-                cancellationToken);
+                cancellationToken))
+            {
+                return await _commandBuffer.ReceiveAsync(combinedCancellationTokenSource.Token);
 
-            return _commandBuffer.ReceiveAsync(combinedCancellationTokenSource.Token);
+            }
         }
 
 
@@ -252,7 +255,7 @@ namespace Lime.Protocol.Network
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns></returns>
         /// <exception cref="System.NotImplementedException"></exception>
-        public virtual Task<Notification> ReceiveNotificationAsync(CancellationToken cancellationToken)
+        public virtual async Task<Notification> ReceiveNotificationAsync(CancellationToken cancellationToken)
         {
             if (State != SessionState.Established)
             {
@@ -261,11 +264,12 @@ namespace Lime.Protocol.Network
 
             EnsureConsumerTaskIsNotFaulted();
 
-            var combinedCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(
+            using (var combinedCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(
                 _channelCancellationTokenSource.Token,
-                cancellationToken);
-
-            return _notificationBuffer.ReceiveAsync(combinedCancellationTokenSource.Token);
+                cancellationToken))
+            {
+                return await _notificationBuffer.ReceiveAsync(combinedCancellationTokenSource.Token);
+            }
         }
 
         #endregion
@@ -311,13 +315,14 @@ namespace Lime.Protocol.Network
                 case SessionState.Finished:
                     throw new InvalidOperationException(string.Format("Cannot receive a session in the '{0}' session state", State));
                 case SessionState.Established:
-                    var combinedCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(
+                    using (var combinedCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(
                         _channelCancellationTokenSource.Token,
-                        cancellationToken);
+                        cancellationToken))
+                    {
+                        EnsureConsumerTaskIsNotFaulted();
 
-                    EnsureConsumerTaskIsNotFaulted();
-
-                    return await _sessionBuffer.ReceiveAsync(combinedCancellationTokenSource.Token).ConfigureAwait(false);
+                        return await _sessionBuffer.ReceiveAsync(combinedCancellationTokenSource.Token).ConfigureAwait(false);
+                    }
             }
 
             var result = await ReceiveAsync(cancellationToken).ConfigureAwait(false);
@@ -380,8 +385,10 @@ namespace Lime.Protocol.Network
 
                     if (exception != null)
                     {
-                        var cts = new CancellationTokenSource(_sendTimeout);
-                        await Transport.CloseAsync(cts.Token).ConfigureAwait(false);
+                        using (var cts = new CancellationTokenSource(_sendTimeout))
+                        {
+                            await Transport.CloseAsync(cts.Token).ConfigureAwait(false);
+                        }
                         throw exception;
                     }
                 }
@@ -538,20 +545,26 @@ namespace Lime.Protocol.Network
         /// </summary>
         /// <param name="envelope">The envelope.</param>
         /// <returns></returns>
-        private Task SendAsync(Envelope envelope)
+        private async Task SendAsync(Envelope envelope)
         {
-            var timeoutCancellationTokenSource = new CancellationTokenSource(_sendTimeout);
 
             if (_fillEnvelopeRecipients)
             {
                 FillEnvelope(envelope, true);
             }
 
-            return Transport.SendAsync(
-                envelope,
-                CancellationTokenSource.CreateLinkedTokenSource(
-                    _channelCancellationTokenSource.Token,
-                    timeoutCancellationTokenSource.Token).Token);
+            using (var timeoutCancellationTokenSource = new CancellationTokenSource(_sendTimeout))
+            {
+                using(var linkedCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(
+                        _channelCancellationTokenSource.Token,
+                        timeoutCancellationTokenSource.Token)) 
+                {
+                    await Transport.SendAsync(
+                        envelope,
+                        linkedCancellationTokenSource.Token);
+
+                }
+            }
         }
 
         /// <summary>
