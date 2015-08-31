@@ -27,15 +27,13 @@ namespace Lime.Protocol
                 throw new ArgumentNullException("type");
             }
 
-            this.Type = type;
-
             if (string.IsNullOrWhiteSpace(subtype))
             {
                 throw new ArgumentNullException("subtype");
             }
 
+            this.Type = type;
             this.Subtype = subtype;
-
             this.Suffix = suffix;
         }
 
@@ -44,13 +42,13 @@ namespace Lime.Protocol
         #region Public Properties
 
         /// <summary>
-        /// The top-level type
-        /// identifier. The valid values
-        /// are text, application, image,
-        /// audio and video.
+        /// The top-level type identifier. The valid values are text, application, image, audio and video.
         /// </summary>
         public string Type { get; set; }
 
+        /// <summary>
+        /// The media type subtype.
+        /// </summary>
         public string Subtype { get; set; }
 
         /// <summary>
@@ -60,8 +58,7 @@ namespace Lime.Protocol
         public string Suffix { get; set; }
 
         /// <summary>
-        /// Indicates if the MIME 
-        /// represents a JSON type
+        /// Indicates if the MIME represents a JSON type.
         /// </summary>
         public bool IsJson
         {
@@ -105,7 +102,7 @@ namespace Lime.Protocol
         }
 
         /// <summary>
-        /// Determines whether the specified <see cref="System.Object" }, is equal to this instance.
+        /// Determines whether the specified <see cref="System.Object" />, is equal to this instance.
         /// </summary>
         /// <param name="obj">The <see cref="System.Object" /> to compare with this instance.</param>
         /// <returns>
@@ -130,28 +127,24 @@ namespace Lime.Protocol
         /// </summary>
         /// <param name="s">The string.</param>
         /// <returns></returns>
-        /// <exception cref="System.ArgumentNullException">value</exception>
+        /// <exception cref="System.ArgumentNullException">s</exception>
         /// <exception cref="System.FormatException">Invalid media type format</exception>
         public static MediaType Parse(string s)
         {
             if (string.IsNullOrWhiteSpace(s))
             {
-                throw new ArgumentNullException("value");
+                throw new ArgumentNullException("s");
             }
 
             var splittedMediaType = s.Split(';')[0].Split('/');
-
             if (splittedMediaType.Length != 2)
             {
                 throw new FormatException("Invalid media type format");
             }
 
             var type = splittedMediaType[0];
-
             var splittedSubtype = splittedMediaType[1].Split('+');
-
             var subtype = splittedSubtype[0];
-
             string suffix = null;
 
             if (splittedSubtype.Length > 1)
@@ -220,6 +213,5 @@ namespace Lime.Protocol
 
             public static string Javascript = "javascript";
         }
-
     }
 }

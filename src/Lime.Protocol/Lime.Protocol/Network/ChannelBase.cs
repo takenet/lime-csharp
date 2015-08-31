@@ -510,13 +510,11 @@ namespace Lime.Protocol.Network
             using (var timeoutCancellationTokenSource = new CancellationTokenSource(_sendTimeout))
             {
                 using (var linkedCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(
-                        _channelCancellationTokenSource.Token,
-                        timeoutCancellationTokenSource.Token))
+                        _channelCancellationTokenSource.Token, timeoutCancellationTokenSource.Token))
                 {
                     await Transport.SendAsync(
                         envelope,
                         linkedCancellationTokenSource.Token);
-
                 }
             }
         }
@@ -558,10 +556,8 @@ namespace Lime.Protocol.Network
             }
 
             using (var linkedCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(
-                _channelCancellationTokenSource.Token,
-                cancellationToken))
+                _channelCancellationTokenSource.Token, cancellationToken))
             {
-
                 try
                 {
                     return await buffer.ReceiveAsync(linkedCancellationTokenSource.Token).ConfigureAwait(false);
