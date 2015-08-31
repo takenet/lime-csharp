@@ -6,6 +6,7 @@ using Lime.Messaging.Resources;
 using Lime.Protocol.Security;
 using Lime.Protocol.Serialization;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Net;
@@ -20,6 +21,14 @@ namespace Lime.Client.Windows.ViewModels
 
         private static TimeSpan _loginTimeout = TimeSpan.FromSeconds(30);
         private static TimeSpan _sendTimeout = TimeSpan.FromSeconds(30);
+
+        private static Dictionary<string, string> _knownDomainServers = new Dictionary<string, string>()
+        {
+            {"0mn.io", "iris.0mn.io"},
+            {"limeprotocol.org", "iris.limeprotocol.org"},
+            {"mobchat.com.br", "iris.mobchat.com.br"},
+        };
+
 
         #endregion
 
@@ -54,7 +63,14 @@ namespace Lime.Client.Windows.ViewModels
                 if (_userNameNode != null &&
                     string.IsNullOrWhiteSpace(ServerAddress))
                 {
-                    ServerAddress = string.Format("net.tcp://{0}:55321", _userNameNode.Domain); 
+                    // TODO: Do a SRV dns search
+                    var domain = _userNameNode.Domain;
+                    if (_knownDomainServers.ContainsKey(domain))
+                    {
+                        domain = _knownDomainServers[domain];
+                    }
+
+                    ServerAddress = string.Format("net.tcp://{0}:55321", domain); 
                 }
             }
         }
