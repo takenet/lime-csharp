@@ -61,5 +61,14 @@ namespace Lime.Protocol
         /// </summary>
         [DataMember(Name = METADATA_KEY)]
         public IDictionary<string, string> Metadata { get; set; }
+
+        /// <summary>
+        /// Creates a shallow copy of the current <see cref="Envelope"/>.
+        /// </summary>
+        /// <returns></returns>
+        internal new Envelope MemberwiseClone()
+        {
+            return (Envelope)base.MemberwiseClone();
+        }
     }
 }

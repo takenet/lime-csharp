@@ -224,6 +224,11 @@ namespace Lime.Protocol.UnitTests
             return dictionary;
         }
 
+        public static IDictionary<string, string> CreateStringStringDictionary()
+        {
+            return CreateStringObjectDictionary(false).ToDictionary(d => d.Key, d => d.Value.ToString());
+        }
+
         public static PlainDocument CreatePlainDocument()
         {
             return new PlainDocument(
