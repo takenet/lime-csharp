@@ -6,14 +6,14 @@ using Lime.Protocol.Util;
 namespace Lime.Protocol.Network
 {
     /// <summary>
-    /// Base class for the protocol
-    /// communication channels
+    /// Base class for the protocol communication channels.
     /// </summary>
     public abstract class ChannelBase : IChannel, IDisposable
     {
         #region Fields
 
         public const string PING_MEDIA_TYPE = "application/vnd.lime.ping+json";
+        private readonly static Document PingDocument = new JsonDocument(MediaType.Parse(PING_MEDIA_TYPE));
 
         private readonly TimeSpan _sendTimeout;
         private readonly bool _fillEnvelopeRecipients;
@@ -22,7 +22,7 @@ namespace Lime.Protocol.Network
         private readonly IAsyncQueue<Command> _commandBuffer;
         private readonly IAsyncQueue<Notification> _notificationBuffer;
         private readonly IAsyncQueue<Session> _sessionBuffer;
-        protected readonly CancellationTokenSource _channelCancellationTokenSource;
+        private readonly CancellationTokenSource _channelCancellationTokenSource;
         private Task _consumeTransportTask;
         private bool _isDisposing;
 
@@ -123,8 +123,7 @@ namespace Lime.Protocol.Network
         #region IMessageChannel Members
 
         /// <summary>
-        /// Sends a message to the
-        /// remote node
+        /// Sends a message to the remote node.
         /// </summary>
         /// <param name="message"></param>
         /// <returns></returns>
@@ -146,8 +145,7 @@ namespace Lime.Protocol.Network
         }
 
         /// <summary>
-        /// Receives a message
-        /// from the remote node.
+        /// Receives a message from the remote node.
         /// </summary>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns></returns>
@@ -162,8 +160,7 @@ namespace Lime.Protocol.Network
         #region ICommandChannel Members
 
         /// <summary>
-        /// Sends a command envelope to
-        /// the remote node
+        /// Sends a command envelope to the remote node.
         /// </summary>
         /// <param name="command"></param>
         /// <returns></returns>
@@ -185,8 +182,7 @@ namespace Lime.Protocol.Network
         }
 
         /// <summary>
-        /// Receives a command
-        /// from the remote node.
+        /// Receives a command from the remote node.
         /// </summary>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns></returns>
@@ -201,8 +197,7 @@ namespace Lime.Protocol.Network
         #region INotificationChannel Members
 
         /// <summary>
-        /// Sends a notification to the
-        /// remote node
+        /// Sends a notification to the remote node.
         /// </summary>
         /// <param name="notification"></param>
         /// <returns></returns>
@@ -224,8 +219,7 @@ namespace Lime.Protocol.Network
         }
 
         /// <summary>
-        /// Receives a notification
-        /// from the remote node.
+        /// Receives a notification from the remote node.
         /// </summary>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns></returns>
@@ -233,17 +227,15 @@ namespace Lime.Protocol.Network
         public virtual Task<Notification> ReceiveNotificationAsync(CancellationToken cancellationToken)
         {
             return ReceiveFromBufferAsync(_notificationBuffer, cancellationToken);
-            }
+        }
 
         #endregion
 
         #region ISessionChannel Members
 
         /// <summary>
-        /// Sends a session change message to 
-        /// the remote node. 
-        /// Avoid to use this method directly. Instead,
-        /// use the Server or Client channel methods.
+        /// Sends a session change message to the remote node. 
+        /// Avoid to use this method directly. Instead, use the Server or Client channel methods.
         /// </summary>
         /// <param name="session"></param>
         /// <returns></returns>
@@ -264,10 +256,8 @@ namespace Lime.Protocol.Network
         }
 
         /// <summary>
-        /// Receives a session
-        /// from the remote node.
-        /// Avoid to use this method directly. Instead,
-        /// use the Server or Client channel methods.
+        /// Receives a session from the remote node.
+        /// Avoid to use this method directly. Instead, use the Server or Client channel methods.
         /// </summary>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns></returns>
@@ -278,11 +268,10 @@ namespace Lime.Protocol.Network
                 case SessionState.Finished:
                     throw new InvalidOperationException(string.Format("Cannot receive a session in the '{0}' session state", State));
                 case SessionState.Established:
-                    using (var combinedCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(
-                        _channelCancellationTokenSource.Token,
-                        cancellationToken))
+                    using (var linkedCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(
+                        _channelCancellationTokenSource.Token, cancellationToken))
                     {
-                        return await ReceiveFromBufferAsync(_sessionBuffer, combinedCancellationTokenSource.Token).ConfigureAwait(false);
+                        return await ReceiveFromBufferAsync(_sessionBuffer, linkedCancellationTokenSource.Token).ConfigureAwait(false);
                     }
             }
 
@@ -315,7 +304,7 @@ namespace Lime.Protocol.Network
 
                         if (_autoReplyPings &&
                             envelope is Command &&
-                            ((Command) envelope).IsPingRequest())
+                            ((Command)envelope).IsPingRequest())
                         {
                             var pingCommandResponse = new Command
                             {
@@ -323,7 +312,7 @@ namespace Lime.Protocol.Network
                                 To = envelope.From,
                                 Status = CommandStatus.Success,
                                 Method = CommandMethod.Get,
-                                Resource = new JsonDocument(MediaType.Parse(PING_MEDIA_TYPE))
+                                Resource = PingDocument
                             };
 
                             await SendCommandAsync(pingCommandResponse).ConfigureAwait(false);
@@ -335,11 +324,8 @@ namespace Lime.Protocol.Network
                     }
                     catch (OperationCanceledException ex)
                     {
-                        if (!_channelCancellationTokenSource.IsCancellationRequested)
-                        {
-                            exception = ex;
-                        }
-                        }
+                        if (!_channelCancellationTokenSource.IsCancellationRequested) exception = ex;                        
+                    }
                     catch (ObjectDisposedException ex)
                     {
                         if (!_isDisposing) exception = ex;
@@ -370,8 +356,7 @@ namespace Lime.Protocol.Network
         }
 
         /// <summary>
-        /// Cancels the token that is associated to 
-        /// the channel send and receive tasks.
+        /// Cancels the token that is associated to the channel send and receive tasks.
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -379,12 +364,15 @@ namespace Lime.Protocol.Network
         {
             using (e.GetDeferral())
             {
-                _channelCancellationTokenSource.Cancel();
+                if (!_channelCancellationTokenSource.IsCancellationRequested)
+                {
+                    _channelCancellationTokenSource.Cancel();
+                }                
             }
         }
 
         /// <summary>
-        /// Fills the buffer with the received envelope
+        /// Fills the buffer with the received envelope.
         /// </summary>
         /// <param name="envelope"></param>
         /// <returns></returns>
@@ -418,7 +406,7 @@ namespace Lime.Protocol.Network
         }
 
         /// <summary>
-        /// Fills the buffer with the received envelope
+        /// Fills the buffer with the received envelope.
         /// </summary>
         /// <param name="message"></param>
         /// <returns></returns>
@@ -443,7 +431,7 @@ namespace Lime.Protocol.Network
 #endif
 
         /// <summary>
-        /// Fills the buffer with the received envelope
+        /// Fills the buffer with the received envelope.
         /// </summary>
         /// <param name="command"></param>
         /// <returns></returns>
@@ -468,7 +456,7 @@ namespace Lime.Protocol.Network
 #endif
 
         /// <summary>
-        /// Fills the buffer with the received envelope
+        /// Fills the buffer with the received envelope.
         /// </summary>
         /// <param name="notification"></param>
         /// <returns></returns>
@@ -493,7 +481,7 @@ namespace Lime.Protocol.Network
 #endif
 
         /// <summary>
-        /// Fills the buffer with the received envelope
+        /// Fills the buffer with the received envelope.
         /// </summary>
         /// <param name="session"></param>
         /// <returns></returns>
@@ -514,7 +502,6 @@ namespace Lime.Protocol.Network
         /// <returns></returns>
         private async Task SendAsync(Envelope envelope)
         {
-
             if (_fillEnvelopeRecipients)
             {
                 FillEnvelope(envelope, true);
@@ -522,12 +509,12 @@ namespace Lime.Protocol.Network
 
             using (var timeoutCancellationTokenSource = new CancellationTokenSource(_sendTimeout))
             {
-                using(var linkedCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(
+                using (var linkedCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(
                         _channelCancellationTokenSource.Token,
-                        timeoutCancellationTokenSource.Token)) 
+                        timeoutCancellationTokenSource.Token))
                 {
                     await Transport.SendAsync(
-                envelope,
+                        envelope,
                         linkedCancellationTokenSource.Token);
 
                 }
@@ -561,7 +548,7 @@ namespace Lime.Protocol.Network
         private async Task<T> ReceiveFromBufferAsync<T>(IAsyncQueue<T> buffer, CancellationToken cancellationToken) where T : Envelope
         {
             if (State != SessionState.Established)
-        {
+            {
                 throw new InvalidOperationException(string.Format("Cannot receive in the '{0}' session state", State));
             }
 
@@ -570,18 +557,20 @@ namespace Lime.Protocol.Network
                 await _consumeTransportTask;
             }
 
-            var combinedCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(
+            using (var linkedCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(
                 _channelCancellationTokenSource.Token,
-                cancellationToken);
+                cancellationToken))
+            {
 
-            try
-            {
-                return await buffer.ReceiveAsync(combinedCancellationTokenSource.Token).ConfigureAwait(false);
-            }
-            catch (OperationCanceledException)
-            {
-                if (_isConsumeTransportTaskFaulting) await _consumeTransportTask;
-                throw;
+                try
+                {
+                    return await buffer.ReceiveAsync(linkedCancellationTokenSource.Token).ConfigureAwait(false);
+                }
+                catch (OperationCanceledException)
+                {
+                    if (_isConsumeTransportTaskFaulting) await _consumeTransportTask;
+                    throw;
+                }
             }
         }
 
@@ -590,8 +579,7 @@ namespace Lime.Protocol.Network
         #region Protected Methods
 
         /// <summary>
-        /// Fills the envelope recipients
-        /// using the session information
+        /// Fills the envelope recipients using the session information.
         /// </summary>
         /// <param name="envelope"></param>
         protected virtual void FillEnvelope(Envelope envelope, bool isSending)
@@ -599,8 +587,8 @@ namespace Lime.Protocol.Network
             if (!isSending)
             {
                 // Receiving
-                Node from = RemoteNode;
-                Node to = LocalNode;
+                var from = RemoteNode;
+                var to = LocalNode;
 
                 if (from != null)
                 {
@@ -649,15 +637,19 @@ namespace Lime.Protocol.Network
         {
             if (disposing)
             {
-                _isDisposing = disposing;
+                _isDisposing = true;
 
                 if (!_channelCancellationTokenSource.IsCancellationRequested)
                 {
                     _channelCancellationTokenSource.Cancel();
                 }
-
+                                
                 _channelCancellationTokenSource.Dispose();
                 Transport.DisposeIfDisposable();
+                if (_consumeTransportTask?.IsCompleted ?? false)
+                {
+                    _consumeTransportTask?.Dispose();
+                }
             }
         }
 
