@@ -6,7 +6,7 @@
     public static class EnvelopeExtensions
     {
         /// <summary>
-        /// Gets a shallow copy of the current envelope.
+        /// Gets a shallow copy of the current <see cref="Envelope"/>.
         /// </summary>
         /// <typeparam name="TEnvelope"></typeparam>
         /// <returns></returns>
