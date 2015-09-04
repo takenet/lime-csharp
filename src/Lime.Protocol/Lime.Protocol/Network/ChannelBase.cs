@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Lime.Protocol.Util;
@@ -342,7 +343,7 @@ namespace Lime.Protocol.Network
                         {
                             await Transport.CloseAsync(cts.Token).ConfigureAwait(false);
                         }
-                        throw exception;
+                        ExceptionDispatchInfo.Capture(exception).Throw();
                     }
                 }
             }

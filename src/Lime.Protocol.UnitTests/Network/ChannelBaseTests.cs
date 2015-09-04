@@ -629,7 +629,7 @@ namespace Lime.Protocol.UnitTests.Network
             {
                 await receiveTask;
             }
-            catch (InvalidOperationException)
+            catch (InvalidOperationException ex)
             {
                 _transport.Verify();
 
