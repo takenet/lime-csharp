@@ -17,7 +17,7 @@ namespace Lime.Protocol.UnitTests.Serialization
 	[TestFixture]
 	public class EnvelopeSerializerTests
 	{
-		public EnvelopeSerializer GetTarget()
+		public virtual IEnvelopeSerializer GetTarget()
 		{
 			return new EnvelopeSerializer();
 		}
@@ -271,70 +271,70 @@ namespace Lime.Protocol.UnitTests.Serialization
 			Assert.IsFalse(resultString.ContainsJsonKey(Command.REASON_KEY));
 		}
 
-        [Test]
-        [Category("Serialize")]
-        public void Serialize_PresenceRequestCommand_ReturnsValidJsonString()
-        {
-            var target = GetTarget();
+		[Test]
+		[Category("Serialize")]
+		public void Serialize_PresenceRequestCommand_ReturnsValidJsonString()
+		{
+			var target = GetTarget();
 
-            var resource = Dummy.CreatePresence();
-            var command = Dummy.CreateCommand(resource);
-            command.Method = CommandMethod.Get;
+			var resource = Dummy.CreatePresence();
+			var command = Dummy.CreateCommand(resource);
+			command.Method = CommandMethod.Get;
 
-            var resultString = target.Serialize(command);
+			var resultString = target.Serialize(command);
 
-            Assert.IsTrue(resultString.HasValidJsonStackedBrackets());
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.ID_KEY, command.Id));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.FROM_KEY, command.From));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.TO_KEY, command.To));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Command.METHOD_KEY, command.Method));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Command.TYPE_KEY, command.Resource.GetMediaType()));
-            Assert.IsTrue(resultString.ContainsJsonKey(Command.RESOURCE_KEY));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Command.METHOD_KEY, command.Method));
+			Assert.IsTrue(resultString.HasValidJsonStackedBrackets());
+			Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.ID_KEY, command.Id));
+			Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.FROM_KEY, command.From));
+			Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.TO_KEY, command.To));
+			Assert.IsTrue(resultString.ContainsJsonProperty(Command.METHOD_KEY, command.Method));
+			Assert.IsTrue(resultString.ContainsJsonProperty(Command.TYPE_KEY, command.Resource.GetMediaType()));
+			Assert.IsTrue(resultString.ContainsJsonKey(Command.RESOURCE_KEY));
+			Assert.IsTrue(resultString.ContainsJsonProperty(Command.METHOD_KEY, command.Method));
 
-            Assert.IsTrue(resultString.ContainsJsonProperty(Presence.MESSAGE_KEY, resource.Message));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Presence.LAST_SEEN_KEY, resource.LastSeen));
-
-
-            Assert.IsFalse(resultString.ContainsJsonKey(Envelope.PP_KEY));
-            Assert.IsFalse(resultString.ContainsJsonKey(Command.METADATA_KEY));
-            Assert.IsFalse(resultString.ContainsJsonProperty(Command.STATUS_KEY, "pending"));
-            Assert.IsFalse(resultString.ContainsJsonKey(Command.REASON_KEY));
-        }
-
-        [Test]
-        [Category("Serialize")]
-        public void Serialize_PresenceRequestWithOffsetDateCommand_ReturnsValidJsonString()
-        {
-            var target = GetTarget();
-
-            var resource = Dummy.CreatePresence();
-            resource.LastSeen = DateTimeOffset.UtcNow.ToOffset(TimeSpan.FromHours(-5));
-            var command = Dummy.CreateCommand(resource);
-            command.Method = CommandMethod.Get;
-
-            var resultString = target.Serialize(command);
-
-            Assert.IsTrue(resultString.HasValidJsonStackedBrackets());
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.ID_KEY, command.Id));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.FROM_KEY, command.From));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.TO_KEY, command.To));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Command.METHOD_KEY, command.Method));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Command.TYPE_KEY, command.Resource.GetMediaType()));
-            Assert.IsTrue(resultString.ContainsJsonKey(Command.RESOURCE_KEY));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Command.METHOD_KEY, command.Method));
-
-            Assert.IsTrue(resultString.ContainsJsonProperty(Presence.MESSAGE_KEY, resource.Message));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Presence.LAST_SEEN_KEY, resource.LastSeen));
+			Assert.IsTrue(resultString.ContainsJsonProperty(Presence.MESSAGE_KEY, resource.Message));
+			Assert.IsTrue(resultString.ContainsJsonProperty(Presence.LAST_SEEN_KEY, resource.LastSeen));
 
 
-            Assert.IsFalse(resultString.ContainsJsonKey(Envelope.PP_KEY));
-            Assert.IsFalse(resultString.ContainsJsonKey(Command.METADATA_KEY));
-            Assert.IsFalse(resultString.ContainsJsonProperty(Command.STATUS_KEY, "pending"));
-            Assert.IsFalse(resultString.ContainsJsonKey(Command.REASON_KEY));
-        }
+			Assert.IsFalse(resultString.ContainsJsonKey(Envelope.PP_KEY));
+			Assert.IsFalse(resultString.ContainsJsonKey(Command.METADATA_KEY));
+			Assert.IsFalse(resultString.ContainsJsonProperty(Command.STATUS_KEY, "pending"));
+			Assert.IsFalse(resultString.ContainsJsonKey(Command.REASON_KEY));
+		}
 
-        [Test]
+		[Test]
+		[Category("Serialize")]
+		public void Serialize_PresenceRequestWithOffsetDateCommand_ReturnsValidJsonString()
+		{
+			var target = GetTarget();
+
+			var resource = Dummy.CreatePresence();
+			resource.LastSeen = DateTimeOffset.UtcNow.ToOffset(TimeSpan.FromHours(-5));
+			var command = Dummy.CreateCommand(resource);
+			command.Method = CommandMethod.Get;
+
+			var resultString = target.Serialize(command);
+
+			Assert.IsTrue(resultString.HasValidJsonStackedBrackets());
+			Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.ID_KEY, command.Id));
+			Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.FROM_KEY, command.From));
+			Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.TO_KEY, command.To));
+			Assert.IsTrue(resultString.ContainsJsonProperty(Command.METHOD_KEY, command.Method));
+			Assert.IsTrue(resultString.ContainsJsonProperty(Command.TYPE_KEY, command.Resource.GetMediaType()));
+			Assert.IsTrue(resultString.ContainsJsonKey(Command.RESOURCE_KEY));
+			Assert.IsTrue(resultString.ContainsJsonProperty(Command.METHOD_KEY, command.Method));
+
+			Assert.IsTrue(resultString.ContainsJsonProperty(Presence.MESSAGE_KEY, resource.Message));
+			Assert.IsTrue(resultString.ContainsJsonProperty(Presence.LAST_SEEN_KEY, resource.LastSeen));
+
+
+			Assert.IsFalse(resultString.ContainsJsonKey(Envelope.PP_KEY));
+			Assert.IsFalse(resultString.ContainsJsonKey(Command.METADATA_KEY));
+			Assert.IsFalse(resultString.ContainsJsonProperty(Command.STATUS_KEY, "pending"));
+			Assert.IsFalse(resultString.ContainsJsonKey(Command.REASON_KEY));
+		}
+
+		[Test]
 		[Category("Serialize")]
 		public void Serialize_FailurePingResponseCommand_ReturnsValidJsonString()
 		{
@@ -421,23 +421,23 @@ namespace Lime.Protocol.UnitTests.Serialization
 			
 			foreach (var keyValuePair in content)
 			{
-			    if (keyValuePair.Value.GetType().IsArray)
-			    {
-                    // TODO: Verify for array properties
-                }
-                else if (keyValuePair.Value is IDictionary<string, object>)
-                {
-                    // TODO: Verify for dictionary properties
-                }
-                else
-			    {
-                    Assert.IsTrue(resultString.ContainsJsonProperty(keyValuePair.Key, keyValuePair.Value));
-                }				
+				if (keyValuePair.Value.GetType().IsArray)
+				{
+					// TODO: Verify for array properties
+				}
+				else if (keyValuePair.Value is IDictionary<string, object>)
+				{
+					// TODO: Verify for dictionary properties
+				}
+				else
+				{
+					Assert.IsTrue(resultString.ContainsJsonProperty(keyValuePair.Key, keyValuePair.Value));
+				}				
 			}            
 			
 			Assert.IsTrue(resultString.ContainsJsonProperty(metadataKey1, metadataValue1));
 			Assert.IsTrue(resultString.ContainsJsonProperty(metadataKey2, metadataValue2));
-        }
+		}
 
 		[Test]
 		[Category("Serialize")]
@@ -708,14 +708,14 @@ namespace Lime.Protocol.UnitTests.Serialization
 			var from = Dummy.CreateNode();
 			var to = Dummy.CreateNode();
 			var resourceUri = new LimeUri("/account");
-            var fullName = Dummy.CreateRandomString(25);
-            var photoUri = Dummy.CreateUri();
+			var fullName = Dummy.CreateRandomString(25);
+			var photoUri = Dummy.CreateUri();
 
 			string json = string.Format(
 				"{{\"uri\":\"{0}\",\"type\":\"application/vnd.lime.account+json\",\"resource\":{{\"fullName\": \"{1}\", \"photoUri\": \"{2}\"}},\"method\":\"{3}\",\"id\":\"{4}\",\"from\":\"{5}\",\"to\":\"{6}\"}}",
 				resourceUri,
-                fullName,
-                photoUri,
+				fullName,
+				photoUri,
 				method.ToString().ToCamelCase(),
 				id,
 				from,
@@ -731,71 +731,71 @@ namespace Lime.Protocol.UnitTests.Serialization
 			command.Metadata.ShouldBe(null);
 
 			command.Method.ShouldBe(method);
-            command.Uri.ShouldBe(resourceUri);
+			command.Uri.ShouldBe(resourceUri);
 
 			var account = command.Resource.ShouldBeOfType<Account>();
-            account.PhotoUri.ShouldBe(photoUri);
+			account.PhotoUri.ShouldBe(photoUri);
 		}
 
 
-        [Test]
-        [Category("Deserialize")]
-        public void Deserialize_PresenceRequestCommand_ReturnsValidInstance()
-        {
-            var target = GetTarget();
+		[Test]
+		[Category("Deserialize")]
+		public void Deserialize_PresenceRequestCommand_ReturnsValidInstance()
+		{
+			var target = GetTarget();
 
-            var method = CommandMethod.Get;
-            var id = Guid.NewGuid();
-            var from = Dummy.CreateNode();
-            var to = Dummy.CreateNode();
-            var resourceUri = new LimeUri("/presence");
-            var status = PresenceStatus.Available;
-            var message = Dummy.CreateRandomString(100);
-            var routingRule = RoutingRule.IdentityByDistance;
-            var lastSeen = DateTimeOffset.UtcNow;
-            var priority = Dummy.CreateRandomInt(100);
-            
-            string json = string.Format(
-                "{{\"uri\":\"{0}\",\"type\":\"application/vnd.lime.presence+json\",\"resource\":{{\"status\": \"{1}\",\"message\":\"{2}\",\"routingRule\":\"{3}\",\"lastSeen\":\"{4}\",\"priority\":{5}}},\"method\":\"{6}\",\"id\":\"{7}\",\"from\":\"{8}\",\"to\":\"{9}\"}}",
-                resourceUri,
-                status.ToString().ToCamelCase(),
-                message,
-                routingRule.ToString().ToCamelCase(),
-                lastSeen.ToUniversalTime().ToString(TextJsonWriter.DATE_FORMAT, CultureInfo.InvariantCulture),
-                priority,
-                method.ToString().ToCamelCase(),
-                id,
-                from,
-                to);
+			var method = CommandMethod.Get;
+			var id = Guid.NewGuid();
+			var from = Dummy.CreateNode();
+			var to = Dummy.CreateNode();
+			var resourceUri = new LimeUri("/presence");
+			var status = PresenceStatus.Available;
+			var message = Dummy.CreateRandomString(100);
+			var routingRule = RoutingRule.IdentityByDistance;
+			var lastSeen = DateTimeOffset.UtcNow;
+			var priority = Dummy.CreateRandomInt(100);
+			
+			string json = string.Format(
+				"{{\"uri\":\"{0}\",\"type\":\"application/vnd.lime.presence+json\",\"resource\":{{\"status\": \"{1}\",\"message\":\"{2}\",\"routingRule\":\"{3}\",\"lastSeen\":\"{4}\",\"priority\":{5}}},\"method\":\"{6}\",\"id\":\"{7}\",\"from\":\"{8}\",\"to\":\"{9}\"}}",
+				resourceUri,
+				status.ToString().ToCamelCase(),
+				message,
+				routingRule.ToString().ToCamelCase(),
+				lastSeen.ToUniversalTime().ToString(TextJsonWriter.DATE_FORMAT, CultureInfo.InvariantCulture),
+				priority,
+				method.ToString().ToCamelCase(),
+				id,
+				from,
+				to);
 
-            var envelope = target.Deserialize(json);
+			var envelope = target.Deserialize(json);
 
-            var command = envelope.ShouldBeOfType<Command>();
-            command.Id.ShouldBe(id);
-            command.From.ShouldBe(from);
-            command.To.ShouldBe(to);
-            command.Pp.ShouldBe(null);
-            command.Metadata.ShouldBe(null);
+			var command = envelope.ShouldBeOfType<Command>();
+			command.Id.ShouldBe(id);
+			command.From.ShouldBe(from);
+			command.To.ShouldBe(to);
+			command.Pp.ShouldBe(null);
+			command.Metadata.ShouldBe(null);
 
-            command.Method.ShouldBe(method);
-            command.Uri.ShouldBe(resourceUri);
+			command.Method.ShouldBe(method);
+			command.Uri.ShouldBe(resourceUri);
 
-            var presence = command.Resource.ShouldBeOfType<Presence>();
-            presence.Status.ShouldBe(status);
-            presence.Message.ShouldBe(message);
-            presence.RoutingRule.ShouldBe(routingRule);
-            presence.LastSeen.ShouldNotBe(null);            
-            presence.LastSeen.Value.Year.ShouldBe(lastSeen.Year);
-            presence.LastSeen.Value.Month.ShouldBe(lastSeen.Month);
-            presence.LastSeen.Value.Day.ShouldBe(lastSeen.Day);
-            presence.LastSeen.Value.Hour.ShouldBe(lastSeen.Hour);
-            presence.LastSeen.Value.Minute.ShouldBe(lastSeen.Minute);
-            presence.LastSeen.Value.Second.ShouldBe(lastSeen.Second);
-            presence.LastSeen.Value.Millisecond.ShouldBe(lastSeen.Millisecond);
-            presence.Priority.ShouldBe(priority);
-        }
+			var presence = command.Resource.ShouldBeOfType<Presence>();
+			presence.Status.ShouldBe(status);
+			presence.Message.ShouldBe(message);
+			presence.RoutingRule.ShouldBe(routingRule);
+			presence.LastSeen.ShouldNotBe(null);            
+			presence.LastSeen.Value.Year.ShouldBe(lastSeen.Year);
+			presence.LastSeen.Value.Month.ShouldBe(lastSeen.Month);
+			presence.LastSeen.Value.Day.ShouldBe(lastSeen.Day);
+			presence.LastSeen.Value.Hour.ShouldBe(lastSeen.Hour);
+			presence.LastSeen.Value.Minute.ShouldBe(lastSeen.Minute);
+			presence.LastSeen.Value.Second.ShouldBe(lastSeen.Second);
+			presence.LastSeen.Value.Millisecond.ShouldBe(lastSeen.Millisecond);
+			presence.Priority.ShouldBe(priority);
+		}
 
-        [Test]
+		[Test]
 		[Category("Deserialize")]
 		public void Deserialize_AbsoluteUriRequestCommand_ReturnsValidInstance()
 		{
@@ -1201,42 +1201,42 @@ namespace Lime.Protocol.UnitTests.Serialization
 
 			var propertyName1 = Dummy.CreateRandomString(10);
 			var propertyName2 = Dummy.CreateRandomString(10);
-            var propertyName3 = Dummy.CreateRandomString(10);
-            var propertyName4 = Dummy.CreateRandomString(10);
+			var propertyName3 = Dummy.CreateRandomString(10);
+			var propertyName4 = Dummy.CreateRandomString(10);
 
-            var arrayPropertyName1 = Dummy.CreateRandomString(10);
-            var arrayPropertyName2 = Dummy.CreateRandomString(10);
-            var arrayPropertyName3 = Dummy.CreateRandomString(10);
-            var arrayPropertyName4 = Dummy.CreateRandomString(10);
-            var arrayPropertyValue1 = Dummy.CreateRandomString(10);            
-            var arrayPropertyValue2 = (long)Dummy.CreateRandomInt(1000);
-            var arrayPropertyValue3 = Dummy.CreateRandomString(10);
-		    var arrayPropertyValue4 = false;
+			var arrayPropertyName1 = Dummy.CreateRandomString(10);
+			var arrayPropertyName2 = Dummy.CreateRandomString(10);
+			var arrayPropertyName3 = Dummy.CreateRandomString(10);
+			var arrayPropertyName4 = Dummy.CreateRandomString(10);
+			var arrayPropertyValue1 = Dummy.CreateRandomString(10);            
+			var arrayPropertyValue2 = (long)Dummy.CreateRandomInt(1000);
+			var arrayPropertyValue3 = Dummy.CreateRandomString(10);
+			var arrayPropertyValue4 = false;
 
-            var propertyValue1 = Dummy.CreateRandomString(10);
+			var propertyValue1 = Dummy.CreateRandomString(10);
 			var propertyValue2 = (long)Dummy.CreateRandomInt(1000);
-            var propertyValue4 = DateTime.Now;
+			var propertyValue4 = DateTime.Now;
 
 
-            string json = string.Format(
-                "{{\"type\":\"{0}\",\"content\":{{\"{1}\":\"{2}\",\"{3}\":{4},\"{5}\":[{{\"{6}\":\"{7}\",\"{8}\":{9}}},{{\"{10}\":\"{11}\",\"{12}\":{13}}}],\"{14}\":\"{15}\"}},\"id\":\"{16}\",\"from\":\"{17}\",\"pp\":\"{18}\",\"to\":\"{19}\",\"metadata\":{{\"{20}\":\"{21}\",\"{22}\":\"{23}\"}}}}",
+			string json = string.Format(
+				"{{\"type\":\"{0}\",\"content\":{{\"{1}\":\"{2}\",\"{3}\":{4},\"{5}\":[{{\"{6}\":\"{7}\",\"{8}\":{9}}},{{\"{10}\":\"{11}\",\"{12}\":{13}}}],\"{14}\":\"{15}\"}},\"id\":\"{16}\",\"from\":\"{17}\",\"pp\":\"{18}\",\"to\":\"{19}\",\"metadata\":{{\"{20}\":\"{21}\",\"{22}\":\"{23}\"}}}}",
 				type,
 				propertyName1,
 				propertyValue1,
 				propertyName2,
 				propertyValue2,
-                propertyName3,
-                arrayPropertyName1,
-                arrayPropertyValue1,
-                arrayPropertyName2,
-                arrayPropertyValue2,
-                arrayPropertyName3,
-                arrayPropertyValue3,
-                arrayPropertyName4,
-                arrayPropertyValue4,
-                propertyName4,
-                propertyValue4.ToUniversalTime().ToString(TextJsonWriter.DATE_FORMAT, CultureInfo.InvariantCulture),
-                id,
+				propertyName3,
+				arrayPropertyName1,
+				arrayPropertyValue1,
+				arrayPropertyName2,
+				arrayPropertyValue2,
+				arrayPropertyName3,
+				arrayPropertyValue3,
+				arrayPropertyName4,
+				arrayPropertyValue4,
+				propertyName4,
+				propertyValue4.ToUniversalTime().ToString(TextJsonWriter.DATE_FORMAT, CultureInfo.InvariantCulture),
+				id,
 				from,
 				pp,
 				to,
@@ -1272,43 +1272,43 @@ namespace Lime.Protocol.UnitTests.Serialization
 			Assert.AreEqual(content[propertyName1], propertyValue1);
 			Assert.IsTrue(content.ContainsKey(propertyName2));            
 			Assert.AreEqual(content[propertyName2], propertyValue2);            
-            Assert.IsTrue(content.ContainsKey(propertyName3));
-            Assert.IsTrue(content[propertyName3] is IList<object>);
+			Assert.IsTrue(content.ContainsKey(propertyName3));
+			Assert.IsTrue(content[propertyName3] is IList<object>);
 
-		    var list = (IList<object>) content[propertyName3];
-            Assert.AreEqual(2, list.Count);
+			var list = (IList<object>) content[propertyName3];
+			Assert.AreEqual(2, list.Count);
 
-		    for (int i = 0; i < list.Count; i++)
-		    {
-		        var item = (IDictionary<string, object>)list[i];
-		        if (i == 0)
-		        {
-                    Assert.IsTrue(item.ContainsKey(arrayPropertyName1));
-                    Assert.AreEqual(arrayPropertyValue1, item[arrayPropertyName1]);
-                    Assert.IsTrue(item.ContainsKey(arrayPropertyName2));
-                    Assert.AreEqual(arrayPropertyValue2, item[arrayPropertyName2]);
-                }
-                else if (i == 1)
-                {
-                    Assert.IsTrue(item.ContainsKey(arrayPropertyName3));
-                    Assert.AreEqual(arrayPropertyValue3, item[arrayPropertyName3]);
-                    Assert.IsTrue(item.ContainsKey(arrayPropertyName4));
-                    Assert.AreEqual(arrayPropertyValue4, item[arrayPropertyName4]);
-                }
-            }
+			for (int i = 0; i < list.Count; i++)
+			{
+				var item = (IDictionary<string, object>)list[i];
+				if (i == 0)
+				{
+					Assert.IsTrue(item.ContainsKey(arrayPropertyName1));
+					Assert.AreEqual(arrayPropertyValue1, item[arrayPropertyName1]);
+					Assert.IsTrue(item.ContainsKey(arrayPropertyName2));
+					Assert.AreEqual(arrayPropertyValue2, item[arrayPropertyName2]);
+				}
+				else if (i == 1)
+				{
+					Assert.IsTrue(item.ContainsKey(arrayPropertyName3));
+					Assert.AreEqual(arrayPropertyValue3, item[arrayPropertyName3]);
+					Assert.IsTrue(item.ContainsKey(arrayPropertyName4));
+					Assert.AreEqual(arrayPropertyValue4, item[arrayPropertyName4]);
+				}
+			}
 
-            Assert.IsTrue(content.ContainsKey(propertyName4));
+			Assert.IsTrue(content.ContainsKey(propertyName4));
 
-		    DateTime dateTime;
-		    DateTime.TryParse((string) content[propertyName4], out dateTime).ShouldBe(true);
-            dateTime.Year.ShouldBe(propertyValue4.Year);
-            dateTime.Month.ShouldBe(propertyValue4.Month);
-            dateTime.Day.ShouldBe(propertyValue4.Day);
-            dateTime.Hour.ShouldBe(propertyValue4.Hour);
-            dateTime.Minute.ShouldBe(propertyValue4.Minute);
-            dateTime.Second.ShouldBe(propertyValue4.Second);
-            dateTime.Millisecond.ShouldBe(propertyValue4.Millisecond);
-        }
+			DateTime dateTime;
+			DateTime.TryParse((string) content[propertyName4], out dateTime).ShouldBe(true);
+			dateTime.Year.ShouldBe(propertyValue4.Year);
+			dateTime.Month.ShouldBe(propertyValue4.Month);
+			dateTime.Day.ShouldBe(propertyValue4.Day);
+			dateTime.Hour.ShouldBe(propertyValue4.Hour);
+			dateTime.Minute.ShouldBe(propertyValue4.Minute);
+			dateTime.Second.ShouldBe(propertyValue4.Second);
+			dateTime.Millisecond.ShouldBe(propertyValue4.Millisecond);
+		}
 
 		[Test]
 		[Category("Deserialize")]
