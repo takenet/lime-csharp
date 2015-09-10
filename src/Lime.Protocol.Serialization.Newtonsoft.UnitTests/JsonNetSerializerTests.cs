@@ -4,9 +4,9 @@ using NUnit.Framework;
 namespace Lime.Protocol.Serialization.Newtonsoft.UnitTests
 {
     [TestFixture]
-    public class JsonNetSerializerTests : EnvelopeSerializerTests
+    public class JsonNetSerializerTests : EnvelopeSerializerBaseTests
     {
-        public override IEnvelopeSerializer GetTarget()
+        protected override IEnvelopeSerializer GetTarget()
         {
             return new JsonNetSerializer();
         }
