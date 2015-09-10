@@ -536,7 +536,8 @@ namespace Lime.Transport.Tcp.UnitTests
 
         private static byte[][] SplitBuffer(byte[] messageBuffer)
         {
-            var bufferParts = Dummy.CreateRandomInt(1000) + 1;
+            var bufferParts = Dummy.CreateRandomInt(100) + 1;
+            if (bufferParts >= messageBuffer.Length) bufferParts = messageBuffer.Length - 1;
             var bufferPartSize = messageBuffer.Length / bufferParts;
 
             byte[][] messageBufferParts = new byte[bufferParts][];
