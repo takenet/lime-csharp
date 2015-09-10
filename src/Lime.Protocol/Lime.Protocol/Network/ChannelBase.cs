@@ -302,6 +302,7 @@ namespace Lime.Protocol.Network
                     try
                     {
                         var envelope = await ReceiveAsync(_channelCancellationTokenSource.Token).ConfigureAwait(false);
+                        if (envelope == null) continue;
 
                         if (_autoReplyPings &&
                             envelope is Command &&
@@ -529,7 +530,8 @@ namespace Lime.Protocol.Network
         {
             var envelope = await Transport.ReceiveAsync(cancellationToken);
 
-            if (_fillEnvelopeRecipients)
+            if (envelope != null &&
+                _fillEnvelopeRecipients)
             {
                 FillEnvelope(envelope, false);
             }

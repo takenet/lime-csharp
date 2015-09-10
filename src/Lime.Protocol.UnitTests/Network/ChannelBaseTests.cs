@@ -60,6 +60,11 @@ namespace Lime.Protocol.UnitTests.Network
         [Category("SendMessageAsync")]
         public async Task SendMessageAsync_EstablishedState_CallsTransport()
         {
+            var tcs = new TaskCompletionSource<Envelope>();
+            _transport
+                .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(tcs.Task);
+
             var target = GetTarget(SessionState.Established);
 
             var content = Dummy.CreateTextContent();
@@ -83,6 +88,11 @@ namespace Lime.Protocol.UnitTests.Network
         [ExpectedException(typeof(ArgumentNullException))]
         public async Task SendMessageAsync_NullMessage_ThrowsArgumentNullException()
         {
+            var tcs = new TaskCompletionSource<Envelope>();
+            _transport
+                .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(tcs.Task);
+
             var target = GetTarget(SessionState.Established);
 
             Message message = null;
@@ -259,6 +269,11 @@ namespace Lime.Protocol.UnitTests.Network
         [Category("SendCommandAsync")]
         public async Task SendCommandAsync_EstablishedState_CallsTransport()
         {
+            var tcs = new TaskCompletionSource<Envelope>();
+            _transport
+                .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(tcs.Task);
+
             var target = GetTarget(SessionState.Established);
 
             var resource = Dummy.CreatePing();
@@ -281,6 +296,11 @@ namespace Lime.Protocol.UnitTests.Network
         [ExpectedException(typeof(ArgumentNullException))]
         public async Task SendCommandAsync_NullCommand_ThrowsArgumentNullException()
         {
+            var tcs = new TaskCompletionSource<Envelope>();
+            _transport
+                .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(tcs.Task);
+
             var target = GetTarget(SessionState.Established);
 
             Command command = null;
@@ -382,6 +402,11 @@ namespace Lime.Protocol.UnitTests.Network
         [Category("SendNotificationAsync")]
         public async Task SendNotificationAsync_EstablishedState_CallsTransport()
         {
+            var tcs = new TaskCompletionSource<Envelope>();
+            _transport
+                .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(tcs.Task);
+
             var target = GetTarget(SessionState.Established);
 
             var notification = Dummy.CreateNotification(Event.Received);
@@ -403,6 +428,11 @@ namespace Lime.Protocol.UnitTests.Network
         [ExpectedException(typeof(ArgumentNullException))]
         public async Task SendNotificationAsync_NullNotification_ThrowsArgumentNullException()
         {
+            var tcs = new TaskCompletionSource<Envelope>();
+            _transport
+                .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(tcs.Task);
+
             var target = GetTarget(SessionState.Established);
 
             Notification notification = null;
@@ -503,6 +533,11 @@ namespace Lime.Protocol.UnitTests.Network
         [Category("SendSessionAsync")]
         public async Task SendSessionAsync_EstablishedState_CallsTransport()
         {
+            var tcs = new TaskCompletionSource<Envelope>();
+            _transport
+                .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(tcs.Task);
+
             var target = (ISessionChannel)GetTarget(SessionState.Established);
 
             var session = Dummy.CreateSession();
@@ -524,6 +559,11 @@ namespace Lime.Protocol.UnitTests.Network
         [ExpectedException(typeof(ArgumentNullException))]
         public async Task SendSessionAsync_NullSession_ThrowsArgumentNullException()
         {
+            var tcs = new TaskCompletionSource<Envelope>();
+            _transport
+                .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(tcs.Task);
+
             var target = (ISessionChannel)GetTarget(SessionState.Established);
 
             Session session = null;

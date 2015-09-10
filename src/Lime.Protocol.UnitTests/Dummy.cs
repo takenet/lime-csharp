@@ -159,7 +159,7 @@ namespace Lime.Protocol.UnitTests
 
         public static CancellationToken CreateCancellationToken()
         {
-            return CancellationToken.None;
+            return CreateCancellationToken(TimeSpan.FromSeconds(30));
         }
 
         public static CancellationTokenSource CreateCancellationTokenSource()
