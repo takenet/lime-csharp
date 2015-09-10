@@ -1212,7 +1212,7 @@ namespace Lime.Protocol.UnitTests.Serialization
 
 			var propertyValue1 = Dummy.CreateRandomString(10);
 			var propertyValue2 = (long)Dummy.CreateRandomInt(1000);
-			var propertyValue4 = DateTime.Now;
+			var propertyValue4 = DateTime.UtcNow;
 
 
 			string json = string.Format(
@@ -1230,7 +1230,7 @@ namespace Lime.Protocol.UnitTests.Serialization
 				arrayPropertyName3,
 				arrayPropertyValue3,
 				arrayPropertyName4,
-				arrayPropertyValue4,
+				arrayPropertyValue4.ToString().ToLower(),
 				propertyName4,
 				propertyValue4.ToUniversalTime().ToString(TextJsonWriter.DATE_FORMAT, CultureInfo.InvariantCulture),
 				id,
@@ -1297,7 +1297,14 @@ namespace Lime.Protocol.UnitTests.Serialization
 			Assert.IsTrue(content.ContainsKey(propertyName4));
 
 			DateTime dateTime;
-			DateTime.TryParse((string) content[propertyName4], out dateTime).ShouldBe(true);
+			if (content[propertyName4] is DateTime)
+			{
+				dateTime = (DateTime)content[propertyName4];
+			}
+            else
+			{
+				DateTime.TryParse((string)content[propertyName4], null, DateTimeStyles.AdjustToUniversal, out dateTime).ShouldBe(true);
+			}
 			dateTime.Year.ShouldBe(propertyValue4.Year);
 			dateTime.Month.ShouldBe(propertyValue4.Month);
 			dateTime.Day.ShouldBe(propertyValue4.Day);

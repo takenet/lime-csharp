@@ -9,14 +9,6 @@ namespace Lime.Protocol.Serialization.Newtonsoft.Converters
 {
     class MessageJsonConverter : JsonConverter
     {
-        public override bool CanWrite
-        {
-            get
-            {
-                return true;
-            }
-        }
-
         public override bool CanConvert(Type objectType)
         {
             return objectType == typeof (Message);
@@ -64,7 +56,7 @@ namespace Lime.Protocol.Serialization.Newtonsoft.Converters
                             var contentJsonObject = jObject[Message.CONTENT_KEY] as IDictionary<string, JToken>;
                             if (contentJsonObject != null)
                             {
-                                var contentDictionary = contentJsonObject.ToDictionary(k => k.Key, v => ((JValue)v.Value).Value);
+                                var contentDictionary = contentJsonObject.ToDictionary(k => k.Key, v => GetTokenValue(v.Value));
                                 message.Content = new JsonDocument(contentDictionary, contentMediaType);
                             }
                             else
@@ -89,41 +81,62 @@ namespace Lime.Protocol.Serialization.Newtonsoft.Converters
             return target;
         }
 
+        private object GetTokenValue(JToken token)
+        {
+            if (token is JValue)
+            {
+                return ((JValue)token).Value;
+            }
+
+            if (token is JArray)
+            {
+                return ((JArray)token)
+                            .Select(t => GetTokenValue(t))
+                            .ToArray();
+            }
+
+            if (token is JObject)
+            {
+                return ((IDictionary<string, JToken>)token).ToDictionary(k => k.Key, v => GetTokenValue(v.Value));
+            }
+
+            throw new ArgumentException("Unknown token type");
+        }
+
         public override void WriteJson(global::Newtonsoft.Json.JsonWriter writer, object value, global::Newtonsoft.Json.JsonSerializer serializer)
         {
             var message = (Message)value;
-            if (message.Type.IsJson)
-            {
-                if (message.Content is JsonDocument)
-                {
-                    throw new NotSupportedException("The content type is not supported by this serializer");
-                }
+            writer.WriteStartObject();
 
-                serializer.Serialize(writer, value);
+            writer.WriteValueIfNotDefault(Envelope.ID_KEY, message.Id);
+            writer.WriteValueIfNotDefaultAsString(Envelope.FROM_KEY, message.From);
+            writer.WriteValueIfNotDefaultAsString(Envelope.TO_KEY, message.To);
+            writer.WriteValueIfNotDefaultAsString(Envelope.PP_KEY, message.Pp);
+
+            writer.WritePropertyName(Message.TYPE_KEY);
+            writer.WriteValue(message.Type.ToString());
+
+            writer.WritePropertyName(Message.CONTENT_KEY);
+            if (message.Content is JsonDocument)
+            {
+                serializer.Serialize(writer, message.Content);
             }
             else
             {
-                writer.WriteStartObject();
-                writer.WriteValueIfNotDefault(Envelope.ID_KEY, message.Id);
-                writer.WriteValueIfNotDefaultAsString(Envelope.FROM_KEY, message.From);
-                writer.WriteValueIfNotDefaultAsString(Envelope.TO_KEY, message.To);
-                writer.WriteValueIfNotDefaultAsString(Envelope.PP_KEY, message.Pp);
-                writer.WritePropertyName(Message.TYPE_KEY);
-                writer.WriteValue(message.Type.ToString());
-                writer.WritePropertyName(Message.CONTENT_KEY);
                 writer.WriteValue(message.Content.ToString());
-                if (message.Metadata != null)
-                {
-                    writer.WritePropertyName(Message.METADATA_KEY);
-                    writer.WriteStartObject();
-                    foreach (var item in message.Metadata)
-                    {
-                        writer.WritePropertyName(item.Key);
-                        writer.WriteValue(item.Value);
-                    }
+            }
 
-                    writer.WriteEndObject();
+            if (message.Metadata != null)
+            {
+                writer.WritePropertyName(Message.METADATA_KEY);
+                writer.WriteStartObject();
+                foreach (var item in message.Metadata)
+                {
+                    writer.WritePropertyName(item.Key);
+                    writer.WriteValue(item.Value);
                 }
+
+                writer.WriteEndObject();
             }
         }
     }
