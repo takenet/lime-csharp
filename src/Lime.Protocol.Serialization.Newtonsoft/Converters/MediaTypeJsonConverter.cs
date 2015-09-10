@@ -3,37 +3,11 @@ using System;
 
 namespace Lime.Protocol.Serialization.Newtonsoft.Converters
 {
-    class MediaTypeJsonConverter : JsonConverter
+    class MediaTypeJsonConverter : StringBasedTypeJsonConverter<MediaType>
     {
-        public override bool CanConvert(Type objectType)
+        protected override MediaType CreateInstance(string tokenValue)
         {
-            return objectType == typeof (MediaType);
-        }
-
-        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, global::Newtonsoft.Json.JsonSerializer serializer)
-        {
-            if (reader.TokenType == JsonToken.String)
-            {
-                var tokenValue = reader.Value.ToString();
-                return MediaType.Parse(tokenValue);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        public override void WriteJson(global::Newtonsoft.Json.JsonWriter writer, object value, global::Newtonsoft.Json.JsonSerializer serializer)
-        {
-            if (value != null)
-            {
-                MediaType identity = (MediaType)value;
-                writer.WriteValue(identity.ToString());
-            }
-            else
-            {
-                writer.WriteNull();
-            }
+            return MediaType.Parse(tokenValue);
         }
     }
 }

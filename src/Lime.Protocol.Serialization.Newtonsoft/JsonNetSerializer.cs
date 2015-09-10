@@ -1,8 +1,9 @@
-﻿using Newtonsoft.Json;
+﻿using Lime.Protocol.Serialization.Newtonsoft.Converters;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
 using System;
-using Lime.Protocol.Serialization.Newtonsoft.Converters;
+using System.Globalization;
 
 namespace Lime.Protocol.Serialization.Newtonsoft
 {
@@ -10,20 +11,25 @@ namespace Lime.Protocol.Serialization.Newtonsoft
     {
         static JsonNetSerializer()
         {
-            JsonConvert.DefaultSettings = () => JsonNetSerializer.Settings;
+            JsonConvert.DefaultSettings = () => Settings;
+            _serializer = global::Newtonsoft.Json.JsonSerializer.Create(JsonNetSerializer.Settings);
         }
 
         private static global::Newtonsoft.Json.JsonSerializerSettings _settings;
+        private static global::Newtonsoft.Json.JsonSerializer _serializer;
+
         public static global::Newtonsoft.Json.JsonSerializerSettings Settings
         {
             get
             {
                 if (_settings == null)
                 {
-                    _settings = new global::Newtonsoft.Json.JsonSerializerSettings();
-                    _settings.NullValueHandling = NullValueHandling.Ignore;
-                    _settings.ReferenceLoopHandling = ReferenceLoopHandling.Serialize;
-                    _settings.Converters.Add(new StringEnumConverter());
+                    _settings = new global::Newtonsoft.Json.JsonSerializerSettings
+                    {
+                        NullValueHandling = NullValueHandling.Ignore,
+                        ReferenceLoopHandling = ReferenceLoopHandling.Serialize
+                    };
+                    _settings.Converters.Add(new StringEnumConverter { CamelCaseText = false });
                     _settings.Converters.Add(new IdentityJsonConverter());
                     _settings.Converters.Add(new NodeJsonConverter());
                     _settings.Converters.Add(new LimeUriJsonConverter());
@@ -33,6 +39,13 @@ namespace Lime.Protocol.Serialization.Newtonsoft
                     _settings.Converters.Add(new MessageJsonConverter());
                     _settings.Converters.Add(new CommandJsonConverter());
                     _settings.Converters.Add(new DocumentJsonConverter());
+                    _settings.Converters.Add(new DocumentCollectionJsonConverter());
+                    _settings.Converters.Add(new IsoDateTimeConverter
+                    {
+                        DateTimeFormat = "yyyy-MM-ddTHH:mm:ss.fffZ",
+                        DateTimeStyles = DateTimeStyles.AdjustToUniversal
+                    });
+
                 }
 
                 return _settings;
@@ -61,22 +74,23 @@ namespace Lime.Protocol.Serialization.Newtonsoft
         /// <exception cref = "System.ArgumentException">JSON string is not a valid envelope</exception>
         public Envelope Deserialize(string envelopeString)
         {
-            var jsonObject = (JObject)JsonConvert.DeserializeObject(envelopeString, Settings);
-            if (jsonObject.Property("content") != null)
+            var jObject = JObject.Parse(envelopeString);
+
+            if (jObject.Property("content") != null)
             {
-                return jsonObject.ToObject<Message>();
+                return jObject.ToObject<Message>(_serializer);
             }
-            else if (jsonObject.Property("event") != null)
+            else if (jObject.Property("event") != null)
             {
-                return jsonObject.ToObject<Notification>();
+                return jObject.ToObject<Notification>(_serializer);
             }
-            else if (jsonObject.Property("method") != null)
+            else if (jObject.Property("method") != null)
             {
-                return jsonObject.ToObject<Command>();
+                return jObject.ToObject<Command>(_serializer);
             }
-            else if (jsonObject.Property("state") != null)
+            else if (jObject.Property("state") != null)
             {
-                return jsonObject.ToObject<Session>();
+                return jObject.ToObject<Session>(_serializer);
             }
             else
             {

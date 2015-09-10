@@ -58,8 +58,7 @@
     <Compile Include="Converters\DocumentCollectionJsonConverter.cs" />
     <Compile Include="Converters\IdentityJsonConverter.cs" />
     <Compile Include="Converters\DocumentJsonConverter.cs" />
-    <Compile Include="Converters\StringBasedTypesJsonConverter.cs" />
-    <Compile Include="JsonNetEnvelopeSerializer.cs" />
+    <Compile Include="Converters\StringBasedTypeJsonConverter.cs" />
     <Compile Include="JsonNetSerializer.cs" />
     <Compile Include="Extensions\JsonWriterExtensions.cs" />
     <Compile Include="Converters\LimeUriJsonConverter.cs" />
