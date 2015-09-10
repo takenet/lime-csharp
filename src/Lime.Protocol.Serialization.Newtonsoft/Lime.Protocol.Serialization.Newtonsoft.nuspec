@@ -9,7 +9,7 @@
     <projectUrl>http://limeprotocol.org</projectUrl>
     <licenseUrl>https://raw.githubusercontent.com/takenet/lime/master/LICENSE</licenseUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
-    <description>Common content types and resource for LIME messaging applications.</description>
+    <description>LIME envelope serializer using Json.Net</description>
     <copyright>Copyright ©  2014 Curupira S/A</copyright>
     <tags>lime</tags>
     <dependencies>
