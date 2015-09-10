@@ -125,7 +125,7 @@ namespace Lime.Transport.Tcp
 
 			_tcpClient = tcpClient;
 
-			_buffer = new byte[bufferSize];
+            _buffer = new byte[bufferSize];
 			_bufferCurPos = 0;
 
 			if (envelopeSerializer == null)
@@ -279,12 +279,21 @@ namespace Lime.Transport.Tcp
                         // The NetworkStream ReceiveAsync method doesn't supports cancellation
                         // http://stackoverflow.com/questions/21468137/async-network-operations-never-finish
                         // http://referencesource.microsoft.com/#mscorlib/system/io/stream.cs,421
-						_bufferCurPos += await _stream
+						var read = await _stream
                             .ReadAsync(_buffer, _bufferCurPos, _buffer.Length - _bufferCurPos, cancellationToken)
                             .WithCancellation(cancellationToken)
                             .ConfigureAwait(false);
 
-						if (_bufferCurPos >= _buffer.Length)
+                        // https://msdn.microsoft.com/en-us/library/hh193669(v=vs.110).aspx
+                        if (read == 0)
+					    {
+                            await CloseAsync(CancellationToken.None).ConfigureAwait(false);
+					        break;
+					    }
+                        
+					    _bufferCurPos += read;
+
+                        if (_bufferCurPos >= _buffer.Length)
 						{
 							await CloseAsync(CancellationToken.None).ConfigureAwait(false);
 							throw new BufferOverflowException("Maximum buffer size reached");
