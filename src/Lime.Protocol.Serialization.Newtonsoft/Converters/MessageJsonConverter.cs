@@ -64,7 +64,7 @@ namespace Lime.Protocol.Serialization.Newtonsoft.Converters
                             var contentJsonObject = jObject[Message.CONTENT_KEY] as IDictionary<string, JToken>;
                             if (contentJsonObject != null)
                             {
-                                var contentDictionary = contentJsonObject.ToDictionary(k => k.Key, v => (object)v.Value.ToString());
+                                var contentDictionary = contentJsonObject.ToDictionary(k => k.Key, v => ((JValue)v.Value).Value);
                                 message.Content = new JsonDocument(contentDictionary, contentMediaType);
                             }
                             else

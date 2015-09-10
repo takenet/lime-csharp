@@ -14,6 +14,7 @@ using System.Text;
 
 namespace Lime.Protocol.UnitTests.Serialization
 {
+	[TestFixture]
 	public abstract class EnvelopeSerializerBaseTests
 	{
 		protected abstract IEnvelopeSerializer GetTarget();

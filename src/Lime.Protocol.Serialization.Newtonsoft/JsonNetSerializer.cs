@@ -34,18 +34,18 @@ namespace Lime.Protocol.Serialization.Newtonsoft
                     _settings.Converters.Add(new NodeJsonConverter());
                     _settings.Converters.Add(new LimeUriJsonConverter());
                     _settings.Converters.Add(new MediaTypeJsonConverter());
+                    _settings.Converters.Add(new UriJsonConverter());
                     _settings.Converters.Add(new SessionJsonConverter());
                     _settings.Converters.Add(new AuthenticationJsonConverter());
                     _settings.Converters.Add(new MessageJsonConverter());
                     _settings.Converters.Add(new CommandJsonConverter());
-                    _settings.Converters.Add(new DocumentJsonConverter());
                     _settings.Converters.Add(new DocumentCollectionJsonConverter());
                     _settings.Converters.Add(new IsoDateTimeConverter
                     {
                         DateTimeFormat = "yyyy-MM-ddTHH:mm:ss.fffZ",
                         DateTimeStyles = DateTimeStyles.AdjustToUniversal
                     });
-
+                    _settings.Converters.Add(new DocumentJsonConverter());
                 }
 
                 return _settings;
