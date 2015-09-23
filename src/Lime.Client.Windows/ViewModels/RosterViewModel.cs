@@ -1,24 +1,22 @@
-﻿using FirstFloor.ModernUI;
-using Lime.Client.Windows.Converters;
-using Lime.Client.Windows.Mvvm;
-using Lime.Protocol;
-using Lime.Protocol.Network;
-using Lime.Protocol.Client;
-using Lime.Messaging.Resources;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
-using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Data;
-using System.Windows.Threading;
-using System.Collections.Specialized;
+using FirstFloor.ModernUI;
 using GalaSoft.MvvmLight.Command;
-using System.Threading;
+using Lime.Client.Windows.Converters;
+using Lime.Client.Windows.Mvvm;
 using Lime.Messaging.Contents;
+using Lime.Messaging.Resources;
+using Lime.Protocol;
+using Lime.Protocol.Client;
+using Lime.Protocol.Network;
 
 namespace Lime.Client.Windows.ViewModels
 {
@@ -55,7 +53,7 @@ namespace Lime.Client.Windows.ViewModels
             }
 
             _clientChannel = clientChannel;
-            this.Identity = _clientChannel.LocalNode.ToIdentity();
+            Identity = _clientChannel.LocalNode.ToIdentity();
             
             if (loginViewModel == null)
             {
@@ -75,20 +73,20 @@ namespace Lime.Client.Windows.ViewModels
         public RosterViewModel()
             : base(new Uri("/Pages/Roster.xaml", UriKind.Relative))
         {
-            this.Contacts = new ObservableCollectionEx<ContactViewModel>();
-            this.Contacts.CollectionChanged += Contacts_CollectionChanged;
+            Contacts = new ObservableCollectionEx<ContactViewModel>();
+            Contacts.CollectionChanged += Contacts_CollectionChanged;
 
             // Commands
-            this.LoadedCommand = new AsyncCommand(LoadedAsync);
-            this.OpenConversationCommand = new RelayCommand(OpenConversation, CanOpenConversation);
-            this.AddContactCommand = new AsyncCommand(AddContactAsync, CanAddContact);
-            this.RemoveContactCommand = new AsyncCommand(RemoveContactAsync, CanRemoveContact);
-            this.SharePresenceCommand = new AsyncCommand(SharePresenceAsync, () => CanSharePresence);
-            this.UnsharePresenceCommand = new AsyncCommand(UnsharePresenceAsync, () => CanUnsharePresence);
-            this.ShareAccountInfoCommand = new AsyncCommand(ShareAccountInfoAsync, () => CanShareAccountInfo);
-            this.UnshareAccountInfoCommand = new AsyncCommand(UnshareAccountInfoAsync, () => CanUnshareAccountInfo);
-            this.AcceptPendingContactCommand = new AsyncCommand(AcceptPendingContactAsync, () => CanAcceptPendingContact);
-            this.RejectPendingContactCommand = new AsyncCommand(RejectPendingContactAsync, () => CanRejectPendingContact);
+            LoadedCommand = new AsyncCommand(LoadedAsync);
+            OpenConversationCommand = new RelayCommand(OpenConversation, CanOpenConversation);
+            AddContactCommand = new AsyncCommand(AddContactAsync, CanAddContact);
+            RemoveContactCommand = new AsyncCommand(RemoveContactAsync, CanRemoveContact);
+            SharePresenceCommand = new AsyncCommand(SharePresenceAsync, () => CanSharePresence);
+            UnsharePresenceCommand = new AsyncCommand(UnsharePresenceAsync, () => CanUnsharePresence);
+            ShareAccountInfoCommand = new AsyncCommand(ShareAccountInfoAsync, () => CanShareAccountInfo);
+            UnshareAccountInfoCommand = new AsyncCommand(UnshareAccountInfoAsync, () => CanUnshareAccountInfo);
+            AcceptPendingContactCommand = new AsyncCommand(AcceptPendingContactAsync, () => CanAcceptPendingContact);
+            RejectPendingContactCommand = new AsyncCommand(RejectPendingContactAsync, () => CanRejectPendingContact);
         }
 
         #endregion
@@ -133,7 +131,7 @@ namespace Lime.Client.Windows.ViewModels
 
                 if (Identity != null)
                 {
-                    return Identity.Name.ToString();
+                    return Identity.Name;
                 }
 
                 return null;
@@ -190,7 +188,7 @@ namespace Lime.Client.Windows.ViewModels
                 {
                     if (Presence == null)
                     {
-                        Presence = new Presence()
+                        Presence = new Presence
                         {
                             Status = value
                         };
@@ -221,7 +219,7 @@ namespace Lime.Client.Windows.ViewModels
                 {
                     if (Presence == null)
                     {
-                        Presence = new Presence()
+                        Presence = new Presence
                         {
                             Message = value
                         };
@@ -262,7 +260,7 @@ namespace Lime.Client.Windows.ViewModels
 
                     if (!ModernUIHelper.IsInDesignMode)
                     {
-                        ContactsView.Filter = new Predicate<object>(o =>
+                        ContactsView.Filter = o =>
                         {
                             if (!string.IsNullOrWhiteSpace(_searchOrAddContactText))
                             {
@@ -276,7 +274,7 @@ namespace Lime.Client.Windows.ViewModels
                             }
 
                             return true;
-                        });
+                        };
                     }
                 }
             }
@@ -357,7 +355,7 @@ namespace Lime.Client.Windows.ViewModels
                         // Events for notification
                         await _clientChannel.SetResourceAsync(
                             LimeUri.Parse(UriTemplates.RECEIPT),
-                            new Receipt()
+                            new Receipt
                             {
                                 Events = new[]
                                 {
@@ -371,7 +369,7 @@ namespace Lime.Client.Windows.ViewModels
                         try
                         {
                             // Gets the user account
-                            this.Account = await _clientChannel.GetResourceAsync<Account>(
+                            Account = await _clientChannel.GetResourceAsync<Account>(
                                 LimeUri.Parse(UriTemplates.ACCOUNT),
                                 _receiveTimeout.ToCancellationToken());
                         }
@@ -384,18 +382,18 @@ namespace Lime.Client.Windows.ViewModels
                         }
 
                         // Creates the account if doesn't exists
-                        if (this.Account == null)
+                        if (Account == null)
                         {
-                            this.Account = new Account()
+                            Account = new Account
                             {
                                 IsTemporary = false,
                                 AllowAnonymousSender = false,
                                 AllowUnknownSender = false
                             };
                                 
-                            await _clientChannel.SetResourceAsync<Account>(
+                            await _clientChannel.SetResourceAsync(
                                 LimeUri.Parse(UriTemplates.ACCOUNT),
-                                this.Account,
+                                Account,
                                 _receiveTimeout.ToCancellationToken());
                         }                       
 
@@ -403,7 +401,7 @@ namespace Lime.Client.Windows.ViewModels
                         await GetContactsAsync();
 
                         // Sets the presence
-                        this.Presence = new Presence()
+                        Presence = new Presence
                         {
                             Status = PresenceStatus.Available,
                             RoutingRule = RoutingRule.Identity
@@ -420,12 +418,12 @@ namespace Lime.Client.Windows.ViewModels
 
         #region OpenConversation
 
-        public RelayCommand OpenConversationCommand { get; private set; }
+        public RelayCommand OpenConversationCommand { get; }
 
         private void OpenConversation()
         {
-            base.MessengerInstance.Send<OpenWindowMessage>(
-                new OpenWindowMessage()
+            MessengerInstance.Send(
+                new OpenWindowMessage
                 {
                     WindowName = "Conversation",
                     DataContext = SelectedContact.Conversation
@@ -441,7 +439,7 @@ namespace Lime.Client.Windows.ViewModels
 
         #region AddContact
 
-        public AsyncCommand AddContactCommand { get; private set; }
+        public AsyncCommand AddContactCommand { get; }
 
         private Task AddContactAsync()
         {
@@ -453,7 +451,7 @@ namespace Lime.Client.Windows.ViewModels
                     {
                         await _clientChannel.SetResourceAsync(
                             LimeUri.Parse(UriTemplates.CONTACTS),
-                            new Contact()
+                            new Contact
                             {
                                 Identity = _searchOrAddContactIdentity
                             },
@@ -474,7 +472,7 @@ namespace Lime.Client.Windows.ViewModels
 
         #region RemoveContact
 
-        public AsyncCommand RemoveContactCommand { get; private set; }
+        public AsyncCommand RemoveContactCommand { get; }
 
         private Task RemoveContactAsync()
         {
@@ -503,7 +501,7 @@ namespace Lime.Client.Windows.ViewModels
 
         #region SharePresence
 
-        public AsyncCommand SharePresenceCommand { get; private set; }
+        public AsyncCommand SharePresenceCommand { get; }
 
         public Task SharePresenceAsync()
         {
@@ -515,7 +513,7 @@ namespace Lime.Client.Windows.ViewModels
                     {                        
                         await _clientChannel.SetResourceAsync(
                             LimeUri.Parse(UriTemplates.CONTACTS),
-                            new Contact()
+                            new Contact
                             {
                                 Identity = selectedContact.Contact.Identity,
                                 SharePresence = true
@@ -549,7 +547,7 @@ namespace Lime.Client.Windows.ViewModels
 
                         await _clientChannel.SetResourceAsync(
                             LimeUri.Parse(UriTemplates.CONTACTS),
-                            new Contact()
+                            new Contact
                             {
                                 Identity = selectedContact.Contact.Identity,
                                 SharePresence = false
@@ -582,7 +580,7 @@ namespace Lime.Client.Windows.ViewModels
                 {
                     await _clientChannel.SetResourceAsync(
                         LimeUri.Parse(UriTemplates.CONTACTS),
-                        new Contact()
+                        new Contact
                         {
                             Identity = selectedContact.Contact.Identity,
                             ShareAccountInfo = true
@@ -615,7 +613,7 @@ namespace Lime.Client.Windows.ViewModels
                 {
                     await _clientChannel.SetResourceAsync(
                         LimeUri.Parse(UriTemplates.CONTACTS),
-                        new Contact()
+                        new Contact
                         {
                             Identity = selectedContact.Contact.Identity,
                             ShareAccountInfo = false
@@ -636,7 +634,7 @@ namespace Lime.Client.Windows.ViewModels
 
         #region AcceptPendingContact
 
-        public AsyncCommand AcceptPendingContactCommand { get; private set; }
+        public AsyncCommand AcceptPendingContactCommand { get; }
 
         public Task AcceptPendingContactAsync()
         {
@@ -648,7 +646,7 @@ namespace Lime.Client.Windows.ViewModels
                 {
                     await _clientChannel.SetResourceAsync(
                         LimeUri.Parse(UriTemplates.CONTACTS),
-                        new Contact()
+                        new Contact
                         {
                             Identity = selectedContact.Contact.Identity,
                             IsPending = false,
@@ -671,7 +669,7 @@ namespace Lime.Client.Windows.ViewModels
 
         #region RejectPendingContact
 
-        public AsyncCommand RejectPendingContactCommand { get; private set; }
+        public AsyncCommand RejectPendingContactCommand { get; }
 
         public Task RejectPendingContactAsync()
         {
@@ -726,19 +724,19 @@ namespace Lime.Client.Windows.ViewModels
         {
             if (message.From != null)
             {
-                var contactViewModel = this.Contacts.FirstOrDefault(c => c.Contact.Identity.Equals(message.From.ToIdentity()));
+                var contactViewModel = Contacts.FirstOrDefault(c => c.Contact.Identity.Equals(message.From.ToIdentity()));
 
                 if (contactViewModel == null)
                 {
                     // Received a message from someone not in the roster
                     contactViewModel = new ContactViewModel(
-                        new Contact()
+                        new Contact
                         {
                             Identity = message.From.ToIdentity()
                         },
                         _clientChannel);
                     
-                    this.Contacts.Add(contactViewModel);                    
+                    Contacts.Add(contactViewModel);                    
                 }
 
                 if (contactViewModel != null)
@@ -748,8 +746,8 @@ namespace Lime.Client.Windows.ViewModels
                     // Don't focus/show the window if its a chat state message
                     if (!(message.Content is ChatState))
                     {
-                        base.MessengerInstance.Send<OpenWindowMessage>(
-                            new OpenWindowMessage()
+                        MessengerInstance.Send(
+                            new OpenWindowMessage
                             {
                                 WindowName = "Conversation",
                                 DataContext = contactViewModel.Conversation
@@ -785,11 +783,11 @@ namespace Lime.Client.Windows.ViewModels
                 LimeUri.Parse(UriTemplates.CONTACTS),
                 _receiveTimeout.ToCancellationToken());
 
-            this.Contacts.Clear();
+            Contacts.Clear();
 
             foreach (Contact contact in contactCollection.Items)
             {
-                this.Contacts.Add(new ContactViewModel(contact, _clientChannel));
+                Contacts.Add(new ContactViewModel(contact, _clientChannel));
             }
         }
 
@@ -797,7 +795,7 @@ namespace Lime.Client.Windows.ViewModels
         {
             return _clientChannel.SetResourceAsync(
                 LimeUri.Parse(UriTemplates.PRESENCE),
-                this.Presence,
+                Presence,
                 _receiveTimeout.ToCancellationToken());
         }
 
@@ -805,7 +803,7 @@ namespace Lime.Client.Windows.ViewModels
         {
             if (!ModernUIHelper.IsInDesignMode)
             {
-                if (e.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Add)
+                if (e.Action == NotifyCollectionChangedAction.Add)
                 {
                     var addedContacts = e.NewItems.Cast<ContactViewModel>();
 
@@ -815,11 +813,11 @@ namespace Lime.Client.Windows.ViewModels
                     {
                         try
                         {
-                            await base.ExecuteAsync(async () =>
+                            await ExecuteAsync(async () =>
                                 {
                                     var identityPresence = await _clientChannel.GetResourceAsync<Presence>(
                                         LimeUri.Parse(UriTemplates.PRESENCE),
-                                        new Node()
+                                        new Node
                                         {
                                             Name = contactViewModel.Contact.Identity.Name,
                                             Domain = contactViewModel.Contact.Identity.Domain
@@ -831,7 +829,7 @@ namespace Lime.Client.Windows.ViewModels
                                     {
                                         var presence = await _clientChannel.GetResourceAsync<Presence>(
                                             LimeUri.Parse(UriTemplates.PRESENCE),
-                                            new Node()
+                                            new Node
                                             {
                                                 Name = contactViewModel.Contact.Identity.Name,
                                                 Domain = contactViewModel.Contact.Identity.Domain,
@@ -839,7 +837,19 @@ namespace Lime.Client.Windows.ViewModels
                                             },
                                             cancellationToken);
 
-                                        contactViewModel.Presence = presence;
+                                        if (presence.Instances != null && presence.Instances.Length > 0)
+                                        {
+                                            var instancePresence = await _clientChannel.GetResourceAsync<Presence>(
+                                            LimeUri.Parse(string.Format("{0}/{1}", UriTemplates.PRESENCE, presence.Instances[0])),
+                                            new Node
+                                            {
+                                                Name = contactViewModel.Contact.Identity.Name,
+                                                Domain = contactViewModel.Contact.Identity.Domain,
+                                                Instance = identityPresence.Instances[0]
+                                            },
+                                            cancellationToken);
+                                            contactViewModel.Presence = instancePresence;
+                                        }                                        
                                     }                                    
                                 });
                         }

@@ -226,6 +226,7 @@ namespace Lime.Protocol
         /// </summary>
         /// <param name="delay">The delay.</param>
         /// <returns></returns>
+        [Obsolete("This method should be avoided since uses a CancellationTokenSource which needs to be disposed")]
         public static CancellationToken ToCancellationToken(this TimeSpan delay)
         {
             var cts = new CancellationTokenSource(delay);

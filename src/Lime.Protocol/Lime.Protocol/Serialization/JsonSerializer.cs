@@ -144,7 +144,7 @@ namespace Lime.Protocol.Serialization
             {
                 propertyType = propertyType.GetGenericArguments().First();
                 isNullable = true;
-            };
+            }
 
             if (propertyType.IsArray)
             {

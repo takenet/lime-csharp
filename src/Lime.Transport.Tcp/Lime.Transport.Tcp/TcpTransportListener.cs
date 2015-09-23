@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Net;
+using System.Net.Security;
 using System.Net.Sockets;
 using System.Security;
 using System.Security.Cryptography;
@@ -21,6 +22,7 @@ namespace Lime.Transport.Tcp
         private readonly X509Certificate2 _sslCertificate;
         private readonly IEnvelopeSerializer _envelopeSerializer;
         private readonly ITraceWriter _traceWriter;
+        private readonly RemoteCertificateValidationCallback _clientCertificateValidationCallback;
         private readonly SemaphoreSlim _semaphore;
         private TcpListener _tcpListener;        
 
@@ -28,7 +30,7 @@ namespace Lime.Transport.Tcp
 
         #region Constructor
 
-        public TcpTransportListener(Uri listenerUri, X509Certificate2 sslCertificate, IEnvelopeSerializer envelopeSerializer, ITraceWriter traceWriter = null)
+        public TcpTransportListener(Uri listenerUri, X509Certificate2 sslCertificate, IEnvelopeSerializer envelopeSerializer, ITraceWriter traceWriter = null, RemoteCertificateValidationCallback clientCertificateValidationCallback = null)
         {
             if (listenerUri == null)
             {
@@ -68,6 +70,7 @@ namespace Lime.Transport.Tcp
             _sslCertificate = sslCertificate;
             _envelopeSerializer = envelopeSerializer;
             _traceWriter = traceWriter;
+            _clientCertificateValidationCallback = clientCertificateValidationCallback;
             _semaphore = new SemaphoreSlim(1);
         }
 
@@ -164,6 +167,7 @@ namespace Lime.Transport.Tcp
                 new TcpClientAdapter(tcpClient),
                 _envelopeSerializer, 
                 _sslCertificate,
+                clientCertificateValidationCallback: _clientCertificateValidationCallback,
                 traceWriter: _traceWriter);            
         }
 

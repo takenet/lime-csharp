@@ -50,7 +50,8 @@
             "type": "string"
         },
         "photoUri": {
-            "type": "string"
+            "type": "string",
+            "format": "uri"
         },
         "cellPhoneNumber": {
             "type": "string"
@@ -568,7 +569,7 @@ S:
 <code class="json-schema">
 {
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "title": "roster",
+    "title": "group",
     "type": "object",
     "properties": {
         "groups" : {
@@ -582,6 +583,19 @@ S:
                 },
                 "name" : {
                     "type": "string"
+                },
+                "photoUri": {
+                    "type": "string",
+                    "format": "uri"
+                },
+                "creator": {
+                    "title": "identity",
+                    "type": "string",
+                    "pattern": "^(?:([^\"&'/:<>@@]{1,1023})@@)?([^/@@]{1,1023})$"
+                },
+                "created": {
+                    "type": "string",
+                    "format": "date-time"
                 },
                 "type" : {
                     "enum": [ "temporary", "public", "private" ]
@@ -610,6 +624,15 @@ S:
                 </li>
                 <li>
                     <strong>name</strong> - Name of the group.
+                </li>
+                <li>
+                    <strong>photoUri</strong> - Photo URI of the group.
+                </li>
+                <li>
+                    <strong>creator</strong> - Identity of the creator of the group.
+                </li>
+                <li>
+                    <strong>created</strong> - Date and time of creation of the group.
                 </li>
                 <li>
                     <strong>type</strong> - Type of the group. The possible values are:

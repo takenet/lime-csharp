@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Runtime.Serialization;
 using Lime.Protocol;
+using System;
 
 namespace Lime.Messaging.Resources
 {
@@ -16,6 +17,9 @@ namespace Lime.Messaging.Resources
         public const string IDENTITY_KEY = "identity";
         public const string NAME_KEY = "name";
         public const string TYPE_KEY = "type";
+        public const string PHOTO_URI_KEY = "photoUri";
+        public const string CREATOR_KEY = "creator";
+        public const string CREATED_KEY = "created";
         public const string MEMBERS_KEY = "members";
 
         /// <summary>
@@ -43,6 +47,24 @@ namespace Lime.Messaging.Resources
         /// </summary>
         [DataMember(Name = TYPE_KEY)]
         public GroupType? Type { get; set; }
+
+        /// <summary>
+        /// The group photo URI.
+        /// </summary>
+        [DataMember(Name = PHOTO_URI_KEY)]
+        public Uri PhotoUri { get; set; }
+
+        /// <summary>
+        /// The group creator identity.
+        /// </summary>
+        [DataMember(Name = CREATOR_KEY)]
+        public Identity Creator { get; set; }
+
+        /// <summary>
+        /// The group creation date.
+        /// </summary>
+        [DataMember(Name = CREATED_KEY)]
+        public DateTime Created { get; set; }
 
         /// <summary>
         /// Members uri of the contact group. 

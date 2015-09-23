@@ -74,6 +74,11 @@ namespace Lime.Protocol.UnitTests.Client
         [ExpectedException(typeof(InvalidOperationException))]
         public async Task StartNewSessionAsync_InvalidState_ThrowsInvalidOperationException()
         {
+            var tcs = new TaskCompletionSource<Envelope>();
+            _transport
+                .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(tcs.Task);
+
             var target = GetTarget(state: SessionState.Established);
 
             var cancellationToken = Dummy.CreateCancellationToken();
@@ -177,12 +182,18 @@ namespace Lime.Protocol.UnitTests.Client
         [ExpectedException(typeof(InvalidOperationException))]
         public async Task AuthenticateSessionAsync_InvalidState_ThrowsInvalidOperationException()
         {
-            var target = GetTarget(sessionId: Guid.NewGuid(), state: SessionState.Established);
+            var tcs = new TaskCompletionSource<Envelope>();
+            _transport
+                .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(tcs.Task);
 
             var cancellationToken = Dummy.CreateCancellationToken();
             var localIdentity = Dummy.CreateIdentity();
             var localInstance = Dummy.CreateInstanceName();
             var authentication = Dummy.CreateAuthentication(Security.AuthenticationScheme.Plain);
+
+            var target = GetTarget(sessionId: Guid.NewGuid(), state: SessionState.Established);
+
 
             var actualSession = await target.AuthenticateSessionAsync(localIdentity, authentication, localInstance, cancellationToken);
         }
@@ -226,6 +237,11 @@ namespace Lime.Protocol.UnitTests.Client
         [Category("SendReceivedNotificationAsync")]
         public async Task SendReceivedNotificationAsync_EstablishedState_CallsTransport()
         {
+            var tcs = new TaskCompletionSource<Envelope>();
+            _transport
+                .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(tcs.Task);
+
             var target = GetTarget(state: SessionState.Established);
 
             var content = Dummy.CreateTextContent();
@@ -247,6 +263,11 @@ namespace Lime.Protocol.UnitTests.Client
         [ExpectedException(typeof(ArgumentNullException))]
         public async Task SendReceivedNotificationAsync_NullTo_ThrowsArgumentNullException()
         {
+            var tcs = new TaskCompletionSource<Envelope>();
+            _transport
+                .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(tcs.Task);            
+
             var target = GetTarget(state: SessionState.Established);
 
             var message = Dummy.CreateMessage(content: null);
@@ -262,6 +283,11 @@ namespace Lime.Protocol.UnitTests.Client
         [Category("SendFinishingSessionAsync")]
         public async Task SendFinishingSessionAsync_EstablishedState_CallsTransport()
         {
+            var tcs = new TaskCompletionSource<Envelope>();
+            _transport
+                .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(tcs.Task);
+
             var target = GetTarget(state: SessionState.Established);
 
             await target.SendFinishingSessionAsync();
@@ -347,6 +373,11 @@ namespace Lime.Protocol.UnitTests.Client
             message.From = senderNode.Copy();
             message.To = destinationNode.Copy();
 
+            var tcs = new TaskCompletionSource<Envelope>();
+            _transport
+                .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(tcs.Task);
+
             var target = GetTarget(
                 state: SessionState.Established,
                 fillEnvelopeRecipients: true,
@@ -385,6 +416,11 @@ namespace Lime.Protocol.UnitTests.Client
             message.To = destinationNode.Copy();
             message.Pp = localNode.Copy();
             message.Pp.Domain = null;
+
+            var tcs = new TaskCompletionSource<Envelope>();
+            _transport
+                .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(tcs.Task);
 
             var target = GetTarget(
                 state: SessionState.Established,

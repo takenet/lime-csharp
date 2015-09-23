@@ -60,6 +60,11 @@ namespace Lime.Protocol.UnitTests.Network
         [Category("SendMessageAsync")]
         public async Task SendMessageAsync_EstablishedState_CallsTransport()
         {
+            var tcs = new TaskCompletionSource<Envelope>();
+            _transport
+                .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(tcs.Task);
+
             var target = GetTarget(SessionState.Established);
 
             var content = Dummy.CreateTextContent();
@@ -83,6 +88,11 @@ namespace Lime.Protocol.UnitTests.Network
         [ExpectedException(typeof(ArgumentNullException))]
         public async Task SendMessageAsync_NullMessage_ThrowsArgumentNullException()
         {
+            var tcs = new TaskCompletionSource<Envelope>();
+            _transport
+                .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(tcs.Task);
+
             var target = GetTarget(SessionState.Established);
 
             Message message = null;
@@ -259,6 +269,11 @@ namespace Lime.Protocol.UnitTests.Network
         [Category("SendCommandAsync")]
         public async Task SendCommandAsync_EstablishedState_CallsTransport()
         {
+            var tcs = new TaskCompletionSource<Envelope>();
+            _transport
+                .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(tcs.Task);
+
             var target = GetTarget(SessionState.Established);
 
             var resource = Dummy.CreatePing();
@@ -281,6 +296,11 @@ namespace Lime.Protocol.UnitTests.Network
         [ExpectedException(typeof(ArgumentNullException))]
         public async Task SendCommandAsync_NullCommand_ThrowsArgumentNullException()
         {
+            var tcs = new TaskCompletionSource<Envelope>();
+            _transport
+                .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(tcs.Task);
+
             var target = GetTarget(SessionState.Established);
 
             Command command = null;
@@ -382,6 +402,11 @@ namespace Lime.Protocol.UnitTests.Network
         [Category("SendNotificationAsync")]
         public async Task SendNotificationAsync_EstablishedState_CallsTransport()
         {
+            var tcs = new TaskCompletionSource<Envelope>();
+            _transport
+                .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(tcs.Task);
+
             var target = GetTarget(SessionState.Established);
 
             var notification = Dummy.CreateNotification(Event.Received);
@@ -403,6 +428,11 @@ namespace Lime.Protocol.UnitTests.Network
         [ExpectedException(typeof(ArgumentNullException))]
         public async Task SendNotificationAsync_NullNotification_ThrowsArgumentNullException()
         {
+            var tcs = new TaskCompletionSource<Envelope>();
+            _transport
+                .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(tcs.Task);
+
             var target = GetTarget(SessionState.Established);
 
             Notification notification = null;
@@ -503,6 +533,11 @@ namespace Lime.Protocol.UnitTests.Network
         [Category("SendSessionAsync")]
         public async Task SendSessionAsync_EstablishedState_CallsTransport()
         {
+            var tcs = new TaskCompletionSource<Envelope>();
+            _transport
+                .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(tcs.Task);
+
             var target = (ISessionChannel)GetTarget(SessionState.Established);
 
             var session = Dummy.CreateSession();
@@ -524,6 +559,11 @@ namespace Lime.Protocol.UnitTests.Network
         [ExpectedException(typeof(ArgumentNullException))]
         public async Task SendSessionAsync_NullSession_ThrowsArgumentNullException()
         {
+            var tcs = new TaskCompletionSource<Envelope>();
+            _transport
+                .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(tcs.Task);
+
             var target = (ISessionChannel)GetTarget(SessionState.Established);
 
             Session session = null;
@@ -601,14 +641,17 @@ namespace Lime.Protocol.UnitTests.Network
 
         [Test]
         [Category("EnvelopeAsyncBuffer_PromiseAdded")]
-        public void EnvelopeAsyncBuffer_PromiseAdded_TransportThrowsException_CallsTransportCloseAsyncAndThrowsException()
+        [ExpectedException(typeof(InvalidOperationException))]
+
+        public async Task EnvelopeAsyncBuffer_PromiseAdded_TransportThrowsException_CallsTransportCloseAsyncAndThrowsException()
         {
             var exception = Dummy.CreateException<InvalidOperationException>();
             var cancellationToken = Dummy.CreateCancellationToken();
 
+            var taskCompletionSource = new TaskCompletionSource<Envelope>();
             _transport
                 .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
-                .ThrowsAsync(exception)
+                .Returns(taskCompletionSource.Task)
                 .Verifiable();
 
             _transport
@@ -617,18 +660,24 @@ namespace Lime.Protocol.UnitTests.Network
                 .Callback(() => _transport.Raise(t => t.Closing += (sender, e) => { }, new DeferralEventArgs()));
 
             var target = GetTarget(SessionState.Established);
+            var receiveTask = target.ReceiveMessageAsync(cancellationToken);
+
+            await Task.Delay(300);
+            taskCompletionSource.SetException(exception);
 
             try
             {
-                var receiveTask = target.ReceiveMessageAsync(cancellationToken);
+                await receiveTask;
             }
-            catch (InvalidOperationException)
+            catch (InvalidOperationException ex)
             {
                 _transport.Verify();
 
                 _transport.Verify(
                     t => t.CloseAsync(It.IsAny<CancellationToken>()),
-                    Times.Once());                              
+                    Times.Once());
+
+                throw;
             }
         }
 

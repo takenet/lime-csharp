@@ -15,8 +15,7 @@ using Lime.Protocol.Serialization;
 namespace Lime.Transport.Tcp
 {
 	/// <summary>
-	/// Provides the messaging protocol
-	/// transport for TCP connections
+	/// Provides the messaging protocol transport for TCP connections.
 	/// </summary>
 	public class TcpTransport : TransportBase, ITransport, IAuthenticatableTransport
 	{
@@ -126,7 +125,7 @@ namespace Lime.Transport.Tcp
 
 			_tcpClient = tcpClient;
 
-			_buffer = new byte[bufferSize];
+            _buffer = new byte[bufferSize];
 			_bufferCurPos = 0;
 
 			if (envelopeSerializer == null)
@@ -154,9 +153,7 @@ namespace Lime.Transport.Tcp
 		#region TransportBase Members
 
 		/// <summary>
-		/// Opens the transport connection with
-		/// the specified Uri and begins to 
-		/// read from the stream
+		/// Opens the transport connection with the specified Uri and begins to read from the stream.
 		/// </summary>
 		/// <param name="uri"></param>
 		/// <param name="cancellationToken"></param>
@@ -190,8 +187,7 @@ namespace Lime.Transport.Tcp
 		}
 
 		/// <summary>
-		/// Sends an envelope to 
-		/// the connected node
+		/// Sends an envelope to the connected node.
 		/// </summary>
 		/// <param name="envelope">Envelope to be transported</param>
 		/// <param name="cancellationToken"></param>
@@ -204,13 +200,17 @@ namespace Lime.Transport.Tcp
 				throw new ArgumentNullException("envelope");
 			}
 
-			if (_stream == null ||
-				!_stream.CanWrite)
+			if (_stream == null)
 			{
-				throw new InvalidOperationException("Invalid stream state. Call OpenAsync first.");
+				throw new InvalidOperationException("The stream was not initialized. Call OpenAsync first.");
 			}
 
-			var envelopeJson = _envelopeSerializer.Serialize(envelope);
+            if (!_stream.CanWrite)
+            {
+                throw new InvalidOperationException("Invalid stream state");
+            }
+
+            var envelopeJson = _envelopeSerializer.Serialize(envelope);
 
 			if (_traceWriter != null &&
 				_traceWriter.IsEnabled)
@@ -232,7 +232,7 @@ namespace Lime.Transport.Tcp
 		}        
 	   
 		/// <summary>
-		/// Reads one envelope from the stream
+		/// Reads one envelope from the stream.
 		/// </summary>
 		/// <param name="cancellationToken"></param>
 		/// <returns></returns>
@@ -240,10 +240,15 @@ namespace Lime.Transport.Tcp
 		{
 			if (_stream == null)
 			{
-				throw new InvalidOperationException("The stream was not initialized. Call StartAsync first.");
+				throw new InvalidOperationException("The stream was not initialized. Call OpenAsync first.");
 			}
 
-			await _receiveSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+            if (!_stream.CanRead)
+            {
+                throw new InvalidOperationException("Invalid stream state");
+            }
+
+            await _receiveSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
 
 			try
 			{
@@ -274,12 +279,21 @@ namespace Lime.Transport.Tcp
                         // The NetworkStream ReceiveAsync method doesn't supports cancellation
                         // http://stackoverflow.com/questions/21468137/async-network-operations-never-finish
                         // http://referencesource.microsoft.com/#mscorlib/system/io/stream.cs,421
-						_bufferCurPos += await _stream
+						var read = await _stream
                             .ReadAsync(_buffer, _bufferCurPos, _buffer.Length - _bufferCurPos, cancellationToken)
                             .WithCancellation(cancellationToken)
                             .ConfigureAwait(false);
 
-						if (_bufferCurPos >= _buffer.Length)
+                        // https://msdn.microsoft.com/en-us/library/hh193669(v=vs.110).aspx
+                        if (read == 0)
+					    {
+                            await CloseAsync(CancellationToken.None).ConfigureAwait(false);
+					        break;
+					    }
+                        
+					    _bufferCurPos += read;
+
+                        if (_bufferCurPos >= _buffer.Length)
 						{
 							await CloseAsync(CancellationToken.None).ConfigureAwait(false);
 							throw new BufferOverflowException("Maximum buffer size reached");
@@ -296,27 +310,26 @@ namespace Lime.Transport.Tcp
 		}
 
 		/// <summary>
-		/// Closes the transport
+		/// Closes the transport.
 		/// </summary>
 		/// <param name="cancellationToken"></param>
 		/// <returns></returns>
 		/// <exception cref="System.NotImplementedException"></exception>
 		protected override Task PerformCloseAsync(CancellationToken cancellationToken)
 		{
-			if (_stream != null)
+            cancellationToken.ThrowIfCancellationRequested();
+
+            if (_stream != null)
 			{
 				_stream.Close();
 			}
-
-			cancellationToken.ThrowIfCancellationRequested();
 
 			_tcpClient.Close();
 			return Task.FromResult<object>(null);
 		}
 
 		/// <summary>
-		/// Enumerates the supported encryption
-		/// options for the transport
+		/// Enumerates the supported encryption options for the transport.
 		/// </summary>
 		/// <returns></returns>
 		public override SessionEncryption[] GetSupportedEncryption()
@@ -338,8 +351,7 @@ namespace Lime.Transport.Tcp
 		}
 
 	    /// <summary>
-		/// Defines the encryption mode
-		/// for the transport
+		/// Defines the encryption mode for the transport.
 		/// </summary>
 		/// <param name="encryption"></param>
 		/// <param name="cancellationToken"></param>
@@ -347,7 +359,8 @@ namespace Lime.Transport.Tcp
 		/// <exception cref="System.NotSupportedException"></exception>        
 		public override async Task SetEncryptionAsync(SessionEncryption encryption, CancellationToken cancellationToken)
 		{
-			if (_sendSemaphore.CurrentCount == 0)
+#if DEBUG
+            if (_sendSemaphore.CurrentCount == 0)
 			{
 				Console.WriteLine("Send semaphore being used");
 			}
@@ -356,8 +369,9 @@ namespace Lime.Transport.Tcp
 			{
 				Console.WriteLine("Receive semaphore being used");
 			}
+#endif
 
-			await _sendSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+            await _sendSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
 			try
 			{
 				await _receiveSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
@@ -454,8 +468,7 @@ namespace Lime.Transport.Tcp
 		#region IAuthenticatableTransport Members
 
 		/// <summary>
-		/// Authenticate the identity
-		/// in the transport layer
+		/// Authenticate the identity in the transport layer.
 		/// </summary>
 		/// <param name="identity">The identity to be authenticated</param>
 		/// <returns>
@@ -478,6 +491,10 @@ namespace Lime.Transport.Tcp
 			{                
 				var certificate = new X509Certificate2(sslStream.RemoteCertificate);
 				var identityCertificateName = certificate.GetNameInfo(X509NameType.SimpleName, false);
+			    if (identityCertificateName == null)
+			    {
+			        throw new InvalidOperationException("Could not determine the certificate identity");
+			    }
 
 				Identity certificateIdentity;
 
@@ -539,9 +556,8 @@ namespace Lime.Transport.Tcp
 
 		#region Buffer fields
 
-		private byte[] _buffer;
-		private int _bufferCurPos;
-		
+		private readonly byte[] _buffer;
+		private int _bufferCurPos;		
 		private int _jsonStartPos;
 		private int _jsonCurPos;
 		private int _jsonStackedBrackets;
@@ -550,9 +566,7 @@ namespace Lime.Transport.Tcp
 		#endregion
 
 		/// <summary>
-		/// Try to extract a JSON document
-		/// from the buffer, based on the 
-		/// brackets count.
+		/// Try to extract a JSON document from the buffer, based on the brackets count.
 		/// </summary>
 		/// <param name="json"></param>
 		/// <returns></returns>

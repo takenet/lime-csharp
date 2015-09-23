@@ -16,6 +16,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Command.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Document.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Envelope.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)EnvelopeExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)EnvelopeType.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Identity.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)IDocument.cs" />

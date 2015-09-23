@@ -16,17 +16,20 @@ Set presence available identity	Command	{"id":"%commandId","method":"set","type"
 Set presence available promiscuous	Command	{"id":"%commandId","method":"set","type":"application/vnd.lime.presence+json","uri":"/presence","resource":{"status":"available","routingRule":"promiscuous"}}
 Set presence invisible	Command	{"id":"%commandId","method":"set","type":"application/vnd.lime.presence+json","uri":"/presence","resource":{"status":"invisible"}}
 Set presence unavailable	Command	{"id":"%commandId","method":"set","type":"application/vnd.lime.presence+json","uri":"/presence","resource":{"status":"unavailable"}}
-Get own presence	Command	{"id":"%commandId","method":"get","type":"application/vnd.lime.presence+json","uri":"/presence"}
+Get own presence	Command	{"id":"%commandId","method":"get","uri":"/presence"}
 Get presence	Command	{"id":"%commandId","from":"%from","method":"get","uri":"/presence"}
 Subscribe own presence	Command	{"id":"%commandId","method":"subscribe","uri":"/presence"}
 Subscribe presence	Command	{"id":"%commandId","method":"subscribe","uri":"lime://%presenceIdentity/presence"}
-Get account	Command	{"id":"%commandId","from":"%from","method":"get","type":"application/vnd.lime.account+json","uri":"/account"}
-Get own account	Command	{"id":"%commandId","method":"get","type":"application/vnd.lime.account+json","uri":"/account"}
+Get account	Command	{"id":"%commandId","from":"%from","method":"get","uri":"/account"}
+Get own account	Command	{"id":"%commandId","method":"get","uri":"/account"}
 Set account	Command	{"id":"%commandId","from":"%accountIdentity","pp":"%from","method":"set","type":"application/vnd.lime.account+json","uri":"/account","resource":{"fullName":"%fullName","phoneNumber":"%phoneNumber","city":"%city","password":"%newPassword"}}
 Set account password	Command	{"id":"%commandId","method":"set","type":"application/vnd.lime.account+json","uri":"/account","resource":{"password":"%newPassword","oldPassword":"%oldPassword"}}
+Get directory account	Command	{"id":"%commandId","method":"get","uri":"lime://%domain/accounts/%accountIdentity"}
+Get directory accounts	Command	{"id":"%commandId","method":"get","uri":"lime://%domain/accounts"}
 Subscribe own account	Command	{"id":"%commandId","method":"subscribe","uri":"/acount"}
 Subscribe account	Command	{"id":"%commandId","method":"subscribe","uri":"lime://%accountIdentity/presence"}
 Set receipts all events	Command	{"id":"%commandId","method":"set","type":"application/vnd.lime.receipt+json","uri":"/receipt","resource":{"events":["failed","accepted","validated","authorized","dispatched","received","consumed"]}}
+Set receipts destination events	Command	{"id":"%commandId","method":"set","type":"application/vnd.lime.receipt+json","uri":"/receipt","resource":{"events":["failed","received","consumed"]}}
 Get groups	Command	{"id":"%commandId","method":"get","type":"application/vnd.lime.group+json","uri": "/groups"}
 Get group	Command	{"id":"%commandId","method":"get","type":"application/vnd.lime.group+json","uri": "/groups/%groupIdentity"}
 Set group	Command	{"id":"%commandId","method":"set","type":"application/vnd.lime.group+json","uri": "/groups","resource":{"identity":"%groupIdentity","name":"%groupName","type":"public"}}

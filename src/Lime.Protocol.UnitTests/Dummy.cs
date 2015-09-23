@@ -159,7 +159,7 @@ namespace Lime.Protocol.UnitTests
 
         public static CancellationToken CreateCancellationToken()
         {
-            return CancellationToken.None;
+            return CreateCancellationToken(TimeSpan.FromSeconds(30));
         }
 
         public static CancellationTokenSource CreateCancellationTokenSource()
@@ -204,7 +204,8 @@ namespace Lime.Protocol.UnitTests
             var dictionary = new Dictionary<string, object>
             {
                 {CreateRandomString(10), CreateRandomString(50)},
-                {CreateRandomString(10), CreateRandomInt(50)}                
+                {CreateRandomString(10), CreateRandomInt(50)},
+                {CreateRandomString(10), DateTimeOffset.UtcNow},
             };
 
             if (includeDeepMembers)
@@ -221,6 +222,11 @@ namespace Lime.Protocol.UnitTests
             }
 
             return dictionary;
+        }
+
+        public static IDictionary<string, string> CreateStringStringDictionary()
+        {
+            return CreateStringObjectDictionary(false).ToDictionary(d => d.Key, d => d.Value.ToString());
         }
 
         public static PlainDocument CreatePlainDocument()
@@ -280,7 +286,8 @@ namespace Lime.Protocol.UnitTests
                 Message = CreateRandomString(50),
                 Priority = 1,
                 RoutingRule = RoutingRule.IdentityByDistance,
-                Status = PresenceStatus.Available
+                Status = PresenceStatus.Available,
+                LastSeen = DateTimeOffset.UtcNow
             };
         }
 

@@ -44,6 +44,7 @@ namespace Lime.Protocol.UnitTests.Serialization
                         key,
                         value.ToString().ToLower()));
             }
+
             if (value is double)
             {
                 return json.Contains(
@@ -51,18 +52,37 @@ namespace Lime.Protocol.UnitTests.Serialization
                         key,
                         ((double)value).ToString(CultureInfo.InvariantCulture)));
             }
-            else if (value.GetType().IsEnum)
+
+            if (value is DateTime)
+            {
+                return json.Contains(
+                    string.Format("\"{0}\":\"{1}\"",
+                        key,
+                        ((DateTime)value).ToUniversalTime().ToString(TextJsonWriter.DATE_FORMAT, CultureInfo.InvariantCulture)));
+            }
+
+            if (value is DateTimeOffset)
+            {
+                return json.Contains(
+                    string.Format("\"{0}\":\"{1}\"",
+                        key,
+                        ((DateTimeOffset)value).ToUniversalTime().ToString(TextJsonWriter.DATE_FORMAT, CultureInfo.InvariantCulture)));
+            }
+
+            if (value.GetType().IsEnum)
             {
                 return json.Contains(
                     string.Format("\"{0}\":\"{1}\"",
                         key,
                         value.ToString().ToCamelCase()));
             }
-            else if (value is IDictionary<string, object>)
+
+            if (value is IDictionary<string, object>)
             {
                 throw new NotSupportedException("Cannot check for dictionary properties");
             }
-            else if (value.GetType().IsArray)
+
+            if (value.GetType().IsArray)
             {
                 var stringBuilder = new StringBuilder();
                 stringBuilder.AppendFormat("\"{0}\":[", key);
@@ -91,13 +111,11 @@ namespace Lime.Protocol.UnitTests.Serialization
 
                 return json.Contains(stringBuilder.ToString().Replace(",]", "]"));
             }
-            else
-            {
-                return json.Contains(
-                    string.Format("\"{0}\":\"{1}\"",
-                        key,
-                        value));
-            }
+
+            return json.Contains(
+                string.Format("\"{0}\":\"{1}\"",
+                    key,
+                    value));
         }
 
         public static bool ContainsJsonKey(this string json, string key)
