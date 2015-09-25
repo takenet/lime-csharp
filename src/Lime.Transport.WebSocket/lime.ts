@@ -123,10 +123,16 @@ class WebSocketTransport implements ITransport {
             }
         }
 
-        this.webSocket.onopen = (e): void => {
+        this.webSocket.onopen = e => {
             while (this.queue.length > 0) {
                 this.send(this.queue.pop());
             }
+        }
+        this.webSocket.onclose = e => {
+            this.webSocket = null;
+        }
+        this.webSocket.onerror = e => {
+            console.log(e);
         }
     }
 

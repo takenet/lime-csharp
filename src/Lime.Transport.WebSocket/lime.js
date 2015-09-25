@@ -83,6 +83,12 @@ var WebSocketTransport = (function () {
                 _this.send(_this.queue.pop());
             }
         };
+        this.webSocket.onclose = function (e) {
+            _this.webSocket = null;
+        };
+        this.webSocket.onerror = function (e) {
+            console.log(e);
+        };
     };
     WebSocketTransport.prototype.close = function () {
         this.webSocket.close();
