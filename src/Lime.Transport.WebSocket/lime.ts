@@ -7,12 +7,12 @@
 }
 
 class SessionState {
-    static new = "new";
-    static negotiating = "negotiating";
-    static authenticating = "authenticating";
-    static established = "established";
-    static finishing = "finishing";
-    static finished = "finished";        
+    static new              = "new";
+    static negotiating      = "negotiating";
+    static authenticating   = "authenticating";
+    static established      = "established";
+    static finishing        = "finishing";
+    static finished         = "finished";        
 }
 
 interface ISession extends IEnvelope {
@@ -25,12 +25,12 @@ interface IMessage extends IEnvelope {
 }
 
 class NotificationEvent {
-    static accepted = "accepted";
-    static validated = "validated";
-    static authorized = "authorized";
-    static dispatched = "dispatched";
-    static received = "received";
-    static consumed = "consumed";
+    static accepted     = "accepted";
+    static validated    = "validated";
+    static authorized   = "authorized";
+    static dispatched   = "dispatched";
+    static received     = "received";
+    static consumed     = "consumed";
 }
 
 interface IReason {
@@ -44,11 +44,11 @@ interface INotification extends IEnvelope {
 }
 
 class CommandMethod {
-    static get = "get";
-    static set = "set";
-    static delete = "delete";
-    static observe = "observe";
-    static subscribe = "subscribe";
+    static get          = "get";
+    static set          = "set";
+    static delete       = "delete";
+    static observe      = "observe";
+    static subscribe    = "subscribe";
 }
 
 class CommandStatus {
@@ -123,7 +123,7 @@ class WebSocketTransport implements ITransport {
             }
         }
 
-        this.webSocket.onopen = e => {
+        this.webSocket.onopen = (e): void => {
             while (this.queue.length > 0) {
                 this.send(this.queue.pop());
             }
