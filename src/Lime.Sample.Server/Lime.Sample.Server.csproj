@@ -54,9 +54,17 @@
       <Project>{0cfee3a4-f914-4c45-be13-a344c9cfa134}</Project>
       <Name>Lime.Protocol.Net45</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Lime.Transport.Http\Lime.Transport.Http.Net45\Lime.Transport.Http.Net45.csproj">
+      <Project>{1095e1ba-c764-46b0-86d1-2290da9c07ad}</Project>
+      <Name>Lime.Transport.Http.Net45</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Lime.Transport.Tcp\Lime.Transport.Tcp.Net45\Lime.Transport.Tcp.Net45.csproj">
       <Project>{d24b4ef4-9b8c-4f89-bfc6-f76007936382}</Project>
       <Name>Lime.Transport.Tcp.Net45</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Lime.Transport.WebSocket\Lime.Transport.WebSocket.csproj">
+      <Project>{a0a1c843-c74c-4204-a19e-2c1e9693bc55}</Project>
+      <Name>Lime.Transport.WebSocket</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

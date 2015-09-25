@@ -132,7 +132,7 @@ namespace Lime.Transport.WebSocket
                     listenerEndPoint, 
                     new WebSocketListenerOptions()
                     {
-                      SubProtocols = new[] { LimeUri.LIME_URI_SCHEME }
+                        SubProtocols = new[] { LimeUri.LIME_URI_SCHEME }
                     });
                 var rfc6455 = new vtortola.WebSockets.Rfc6455.WebSocketFactoryRfc6455(_webSocketListener);
                 _webSocketListener.Standards.RegisterStandard(rfc6455);

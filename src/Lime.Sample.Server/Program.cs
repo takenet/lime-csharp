@@ -11,6 +11,7 @@ using Lime.Protocol.Serialization;
 using Lime.Protocol.Server;
 using Lime.Transport.Tcp;
 using Lime.Protocol.Network;
+using Lime.Transport.WebSocket;
 
 namespace Lime.Sample.Server
 {
@@ -26,33 +27,71 @@ namespace Lime.Sample.Server
 
         static async Task MainAsync(string[] args)
         {
+            Console.Write("Enter the listener URI (Press ENTER for default): ");
+
+            var inputListenerUri = Console.ReadLine();
+            if (string.IsNullOrWhiteSpace(inputListenerUri))
+            {
+                inputListenerUri = "net.tcp://localhost:55321";
+            }
+
             Console.WriteLine("Starting the server...");
 
             // Create and start a listener
-            var listenerUri = new Uri("net.tcp://localhost:55321");
+            var listenerUri = new Uri(inputListenerUri);
+            var transportListener = GetTransportListenerForUri(listenerUri);
+
+            // Starts listening
+            try
+            {
+
+
+                await transportListener.StartAsync();
+                var cts = new CancellationTokenSource();
+                var listenerTask = ListenAsync(transportListener, cts.Token);
+
+                Console.WriteLine("Server started. Press ENTER to stop.");
+                Console.ReadLine();
+                cts.Cancel();
+
+                await listenerTask;
+                await transportListener.StopAsync();
+
+                Console.WriteLine("Server stopped. Press any key to exit.");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Server failed with message '{ex.Message}'. Press any key to exit.");
+            }
+
+            
+            Console.Read();
+        }
+
+        static ITransportListener GetTransportListenerForUri(Uri uri)
+        {
             X509Certificate2 serverCertificate = null;  // You should provide a certificate for TLS
             var serializer = new EnvelopeSerializer();  // Built-in serializer
 
-            var transportListener = new TcpTransportListener(
-                listenerUri,
-                serverCertificate,
-                serializer);
+            switch (uri.Scheme)
+            {
+                case "net.tcp":
+                    return new TcpTransportListener(
+                        uri,
+                        serverCertificate,
+                        serializer);
+                case "ws":
+                case "wss":
+                    return new WebSocketTransportListener(
+                        uri,
+                        serverCertificate,
+                        serializer);                    
 
-            // Starts listening
-            await transportListener.StartAsync();
-            var cts = new CancellationTokenSource();
-            var listenerTask = ListenAsync(transportListener, cts.Token);
-
-            Console.WriteLine("Server started. Press ENTER to stop.");
-            Console.ReadLine();
-            cts.Cancel();
-
-            await listenerTask;
-            await transportListener.StopAsync();            
-
-            Console.WriteLine("Server stopped. Press any key to exit.");
-            Console.Read();
+                default:
+                    throw new NotSupportedException($"Unsupported URI scheme '{uri.Scheme}'");
+            }
         }
+
 
         static async Task ListenAsync(ITransportListener transportListener, CancellationToken cancellationToken)
         {

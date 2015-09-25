@@ -17,6 +17,7 @@ namespace Lime.Protocol.Network
         /// Sends an envelope to the remote node.
         /// </summary>
         /// <param name="envelope">Envelope to be transported</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns></returns>
         Task SendAsync(Envelope envelope, CancellationToken cancellationToken);
 
@@ -31,12 +32,13 @@ namespace Lime.Protocol.Network
         /// Opens the transport connection with the specified Uri.
         /// </summary>
         /// <param name="uri"></param>
-        /// <param name="cancellationToken"></param>
+        /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns></returns>
         Task OpenAsync(Uri uri, CancellationToken cancellationToken);
 
         /// <summary>
         /// Closes the connection
+        /// <param name="cancellationToken">The cancellation token.</param>
         /// </summary>
         Task CloseAsync(CancellationToken cancellationToken);
 
