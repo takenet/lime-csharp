@@ -9,20 +9,46 @@ var SessionState = (function () {
     SessionState.finished = "finished";
     return SessionState;
 })();
-var WebSocketReadyState = (function () {
-    function WebSocketReadyState() {
+var NotificationEvent = (function () {
+    function NotificationEvent() {
     }
-    WebSocketReadyState.CONNECTING = 0;
-    WebSocketReadyState.OPEN = 1;
-    WebSocketReadyState.CLOSING = 2;
-    WebSocketReadyState.CLOSED = 3;
-    return WebSocketReadyState;
+    NotificationEvent.accepted = "accepted";
+    NotificationEvent.validated = "validated";
+    NotificationEvent.authorized = "authorized";
+    NotificationEvent.dispatched = "dispatched";
+    NotificationEvent.received = "received";
+    NotificationEvent.consumed = "consumed";
+    return NotificationEvent;
+})();
+var CommandMethod = (function () {
+    function CommandMethod() {
+    }
+    CommandMethod.get = "get";
+    CommandMethod.set = "set";
+    CommandMethod.delete = "delete";
+    CommandMethod.observe = "observe";
+    CommandMethod.subscribe = "subscribe";
+    return CommandMethod;
+})();
+var CommandStatus = (function () {
+    function CommandStatus() {
+    }
+    CommandStatus.success = "success";
+    CommandStatus.failure = "failure";
+    return CommandStatus;
 })();
 var WebSocketTransport = (function () {
     function WebSocketTransport() {
+        this.queue = [];
     }
     WebSocketTransport.prototype.send = function (envelope) {
-        this.webSocket.send(JSON.stringify(envelope));
+        if (this.webSocket == null) {
+            throw "The connection is not open";
+        }
+        if (this.webSocket.readyState === WebSocket.OPEN) {
+            this.webSocket.send(JSON.stringify(envelope));
+        }
+        this.queue.push(envelope);
     };
     WebSocketTransport.prototype.setListener = function (listener) {
         this.listener = listener;
@@ -30,9 +56,32 @@ var WebSocketTransport = (function () {
     WebSocketTransport.prototype.open = function (url) {
         var _this = this;
         this.webSocket = new WebSocket(url, "lime");
+        this.webSocket.onmessage = function (e) {
+            if (_this.listener != null) {
+                var object = JSON.parse(e.data);
+                var envelope;
+                if (object.hasOwnProperty("event")) {
+                    envelope = object;
+                }
+                else if (object.hasOwnProperty("content")) {
+                    envelope = object;
+                }
+                else if (object.hasOwnProperty("method")) {
+                    envelope = object;
+                }
+                else if (object.hasOwnProperty("state")) {
+                    envelope = object;
+                }
+                else {
+                    return;
+                }
+                _this.listener.onEnvelopeReceived(envelope);
+            }
+        };
         this.webSocket.onopen = function (e) {
-            _this.webSocket.onmessage = function (ev) {
-            };
+            while (_this.queue.length > 0) {
+                _this.send(_this.queue.pop());
+            }
         };
     };
     WebSocketTransport.prototype.close = function () {
