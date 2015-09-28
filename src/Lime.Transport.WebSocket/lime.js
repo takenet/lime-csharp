@@ -1,8 +1,7 @@
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
-    __.prototype = b.prototype;
-    d.prototype = new __();
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
 var SessionState = (function () {
     function SessionState() {
@@ -15,6 +14,43 @@ var SessionState = (function () {
     SessionState.finished = "finished";
     SessionState.failed = "failed";
     return SessionState;
+})();
+var SessionEncryption = (function () {
+    function SessionEncryption() {
+    }
+    SessionEncryption.none = "none";
+    SessionEncryption.tls = "tls";
+    return SessionEncryption;
+})();
+var SessionCompression = (function () {
+    function SessionCompression() {
+    }
+    SessionCompression.none = "none";
+    SessionCompression.gzip = "gzip";
+    return SessionCompression;
+})();
+var AuthenticationScheme = (function () {
+    function AuthenticationScheme() {
+    }
+    AuthenticationScheme.guest = "guest";
+    AuthenticationScheme.plain = "plain";
+    AuthenticationScheme.transport = "transport";
+    return AuthenticationScheme;
+})();
+var GuestAuthentication = (function () {
+    function GuestAuthentication() {
+    }
+    return GuestAuthentication;
+})();
+var TransportAuthentication = (function () {
+    function TransportAuthentication() {
+    }
+    return TransportAuthentication;
+})();
+var PlainAuthentication = (function () {
+    function PlainAuthentication() {
+    }
+    return PlainAuthentication;
 })();
 var NotificationEvent = (function () {
     function NotificationEvent() {
@@ -52,12 +88,16 @@ var WebSocketTransport = (function () {
         this.webSocket.send(JSON.stringify(envelope));
     };
     WebSocketTransport.prototype.onEnvelope = function (envelope) { };
-    WebSocketTransport.prototype.setStateListener = function (listener) {
-        this.transportStateListener = listener;
-    };
     WebSocketTransport.prototype.open = function (uri) {
         var _this = this;
         this.webSocket = new WebSocket(uri, "lime");
+        if (uri.indexOf("wss://") > -1) {
+            this.encryption = SessionEncryption.tls;
+        }
+        else {
+            this.encryption = SessionEncryption.none;
+        }
+        this.compression = SessionCompression.none;
         this.webSocket.onmessage = function (e) {
             var object = JSON.parse(e.data);
             var envelope;
@@ -79,19 +119,19 @@ var WebSocketTransport = (function () {
             _this.onEnvelope(envelope);
         };
         this.webSocket.onopen = function (e) {
-            if (_this.transportStateListener != null) {
-                _this.transportStateListener.onOpen();
+            if (_this.stateListener != null) {
+                _this.stateListener.onOpen();
             }
         };
         this.webSocket.onclose = function (e) {
-            if (_this.transportStateListener != null) {
-                _this.transportStateListener.onClosed();
+            if (_this.stateListener != null) {
+                _this.stateListener.onClosed();
             }
             _this.webSocket = null;
         };
         this.webSocket.onerror = function (e) {
-            if (_this.transportStateListener != null) {
-                _this.transportStateListener.onError();
+            if (_this.stateListener != null) {
+                _this.stateListener.onError(e.toString());
             }
             _this.webSocket = null;
             console.log(e);
@@ -107,6 +147,10 @@ var WebSocketTransport = (function () {
             throw "The connection is not open";
         }
     };
+    WebSocketTransport.prototype.getSupportedCompression = function () { throw new Error("Encryption change is not supported"); };
+    WebSocketTransport.prototype.setCompression = function (compression) { };
+    WebSocketTransport.prototype.getSupportedEncryption = function () { throw new Error("Encryption change is not supported"); };
+    WebSocketTransport.prototype.setEncryption = function (encryption) { };
     return WebSocketTransport;
 })();
 var Channel = (function () {
@@ -131,21 +175,21 @@ var Channel = (function () {
     }
     Channel.prototype.sendMessage = function (message) {
         if (this.state !== SessionState.established) {
-            throw "Cannot send in the '" + this.state + "' state";
+            throw new Error("Cannot send in the '" + this.state + "' state");
         }
         this.send(message);
     };
     Channel.prototype.onMessage = function (message) { };
     Channel.prototype.sendCommand = function (command) {
         if (this.state !== SessionState.established) {
-            throw "Cannot send in the '" + this.state + "' state";
+            throw new Error("Cannot send in the '" + this.state + "' state");
         }
         this.send(command);
     };
     Channel.prototype.onCommand = function (command) { };
     Channel.prototype.sendNotification = function (notification) {
         if (this.state !== SessionState.established) {
-            throw "Cannot send in the '" + this.state + "' state";
+            throw new Error("Cannot send in the '" + this.state + "' state");
         }
         this.send(notification);
     };
@@ -153,7 +197,7 @@ var Channel = (function () {
     Channel.prototype.sendSession = function (session) {
         if (this.state === SessionState.finished ||
             this.state === SessionState.failed) {
-            throw "Cannot send in the '" + this.state + "' state";
+            throw new Error("Cannot send in the '" + this.state + "' state");
         }
         this.send(session);
     };
@@ -183,21 +227,175 @@ var ClientChannel = (function (_super) {
                     console.error(e);
                 }
             }
+            switch (s.state) {
+                case SessionState.negotiating:
+                    if (_this.onSessionNegotiating != null) {
+                        _this.onSessionNegotiating(s);
+                    }
+                    break;
+                case SessionState.authenticating:
+                    if (_this.onSessionAuthenticating != null) {
+                        _this.onSessionAuthenticating(s);
+                    }
+                    break;
+                case SessionState.established:
+                    if (_this.onSessionEstablished != null) {
+                        _this.onSessionEstablished(s);
+                    }
+                    break;
+                case SessionState.finished:
+                    if (_this.onSessionFinished != null) {
+                        _this.onSessionFinished(s);
+                    }
+                case SessionState.failed:
+                    if (_this.onSessionFailed != null) {
+                        _this.onSessionFailed(s);
+                    }
+                default:
+            }
         };
     }
-    ClientChannel.prototype.startNewSession = function (sessionListener) {
+    ClientChannel.prototype.startNewSession = function () {
+        if (this.state !== SessionState.new) {
+            throw "Cannot start a session in the '" + this.state + "' state.";
+        }
+        var session = {
+            state: SessionState.new
+        };
+        this.sendSession(session);
     };
+    ClientChannel.prototype.negotiateSession = function (sessionCompression, sessionEncryption) {
+        if (this.state !== SessionState.negotiating) {
+            throw "Cannot negotiate a session in the '" + this.state + "' state.";
+        }
+        var session = {
+            id: this.sessionId,
+            state: SessionState.negotiating,
+            compression: sessionCompression,
+            encryption: sessionEncryption
+        };
+        this.sendSession(session);
+    };
+    ClientChannel.prototype.authenticateSession = function (identity, authentication, instance) {
+        if (this.state !== SessionState.authenticating) {
+            throw "Cannot authenticate a session in the '" + this.state + "' state.";
+        }
+        var session = {
+            id: this.sessionId,
+            state: SessionState.authenticating,
+            from: identity + "/" + instance,
+            authentication: authentication
+        };
+        this.sendSession(session);
+    };
+    ClientChannel.prototype.sendFinishingSession = function () {
+        if (this.state !== SessionState.established) {
+            throw "Cannot finish a session in the '" + this.state + "' state.";
+        }
+        var session = {
+            id: this.sessionId,
+            state: SessionState.finishing
+        };
+        this.sendSession(session);
+    };
+    ClientChannel.prototype.onSessionNegotiating = function (session) { };
+    ClientChannel.prototype.onSessionAuthenticating = function (session) { };
+    ClientChannel.prototype.onSessionEstablished = function (session) { };
+    ClientChannel.prototype.onSessionFinished = function (session) { };
+    ClientChannel.prototype.onSessionFailed = function (session) { };
     return ClientChannel;
 })(Channel);
+var ClientChannelExtensions = (function () {
+    function ClientChannelExtensions() {
+    }
+    ClientChannelExtensions.establishSession = function (clientChannel, compression, encryption, identity, authentication, instance, listener) {
+        var _this = this;
+        if (clientChannel.state !== SessionState.new) {
+            throw "Cannot establish a session in the '" + clientChannel.state + "' state.";
+        }
+        clientChannel.onSessionNegotiating = function (s) {
+            try {
+                if (s.encryptionOptions != null || s.compressionOptions != null) {
+                    var sessionCompression = compression;
+                    if (sessionCompression === null) {
+                        sessionCompression = s.compressionOptions[0];
+                    }
+                    var sessionEncryption = encryption;
+                    if (sessionEncryption === null) {
+                        sessionEncryption = s.encryptionOptions[0];
+                    }
+                    clientChannel.negotiateSession(sessionCompression, sessionEncryption);
+                }
+                else {
+                    // Apply transport options
+                    if (s.compression !== clientChannel.transport.compression) {
+                        clientChannel.transport.setCompression(s.compression);
+                    }
+                    if (s.encryption !== clientChannel.transport.encryption) {
+                        clientChannel.transport.setEncryption(s.encryption);
+                    }
+                }
+            }
+            catch (e1) {
+                _this.onFailure(clientChannel, listener, e1);
+            }
+        };
+        clientChannel.onSessionAuthenticating = function (s) {
+            try {
+                clientChannel.authenticateSession(identity, authentication, instance);
+            }
+            catch (e2) {
+                _this.onFailure(clientChannel, listener, e2);
+            }
+        };
+        clientChannel.onSessionEstablished = function (s) {
+            _this.onResult(clientChannel, listener, s);
+        };
+        clientChannel.onSessionFailed = function (s) {
+            _this.onResult(clientChannel, listener, s);
+        };
+        try {
+            clientChannel.startNewSession();
+        }
+        catch (e) {
+            this.onFailure(clientChannel, listener, e);
+        }
+    };
+    ClientChannelExtensions.onResult = function (clientChannel, listener, session) {
+        this.removeListeners(clientChannel);
+        listener.onResult(session);
+    };
+    ClientChannelExtensions.onFailure = function (clientChannel, listener, exception) {
+        this.removeListeners(clientChannel);
+        listener.onFailure(exception);
+    };
+    ClientChannelExtensions.removeListeners = function (clientChannel) {
+        clientChannel.onSessionNegotiating = null;
+        clientChannel.onSessionAuthenticating = null;
+        clientChannel.onSessionEstablished = null;
+        clientChannel.onSessionFailed = null;
+    };
+    return ClientChannelExtensions;
+})();
 function establishSession() {
-    var webSocket = new WebSocket("ws://localhost:8080", "lime");
-    webSocket.onmessage = function (event) {
-        console.log(event.data);
+    var transport = new WebSocketTransport();
+    transport.stateListener = {
+        onOpen: function () {
+            var channel = new ClientChannel(transport);
+            ClientChannelExtensions.establishSession(channel, "none", "none", "any@domain.com", new PlainAuthentication(), "default", {
+                onResult: function (s) { console.log("Session id: " + s.id + " - State: " + s.state); },
+                onFailure: function (e) { console.error("An error occurred: " + e); }
+            });
+            channel.onMessage = function (m) {
+                console.log("Message received - From: " + m.from + " - To: " + m.to + " - Content: " + m.content);
+            };
+        },
+        onClosed: function () {
+            console.log("Transport is cloed");
+        },
+        onError: function (s) {
+            console.error("Transport failed: " + s);
+        }
     };
-    var session = {
-        state: SessionState.new
-    };
-    webSocket.onopen = function (event) {
-        webSocket.send(JSON.stringify(session));
-    };
+    transport.open("ws://localhost:8080");
 }
