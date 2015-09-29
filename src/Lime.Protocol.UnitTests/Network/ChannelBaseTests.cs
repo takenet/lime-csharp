@@ -619,20 +619,20 @@ namespace Lime.Protocol.UnitTests.Network
         [ExpectedException(typeof(InvalidOperationException))]
         public async Task ReceiveSessionAsync_LimitedBuffers_ThrowsInvalidOperationException()
         {
+            // Arrange
             var session = Dummy.CreateSession(SessionState.Finished);
-
-            var cancellationToken = Dummy.CreateCancellationToken();
-
-
-            var taskCompletionSource = new TaskCompletionSource<Envelope>();
+            var cancellationToken = Dummy.CreateCancellationToken();            
             _transport
                 .SetupSequence(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
                 .Returns(Task.FromResult<Envelope>(session))
                 .Returns(Task.FromResult<Envelope>(session));
 
-            var target = (ISessionChannel)GetTarget(SessionState.Established);
+            var target = (ISessionChannel)GetTarget(SessionState.Established, 1);
+            await Task.Delay(100);
 
-            var receiveSessionTask = await target.ReceiveSessionAsync(cancellationToken);            
+            // Act
+            var receiveSessionTask = await target.ReceiveSessionAsync(cancellationToken);
+            
         }
 
         #endregion
@@ -683,8 +683,9 @@ namespace Lime.Protocol.UnitTests.Network
 
         [Test]
         [Category("EnvelopeAsyncBuffer_PromiseAdded")]
-        public void EnvelopeAsyncBuffer_PromiseAdded_BufferHasPromises_ConsumersFromTransport()
+        public async Task EnvelopeAsyncBuffer_PromiseAdded_BufferHasPromises_ConsumersFromTransport()
         {
+            // Arrange
             var cancellationToken = Dummy.CreateCancellationToken();
 
             var content = Dummy.CreateTextContent();
@@ -708,11 +709,15 @@ namespace Lime.Protocol.UnitTests.Network
             
             var target = GetTarget(SessionState.Established);
 
+            // Act
             var receiveMessageTask = target.ReceiveMessageAsync(cancellationToken);
             var receiveCommandTask = target.ReceiveCommandAsync(cancellationToken);
             var receiveNotificationTask = target.ReceiveNotificationAsync(cancellationToken);
             var receiveSessionTask = ((ISessionChannel)target).ReceiveSessionAsync(cancellationToken);
-                                    
+
+            // Assert
+            await Task.WhenAll(receiveSessionTask, receiveNotificationTask, receiveCommandTask, receiveMessageTask);
+
             Assert.IsTrue(receiveSessionTask.IsCompleted);
             Assert.IsTrue(receiveNotificationTask.IsCompleted);
             Assert.IsTrue(receiveCommandTask.IsCompleted);
@@ -731,7 +736,7 @@ namespace Lime.Protocol.UnitTests.Network
 
         [Test]
         [Category("EnvelopeAsyncBuffer_PromiseAdded")]
-        public void EnvelopeAsyncBuffer_PromiseAdded_BufferHasPromises_ConsumersFromTransportInverted()
+        public async Task EnvelopeAsyncBuffer_PromiseAdded_BufferHasPromises_ConsumersFromTransportInverted()
         {
             var cancellationToken = Dummy.CreateCancellationToken();
 
@@ -754,10 +759,15 @@ namespace Lime.Protocol.UnitTests.Network
                 .Returns(tcs.Task);
 
             var target = GetTarget(SessionState.Established);
+
+            // Act
             var receiveSessionTask = ((ISessionChannel)target).ReceiveSessionAsync(cancellationToken);
             var receiveNotificationTask = target.ReceiveNotificationAsync(cancellationToken);
             var receiveCommandTask = target.ReceiveCommandAsync(cancellationToken);
             var receiveMessageTask = target.ReceiveMessageAsync(cancellationToken);
+
+            // Assert
+            await Task.WhenAll(receiveSessionTask, receiveNotificationTask, receiveCommandTask, receiveMessageTask);
 
             Assert.IsTrue(receiveSessionTask.IsCompleted);
             Assert.IsTrue(receiveNotificationTask.IsCompleted);

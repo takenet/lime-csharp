@@ -41,11 +41,7 @@ namespace Lime.Protocol.Network
         /// <param name="autoReplyPings">Indicates if the channel should reply automatically to ping request commands. In this case, the ping command are not returned by the ReceiveCommandAsync method.</param>
         protected ChannelBase(ITransport transport, TimeSpan sendTimeout, int buffersLimit, bool fillEnvelopeRecipients, bool autoReplyPings)
         {
-            if (transport == null)
-            {
-                throw new ArgumentNullException("transport");
-            }
-
+            if (transport == null) throw new ArgumentNullException(nameof(transport));            
             Transport = transport;
             Transport.Closing += Transport_Closing;
 
@@ -114,7 +110,9 @@ namespace Lime.Protocol.Network
                 if (_state == SessionState.Established &&
                     _consumeTransportTask == null)
                 {
-                    _consumeTransportTask = ConsumeTransportAsync();
+                    _consumeTransportTask =
+                        Task.Factory.StartNew((Func<Task>)ConsumeTransportAsync, TaskCreationOptions.LongRunning)
+                        .Unwrap();
                 }
             }
         }
