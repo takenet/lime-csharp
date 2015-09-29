@@ -95,31 +95,30 @@ namespace Lime.Transport.WebSocket
                 {
                     listenerEndPoint = new IPEndPoint(IPAddress.Any, listenerUri.Port);
                 }
-                else
-                    switch (listenerUri.HostNameType)
-                    {
-                        case UriHostNameType.Dns:
-                            var dnsEntry = await Dns.GetHostEntryAsync(listenerUri.Host).ConfigureAwait(false);
-                            if (dnsEntry.AddressList.Any(a => a.AddressFamily == AddressFamily.InterNetwork))
-                            {
-                                listenerEndPoint =
-                                    new IPEndPoint(
-                                        dnsEntry.AddressList.First(a => a.AddressFamily == AddressFamily.InterNetwork),
-                                        listenerUri.Port);
-                            }
-                            else
-                            {
-                                throw new ArgumentException(
-                                    $"Could not resolve the IPAddress for the host '{listenerUri.Host}'");
-                            }
-                            break;
-                        case UriHostNameType.IPv4:
-                        case UriHostNameType.IPv6:
-                            listenerEndPoint = new IPEndPoint(IPAddress.Parse(listenerUri.Host), listenerUri.Port);
-                            break;
-                        default:
-                            throw new ArgumentException($"The host name type for '{listenerUri.Host}' is not supported");
-                    }
+                else switch (listenerUri.HostNameType)
+                {
+                    case UriHostNameType.Dns:
+                        var dnsEntry = await Dns.GetHostEntryAsync(listenerUri.Host).ConfigureAwait(false);
+                        if (dnsEntry.AddressList.Any(a => a.AddressFamily == AddressFamily.InterNetwork))
+                        {
+                            listenerEndPoint =
+                                new IPEndPoint(
+                                    dnsEntry.AddressList.First(a => a.AddressFamily == AddressFamily.InterNetwork),
+                                    listenerUri.Port);
+                        }
+                        else
+                        {
+                            throw new ArgumentException(
+                                $"Could not resolve the IPAddress for the host '{listenerUri.Host}'");
+                        }
+                        break;
+                    case UriHostNameType.IPv4:
+                    case UriHostNameType.IPv6:
+                        listenerEndPoint = new IPEndPoint(IPAddress.Parse(listenerUri.Host), listenerUri.Port);
+                        break;
+                    default:
+                        throw new ArgumentException($"The host name type for '{listenerUri.Host}' is not supported");
+                }
 
                 _webSocketListener = new WebSocketListener(
                     listenerEndPoint, 
