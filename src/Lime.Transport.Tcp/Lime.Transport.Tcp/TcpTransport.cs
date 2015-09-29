@@ -14,7 +14,7 @@ using Lime.Protocol.Serialization;
 
 namespace Lime.Transport.Tcp
 {
-	/// <summary>
+    /// <summary>
 	/// Provides the messaging protocol transport for TCP connections.
 	/// </summary>
 	public class TcpTransport : TransportBase, ITransport, IAuthenticatableTransport
@@ -34,25 +34,26 @@ namespace Lime.Transport.Tcp
 	    private readonly X509Certificate2 _serverCertificate;
 		private readonly X509Certificate2 _clientCertificate;
 		private string _hostName;
-		
-		#endregion
 
-		#region Constructor
+        private readonly JsonBuffer _jsonBuffer;
 
-	    /// <summary>
-	    /// Initializes a new instance of the <see cref="TcpTransport"/> class.
-	    /// </summary>
-	    /// <param name="clientCertificate"></param>
-	    /// <param name="bufferSize">Size of the buffer.</param>
-	    /// <param name="traceWriter">The trace writer.</param>
+        #endregion
+
+        #region Constructor
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="TcpTransport"/> class.
+        /// </summary>
+        /// <param name="clientCertificate"></param>
+        /// <param name="bufferSize">Size of the buffer.</param>
+        /// <param name="traceWriter">The trace writer.</param>
         /// <param name="serverCertificateValidationCallback">A callback to validate the server certificate in the TLS authentication process.</param>
-	    public TcpTransport(X509Certificate2 clientCertificate = null, int bufferSize = DEFAULT_BUFFER_SIZE, ITraceWriter traceWriter = null, RemoteCertificateValidationCallback serverCertificateValidationCallback = null)
+        public TcpTransport(X509Certificate2 clientCertificate = null, int bufferSize = DEFAULT_BUFFER_SIZE, ITraceWriter traceWriter = null, RemoteCertificateValidationCallback serverCertificateValidationCallback = null)
 			: this(new EnvelopeSerializer(), clientCertificate, bufferSize, traceWriter, serverCertificateValidationCallback)
-		{
+	    {
+	    }
 
-		}
-
-	    /// <summary>
+        /// <summary>
 	    /// Initializes a new instance of the <see cref="TcpTransport"/> class.
 	    /// </summary>
 	    /// <param name="envelopeSerializer">The envelope serializer.</param>
@@ -62,11 +63,10 @@ namespace Lime.Transport.Tcp
         /// <param name="serverCertificateValidationCallback">A callback to validate the server certificate in the TLS authentication process.</param>
 	    public TcpTransport(IEnvelopeSerializer envelopeSerializer, X509Certificate2 clientCertificate = null, int bufferSize = DEFAULT_BUFFER_SIZE, ITraceWriter traceWriter = null, RemoteCertificateValidationCallback serverCertificateValidationCallback = null)
 			: this(new TcpClientAdapter(new TcpClient()), envelopeSerializer, null, clientCertificate, null, bufferSize, traceWriter, serverCertificateValidationCallback, null)
-		{
+        {
+        }
 
-		}
-
-	    /// <summary>
+        /// <summary>
 	    /// Initializes a new instance of the <see cref="TcpTransport"/> class.
 	    /// </summary>
 	    /// <param name="tcpClient">The TCP client.</param>
@@ -79,11 +79,10 @@ namespace Lime.Transport.Tcp
 	    public TcpTransport(ITcpClient tcpClient, IEnvelopeSerializer envelopeSerializer, string hostName, X509Certificate2 clientCertificate = null, int bufferSize = DEFAULT_BUFFER_SIZE, ITraceWriter traceWriter = null, RemoteCertificateValidationCallback serverCertificateValidationCallback = null)
 			: this(tcpClient, envelopeSerializer, null, clientCertificate, hostName, bufferSize, traceWriter, serverCertificateValidationCallback, null)
 
-		{
+        {
+        }
 
-		}
-
-	    /// <summary>
+        /// <summary>
 	    /// Initializes a new instance of the <see cref="TcpTransport"/> class.
 	    /// This constructor is used by the <see cref="TcpTransportListener"/> class.
 	    /// </summary>
@@ -95,9 +94,8 @@ namespace Lime.Transport.Tcp
         /// <param name="clientCertificateValidationCallback">A callback to validate the client certificate in the TLS authentication process.</param>
 	    internal TcpTransport(ITcpClient tcpClient, IEnvelopeSerializer envelopeSerializer, X509Certificate2 serverCertificate, int bufferSize = DEFAULT_BUFFER_SIZE, ITraceWriter traceWriter = null, RemoteCertificateValidationCallback clientCertificateValidationCallback = null)
 			: this(tcpClient, envelopeSerializer, serverCertificate, null, null, bufferSize, traceWriter, null, clientCertificateValidationCallback)
-		{
-
-		}
+        {
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TcpTransport"/> class.
@@ -118,22 +116,13 @@ namespace Lime.Transport.Tcp
         /// </exception>
 		private TcpTransport(ITcpClient tcpClient, IEnvelopeSerializer envelopeSerializer, X509Certificate2 serverCertificate, X509Certificate2 clientCertificate, string hostName, int bufferSize, ITraceWriter traceWriter, RemoteCertificateValidationCallback serverCertificateValidationCallback, RemoteCertificateValidationCallback clientCertificateValidationCallback)
 		{
-			if (tcpClient == null)
-			{
-				throw new ArgumentNullException("tcpClient");
-			}
+			if (tcpClient == null) throw new ArgumentNullException(nameof(tcpClient));
+            if (envelopeSerializer == null) throw new ArgumentNullException(nameof(envelopeSerializer));
 
-			_tcpClient = tcpClient;
 
-            _buffer = new byte[bufferSize];
-			_bufferCurPos = 0;
-
-			if (envelopeSerializer == null)
-			{
-				throw new ArgumentNullException("envelopeSerializer");
-			}
-
-			_envelopeSerializer = envelopeSerializer;
+            _tcpClient = tcpClient;            			
+            _jsonBuffer = new JsonBuffer(bufferSize);
+            _envelopeSerializer = envelopeSerializer;
 
 			_hostName = hostName;
 			_traceWriter = traceWriter;
@@ -148,7 +137,7 @@ namespace Lime.Transport.Tcp
             _clientCertificateValidationCallback = clientCertificateValidationCallback ?? ValidateClientCertificate;
 		}
 
-		#endregion
+        #endregion
 
 		#region TransportBase Members
 
@@ -165,14 +154,10 @@ namespace Lime.Transport.Tcp
 
 			if (!_tcpClient.Connected)
 			{
-				if (uri == null)
-				{
-					throw new ArgumentNullException("uri");
-				}
-
+				if (uri == null) throw new ArgumentNullException(nameof(uri));				
 				if (uri.Scheme != Uri.UriSchemeNetTcp)
 				{
-					throw new ArgumentException(string.Format("Invalid URI scheme. Expected is '{0}'.", Uri.UriSchemeNetTcp));
+					throw new ArgumentException($"Invalid URI scheme. Expected is '{Uri.UriSchemeNetTcp}'.");
 				}
 
 				if (string.IsNullOrWhiteSpace(_hostName))
@@ -195,21 +180,10 @@ namespace Lime.Transport.Tcp
 		/// <exception cref="System.NotImplementedException"></exception>
 		public override async Task SendAsync(Envelope envelope, CancellationToken cancellationToken)
 		{
-			if (envelope == null)
-			{
-				throw new ArgumentNullException("envelope");
-			}
-
-			if (_stream == null)
-			{
-				throw new InvalidOperationException("The stream was not initialized. Call OpenAsync first.");
-			}
-
-            if (!_stream.CanWrite)
-            {
-                throw new InvalidOperationException("Invalid stream state");
-            }
-
+			if (envelope == null) throw new ArgumentNullException(nameof(envelope));			
+			if (_stream == null) throw new InvalidOperationException("The stream was not initialized. Call OpenAsync first.");			
+            if (!_stream.CanWrite) throw new InvalidOperationException("Invalid stream state");
+            
             var envelopeJson = _envelopeSerializer.Serialize(envelope);
 
 			if (_traceWriter != null &&
@@ -238,16 +212,9 @@ namespace Lime.Transport.Tcp
 		/// <returns></returns>
 		public override async Task<Envelope> ReceiveAsync(CancellationToken cancellationToken)
 		{
-			if (_stream == null)
-			{
-				throw new InvalidOperationException("The stream was not initialized. Call OpenAsync first.");
-			}
-
-            if (!_stream.CanRead)
-            {
-                throw new InvalidOperationException("Invalid stream state");
-            }
-
+			if (_stream == null) throw new InvalidOperationException("The stream was not initialized. Call OpenAsync first.");		
+            if (!_stream.CanRead) throw new InvalidOperationException("Invalid stream state");
+            
             await _receiveSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
 
 			try
@@ -258,11 +225,11 @@ namespace Lime.Transport.Tcp
 				{
 					cancellationToken.ThrowIfCancellationRequested();
 
-					byte[] json;
+					byte[] jsonBytes;
 
-					if (TryExtractJsonFromBuffer(out json))
+					if (_jsonBuffer.TryExtractJsonFromBuffer(out jsonBytes))
 					{
-						var envelopeJson = Encoding.UTF8.GetString(json);
+						var envelopeJson = Encoding.UTF8.GetString(jsonBytes);
 
 						if (_traceWriter != null &&
 							_traceWriter.IsEnabled)
@@ -280,7 +247,7 @@ namespace Lime.Transport.Tcp
                         // http://stackoverflow.com/questions/21468137/async-network-operations-never-finish
                         // http://referencesource.microsoft.com/#mscorlib/system/io/stream.cs,421
 						var read = await _stream
-                            .ReadAsync(_buffer, _bufferCurPos, _buffer.Length - _bufferCurPos, cancellationToken)
+                            .ReadAsync(_jsonBuffer.Buffer, _jsonBuffer.BufferCurPos, _jsonBuffer.Buffer.Length - _jsonBuffer.BufferCurPos, cancellationToken)
                             .WithCancellation(cancellationToken)
                             .ConfigureAwait(false);
 
@@ -290,10 +257,10 @@ namespace Lime.Transport.Tcp
                             await CloseAsync(CancellationToken.None).ConfigureAwait(false);
 					        break;
 					    }
-                        
-					    _bufferCurPos += read;
 
-                        if (_bufferCurPos >= _buffer.Length)
+					    _jsonBuffer.BufferCurPos += read;
+
+                        if (_jsonBuffer.BufferCurPos >= _jsonBuffer.Buffer.Length)
 						{
 							await CloseAsync(CancellationToken.None).ConfigureAwait(false);
 							throw new BufferOverflowException("Maximum buffer size reached");
@@ -318,13 +285,8 @@ namespace Lime.Transport.Tcp
 		protected override Task PerformCloseAsync(CancellationToken cancellationToken)
 		{
             cancellationToken.ThrowIfCancellationRequested();
-
-            if (_stream != null)
-			{
-				_stream.Close();
-			}
-
-			_tcpClient.Close();
+		    _stream?.Close();
+		    _tcpClient.Close();
 			return Task.FromResult<object>(null);
 		}
 
@@ -429,7 +391,7 @@ namespace Lime.Transport.Tcp
 
 								if (_clientCertificate != null)
 								{
-									clientCertificates = new X509CertificateCollection(new[] { _clientCertificate });
+									clientCertificates = new X509CertificateCollection(new X509Certificate[] { _clientCertificate });
 								}
 
 								await sslStream
@@ -478,11 +440,7 @@ namespace Lime.Transport.Tcp
 		{
 			var role = DomainRole.Unknown;
 			
-			if (identity == null)
-			{
-				throw new ArgumentNullException("identity");
-			}
-
+			if (identity == null) throw new ArgumentNullException(nameof(identity));
 			var sslStream = _stream as SslStream;
 
 			if (sslStream != null &&
@@ -554,77 +512,6 @@ namespace Lime.Transport.Tcp
 #endif
 		}
 
-		#region Buffer fields
-
-		private readonly byte[] _buffer;
-		private int _bufferCurPos;		
-		private int _jsonStartPos;
-		private int _jsonCurPos;
-		private int _jsonStackedBrackets;
-		private bool _jsonStarted;
-
-		#endregion
-
-		/// <summary>
-		/// Try to extract a JSON document from the buffer, based on the brackets count.
-		/// </summary>
-		/// <param name="json"></param>
-		/// <returns></returns>
-		private bool TryExtractJsonFromBuffer(out byte[] json)
-		{
-			if (_bufferCurPos > _buffer.Length)
-			{
-				throw new ArgumentException("Buffer current pos or length value is invalid");
-			}
-
-			json = null;
-			int jsonLenght = 0;
-
-			for (int i = _jsonCurPos; i < _bufferCurPos; i++)
-			{
-				_jsonCurPos = i + 1;
-
-				if (_buffer[i] == '{')
-				{
-					_jsonStackedBrackets++;
-					if (!_jsonStarted)
-					{
-						_jsonStartPos = i;
-						_jsonStarted = true;
-					}
-				}
-				else if (_buffer[i] == '}')
-				{
-					_jsonStackedBrackets--;
-				}
-
-				if (_jsonStarted &&
-					_jsonStackedBrackets == 0)
-				{
-					jsonLenght = i - _jsonStartPos + 1;
-					break;
-				}
-			}
-
-			if (jsonLenght > 1)
-			{
-				json = new byte[jsonLenght];
-				Array.Copy(_buffer, _jsonStartPos, json, 0, jsonLenght);
-
-				// Shifts the buffer to the left
-				_bufferCurPos -= (jsonLenght + _jsonStartPos);
-				Array.Copy(_buffer, jsonLenght + _jsonStartPos, _buffer, 0, _bufferCurPos);
-
-				_jsonCurPos = 0;
-				_jsonStartPos = 0;
-				_jsonStarted = false;
-
-				return true;
-			}
-
-			return false;
-		}
-
-		#endregion
+        #endregion
 	}
 }

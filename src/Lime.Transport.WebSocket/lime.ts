@@ -45,7 +45,6 @@ class AuthenticationScheme {
 }
 
 interface IAuthentication { }
-
 class GuestAuthentication implements IAuthentication { }
 class TransportAuthentication implements IAuthentication { }
 class PlainAuthentication implements IAuthentication {
@@ -539,40 +538,4 @@ class ClientChannelExtensions {
 interface IEstablishSessionListener {
     onResult: ISessionListener;
     onFailure: (exception: string) => void;
-}
-
-
-function establishSession() {
-
-    const transport = new WebSocketTransport(true);        
-
-    transport.stateListener = {
-        onOpen: () => {
-            const channel = new ClientChannel(transport);
-            ClientChannelExtensions.establishSession(
-                channel,
-                "none",
-                "none",
-                "any@limeprotocol.org",
-                new GuestAuthentication(),
-                "default",
-                {
-                    onResult: s => { console.log(`Session id: ${s.id} - State: ${s.state}`); },
-                    onFailure: e => { console.error(`An error occurred: ${e}`); }
-                });
-
-            channel.onMessage = m => {
-                console.log(`Message received - From: ${m.from} - To: ${m.to} - Content: ${m.content}`);
-            };
-            
-        },
-        onClosed: () => {
-            console.log("Transport is closed");
-        },
-        onError: (s) => {
-            console.error(`Transport failed: ${s}`);
-        }
-    }
-
-    transport.open("ws://localhost:8080");    
 }

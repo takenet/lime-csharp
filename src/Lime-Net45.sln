@@ -61,6 +61,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lime.Protocol.Serialization
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lime.Protocol.Serialization.Newtonsoft.UnitTests", "Lime.Protocol.Serialization.Newtonsoft.UnitTests\Lime.Protocol.Serialization.Newtonsoft.UnitTests.csproj", "{C51D26F4-E780-4BDE-84FC-AADC6AE63D5B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lime.Transport.WebSocket.UnitTests", "Lime.Transport.WebSocket.UnitTests\Lime.Transport.WebSocket.UnitTests.csproj", "{FB2EA586-5B55-442D-BD88-67AB219E7325}"
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		Lime.Messaging\Lime.Messaging\Lime.Messaging.projitems*{796a57b4-1fe0-4fe9-940f-e99083dc233a}*SharedItemsImports = 4
@@ -275,6 +277,22 @@ Global
 		{C51D26F4-E780-4BDE-84FC-AADC6AE63D5B}.Release|Any CPU.Build.0 = Release|Any CPU
 		{C51D26F4-E780-4BDE-84FC-AADC6AE63D5B}.Release|x86.ActiveCfg = Release|Any CPU
 		{C51D26F4-E780-4BDE-84FC-AADC6AE63D5B}.Release|x86.Build.0 = Release|Any CPU
+		{FB2EA586-5B55-442D-BD88-67AB219E7325}.Ad-Hoc|Any CPU.ActiveCfg = Release|Any CPU
+		{FB2EA586-5B55-442D-BD88-67AB219E7325}.Ad-Hoc|Any CPU.Build.0 = Release|Any CPU
+		{FB2EA586-5B55-442D-BD88-67AB219E7325}.Ad-Hoc|x86.ActiveCfg = Release|Any CPU
+		{FB2EA586-5B55-442D-BD88-67AB219E7325}.Ad-Hoc|x86.Build.0 = Release|Any CPU
+		{FB2EA586-5B55-442D-BD88-67AB219E7325}.AppStore|Any CPU.ActiveCfg = Release|Any CPU
+		{FB2EA586-5B55-442D-BD88-67AB219E7325}.AppStore|Any CPU.Build.0 = Release|Any CPU
+		{FB2EA586-5B55-442D-BD88-67AB219E7325}.AppStore|x86.ActiveCfg = Release|Any CPU
+		{FB2EA586-5B55-442D-BD88-67AB219E7325}.AppStore|x86.Build.0 = Release|Any CPU
+		{FB2EA586-5B55-442D-BD88-67AB219E7325}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FB2EA586-5B55-442D-BD88-67AB219E7325}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FB2EA586-5B55-442D-BD88-67AB219E7325}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{FB2EA586-5B55-442D-BD88-67AB219E7325}.Debug|x86.Build.0 = Debug|Any CPU
+		{FB2EA586-5B55-442D-BD88-67AB219E7325}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FB2EA586-5B55-442D-BD88-67AB219E7325}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FB2EA586-5B55-442D-BD88-67AB219E7325}.Release|x86.ActiveCfg = Release|Any CPU
+		{FB2EA586-5B55-442D-BD88-67AB219E7325}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -291,5 +309,6 @@ Global
 		{BA768C8A-A119-4185-83F9-ADCDF7593D4C} = {63966937-1156-4CA9-9667-56960120C911}
 		{5EBDDCFE-BA33-44A9-835E-122390030754} = {63966937-1156-4CA9-9667-56960120C911}
 		{A0A1C843-C74C-4204-A19E-2C1E9693BC55} = {84538803-A033-47DD-A350-A04E84F6BAE8}
+		{FB2EA586-5B55-442D-BD88-67AB219E7325} = {84538803-A033-47DD-A350-A04E84F6BAE8}
 	EndGlobalSection
 EndGlobal

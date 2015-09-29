@@ -8,6 +8,7 @@ using Lime.Protocol.Network;
 using Lime.Protocol.Serialization;
 using Lime.Protocol.Util;
 using vtortola.WebSockets;
+using vtortola.WebSockets.Rfc6455;
 
 namespace Lime.Transport.WebSocket
 {
@@ -19,7 +20,7 @@ namespace Lime.Transport.WebSocket
 
         internal ServerWebSocketTransport(vtortola.WebSockets.WebSocket webSocket, IEnvelopeSerializer envelopeSerializer, ITraceWriter traceWriter = null)
         {
-            if (webSocket == null) throw new ArgumentNullException("webSocket");
+            if (webSocket == null) throw new ArgumentNullException(nameof(webSocket));
             _webSocket = webSocket;
             _envelopeSerializer = envelopeSerializer;
             _traceWriter = traceWriter;
@@ -42,11 +43,11 @@ namespace Lime.Transport.WebSocket
         {
             using (var stream = await _webSocket.ReadMessageAsync(cancellationToken).ConfigureAwait(false))
             {
-                if (stream.MessageType == WebSocketMessageType.Binary)
+                if (stream.MessageType != WebSocketMessageType.Text)
                 {
-                    throw new NotSupportedException("An unsupported binary message was received");
+                    throw new NotSupportedException("An unsupported message type was received");
                 }
-                
+
                 using (var reader = new StreamReader(stream, Encoding.UTF8))
                 {
                     var envelopeJson = await reader.ReadToEndAsync().ConfigureAwait(false);

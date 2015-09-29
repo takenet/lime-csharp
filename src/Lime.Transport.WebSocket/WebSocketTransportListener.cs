@@ -33,32 +33,26 @@ namespace Lime.Transport.WebSocket
         public WebSocketTransportListener(Uri listenerUri, X509Certificate2 sslCertificate,
             IEnvelopeSerializer envelopeSerializer, ITraceWriter traceWriter = null)
         {
-            if (listenerUri == null)
-            {
-                throw new ArgumentNullException("listenerUri");
-            }
-
+            if (listenerUri == null) throw new ArgumentNullException(nameof(listenerUri));
+            
             if (listenerUri.Scheme != UriSchemeWebSocket &&
                 listenerUri.Scheme != UriSchemeWebSocketSecure)
             {
-                throw new ArgumentException("Invalid URI scheme. The expected value is 'ws' or 'wss'.");
+                throw new ArgumentException($"Invalid URI scheme. The expected value is '{UriSchemeWebSocket}' or '{UriSchemeWebSocketSecure}'.");
             }
 
             if (sslCertificate == null &&
                 listenerUri.Scheme == UriSchemeWebSocketSecure)
             {
-                throw new ArgumentNullException("sslCertificate");
+                throw new ArgumentNullException(nameof(sslCertificate));
             }
 
             ListenerUris = new[] { listenerUri };
 
             if (sslCertificate != null)
             {
-                if (!sslCertificate.HasPrivateKey)
-                {
-                    throw new ArgumentException("The certificate must have a private key");
-                }
-
+                if (!sslCertificate.HasPrivateKey) throw new ArgumentException("The certificate must have a private key", nameof(sslCertificate));
+                
                 try
                 {
                     // Checks if the private key is available for the current user
@@ -72,7 +66,7 @@ namespace Lime.Transport.WebSocket
 
             if (envelopeSerializer == null)
             {
-                throw new ArgumentNullException("envelopeSerializer");
+                throw new ArgumentNullException(nameof(envelopeSerializer));
             }
             _sslCertificate = sslCertificate;
             _envelopeSerializer = envelopeSerializer;
@@ -82,7 +76,7 @@ namespace Lime.Transport.WebSocket
 
         #region ITransportListener Members
 
-        public Uri[] ListenerUris { get; private set; }
+        public Uri[] ListenerUris { get; }
 
         public async Task StartAsync()
         {
@@ -116,7 +110,7 @@ namespace Lime.Transport.WebSocket
                             else
                             {
                                 throw new ArgumentException(
-                                    string.Format("Could not resolve the IPAddress for the host '{0}'", listenerUri.Host));
+                                    $"Could not resolve the IPAddress for the host '{listenerUri.Host}'");
                             }
                             break;
                         case UriHostNameType.IPv4:
@@ -124,8 +118,7 @@ namespace Lime.Transport.WebSocket
                             listenerEndPoint = new IPEndPoint(IPAddress.Parse(listenerUri.Host), listenerUri.Port);
                             break;
                         default:
-                            throw new ArgumentException(string.Format("The host name type for '{0}' is not supported",
-                                listenerUri.Host));
+                            throw new ArgumentException($"The host name type for '{listenerUri.Host}' is not supported");
                     }
 
                 _webSocketListener = new WebSocketListener(

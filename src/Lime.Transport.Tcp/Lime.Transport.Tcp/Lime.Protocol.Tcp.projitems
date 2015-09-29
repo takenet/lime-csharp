@@ -11,6 +11,7 @@
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)BufferOverflowException.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ITcpClient.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)JsonBuffer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)TcpClientAdapter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)TcpTransport.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)TcpTransportListener.cs" />
