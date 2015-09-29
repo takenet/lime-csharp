@@ -53,6 +53,12 @@ namespace Lime.Protocol.Security
         /// Transport layer authentication.
         /// </summary>
         [EnumMember(Value = "transport")]
-        Transport
+        Transport,
+
+        /// <summary>
+        /// Key authentication.
+        /// </summary>
+        [EnumMember(Value = "key")]
+        Key
     }
 }

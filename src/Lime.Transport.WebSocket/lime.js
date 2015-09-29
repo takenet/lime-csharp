@@ -35,6 +35,7 @@ var AuthenticationScheme = (function () {
     AuthenticationScheme.guest = "guest";
     AuthenticationScheme.plain = "plain";
     AuthenticationScheme.transport = "transport";
+    AuthenticationScheme.key = "key";
     return AuthenticationScheme;
 })();
 var GuestAuthentication = (function () {
@@ -51,6 +52,11 @@ var PlainAuthentication = (function () {
     function PlainAuthentication() {
     }
     return PlainAuthentication;
+})();
+var KeyAuthentication = (function () {
+    function KeyAuthentication() {
+    }
+    return KeyAuthentication;
 })();
 var NotificationEvent = (function () {
     function NotificationEvent() {
@@ -81,11 +87,17 @@ var CommandStatus = (function () {
     return CommandStatus;
 })();
 var WebSocketTransport = (function () {
-    function WebSocketTransport() {
+    function WebSocketTransport(traceEnabled) {
+        if (traceEnabled === void 0) { traceEnabled = false; }
+        this.traceEnabled = traceEnabled;
     }
     WebSocketTransport.prototype.send = function (envelope) {
         this.ensureSocketOpen();
-        this.webSocket.send(JSON.stringify(envelope));
+        var envelopeString = JSON.stringify(envelope);
+        this.webSocket.send(envelopeString);
+        if (this.traceEnabled) {
+            console.debug("SEND: " + envelopeString);
+        }
     };
     WebSocketTransport.prototype.onEnvelope = function (envelope) { };
     WebSocketTransport.prototype.open = function (uri) {
@@ -99,6 +111,9 @@ var WebSocketTransport = (function () {
         }
         this.compression = SessionCompression.none;
         this.webSocket.onmessage = function (e) {
+            if (_this.traceEnabled) {
+                console.debug("RECEIVE: " + e.data);
+            }
             var object = JSON.parse(e.data);
             var envelope;
             if (object.hasOwnProperty("event")) {
@@ -280,10 +295,27 @@ var ClientChannel = (function (_super) {
         if (this.state !== SessionState.authenticating) {
             throw "Cannot authenticate a session in the '" + this.state + "' state.";
         }
+        var scheme;
+        if (authentication instanceof GuestAuthentication) {
+            scheme = AuthenticationScheme.guest;
+        }
+        else if (authentication instanceof PlainAuthentication) {
+            scheme = AuthenticationScheme.plain;
+        }
+        else if (authentication instanceof TransportAuthentication) {
+            scheme = AuthenticationScheme.transport;
+        }
+        else if (authentication instanceof KeyAuthentication) {
+            scheme = AuthenticationScheme.key;
+        }
+        else {
+            scheme = "unknown";
+        }
         var session = {
             id: this.sessionId,
             state: SessionState.authenticating,
             from: identity + "/" + instance,
+            scheme: scheme,
             authentication: authentication
         };
         this.sendSession(session);
@@ -378,11 +410,11 @@ var ClientChannelExtensions = (function () {
     return ClientChannelExtensions;
 })();
 function establishSession() {
-    var transport = new WebSocketTransport();
+    var transport = new WebSocketTransport(true);
     transport.stateListener = {
         onOpen: function () {
             var channel = new ClientChannel(transport);
-            ClientChannelExtensions.establishSession(channel, "none", "none", "any@domain.com", new PlainAuthentication(), "default", {
+            ClientChannelExtensions.establishSession(channel, "none", "none", "any@limeprotocol.org", new GuestAuthentication(), "default", {
                 onResult: function (s) { console.log("Session id: " + s.id + " - State: " + s.state); },
                 onFailure: function (e) { console.error("An error occurred: " + e); }
             });
@@ -391,7 +423,7 @@ function establishSession() {
             };
         },
         onClosed: function () {
-            console.log("Transport is cloed");
+            console.log("Transport is closed");
         },
         onError: function (s) {
             console.error("Transport failed: " + s);

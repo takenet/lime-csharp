@@ -11,6 +11,7 @@ using Lime.Protocol.Serialization;
 using Lime.Protocol.Server;
 using Lime.Transport.Tcp;
 using Lime.Protocol.Network;
+using Lime.Protocol.Security;
 using Lime.Transport.WebSocket;
 
 namespace Lime.Sample.Server
@@ -44,8 +45,6 @@ namespace Lime.Sample.Server
             // Starts listening
             try
             {
-
-
                 await transportListener.StartAsync();
                 var cts = new CancellationTokenSource();
                 var listenerTask = ListenAsync(transportListener, cts.Token);
@@ -117,16 +116,19 @@ namespace Lime.Sample.Server
                         transport,
                         sendTimeout);
 
-                    var consumerTask = ConsumeAsync(serverChannel, cancellationToken)
+                    var consumerTask = Task.Factory.StartNew(async() => await ConsumeAsync(serverChannel, cancellationToken), cancellationToken)
+                        .Unwrap();
+
+                    var continuation = consumerTask
                         .ContinueWith(t =>
                         {
                             if (t.Exception != null)
                             {
-                                Console.WriteLine("Consumer task failed: {0}", t.Exception);                                
+                                Console.WriteLine("Consumer task failed: {0}", t.Exception.InnerException.Message);                                
                             }
 
-                            consumerTasks.Remove(t);
-                        });
+                            consumerTasks.Remove(consumerTask);
+                        }, cancellationToken);
 
                     consumerTasks.Add(consumerTask);
                 }
@@ -146,35 +148,61 @@ namespace Lime.Sample.Server
         {
             try
             {
-                // Establishes the session without negotiation and authentication
-                await serverChannel.ReceiveNewSessionAsync(cancellationToken);
-                await serverChannel.SendEstablishedSessionAsync(new Node()
+                await serverChannel.EstablishSessionAsync(
+                    serverChannel.Transport.GetSupportedCompression(),
+                    serverChannel.Transport.GetSupportedEncryption(),
+                    new[] {AuthenticationScheme.Guest},
+                    (identity, authentication) =>
+                        new AuthenticationResult(null,
+                            new Node()
+                            {
+                                Name = Guid.NewGuid().ToString(),
+                                Domain = "limeprotocol.org",
+                                Instance = Environment.MachineName
+                            }),
+                    cancellationToken);
+
+                if (serverChannel.State == SessionState.Established)
                 {
-                    Name = serverChannel.SessionId.ToString(),
-                    Domain = serverChannel.LocalNode.Domain,
-                    Instance = "default"
-                });
+                    _nodeChannelsDictionary.Add(serverChannel.RemoteNode, serverChannel);
 
-                _nodeChannelsDictionary.Add(serverChannel.RemoteNode, serverChannel);
+                    // Consume the channel envelopes
+                    var consumeMessagesTask =
+                        ConsumeMessagesAsync(serverChannel, cancellationToken).WithPassiveCancellation();
+                    var consumeCommandsTask =
+                        ConsumeCommandsAsync(serverChannel, cancellationToken).WithPassiveCancellation();
+                    var consumeNotificationsTask =
+                        ConsumeNotificationsAsync(serverChannel, cancellationToken).WithPassiveCancellation();
+                    // Awaits for the finishing envelope
+                    var finishingSessionTask = serverChannel.ReceiveFinishingSessionAsync(cancellationToken);
 
-                // Consume the channel envelopes
-                var consumeMessagesTask = ConsumeMessagesAsync(serverChannel, cancellationToken).WithPassiveCancellation();
-                var consumeCommandsTask = ConsumeCommandsAsync(serverChannel, cancellationToken).WithPassiveCancellation();
-                var consumeNotificationsTask = ConsumeNotificationsAsync(serverChannel, cancellationToken).WithPassiveCancellation();
-                // Awaits for the finishing envelope
-                var finishingSessionTask = serverChannel.ReceiveFinishingSessionAsync(cancellationToken);
+                    // Stops the consumer when any of the tasks finishes
+                    await
+                        Task.WhenAny(finishingSessionTask, consumeMessagesTask, consumeCommandsTask,
+                            consumeNotificationsTask);
 
-                // Stops the consumer when any of the tasks finishes
-                await
-                    Task.WhenAny(finishingSessionTask, consumeMessagesTask, consumeCommandsTask,
-                        consumeNotificationsTask);
+                    if (finishingSessionTask.IsCompleted)
+                    {
+                        await serverChannel.SendFinishedSessionAsync();
+                    }
+                }
+
+                if (serverChannel.State != SessionState.Finished &&
+                    serverChannel.State != SessionState.Failed)
+                {
+                    await serverChannel.SendFailedSessionAsync(new Reason()
+                    {
+                        Code = ReasonCodes.SESSION_ERROR,
+                        Description = "The session failed"
+                    });
+                }
             }
             catch (OperationCanceledException ex)
             {
                 if (ex.CancellationToken != cancellationToken)
                 {
                     throw;
-                }            
+                }
             }
 
             if (serverChannel.RemoteNode != null)
@@ -182,7 +210,6 @@ namespace Lime.Sample.Server
                 _nodeChannelsDictionary.Remove(serverChannel.RemoteNode);    
             }            
 
-            await serverChannel.SendFinishedSessionAsync();
         }
 
         static async Task ConsumeMessagesAsync(IServerChannel serverChannel, CancellationToken cancellationToken)

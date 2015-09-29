@@ -10,31 +10,64 @@ namespace Lime.Protocol.Server
 {
     public static class ServerChannelExtensions
     {
-        public static async Task<Session> EstablishSessionAsync(this IServerChannel channel, IEnumerable<SessionCompression> enabledCompressionOptions, IEnumerable<SessionEncryption> enabledEncryptionOptions, 
-            Func<Identity, Authentication, Node> authenticateFunc, CancellationToken cancellationToken)
+        /// <summary>
+        /// Establishes a server channel with transport options negotiation and authentication.
+        /// </summary>
+        /// <param name="channel"></param>
+        /// <param name="enabledCompressionOptions"></param>
+        /// <param name="enabledEncryptionOptions"></param>
+        /// <param name="schemeOptions"></param>
+        /// <param name="authenticateFunc"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public static async Task EstablishSessionAsync(
+            this IServerChannel channel, 
+            SessionCompression[] enabledCompressionOptions,
+            SessionEncryption[] enabledEncryptionOptions,
+            AuthenticationScheme[] schemeOptions,
+            Func<Node, Authentication, AuthenticationResult> authenticateFunc,
+            CancellationToken cancellationToken)
         {
+            if (channel == null) throw new ArgumentNullException(nameof(channel));            
+            if (enabledCompressionOptions == null || 
+                enabledCompressionOptions.Length == 0 || 
+                enabledCompressionOptions.Any(o => !channel.Transport.GetSupportedCompression().Contains(o)))
+            {
+                throw new ArgumentException("The transport doesn't support one or more of the specified compression options", nameof(enabledCompressionOptions));
+            }
+
+            if (enabledEncryptionOptions == null || 
+                enabledEncryptionOptions.Length == 0 || 
+                enabledEncryptionOptions.Any(o => !channel.Transport.GetSupportedEncryption().Contains(o)))
+            {
+                throw new ArgumentException("The transport doesn't support one or more of the specified compression options", nameof(enabledEncryptionOptions));
+            }
+
+            if (schemeOptions == null) throw new ArgumentNullException(nameof(schemeOptions));            
+            if (schemeOptions.Length == 0) throw new ArgumentException("The authentication scheme options is mandatory", nameof(schemeOptions));
+            if (authenticateFunc == null) throw new ArgumentNullException(nameof(authenticateFunc));
+
+            // Awaits for the 'new' session envelope
             var receivedSession = await channel.ReceiveNewSessionAsync(cancellationToken).ConfigureAwait(false);
             if (receivedSession.State == SessionState.New)
             {
-                receivedSession = await channel.AuthenticateSessionAsync(
-                    new[] { AuthenticationScheme.Plain },
-                    cancellationToken).ConfigureAwait(false);
-
+                // Check if there's any transport option to negotiate
                 var compressionOptions = enabledCompressionOptions.Intersect(channel.Transport.GetSupportedCompression()).ToArray();
                 var encryptionOptions = enabledEncryptionOptions.Intersect(channel.Transport.GetSupportedEncryption()).ToArray();
                 
-                if (compressionOptions.Length > 1 ||
-                    encryptionOptions.Length > 1)
+                if (compressionOptions.Length > 1 || encryptionOptions.Length > 1)
                 {
+                    // Negotiate the transport options
                     receivedSession = await channel.NegotiateSessionAsync(
                         compressionOptions,
                         encryptionOptions,
                         cancellationToken).ConfigureAwait(false);
 
+                    // Validate the selected options
                     if (receivedSession.State == SessionState.Negotiating &&
-                        receivedSession.Compression.HasValue &&
+                        receivedSession.Compression != null &&
                         compressionOptions.Contains(receivedSession.Compression.Value) &&
-                        receivedSession.Encryption.HasValue &&
+                        receivedSession.Encryption != null &&
                         encryptionOptions.Contains(receivedSession.Encryption.Value))
                     {
                         await channel.SendNegotiatingSessionAsync(
@@ -55,36 +88,63 @@ namespace Lime.Protocol.Server
                                 cancellationToken);
                         }
                     }
-                }
-                else if (compressionOptions.Length == 0 ||
-                         !compressionOptions[0].Equals(channel.Transport.Compression))
-                {
-                    throw new ArgumentException("The transport doesn't support the specified compression options", "enabledCompressionOptions");
-                }
-                else if (encryptionOptions.Length == 0 ||
-                         !encryptionOptions[0].Equals(channel.Transport.Encryption))
-                {
-                    throw new ArgumentException("The transport doesn't support the specified encryption options", "enabledEncryptionOptions");
-                }
-                                   
-                if (receivedSession.State == SessionState.Authenticating)
-                {
-                    var plainAuthentication = receivedSession.Authentication as PlainAuthentication;
-                    if (plainAuthentication != null)
+                    else
                     {
-
+                        await channel.SendFailedSessionAsync(new Reason()
+                        {
+                            Code = ReasonCodes.SESSION_NEGOTIATION_INVALID_OPTIONS,
+                            Description = "An invalid negotiation option was selected"
+                        });
                     }
-
                 }
 
+                if (channel.State != SessionState.Failed)
+                {
+                    // Sends the authentication options and awaits for the authentication 
+                    receivedSession = await channel.AuthenticateSessionAsync(schemeOptions, cancellationToken);
+                    if (receivedSession.State == SessionState.Authenticating &&
+                        receivedSession.Authentication != null &&
+                        receivedSession.Scheme != null &&
+                        schemeOptions.Contains(receivedSession.Scheme.Value))
+                    {
+                        while (channel.State == SessionState.Authenticating)
+                        {
+                            cancellationToken.ThrowIfCancellationRequested();
+
+                            var authenticationResult = authenticateFunc(receivedSession.From, receivedSession.Authentication);
+                            if (authenticationResult.Roundtrip != null)
+                            {
+                                receivedSession = await channel.AuthenticateSessionAsync(authenticationResult.Roundtrip, cancellationToken);
+                            }
+                            else if (authenticationResult.Node != null)
+                            {
+                                await channel.SendEstablishedSessionAsync(authenticationResult.Node);
+                            }
+                            else
+                            {
+                                await channel.SendFailedSessionAsync(new Reason()
+                                {
+                                    Code = ReasonCodes.SESSION_AUTHENTICATION_FAILED,
+                                    Description = "The session authentication failed"
+                                });
+                            }
+                        }
+                    }
+                }
             }
-
-            if (receivedSession.State != SessionState.Established)
-            {
-
-            }
-
-            return receivedSession;
         }
+    }
+
+    public sealed class AuthenticationResult
+    {
+        public AuthenticationResult(Authentication roundtrip, Node node)
+        {
+            Roundtrip = roundtrip;
+            Node = node;
+        }
+
+        public Authentication Roundtrip { get; }
+
+        public Node Node { get; }
     }
 }

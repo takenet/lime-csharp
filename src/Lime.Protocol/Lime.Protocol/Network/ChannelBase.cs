@@ -250,7 +250,7 @@ namespace Lime.Protocol.Network
 
             if (State == SessionState.Finished || State == SessionState.Failed)
             {
-                throw new InvalidOperationException(string.Format("Cannot send a message in the '{0}' session state", State));
+                throw new InvalidOperationException($"Cannot send a message in the '{State}' session state");
             }
 
             return SendAsync(session);
@@ -267,7 +267,7 @@ namespace Lime.Protocol.Network
             switch (State)
             {
                 case SessionState.Finished:
-                    throw new InvalidOperationException(string.Format("Cannot receive a session in the '{0}' session state", State));
+                    throw new InvalidOperationException($"Cannot receive a session in the '{State}' session state");
                 case SessionState.Established:
                     using (var linkedCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(
                         _channelCancellationTokenSource.Token, cancellationToken))
@@ -382,7 +382,7 @@ namespace Lime.Protocol.Network
         {
             if (envelope == null)
             {
-                throw new ArgumentNullException("envelope", "An empty envelope was received from the transport");
+                throw new ArgumentNullException(nameof(envelope), "An empty envelope was received from the transport");
             }
 
             if (envelope is Notification)
@@ -550,7 +550,7 @@ namespace Lime.Protocol.Network
         {
             if (State != SessionState.Established)
             {
-                throw new InvalidOperationException(string.Format("Cannot receive in the '{0}' session state", State));
+                throw new InvalidOperationException($"Cannot receive in the '{State}' session state");
             }
 
             if (_consumeTransportTask.IsFaulted)
@@ -581,6 +581,7 @@ namespace Lime.Protocol.Network
         /// Fills the envelope recipients using the session information.
         /// </summary>
         /// <param name="envelope"></param>
+        /// <param name="isSending"></param>
         protected virtual void FillEnvelope(Envelope envelope, bool isSending)
         {
             if (!isSending)

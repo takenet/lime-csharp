@@ -41,6 +41,7 @@ class AuthenticationScheme {
     static guest = "guest";
     static plain = "plain";
     static transport = "transport";
+    static key = "key";
 }
 
 interface IAuthentication { }
@@ -50,7 +51,9 @@ class TransportAuthentication implements IAuthentication { }
 class PlainAuthentication implements IAuthentication {
     password: string;
 }
-
+class KeyAuthentication implements IAuthentication {
+    key: string;
+}
 
 interface IReason {
     code: number;
@@ -123,14 +126,23 @@ interface ITransportStateListener {
 }
 
 class WebSocketTransport implements ITransport {
-    
-    
+    private traceEnabled: boolean;
     webSocket: WebSocket;
+
+    constructor(traceEnabled: boolean = false) {
+        this.traceEnabled = traceEnabled;
+    }
+
 
     send(envelope: IEnvelope) {
         this.ensureSocketOpen();
+        const envelopeString = JSON.stringify(envelope);
         this.webSocket.send(
-            JSON.stringify(envelope));
+            envelopeString);
+
+        if (this.traceEnabled) {
+            console.debug(`SEND: ${envelopeString}`);
+        }
     }
     
     onEnvelope(envelope: IEnvelope) { }
@@ -146,7 +158,11 @@ class WebSocketTransport implements ITransport {
 
         this.compression = SessionCompression.none;
 
-        this.webSocket.onmessage = e => {            
+        this.webSocket.onmessage = e => {
+            if (this.traceEnabled) {
+                console.debug(`RECEIVE: ${e.data}`);
+            }
+
             const object = JSON.parse(e.data);
             let envelope: IEnvelope;
             if (object.hasOwnProperty("event")) {
@@ -311,7 +327,7 @@ class Channel implements IChannel {
 interface IClientChannel extends IChannel {
     startNewSession(): void;
     negotiateSession(sessionCompression: string, sessionEncryption: string): void;
-    authenticateSession(identity: string, authentication: any, instance: string): void;
+    authenticateSession(identity: string, authentication: IAuthentication, instance: string): void;
     sendFinishingSession(): void;
     onSessionNegotiating: ISessionListener;
     onSessionAuthenticating: ISessionListener;
@@ -391,15 +407,29 @@ class ClientChannel extends Channel implements IClientChannel {
         this.sendSession(session);
     }
 
-    authenticateSession(identity: string, authentication, instance: string) {
+    authenticateSession(identity: string, authentication: IAuthentication, instance: string) {
         if (this.state !== SessionState.authenticating) {
             throw `Cannot authenticate a session in the '${this.state}' state.`;
+        }
+
+        let scheme: string;
+        if (authentication instanceof GuestAuthentication) {
+            scheme = AuthenticationScheme.guest;
+        } else if (authentication instanceof PlainAuthentication) {
+            scheme = AuthenticationScheme.plain;
+        } else if (authentication instanceof TransportAuthentication) {
+            scheme = AuthenticationScheme.transport;
+        } else if (authentication instanceof KeyAuthentication) {
+            scheme = AuthenticationScheme.key;
+        } else {
+            scheme = "unknown";
         }
 
         const session: ISession = {
             id: this.sessionId,
             state: SessionState.authenticating,
             from: `${identity}/${instance}`,
+            scheme: scheme,
             authentication: authentication
         };
         this.sendSession(session);
@@ -506,7 +536,6 @@ class ClientChannelExtensions {
     }
 }
 
-
 interface IEstablishSessionListener {
     onResult: ISessionListener;
     onFailure: (exception: string) => void;
@@ -515,7 +544,7 @@ interface IEstablishSessionListener {
 
 function establishSession() {
 
-    const transport = new WebSocketTransport();        
+    const transport = new WebSocketTransport(true);        
 
     transport.stateListener = {
         onOpen: () => {
@@ -524,8 +553,8 @@ function establishSession() {
                 channel,
                 "none",
                 "none",
-                "any@domain.com",
-                new PlainAuthentication(),
+                "any@limeprotocol.org",
+                new GuestAuthentication(),
                 "default",
                 {
                     onResult: s => { console.log(`Session id: ${s.id} - State: ${s.state}`); },
@@ -538,13 +567,12 @@ function establishSession() {
             
         },
         onClosed: () => {
-            console.log("Transport is cloed");
+            console.log("Transport is closed");
         },
         onError: (s) => {
             console.error(`Transport failed: ${s}`);
         }
     }
 
-    transport.open("ws://localhost:8080");
-    
+    transport.open("ws://localhost:8080");    
 }
