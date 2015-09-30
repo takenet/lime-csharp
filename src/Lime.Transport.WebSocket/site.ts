@@ -41,7 +41,7 @@ messageSendButton.onclick = e => {
         var messageToInput = <HTMLInputElement>document.getElementById("message-to-input");
         var messageContentInput = <HTMLInputElement>document.getElementById("message-content-input");
         var message: IMessage = {
-            id: generateGuid(),
+            id: newGuid(),
             to: messageToInput.value,
             type: "text/plain",
             content: messageContentInput.value
@@ -54,7 +54,7 @@ var setPresenceAvailableButton = <HTMLButtonElement>document.getElementById("set
 setPresenceAvailableButton.onclick = e => {
     if (isSessionEstablished()) {
         var presenceCommand: ICommand = {
-            id: generateGuid(),
+            id: newGuid(),
             method: CommandMethod.set,
             uri: "/presence",
             type: "application/vnd.lime.presence+json",
@@ -71,7 +71,7 @@ var setPresenceUnavailableButton = <HTMLButtonElement>document.getElementById("s
 setPresenceUnavailableButton.onclick = e => {
     if (isSessionEstablished()) {
         var presenceCommand: ICommand = {
-            id: generateGuid(),
+            id: newGuid(),
             method: CommandMethod.set,
             uri: "/presence",
             type: "application/vnd.lime.presence+json",
@@ -88,7 +88,7 @@ var setReceiptsButton = <HTMLButtonElement>document.getElementById("set-receipts
 setReceiptsButton.onclick = e => {
     if (isSessionEstablished()) {
         var presenceCommand: ICommand = {
-            id: generateGuid(),
+            id: newGuid(),
             method: CommandMethod.set,
             uri: "/receipt",
             type: "application/vnd.lime.receipt+json",
@@ -112,7 +112,7 @@ function establishSession(uri: string, identity: string, instance: string, passw
             var authentication: IAuthentication;
             if (password) {
                 const plainAuthentication = new PlainAuthentication();
-                plainAuthentication.password = password;
+                plainAuthentication.password = btoa(password);
                 authentication = plainAuthentication;
             } else {
                 authentication = new GuestAuthentication();

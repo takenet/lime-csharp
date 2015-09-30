@@ -571,7 +571,7 @@ interface IEstablishSessionListener {
     onFailure: (exception: string) => void;
 }
 
-function generateGuid(): string {
+function newGuid(): string {
     var d = new Date().getTime();
     const uuid = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, c => {
         var r = (d + Math.random() * 16) % 16 | 0;

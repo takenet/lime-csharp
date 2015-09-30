@@ -92,7 +92,6 @@ namespace Lime.Transport.WebSocket
 
         protected override Task PerformCloseAsync(CancellationToken cancellationToken)
         {
-            EnsureIsConnected();
             _webSocket.Close();
             return TaskUtil.CompletedTask;
         }

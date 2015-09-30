@@ -33,7 +33,7 @@ messageSendButton.onclick = function (e) {
         var messageToInput = document.getElementById("message-to-input");
         var messageContentInput = document.getElementById("message-content-input");
         var message = {
-            id: generateGuid(),
+            id: newGuid(),
             to: messageToInput.value,
             type: "text/plain",
             content: messageContentInput.value
@@ -45,7 +45,7 @@ var setPresenceAvailableButton = document.getElementById("set-presence-available
 setPresenceAvailableButton.onclick = function (e) {
     if (isSessionEstablished()) {
         var presenceCommand = {
-            id: generateGuid(),
+            id: newGuid(),
             method: CommandMethod.set,
             uri: "/presence",
             type: "application/vnd.lime.presence+json",
@@ -60,7 +60,7 @@ var setPresenceUnavailableButton = document.getElementById("set-presence-unavail
 setPresenceUnavailableButton.onclick = function (e) {
     if (isSessionEstablished()) {
         var presenceCommand = {
-            id: generateGuid(),
+            id: newGuid(),
             method: CommandMethod.set,
             uri: "/presence",
             type: "application/vnd.lime.presence+json",
@@ -75,7 +75,7 @@ var setReceiptsButton = document.getElementById("set-receipts-button");
 setReceiptsButton.onclick = function (e) {
     if (isSessionEstablished()) {
         var presenceCommand = {
-            id: generateGuid(),
+            id: newGuid(),
             method: CommandMethod.set,
             uri: "/receipt",
             type: "application/vnd.lime.receipt+json",
@@ -96,7 +96,7 @@ function establishSession(uri, identity, instance, password) {
             var authentication;
             if (password) {
                 var plainAuthentication = new PlainAuthentication();
-                plainAuthentication.password = password;
+                plainAuthentication.password = btoa(password);
                 authentication = plainAuthentication;
             }
             else {
