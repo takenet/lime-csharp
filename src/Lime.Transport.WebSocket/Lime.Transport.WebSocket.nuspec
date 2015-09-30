@@ -1,0 +1,25 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
+  <metadata>
+    <id>Lime.Transport.WebSocket</id>
+    <version>$version$</version>
+    <title>Lime.Transport.WebSocket</title>
+    <authors>takenet</authors>
+    <owners>takenet,andrebires</owners>
+    <projectUrl>http://limeprotocol.org</projectUrl>
+    <licenseUrl>https://raw.githubusercontent.com/takenet/lime/master/LICENSE</licenseUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>WebSocket transport for LIME protocol.</description>
+    <copyright>Copyright ©  2015 Curupira S/A</copyright>
+    <tags>lime</tags>
+    <dependencies>
+      <dependency id="Lime.Protocol" />
+      <dependency id="Microsoft.Tpl.Dataflow" version="4.5.24" />
+      <dependency id="vtortola.WebSocketListener" version="2.1.7.0" />
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="bin\Release\Lime.Transport.WebSocket.dll" target="lib\net45\Lime.Transport.WebSocket.dll" />
+    <file src="bin\Release\Lime.Transport.WebSocket.XML" target="lib\net45\Lime.Transport.WebSocket.XML" />
+  </files>
+</package>

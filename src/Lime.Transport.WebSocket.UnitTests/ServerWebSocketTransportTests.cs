@@ -282,7 +282,7 @@ namespace Lime.Transport.WebSocket.UnitTests
         }
 
         [Test]
-        public async Task CloseAsync_Connected_PerformClose()
+        public async Task CloseAsync_ConnectedTransport_PerformClose()
         {
             // Arrange
             var target = await GetTargetAsync();
@@ -304,6 +304,18 @@ namespace Lime.Transport.WebSocket.UnitTests
             }            
         }
 
+        [Test]
+        [ExpectedException(typeof(InvalidOperationException))]
+        public async Task CloseAsync_DisconnectedTransport_ThrowsInvalidOperationException()
+        {
+            // Arrange
+            var target = await GetTargetAsync();
+            var session = Dummy.CreateSession(SessionState.Negotiating);
+            await target.SendAsync(session, CancellationToken); // Send something to assert is connected
+            await target.CloseAsync(CancellationToken);
 
+            // Act
+            await target.CloseAsync(CancellationToken);
+        }
     }
 }

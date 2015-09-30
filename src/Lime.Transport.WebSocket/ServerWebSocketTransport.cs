@@ -32,10 +32,8 @@ namespace Lime.Transport.WebSocket
 
         public override async Task SendAsync(Envelope envelope, CancellationToken cancellationToken)
         {
-            if (!_webSocket.IsConnected)
-            {
-                throw new InvalidOperationException("The connection was not initialized. Call OpenAsync first.");
-            }
+            EnsureIsConnected();
+
             await _sendSemaphore.WaitAsync(cancellationToken);
             try
             {
@@ -57,10 +55,7 @@ namespace Lime.Transport.WebSocket
 
         public override async Task<Envelope> ReceiveAsync(CancellationToken cancellationToken)
         {
-            if (!_webSocket.IsConnected)
-            {
-                throw new InvalidOperationException("The connection was not initialized. Call OpenAsync first.");
-            }
+            EnsureIsConnected();
 
             await _receiveSemaphore.WaitAsync(cancellationToken);
             try
@@ -90,16 +85,14 @@ namespace Lime.Transport.WebSocket
 
         public override Task OpenAsync(Uri uri, CancellationToken cancellationToken)
         {
-            if (!_webSocket.IsConnected)
-            {
-                throw new InvalidOperationException("The transport is not connected");
-            }
-
+            EnsureIsConnected();
             return TaskUtil.CompletedTask;
         }
 
+
         protected override Task PerformCloseAsync(CancellationToken cancellationToken)
         {
+            EnsureIsConnected();
             _webSocket.Close();
             return TaskUtil.CompletedTask;
         }
@@ -117,5 +110,14 @@ namespace Lime.Transport.WebSocket
         {
             _webSocket.Dispose();
         }
+
+        private void EnsureIsConnected()
+        {
+            if (!_webSocket.IsConnected)
+            {
+                throw new InvalidOperationException("The WebSocket is not connected. Call 'OpenAsync' first.");
+            }
+        }
+
     }
 }
