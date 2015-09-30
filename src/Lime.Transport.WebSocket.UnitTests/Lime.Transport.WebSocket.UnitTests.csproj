@@ -58,6 +58,9 @@
     <Otherwise />
   </Choose>
   <ItemGroup>
+    <Compile Include="..\Lime.Protocol.UnitTests\Dummy.cs">
+      <Link>Dummy.cs</Link>
+    </Compile>
     <Compile Include="ServerWebSocketTransportTests.cs" />
     <Compile Include="WebSocketTransportListenerTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

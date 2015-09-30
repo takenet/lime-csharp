@@ -169,8 +169,9 @@ var WebSocketTransport = (function () {
     return WebSocketTransport;
 })();
 var Channel = (function () {
-    function Channel(transport) {
+    function Channel(transport, autoReplyPings) {
         var _this = this;
+        this.autoReplyPings = autoReplyPings;
         this.transport = transport;
         this.transport.onEnvelope = function (e) {
             if (e.hasOwnProperty("event")) {
@@ -180,7 +181,23 @@ var Channel = (function () {
                 _this.onMessage(e);
             }
             else if (e.hasOwnProperty("method")) {
-                _this.onCommand(e);
+                var command = e;
+                if (_this.autoReplyPings &&
+                    command.id &&
+                    command.from &&
+                    command.uri === "/ping" &&
+                    command.method === CommandMethod.get) {
+                    var pingCommandResponse = {
+                        id: command.id,
+                        to: command.from,
+                        method: CommandMethod.get,
+                        status: CommandStatus.success
+                    };
+                    _this.sendCommand(pingCommandResponse);
+                }
+                else {
+                    _this.onCommand(command);
+                }
             }
             else if (e.hasOwnProperty("state")) {
                 _this.onSession(e);
@@ -224,9 +241,10 @@ var Channel = (function () {
 })();
 var ClientChannel = (function (_super) {
     __extends(ClientChannel, _super);
-    function ClientChannel(transport) {
+    function ClientChannel(transport, autoReplyPings) {
         var _this = this;
-        _super.call(this, transport);
+        if (autoReplyPings === void 0) { autoReplyPings = true; }
+        _super.call(this, transport, autoReplyPings);
         _super.prototype.onSession = function (s) {
             _this.sessionId = s.id;
             _this.state = s.state;

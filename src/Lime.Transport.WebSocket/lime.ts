@@ -258,8 +258,10 @@ interface ISessionListener {
 }
 
 class Channel implements IChannel {
+    private autoReplyPings: boolean;
 
-    constructor(transport: ITransport) {
+    constructor(transport: ITransport, autoReplyPings: boolean) {
+        this.autoReplyPings = autoReplyPings;
         this.transport = transport;
         this.transport.onEnvelope = e => {            
             if (e.hasOwnProperty("event")) {
@@ -267,7 +269,23 @@ class Channel implements IChannel {
             } else if (e.hasOwnProperty("content")) {
                 this.onMessage(<IMessage>e);                
             } else if (e.hasOwnProperty("method")) {
-                this.onCommand(<ICommand>e);
+                const command = <ICommand>e;
+                if (this.autoReplyPings && 
+                    command.id &&
+                    command.from &&
+                    command.uri === "/ping" &&                    
+                    command.method === CommandMethod.get) {
+                    const pingCommandResponse: ICommand = {
+                        id: command.id,
+                        to: command.from,
+                        method: CommandMethod.get,
+                        status: CommandStatus.success
+                    }
+                    this.sendCommand(pingCommandResponse);                
+
+                } else {
+                    this.onCommand(command);
+                }                
             } else if (e.hasOwnProperty("state")) {
                 this.onSession(<ISession>e);
             }                
@@ -336,8 +354,8 @@ interface IClientChannel extends IChannel {
 }
 
 class ClientChannel extends Channel implements IClientChannel {
-    constructor(transport: ITransport) {
-        super(transport);
+    constructor(transport: ITransport, autoReplyPings: boolean = true) {
+        super(transport, autoReplyPings);
         super.onSession = s => {
             this.sessionId = s.id;
             this.state = s.state;
