@@ -3,6 +3,7 @@ var connectButton = document.getElementById("connect-button");
 connectButton.onclick = function (e) {
     var identityInput = document.getElementById("identity-input");
     var instanceInput = document.getElementById("instance-input");
+    var passwordInput = document.getElementById("password-input");
     var uriInput = document.getElementById("uri-input");
     if (!identityInput.value) {
         alert("The identity value is mandatory");
@@ -16,7 +17,7 @@ connectButton.onclick = function (e) {
         alert("The URI value is mandatory");
         return;
     }
-    establishSession(uriInput.value, identityInput.value, instanceInput.value);
+    establishSession(uriInput.value, identityInput.value, instanceInput.value, passwordInput.value);
 };
 connectButton.disabled = false;
 var disconnectButton = document.getElementById("disconnect-button");
@@ -32,6 +33,7 @@ messageSendButton.onclick = function (e) {
         var messageToInput = document.getElementById("message-to-input");
         var messageContentInput = document.getElementById("message-content-input");
         var message = {
+            id: generateGuid(),
             to: messageToInput.value,
             type: "text/plain",
             content: messageContentInput.value
@@ -39,15 +41,69 @@ messageSendButton.onclick = function (e) {
         clientChannel.sendMessage(message);
     }
 };
+var setPresenceAvailableButton = document.getElementById("set-presence-available-button");
+setPresenceAvailableButton.onclick = function (e) {
+    if (isSessionEstablished()) {
+        var presenceCommand = {
+            id: generateGuid(),
+            method: CommandMethod.set,
+            uri: "/presence",
+            type: "application/vnd.lime.presence+json",
+            resource: {
+                status: "available"
+            }
+        };
+        clientChannel.sendCommand(presenceCommand);
+    }
+};
+var setPresenceUnavailableButton = document.getElementById("set-presence-unavailable-button");
+setPresenceUnavailableButton.onclick = function (e) {
+    if (isSessionEstablished()) {
+        var presenceCommand = {
+            id: generateGuid(),
+            method: CommandMethod.set,
+            uri: "/presence",
+            type: "application/vnd.lime.presence+json",
+            resource: {
+                status: "unavailable"
+            }
+        };
+        clientChannel.sendCommand(presenceCommand);
+    }
+};
+var setReceiptsButton = document.getElementById("set-receipts-button");
+setReceiptsButton.onclick = function (e) {
+    if (isSessionEstablished()) {
+        var presenceCommand = {
+            id: generateGuid(),
+            method: CommandMethod.set,
+            uri: "/receipt",
+            type: "application/vnd.lime.receipt+json",
+            resource: {
+                events: ["accepted", "validated", "authorized", "dispatched", "received", "consumed"]
+            }
+        };
+        clientChannel.sendCommand(presenceCommand);
+    }
+};
 function isSessionEstablished() {
     return clientChannel != null && clientChannel.state === SessionState.established;
 }
-function establishSession(uri, identity, instance) {
+function establishSession(uri, identity, instance, password) {
     var transport = new WebSocketTransport(true);
     transport.stateListener = {
         onOpen: function () {
-            clientChannel = new ClientChannel(transport);
-            ClientChannelExtensions.establishSession(clientChannel, "none", "none", identity, new GuestAuthentication(), instance, {
+            var authentication;
+            if (password) {
+                var plainAuthentication = new PlainAuthentication();
+                plainAuthentication.password = password;
+                authentication = plainAuthentication;
+            }
+            else {
+                authentication = new GuestAuthentication();
+            }
+            clientChannel = new ClientChannel(transport, true, true);
+            ClientChannelExtensions.establishSession(clientChannel, "none", "none", identity, authentication, instance, {
                 onResult: function (s) {
                     logMessage("Session id: " + s.id + " - State: " + s.state);
                     if (s.state === SessionState.established) {
@@ -66,14 +122,10 @@ function establishSession(uri, identity, instance) {
             clientChannel.onCommand = function (c) {
                 logMessage("Command received - From: " + c.from + " - To: " + c.to + " - Method: " + c.method + " - URI: " + c.uri + " - Resource: " + c.resource + " - Status: " + c.status + " - Reason: " + c.reason);
             };
-            var sessionListener = function (s) {
-                connectButton.disabled = false;
-                disconnectButton.disabled = true;
-            };
-            clientChannel.onSessionFinished = sessionListener;
-            clientChannel.onSessionFailed = sessionListener;
         },
         onClosed: function () {
+            connectButton.disabled = false;
+            disconnectButton.disabled = true;
             logMessage("Transport is closed");
         },
         onError: function (s) {

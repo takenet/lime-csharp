@@ -5,6 +5,7 @@ var connectButton = <HTMLButtonElement>document.getElementById("connect-button")
 connectButton.onclick = e => {
     var identityInput = <HTMLInputElement>document.getElementById("identity-input");
     var instanceInput = <HTMLInputElement>document.getElementById("instance-input");
+    var passwordInput = <HTMLInputElement>document.getElementById("password-input");
     var uriInput = <HTMLInputElement>document.getElementById("uri-input");
 
     if (!identityInput.value) {
@@ -22,7 +23,7 @@ connectButton.onclick = e => {
         return;
     }
 
-    establishSession(uriInput.value, identityInput.value, instanceInput.value);
+    establishSession(uriInput.value, identityInput.value, instanceInput.value, passwordInput.value);
 };
 connectButton.disabled = false;
 
@@ -40,29 +41,90 @@ messageSendButton.onclick = e => {
         var messageToInput = <HTMLInputElement>document.getElementById("message-to-input");
         var messageContentInput = <HTMLInputElement>document.getElementById("message-content-input");
         var message: IMessage = {
+            id: generateGuid(),
             to: messageToInput.value,
             type: "text/plain",
             content: messageContentInput.value
         };
         clientChannel.sendMessage(message);
-    }        
+    }
+}
+
+var setPresenceAvailableButton = <HTMLButtonElement>document.getElementById("set-presence-available-button");
+setPresenceAvailableButton.onclick = e => {
+    if (isSessionEstablished()) {
+        var presenceCommand: ICommand = {
+            id: generateGuid(),
+            method: CommandMethod.set,
+            uri: "/presence",
+            type: "application/vnd.lime.presence+json",
+            resource: {
+                status: "available"
+            }
+        }
+
+        clientChannel.sendCommand(presenceCommand);
+    }
+}
+
+var setPresenceUnavailableButton = <HTMLButtonElement>document.getElementById("set-presence-unavailable-button");
+setPresenceUnavailableButton.onclick = e => {
+    if (isSessionEstablished()) {
+        var presenceCommand: ICommand = {
+            id: generateGuid(),
+            method: CommandMethod.set,
+            uri: "/presence",
+            type: "application/vnd.lime.presence+json",
+            resource: {
+                status: "unavailable"
+            }
+        }
+
+        clientChannel.sendCommand(presenceCommand);
+    }
+}
+
+var setReceiptsButton = <HTMLButtonElement>document.getElementById("set-receipts-button");
+setReceiptsButton.onclick = e => {
+    if (isSessionEstablished()) {
+        var presenceCommand: ICommand = {
+            id: generateGuid(),
+            method: CommandMethod.set,
+            uri: "/receipt",
+            type: "application/vnd.lime.receipt+json",
+            resource: {
+                events: [ "accepted", "validated", "authorized", "dispatched", "received", "consumed" ]
+            }
+        }
+
+        clientChannel.sendCommand(presenceCommand);
+    }
 }
 
 function isSessionEstablished(): boolean {
     return clientChannel != null && clientChannel.state === SessionState.established;
 }
 
-function establishSession(uri: string, identity: string, instance: string) {
+function establishSession(uri: string, identity: string, instance: string, password: string) {
     var transport = new WebSocketTransport(true);
     transport.stateListener = {
         onOpen: () => {
-            clientChannel = new ClientChannel(transport);
+            var authentication: IAuthentication;
+            if (password) {
+                const plainAuthentication = new PlainAuthentication();
+                plainAuthentication.password = password;
+                authentication = plainAuthentication;
+            } else {
+                authentication = new GuestAuthentication();
+            }
+            
+            clientChannel = new ClientChannel(transport, true, true);
             ClientChannelExtensions.establishSession(
                 clientChannel,
                 "none",
                 "none",
                 identity,
-                new GuestAuthentication(),
+                authentication,
                 instance,
                 {
                     onResult: s => {
@@ -86,17 +148,10 @@ function establishSession(uri: string, identity: string, instance: string) {
             clientChannel.onCommand = c => {
                 logMessage(`Command received - From: ${c.from} - To: ${c.to} - Method: ${c.method} - URI: ${c.uri} - Resource: ${c.resource} - Status: ${c.status} - Reason: ${c.reason}`);
             };
-
-            var sessionListener: ISessionListener = s => {
-                connectButton.disabled = false;
-                disconnectButton.disabled = true;
-            }
-
-            clientChannel.onSessionFinished = sessionListener;
-            clientChannel.onSessionFailed = sessionListener;
-
         },
         onClosed: () => {
+            connectButton.disabled = false;
+            disconnectButton.disabled = true;
             logMessage("Transport is closed");
         },
         onError: (s) => {

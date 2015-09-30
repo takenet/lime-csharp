@@ -14,7 +14,7 @@ interface ISession extends IEnvelope {
     compression?: string;
     scheme?: string;
     authentication?: any;
-    reason?: IReason;
+    reason?: IReason;    
 }
 
 class SessionState {
@@ -83,7 +83,7 @@ interface ICommand extends IEnvelope {
     type?: string;
     resource?: any;
     method: string;
-    status: string;
+    status?: string;
     reason?: IReason;
 }
 
@@ -259,15 +259,28 @@ interface ISessionListener {
 
 class Channel implements IChannel {
     private autoReplyPings: boolean;
+    private autoNotifyReceipt: boolean;
 
-    constructor(transport: ITransport, autoReplyPings: boolean) {
+    constructor(transport: ITransport, autoReplyPings: boolean, autoNotifyReceipt: boolean) {
         this.autoReplyPings = autoReplyPings;
+        this.autoNotifyReceipt = autoNotifyReceipt;
         this.transport = transport;
         this.transport.onEnvelope = e => {            
             if (e.hasOwnProperty("event")) {
                 this.onNotification(<INotification>e);
             } else if (e.hasOwnProperty("content")) {
-                this.onMessage(<IMessage>e);                
+                const message = <IMessage>e;
+                if (this.autoNotifyReceipt && 
+                    message.id &&
+                    message.from) {
+                    const notification: INotification = {
+                        id: message.id,
+                        to: message.from,
+                        event: NotificationEvent.received
+                    };
+                    this.sendNotification(notification);
+                }
+                this.onMessage(message);
             } else if (e.hasOwnProperty("method")) {
                 const command = <ICommand>e;
                 if (this.autoReplyPings && 
@@ -279,10 +292,10 @@ class Channel implements IChannel {
                         id: command.id,
                         to: command.from,
                         method: CommandMethod.get,
-                        status: CommandStatus.success
+                        status: CommandStatus.success,
+                        type: "application/vnd.lime.ping+json"
                     }
                     this.sendCommand(pingCommandResponse);                
-
                 } else {
                     this.onCommand(command);
                 }                
@@ -354,8 +367,8 @@ interface IClientChannel extends IChannel {
 }
 
 class ClientChannel extends Channel implements IClientChannel {
-    constructor(transport: ITransport, autoReplyPings: boolean = true) {
-        super(transport, autoReplyPings);
+    constructor(transport: ITransport, autoReplyPings: boolean = true, autoNotifyReceipt: boolean = false) {
+        super(transport, autoReplyPings, autoNotifyReceipt);
         super.onSession = s => {
             this.sessionId = s.id;
             this.state = s.state;
@@ -556,4 +569,14 @@ class ClientChannelExtensions {
 interface IEstablishSessionListener {
     onResult: ISessionListener;
     onFailure: (exception: string) => void;
+}
+
+function generateGuid(): string {
+    var d = new Date().getTime();
+    const uuid = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, c => {
+        var r = (d + Math.random() * 16) % 16 | 0;
+        d = Math.floor(d / 16);
+        return (c === "x" ? r : (r & 0x3 | 0x8)).toString(16);
+    });
+    return uuid;
 }

@@ -169,16 +169,28 @@ var WebSocketTransport = (function () {
     return WebSocketTransport;
 })();
 var Channel = (function () {
-    function Channel(transport, autoReplyPings) {
+    function Channel(transport, autoReplyPings, autoNotifyReceipt) {
         var _this = this;
         this.autoReplyPings = autoReplyPings;
+        this.autoNotifyReceipt = autoNotifyReceipt;
         this.transport = transport;
         this.transport.onEnvelope = function (e) {
             if (e.hasOwnProperty("event")) {
                 _this.onNotification(e);
             }
             else if (e.hasOwnProperty("content")) {
-                _this.onMessage(e);
+                var message = e;
+                if (_this.autoNotifyReceipt &&
+                    message.id &&
+                    message.from) {
+                    var notification = {
+                        id: message.id,
+                        to: message.from,
+                        event: NotificationEvent.received
+                    };
+                    _this.sendNotification(notification);
+                }
+                _this.onMessage(message);
             }
             else if (e.hasOwnProperty("method")) {
                 var command = e;
@@ -191,7 +203,8 @@ var Channel = (function () {
                         id: command.id,
                         to: command.from,
                         method: CommandMethod.get,
-                        status: CommandStatus.success
+                        status: CommandStatus.success,
+                        type: "application/vnd.lime.ping+json"
                     };
                     _this.sendCommand(pingCommandResponse);
                 }
@@ -241,10 +254,11 @@ var Channel = (function () {
 })();
 var ClientChannel = (function (_super) {
     __extends(ClientChannel, _super);
-    function ClientChannel(transport, autoReplyPings) {
+    function ClientChannel(transport, autoReplyPings, autoNotifyReceipt) {
         var _this = this;
         if (autoReplyPings === void 0) { autoReplyPings = true; }
-        _super.call(this, transport, autoReplyPings);
+        if (autoNotifyReceipt === void 0) { autoNotifyReceipt = false; }
+        _super.call(this, transport, autoReplyPings, autoNotifyReceipt);
         _super.prototype.onSession = function (s) {
             _this.sessionId = s.id;
             _this.state = s.state;
@@ -427,3 +441,12 @@ var ClientChannelExtensions = (function () {
     };
     return ClientChannelExtensions;
 })();
+function generateGuid() {
+    var d = new Date().getTime();
+    var uuid = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
+        var r = (d + Math.random() * 16) % 16 | 0;
+        d = Math.floor(d / 16);
+        return (c === "x" ? r : (r & 0x3 | 0x8)).toString(16);
+    });
+    return uuid;
+}
