@@ -78,7 +78,7 @@ namespace Lime.Protocol.Network
         /// <summary>
         /// The current session transport
         /// </summary>
-        public ITransport Transport { get; private set; }
+        public ITransport Transport { get; }
 
         /// <summary>
         /// Remote node identifier
@@ -130,14 +130,10 @@ namespace Lime.Protocol.Network
         /// <exception cref="System.InvalidOperationException"></exception>
         public virtual Task SendMessageAsync(Message message)
         {
-            if (message == null)
-            {
-                throw new ArgumentNullException("message");
-            }
-
+            if (message == null) throw new ArgumentNullException(nameof(message));            
             if (State != SessionState.Established)
             {
-                throw new InvalidOperationException(string.Format("Cannot send a message in the '{0}' session state", State));
+                throw new InvalidOperationException($"Cannot send a message in the '{State}' session state");
             }
 
             return SendAsync(message);
@@ -153,7 +149,6 @@ namespace Lime.Protocol.Network
             return ReceiveFromBufferAsync(_messageBuffer, cancellationToken);
         }
 
-
         #endregion
 
         #region ICommandChannel Members
@@ -167,14 +162,10 @@ namespace Lime.Protocol.Network
         /// <exception cref="System.InvalidOperationException"></exception>
         public virtual Task SendCommandAsync(Command command)
         {
-            if (command == null)
-            {
-                throw new ArgumentNullException("command");
-            }
-
+            if (command == null) throw new ArgumentNullException(nameof(command));            
             if (State != SessionState.Established)
             {
-                throw new InvalidOperationException(string.Format("Cannot send a command in the '{0}' session state", State));
+                throw new InvalidOperationException($"Cannot send a command in the '{State}' session state");
             }
 
             return SendAsync(command);
@@ -204,14 +195,10 @@ namespace Lime.Protocol.Network
         /// <exception cref="System.InvalidOperationException"></exception>
         public virtual Task SendNotificationAsync(Notification notification)
         {
-            if (notification == null)
-            {
-                throw new ArgumentNullException("notification");
-            }
-
+            if (notification == null) throw new ArgumentNullException(nameof(notification));            
             if (State != SessionState.Established)
             {
-                throw new InvalidOperationException(string.Format("Cannot send a notification in the '{0}' session state", State));
+                throw new InvalidOperationException($"Cannot send a notification in the '{State}' session state");
             }
 
             return SendAsync(notification);
@@ -241,11 +228,7 @@ namespace Lime.Protocol.Network
         /// <exception cref="System.ArgumentNullException">session</exception>
         public virtual Task SendSessionAsync(Session session)
         {
-            if (session == null)
-            {
-                throw new ArgumentNullException("session");
-            }
-
+            if (session == null) throw new ArgumentNullException(nameof(session));            
             if (State == SessionState.Finished || State == SessionState.Failed)
             {
                 throw new InvalidOperationException($"Cannot send a message in the '{State}' session state");

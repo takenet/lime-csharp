@@ -49,22 +49,22 @@ function establishSession(uri, identity, instance) {
             clientChannel = new ClientChannel(transport);
             ClientChannelExtensions.establishSession(clientChannel, "none", "none", identity, new GuestAuthentication(), instance, {
                 onResult: function (s) {
-                    console.log("Session id: " + s.id + " - State: " + s.state);
+                    logMessage("Session id: " + s.id + " - State: " + s.state);
                     if (s.state === SessionState.established) {
                         connectButton.disabled = true;
                         disconnectButton.disabled = false;
                     }
                 },
-                onFailure: function (e) { console.error("An error occurred: " + e); }
+                onFailure: function (e) { logMessage("An error occurred: " + e); }
             });
             clientChannel.onMessage = function (m) {
-                console.log("Message received - From: " + m.from + " - To: " + m.to + " - Content: " + m.content);
+                logMessage("Message received - From: " + m.from + " - To: " + m.to + " - Content: " + m.content);
             };
             clientChannel.onNotification = function (n) {
-                console.log("Notification received - From: " + n.from + " - To: " + n.to + " - Event: " + n.event + " - Reason: " + n.reason);
+                logMessage("Notification received - From: " + n.from + " - To: " + n.to + " - Event: " + n.event + " - Reason: " + n.reason);
             };
             clientChannel.onCommand = function (c) {
-                console.log("Command received - From: " + c.from + " - To: " + c.to + " - Method: " + c.method + " - URI: " + c.uri + " - Resource: " + c.resource + " - Status: " + c.status + " - Reason: " + c.reason);
+                logMessage("Command received - From: " + c.from + " - To: " + c.to + " - Method: " + c.method + " - URI: " + c.uri + " - Resource: " + c.resource + " - Status: " + c.status + " - Reason: " + c.reason);
             };
             var sessionListener = function (s) {
                 connectButton.disabled = false;
@@ -74,11 +74,20 @@ function establishSession(uri, identity, instance) {
             clientChannel.onSessionFailed = sessionListener;
         },
         onClosed: function () {
-            console.log("Transport is closed");
+            logMessage("Transport is closed");
         },
         onError: function (s) {
-            console.error("Transport failed: " + s);
+            logMessage("Transport failed: " + s);
         }
     };
     transport.open(uri);
+}
+var logTextarea = document.getElementById("log-textarea");
+function logMessage(message) {
+    var log = logTextarea.value;
+    if (log) {
+        log += "\r\n";
+    }
+    log += message;
+    logTextarea.value = log;
 }

@@ -28,6 +28,11 @@ namespace Lime.Transport.WebSocket
 
         public override async Task SendAsync(Envelope envelope, CancellationToken cancellationToken)
         {
+            if (!_webSocket.IsConnected)
+            {
+                throw new InvalidOperationException("The connection was not initialized. Call OpenAsync first.");
+            }
+
             using (var stream = _webSocket.CreateMessageWriter(WebSocketMessageType.Text))
             {
                 using (var writer = new StreamWriter(stream, Encoding.UTF8))
@@ -41,10 +46,15 @@ namespace Lime.Transport.WebSocket
 
         public override async Task<Envelope> ReceiveAsync(CancellationToken cancellationToken)
         {
+            if (!_webSocket.IsConnected)
+            {
+                throw new InvalidOperationException("The connection was not initialized. Call OpenAsync first.");
+            }
+
             using (var stream = await _webSocket.ReadMessageAsync(cancellationToken).ConfigureAwait(false))
             {
                 cancellationToken.ThrowIfCancellationRequested();
-
+                if (stream == null) return null;
                 if (stream.MessageType != WebSocketMessageType.Text)
                 {
                     throw new NotSupportedException("An unsupported message type was received");

@@ -66,25 +66,25 @@ function establishSession(uri: string, identity: string, instance: string) {
                 instance,
                 {
                     onResult: s => {
-                        console.log(`Session id: ${s.id} - State: ${s.state}`);
+                        logMessage(`Session id: ${s.id} - State: ${s.state}`);
                         if (s.state === SessionState.established) {
                             connectButton.disabled = true;
                             disconnectButton.disabled = false;
                         }
                     },
-                    onFailure: e => { console.error(`An error occurred: ${e}`); }
+                    onFailure: e => { logMessage(`An error occurred: ${e}`); }
                 });
 
             clientChannel.onMessage = m => {
-                console.log(`Message received - From: ${m.from} - To: ${m.to} - Content: ${m.content}`);
+                logMessage(`Message received - From: ${m.from} - To: ${m.to} - Content: ${m.content}`);
             };
 
             clientChannel.onNotification = n => {
-                console.log(`Notification received - From: ${n.from} - To: ${n.to} - Event: ${n.event} - Reason: ${n.reason}`);
+                logMessage(`Notification received - From: ${n.from} - To: ${n.to} - Event: ${n.event} - Reason: ${n.reason}`);
             };
 
             clientChannel.onCommand = c => {
-                console.log(`Command received - From: ${c.from} - To: ${c.to} - Method: ${c.method} - URI: ${c.uri} - Resource: ${c.resource} - Status: ${c.status} - Reason: ${c.reason}`);
+                logMessage(`Command received - From: ${c.from} - To: ${c.to} - Method: ${c.method} - URI: ${c.uri} - Resource: ${c.resource} - Status: ${c.status} - Reason: ${c.reason}`);
             };
 
             var sessionListener: ISessionListener = s => {
@@ -97,12 +97,22 @@ function establishSession(uri: string, identity: string, instance: string) {
 
         },
         onClosed: () => {
-            console.log("Transport is closed");
+            logMessage("Transport is closed");
         },
         onError: (s) => {
-            console.error(`Transport failed: ${s}`);
+            logMessage(`Transport failed: ${s}`);
         }
     }
 
     transport.open(uri);
+}
+
+var logTextarea = <HTMLTextAreaElement>document.getElementById("log-textarea");
+function logMessage(message: string) {
+    let log = logTextarea.value;
+    if (log) {
+        log += "\r\n";
+    }
+    log += message;
+    logTextarea.value = log;
 }
