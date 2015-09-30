@@ -43,6 +43,8 @@ namespace Lime.Transport.WebSocket
         {
             using (var stream = await _webSocket.ReadMessageAsync(cancellationToken).ConfigureAwait(false))
             {
+                cancellationToken.ThrowIfCancellationRequested();
+
                 if (stream.MessageType != WebSocketMessageType.Text)
                 {
                     throw new NotSupportedException("An unsupported message type was received");

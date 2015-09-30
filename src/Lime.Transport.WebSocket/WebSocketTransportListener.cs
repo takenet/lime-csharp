@@ -148,11 +148,13 @@ namespace Lime.Transport.WebSocket
             {
                 throw new InvalidOperationException("The listener is not active. Call StartAsync first.");
             }
-
-            cancellationToken.ThrowIfCancellationRequested();
+            
             var webSocket = await _webSocketListener
                 .AcceptWebSocketAsync(cancellationToken)
                 .ConfigureAwait(false);
+
+            cancellationToken.ThrowIfCancellationRequested();
+            
             return new ServerWebSocketTransport(webSocket, _envelopeSerializer, _traceWriter);
         }
 

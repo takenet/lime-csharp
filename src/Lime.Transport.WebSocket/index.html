@@ -3,11 +3,38 @@
 <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
 <head>
     <meta charset="utf-8" />
-    <title></title>
-    <script type="text/javascript" src="lime.js"></script>
-    <script type="text/javascript" src="site.js"></script>
+    <title>LIME Websocket Client Console</title>
 </head>
 <body>
+    <div>
+        <label for="identity-input">Identity:</label>
+        <input type="text" id="identity-input" />
+    </div>
+    <div>
+        <label for="instance-input">Instance:</label>
+        <input type="text" id="instance-input" />
+    </div>
+    <div>
+        <label for="uri-input">URI:</label>
+        <input type="text" id="uri-input" />
+    </div>
+    <div>
+        <button id="connect-button">Connect</button>
+        <button id="disconnect-button">Disconnect</button>
+    </div>
 
+    <div>
+        <label for="message-to-input">To:</label>
+        <input type="text" id="message-to-input" />
+    </div>
+    <div>
+        <label for="message-content-input">Content:</label>
+        <input type="text" id="message-content-input"/>
+    </div>
+    <div>
+        <button id="message-send-button">Send message</button>        
+    </div>
+    <script type="text/javascript" src="lime.js"></script>
+    <script type="text/javascript" src="site.js"></script>
 </body>
 </html>
