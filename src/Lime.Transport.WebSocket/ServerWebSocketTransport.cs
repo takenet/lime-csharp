@@ -17,6 +17,8 @@ namespace Lime.Transport.WebSocket
         private readonly vtortola.WebSockets.WebSocket _webSocket;
         private readonly IEnvelopeSerializer _envelopeSerializer;
         private readonly ITraceWriter _traceWriter;
+        private readonly SemaphoreSlim _receiveSemaphore;
+        private readonly SemaphoreSlim _sendSemaphore;
 
         internal ServerWebSocketTransport(vtortola.WebSockets.WebSocket webSocket, IEnvelopeSerializer envelopeSerializer, ITraceWriter traceWriter = null)
         {
@@ -24,6 +26,8 @@ namespace Lime.Transport.WebSocket
             _webSocket = webSocket;
             _envelopeSerializer = envelopeSerializer;
             _traceWriter = traceWriter;
+            _receiveSemaphore = new SemaphoreSlim(1);
+            _sendSemaphore = new SemaphoreSlim(1);
         }
 
         public override async Task SendAsync(Envelope envelope, CancellationToken cancellationToken)
@@ -32,15 +36,22 @@ namespace Lime.Transport.WebSocket
             {
                 throw new InvalidOperationException("The connection was not initialized. Call OpenAsync first.");
             }
-
-            using (var stream = _webSocket.CreateMessageWriter(WebSocketMessageType.Text))
+            await _sendSemaphore.WaitAsync(cancellationToken);
+            try
             {
-                using (var writer = new StreamWriter(stream, Encoding.UTF8))
+                using (var stream = _webSocket.CreateMessageWriter(WebSocketMessageType.Text))
                 {
-                    var envelopeJson = _envelopeSerializer.Serialize(envelope);
-                    await TraceDataIfEnabledAsync(envelopeJson, DataOperation.Send).ConfigureAwait(false);
-                    await writer.WriteAsync(envelopeJson).ConfigureAwait(false);                    
+                    using (var writer = new StreamWriter(stream, Encoding.UTF8))
+                    {
+                        var envelopeJson = _envelopeSerializer.Serialize(envelope);
+                        await TraceDataIfEnabledAsync(envelopeJson, DataOperation.Send).ConfigureAwait(false);
+                        await writer.WriteAsync(envelopeJson).ConfigureAwait(false);
+                    }
                 }
+            }
+            finally
+            {
+                _sendSemaphore.Release();
             }
         }
 
@@ -51,21 +62,29 @@ namespace Lime.Transport.WebSocket
                 throw new InvalidOperationException("The connection was not initialized. Call OpenAsync first.");
             }
 
-            using (var stream = await _webSocket.ReadMessageAsync(cancellationToken).ConfigureAwait(false))
+            await _receiveSemaphore.WaitAsync(cancellationToken);
+            try
             {
-                cancellationToken.ThrowIfCancellationRequested();
-                if (stream == null) return null;
-                if (stream.MessageType != WebSocketMessageType.Text)
+                using (var stream = await _webSocket.ReadMessageAsync(cancellationToken).ConfigureAwait(false))
                 {
-                    throw new NotSupportedException("An unsupported message type was received");
-                }
+                    cancellationToken.ThrowIfCancellationRequested();
+                    if (stream == null) return null;
+                    if (stream.MessageType != WebSocketMessageType.Text)
+                    {
+                        throw new NotSupportedException("An unsupported message type was received");
+                    }
 
-                using (var reader = new StreamReader(stream, Encoding.UTF8))
-                {
-                    var envelopeJson = await reader.ReadToEndAsync().ConfigureAwait(false);
-                    await TraceDataIfEnabledAsync(envelopeJson, DataOperation.Receive).ConfigureAwait(false);
-                    return _envelopeSerializer.Deserialize(envelopeJson);
+                    using (var reader = new StreamReader(stream, Encoding.UTF8))
+                    {
+                        var envelopeJson = await reader.ReadToEndAsync().ConfigureAwait(false);
+                        await TraceDataIfEnabledAsync(envelopeJson, DataOperation.Receive).ConfigureAwait(false);
+                        return _envelopeSerializer.Deserialize(envelopeJson);
+                    }
                 }
+            }
+            finally
+            {
+                _receiveSemaphore.Release();
             }
         }
 

@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
@@ -143,16 +146,68 @@ namespace Lime.Transport.WebSocket.UnitTests
 
             // Assert
             actual.ShouldNotBeNull();
-            var actualSession = actual.ShouldBeOfType<Notification>();
-            actualSession.Id.ShouldBe(notification.Id);
-            actualSession.From.ShouldBe(notification.From);
-            actualSession.To.ShouldBe(notification.To);
-            actualSession.Pp.ShouldBe(notification.Pp);
-            actualSession.Metadata.ShouldBe(notification.Metadata);
-            actualSession.Event.ShouldBe(notification.Event);
-            actualSession.Reason.ShouldBe(notification.Reason);
-            actualSession.Metadata.ShouldBe(notification.Metadata);
+            var actualNotification = actual.ShouldBeOfType<Notification>();
+            actualNotification.Id.ShouldBe(notification.Id);
+            actualNotification.From.ShouldBe(notification.From);
+            actualNotification.To.ShouldBe(notification.To);
+            actualNotification.Pp.ShouldBe(notification.Pp);
+            actualNotification.Metadata.ShouldBe(notification.Metadata);
+            actualNotification.Event.ShouldBe(notification.Event);
+            actualNotification.Reason.ShouldBe(notification.Reason);
+            actualNotification.Metadata.ShouldBe(notification.Metadata);
         }
+
+        [Test]
+        public async Task SendAsync_MultipleParallelNotifications_ClientShouldReceive()
+        {
+            // Arrange            
+            var count = Dummy.CreateRandomInt(100) + 1;
+            var notifications = Enumerable.Range(0, count)
+                .Select(i =>
+                {
+                    var notification = Dummy.CreateNotification(Event.Dispatched);
+                    notification.Id = Guid.NewGuid();
+                    return notification;
+                })
+                .ToList();
+            var target = await GetTargetAsync();
+
+            // Act
+            Parallel.ForEach(notifications, async notification =>
+            {
+                await target.SendAsync(notification, CancellationToken);
+            });
+
+
+            var receiveTasks = new List<Task<Envelope>>();            
+            while (count-- > 0)
+            {
+                receiveTasks.Add( 
+                    Task.Run(async () => await Client.ReceiveAsync(CancellationToken), 
+                    CancellationToken));
+            }
+            
+            await Task.WhenAll(receiveTasks);
+            var actuals = receiveTasks.Select(t => t.Result).ToList();
+            
+            // Assert
+            actuals.Count.ShouldBe(notifications.Count);
+            foreach (var notification in notifications)
+            {
+                var actualEnvelope = actuals.FirstOrDefault(e => e.Id == notification.Id);
+                actualEnvelope.ShouldNotBeNull();
+                var actualNotification = actualEnvelope.ShouldBeOfType<Notification>();
+                actualNotification.Id.ShouldBe(notification.Id);
+                actualNotification.From.ShouldBe(notification.From);
+                actualNotification.To.ShouldBe(notification.To);
+                actualNotification.Pp.ShouldBe(notification.Pp);
+                actualNotification.Metadata.ShouldBe(notification.Metadata);
+                actualNotification.Event.ShouldBe(notification.Event);
+                actualNotification.Reason.ShouldBe(notification.Reason);
+                actualNotification.Metadata.ShouldBe(notification.Metadata);
+            }
+        }
+
 
         [Test]
         public async Task ReceiveAsync_NewSessionEnvelope_ServerShouldReceive()
@@ -225,6 +280,30 @@ namespace Lime.Transport.WebSocket.UnitTests
             actualSession.Reason.Code.ShouldBe(session.Reason.Code);
             actualSession.Metadata.ShouldBe(session.Metadata);
         }
+
+        [Test]
+        public async Task CloseAsync_Connected_PerformClose()
+        {
+            // Arrange
+            var target = await GetTargetAsync();
+            var session = Dummy.CreateSession(SessionState.Negotiating);
+            await target.SendAsync(session, CancellationToken); // Send something to assert is connected
+
+            // Act
+            await target.CloseAsync(CancellationToken);
+
+            // Assert
+            try
+            {
+                await target.SendAsync(session, CancellationToken); // Send something to assert is connected
+                Assert.Fail("Send was succeeded but an exception was expected");
+            }
+            catch (Exception ex)
+            {
+                ex.ShouldBeOfType<InvalidOperationException>();
+            }            
+        }
+
 
     }
 }

@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Net.WebSockets;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
@@ -6,6 +8,7 @@ using System.Threading.Tasks;
 using Lime.Protocol;
 using Lime.Protocol.Network;
 using Lime.Protocol.Serialization;
+using Lime.Protocol.UnitTests;
 using Moq;
 using NUnit.Framework;
 using Shouldly;
@@ -82,7 +85,7 @@ namespace Lime.Transport.WebSocket.UnitTests
         }
 
         [Test]
-        public async Task AcceptTransportAsync_NewRequest_RetunsTransport()
+        public async Task AcceptTransportAsync_NewConnection_RetunsTransport()
         {
             // Arrange
             await Target.StartAsync();
@@ -94,6 +97,37 @@ namespace Lime.Transport.WebSocket.UnitTests
 
             // Assert
             transport.ShouldNotBeNull();
+        }
+
+        [Test]
+        public async Task AcceptTransportAsync_MultipleConnection_RetunsTransports()
+        {
+            // Arrange
+            await Target.StartAsync();
+
+            var count = Dummy.CreateRandomInt(100) + 1;
+            var clientTransports = Enumerable.Range(0, count)
+                .Select(async i =>
+                {
+                    var clientTransport = new ClientWebSocketTransport(EnvelopeSerializer);
+                    await clientTransport.OpenAsync(ListenerUri, CancellationToken);
+                    return clientTransport;
+                })
+                .ToList();
+            
+            // Act
+            var acceptTasks = new List<Task<ITransport>>();
+            while (count-- > 0)
+            {
+                acceptTasks.Add(
+                    Task.Run(async () => await Target.AcceptTransportAsync(CancellationToken), CancellationToken));
+            }
+
+            await Task.WhenAll(acceptTasks);
+            var actualTransports = acceptTasks.Select(t => t.Result).ToList();
+
+            // Assert
+            actualTransports.Count.ShouldBe(clientTransports.Count);
         }
 
         [Test]
