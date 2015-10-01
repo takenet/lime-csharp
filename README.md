@@ -17,6 +17,7 @@ Finally it has built-in support for authentication, transport encryption and com
 
 - **Lime.Protocol**: Base protocol ([NuGet](https://www.nuget.org/Packages/Lime.Protocol))
 - **Lime.Transport.Tcp**: TCP transport implementation ([NuGet](https://www.nuget.org/Packages/Lime.Transport.Tcp))
+- **Lime.Transport.WebSocket**: WebSocket transport implementation ([NuGet](https://www.nuget.org/Packages/Lime.Transport.WebSocket))
 - **Lime.Transport.Http**: HTTP emulation layer (LIME over HTTP) ([NuGet](https://www.nuget.org/Packages/Lime.Transport.Http))
 - **Lime.Messaging**: Common content and resource types for instant messaging applications ([NuGet](https://www.nuget.org/Packages/Lime.Messaging))
 - **Lime.Client.TestConsole**: Client console for server testing
@@ -36,7 +37,7 @@ The basic protocol data package is called **envelope**. As mentioned before, the
 
 All envelope types share some properties (like the ```id``` - the envelope unique identifier - and the ```from``` and ```to``` routing information) but there are some unique properties of each one that allows the proper deserialization when a JSON object is received by the transport.
 
-The ```ITransport``` interface represents a persistent transport connection that allows the management of the connection state, besides sending and receiving envelopes. Currently, the library only provides the ```TcpTransport``` implementation but a ```WebSocketTransport``` is on the way.
+The ```ITransport``` interface represents a persistent transport connection that allows the management of the connection state, besides sending and receiving envelopes. Currently, the library provides the ```TcpTransport``` and ```WebSocketTransport``` implementations.
 
 A transport instance needs an ```ISerializer``` to transform envelope objects into JSON strings and vice-versa. The library has a built-in serializer but there is available an implementation that is based on the the **Newtonsoft.Json** library (with some limitations about some content types). Also, there is partial support for the **ServiceStack.Text** library.
 
