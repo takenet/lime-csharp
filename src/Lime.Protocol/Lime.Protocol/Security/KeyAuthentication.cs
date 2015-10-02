@@ -6,99 +6,91 @@ using Lime.Protocol.Serialization;
 namespace Lime.Protocol.Security
 {
     /// <summary>
-    /// Defines a plain authentication scheme,
-    /// that uses a password for authentication.
+    /// Defines a authentication scheme that uses a key for authentication.
     /// Should be used only with encrypted sessions.
     /// </summary>
     [DataContract(Namespace = "http://limeprotocol.org/2014")]
-    public class PlainAuthentication : Authentication, IDisposable
+    public class KeyAuthentication : Authentication, IDisposable
     {
-        public const string PASSWORD_KEY = "password";
+        public const string KEY_KEY = "key";
 
-        public PlainAuthentication()
-            : base(AuthenticationScheme.Plain)
+        public KeyAuthentication()
+            : base(AuthenticationScheme.Key)
         {
 
         }
 
-        ~PlainAuthentication()
+        ~KeyAuthentication()
         {
             Dispose(false);
-        } 
+        }
 
 
 #if !PCL
         [IgnoreDataMember]
-        public SecureString SecurePassword { get; private set; }
+        public SecureString SecureKey { get; private set; }
 
         /// <summary>
         /// Base64 representation of the 
-        /// identity password
+        /// identity key
         /// </summary>
-        [DataMember(Name = PASSWORD_KEY)]
-        public string Password
+        [DataMember(Name = KEY_KEY)]
+        public string Key
         {
             get
             {
-                return SecurePassword?.ToUnsecureString();
+                return SecureKey?.ToUnsecureString();
             }
             set
             {
-                if (SecurePassword != null)
+                if (SecureKey != null)
                 {
-                    SecurePassword.Dispose();
-                    SecurePassword = null;
+                    SecureKey.Dispose();
+                    SecureKey = null;
                 }
 
                 if (value != null)
                 {
-                    SecurePassword = value.ToSecureString();
+                    SecureKey = value.ToSecureString();
                 }
             }
-        } 
+        }
 
 #else
 
         [IgnoreDataMember]
-        private string _password;
+        private string _key;
 
         /// <summary>
         /// Base64 representation of the 
-        /// identity password
+        /// identity key
         /// </summary>
-        [DataMember(Name = PASSWORD_KEY)]
-        public string Password 
+        [DataMember(Name = KEY_KEY)]
+        public string Key 
         { 
-            get { return _password; }
-            set { _password = value; }
+            get { return _key; }
+            set { _key = value; }
         }
 #endif
 
         /// <summary>
-        /// Set a plain password to a 
+        /// Set a plain key to a 
         /// Base64 representation
         /// </summary>
-        /// <param name="password"></param>
-        public void SetToBase64Password(string password)
+        /// <param name="key"></param>
+        public void SetToBase64Key(string key)
         {
-            if (string.IsNullOrWhiteSpace(password))
-            {
-                Password = password;
-            }
-            else
-            {
-                Password = password.ToBase64();
-            }
+            Key = string.IsNullOrWhiteSpace(key) ? key : key.ToBase64();
         }
 
         /// <summary>
-        /// Gets the plain password decoded 
+        /// Gets the plain key decoded 
         /// from the Base64 representation
         /// </summary>
         /// <returns></returns>
-        public string GetFromBase64Password()
+        public string GetFromBase64Key()
         {
-            return string.IsNullOrWhiteSpace(Password) ? Password : Password.FromBase64();
+            return string.IsNullOrWhiteSpace(Key) ? Key : Key.FromBase64();
         }
 
         #region IDisposable Members
@@ -121,7 +113,7 @@ namespace Lime.Protocol.Security
             if (disposing)
             {
 #if !PCL
-                SecurePassword?.Dispose();
+                SecureKey?.Dispose();
 #endif
             }
         }

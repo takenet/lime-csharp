@@ -49,6 +49,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Security\Authentication.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Security\GuestAuthentication.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Security\IAuthenticatableTransport.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Security\KeyAuthentication.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Security\PlainAuthentication.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Security\TransportAuthentication.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Serialization\DictionaryJsonWriter.cs" />

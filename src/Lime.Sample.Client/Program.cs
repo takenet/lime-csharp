@@ -1,10 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Net;
-using System.Net.Configuration;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Lime.Messaging.Contents;
@@ -23,7 +19,7 @@ namespace Lime.Sample.Client
 
         static async Task MainAsync(string[] args)
         {
-            System.Console.Write("Host name (ENTER for default): ");
+            Console.Write("Host name (ENTER for default): ");
 
             var hostName = Console.ReadLine();
             if (string.IsNullOrWhiteSpace(hostName))
@@ -31,7 +27,7 @@ namespace Lime.Sample.Client
                 hostName = Dns.GetHostName();
             }
 
-            System.Console.Write("Port number (ENTER for default): ");
+            Console.Write("Port number (ENTER for default): ");
 
             int portNumber;
             if (!int.TryParse(Console.ReadLine(), out portNumber))
@@ -53,8 +49,8 @@ namespace Lime.Sample.Client
 
             // TODO Support for session authentication
             var session = await clientChannel.EstablishSessionAsync(
-                (compressionOptions) => compressionOptions.First(),     // Compression selector 
-                (encryptionOptions) => encryptionOptions.First(),       // Encryption selector
+                compressionOptions => compressionOptions.First(),     // Compression selector 
+                encryptionOptions => encryptionOptions.First(),       // Encryption selector
                 null,                                                   // Client identity
                 (authenticationSchemes, roundtrip) => null,             // Authentication
                 "default",
@@ -95,10 +91,10 @@ namespace Lime.Sample.Client
                     if (string.IsNullOrEmpty(toInput) || Node.TryParse(toInput, out to))
                     {
                         Console.Write("Message text: ");                        
-                        var message = new Message()
+                        var message = new Message
                         {
                             To = to,
-                            Content = new PlainText()
+                            Content = new PlainText
                             {
                                 Text = Console.ReadLine()
                             }
