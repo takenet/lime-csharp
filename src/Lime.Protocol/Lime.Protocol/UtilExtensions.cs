@@ -420,8 +420,10 @@ namespace Lime.Protocol
         /// <returns></returns>
         public static byte[] ToSHA1Hash(this string inputString)
         {
-            HashAlgorithm algorithm = SHA1.Create();
-            return algorithm.ComputeHash(Encoding.UTF8.GetBytes(inputString));
+            using (var algorithm = SHA1.Create())
+            {
+                return algorithm.ComputeHash(Encoding.UTF8.GetBytes(inputString));
+            }                
         }
 
         /// <summary>
@@ -431,7 +433,7 @@ namespace Lime.Protocol
         /// <returns></returns>
         public static string ToSHA1HashString(this string inputString)
         {
-            StringBuilder sb = new StringBuilder();
+            var sb = new StringBuilder();
             foreach (byte b in ToSHA1Hash(inputString))
                 sb.Append(b.ToString("X2"));
 

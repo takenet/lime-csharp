@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Linq;
 using System.Net;
 using System.Security.Principal;
+using System.Threading;
 using System.Timers;
 using Lime.Protocol;
 using Lime.Protocol.Network;
@@ -127,27 +128,30 @@ namespace Lime.Transport.Http
 
                 foreach (var expiredSession in expiredTransportSessions)
                 {
-                    var cancellationToken = _closeTransportTimeout.ToCancellationToken();
+                    using (var tcs = new CancellationTokenSource(_closeTransportTimeout))
+                    {
+                        var cancellationToken = tcs.Token;
+                        bool finished;
 
-                    bool finished;
-                    try
-                    {
-                        await expiredSession.FinishAsync(cancellationToken);
-                        finished = true;
-                    }
-                    catch (OperationCanceledException)
-                    {
-                        finished = false;
-                    }
-                    catch (InvalidOperationException)
-                    {
-                        finished = false;
-                    }
+                        try
+                        {
+                            await expiredSession.FinishAsync(cancellationToken);
+                            finished = true;
+                        }
+                        catch (OperationCanceledException)
+                        {
+                            finished = false;
+                        }
+                        catch (InvalidOperationException)
+                        {
+                            finished = false;
+                        }
 
-                    if (!finished)
-                    {
-                        // Force closing the transport
-                        await ((ITransport)expiredSession).CloseAsync(cancellationToken);
+                        if (!finished)
+                        {
+                            // Force closing the transport
+                            await ((ITransport) expiredSession).CloseAsync(cancellationToken);
+                        }
                     }
                 }
             }
