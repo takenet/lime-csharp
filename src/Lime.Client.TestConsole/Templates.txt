@@ -3,6 +3,7 @@ Negotiating none/none	Session	{"id":"%sessionId","state":"negotiating","encrypti
 Negotiating none/tls	Session	{"id":"%sessionId","state":"negotiating","encryption":"tls","compression":"none"}
 Authenticating guest	Session	{"id":"%sessionId","from":"%from","state":"authenticating","scheme":"guest"}
 Authenticating plain	Session	{"id":"%sessionId","from":"%from","state":"authenticating","scheme":"plain","authentication":{"password":"%password"}}
+Authenticating key	Session	{"id":"%sessionId","from":"%from","state":"authenticating","scheme":"key","authentication":{"key":"%key"}}
 Authenticating transport	Session	{"id":"%sessionId","from":"%from","state":"authenticating","scheme":"transport"}
 Finishing	Session	{"id":"%sessionId","state": "finishing"}
 Text message	Message	{"id":"%messageId","to":"%to","type":"text/plain","content":"%text"}
