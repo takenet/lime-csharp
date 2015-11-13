@@ -23,6 +23,9 @@ namespace Lime.Protocol.UnitTests.Client
         public void Setup()
         {
             _transport = new Mock<ITransport>();
+            _transport
+                .Setup(t => t.IsConnected)
+                .Returns(true);
             _sendTimeout = TimeSpan.FromSeconds(30);
         }
 

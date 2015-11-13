@@ -276,7 +276,8 @@ namespace Lime.Protocol.Network
             try
             {
                 while (!_channelCancellationTokenSource.IsCancellationRequested &&
-                        State == SessionState.Established)
+                        State == SessionState.Established &&
+                        Transport.IsConnected)
                 {
                     Exception exception = null;
 
@@ -321,9 +322,12 @@ namespace Lime.Protocol.Network
                     if (exception != null)
                     {
                         _isConsumeTransportTaskFaulting = true;
-                        using (var cts = new CancellationTokenSource(_sendTimeout))
+                        if (Transport.IsConnected)
                         {
-                            await Transport.CloseAsync(cts.Token).ConfigureAwait(false);
+                            using (var cts = new CancellationTokenSource(_sendTimeout))
+                            {
+                                await Transport.CloseAsync(cts.Token).ConfigureAwait(false);
+                            }
                         }
                         ExceptionDispatchInfo.Capture(exception).Throw();
                     }
@@ -485,10 +489,15 @@ namespace Lime.Protocol.Network
         /// <returns></returns>
         private async Task SendAsync(Envelope envelope)
         {
+            if (!Transport.IsConnected)
+            {
+                throw new InvalidOperationException("The transport is not connected");
+            }
+
             if (_fillEnvelopeRecipients)
             {
                 FillEnvelope(envelope, true);
-            }
+            }            
 
             using (var timeoutCancellationTokenSource = new CancellationTokenSource(_sendTimeout))
             {

@@ -96,6 +96,8 @@ namespace Lime.Transport.WebSocket
             return TaskUtil.CompletedTask;
         }
 
+        public override bool IsConnected => _webSocket.IsConnected;
+
         private async Task TraceDataIfEnabledAsync(string envelopeJson, DataOperation dataOperation)
         {
             if (_traceWriter != null &&

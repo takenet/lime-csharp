@@ -111,5 +111,7 @@ namespace Lime.Transport.WebSocket
         {
             return _clientWebSocket.CloseAsync(WebSocketCloseStatus.Empty, "The session was finished", cancellationToken);
         }
+
+        public override bool IsConnected => _clientWebSocket.State == WebSocketState.Open;
     }
 }

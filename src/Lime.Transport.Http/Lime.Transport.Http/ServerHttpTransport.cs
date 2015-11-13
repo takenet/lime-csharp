@@ -365,6 +365,8 @@ namespace Lime.Transport.Http
             return Task.FromResult<object>(null);
         }
 
+        public override bool IsConnected => true;
+
         #endregion
 
         #region Private Methods

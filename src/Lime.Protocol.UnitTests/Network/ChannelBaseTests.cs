@@ -27,6 +27,9 @@ namespace Lime.Protocol.UnitTests.Network
         public void Setup()
         {
             _transport = new Mock<ITransport>();
+            _transport
+                .Setup(t => t.IsConnected)
+                .Returns(true);
             _sendTimeout = TimeSpan.FromSeconds(30);
         }
 
@@ -38,8 +41,6 @@ namespace Lime.Protocol.UnitTests.Network
         }
 
         #endregion
-
-
 
         public ChannelBase GetTarget(SessionState state, int buffersLimit = 5, bool fillEnvelopeRecipients = false, Node remoteNode = null, Node localNode = null)
         {

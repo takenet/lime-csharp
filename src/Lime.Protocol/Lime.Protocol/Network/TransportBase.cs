@@ -23,8 +23,7 @@ namespace Lime.Protocol.Network
         #region ITransport Members
 
         /// <summary>
-        /// Sends an envelope to 
-        /// the connected node
+        /// Sends an envelope to the connected node.
         /// </summary>
         /// <param name="envelope">Envelope to be transported</param>
         /// <param name="cancellationToken"></param>
@@ -32,16 +31,14 @@ namespace Lime.Protocol.Network
         public abstract Task SendAsync(Envelope envelope, CancellationToken cancellationToken);
 
         /// <summary>
-        /// Receives an envelope 
-        /// from the remote node.
+        /// Receives an envelope from the remote node.
         /// </summary>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns></returns>
         public abstract Task<Envelope> ReceiveAsync(CancellationToken cancellationToken);
 
         /// <summary>
-        /// Opens the transport connection with
-        /// the specified Uri
+        /// Opens the transport connection with the specified Uri.
         /// </summary>
         /// <param name="uri"></param>
         /// <param name="cancellationToken"></param>
@@ -56,14 +53,13 @@ namespace Lime.Protocol.Network
         /// <returns></returns>
         public async virtual Task CloseAsync(CancellationToken cancellationToken)
         {
-            await this.OnClosingAsync().ConfigureAwait(false);
-            await this.PerformCloseAsync(cancellationToken).ConfigureAwait(false);
-            this.OnClosed();
+            await OnClosingAsync().ConfigureAwait(false);
+            await PerformCloseAsync(cancellationToken).ConfigureAwait(false);
+            OnClosed();
         }
 
         /// <summary>
-        /// Enumerates the supported compression
-        /// options for the transport
+        /// Enumerates the supported compression options for the transport.
         /// </summary>
         /// <returns></returns>
         public virtual SessionCompression[] GetSupportedCompression()
@@ -78,8 +74,7 @@ namespace Lime.Protocol.Network
         public virtual SessionCompression Compression { get; protected set; }
 
         /// <summary>
-        /// Defines the compression mode
-        /// for the transport
+        /// Defines the compression mode for the transport.
         /// </summary>
         /// <param name="compression">The compression mode</param>
         /// <param name="cancellationToken"></param>
@@ -96,8 +91,7 @@ namespace Lime.Protocol.Network
         }
 
         /// <summary>
-        /// Enumerates the supported encryption
-        /// options for the transport
+        /// Enumerates the supported encryption options for the transport.
         /// </summary>
         /// <returns></returns>
         public virtual SessionEncryption[] GetSupportedEncryption()
@@ -106,14 +100,17 @@ namespace Lime.Protocol.Network
         }
 
         /// <summary>
-        /// Gets the current transport 
-        /// encryption option
+        /// Gets the current transport encryption option.
         /// </summary>
         public virtual SessionEncryption Encryption { get; protected set; }
 
         /// <summary>
-        /// Defines the encryption mode
-        /// for the transport
+        /// Indicates if the transport is connected.
+        /// </summary>
+        public abstract bool IsConnected { get; }
+
+        /// <summary>
+        /// Defines the encryption mode for the transport.
         /// </summary>
         /// <param name="encryption"></param>
         /// <param name="cancellationToken"></param>
@@ -130,18 +127,17 @@ namespace Lime.Protocol.Network
         }
 
         /// <summary>
-        /// Occurs when the channel is about
-        /// to be closed
+        /// Occurs when the channel is about to be closed.
         /// </summary>
         public event EventHandler<DeferralEventArgs> Closing;
 
         /// <summary>
-        /// Occurs after the connection was closed
+        /// Occurs after the connection was closed.
         /// </summary>
         public event EventHandler Closed;
 
         /// <summary>
-        /// Closes the transport
+        /// Closes the transport.
         /// </summary>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
@@ -151,9 +147,7 @@ namespace Lime.Protocol.Network
 
 
         /// <summary>
-        /// Raises the Closing event with
-        /// a deferral to wait the event handlers
-        /// to complete the execution.
+        /// Raises the Closing event with a deferral to wait the event handlers to complete the execution.
         /// </summary>
         /// <returns></returns>
         protected virtual Task OnClosingAsync()
@@ -163,7 +157,7 @@ namespace Lime.Protocol.Network
                 _closingInvoked = true;
 
                 var e = new DeferralEventArgs();
-                this.Closing.RaiseEvent(this, e);
+                Closing.RaiseEvent(this, e);
                 return e.WaitForDeferralsAsync();
             }
 
@@ -178,7 +172,7 @@ namespace Lime.Protocol.Network
             if (!_closedInvoked)
             {
                 _closedInvoked = true;
-                this.Closed.RaiseEvent(this, EventArgs.Empty);
+                Closed.RaiseEvent(this, EventArgs.Empty);
             }
         }
     }

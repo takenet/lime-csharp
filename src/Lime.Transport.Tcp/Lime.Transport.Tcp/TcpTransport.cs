@@ -425,18 +425,20 @@ namespace Lime.Transport.Tcp
 			}
 		}
 
-		#endregion
+        public override bool IsConnected => _tcpClient.Connected;
 
-		#region IAuthenticatableTransport Members
+        #endregion
 
-		/// <summary>
-		/// Authenticate the identity in the transport layer.
-		/// </summary>
-		/// <param name="identity">The identity to be authenticated</param>
-		/// <returns>
-		/// Indicates if the identity is authenticated
-		/// </returns>
-		public Task<DomainRole> AuthenticateAsync(Identity identity)
+        #region IAuthenticatableTransport Members
+
+        /// <summary>
+        /// Authenticate the identity in the transport layer.
+        /// </summary>
+        /// <param name="identity">The identity to be authenticated</param>
+        /// <returns>
+        /// Indicates if the identity is authenticated
+        /// </returns>
+        public Task<DomainRole> AuthenticateAsync(Identity identity)
 		{
 			var role = DomainRole.Unknown;
 			

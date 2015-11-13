@@ -215,6 +215,7 @@ namespace Lime.Protocol.UnitTests.Network
 
             public CancellationToken PerformCloseAsynCancellationToken { get; private set; }
 
+            public override bool IsConnected => OpenAsyncInvoked && !PerformCloseAsyncInvoked;
 
             public override Task SendAsync(Envelope envelope, CancellationToken cancellationToken)
             {
