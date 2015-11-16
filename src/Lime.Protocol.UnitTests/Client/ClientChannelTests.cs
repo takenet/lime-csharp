@@ -31,7 +31,7 @@ namespace Lime.Protocol.UnitTests.Client
 
         #endregion
 
-        public ClientChannel GetTarget(Guid? sessionId = null, SessionState state = SessionState.New, bool fillEnvelopeRecipients = false, bool autoReplyPings = true, bool autoNotifyReceipt = true, Node remoteNode = null, Node localNode = null)
+        public ClientChannel GetTarget(Guid? sessionId = null, SessionState state = SessionState.New, bool fillEnvelopeRecipients = false, bool autoReplyPings = true, bool autoNotifyReceipt = true, Node remoteNode = null, Node localNode = null, TimeSpan? remotePingInterval = null, TimeSpan? remoteIdleTimeout = null)
         {
             return new TestClientChannel(
                 sessionId,
@@ -42,7 +42,9 @@ namespace Lime.Protocol.UnitTests.Client
                 autoReplyPings,
                 autoNotifyReceipt,
                 remoteNode,
-                localNode
+                localNode,
+                remotePingInterval,
+                remoteIdleTimeout
                 );
         }
 
@@ -759,24 +761,54 @@ namespace Lime.Protocol.UnitTests.Client
                     t.CloseAsync(It.IsAny<CancellationToken>()),
                     Times.Once());
         }
-    
+
+
+        [Test]
+        [Category("OnRemoteIdleAsync")]
+        public async Task OnRemoteIdleAsync_EstablishedState_CallsSendFinishingAndReceiveFinishedSession()
+        {
+            // Arrange
+            var session = Dummy.CreateSession(SessionState.Finished);            
+            var tcs1 = new TaskCompletionSource<Envelope>();
+            var tcs2 = new TaskCompletionSource<Envelope>();
+            _transport
+                .SetupSequence(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(tcs1.Task)
+                .Returns(tcs2.Task);
+            var target = GetTarget(state: SessionState.Established, remotePingInterval: TimeSpan.FromMilliseconds(100), remoteIdleTimeout: TimeSpan.FromMilliseconds(300));
+
+            _transport
+                .Setup(t => t.SendAsync(It.Is<Envelope>(e => e is Session), It.IsAny<CancellationToken>()))
+                .Callback(() => 
+                {                    
+                    tcs1.TrySetResult(session);
+                });
+
+            // Act
+            await Task.Delay(1000);
+
+            // Assert
+            _transport
+                .Verify(t =>
+                    t.CloseAsync(It.IsAny<CancellationToken>()),
+                    Times.Once());
+        }
+
         #endregion
 
         private class TestClientChannel : ClientChannel
         {
-            public TestClientChannel(Guid? sessionId, SessionState state, ITransport transport, TimeSpan sendTimeout, bool fillEnvelopeRecipients = false, bool autoReplyPings = true, bool autoNotifyReceipt = false, Node remoteNode = null, Node localNode = null)
-                : base(transport, sendTimeout, 5, fillEnvelopeRecipients, autoReplyPings, autoNotifyReceipt)
+            public TestClientChannel(Guid? sessionId, SessionState state, ITransport transport, TimeSpan sendTimeout, bool fillEnvelopeRecipients = false, bool autoReplyPings = true, bool autoNotifyReceipt = false, Node remoteNode = null, Node localNode = null, TimeSpan? remotePingInterval = null, TimeSpan? remoteIdleTimeout = null)
+                : base(transport, sendTimeout, 5, fillEnvelopeRecipients, autoReplyPings, autoNotifyReceipt, remotePingInterval, remoteIdleTimeout)
             {
                 if (sessionId.HasValue)
                 {
-                    base.SessionId = sessionId.Value;
+                    SessionId = sessionId.Value;
                 }
-                base.State = state;
-                base.RemoteNode = remoteNode;
-                base.LocalNode = localNode;
-
+                State = state;
+                RemoteNode = remoteNode;
+                LocalNode = localNode;
             }
-
         }
     }
 }

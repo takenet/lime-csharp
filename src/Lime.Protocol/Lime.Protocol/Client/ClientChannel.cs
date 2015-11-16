@@ -27,8 +27,10 @@ namespace Lime.Protocol.Client
         /// <param name="sendTimeout">The channel send timeout.</param>
         /// <param name="autoReplyPings">Indicates if the channel should reply automatically to ping request commands. In this case, the ping command are not returned by the ReceiveCommandAsync method.</param>
         /// <param name="autoNotifyReceipt">Indicates if the client should automatically send 'received' notifications for messages.</param>
-        public ClientChannel(ITransport transport, TimeSpan sendTimeout, int buffersLimit = 5, bool fillEnvelopeRecipients = false, bool autoReplyPings = true, bool autoNotifyReceipt = false)
-            : base(transport, sendTimeout, buffersLimit, fillEnvelopeRecipients, autoReplyPings)
+        /// <param name="remotePingInterval">The interval to ping the remote party.</param>
+        /// <param name="remoteIdleTimeout">The timeout to close the channel due to inactivity.</param>
+        public ClientChannel(ITransport transport, TimeSpan sendTimeout, int buffersLimit = 5, bool fillEnvelopeRecipients = false, bool autoReplyPings = true, bool autoNotifyReceipt = false, TimeSpan? remotePingInterval = null, TimeSpan? remoteIdleTimeout = null)
+            : base(transport, sendTimeout, buffersLimit, fillEnvelopeRecipients, autoReplyPings, remotePingInterval, remoteIdleTimeout)
         {
             _autoNotifyReceipt = autoNotifyReceipt;
         }
@@ -120,10 +122,7 @@ namespace Lime.Protocol.Client
         }
 
         /// <summary>
-        /// Send a authenticate session envelope
-        /// to the server to establish
-        /// an authenticated session and awaits
-        /// for the response.
+        /// Send a authenticate session envelope to the server to establish an authenticated session and awaits for the response.
         /// </summary>
         /// <param name="cancellationToken"></param>
         /// <param name="identity"></param>
@@ -294,10 +293,10 @@ namespace Lime.Protocol.Client
         }
 
         /// <summary>
-        /// Fills the envelope recipients
-        /// using the session information
+        /// Fills the envelope recipients using the session information.
         /// </summary>
         /// <param name="envelope"></param>
+        /// <param name="isSending"></param>
         protected override void FillEnvelope(Envelope envelope, bool isSending)
         {
             base.FillEnvelope(envelope, isSending);
@@ -318,6 +317,17 @@ namespace Lime.Protocol.Client
                     envelope.Pp.Domain = LocalNode.Domain;
                 }
             }
+        }
+
+        /// <summary>
+        /// Closes the idle channel with the remote party.
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        protected override async Task OnRemoteIdleAsync(CancellationToken cancellationToken)
+        {
+            await SendFinishingSessionAsync().ConfigureAwait(false);
+            await ReceiveFinishedSessionAsync(cancellationToken).ConfigureAwait(false);            
         }
 
         #endregion

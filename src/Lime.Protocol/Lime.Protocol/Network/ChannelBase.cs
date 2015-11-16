@@ -14,18 +14,28 @@ namespace Lime.Protocol.Network
         #region Fields
 
         public const string PING_MEDIA_TYPE = "application/vnd.lime.ping+json";
+        public const string PING_URI = "/ping";
+
         private readonly static Document PingDocument = new JsonDocument(MediaType.Parse(PING_MEDIA_TYPE));
+        private readonly static TimeSpan OnRemoteIdleTimeout = TimeSpan.FromSeconds(30);
+        private readonly static TimeSpan MinimumRemotePingInterval = TimeSpan.FromSeconds(5);
 
         private readonly TimeSpan _sendTimeout;
         private readonly bool _fillEnvelopeRecipients;
         private readonly bool _autoReplyPings;
+        private readonly TimeSpan _remotePingInterval;
+        private readonly TimeSpan _remoteIdleTimeout;
         private readonly IAsyncQueue<Message> _messageBuffer;
         private readonly IAsyncQueue<Command> _commandBuffer;
         private readonly IAsyncQueue<Notification> _notificationBuffer;
         private readonly IAsyncQueue<Session> _sessionBuffer;
         private readonly CancellationTokenSource _channelCancellationTokenSource;
+
         private Task _consumeTransportTask;
+        private Task _remotePingTask;        
         private bool _isDisposing;
+
+        protected DateTimeOffset LastReceivedEnvelope;
 
         #endregion
 
@@ -39,7 +49,9 @@ namespace Lime.Protocol.Network
         /// <param name="buffersLimit"></param>
         /// <param name="fillEnvelopeRecipients">Indicates if the from and to properties of sent and received envelopes should be filled with the session information if not defined.</param>
         /// <param name="autoReplyPings">Indicates if the channel should reply automatically to ping request commands. In this case, the ping command are not returned by the ReceiveCommandAsync method.</param>
-        protected ChannelBase(ITransport transport, TimeSpan sendTimeout, int buffersLimit, bool fillEnvelopeRecipients, bool autoReplyPings)
+        /// <param name="remotePingInterval">The interval to ping the remote party.</param>
+        /// <param name="remoteIdleTimeout">The timeout to close the channel due to inactivity.</param>
+        protected ChannelBase(ITransport transport, TimeSpan sendTimeout, int buffersLimit, bool fillEnvelopeRecipients, bool autoReplyPings, TimeSpan? remotePingInterval, TimeSpan? remoteIdleTimeout)
         {
             if (transport == null) throw new ArgumentNullException(nameof(transport));            
             Transport = transport;
@@ -48,16 +60,18 @@ namespace Lime.Protocol.Network
             _sendTimeout = sendTimeout;
             _fillEnvelopeRecipients = fillEnvelopeRecipients;
             _autoReplyPings = autoReplyPings;
+            _remotePingInterval = remotePingInterval ?? TimeSpan.Zero;
+            _remoteIdleTimeout = remoteIdleTimeout ?? TimeSpan.Zero;
 
             _channelCancellationTokenSource = new CancellationTokenSource();
 
             State = SessionState.New;
 
 #if MONO
-            _messageBuffer = new AsyncQueue<Message> (buffersLimit, buffersLimit);
-            _commandBuffer = new AsyncQueue<Command> (buffersLimit, buffersLimit);
-            _notificationBuffer = new AsyncQueue<Notification> (buffersLimit, buffersLimit);
-            _sessionBuffer = new AsyncQueue<Session> (1, 1);
+            _messageBuffer = new AsyncQueue<Message>(buffersLimit, buffersLimit);
+            _commandBuffer = new AsyncQueue<Command>(buffersLimit, buffersLimit);
+            _notificationBuffer = new AsyncQueue<Notification>(buffersLimit, buffersLimit);
+            _sessionBuffer = new AsyncQueue<Session>(1, 1);
 #else
             _messageBuffer = new BufferBlockAsyncQueue<Message>(buffersLimit);
             _commandBuffer = new BufferBlockAsyncQueue<Command>(buffersLimit);
@@ -107,12 +121,21 @@ namespace Lime.Protocol.Network
             {
                 _state = value;
 
-                if (_state == SessionState.Established &&
-                    _consumeTransportTask == null)
+                if (_state == SessionState.Established)
                 {
-                    _consumeTransportTask =
-                        Task.Factory.StartNew((Func<Task>)ConsumeTransportAsync, TaskCreationOptions.LongRunning)
-                        .Unwrap();
+                    if (_consumeTransportTask == null)
+                    {
+                        _consumeTransportTask =
+                            Task.Factory.StartNew((Func<Task>)ConsumeTransportAsync, TaskCreationOptions.LongRunning)
+                            .Unwrap();
+                    }
+
+                    if (_remotePingInterval > TimeSpan.Zero)
+                    {
+                        _remotePingTask =
+                            Task.Factory.StartNew((Func<Task>)PingRemoteAsync)
+                            .Unwrap();
+                    }
                 }
             }
         }
@@ -275,9 +298,7 @@ namespace Lime.Protocol.Network
         {
             try
             {
-                while (!_channelCancellationTokenSource.IsCancellationRequested &&
-                        State == SessionState.Established &&
-                        Transport.IsConnected)
+                while (IsChannelEstablished())
                 {
                     Exception exception = null;
 
@@ -308,7 +329,7 @@ namespace Lime.Protocol.Network
                     }
                     catch (OperationCanceledException ex)
                     {
-                        if (!_channelCancellationTokenSource.IsCancellationRequested) exception = ex;                        
+                        if (!_channelCancellationTokenSource.IsCancellationRequested) exception = ex;
                     }
                     catch (ObjectDisposedException ex)
                     {
@@ -340,6 +361,62 @@ namespace Lime.Protocol.Network
                     _channelCancellationTokenSource.Cancel();
                 }
             }
+        }
+
+        private async Task PingRemoteAsync()
+        {
+            LastReceivedEnvelope = DateTime.UtcNow;
+            var pingInterval = MinimumRemotePingInterval;
+#if UNIT_TESTS || NCRUNCH
+            pingInterval = TimeSpan.Zero;
+#endif
+
+            if (_remotePingInterval > pingInterval) pingInterval = _remotePingInterval;
+
+            while (IsChannelEstablished())
+            {
+                try
+                {
+                    await Task.Delay(pingInterval, _channelCancellationTokenSource.Token).ConfigureAwait(false);
+                    if (IsChannelEstablished())
+                    {
+                        var idleTime = DateTimeOffset.UtcNow - LastReceivedEnvelope;                        
+
+                        if (_remoteIdleTimeout > TimeSpan.Zero &&
+                            idleTime >= _remoteIdleTimeout)
+                        {
+                            using (var cts = new CancellationTokenSource(OnRemoteIdleTimeout))
+                            {
+                                await OnRemoteIdleAsync(cts.Token).ConfigureAwait(false);
+                            }
+                        }
+                        else if (idleTime >= pingInterval)
+                        {
+                            // Send a ping command to the remote party
+                            var pingCommandRequest = new Command(Guid.NewGuid())
+                            {
+                                Method = CommandMethod.Get,
+                                Uri = new LimeUri(PING_URI)
+                            };
+
+                            await SendCommandAsync(pingCommandRequest).ConfigureAwait(false);
+                        }
+                    }
+                }
+                catch (OperationCanceledException)
+                {
+                    if (!_channelCancellationTokenSource.IsCancellationRequested) throw;
+                    break;
+                }
+            }
+        }
+
+        private bool IsChannelEstablished()
+        {
+            return 
+                !_channelCancellationTokenSource.IsCancellationRequested &&
+                State == SessionState.Established &&
+                Transport.IsConnected;
         }
 
         /// <summary>
@@ -509,7 +586,7 @@ namespace Lime.Protocol.Network
                         linkedCancellationTokenSource.Token);
                 }
             }
-        }
+        }        
 
         /// <summary>
         /// Receives an envelope from the transport.
@@ -519,6 +596,8 @@ namespace Lime.Protocol.Network
         private async Task<Envelope> ReceiveAsync(CancellationToken cancellationToken)
         {
             var envelope = await Transport.ReceiveAsync(cancellationToken);
+
+            LastReceivedEnvelope = DateTimeOffset.UtcNow;
 
             if (envelope != null &&
                 _fillEnvelopeRecipients)
@@ -563,9 +642,9 @@ namespace Lime.Protocol.Network
             }
         }
 
-        #endregion
+#endregion
 
-        #region Protected Methods
+#region Protected Methods
 
         /// <summary>
         /// Fills the envelope recipients using the session information.
@@ -606,9 +685,16 @@ namespace Lime.Protocol.Network
             }
         }
 
-        #endregion
+        /// <summary>
+        /// Handles a remote idle event.
+        /// </summary>
+        /// <param name="cancellationToken">The operation cancellation token.</param>
+        /// <returns></returns>
+        protected abstract Task OnRemoteIdleAsync(CancellationToken cancellationToken);
 
-        #region IDisposable Members
+#endregion
+
+#region IDisposable Members
 
         /// <summary>
         /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
@@ -640,10 +726,15 @@ namespace Lime.Protocol.Network
                 {
                     _consumeTransportTask?.Dispose();
                 }
+
+                if (_remotePingTask?.IsCompleted ?? false)
+                {
+                    _remotePingTask?.Dispose();
+                }
             }
         }
 
-        #endregion
+#endregion
 
     }
 }

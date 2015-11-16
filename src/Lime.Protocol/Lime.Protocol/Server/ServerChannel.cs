@@ -24,8 +24,10 @@ namespace Lime.Protocol.Server
         /// <param name="buffersLimit"></param>
         /// <param name="fillEnvelopeRecipients"></param>
         /// <param name="autoReplyPings">Indicates if the channel should reply automatically to ping request commands. In this case, the ping command are not returned by the ReceiveCommandAsync method.</param>
-        public ServerChannel(Guid sessionId, Node serverNode, ITransport transport, TimeSpan sendTimeout, int buffersLimit = 5, bool fillEnvelopeRecipients = false, bool autoReplyPings = false)
-            : base(transport, sendTimeout, buffersLimit, fillEnvelopeRecipients, autoReplyPings)
+        /// <param name="remotePingInterval">The interval to ping the remote party.</param>
+        /// <param name="remoteIdleTimeout">The timeout to close the channel due to inactivity.</param>
+        public ServerChannel(Guid sessionId, Node serverNode, ITransport transport, TimeSpan sendTimeout, int buffersLimit = 5, bool fillEnvelopeRecipients = false, bool autoReplyPings = false, TimeSpan? remotePingInterval = null, TimeSpan? remoteIdleTimeout = null)
+            : base(transport, sendTimeout, buffersLimit, fillEnvelopeRecipients, autoReplyPings, remotePingInterval, remoteIdleTimeout)
         {
             LocalNode = serverNode;
             SessionId = sessionId;
@@ -341,6 +343,11 @@ namespace Lime.Protocol.Server
             }
 
             return session;
+        }
+
+        protected override Task OnRemoteIdleAsync(CancellationToken cancellationToken)
+        {
+            return SendFinishedSessionAsync();
         }
 
         #endregion

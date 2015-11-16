@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Shouldly;
+using Lime.Protocol.Util;
 
 namespace Lime.Protocol.UnitTests.Network
 {
@@ -42,7 +43,7 @@ namespace Lime.Protocol.UnitTests.Network
 
         #endregion
 
-        public ChannelBase GetTarget(SessionState state, int buffersLimit = 5, bool fillEnvelopeRecipients = false, Node remoteNode = null, Node localNode = null)
+        public ChannelBase GetTarget(SessionState state, int buffersLimit = 5, bool fillEnvelopeRecipients = false, Node remoteNode = null, Node localNode = null, bool autoReplyPings = false, TimeSpan? remotePingInterval = null, TimeSpan? remoteIdleTimeout = null)
         {
             return new TestChannel(
                 state,
@@ -51,7 +52,10 @@ namespace Lime.Protocol.UnitTests.Network
                 buffersLimit,
                 fillEnvelopeRecipients,
                 remoteNode, 
-                localNode
+                localNode,
+                autoReplyPings,
+                remotePingInterval,
+                remoteIdleTimeout
                 );
         }
 
@@ -732,7 +736,6 @@ namespace Lime.Protocol.UnitTests.Network
             _transport.Verify(
                 t => t.ReceiveAsync(It.IsAny<CancellationToken>()),
                 Times.AtLeast(4));
-
         }
 
         [Test]
@@ -893,18 +896,122 @@ namespace Lime.Protocol.UnitTests.Network
 
             await receiveSessionTask;
         }
+
+
+        [Test]
+        [Category("PingRemoteAsync")]
+        public async Task PingRemoteAsync_IdleChannel_SendsPing()
+        {
+            // Arrange
+            var taskCompletionSource = new TaskCompletionSource<Envelope>();
+            _transport
+                .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(taskCompletionSource.Task);
+            var target = GetTarget(SessionState.Established, remotePingInterval: TimeSpan.FromMilliseconds(500));
+
+            // Act
+            await Task.Delay(1000);
+
+            // Assert
+            _transport
+                .Verify(t => t.SendAsync(It.Is<Envelope>(e => e is Command && ((Command)e).Method == CommandMethod.Get && ((Command)e).Uri.ToString().Equals("/ping")), It.IsAny<CancellationToken>()), Times.AtLeastOnce);
+
+            _transport
+                .Verify(t => t.SendAsync(It.Is<Envelope>(e => e is Command && ((Command)e).Method == CommandMethod.Get && ((Command)e).Uri.ToString().Equals("/ping")), It.IsAny<CancellationToken>()), Times.AtMost(2));
+        }
+
+        [Test]
+        [Category("PingRemoteAsync")]
+        public async Task PingRemoteAsync_ActiveChannel_DoNotSendsPing()
+        {
+            // Arrange
+            var envelope = Dummy.CreateMessage(Dummy.CreateTextContent());
+            var tcs1 = new TaskCompletionSource<Envelope>();
+            var tcs2 = new TaskCompletionSource<Envelope>();
+            _transport
+                .SetupSequence(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(tcs1.Task)
+                .Returns(tcs2.Task);
+            var target = GetTarget(SessionState.Established, remotePingInterval: TimeSpan.FromMilliseconds(500));
+
+            // Act
+            await Task.Delay(350);
+            tcs1.TrySetResult(envelope);
+            await Task.Delay(350);
+
+            // Assert
+            _transport
+                .Verify(t => t.SendAsync(It.Is<Envelope>(e => e is Command && ((Command)e).Method == CommandMethod.Get && ((Command)e).Uri.ToString().Equals("/ping")), It.IsAny<CancellationToken>()), Times.Never);
+        }
+
+        [Test]
+        [Category("PingRemoteAsync")]
+        public async Task PingRemoteAsync_IdleChannel_RaiseOnRemotesIdle()
+        {
+            // Arrange
+            var taskCompletionSource = new TaskCompletionSource<Envelope>();
+            _transport
+                .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(taskCompletionSource.Task);
+            var target = GetTarget(SessionState.Established, remotePingInterval: TimeSpan.FromMilliseconds(300), remoteIdleTimeout: TimeSpan.FromMilliseconds(500));
+
+            // Act
+            await Task.Delay(1000);
+
+            // Assert
+            _transport
+                .Verify(t => t.SendAsync(It.Is<Envelope>(e => e is Command && ((Command)e).Method == CommandMethod.Get && ((Command)e).Uri.ToString().Equals("/ping")), It.IsAny<CancellationToken>()), Times.AtMostOnce);
+            ((TestChannel)target).IsRemoteIdle.ShouldBe(true);
+        }
+
+
+        [Test]
+        [Category("PingRemoteAsync")]
+        public async Task PingRemoteAsync_ActiveChannel_DoNotRaiseOnRemotesIdle()
+        {
+            // Arrange
+            var envelope = Dummy.CreateMessage(Dummy.CreateTextContent());
+            var tcs1 = new TaskCompletionSource<Envelope>();
+            var tcs2 = new TaskCompletionSource<Envelope>();
+            _transport
+                .SetupSequence(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(tcs1.Task)
+                .Returns(tcs2.Task);
+            var target = GetTarget(SessionState.Established, remotePingInterval: TimeSpan.FromMilliseconds(300), remoteIdleTimeout: TimeSpan.FromMilliseconds(500));
+
+            // Act
+            await Task.Delay(450);
+            tcs1.TrySetResult(envelope);
+            await Task.Delay(350);
+
+            // Assert
+            _transport
+                .Verify(t => t.SendAsync(It.Is<Envelope>(e => e is Command && ((Command)e).Method == CommandMethod.Get && ((Command)e).Uri.ToString().Equals("/ping")), It.IsAny<CancellationToken>()), Times.AtLeastOnce);
+            _transport
+                .Verify(t => t.SendAsync(It.Is<Envelope>(e => e is Command && ((Command)e).Method == CommandMethod.Get && ((Command)e).Uri.ToString().Equals("/ping")), It.IsAny<CancellationToken>()), Times.AtMost(2));
+            ((TestChannel)target).IsRemoteIdle.ShouldBe(false);
+        }
+
         #endregion
 
         #region Private classes
 
         private class TestChannel : ChannelBase
         {
-            public TestChannel(SessionState state, ITransport transport, TimeSpan sendTimeout, int buffersLimit, bool fillEnvelopeRecipients, Node remoteNode = null, Node localNode = null, bool autoReplyPings = false)
-                : base(transport, sendTimeout, buffersLimit, fillEnvelopeRecipients, autoReplyPings)
+            public TestChannel(SessionState state, ITransport transport, TimeSpan sendTimeout, int buffersLimit, bool fillEnvelopeRecipients, Node remoteNode = null, Node localNode = null, bool autoReplyPings = false, TimeSpan? remotePingInterval = null, TimeSpan? remoteIdleTimeout = null)
+                : base(transport, sendTimeout, buffersLimit, fillEnvelopeRecipients, autoReplyPings, remotePingInterval, remoteIdleTimeout)
             {                
-                base.RemoteNode = remoteNode;
-                base.LocalNode = localNode;
-                base.State = state;
+                RemoteNode = remoteNode;
+                LocalNode = localNode;
+                State = state;
+            }
+
+            public bool IsRemoteIdle { get; private set; }
+
+            protected override Task OnRemoteIdleAsync(CancellationToken cancellationToken)
+            {
+                IsRemoteIdle = true;
+                return TaskUtil.CompletedTask;
             }
         }
 
