@@ -22,19 +22,12 @@ namespace Lime.Protocol
 
         public MediaType(string type, string subtype, string suffix = null)
         {
-            if (string.IsNullOrWhiteSpace(type))
-            {
-                throw new ArgumentNullException("type");
-            }
-
-            if (string.IsNullOrWhiteSpace(subtype))
-            {
-                throw new ArgumentNullException("subtype");
-            }
-
-            this.Type = type;
-            this.Subtype = subtype;
-            this.Suffix = suffix;
+            if (string.IsNullOrWhiteSpace(type)) throw new ArgumentNullException(nameof(type));            
+            if (string.IsNullOrWhiteSpace(subtype)) throw new ArgumentNullException(nameof(subtype));
+            
+            Type = type;
+            Subtype = subtype;
+            Suffix = suffix;
         }
 
         #endregion
