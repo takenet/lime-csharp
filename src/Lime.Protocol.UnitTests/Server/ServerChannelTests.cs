@@ -625,6 +625,10 @@ namespace Lime.Protocol.UnitTests.Server
             _transport
                 .Setup(t => t.SendAsync(It.IsAny<Envelope>(), It.IsAny<CancellationToken>()))
                 .Returns(TaskUtil.CompletedTask);
+            _transport
+                .Setup(t => t.CloseAsync(It.IsAny<CancellationToken>()))
+                .Returns(TaskUtil.CompletedTask)
+                .Verifiable();
 
             var target = GetTarget(                
                 SessionState.Established,                
