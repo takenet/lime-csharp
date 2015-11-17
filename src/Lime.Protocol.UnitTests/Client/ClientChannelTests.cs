@@ -766,7 +766,7 @@ namespace Lime.Protocol.UnitTests.Client
 
         [Test]
         [Category("OnRemoteIdleAsync")]
-        public async Task OnRemoteIdleAsync_EstablishedState_CallsSendFinishingAndReceiveFinishedSession()
+        public async Task OnRemoteIdleAsync_EstablishedState_CallsSendFinishingAndReceiveFinishedSessionAndClosesTransport()
         {
             // Arrange
             var session = Dummy.CreateSession(SessionState.Finished);            
