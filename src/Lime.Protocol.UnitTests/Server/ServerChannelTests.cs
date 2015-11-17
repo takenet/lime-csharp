@@ -625,7 +625,7 @@ namespace Lime.Protocol.UnitTests.Server
 
             var target = GetTarget(                
                 SessionState.Established,                
-                remotePingInterval: TimeSpan.FromMilliseconds(100),
+                remotePingInterval: TimeSpan.FromMilliseconds(500),
                 remoteIdleTimeout: TimeSpan.FromMilliseconds(300));
 
             // Act

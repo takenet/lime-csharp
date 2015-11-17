@@ -127,7 +127,6 @@ namespace Lime.Protocol.Client
         /// <param name="identity"></param>
         /// <param name="authentication"></param>
         /// <param name="instance"></param>
-        /// <param name="sessionMode"></param>
         /// <returns></returns>
         /// <exception cref="System.InvalidOperationException">
         /// Cannot await for a session response since there's already a listener.
@@ -144,16 +143,9 @@ namespace Lime.Protocol.Client
                 throw new InvalidOperationException(string.Format("Cannot authenticate a session in the '{0}' state", State));
             }
 
-            if (identity == null)
-            {
-                throw new ArgumentNullException("identity");
-            }
-
-            if (authentication == null)
-            {
-                throw new ArgumentNullException("authentication");
-            }
-
+            if (identity == null) throw new ArgumentNullException(nameof(identity));            
+            if (authentication == null) throw new ArgumentNullException(nameof(authentication));
+            
             var session = new Session
             {
                 Id = SessionId,
@@ -182,11 +174,8 @@ namespace Lime.Protocol.Client
         /// <exception cref="System.ArgumentNullException">to</exception>
         public Task SendReceivedNotificationAsync(Guid messageId, Node to)
         {
-            if (to == null)
-            {
-                throw new ArgumentNullException("to");
-            }
-
+            if (to == null) throw new ArgumentNullException(nameof(to));
+                        
             var notification = new Notification
             {
                 Id = messageId,
