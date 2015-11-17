@@ -18,7 +18,6 @@ namespace Lime.Protocol.Network
 
         private readonly static Document PingDocument = new JsonDocument(MediaType.Parse(PING_MEDIA_TYPE));
         private readonly static TimeSpan OnRemoteIdleTimeout = TimeSpan.FromSeconds(30);
-        private readonly static TimeSpan MinimumRemotePingInterval = TimeSpan.FromSeconds(5);
 
         private readonly TimeSpan _sendTimeout;
         private readonly bool _fillEnvelopeRecipients;
@@ -366,18 +365,11 @@ namespace Lime.Protocol.Network
         private async Task PingRemoteAsync()
         {
             LastReceivedEnvelope = DateTime.UtcNow;
-            var pingInterval = MinimumRemotePingInterval;
-#if UNIT_TESTS || NCRUNCH
-            pingInterval = TimeSpan.Zero;
-#endif
-
-            if (_remotePingInterval > pingInterval) pingInterval = _remotePingInterval;
-
             while (IsChannelEstablished())
             {
                 try
                 {
-                    await Task.Delay(pingInterval, _channelCancellationTokenSource.Token).ConfigureAwait(false);
+                    await Task.Delay(_remotePingInterval, _channelCancellationTokenSource.Token).ConfigureAwait(false);
                     if (IsChannelEstablished())
                     {
                         var idleTime = DateTimeOffset.UtcNow - LastReceivedEnvelope;                        
@@ -390,7 +382,7 @@ namespace Lime.Protocol.Network
                                 await OnRemoteIdleAsync(cts.Token).ConfigureAwait(false);
                             }
                         }
-                        else if (idleTime >= pingInterval)
+                        else if (idleTime >= _remotePingInterval)
                         {
                             // Send a ping command to the remote party
                             var pingCommandRequest = new Command(Guid.NewGuid())

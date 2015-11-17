@@ -7,8 +7,7 @@ using Lime.Protocol.Security;
 namespace Lime.Protocol.Client
 {
     /// <summary>
-    /// Defines the communication channel
-    /// between a node and a server
+    /// Defines the communication channel between a node and a server.
     /// </summary>
     public class ClientChannel : ChannelBase, IClientChannel, IDisposable
     {
