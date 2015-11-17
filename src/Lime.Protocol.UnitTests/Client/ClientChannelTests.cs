@@ -8,6 +8,7 @@ using Moq;
 using System.Threading;
 using Lime.Protocol.Security;
 using Shouldly;
+using Lime.Protocol.Util;
 
 namespace Lime.Protocol.UnitTests.Client
 {
@@ -775,14 +776,20 @@ namespace Lime.Protocol.UnitTests.Client
                 .SetupSequence(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
                 .Returns(tcs1.Task)
                 .Returns(tcs2.Task);
-            var target = GetTarget(state: SessionState.Established, remotePingInterval: TimeSpan.FromMilliseconds(100), remoteIdleTimeout: TimeSpan.FromMilliseconds(300));
-
             _transport
-                .Setup(t => t.SendAsync(It.Is<Envelope>(e => e is Session), It.IsAny<CancellationToken>()))
-                .Callback(() => 
-                {                    
+                .Setup(t => t.SendAsync(It.Is<Envelope>(e => e is Session && ((Session)e).State == SessionState.Finishing), It.IsAny<CancellationToken>()))
+                .Returns(() => TaskUtil.CompletedTask)
+                .Callback(() => Task.Run(async () => 
+                {
+                    await Task.Delay(100);
                     tcs1.TrySetResult(session);
-                });
+                }));
+
+            var target = GetTarget(
+                session.Id,
+                SessionState.Established,
+                remotePingInterval: TimeSpan.FromMilliseconds(100),
+                remoteIdleTimeout: TimeSpan.FromMilliseconds(300));
 
             // Act
             await Task.Delay(1000);

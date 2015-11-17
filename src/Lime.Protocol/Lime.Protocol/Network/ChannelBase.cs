@@ -583,10 +583,11 @@ namespace Lime.Protocol.Network
                 {
                     await Transport.SendAsync(
                         envelope,
-                        linkedCancellationTokenSource.Token);
+                        linkedCancellationTokenSource.Token)
+                        .ConfigureAwait(false);
                 }
             }
-        }        
+        }
 
         /// <summary>
         /// Receives an envelope from the transport.
