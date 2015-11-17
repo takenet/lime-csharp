@@ -36,6 +36,8 @@ namespace Lime.Protocol.Network
 
         protected DateTimeOffset LastReceivedEnvelope;
 
+        private object _syncRoot = new object();
+
         #endregion
 
         #region Constructors
@@ -122,18 +124,22 @@ namespace Lime.Protocol.Network
 
                 if (_state == SessionState.Established)
                 {
-                    if (_consumeTransportTask == null)
+                    lock (_syncRoot)
                     {
-                        _consumeTransportTask =
-                            Task.Factory.StartNew((Func<Task>)ConsumeTransportAsync, TaskCreationOptions.LongRunning)
-                            .Unwrap();
-                    }
+                        if (_consumeTransportTask == null)
+                        {
+                            _consumeTransportTask =
+                                Task.Factory.StartNew((Func<Task>)ConsumeTransportAsync, TaskCreationOptions.LongRunning)
+                                .Unwrap();
+                        }
 
-                    if (_remotePingInterval > TimeSpan.Zero)
-                    {
-                        _remotePingTask =
-                            Task.Factory.StartNew((Func<Task>)PingRemoteAsync)
-                            .Unwrap();
+                        if (_remotePingInterval > TimeSpan.Zero &&
+                            _remotePingTask == null)
+                        {
+                            _remotePingTask =
+                                Task.Factory.StartNew((Func<Task>)PingRemoteAsync)
+                                .Unwrap();
+                        }
                     }
                 }
             }
