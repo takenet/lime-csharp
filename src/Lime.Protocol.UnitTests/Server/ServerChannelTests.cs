@@ -15,20 +15,28 @@ namespace Lime.Protocol.UnitTests.Server
     {
         #region Private fields
 
-        private Mock<ITransport> _transport;
+        private Mock<TransportBase> _transport;
         private TimeSpan _sendTimeout;
 
         #endregion
 
-        #region Constructor
+        #region Scenario
 
-        public ServerChannelTests()
-        {
-            _transport = new Mock<ITransport>();
+        [SetUp]
+        public void Setup()
+        {            
+            _transport = new Mock<TransportBase>();
             _transport
                 .Setup(t => t.IsConnected)
                 .Returns(true);            
             _sendTimeout = TimeSpan.FromSeconds(30);
+        }
+
+        [TearDown]
+        public void Teardown()
+        {
+            _transport = null;
+            _sendTimeout = default(TimeSpan);
         }
 
         #endregion
@@ -625,22 +633,24 @@ namespace Lime.Protocol.UnitTests.Server
             _transport
                 .Setup(t => t.SendAsync(It.IsAny<Envelope>(), It.IsAny<CancellationToken>()))
                 .Returns(TaskUtil.CompletedTask);
-            _transport
-                .Setup(t => t.CloseAsync(It.IsAny<CancellationToken>()))
-                .Returns(TaskUtil.CompletedTask)
-                .Verifiable();
-
             var target = GetTarget(                
                 SessionState.Established,                
                 remotePingInterval: TimeSpan.FromMilliseconds(500),
-                remoteIdleTimeout: TimeSpan.FromMilliseconds(300));
+                remoteIdleTimeout: TimeSpan.FromMilliseconds(150));
 
             // Act
             await Task.Delay(1000);
 
             // Assert
             _transport
-                .Verify(t => t.SendAsync(It.Is<Envelope>(e => e is Session && ((Session)e).State == SessionState.Finished && ((Session)e).Id == target.SessionId), It.IsAny<CancellationToken>()), Times.Once());
+                .Verify(t => t.SendAsync(
+                    It.IsAny<Envelope>(), 
+                    It.IsAny<CancellationToken>()), 
+                    Times.Once());
+
+            _transport
+                .Verify(t => t.SendAsync(
+                    It.Is<Envelope>(e => e is Session && ((Session)e).State == SessionState.Finished && ((Session)e).Id == target.SessionId), It.IsAny<CancellationToken>()), Times.Once());
 
             _transport
                 .Verify(t =>

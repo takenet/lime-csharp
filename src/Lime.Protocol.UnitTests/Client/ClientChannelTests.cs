@@ -15,7 +15,7 @@ namespace Lime.Protocol.UnitTests.Client
     [TestFixture]
     public class ClientChannelTests
     {
-        private Mock<ITransport> _transport;
+        private Mock<TransportBase> _transport;
         private TimeSpan _sendTimeout;
 
         #region Scenario
@@ -23,11 +23,19 @@ namespace Lime.Protocol.UnitTests.Client
         [SetUp]
         public void Setup()
         {
-            _transport = new Mock<ITransport>();
+            _transport = new Mock<TransportBase>();
             _transport
                 .Setup(t => t.IsConnected)
                 .Returns(true);
             _sendTimeout = TimeSpan.FromSeconds(30);
+        }
+
+
+        [TearDown]
+        public void Teardown()
+        {
+            _transport = null;
+            _sendTimeout = default(TimeSpan);
         }
 
         #endregion

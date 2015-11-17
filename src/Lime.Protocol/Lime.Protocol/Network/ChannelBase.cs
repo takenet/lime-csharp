@@ -259,7 +259,7 @@ namespace Lime.Protocol.Network
             if (session == null) throw new ArgumentNullException(nameof(session));            
             if (State == SessionState.Finished || State == SessionState.Failed)
             {
-                throw new InvalidOperationException($"Cannot send a message in the '{State}' session state");
+                throw new InvalidOperationException($"Cannot send a session in the '{State}' session state");
             }
 
             return SendAsync(session);
