@@ -470,7 +470,8 @@ namespace Lime.Protocol.Serialization
                     .CurrentDomain
                     .GetAssemblies()
                     .SelectMany(a => a.GetTypes())
-                    .Where(t => !t.FullName.StartsWith("System."));
+                    .Where(t => !t.FullName.StartsWith("System.", StringComparison.OrdinalIgnoreCase) && 
+                                !t.FullName.StartsWith("Microsoft.", StringComparison.OrdinalIgnoreCase));
         }
 
         private static void LoadReferencedAssemblies()
@@ -495,7 +496,7 @@ namespace Lime.Protocol.Serialization
             }
             catch (SystemException ex)
             {
-                Trace.TraceError($"Error loading types in the assembly {assembly.FullName}: {ex}");
+                Trace.TraceError($"LIME - Error loading the assembly {assembly.FullName}: {ex}");
             }
         }
 
