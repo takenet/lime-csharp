@@ -479,7 +479,7 @@ namespace Lime.Protocol.Serialization
 
         private static void LoadReferencedAssemblies()
         {
-            foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+            foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies().Where(_assemblyFilter))
             {
                 LoadReferencedAssembly(assembly);
             }
