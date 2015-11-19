@@ -463,15 +463,18 @@ namespace Lime.Protocol.Serialization
             return Activator.CreateInstance(type);
         }
 
+        private static readonly Func<Assembly, bool> _assemblyFilter = 
+            a => !a.FullName.StartsWith("System.", StringComparison.OrdinalIgnoreCase) &&
+                 !a.FullName.StartsWith("Microsoft.", StringComparison.OrdinalIgnoreCase);
+
         private static IEnumerable<Type> GetAllTypesFromApplication()
         {
             LoadReferencedAssemblies();
             return AppDomain
                     .CurrentDomain
                     .GetAssemblies()
-                    .SelectMany(a => a.GetTypes())
-                    .Where(t => !t.FullName.StartsWith("System.", StringComparison.OrdinalIgnoreCase) && 
-                                !t.FullName.StartsWith("Microsoft.", StringComparison.OrdinalIgnoreCase));
+                    .Where(_assemblyFilter)
+                    .SelectMany(a => a.GetTypes());
         }
 
         private static void LoadReferencedAssemblies()
@@ -488,7 +491,7 @@ namespace Lime.Protocol.Serialization
             {
                 foreach (var name in assembly.GetReferencedAssemblies())
                 {
-                    if (AppDomain.CurrentDomain.GetAssemblies().All(a => a.FullName != name.FullName))
+                    if (AppDomain.CurrentDomain.GetAssemblies().All(a => a.FullName != name.FullName && _assemblyFilter(a)))
                     {
                         LoadReferencedAssembly(Assembly.Load(name));
                     }
