@@ -9,6 +9,7 @@ using System.Reflection;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
+using System.Diagnostics;
 
 namespace Lime.Protocol.Serialization
 {
@@ -482,12 +483,19 @@ namespace Lime.Protocol.Serialization
 
         private static void LoadReferencedAssembly(Assembly assembly)
         {
-            foreach (var name in assembly.GetReferencedAssemblies())
+            try
             {
-                if (AppDomain.CurrentDomain.GetAssemblies().All(a => a.FullName != name.FullName))
+                foreach (var name in assembly.GetReferencedAssemblies())
                 {
-                    LoadReferencedAssembly(Assembly.Load(name));
+                    if (AppDomain.CurrentDomain.GetAssemblies().All(a => a.FullName != name.FullName))
+                    {
+                        LoadReferencedAssembly(Assembly.Load(name));
+                    }
                 }
+            }
+            catch (SystemException ex)
+            {
+                Trace.TraceError($"Error loading types in the assembly {assembly.FullName}: {ex}");
             }
         }
 
