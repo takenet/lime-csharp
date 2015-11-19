@@ -21,11 +21,11 @@ namespace Lime.Protocol.Serialization
         public static object GetDefaultValue(this Type type)
         {
             // Validate parameters.
-            if (type == null) throw new ArgumentNullException("type");
+            if (type == null) throw new ArgumentNullException(nameof(type));
 
             // We want an Func<object> which returns the default.
             // Create that expression here.
-            Expression<Func<object>> e = Expression.Lambda<Func<object>>(
+            var e = Expression.Lambda<Func<object>>(
                 // Have to convert to object.
                 Expression.Convert(
                 // The default value, always get what the *code* tells us.
@@ -39,10 +39,7 @@ namespace Lime.Protocol.Serialization
 
         public static string RemoveCrLf(this string value)
         {
-            if (value == null)
-            {
-                throw new ArgumentNullException("value");
-            }
+            if (value == null) throw new ArgumentNullException(nameof(value));
 
             return value
                 .Replace("\n", string.Empty)
@@ -60,10 +57,7 @@ namespace Lime.Protocol.Serialization
         private const string INDENT_STRING = "  ";
         public static string IndentJson(this string jsonString)
         {
-            if (string.IsNullOrWhiteSpace(jsonString))
-            {
-                throw new ArgumentNullException("jsonString");
-            }
+            if (string.IsNullOrWhiteSpace(jsonString)) throw new ArgumentNullException(nameof(jsonString));
 
             jsonString = jsonString.RemoveCrLf();
 
@@ -195,10 +189,7 @@ namespace Lime.Protocol.Serialization
         /// <returns></returns>
         public static string ToBase64(this string value)
         {
-            if (string.IsNullOrEmpty(value))
-            {
-                throw new ArgumentNullException("value");
-            }
+            if (string.IsNullOrEmpty(value)) throw new ArgumentNullException(nameof(value));
 
             return Convert.ToBase64String(Encoding.UTF8.GetBytes(value));
         }
@@ -210,10 +201,7 @@ namespace Lime.Protocol.Serialization
         /// <returns></returns>
         public static string FromBase64(this string value)
         {
-            if (string.IsNullOrEmpty(value))
-            {
-                throw new ArgumentNullException("value");
-            }
+            if (string.IsNullOrEmpty(value)) throw new ArgumentNullException(nameof(value));
 
             var valueBytes = Convert.FromBase64String(value);
 

@@ -20,7 +20,7 @@ namespace Lime.Protocol.Network
         /// <param name="reasonDescription">The reason description.</param>
         /// <param name="innerException">The inner exception.</param>
         public LimeException(int reasonCode, string reasonDescription, Exception innerException = null)
-            : this(new Reason() {  Code = reasonCode, Description = reasonDescription}, innerException)
+            : this(new Reason {  Code = reasonCode, Description = reasonDescription}, innerException)
         {
 
         }
