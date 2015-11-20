@@ -9,6 +9,7 @@ using System.Reflection;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
+using System.Diagnostics;
 
 namespace Lime.Protocol.Serialization
 {
@@ -462,19 +463,23 @@ namespace Lime.Protocol.Serialization
             return Activator.CreateInstance(type);
         }
 
+        private static readonly Func<Assembly, bool> _assemblyFilter = 
+            a => !a.FullName.StartsWith("System.", StringComparison.OrdinalIgnoreCase) &&
+                 !a.FullName.StartsWith("Microsoft.", StringComparison.OrdinalIgnoreCase);
+
         private static IEnumerable<Type> GetAllTypesFromApplication()
         {
             LoadReferencedAssemblies();
             return AppDomain
                     .CurrentDomain
                     .GetAssemblies()
-                    .SelectMany(a => a.GetTypes())
-                    .Where(t => !t.FullName.StartsWith("System."));
+                    .Where(_assemblyFilter)
+                    .SelectMany(a => a.GetTypes());
         }
 
         private static void LoadReferencedAssemblies()
         {
-            foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+            foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies().Where(_assemblyFilter))
             {
                 LoadReferencedAssembly(assembly);
             }
@@ -482,12 +487,19 @@ namespace Lime.Protocol.Serialization
 
         private static void LoadReferencedAssembly(Assembly assembly)
         {
-            foreach (var name in assembly.GetReferencedAssemblies())
+            try
             {
-                if (AppDomain.CurrentDomain.GetAssemblies().All(a => a.FullName != name.FullName))
+                foreach (var name in assembly.GetReferencedAssemblies())
                 {
-                    LoadReferencedAssembly(Assembly.Load(name));
+                    if (AppDomain.CurrentDomain.GetAssemblies().All(a => a.FullName != name.FullName && _assemblyFilter(a)))
+                    {
+                        LoadReferencedAssembly(Assembly.Load(name));
+                    }
                 }
+            }
+            catch (SystemException ex)
+            {
+                Trace.TraceError($"LIME - Error loading the assembly {assembly.FullName}: {ex}");
             }
         }
 

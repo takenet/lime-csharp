@@ -12,6 +12,9 @@ namespace Lime.Protocol.Server
     /// </summary>
     public class ServerChannel : ChannelBase, IServerChannel
     {
+        private readonly static TimeSpan CloseTransportTimeout = TimeSpan.FromSeconds(30);
+
+
         #region Constructor
 
         /// <summary>
@@ -24,8 +27,10 @@ namespace Lime.Protocol.Server
         /// <param name="buffersLimit"></param>
         /// <param name="fillEnvelopeRecipients"></param>
         /// <param name="autoReplyPings">Indicates if the channel should reply automatically to ping request commands. In this case, the ping command are not returned by the ReceiveCommandAsync method.</param>
-        public ServerChannel(Guid sessionId, Node serverNode, ITransport transport, TimeSpan sendTimeout, int buffersLimit = 5, bool fillEnvelopeRecipients = false, bool autoReplyPings = false)
-            : base(transport, sendTimeout, buffersLimit, fillEnvelopeRecipients, autoReplyPings)
+        /// <param name="remotePingInterval">The interval to ping the remote party.</param>
+        /// <param name="remoteIdleTimeout">The timeout to close the channel due to inactivity.</param>
+        public ServerChannel(Guid sessionId, Node serverNode, ITransport transport, TimeSpan sendTimeout, int buffersLimit = 5, bool fillEnvelopeRecipients = false, bool autoReplyPings = false, TimeSpan? remotePingInterval = null, TimeSpan? remoteIdleTimeout = null)
+            : base(transport, sendTimeout, buffersLimit, fillEnvelopeRecipients, autoReplyPings, remotePingInterval, remoteIdleTimeout)
         {
             LocalNode = serverNode;
             SessionId = sessionId;
@@ -54,8 +59,7 @@ namespace Lime.Protocol.Server
         }
 
         /// <summary>
-        /// Changes the session state and sends a negotiate session envelope
-        /// to the node with the available options and awaits for the client selected option.
+        /// Changes the session state and sends a negotiate session envelope to the node with the available options and awaits for the client selected option.
         /// </summary>
         /// <param name="cancellationToken"></param>
         /// <param name="compressionOptions">The session compression options.</param>
@@ -81,21 +85,13 @@ namespace Lime.Protocol.Server
                 throw new InvalidOperationException(string.Format("Cannot start a session negotiating in the '{0}' state", State));
             }
 
-            if (compressionOptions == null)
-            {
-                throw new ArgumentNullException("compressionOptions");
-            }
-
+            if (compressionOptions == null) throw new ArgumentNullException(nameof(compressionOptions));            
             if (compressionOptions.Length == 0)
             {
                 throw new ArgumentException("No available options for compression negotiation");
             }
 
-            if (encryptionOptions == null)
-            {
-                throw new ArgumentNullException("encryptionOptions");
-            }
-
+            if (encryptionOptions == null) throw new ArgumentNullException(nameof(encryptionOptions));            
             if (encryptionOptions.Length == 0)
             {
                 throw new ArgumentException("No available options for encryption negotiation");
@@ -117,8 +113,7 @@ namespace Lime.Protocol.Server
         }
 
         /// <summary>
-        /// Send a negotiate session envelope to the remote node to confirm the 
-        /// session negotiation options.
+        /// Send a negotiate session envelope to the remote node to confirm the session negotiation options.
         /// </summary>
         /// <param name="sessionCompression">The session compression option</param>
         /// <param name="sessionEncryption">The session encryption option</param>
@@ -144,8 +139,7 @@ namespace Lime.Protocol.Server
         }
 
         /// <summary>
-        /// Changes the session state and sends an authenticate envelope to the node with the available options 
-        /// and awaits for the client authentication.
+        /// Changes the session state and sends an authenticate envelope to the node with the available options and awaits for the client authentication.
         /// </summary>
         /// <param name="cancellationToken"></param>
         /// <param name="schemeOptions"></param>
@@ -163,14 +157,10 @@ namespace Lime.Protocol.Server
                 throw new InvalidOperationException(string.Format("Cannot start the session authentication in the '{0}' state", State));
             }
 
-            if (schemeOptions == null)
-            {
-                throw new ArgumentNullException("authentication");
-            }
-
+            if (schemeOptions == null) throw new ArgumentNullException(nameof(schemeOptions));
             if (schemeOptions.Length == 0)
             {
-                throw new ArgumentException("No available options for authentication");
+                throw new ArgumentException("No available options for authentication", nameof(schemeOptions));
             }
 
             State = SessionState.Authenticating;
@@ -191,6 +181,7 @@ namespace Lime.Protocol.Server
         /// Sends authentication round-trip information to the connected node and awaits for the client authentication.
         /// </summary>
         /// <param name="authenticationRoundtrip">The authentication round-trip data.</param>
+        /// <param name="cancellationToken"></param>
         /// <returns>
         /// A authenticating session envelope with the authentication information.
         /// </returns>
@@ -198,11 +189,7 @@ namespace Lime.Protocol.Server
         /// <exception cref="System.InvalidOperationException"></exception>
         public async Task<Session> AuthenticateSessionAsync(Authentication authenticationRoundtrip, CancellationToken cancellationToken)
         {
-            if (authenticationRoundtrip == null)
-            {
-                throw new ArgumentNullException("authenticationRoundtrip");
-            }
-
+            if (authenticationRoundtrip == null) throw new ArgumentNullException(nameof(authenticationRoundtrip));            
             if (State != SessionState.Authenticating)
             {
                 throw new InvalidOperationException(string.Format("Cannot send an authentication round-trip for a session in the '{0}' state", State));
@@ -221,19 +208,14 @@ namespace Lime.Protocol.Server
         }
 
         /// <summary>
-        /// Changes the session state and sends a finished session envelope
-        /// to the node to communicate the end of the session.
+        /// Changes the session state to the established state and sends a session envelope to the node to communicate the establishment of the session.
         /// </summary>
         /// <param name="node"></param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">node</exception>
         public Task SendEstablishedSessionAsync(Node node)
         {
-            if (node == null)
-            {
-                throw new ArgumentNullException("node");
-            }
-
+            if (node == null) throw new ArgumentNullException(nameof(node));            
             if (State > SessionState.Authenticating)
             {
                 throw new InvalidOperationException(string.Format("Cannot establish a session in the '{0}' state", State));
@@ -272,13 +254,12 @@ namespace Lime.Protocol.Server
         }
 
         /// <summary>
-        /// Changes the session state and sends a finished session envelope to the node to communicate the
-        /// end of the session and closes the transport.
+        /// Changes the session state and sends a finished session envelope to the node to communicate the end of the session and closes the transport.
         /// </summary>
         /// <returns></returns>
         /// <exception cref="System.InvalidOperationException"></exception>
         public async Task SendFinishedSessionAsync()
-        {            
+        {
             var session = new Session
             {
                 Id = SessionId,
@@ -288,24 +269,21 @@ namespace Lime.Protocol.Server
             };
 
             await SendSessionAsync(session).ConfigureAwait(false);
-            await Transport.CloseAsync(CancellationToken.None).ConfigureAwait(false);
+            await CloseTransportAsync().ConfigureAwait(false);
             State = session.State;
         }
 
+
         /// <summary>
-        /// Changes the session state and sends a failed session envelope to the node to communicate the
-        /// finished session and closes the transport.
+        /// Changes the session state and sends a failed session envelope to the node to communicate the finished session and closes the transport.
         /// </summary>
         /// <param name="reason"></param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">reason</exception>
         public async Task SendFailedSessionAsync(Reason reason)
         {
-            if (reason == null)
-            {
-                throw new ArgumentNullException("reason");
-            }            
-
+            if (reason == null) throw new ArgumentNullException(nameof(reason));
+            
             var session = new Session
             {
                 Id = SessionId,
@@ -316,7 +294,7 @@ namespace Lime.Protocol.Server
             };
 
             await SendSessionAsync(session).ConfigureAwait(false);
-            await Transport.CloseAsync(CancellationToken.None).ConfigureAwait(false);
+            await CloseTransportAsync().ConfigureAwait(false);
             State = session.State;
         }
 
@@ -342,6 +320,23 @@ namespace Lime.Protocol.Server
 
             return session;
         }
+
+        protected override Task OnRemoteIdleAsync(CancellationToken cancellationToken)
+        {
+            return SendFinishedSessionAsync();
+        }
+
+        #endregion
+
+        #region Private methods
+
+        private Task CloseTransportAsync()
+        {
+            using (var cts = new CancellationTokenSource(CloseTransportTimeout))
+            {
+                return Transport.CloseAsync(cts.Token);
+            }
+        } 
 
         #endregion
     }

@@ -3,27 +3,40 @@
 namespace Lime.Protocol
 {
     /// <summary>
-    /// Represents an element in a network
+    /// Represents an identity in a domain.
     /// </summary>
     public class Identity : IIdentity
     {
+        #region Constructor
+
+        public Identity()
+        {
+
+        }
+
+        public Identity(string name, string domain)
+        {
+            Name = name;
+            Domain = domain;
+        } 
+
+        #endregion
+
         /// <summary>
-        /// Identity unique name 
-        /// on his domain
+        /// Identity unique name on his domain.
         /// </summary>
         public string Name { get; set; }
 
         /// <summary>
-        /// Network domain name 
-        /// of the identity
+        /// Network domain name of the identity.
         /// </summary>
         public string Domain { get; set; }
 
         /// <summary>
-        /// Returns a <see cref="System.String" /> that represents this instance.
+        /// Returns a <see cref="string" /> that represents this instance.
         /// </summary>
         /// <returns>
-        /// A <see cref="System.String" /> that represents this instance.
+        /// A <see cref="string" /> that represents this instance.
         /// </returns>
         public override string ToString()
         {
@@ -46,11 +59,11 @@ namespace Lime.Protocol
         }
 
         /// <summary>
-        /// Determines whether the specified <see cref="System.Object" }, is equal to this instance.
+        /// Determines whether the specified <see cref="object" }, is equal to this instance.
         /// </summary>
-        /// <param name="obj">The <see cref="System.Object" /> to compare with this instance.</param>
+        /// <param name="obj">The <see cref="object" /> to compare with this instance.</param>
         /// <returns>
-        ///   <c>true</c> if the specified <see cref="System.Object" /> is equal to this instance; otherwise, <c>false</c>.
+        ///   <c>true</c> if the specified <see cref="object" /> is equal to this instance; otherwise, <c>false</c>.
         /// </returns>
         public override bool Equals(object obj)
         {
@@ -64,7 +77,6 @@ namespace Lime.Protocol
             return ((Name == null && identity.Name == null) || (Name != null && Name.Equals(identity.Name, StringComparison.CurrentCultureIgnoreCase))) &&
                    ((Domain == null && identity.Domain == null) || (Domain != null && Domain.Equals(identity.Domain, StringComparison.CurrentCultureIgnoreCase)));
         }
-
 
         /// <summary>
         /// Creates a Node instance based on the identity,
@@ -104,7 +116,7 @@ namespace Lime.Protocol
         }
 
         /// <summary>
-        /// Tries to parse the string to a valid Identity;
+        /// Tries to parse the string to a valid Identity.
         /// </summary>
         /// <param name="s">The s.</param>
         /// <param name="value">The value.</param>

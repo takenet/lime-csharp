@@ -86,5 +86,10 @@ namespace Lime.Protocol.Network
         /// Occurs after the transport was closed.
         /// </summary>
         event EventHandler Closed;
+
+        /// <summary>
+        /// Indicates if the transport is connected.
+        /// </summary>
+        bool IsConnected { get; }
     }
 }

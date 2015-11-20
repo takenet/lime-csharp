@@ -3,26 +3,35 @@
 namespace Lime.Protocol
 {
     /// <summary>
-    /// Represents an element 
-    /// of a network
+    /// Represents an element of a network.
     /// </summary>
     public class Node : Identity
     {
         #region Constructor
 
+        public Node()
+        {
+
+        }
+
+        public Node(string name, string domain, string instance)
+            : base(name, domain)            
+        {
+            Instance = instance;
+        }
+
         #endregion
 
         /// <summary>
-        /// The name of the instance used
-        /// by the node to connect to the network
+        /// The name of the instance used by the node to connect to the network.
         /// </summary>
         public string Instance { get; set; }
 
         /// <summary>
-        /// Returns a <see cref="System.String" /> that represents this instance.
+        /// Returns a <see cref="string" /> that represents this instance.
         /// </summary>
         /// <returns>
-        /// A <see cref="System.String" /> that represents this instance.
+        /// A <see cref="string" /> that represents this instance.
         /// </returns>
         public override string ToString()
         {
@@ -30,11 +39,11 @@ namespace Lime.Protocol
         }
 
         /// <summary>
-        /// Determines whether the specified <see cref="System.Object" }, is equal to this instance.
+        /// Determines whether the specified <see cref="object" }, is equal to this instance.
         /// </summary>
-        /// <param name="obj">The <see cref="System.Object" /> to compare with this instance.</param>
+        /// <param name="obj">The <see cref="object" /> to compare with this instance.</param>
         /// <returns>
-        ///   <c>true</c> if the specified <see cref="System.Object" /> is equal to this instance; otherwise, <c>false</c>.
+        ///   <c>true</c> if the specified <see cref="object" /> is equal to this instance; otherwise, <c>false</c>.
         /// </returns>
         public override bool Equals(object obj)
         {
@@ -138,8 +147,7 @@ namespace Lime.Protocol
         #region ICloneable Members
 
         /// <summary>
-        /// Creates a new object that 
-        /// is a copy of the current instance.
+        /// Creates a new object that is a copy of the current instance.
         /// </summary>
         /// <returns>
         /// A new object that is a copy of this instance.

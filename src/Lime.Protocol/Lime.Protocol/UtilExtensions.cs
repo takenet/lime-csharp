@@ -29,10 +29,7 @@ namespace Lime.Protocol
         /// <returns></returns>
         public static bool IsPingRequest(this Command command)
         {
-            if (command == null)
-            {
-                throw new ArgumentNullException("command");
-            }
+            if (command == null) throw new ArgumentNullException(nameof(command));
 
             if (command.Method == CommandMethod.Get &&
                 command.Status == CommandStatus.Pending &&
@@ -183,12 +180,9 @@ namespace Lime.Protocol
         /// <returns></returns>
         public static string ToUnsecureString(this SecureString securePassword)
         {
-            if (securePassword == null)
-            {
-                throw new ArgumentNullException("securePassword");
-            }
-
-            IntPtr unmanagedString = IntPtr.Zero;
+            if (securePassword == null) throw new ArgumentNullException(nameof(securePassword));
+            
+            var unmanagedString = IntPtr.Zero;
             try
             {
                 unmanagedString = Marshal.SecureStringToGlobalAllocUnicode(securePassword);

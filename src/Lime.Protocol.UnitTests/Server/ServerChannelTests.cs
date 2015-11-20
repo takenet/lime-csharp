@@ -6,6 +6,7 @@ using Lime.Protocol.Server;
 using System.Threading.Tasks;
 using System.Threading;
 using Lime.Protocol.Security;
+using Lime.Protocol.Util;
 
 namespace Lime.Protocol.UnitTests.Server
 {
@@ -14,22 +15,33 @@ namespace Lime.Protocol.UnitTests.Server
     {
         #region Private fields
 
-        private Mock<ITransport> _transport;
+        private Mock<TransportBase> _transport;
         private TimeSpan _sendTimeout;
 
         #endregion
 
-        #region Constructor
+        #region Scenario
 
-        public ServerChannelTests()
-        {
-            _transport = new Mock<ITransport>();
+        [SetUp]
+        public void Setup()
+        {            
+            _transport = new Mock<TransportBase>();
+            _transport
+                .Setup(t => t.IsConnected)
+                .Returns(true);            
             _sendTimeout = TimeSpan.FromSeconds(30);
+        }
+
+        [TearDown]
+        public void Teardown()
+        {
+            _transport = null;
+            _sendTimeout = default(TimeSpan);
         }
 
         #endregion
 
-        private ServerChannel GetTarget(SessionState state = SessionState.New, Node remoteNode = null, Guid sessionId = default(Guid), Node serverNode = null)
+        private ServerChannel GetTarget(SessionState state = SessionState.New, Node remoteNode = null, Guid sessionId = default(Guid), Node serverNode = null, TimeSpan? remotePingInterval = null, TimeSpan? remoteIdleTimeout = null)
         {
             if (sessionId == Guid.Empty)
             {
@@ -47,7 +59,9 @@ namespace Lime.Protocol.UnitTests.Server
                 serverNode,
                 _transport.Object,
                 _sendTimeout,
-                remoteNode);
+                remoteNode,
+                remotePingInterval,
+                remoteIdleTimeout);
         }
 
         #region ReceiveNewSessionAsync
@@ -606,10 +620,49 @@ namespace Lime.Protocol.UnitTests.Server
 
         #endregion
 
+        #region OnRemoteIdleAsync
+        [Test]
+        [Category("OnRemoteIdleAsync")]
+        public async Task OnRemoteIdleAsync_EstablishedState_CallsSendSessionFinishedAndClosesTransport()
+        {
+            // Arrange            
+            var tcs1 = new TaskCompletionSource<Envelope>();
+            _transport
+                .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(tcs1.Task);
+            _transport
+                .Setup(t => t.SendAsync(It.IsAny<Envelope>(), It.IsAny<CancellationToken>()))
+                .Returns(TaskUtil.CompletedTask);
+            var target = GetTarget(                
+                SessionState.Established,                
+                remotePingInterval: TimeSpan.FromMilliseconds(500),
+                remoteIdleTimeout: TimeSpan.FromMilliseconds(150));
+
+            // Act
+            await Task.Delay(1000);
+
+            // Assert
+            _transport
+                .Verify(t => t.SendAsync(
+                    It.IsAny<Envelope>(), 
+                    It.IsAny<CancellationToken>()), 
+                    Times.Once());
+
+            _transport
+                .Verify(t => t.SendAsync(
+                    It.Is<Envelope>(e => e is Session && ((Session)e).State == SessionState.Finished && ((Session)e).Id == target.SessionId), It.IsAny<CancellationToken>()), Times.Once());
+
+            _transport
+                .Verify(t =>
+                    t.CloseAsync(It.IsAny<CancellationToken>()),
+                    Times.Once());
+        }
+
+        #endregion
         private class TestServerChannel : ServerChannel
         {
-            public TestServerChannel(SessionState state, Guid sessionId, Node serverNode, ITransport transport, TimeSpan sendTimeout, Node remoteNode)
-                : base(sessionId, serverNode, transport, sendTimeout)
+            public TestServerChannel(SessionState state, Guid sessionId, Node serverNode, ITransport transport, TimeSpan sendTimeout, Node remoteNode, TimeSpan? remotePingInterval = null, TimeSpan? remoteIdleTimeout = null)
+                : base(sessionId, serverNode, transport, sendTimeout, remotePingInterval: remotePingInterval, remoteIdleTimeout: remoteIdleTimeout)
             {                
                 base.State = state;
                 base.RemoteNode = remoteNode;

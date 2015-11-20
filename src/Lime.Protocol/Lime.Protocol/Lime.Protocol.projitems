@@ -30,7 +30,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Network\EnvelopeEventArgs.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Network\ExceptionEventArgs.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Network\IChannel.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Network\IChannelExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Network\ChannelExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Network\ICommandChannel.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Network\IEnvelopeContainer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Network\IMessageChannel.cs" />

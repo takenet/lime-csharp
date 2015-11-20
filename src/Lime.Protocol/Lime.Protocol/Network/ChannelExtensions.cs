@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,10 +9,9 @@ using System.Threading.Tasks;
 namespace Lime.Protocol.Network
 {
     /// <summary>
-    /// Utility extensions for the
-    /// IChannel interface
+    /// Utility extensions for the IChannel interface.
     /// </summary>
-    public static class IChannelExtensions
+    public static class ChannelExtensions
     {
         #region Private Fields
 
@@ -21,7 +21,7 @@ namespace Lime.Protocol.Network
 
         #region Constructor
 
-        static IChannelExtensions()
+        static ChannelExtensions()
         {
             _processCommandSemaphore = new SemaphoreSlim(1);
         }
@@ -38,7 +38,7 @@ namespace Lime.Protocol.Network
         /// <returns></returns>
         public static async Task SendAsync<T>(this IChannel channel, T envelope) where T : Envelope
         {
-            if (channel == null) throw new ArgumentNullException("channel");            
+            if (channel == null) throw new ArgumentNullException(nameof(channel));            
 
             if (typeof(T) == typeof(Notification))
             {
@@ -63,13 +63,13 @@ namespace Lime.Protocol.Network
         }
 
         /// <summary>
-        /// Composes a command envelope with a
-        /// get method for the specified resource.
+        /// Composes a command envelope with a get method for the specified resource.
         /// </summary>
-        /// <typeparam name="TResource">The type of the resource.</typeparam>
         /// <param name="channel">The channel.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <param name="unrelatedCommandHandler">Defines a handler for unexpected commands received while awaiting for the actual command response. If not provided, the method will throw an <exception cref="InvalidOperationException"> in these cases.</exception>.</param>
+        /// <param name="uri">todo: describe uri parameter on GetResourceAsync</param>
+        /// <typeparam name="TResource">The type of the resource.</typeparam>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">channel</exception>
         /// <exception cref="LimeException">Returns an exception with the failure reason</exception>
@@ -79,8 +79,7 @@ namespace Lime.Protocol.Network
         }
 
         /// <summary>
-        /// Composes a command envelope with a
-        /// get method for the specified resource.
+        /// Composes a command envelope with a get method for the specified resource.
         /// </summary>
         /// <typeparam name="TResource">The type of the resource.</typeparam>
         /// <param name="channel">The channel.</param>
@@ -93,17 +92,10 @@ namespace Lime.Protocol.Network
         /// <exception cref="LimeException">Returns an exception with the failure reason</exception>
         public static async Task<TResource> GetResourceAsync<TResource>(this IChannel channel, LimeUri uri, Node from, CancellationToken cancellationToken, Func<Command, Task> unrelatedCommandHandler = null) where TResource : Document
         {
-            if (channel == null)
-            {
-                throw new ArgumentNullException("channel");
-            }
+            if (channel == null) throw new ArgumentNullException(nameof(channel));
+            if (uri == null) throw new ArgumentNullException(nameof(uri));
 
-            if (uri == null)
-            {
-                throw new ArgumentNullException("uri");
-            }
-
-            var requestCommand = new Command()
+            var requestCommand = new Command
             {
                 From = from,
                 Method = CommandMethod.Get,
@@ -155,22 +147,11 @@ namespace Lime.Protocol.Network
         /// <exception cref="LimeException"></exception>
         public static async Task SetResourceAsync<TResource>(this IChannel channel, LimeUri uri, TResource resource, Node from, CancellationToken cancellationToken, Func<Command, Task> unrelatedCommandHandler = null) where TResource : Document
         {
-            if (channel == null)
-            {
-                throw new ArgumentNullException("channel");
-            }
+            if (channel == null) throw new ArgumentNullException(nameof(channel));
+            if (uri == null) throw new ArgumentNullException(nameof(uri));
+            if (resource == null) throw new ArgumentNullException(nameof(resource));
 
-            if (uri == null)
-            {
-                throw new ArgumentNullException("uri");
-            }
-
-            if (resource == null)
-            {
-                throw new ArgumentNullException("resource");
-            }
-
-            var requestCommand = new Command()
+            var requestCommand = new Command
             {
                 From = from,
                 Method = CommandMethod.Set,
@@ -230,17 +211,10 @@ namespace Lime.Protocol.Network
         /// <exception cref="LimeException">Returns an exception with the failure reason</exception>
         public static async Task DeleteResourceAsync(this IChannel channel, LimeUri uri, Node from, CancellationToken cancellationToken, Func<Command, Task> unrelatedCommandHandler = null)
         {
-            if (channel == null)
-            {
-                throw new ArgumentNullException("channel");
-            }
+            if (channel == null) throw new ArgumentNullException(nameof(channel));
+            if (uri == null) throw new ArgumentNullException(nameof(uri));
 
-            if (uri == null)
-            {
-                throw new ArgumentNullException("uri");
-            }
-
-            var requestCommand = new Command()
+            var requestCommand = new Command
             {
                 From = from,
                 Method = CommandMethod.Delete,
@@ -275,8 +249,8 @@ namespace Lime.Protocol.Network
         /// <returns></returns>
         public static async Task<Command> ProcessCommandAsync(this IChannel channel, Command requestCommand, CancellationToken cancellationToken, Func<Command, Task> unrelatedCommandHandler = null)
         {
-            if (channel == null) throw new ArgumentNullException("channel");            
-            if (requestCommand == null) throw new ArgumentNullException("requestCommand");
+            if (channel == null) throw new ArgumentNullException(nameof(channel));            
+            if (requestCommand == null) throw new ArgumentNullException(nameof(requestCommand));
             
             await _processCommandSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
 

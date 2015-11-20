@@ -29,30 +29,17 @@ namespace Lime.Protocol.Client
             Func<SessionEncryption[], SessionEncryption> encryptionSelector, Identity identity, Func<AuthenticationScheme[], Authentication, Authentication> authenticator, 
             string instance, CancellationToken cancellationToken)
         {
-            if (channel == null)
-            {
-                throw new ArgumentNullException("channel");
-            }
-
-            if (authenticator == null)
-            {
-                throw new ArgumentNullException("authenticator");
-            }
+            if (channel == null) throw new ArgumentNullException(nameof(channel));
+            if (authenticator == null) throw new ArgumentNullException(nameof(authenticator));
 
             var receivedSession = await channel.StartNewSessionAsync(cancellationToken).ConfigureAwait(false);
 
             // Session negotiation
             if (receivedSession.State == SessionState.Negotiating)
             {
-                if (compressionSelector == null)
-                {
-                    throw new ArgumentNullException("compressionSelector");
-                }
+                if (compressionSelector == null) throw new ArgumentNullException(nameof(compressionSelector));
 
-                if (encryptionSelector == null)
-                {
-                    throw new ArgumentNullException("encryptionSelector");
-                }
+                if (encryptionSelector == null) throw new ArgumentNullException(nameof(encryptionSelector));
 
                 // Select options
                 receivedSession = await channel.NegotiateSessionAsync(
@@ -81,10 +68,7 @@ namespace Lime.Protocol.Client
             // Session authentication
             if (receivedSession.State == SessionState.Authenticating)
             {
-                if (identity == null)
-                {
-                    throw new ArgumentNullException("identity");
-                }
+                if (identity == null) throw new ArgumentNullException(nameof(identity));
 
                 do
                 {
