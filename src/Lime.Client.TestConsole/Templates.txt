@@ -1,12 +1,13 @@
 ﻿New	Session	{"state":"new"}
 Negotiating none/none	Session	{"id":"%sessionId","state":"negotiating","encryption":"none","compression":"none"}
 Negotiating none/tls	Session	{"id":"%sessionId","state":"negotiating","encryption":"tls","compression":"none"}
-Authenticating guest	Session	{"id":"%sessionId","from":"%from","state":"authenticating","scheme":"guest"}
+Authenticating guest	Session	{"id":"%sessionId","from":"%guestIdentity","state":"authenticating","scheme":"guest"}
 Authenticating plain	Session	{"id":"%sessionId","from":"%from","state":"authenticating","scheme":"plain","authentication":{"password":"%password"}}
 Authenticating key	Session	{"id":"%sessionId","from":"%from","state":"authenticating","scheme":"key","authentication":{"key":"%key"}}
 Authenticating transport	Session	{"id":"%sessionId","from":"%from","state":"authenticating","scheme":"transport"}
 Finishing	Session	{"id":"%sessionId","state": "finishing"}
 Text message	Message	{"id":"%messageId","to":"%to","type":"text/plain","content":"%text"}
+Text message with pp	Message	{"id":"%messageId","from":"%delegateIdentity","to":"%to","pp":"%localNode","type":"text/plain","content":"%text"}
 Chat state message	Message	{"to":"%to","type":"application/vnd.lime.chatstate+json","content":{"state":"%chatState"}}
 Fire-and-forget text message	Message	{"to":"%to","type":"text/plain","content":"%text"}
 Received notification	Notification	{"id":"%messageId","from":"%from","to":"%to","event":"received"}
@@ -23,7 +24,7 @@ Subscribe own presence	Command	{"id":"%commandId","method":"subscribe","uri":"/p
 Subscribe presence	Command	{"id":"%commandId","method":"subscribe","uri":"lime://%presenceIdentity/presence"}
 Get account	Command	{"id":"%commandId","from":"%from","method":"get","uri":"/account"}
 Get own account	Command	{"id":"%commandId","method":"get","uri":"/account"}
-Set account	Command	{"id":"%commandId","from":"%accountIdentity","pp":"%from","method":"set","type":"application/vnd.lime.account+json","uri":"/account","resource":{"fullName":"%fullName","phoneNumber":"%phoneNumber","city":"%city","password":"%newPassword"}}
+Set account	Command	{"id":"%commandId","from":"%accountIdentity","pp":"%localNode","method":"set","type":"application/vnd.lime.account+json","uri":"/account","resource":{"fullName":"%fullName","phoneNumber":"%phoneNumber","city":"%city","password":"%newPassword"}}
 Set account password	Command	{"id":"%commandId","method":"set","type":"application/vnd.lime.account+json","uri":"/account","resource":{"password":"%newPassword","oldPassword":"%oldPassword"}}
 Get directory account	Command	{"id":"%commandId","method":"get","uri":"lime://%domain/accounts/%accountIdentity"}
 Get directory accounts	Command	{"id":"%commandId","method":"get","uri":"lime://%domain/accounts"}
