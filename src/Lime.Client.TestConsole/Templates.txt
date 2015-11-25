@@ -41,3 +41,5 @@ Set contact	Command	{"id":"%commandId","method":"set","type":"application/vnd.li
 Delete contact	Command	{"id":"%commandId","method":"delete","uri": "/contacts/%contactIdentity"}
 Set location	Command	{"id":  "%commandId","to":"postmaster@location.take.io","method":"set","type":"application/vnd.iris.location+json","uri":"/location","resource":{"latitude":10.1,"longitude":10.2}}
 Get location	Command	{"id":  "%commandId","to":"postmaster@location.take.io","method":"get","type":"application/vnd.iris.location+json","uri":"/location"}
+Set delegation	Command	{"id":"%commandId","method":"set","type":"application/vnd.lime.delegation+json","uri":"/delegations","resource":{"target":"%targetIdentity"}
+Delete delegation	Command	{"id":  "%commandId","method":"delete","type":"application/vnd.lime.delegation+json","uri":"/delegations/%targetIdentity"}
