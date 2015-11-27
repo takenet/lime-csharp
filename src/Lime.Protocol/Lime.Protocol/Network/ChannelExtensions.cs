@@ -38,7 +38,7 @@ namespace Lime.Protocol.Network
         /// <returns></returns>
         public static async Task SendAsync<T>(this IChannel channel, T envelope) where T : Envelope
         {
-            if (channel == null) throw new ArgumentNullException("channel");            
+            if (channel == null) throw new ArgumentNullException(nameof(channel));            
 
             if (typeof(T) == typeof(Notification))
             {
@@ -92,17 +92,10 @@ namespace Lime.Protocol.Network
         /// <exception cref="LimeException">Returns an exception with the failure reason</exception>
         public static async Task<TResource> GetResourceAsync<TResource>(this IChannel channel, LimeUri uri, Node from, CancellationToken cancellationToken, Func<Command, Task> unrelatedCommandHandler = null) where TResource : Document
         {
-            if (channel == null)
-            {
-                throw new ArgumentNullException("channel");
-            }
+            if (channel == null) throw new ArgumentNullException(nameof(channel));
+            if (uri == null) throw new ArgumentNullException(nameof(uri));
 
-            if (uri == null)
-            {
-                throw new ArgumentNullException("uri");
-            }
-
-            var requestCommand = new Command()
+            var requestCommand = new Command
             {
                 From = from,
                 Method = CommandMethod.Get,
@@ -154,22 +147,11 @@ namespace Lime.Protocol.Network
         /// <exception cref="LimeException"></exception>
         public static async Task SetResourceAsync<TResource>(this IChannel channel, LimeUri uri, TResource resource, Node from, CancellationToken cancellationToken, Func<Command, Task> unrelatedCommandHandler = null) where TResource : Document
         {
-            if (channel == null)
-            {
-                throw new ArgumentNullException("channel");
-            }
+            if (channel == null) throw new ArgumentNullException(nameof(channel));
+            if (uri == null) throw new ArgumentNullException(nameof(uri));
+            if (resource == null) throw new ArgumentNullException(nameof(resource));
 
-            if (uri == null)
-            {
-                throw new ArgumentNullException("uri");
-            }
-
-            if (resource == null)
-            {
-                throw new ArgumentNullException("resource");
-            }
-
-            var requestCommand = new Command()
+            var requestCommand = new Command
             {
                 From = from,
                 Method = CommandMethod.Set,
@@ -229,17 +211,10 @@ namespace Lime.Protocol.Network
         /// <exception cref="LimeException">Returns an exception with the failure reason</exception>
         public static async Task DeleteResourceAsync(this IChannel channel, LimeUri uri, Node from, CancellationToken cancellationToken, Func<Command, Task> unrelatedCommandHandler = null)
         {
-            if (channel == null)
-            {
-                throw new ArgumentNullException("channel");
-            }
+            if (channel == null) throw new ArgumentNullException(nameof(channel));
+            if (uri == null) throw new ArgumentNullException(nameof(uri));
 
-            if (uri == null)
-            {
-                throw new ArgumentNullException("uri");
-            }
-
-            var requestCommand = new Command()
+            var requestCommand = new Command
             {
                 From = from,
                 Method = CommandMethod.Delete,

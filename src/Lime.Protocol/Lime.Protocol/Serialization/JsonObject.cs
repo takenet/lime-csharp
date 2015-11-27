@@ -33,10 +33,7 @@ namespace Lime.Protocol.Serialization
         /// <exception cref="System.ArgumentNullException">dictionary</exception>
         public JsonObject(IDictionary<string, object> dictionary)
         {
-            if (dictionary == null)
-            {
-                throw new ArgumentNullException("dictionary");
-            }
+            if (dictionary == null) throw new ArgumentNullException(nameof(dictionary));
 
             foreach (var key in dictionary.Keys)
             {

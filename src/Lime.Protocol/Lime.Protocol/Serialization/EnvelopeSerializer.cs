@@ -22,11 +22,8 @@ namespace Lime.Protocol.Serialization
         /// <returns></returns>
         public string Serialize(Envelope envelope)
         {            
-            if (envelope == null)
-            {
-                throw new ArgumentNullException("envelope");
-            }
-
+            if (envelope == null) throw new ArgumentNullException(nameof(envelope));
+            
             if (envelope is Notification)
             {
                 return JsonSerializer<Notification>.Serialize((Notification)envelope);
