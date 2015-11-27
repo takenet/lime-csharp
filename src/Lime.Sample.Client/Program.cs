@@ -7,6 +7,7 @@ using Lime.Messaging.Contents;
 using Lime.Protocol;
 using Lime.Protocol.Client;
 using Lime.Transport.Tcp;
+using Lime.Protocol.Security;
 
 namespace Lime.Sample.Client
 {
@@ -35,90 +36,112 @@ namespace Lime.Sample.Client
                 portNumber = 55321;
             }
 
+            Console.Write("Identity (name@domain): ");
+
+            Identity identity;
+            if (!Identity.TryParse(Console.ReadLine(), out identity))
+            {
+                identity = new Identity("samples", "take.io");
+            }
+
+            Console.Write("Password: ");
+            var password = Console.ReadLine();
+            if (string.IsNullOrWhiteSpace(password))
+            {
+                password = "123456";
+            }
+
             // Creates a new transport and connect to the server
             var serverUri = new Uri(string.Format("net.tcp://{0}:{1}", hostName, portNumber)); 
-            var transport = new TcpTransport();
+            var transport = new TcpTransport(traceWriter: new DebugTraceWriter());
             await transport.OpenAsync(serverUri, CancellationToken.None);
 
             // Creates a new client channel
             var sendTimeout = TimeSpan.FromSeconds(60);
 
-            var clientChannel = new ClientChannel(
-                transport,
-                sendTimeout);
-
-            // TODO Support for session authentication
-            var session = await clientChannel.EstablishSessionAsync(
-                compressionOptions => compressionOptions.First(),     // Compression selector 
-                encryptionOptions => encryptionOptions.First(),       // Encryption selector
-                null,                                                   // Client identity
-                (authenticationSchemes, roundtrip) => null,             // Authentication
-                "default",
-                CancellationToken.None);
-
-            if (session.State == SessionState.Established)
+            using (var clientChannel = new ClientChannel(transport, sendTimeout))
             {
-                var consumerCts = new CancellationTokenSource();
-                var consumeMessagesTask = ConsumeMessagesAsync(clientChannel, consumerCts.Token).WithPassiveCancellation();
-                var consumeCommandsTask = ConsumeCommandsAsync(clientChannel, consumerCts.Token).WithPassiveCancellation();
-                var consumeNotificationsTask = ConsumeNotificationsAsync(clientChannel, consumerCts.Token).WithPassiveCancellation();
-
-                var finishedSessionTask = clientChannel
-                    .ReceiveFinishedSessionAsync(CancellationToken.None)
-                    .ContinueWith(t =>
+                // Establish the session
+                var session = await clientChannel.EstablishSessionAsync(
+                    compressionOptions => compressionOptions.First(),     // Compression selector 
+                    encryptionOptions => encryptionOptions.First(),       // Encryption selector
+                    identity,                                                   // Client identity
+                    (authenticationSchemes, roundtrip) =>
                     {
-                        Console.Write("The session was finished. ");
-                        if (t.Result.Reason != null)
-                        {
-                            Console.Write("Reason: {0}", t.Result.Reason);
-                        }
-                        Console.WriteLine();
-                    });
+                        var authentication = new PlainAuthentication();
+                        authentication.SetToBase64Password(password);
+                        return authentication;
+                    },
+                    "default",
+                    CancellationToken.None);
 
-                Console.WriteLine("Session established. Id: {0} - Local node: {1} - Remote node: {2}", session.Id, session.To, session.From);
-
-                while (clientChannel.State == SessionState.Established)
-                {                    
-                    Console.Write("Destination node (Type EXIT to quit): ");
-                    var toInput = Console.ReadLine();
-                    if (toInput != null && 
-                        toInput.Equals("exit", StringComparison.InvariantCultureIgnoreCase))
-                    {                        
-                        break;
-                    }
-                    
-                    Node to = null;
-                    if (string.IsNullOrEmpty(toInput) || Node.TryParse(toInput, out to))
-                    {
-                        Console.Write("Message text: ");                        
-                        var message = new Message
-                        {
-                            To = to,
-                            Content = new PlainText
-                            {
-                                Text = Console.ReadLine()
-                            }
-                        };
-
-                        await clientChannel.SendMessageAsync(message);
-                    }
-
-                }
-
-                Console.WriteLine("Finishing...");
-                consumerCts.Cancel();
-                await Task.WhenAll(consumeMessagesTask, consumeCommandsTask, consumeNotificationsTask);
-                await clientChannel.SendFinishingSessionAsync();
-                await finishedSessionTask.WithCancellation(TimeSpan.FromSeconds(30).ToCancellationToken());
-            }
-            else
-            {
-                Console.Write("Could not establish the session. ");
-                if (session.Reason != null)
+                if (session.State == SessionState.Established)
                 {
-                    Console.Write("Reason: {0}", session.Reason);
+                    using (var consumerCts = new CancellationTokenSource())
+                    {
+                        var consumeMessagesTask = ConsumeMessagesAsync(clientChannel, consumerCts.Token).WithPassiveCancellation();
+                        var consumeCommandsTask = ConsumeCommandsAsync(clientChannel, consumerCts.Token).WithPassiveCancellation();
+                        var consumeNotificationsTask = ConsumeNotificationsAsync(clientChannel, consumerCts.Token).WithPassiveCancellation();
+
+                        var finishedSessionTask = clientChannel
+                            .ReceiveFinishedSessionAsync(CancellationToken.None)
+                            .ContinueWith(t =>
+                            {
+                                Console.Write("The session was finished. ");
+                                if (t.Result.Reason != null)
+                                {
+                                    Console.Write("Reason: {0}", t.Result.Reason);
+                                }
+                                Console.WriteLine();
+                            });
+
+                        Console.WriteLine("Session established. Id: {0} - Local node: {1} - Remote node: {2}", session.Id, session.To, session.From);
+
+                        while (clientChannel.State == SessionState.Established)
+                        {
+                            Console.Write("Destination node (Type EXIT to quit): ");
+                            var toInput = Console.ReadLine();
+                            if (toInput != null &&
+                                toInput.Equals("exit", StringComparison.InvariantCultureIgnoreCase))
+                            {
+                                break;
+                            }
+
+                            Node to = null;
+                            if (string.IsNullOrEmpty(toInput) || Node.TryParse(toInput, out to))
+                            {
+                                Console.Write("Message text: ");
+                                var message = new Message
+                                {
+                                    To = to,
+                                    Content = new PlainText
+                                    {
+                                        Text = Console.ReadLine()
+                                    }
+                                };
+
+                                await clientChannel.SendMessageAsync(message);
+                            }
+
+                        }
+
+                        Console.WriteLine("Finishing...");
+                        consumerCts.Cancel();
+                        await Task.WhenAll(consumeMessagesTask, consumeCommandsTask, consumeNotificationsTask);
+                        await clientChannel.SendFinishingSessionAsync();
+                        await finishedSessionTask.WithCancellation(TimeSpan.FromSeconds(30).ToCancellationToken());
+                    }
+
                 }
-                Console.WriteLine();
+                else
+                {
+                    Console.Write("Could not establish the session. ");
+                    if (session.Reason != null)
+                    {
+                        Console.Write("Reason: {0}", session.Reason);
+                    }
+                    Console.WriteLine();
+                }
             }
 
             Console.WriteLine("Press any key to exit.");
