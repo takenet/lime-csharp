@@ -20,10 +20,12 @@ namespace Lime.Transport.Tcp
 	public class TcpTransport : TransportBase, ITransport, IAuthenticatableTransport
 	{
 		public const int DEFAULT_BUFFER_SIZE = 8192;
+        public static readonly TimeSpan ReadTimeout = TimeSpan.FromSeconds(5);
+        public static readonly TimeSpan CloseTimeout = TimeSpan.FromSeconds(30);
 
-		#region Fields
+        #region Fields
 
-		private Stream _stream;
+        private Stream _stream;
 		private readonly SemaphoreSlim _receiveSemaphore;
 		private readonly SemaphoreSlim _sendSemaphore;
 		private readonly ITcpClient _tcpClient;        
@@ -203,14 +205,15 @@ namespace Lime.Transport.Tcp
 			{
 				_sendSemaphore.Release();
 			}
-		}        
-	   
-		/// <summary>
-		/// Reads one envelope from the stream.
-		/// </summary>
-		/// <param name="cancellationToken"></param>
-		/// <returns></returns>
-		public override async Task<Envelope> ReceiveAsync(CancellationToken cancellationToken)
+		}
+
+
+        /// <summary>
+        /// Reads one envelope from the stream.
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public override async Task<Envelope> ReceiveAsync(CancellationToken cancellationToken)
 		{
 			if (_stream == null) throw new InvalidOperationException("The stream was not initialized. Call OpenAsync first.");		
             if (!_stream.CanRead) throw new InvalidOperationException("Invalid stream state");
@@ -221,7 +224,7 @@ namespace Lime.Transport.Tcp
 			{
 				Envelope envelope = null;
 
-				while (envelope == null && _stream.CanRead)
+				while (envelope == null)
 				{
 					cancellationToken.ThrowIfCancellationRequested();
 
@@ -240,21 +243,38 @@ namespace Lime.Transport.Tcp
 						envelope = _envelopeSerializer.Deserialize(envelopeJson);
 					}
 
-					if (envelope == null &&
-						_stream.CanRead)
+					if (envelope == null && CanRead)
 					{
                         // The NetworkStream ReceiveAsync method doesn't supports cancellation
                         // http://stackoverflow.com/questions/21468137/async-network-operations-never-finish
                         // http://referencesource.microsoft.com/#mscorlib/system/io/stream.cs,421
-						var read = await _stream
-                            .ReadAsync(_jsonBuffer.Buffer, _jsonBuffer.BufferCurPos, _jsonBuffer.Buffer.Length - _jsonBuffer.BufferCurPos, cancellationToken)
-                            .WithCancellation(cancellationToken)
-                            .ConfigureAwait(false);
+                        var readTask = _stream
+                            .ReadAsync(_jsonBuffer.Buffer, _jsonBuffer.BufferCurPos, _jsonBuffer.Buffer.Length - _jsonBuffer.BufferCurPos, cancellationToken);
+                        
+                        while (!readTask.IsCompleted && CanRead)
+                        {
+                            cancellationToken.ThrowIfCancellationRequested();
+                           
+                            await Task
+                                .WhenAny(
+                                    readTask,
+                                    Task.Delay(ReadTimeout, cancellationToken))
+                                .ConfigureAwait(false);                                                        
+                        }
+
+                        // If is not possible to read, closes the transport and returns
+                        if (!readTask.IsCompleted)
+                        {
+                            await CloseWithTimeout().ConfigureAwait(false);
+                            break;
+                        }                        
+
+                        var read = await readTask.ConfigureAwait(false);
 
                         // https://msdn.microsoft.com/en-us/library/hh193669(v=vs.110).aspx
                         if (read == 0)
 					    {
-                            await CloseAsync(CancellationToken.None).ConfigureAwait(false);
+                            await CloseWithTimeout().ConfigureAwait(false);
 					        break;
 					    }
 
@@ -262,7 +282,7 @@ namespace Lime.Transport.Tcp
 
                         if (_jsonBuffer.BufferCurPos >= _jsonBuffer.Buffer.Length)
 						{
-							await CloseAsync(CancellationToken.None).ConfigureAwait(false);
+							await CloseWithTimeout().ConfigureAwait(false);
 							throw new BufferOverflowException("Maximum buffer size reached");
 						}
 					}
@@ -276,13 +296,15 @@ namespace Lime.Transport.Tcp
 			}
 		}
 
-		/// <summary>
-		/// Closes the transport.
-		/// </summary>
-		/// <param name="cancellationToken"></param>
-		/// <returns></returns>
-		/// <exception cref="System.NotImplementedException"></exception>
-		protected override Task PerformCloseAsync(CancellationToken cancellationToken)
+
+
+        /// <summary>
+        /// Closes the transport.
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        /// <exception cref="System.NotImplementedException"></exception>
+        protected override Task PerformCloseAsync(CancellationToken cancellationToken)
 		{
             cancellationToken.ThrowIfCancellationRequested();
 		    _stream?.Close();
@@ -514,6 +536,16 @@ namespace Lime.Transport.Tcp
 #endif
 		}
 
+        private bool CanRead => _stream.CanRead && _tcpClient.Connected;
+
+        private Task CloseWithTimeout()
+        {
+            using (var cts = new CancellationTokenSource(CloseTimeout))
+            {
+                return CloseAsync(cts.Token);
+            }
+        }
+
         #endregion
-	}
+    }
 }

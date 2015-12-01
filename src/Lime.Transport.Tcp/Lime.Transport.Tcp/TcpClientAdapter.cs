@@ -1,4 +1,7 @@
 ﻿using System;
+using System.IO;
+using System.Linq;
+using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Threading.Tasks;
 
@@ -20,10 +23,7 @@ namespace Lime.Transport.Tcp
         /// Returns the System.Net.Sockets.NetworkStream used to send and receive data.
         /// </summary>
         /// <returns></returns>
-        public System.IO.Stream GetStream()
-        {
-            return _tcpClient.GetStream();
-        }
+        public Stream GetStream() => _tcpClient.GetStream();
 
         /// <summary>
         /// Connects the client to the specified port on the specified host.
@@ -31,10 +31,7 @@ namespace Lime.Transport.Tcp
         /// <param name="host"></param>
         /// <param name="port">The portThe port number of the remote host to which you intend to connect.</param>
         /// <returns></returns>
-        public Task ConnectAsync(string host, int port)
-        {
-            return _tcpClient.ConnectAsync(host, port);
-        }
+        public Task ConnectAsync(string host, int port) => _tcpClient.ConnectAsync(host, port);
 
         /// <summary>
         /// Gets a value indicating whether the underlying System.Net.Sockets.Socket
@@ -43,15 +40,9 @@ namespace Lime.Transport.Tcp
         /// <value>
         ///   <c>true</c> if connected; otherwise, <c>false</c>.
         /// </value>
-        public bool Connected
-        {
-            get { return _tcpClient.Connected; }
-        }
+        public bool Connected => _tcpClient.Connected && _tcpClient.GetState() == TcpState.Established;
 
-        public void Close()
-        {
-            _tcpClient.Close();
-        }
+        public void Close() => _tcpClient.Close();
 
         #endregion
     }

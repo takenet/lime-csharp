@@ -13,6 +13,8 @@
     <Compile Include="$(MSBuildThisFileDirectory)ITcpClient.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)JsonBuffer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)TcpClientAdapter.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)TcpClientExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)TcpConnectionInformationCache.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)TcpTransport.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)TcpTransportListener.cs" />
   </ItemGroup>
