@@ -156,10 +156,10 @@ namespace Lime.Transport.Tcp
 
 			if (!_tcpClient.Connected)
 			{
-				if (uri == null) throw new ArgumentNullException(nameof(uri));				
+				if (uri == null) throw new ArgumentNullException(nameof(uri), "The uri is mandatory for a not connected TCP client");				
 				if (uri.Scheme != Uri.UriSchemeNetTcp)
 				{
-					throw new ArgumentException($"Invalid URI scheme. Expected is '{Uri.UriSchemeNetTcp}'.");
+					throw new ArgumentException($"Invalid URI scheme. Expected is '{Uri.UriSchemeNetTcp}'.", nameof(uri));
 				}
 
 				if (string.IsNullOrWhiteSpace(_hostName))
