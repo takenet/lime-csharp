@@ -17,10 +17,7 @@ namespace Lime.Protocol
 
         public LimeUri(string uriPath)
         {
-            if (string.IsNullOrWhiteSpace(uriPath))
-            {
-                throw new ArgumentNullException("uriPath");
-            }
+            if (string.IsNullOrWhiteSpace(uriPath)) throw new ArgumentNullException(nameof(uriPath));
 
 			if (Uri.IsWellFormedUriString(uriPath, UriKind.Absolute))
             {
