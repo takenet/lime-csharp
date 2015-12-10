@@ -40,7 +40,7 @@ namespace Lime.Transport.Tcp
         /// <value>
         ///   <c>true</c> if connected; otherwise, <c>false</c>.
         /// </value>
-        public bool Connected => _tcpClient.Connected && _tcpClient.GetState() == TcpState.Established;
+        public bool Connected => _tcpClient.Connected; 
 
         public void Close() => _tcpClient.Close();
 
