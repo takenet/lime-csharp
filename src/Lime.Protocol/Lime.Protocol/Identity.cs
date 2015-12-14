@@ -101,10 +101,7 @@ namespace Lime.Protocol
         /// <exception cref="System.FormatException">Invalid identity format</exception>
         public static Identity Parse(string s)
         {
-            if (string.IsNullOrWhiteSpace(s))
-            {
-                throw new ArgumentNullException("s");
-            }
+            if (string.IsNullOrWhiteSpace(s)) throw new ArgumentNullException(nameof(s));
 
             var splittedIdentity = s.Split('@');
 
