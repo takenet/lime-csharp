@@ -42,26 +42,28 @@ namespace Lime.Client.TestConsole.ViewModels
             _operationTimeout = TimeSpan.FromSeconds(15);
 
             // Collections
-            this.Envelopes = new ObservableCollectionEx<EnvelopeViewModel>();
-            this.Variables = new ObservableCollectionEx<VariableViewModel>();
-            this.Templates = new ObservableCollectionEx<TemplateViewModel>();
-            this.Macros = new ObservableCollectionEx<MacroViewModel>();
-            this.StatusMessages = new ObservableCollectionEx<StatusMessageViewModel>();
+            Envelopes = new ObservableCollectionEx<EnvelopeViewModel>();
+            Variables = new ObservableCollectionEx<VariableViewModel>();
+            Templates = new ObservableCollectionEx<TemplateViewModel>();
+            Macros = new ObservableCollectionEx<MacroViewModel>();
+            StatusMessages = new ObservableCollectionEx<StatusMessageViewModel>();
 
             // Commands
-            this.OpenTransportCommand = new AsyncCommand(OpenTransportAsync, CanOpenTransport);
-            this.CloseTransportCommand = new AsyncCommand(CloseTransportAsync, CanCloseTransport);
-            this.SendCommand = new AsyncCommand(SendAsync, CanSend);
-            this.ClearTraceCommand = new RelayCommand(ClearTrace);
-            this.IndentCommand = new RelayCommand(Indent, CanIndent);
-            this.ValidateCommand = new RelayCommand(Validate, CanValidate);
-            this.LoadTemplateCommand = new RelayCommand(LoadTemplate, CanLoadTemplate);
-            this.ParseCommand = new RelayCommand(Parse, CanParse);
+            OpenTransportCommand = new AsyncCommand(OpenTransportAsync, CanOpenTransport);
+            CloseTransportCommand = new AsyncCommand(CloseTransportAsync, CanCloseTransport);
+            SendCommand = new AsyncCommand(SendAsync, CanSend);
+            ClearTraceCommand = new RelayCommand(ClearTrace);
+            IndentCommand = new RelayCommand(Indent, CanIndent);
+            ValidateCommand = new RelayCommand(Validate, CanValidate);
+            LoadTemplateCommand = new RelayCommand(LoadTemplate, CanLoadTemplate);
+            ParseCommand = new RelayCommand(Parse, CanParse);
 
-            this.Host = "net.tcp://iris.limeprotocol.org:55321";
-            this.ClientCertificateThumbprint = Settings.Default.LastCertificateThumbprint;
-            this.ClearAfterSent = true;
-            this.ParseBeforeSend = true;
+            // Defaults
+            Host = "net.tcp://iris.limeprotocol.org:55321";
+            ClientCertificateThumbprint = Settings.Default.LastCertificateThumbprint;
+            ClearAfterSent = true;
+            ParseBeforeSend = true;
+            IgnoreParsingErrors = false;
 
             if (!IsInDesignMode)
             {
@@ -353,6 +355,18 @@ namespace Lime.Client.TestConsole.ViewModels
             { 
                 _clearAfterSent = value;
                 RaisePropertyChanged(() => ClearAfterSent);
+            }
+        }
+
+        private bool _ignoreParsingErrors;
+
+        public bool IgnoreParsingErrors
+        {
+            get { return _ignoreParsingErrors; }
+            set
+            {
+                _ignoreParsingErrors = value;
+                RaisePropertyChanged(() => IgnoreParsingErrors);
             }
         }
 
@@ -876,11 +890,19 @@ namespace Lime.Client.TestConsole.ViewModels
 
         }
 
-        private static string ParseInput(string input, IEnumerable<VariableViewModel> variables)
+        private string ParseInput(string input, IEnumerable<VariableViewModel> variables)
         {
             var variableValues = variables.ToDictionary(t => t.Name, t => t.Value);
             variableValues.Add("newGuid", Guid.NewGuid().ToString());
-            return input.ReplaceVariables(variableValues);
+            try
+            {
+                return input.ReplaceVariables(variableValues);
+            }
+            catch (ArgumentException) when (IgnoreParsingErrors)
+            {
+                AddStatusMessage("Some variables could not be parsed", true);
+                return input;
+            }
         }
 
         private void LoadMacros()
