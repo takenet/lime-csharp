@@ -316,7 +316,7 @@ namespace Lime.Transport.Http
         /// <param name="uri">The URI.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns></returns>
-        public override Task OpenAsync(Uri uri, CancellationToken cancellationToken)
+        protected override Task PerformOpenAsync(Uri uri, CancellationToken cancellationToken)
         {
             var session = new Session()
             {

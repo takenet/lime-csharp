@@ -44,7 +44,12 @@ namespace Lime.Protocol.Network
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
         /// <exception cref="System.NotImplementedException"></exception>
-        public abstract Task OpenAsync(Uri uri, CancellationToken cancellationToken);
+        public async virtual Task OpenAsync(Uri uri, CancellationToken cancellationToken)
+        {
+            await PerformOpenAsync(uri, cancellationToken);
+            _closingInvoked = false;
+            _closedInvoked = false;
+        }
 
         /// <summary>
         /// Closes the connection
@@ -142,7 +147,14 @@ namespace Lime.Protocol.Network
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
         protected abstract Task PerformCloseAsync(CancellationToken cancellationToken);
-        
+
+        /// <summary>
+        /// Opens the transport connection with the specified Uri.
+        /// </summary>
+        /// <param name="uri"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        protected abstract Task PerformOpenAsync(Uri uri, CancellationToken cancellationToken);
         #endregion
 
 

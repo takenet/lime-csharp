@@ -230,7 +230,7 @@ namespace Lime.Protocol.UnitTests.Network
             }
 
 
-            public override Task OpenAsync(Uri uri, CancellationToken cancellationToken)
+            protected override Task PerformOpenAsync(Uri uri, CancellationToken cancellationToken)
             {
                 this.OpenAsyncInvoked = true;
                 return Task.FromResult<object>(null);

@@ -102,7 +102,7 @@ namespace Lime.Transport.WebSocket
             return null;
         }
 
-        public override Task OpenAsync(Uri uri, CancellationToken cancellationToken)
+        protected override Task PerformOpenAsync(Uri uri, CancellationToken cancellationToken)
         {
             return _clientWebSocket.ConnectAsync(uri, cancellationToken);
         }
