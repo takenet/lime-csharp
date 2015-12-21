@@ -261,6 +261,50 @@ namespace Lime.Transport.Tcp.UnitTests
             await target.SendAsync(message, cancellationToken);
         }
 
+        [Test]
+        [Category("SendAsync")]
+        public async Task SendAsync_IOException_ThrowsIOExceptionAndCallsCloseAsync()
+        {
+            var target = await this.GetAndOpenTargetAsync();
+
+            var content = Dummy.CreateTextContent();
+            var message = Dummy.CreateMessage(content);
+            var serializedMessage = Dummy.CreateRandomString(200);
+            var serializedMessageBytes = Encoding.UTF8.GetBytes(serializedMessage);
+            var cancellationToken = CancellationToken.None;
+
+            _tcpClient
+                .Setup(s => s.Close())
+                .Verifiable();
+
+            _stream
+                .Setup(s => s.Close())
+                .Verifiable();
+
+            _stream
+                .Setup(s => s.CanWrite)
+                .Returns(true);
+                
+            _stream
+                .Setup(s =>
+                    s.WriteAsync(
+                        It.IsAny<byte[]>(),
+                        It.IsAny<int>(),
+                        It.IsAny<int>(),
+                        It.IsAny<CancellationToken>()))
+                .Throws(new IOException())
+                .Verifiable();
+
+            _envelopeSerializer
+                .Setup(e => e.Serialize(message))
+                .Returns(serializedMessage);
+            
+            Assert.Throws<IOException>(async () => await target.SendAsync(message, cancellationToken));
+
+            _tcpClient.Verify();
+            _stream.Verify();
+        }
+
         #endregion
 
         #region ReceiveAsync
@@ -598,6 +642,25 @@ namespace Lime.Transport.Tcp.UnitTests
                 .Verifiable();
 
             var target = GetTarget();
+
+            await target.CloseAsync(cancellationToken);
+
+            _tcpClient.Verify();
+        }
+
+        [Test]
+        [Category("PerformCloseAsync")]
+        public async Task PerformCloseAsync_AlreadyClosed_ClosesClient()
+        {
+            var cancellationToken = CancellationToken.None;
+
+            _tcpClient
+                .Setup(s => s.Close())
+                .Verifiable();
+
+            var target = GetTarget();
+
+            await target.CloseAsync(cancellationToken);
 
             await target.CloseAsync(cancellationToken);
 

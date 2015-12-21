@@ -201,6 +201,11 @@ namespace Lime.Transport.Tcp
 			{
 				await _stream.WriteAsync(jsonBytes, 0, jsonBytes.Length, cancellationToken).ConfigureAwait(false);
 			}
+            catch (IOException)
+            {
+                await CloseWithTimeout().ConfigureAwait(false);
+                throw;
+            }
 			finally
 			{
 				_sendSemaphore.Release();
