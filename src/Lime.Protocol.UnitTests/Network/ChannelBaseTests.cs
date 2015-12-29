@@ -164,6 +164,33 @@ namespace Lime.Protocol.UnitTests.Network
             var actual = await target.ReceiveMessageAsync(cancellationToken);
         }
 
+        [Test]
+        [Category("ReceiveMessageAsync")]
+        public async Task ReceiveMessageAsync_TransportDisconnect_ReadFromBufferThenThrow()
+        {
+            var content = Dummy.CreateTextContent();
+            var message = Dummy.CreateMessage(content);
+            
+            _transport
+                .SetupSequence(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(Task.FromResult<Envelope>(message))
+                .Returns(Task.FromResult<Envelope>(message))
+                .Throws<OperationCanceledException>();
+
+            var target = GetTarget(SessionState.Established, 5);
+            var cancellationToken = Dummy.CreateCancellationToken();
+
+            await Task.Delay(200);
+
+            Message messageReceived = null;
+
+            Assert.DoesNotThrow(async () => messageReceived = await target.ReceiveMessageAsync(cancellationToken));
+            Assert.IsNotNull(messageReceived);
+            Assert.DoesNotThrow(async () => messageReceived = await target.ReceiveMessageAsync(cancellationToken));
+            Assert.IsNotNull(messageReceived);
+            Assert.Throws<OperationCanceledException>(async () => await target.ReceiveMessageAsync(cancellationToken));
+        }
+
 #if MONO
         [Test]
         [Category("ReceiveMessageAsync")]
@@ -636,8 +663,8 @@ namespace Lime.Protocol.UnitTests.Network
             await Task.Delay(100);
 
             // Act
-            var receiveSessionTask = await target.ReceiveSessionAsync(cancellationToken);
-            
+            Assert.DoesNotThrow(async () => await target.ReceiveSessionAsync(cancellationToken));
+            await target.ReceiveSessionAsync(cancellationToken);
         }
 
         #endregion

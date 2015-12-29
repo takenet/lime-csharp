@@ -151,7 +151,7 @@ namespace Lime.Protocol
         [EnumMember(Value = "authenticating")]
         Authenticating,
         /// <summary>
-        /// The session is active and is possible to send and receive 
+        /// The session is active and it is possible to send and receive 
         /// messages and commands. The server sends this state 
         /// after the session was authenticated.
         /// </summary>
