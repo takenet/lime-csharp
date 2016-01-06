@@ -7,12 +7,11 @@ using Lime.Protocol.Security;
 namespace Lime.Protocol.Server
 {
     /// <summary>
-    /// Defines the communication channel
-    /// between a server and a node
+    /// Defines the communication channel between a server and a node.
     /// </summary>
     public class ServerChannel : ChannelBase, IServerChannel
     {
-        private readonly static TimeSpan CloseTransportTimeout = TimeSpan.FromSeconds(30);
+        private static readonly TimeSpan CloseTransportTimeout = TimeSpan.FromSeconds(30);
 
 
         #region Constructor
@@ -52,7 +51,7 @@ namespace Lime.Protocol.Server
         {
             if (State != SessionState.New)
             {
-                throw new InvalidOperationException(string.Format("Cannot receive a new session in the '{0}' state", State));                
+                throw new InvalidOperationException($"Cannot receive a new session in the '{State}' state");                
             }
 
             return await ReceiveSessionAsync(cancellationToken).ConfigureAwait(false);
@@ -82,7 +81,7 @@ namespace Lime.Protocol.Server
         {
             if (State != SessionState.New)
             {
-                throw new InvalidOperationException(string.Format("Cannot start a session negotiating in the '{0}' state", State));
+                throw new InvalidOperationException($"Cannot start a session negotiating in the '{State}' state");
             }
 
             if (compressionOptions == null) throw new ArgumentNullException(nameof(compressionOptions));            
@@ -123,7 +122,7 @@ namespace Lime.Protocol.Server
         {
             if (State != SessionState.Negotiating)
             {
-                throw new InvalidOperationException(string.Format("Cannot negotiate a session in the '{0}' state", State));
+                throw new InvalidOperationException($"Cannot negotiate a session in the '{State}' state");
             }
 
             var session = new Session
@@ -154,7 +153,7 @@ namespace Lime.Protocol.Server
             if (State != SessionState.New &&
                 State != SessionState.Negotiating)
             {
-                throw new InvalidOperationException(string.Format("Cannot start the session authentication in the '{0}' state", State));
+                throw new InvalidOperationException($"Cannot start the session authentication in the '{State}' state");
             }
 
             if (schemeOptions == null) throw new ArgumentNullException(nameof(schemeOptions));
@@ -192,7 +191,8 @@ namespace Lime.Protocol.Server
             if (authenticationRoundtrip == null) throw new ArgumentNullException(nameof(authenticationRoundtrip));            
             if (State != SessionState.Authenticating)
             {
-                throw new InvalidOperationException(string.Format("Cannot send an authentication round-trip for a session in the '{0}' state", State));
+                throw new InvalidOperationException(
+                    $"Cannot send an authentication round-trip for a session in the '{State}' state");
             }
 
             var session = new Session
@@ -218,7 +218,7 @@ namespace Lime.Protocol.Server
             if (node == null) throw new ArgumentNullException(nameof(node));            
             if (State > SessionState.Authenticating)
             {
-                throw new InvalidOperationException(string.Format("Cannot establish a session in the '{0}' state", State));
+                throw new InvalidOperationException($"Cannot establish a session in the '{State}' state");
             }
 
             State = SessionState.Established;
@@ -247,7 +247,7 @@ namespace Lime.Protocol.Server
         {
             if (State != SessionState.Established)
             {
-                throw new InvalidOperationException(string.Format("Cannot receive a new session in the '{0}' state", State));
+                throw new InvalidOperationException($"Cannot receive a new session in the '{State}' state");
             }
 
             return await ReceiveSessionAsync(cancellationToken).ConfigureAwait(false);

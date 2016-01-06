@@ -20,10 +20,7 @@ namespace Lime.Protocol.Network
             return TaskUtil.CompletedTask;
         }
 
-        public bool IsEnabled
-        {
-            get { return Trace.Listeners.Count > 0; }
-        }
+        public bool IsEnabled => Trace.Listeners.Count > 0;
 
         #endregion
     }

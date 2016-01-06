@@ -1,15 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using System.Threading;
 
 namespace Lime.Protocol.Network
 {
     /// <summary>
-    /// Base class for transport
-    /// implementation
+    /// Base class for transport implementation.
     /// </summary>
     public abstract class TransportBase : ITransport
     {
@@ -44,7 +40,7 @@ namespace Lime.Protocol.Network
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
         /// <exception cref="System.NotImplementedException"></exception>
-        public async virtual Task OpenAsync(Uri uri, CancellationToken cancellationToken)
+        public virtual async Task OpenAsync(Uri uri, CancellationToken cancellationToken)
         {
             await PerformOpenAsync(uri, cancellationToken);
             _closingInvoked = false;
@@ -56,7 +52,7 @@ namespace Lime.Protocol.Network
         /// </summary>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public async virtual Task CloseAsync(CancellationToken cancellationToken)
+        public virtual async Task CloseAsync(CancellationToken cancellationToken)
         {
             await OnClosingAsync().ConfigureAwait(false);
             await PerformCloseAsync(cancellationToken).ConfigureAwait(false);
@@ -69,7 +65,7 @@ namespace Lime.Protocol.Network
         /// <returns></returns>
         public virtual SessionCompression[] GetSupportedCompression()
         {
-            return new SessionCompression[] { SessionCompression.None };
+            return new[] { SessionCompression.None };
         }
 
         /// <summary>
@@ -101,7 +97,7 @@ namespace Lime.Protocol.Network
         /// <returns></returns>
         public virtual SessionEncryption[] GetSupportedEncryption()
         {
-            return new SessionEncryption[] { SessionEncryption.None };
+            return new[] { SessionEncryption.None };
         }
 
         /// <summary>
@@ -155,8 +151,8 @@ namespace Lime.Protocol.Network
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
         protected abstract Task PerformOpenAsync(Uri uri, CancellationToken cancellationToken);
-        #endregion
 
+        #endregion
 
         /// <summary>
         /// Raises the Closing event with a deferral to wait the event handlers to complete the execution.

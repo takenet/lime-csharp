@@ -447,15 +447,15 @@ namespace Lime.Protocol.Network
 
             if (envelope is Notification)
             {
-                await PostNotificationToBufferAsync((Notification)envelope).ConfigureAwait(false);
+                await SendNotificationToBufferAsync((Notification)envelope).ConfigureAwait(false);
             }
             else if (envelope is Message)
             {
-                await PostMessageToBufferAsync((Message)envelope).ConfigureAwait(false);
+                await SendMessageToBufferAsync((Message)envelope).ConfigureAwait(false);
             }
             else if (envelope is Command)
             {
-                await PostCommandToBufferAsync((Command)envelope).ConfigureAwait(false);
+                await SendCommandToBufferAsync((Command)envelope).ConfigureAwait(false);
             }
             else if (envelope is Session)
             {
@@ -473,7 +473,7 @@ namespace Lime.Protocol.Network
         /// <param name="message"></param>
         /// <returns></returns>
 #if MONO
-        private Task PostMessageToBufferAsync(Message message)
+        private Task SendMessageToBufferAsync(Message message)
         {
             if (!_messageBuffer.Post(message))
             {
@@ -483,12 +483,9 @@ namespace Lime.Protocol.Network
             return Task.FromResult<object>(null);
         }
 #else
-        private async Task PostMessageToBufferAsync(Message message)
+        private Task SendMessageToBufferAsync(Message message)
         {
-            if (!await _messageBuffer.SendAsync(message, _channelCancellationTokenSource.Token))
-            {
-                throw new InvalidOperationException("Message buffer limit reached");
-            }
+            return SendEnvelopeToBufferAsync(_messageBuffer, message);
         }
 #endif
 
@@ -498,7 +495,7 @@ namespace Lime.Protocol.Network
         /// <param name="command"></param>
         /// <returns></returns>
 #if MONO
-        private Task PostCommandToBufferAsync(Command command)
+        private Task SendCommandToBufferAsync(Command command)
         {
             if (!_commandBuffer.Post(command))
             {
@@ -508,12 +505,9 @@ namespace Lime.Protocol.Network
             return Task.FromResult<object>(null);
         }
 #else
-        private async Task PostCommandToBufferAsync(Command command)
+        private Task SendCommandToBufferAsync(Command command)
         {
-            if (!await _commandBuffer.SendAsync(command, _channelCancellationTokenSource.Token))
-            {
-                throw new InvalidOperationException("Command buffer limit reached");
-            }
+            return SendEnvelopeToBufferAsync(_commandBuffer, command);
         }
 #endif
 
@@ -523,7 +517,7 @@ namespace Lime.Protocol.Network
         /// <param name="notification"></param>
         /// <returns></returns>
 #if MONO
-        private Task PostNotificationToBufferAsync(Notification notification)
+        private Task SendNotificationToBufferAsync(Notification notification)
         {
             if (!_notificationBuffer.Post(notification))
             {
@@ -533,15 +527,19 @@ namespace Lime.Protocol.Network
             return Task.FromResult<object>(null);
         }
 #else
-        private async Task PostNotificationToBufferAsync(Notification notification)
+        private Task SendNotificationToBufferAsync(Notification notification)
         {
-            if (!await _notificationBuffer.SendAsync(notification, _channelCancellationTokenSource.Token))
-            {
-                throw new InvalidOperationException("Notification buffer limit reached");
-            }
+            return SendEnvelopeToBufferAsync(_notificationBuffer, notification);
         }
 #endif
 
+        private async Task SendEnvelopeToBufferAsync<T>(IAsyncQueue<T> buffer, T envelope) where T : Envelope, new()
+        {
+            if (!await buffer.SendAsync(envelope, _channelCancellationTokenSource.Token))
+            {
+                throw new InvalidOperationException($"{typeof(T).Name} buffer limit reached");
+            }
+        }
         /// <summary>
         /// Fills the buffer with the received envelope.
         /// </summary>
@@ -616,9 +614,9 @@ namespace Lime.Protocol.Network
         /// <returns></returns>
         private async Task<T> ReceiveEnvelopeAsync<T>(IAsyncQueue<T> buffer, CancellationToken cancellationToken) where T : Envelope
         {
-            if (State != SessionState.Established
-                || _consumeTransportTask.IsFaulted
-                || _isConsumeTransportTaskFaulting)
+            if (State != SessionState.Established ||                 
+                _isConsumeTransportTaskFaulting ||
+                _consumeTransportTask.IsFaulted)
             {
                 T envelope;
                 if (buffer.TryTake(out envelope))
@@ -629,11 +627,9 @@ namespace Lime.Protocol.Network
                 if (State != SessionState.Established)
                 {
                     throw new InvalidOperationException($"Cannot receive more envelopes in the '{State}' session state");
+
                 }
-                else
-                {
-                    await _consumeTransportTask;
-                }
+                await _consumeTransportTask;
             }
 
             try

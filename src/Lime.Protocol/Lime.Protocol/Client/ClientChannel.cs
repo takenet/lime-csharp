@@ -64,7 +64,7 @@ namespace Lime.Protocol.Client
             };
 
             await SendSessionAsync(session).ConfigureAwait(false);
-            return await ReceiveSessionAsync(cancellationToken).ConfigureAwait(false);            
+            return await ReceiveSessionAsync(cancellationToken).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -117,7 +117,7 @@ namespace Lime.Protocol.Client
                 throw new InvalidOperationException(string.Format("Cannot receive a authenticating session in the '{0}' state", State));
             }
 
-            return await ReceiveSessionAsync(cancellationToken).ConfigureAwait(false);      
+            return await ReceiveSessionAsync(cancellationToken).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -143,9 +143,9 @@ namespace Lime.Protocol.Client
                 throw new InvalidOperationException(string.Format("Cannot authenticate a session in the '{0}' state", State));
             }
 
-            if (identity == null) throw new ArgumentNullException(nameof(identity));            
+            if (identity == null) throw new ArgumentNullException(nameof(identity));
             if (authentication == null) throw new ArgumentNullException(nameof(authentication));
-            
+
             var session = new Session
             {
                 Id = SessionId,
@@ -175,7 +175,7 @@ namespace Lime.Protocol.Client
         public Task SendReceivedNotificationAsync(Guid messageId, Node to)
         {
             if (to == null) throw new ArgumentNullException(nameof(to));
-                        
+
             var notification = new Notification
             {
                 Id = messageId,
@@ -271,11 +271,12 @@ namespace Lime.Protocol.Client
             {
                 LocalNode = session.To;
                 RemoteNode = session.From;
-            } else if (session.State == SessionState.Finished ||
-                session.State == SessionState.Failed)
+            }
+            else if (session.State == SessionState.Finished || 
+                     session.State == SessionState.Failed)
             {
                 await Transport.CloseAsync(cancellationToken).ConfigureAwait(false);
-            } 
+            }
 
             return session;
         }
@@ -315,7 +316,7 @@ namespace Lime.Protocol.Client
         protected override async Task OnRemoteIdleAsync(CancellationToken cancellationToken)
         {
             await SendFinishingSessionAsync().ConfigureAwait(false);
-            await ReceiveFinishedSessionAsync(cancellationToken).ConfigureAwait(false);            
+            await ReceiveFinishedSessionAsync(cancellationToken).ConfigureAwait(false);
         }
 
         #endregion
