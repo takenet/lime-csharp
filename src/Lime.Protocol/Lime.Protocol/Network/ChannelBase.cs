@@ -1,8 +1,11 @@
 ﻿using System;
+using System.Linq;
 using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Lime.Protocol.Util;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 
 namespace Lime.Protocol.Network
 {
@@ -10,9 +13,7 @@ namespace Lime.Protocol.Network
     /// Base class for the protocol communication channels.
     /// </summary>
     public abstract class ChannelBase : IChannel, IDisposable
-    {
-        #region Fields
-
+    {        
         public const string PING_MEDIA_TYPE = "application/vnd.lime.ping+json";
         public const string PING_URI = "/ping";
 
@@ -22,23 +23,32 @@ namespace Lime.Protocol.Network
         private readonly TimeSpan _sendTimeout;
         private readonly bool _fillEnvelopeRecipients;
         private readonly bool _autoReplyPings;
+
+        // Ping remote task
         private readonly TimeSpan _remotePingInterval;
         private readonly TimeSpan _remoteIdleTimeout;
+
+        // Resend unotified messages task
+        private readonly int _resendMessageTryCount;
+        private readonly TimeSpan _resendMessageInterval;
+        private ConcurrentDictionary<Guid, SentMessage> _sentMessageDictionary;
+
         private readonly IAsyncQueue<Message> _messageBuffer;
         private readonly IAsyncQueue<Command> _commandBuffer;
         private readonly IAsyncQueue<Notification> _notificationBuffer;
         private readonly IAsyncQueue<Session> _sessionBuffer;
         private readonly CancellationTokenSource _channelCancellationTokenSource;
+        private readonly object _syncRoot;
+        private SessionState _state;
 
         private Task _consumeTransportTask;
-        private Task _remotePingTask;
+        private Task _pingRemoteTask;
+        private Task _resendMessagesTask;
+
+        private bool _isConsumeTransportTaskFaulting;
         private bool _isDisposing;
-
+        
         protected DateTimeOffset LastReceivedEnvelope;
-
-        private object _syncRoot = new object();
-
-        #endregion
 
         #region Constructors
 
@@ -52,7 +62,9 @@ namespace Lime.Protocol.Network
         /// <param name="autoReplyPings">Indicates if the channel should reply automatically to ping request commands. In this case, the ping command are not returned by the ReceiveCommandAsync method.</param>
         /// <param name="remotePingInterval">The interval to ping the remote party.</param>
         /// <param name="remoteIdleTimeout">The timeout to close the channel due to inactivity.</param>
-        protected ChannelBase(ITransport transport, TimeSpan sendTimeout, int buffersLimit, bool fillEnvelopeRecipients, bool autoReplyPings, TimeSpan? remotePingInterval, TimeSpan? remoteIdleTimeout)
+        /// <param name="resendMessageTryCount">Indicates the number of attemps to resend messages that were not notified as received by the destination.</param>
+        /// <param name="resendMessageInterval">The interval to resend the messages.</param>
+        protected ChannelBase(ITransport transport, TimeSpan sendTimeout, int buffersLimit, bool fillEnvelopeRecipients, bool autoReplyPings, TimeSpan? remotePingInterval, TimeSpan? remoteIdleTimeout, int resendMessageTryCount, TimeSpan? resendMessageInterval)
         {
             if (transport == null) throw new ArgumentNullException(nameof(transport));
             Transport = transport;
@@ -64,21 +76,17 @@ namespace Lime.Protocol.Network
             _remotePingInterval = remotePingInterval ?? TimeSpan.Zero;
             _remoteIdleTimeout = remoteIdleTimeout ?? TimeSpan.Zero;
 
-            _channelCancellationTokenSource = new CancellationTokenSource();
+            _resendMessageTryCount = resendMessageTryCount;
+            _resendMessageInterval = resendMessageInterval ?? TimeSpan.Zero;
 
+            _channelCancellationTokenSource = new CancellationTokenSource();
+            _syncRoot = new object();
             State = SessionState.New;
 
-#if MONO
-            _messageBuffer = new AsyncQueue<Message>(buffersLimit, buffersLimit);
-            _commandBuffer = new AsyncQueue<Command>(buffersLimit, buffersLimit);
-            _notificationBuffer = new AsyncQueue<Notification>(buffersLimit, buffersLimit);
-            _sessionBuffer = new AsyncQueue<Session>(1, 1);
-#else
             _messageBuffer = new BufferBlockAsyncQueue<Message>(buffersLimit);
             _commandBuffer = new BufferBlockAsyncQueue<Command>(buffersLimit);
             _notificationBuffer = new BufferBlockAsyncQueue<Notification>(buffersLimit);
             _sessionBuffer = new BufferBlockAsyncQueue<Session>(1);
-#endif
         }
 
         ~ChannelBase()
@@ -108,9 +116,7 @@ namespace Lime.Protocol.Network
         /// <summary>
         /// The session Id
         /// </summary>
-        public Guid SessionId { get; protected set; }
-
-        private SessionState _state;
+        public Guid SessionId { get; protected set; }        
 
         /// <summary>
         /// Current session state
@@ -124,23 +130,7 @@ namespace Lime.Protocol.Network
 
                 if (_state == SessionState.Established)
                 {
-                    lock (_syncRoot)
-                    {
-                        if (_consumeTransportTask == null)
-                        {
-                            _consumeTransportTask =
-                                Task.Factory.StartNew((Func<Task>)ConsumeTransportAsync, TaskCreationOptions.LongRunning)
-                                .Unwrap();
-                        }
-
-                        if (_remotePingInterval > TimeSpan.Zero &&
-                            _remotePingTask == null)
-                        {
-                            _remotePingTask =
-                                Task.Factory.StartNew((Func<Task>)PingRemoteAsync)
-                                .Unwrap();
-                        }
-                    }
+                    StartChannelTasks();
                 }
             }
         }
@@ -156,7 +146,7 @@ namespace Lime.Protocol.Network
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">message</exception>
         /// <exception cref="System.InvalidOperationException"></exception>
-        public virtual Task SendMessageAsync(Message message)
+        public virtual async Task SendMessageAsync(Message message)
         {
             if (message == null) throw new ArgumentNullException(nameof(message));
             if (State != SessionState.Established)
@@ -164,7 +154,14 @@ namespace Lime.Protocol.Network
                 throw new InvalidOperationException($"Cannot send a message in the '{State}' session state");
             }
 
-            return SendAsync(message);
+            await SendAsync(message).ConfigureAwait(false);
+
+            if (message.Id != Guid.Empty &&
+                _sentMessageDictionary != null &&
+                _resendMessagesTask?.Status == TaskStatus.Running)
+            {
+                _sentMessageDictionary.TryAdd(message.Id, new SentMessage(message));                
+            }
         }
 
         /// <summary>
@@ -297,7 +294,35 @@ namespace Lime.Protocol.Network
 
         #region Private Methods
 
-        private bool _isConsumeTransportTaskFaulting;
+        private void StartChannelTasks()
+        {
+            lock (_syncRoot)
+            {
+                if (_consumeTransportTask == null)
+                {
+                    _consumeTransportTask =
+                        Task.Factory.StartNew(ConsumeTransportAsync, TaskCreationOptions.LongRunning)
+                        .Unwrap();
+                }
+
+                if (_pingRemoteTask == null &&
+                    _remotePingInterval > TimeSpan.Zero)
+                {
+                    _pingRemoteTask =
+                        Task.Factory.StartNew(PingRemoteAsync)
+                        .Unwrap();
+                }
+
+                if (_resendMessagesTask == null &&
+                    _resendMessageTryCount > 0)
+                {
+                    _resendMessagesTask =
+                        Task.Factory.StartNew(ResendMessagesAsync)
+                        .Unwrap();
+                }
+            }
+        }
+
 
         private async Task ConsumeTransportAsync()
         {
@@ -312,25 +337,7 @@ namespace Lime.Protocol.Network
                         var envelope = await ReceiveAsync(_channelCancellationTokenSource.Token).ConfigureAwait(false);
                         if (envelope == null) continue;
 
-                        if (_autoReplyPings &&
-                            envelope is Command &&
-                            ((Command)envelope).IsPingRequest())
-                        {
-                            var pingCommandResponse = new Command
-                            {
-                                Id = envelope.Id,
-                                To = envelope.From,
-                                Status = CommandStatus.Success,
-                                Method = CommandMethod.Get,
-                                Resource = PingDocument
-                            };
-
-                            await SendCommandAsync(pingCommandResponse).ConfigureAwait(false);
-                        }
-                        else
-                        {
-                            await PostEnvelopeToBufferAsync(envelope);
-                        }
+                        await ConsumeEnvelopeAsync(envelope);
                     }
                     catch (OperationCanceledException ex)
                     {
@@ -409,6 +416,51 @@ namespace Lime.Protocol.Network
             }
         }
 
+
+        private async Task ResendMessagesAsync()
+        {
+            _sentMessageDictionary = new ConcurrentDictionary<Guid, SentMessage>();
+
+            while (IsChannelEstablished())
+            {
+                try
+                {
+                    await Task.Delay(_resendMessageInterval, _channelCancellationTokenSource.Token);
+
+                    var referenceDate = DateTimeOffset.UtcNow - _resendMessageInterval;
+                    var messageIds = _sentMessageDictionary
+                        .Where(s => s.Value.SentDate <= referenceDate)
+                        .Select(s => s.Key)
+                        .ToArray();
+
+                    foreach (var messageId in messageIds)
+                    {
+                        _channelCancellationTokenSource.Token.ThrowIfCancellationRequested();
+
+                        SentMessage sentMessage;
+                        if (_sentMessageDictionary.TryGetValue(messageId, out sentMessage))
+                        {
+                            await SendMessageAsync(sentMessage.Message);
+
+                            if (sentMessage.SentCount > _resendMessageTryCount)
+                            {
+                                _sentMessageDictionary.TryRemove(messageId, out sentMessage);
+                            }
+                            else
+                            {
+                                sentMessage.IncrementSentCount();
+                            }
+                        }                        
+                    }
+                }
+                catch (OperationCanceledException)
+                {
+                    if (!_channelCancellationTokenSource.IsCancellationRequested) throw;
+                    break;
+                }
+            }
+        }
+
         private bool IsChannelEstablished()
         {
             return
@@ -433,33 +485,25 @@ namespace Lime.Protocol.Network
             }
         }
 
-        /// <summary>
-        /// Fills the buffer with the received envelope.
-        /// </summary>
-        /// <param name="envelope"></param>
-        /// <returns></returns>
-        private async Task PostEnvelopeToBufferAsync(Envelope envelope)
+        private async Task ConsumeEnvelopeAsync(Envelope envelope)
         {
-            if (envelope == null)
-            {
-                throw new ArgumentNullException(nameof(envelope), "An empty envelope was received from the transport");
-            }
-
+            if (envelope == null) throw new ArgumentNullException(nameof(envelope));
+            
             if (envelope is Notification)
             {
-                await SendNotificationToBufferAsync((Notification)envelope).ConfigureAwait(false);
+                await ConsumeNotificationAsync((Notification)envelope).ConfigureAwait(false);
             }
             else if (envelope is Message)
             {
-                await SendMessageToBufferAsync((Message)envelope).ConfigureAwait(false);
+                await ConsumeMessageAsync((Message)envelope).ConfigureAwait(false);
             }
             else if (envelope is Command)
             {
-                await SendCommandToBufferAsync((Command)envelope).ConfigureAwait(false);
+                await ConsumeCommandAsync((Command)envelope).ConfigureAwait(false);
             }
             else if (envelope is Session)
             {
-                await PostSessionToBufferAsync((Session)envelope).ConfigureAwait(false);
+                await ConsumeSessionAsync((Session)envelope).ConfigureAwait(false);
             }
             else
             {
@@ -467,85 +511,46 @@ namespace Lime.Protocol.Network
             }
         }
 
-        /// <summary>
-        /// Fills the buffer with the received envelope.
-        /// </summary>
-        /// <param name="message"></param>
-        /// <returns></returns>
-#if MONO
-        private Task SendMessageToBufferAsync(Message message)
+        private Task ConsumeMessageAsync(Message message) => SendEnvelopeToBufferAsync(_messageBuffer, message);
+
+        private async Task ConsumeCommandAsync(Command command)
         {
-            if (!_messageBuffer.Post(message))
+            if (_autoReplyPings &&
+                command.IsPingRequest())
             {
-                throw new InvalidOperationException("Message buffer limit reached");
+                var pingCommandResponse = new Command
+                {
+                    Id = command.Id,
+                    To = command.From,
+                    Status = CommandStatus.Success,
+                    Method = CommandMethod.Get,
+                    Resource = PingDocument
+                };
+
+                await SendCommandAsync(pingCommandResponse).ConfigureAwait(false);
             }
-
-            return Task.FromResult<object>(null);
-        }
-#else
-        private Task SendMessageToBufferAsync(Message message)
-        {
-            return SendEnvelopeToBufferAsync(_messageBuffer, message);
-        }
-#endif
-
-        /// <summary>
-        /// Fills the buffer with the received envelope.
-        /// </summary>
-        /// <param name="command"></param>
-        /// <returns></returns>
-#if MONO
-        private Task SendCommandToBufferAsync(Command command)
-        {
-            if (!_commandBuffer.Post(command))
+            else
             {
-                throw new InvalidOperationException("Command buffer limit reached");
+                await SendEnvelopeToBufferAsync(_commandBuffer, command);
             }
-
-            return Task.FromResult<object>(null);
         }
-#else
-        private Task SendCommandToBufferAsync(Command command)
-        {
-            return SendEnvelopeToBufferAsync(_commandBuffer, command);
-        }
-#endif
 
-        /// <summary>
-        /// Fills the buffer with the received envelope.
-        /// </summary>
-        /// <param name="notification"></param>
-        /// <returns></returns>
-#if MONO
-        private Task SendNotificationToBufferAsync(Notification notification)
+        private Task ConsumeNotificationAsync(Notification notification)
         {
-            if (!_notificationBuffer.Post(notification))
+            if (notification.Event == Event.Received ||
+                notification.Event == Event.Failed)
             {
-                throw new InvalidOperationException("Notification buffer limit reached");
-            }
+                SentMessage sentMessage;
+                if (_sentMessageDictionary != null)
+                {
+                    _sentMessageDictionary.TryRemove(notification.Id, out sentMessage);
+                }
+            }            
 
-            return Task.FromResult<object>(null);
-        }
-#else
-        private Task SendNotificationToBufferAsync(Notification notification)
-        {
             return SendEnvelopeToBufferAsync(_notificationBuffer, notification);
         }
-#endif
 
-        private async Task SendEnvelopeToBufferAsync<T>(IAsyncQueue<T> buffer, T envelope) where T : Envelope, new()
-        {
-            if (!await buffer.SendAsync(envelope, _channelCancellationTokenSource.Token))
-            {
-                throw new InvalidOperationException($"{typeof(T).Name} buffer limit reached");
-            }
-        }
-        /// <summary>
-        /// Fills the buffer with the received envelope.
-        /// </summary>
-        /// <param name="session"></param>
-        /// <returns></returns>
-        private Task PostSessionToBufferAsync(Session session)
+        private Task ConsumeSessionAsync(Session session)
         {
             if (!_sessionBuffer.Post(session))
             {
@@ -553,6 +558,14 @@ namespace Lime.Protocol.Network
             }
 
             return Task.FromResult<object>(null);
+        }
+
+        private async Task SendEnvelopeToBufferAsync<T>(IAsyncQueue<T> buffer, T envelope) where T : Envelope, new()
+        {
+            if (!await buffer.SendAsync(envelope, _channelCancellationTokenSource.Token))
+            {
+                throw new InvalidOperationException($"{typeof(T).Name} buffer limit reached");
+            }
         }
 
         /// <summary>
@@ -744,14 +757,56 @@ namespace Lime.Protocol.Network
                     _consumeTransportTask?.Dispose();
                 }
 
-                if (_remotePingTask?.IsCompleted ?? false)
+                if (_pingRemoteTask?.IsCompleted ?? false)
                 {
-                    _remotePingTask?.Dispose();
+                    _pingRemoteTask?.Dispose();
                 }
             }
         }
 
         #endregion
+
+        private class SentMessage
+        {
+            private Message _message;
+
+            private const string SENT_COUNT_KEY = "#sendCount";
+
+            public SentMessage(Message message)
+                : this(message, DateTimeOffset.UtcNow, 1)
+            {
+
+            }
+
+            private SentMessage(Message message, DateTimeOffset sentDate, int sentCount)
+            {
+                if (message == null) throw new ArgumentNullException(nameof(Message));
+                _message = message;
+                SentDate = sentDate;
+                SentCount = sentCount;
+            }
+
+            public Message Message
+            {
+                get
+                {
+                    if (_message.Metadata == null) _message.Metadata = new Dictionary<string, string>();
+                    _message.Metadata.Remove(SENT_COUNT_KEY);
+                    _message.Metadata.Add(SENT_COUNT_KEY, SentCount.ToString());
+                    return _message;
+                }
+            }
+
+            public DateTimeOffset SentDate { get; private set; }
+
+            public int SentCount { get; private set; }
+
+            public void IncrementSentCount()
+            {
+                SentCount++;
+                SentDate = DateTimeOffset.UtcNow;
+            }
+        }
 
     }
 }
