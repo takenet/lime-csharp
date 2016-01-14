@@ -66,13 +66,13 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Lime.Messaging\Lime.Messaging.Net45\Lime.Messaging.Net45.csproj">
+    <ProjectReference Include="..\Lime.Messaging\Lime.Messaging.Net45\Lime.Messaging.csproj">
       <Project>{796a57b4-1fe0-4fe9-940f-e99083dc233a}</Project>
-      <Name>Lime.Messaging.Net45</Name>
+      <Name>Lime.Messaging</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Lime.Protocol\Lime.Protocol.Net45\Lime.Protocol.Net45.csproj">
+    <ProjectReference Include="..\Lime.Protocol\Lime.Protocol.Net45\Lime.Protocol.csproj">
       <Project>{0cfee3a4-f914-4c45-be13-a344c9cfa134}</Project>
-      <Name>Lime.Protocol.Net45</Name>
+      <Name>Lime.Protocol</Name>
     </ProjectReference>
     <ProjectReference Include="..\Lime.Transport.WebSocket\Lime.Transport.WebSocket.csproj">
       <Project>{a0a1c843-c74c-4204-a19e-2c1e9693bc55}</Project>

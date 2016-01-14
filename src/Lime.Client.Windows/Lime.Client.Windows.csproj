@@ -291,17 +291,17 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Lime.Messaging\Lime.Messaging.Net45\Lime.Messaging.Net45.csproj">
+    <ProjectReference Include="..\Lime.Messaging\Lime.Messaging.Net45\Lime.Messaging.csproj">
       <Project>{796a57b4-1fe0-4fe9-940f-e99083dc233a}</Project>
-      <Name>Lime.Messaging.Net45</Name>
+      <Name>Lime.Messaging</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Lime.Transport.Tcp\Lime.Transport.Tcp.Net45\Lime.Transport.Tcp.Net45.csproj">
+    <ProjectReference Include="..\Lime.Transport.Tcp\Lime.Transport.Tcp.Net45\Lime.Transport.Tcp.csproj">
       <Project>{d24b4ef4-9b8c-4f89-bfc6-f76007936382}</Project>
-      <Name>Lime.Transport.Tcp.Net45</Name>
+      <Name>Lime.Transport.Tcp</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Lime.Protocol\Lime.Protocol.Net45\Lime.Protocol.Net45.csproj">
+    <ProjectReference Include="..\Lime.Protocol\Lime.Protocol.Net45\Lime.Protocol.csproj">
       <Project>{0cfee3a4-f914-4c45-be13-a344c9cfa134}</Project>
-      <Name>Lime.Protocol.Net45</Name>
+      <Name>Lime.Protocol</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
-VisualStudioVersion = 14.0.23107.0
+VisualStudioVersion = 14.0.24720.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lime.Web", "Lime.Web\Lime.Web.csproj", "{7017CC97-1450-4851-A39A-B4A611BC2AA0}"
 EndProject
@@ -29,25 +29,17 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Client", "Client", "{9827B4
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lime.Client.TestConsole", "Lime.Client.TestConsole\Lime.Client.TestConsole.csproj", "{9E13148D-726D-4E42-B924-4A1AF4F0DC3E}"
 EndProject
-Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Lime.Protocol", "Lime.Protocol\Lime.Protocol\Lime.Protocol.shproj", "{D12C1153-A423-40C6-A611-85C659CAEB7B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lime.Protocol", "Lime.Protocol\Lime.Protocol.Net45\Lime.Protocol.csproj", "{0CFEE3A4-F914-4C45-BE13-A344C9CFA134}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lime.Protocol.Net45", "Lime.Protocol\Lime.Protocol.Net45\Lime.Protocol.Net45.csproj", "{0CFEE3A4-F914-4C45-BE13-A344C9CFA134}"
-EndProject
-Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Lime.Transport.Tcp", "Lime.Transport.Tcp\Lime.Transport.Tcp\Lime.Transport.Tcp.shproj", "{968A35EF-0800-4F7E-9C93-F444D80A4DA9}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lime.Transport.Tcp.Net45", "Lime.Transport.Tcp\Lime.Transport.Tcp.Net45\Lime.Transport.Tcp.Net45.csproj", "{D24B4EF4-9B8C-4F89-BFC6-F76007936382}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lime.Transport.Tcp", "Lime.Transport.Tcp\Lime.Transport.Tcp.Net45\Lime.Transport.Tcp.csproj", "{D24B4EF4-9B8C-4F89-BFC6-F76007936382}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Transports", "Transports", "{84538803-A033-47DD-A350-A04E84F6BAE8}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lime.Transport.Http.UnitTests", "Lime.Transport.Http.UnitTests\Lime.Transport.Http.UnitTests.csproj", "{ED45BE37-AD6E-42A2-82C5-13D2B9189868}"
 EndProject
-Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Lime.Transport.Http", "Lime.Transport.Http\Lime.Transport.Http\Lime.Transport.Http.shproj", "{797C3CAB-166E-4821-A7C9-9D2B6D53DDC0}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lime.Transport.Http", "Lime.Transport.Http\Lime.Transport.Http.Net45\Lime.Transport.Http.csproj", "{1095E1BA-C764-46B0-86D1-2290DA9C07AD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lime.Transport.Http.Net45", "Lime.Transport.Http\Lime.Transport.Http.Net45\Lime.Transport.Http.Net45.csproj", "{1095E1BA-C764-46B0-86D1-2290DA9C07AD}"
-EndProject
-Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Lime.Messaging", "Lime.Messaging\Lime.Messaging\Lime.Messaging.shproj", "{C6619A1E-E64C-425F-8560-E9B32E9A2887}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lime.Messaging.Net45", "Lime.Messaging\Lime.Messaging.Net45\Lime.Messaging.Net45.csproj", "{796A57B4-1FE0-4FE9-940F-E99083DC233A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lime.Messaging", "Lime.Messaging\Lime.Messaging.Net45\Lime.Messaging.csproj", "{796A57B4-1FE0-4FE9-940F-E99083DC233A}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Samples", "Samples", "{63966937-1156-4CA9-9667-56960120C911}"
 EndProject
@@ -64,16 +56,6 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lime.Transport.WebSocket.UnitTests", "Lime.Transport.WebSocket.UnitTests\Lime.Transport.WebSocket.UnitTests.csproj", "{FB2EA586-5B55-442D-BD88-67AB219E7325}"
 EndProject
 Global
-	GlobalSection(SharedMSBuildProjectFiles) = preSolution
-		Lime.Messaging\Lime.Messaging\Lime.Messaging.projitems*{796a57b4-1fe0-4fe9-940f-e99083dc233a}*SharedItemsImports = 4
-		Lime.Transport.Tcp\Lime.Transport.Tcp\Lime.Protocol.Tcp.projitems*{d24b4ef4-9b8c-4f89-bfc6-f76007936382}*SharedItemsImports = 4
-		Lime.Messaging\Lime.Messaging\Lime.Messaging.projitems*{c6619a1e-e64c-425f-8560-e9b32e9a2887}*SharedItemsImports = 13
-		Lime.Protocol\Lime.Protocol\Lime.Protocol.projitems*{d12c1153-a423-40c6-a611-85c659caeb7b}*SharedItemsImports = 13
-		Lime.Transport.Http\Lime.Transport.Http\Lime.Protocol.Http.projitems*{797c3cab-166e-4821-a7c9-9d2b6d53ddc0}*SharedItemsImports = 13
-		Lime.Transport.Http\Lime.Transport.Http\Lime.Protocol.Http.projitems*{1095e1ba-c764-46b0-86d1-2290da9c07ad}*SharedItemsImports = 4
-		Lime.Protocol\Lime.Protocol\Lime.Protocol.projitems*{0cfee3a4-f914-4c45-be13-a344c9cfa134}*SharedItemsImports = 4
-		Lime.Transport.Tcp\Lime.Transport.Tcp\Lime.Protocol.Tcp.projitems*{968a35ef-0800-4f7e-9c93-f444d80a4da9}*SharedItemsImports = 13
-	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Ad-Hoc|Any CPU = Ad-Hoc|Any CPU
 		Ad-Hoc|x86 = Ad-Hoc|x86
@@ -301,10 +283,8 @@ Global
 		{690CB13D-5BFC-4D2E-B23C-64BD00B7AF6F} = {84538803-A033-47DD-A350-A04E84F6BAE8}
 		{1847098B-FE9E-4E40-AA69-9E70FAF5D06E} = {9827B4C3-A069-4229-A51A-55E71B94F50C}
 		{9E13148D-726D-4E42-B924-4A1AF4F0DC3E} = {9827B4C3-A069-4229-A51A-55E71B94F50C}
-		{968A35EF-0800-4F7E-9C93-F444D80A4DA9} = {84538803-A033-47DD-A350-A04E84F6BAE8}
 		{D24B4EF4-9B8C-4F89-BFC6-F76007936382} = {84538803-A033-47DD-A350-A04E84F6BAE8}
 		{ED45BE37-AD6E-42A2-82C5-13D2B9189868} = {84538803-A033-47DD-A350-A04E84F6BAE8}
-		{797C3CAB-166E-4821-A7C9-9D2B6D53DDC0} = {84538803-A033-47DD-A350-A04E84F6BAE8}
 		{1095E1BA-C764-46B0-86D1-2290DA9C07AD} = {84538803-A033-47DD-A350-A04E84F6BAE8}
 		{BA768C8A-A119-4185-83F9-ADCDF7593D4C} = {63966937-1156-4CA9-9667-56960120C911}
 		{5EBDDCFE-BA33-44A9-835E-122390030754} = {63966937-1156-4CA9-9667-56960120C911}
