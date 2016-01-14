@@ -25,14 +25,11 @@ namespace Lime.Protocol.Security
             Dispose(false);
         }
 
-
-#if !PCL
         [IgnoreDataMember]
         public SecureString SecureKey { get; private set; }
 
         /// <summary>
-        /// Base64 representation of the 
-        /// identity key
+        /// Base64 representation of the identity key.
         /// </summary>
         [DataMember(Name = KEY_KEY)]
         public string Key
@@ -56,26 +53,8 @@ namespace Lime.Protocol.Security
             }
         }
 
-#else
-
-        [IgnoreDataMember]
-        private string _key;
-
         /// <summary>
-        /// Base64 representation of the 
-        /// identity key
-        /// </summary>
-        [DataMember(Name = KEY_KEY)]
-        public string Key 
-        { 
-            get { return _key; }
-            set { _key = value; }
-        }
-#endif
-
-        /// <summary>
-        /// Set a plain key to a 
-        /// Base64 representation
+        /// Set a plain key to a Base64 representation.
         /// </summary>
         /// <param name="key"></param>
         public void SetToBase64Key(string key)
@@ -84,8 +63,7 @@ namespace Lime.Protocol.Security
         }
 
         /// <summary>
-        /// Gets the plain key decoded 
-        /// from the Base64 representation
+        /// Gets the plain key decoded from the Base64 representation.
         /// </summary>
         /// <returns></returns>
         public string GetFromBase64Key()
@@ -112,9 +90,7 @@ namespace Lime.Protocol.Security
         {
             if (disposing)
             {
-#if !PCL
                 SecureKey?.Dispose();
-#endif
             }
         }
 

@@ -37,7 +37,7 @@ namespace Lime.Protocol
 
                 if (!_absoluteUri.Scheme.Equals(LIME_URI_SCHEME))
                 {
-                    throw new ArgumentException(string.Format("Invalid URI scheme. Expected is '{0}'", LIME_URI_SCHEME));
+                    throw new ArgumentException($"Invalid URI scheme. Expected is '{LIME_URI_SCHEME}'");
                 }
             }
             else if (!Uri.IsWellFormedUriString(uriPath, UriKind.Relative))

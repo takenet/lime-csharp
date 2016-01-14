@@ -1,5 +1,4 @@
-﻿#if !MONO
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
@@ -15,8 +14,6 @@ namespace Lime.Protocol.Util
     /// <typeparam name="T"></typeparam>
     public class BufferBlockAsyncQueue<T> : IAsyncQueue<T>
     {
-        private readonly BufferBlock<T> _bufferBlock;
-
         #region Constructor
 
         public BufferBlockAsyncQueue()
@@ -32,7 +29,7 @@ namespace Lime.Protocol.Util
                 BoundedCapacity = boundedCapacity
             };
 
-            _bufferBlock = new BufferBlock<T>(dataflowBlockOptions);
+            BufferBlock = new BufferBlock<T>(dataflowBlockOptions);
         }
 
         #endregion
@@ -61,10 +58,6 @@ namespace Lime.Protocol.Util
 
         #endregion
 
-        public BufferBlock<T> BufferBlock
-        {
-            get { return _bufferBlock; }
-        }
+        public BufferBlock<T> BufferBlock { get; }
     }
 }
-#endif

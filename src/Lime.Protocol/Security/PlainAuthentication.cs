@@ -26,8 +26,6 @@ namespace Lime.Protocol.Security
             Dispose(false);
         } 
 
-
-#if !PCL
         [IgnoreDataMember]
         public SecureString SecurePassword { get; private set; }
 
@@ -55,24 +53,7 @@ namespace Lime.Protocol.Security
                     SecurePassword = value.ToSecureString();
                 }
             }
-        } 
-
-#else
-
-        [IgnoreDataMember]
-        private string _password;
-
-        /// <summary>
-        /// Base64 representation of the 
-        /// identity password
-        /// </summary>
-        [DataMember(Name = PASSWORD_KEY)]
-        public string Password 
-        { 
-            get { return _password; }
-            set { _password = value; }
-        }
-#endif
+        }     
 
         /// <summary>
         /// Set a plain password to a 
@@ -81,14 +62,7 @@ namespace Lime.Protocol.Security
         /// <param name="password"></param>
         public void SetToBase64Password(string password)
         {
-            if (string.IsNullOrWhiteSpace(password))
-            {
-                Password = password;
-            }
-            else
-            {
-                Password = password.ToBase64();
-            }
+            Password = string.IsNullOrWhiteSpace(password) ? password : password.ToBase64();
         }
 
         /// <summary>
@@ -120,9 +94,7 @@ namespace Lime.Protocol.Security
         {
             if (disposing)
             {
-#if !PCL
                 SecurePassword?.Dispose();
-#endif
             }
         }
 

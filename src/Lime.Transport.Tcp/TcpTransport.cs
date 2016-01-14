@@ -376,14 +376,6 @@ namespace Lime.Transport.Tcp
 
 							if (_serverCertificate != null)
 							{
-#if MONO
-								// Server
-								sslStream = new SslStream(
-									_stream,
-									false,
-									_clientCertificateValidationCallback,
-									null);
-#else
                                 // Server
 								sslStream = new SslStream(
 									_stream,
@@ -391,7 +383,7 @@ namespace Lime.Transport.Tcp
 									_clientCertificateValidationCallback,
 									null,
 									EncryptionPolicy.RequireEncryption);
-#endif
+
 								await sslStream
 									.AuthenticateAsServerAsync(
 										_serverCertificate,

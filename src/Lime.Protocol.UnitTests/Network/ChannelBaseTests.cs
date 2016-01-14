@@ -191,30 +191,6 @@ namespace Lime.Protocol.UnitTests.Network
             Assert.Throws<OperationCanceledException>(async () => await target.ReceiveMessageAsync(cancellationToken));
         }
 
-#if MONO
-        [Test]
-        [Category("ReceiveMessageAsync")]
-        [ExpectedException(typeof(InvalidOperationException))]
-        public async Task ReceiveMessageAsync_LimitedBuffers_ThrowsInvalidOperationException()
-        {
-            int buffersLimit = 1;
-
-            var cancellationToken = Dummy.CreateCancellationToken();
-
-            var content = Dummy.CreateTextContent();
-            var message = Dummy.CreateMessage(content);
-
-            _transport
-                .SetupSequence(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
-                .Returns(Task.FromResult<Envelope>(message))
-                .Returns(Task.FromResult<Envelope>(message));
-
-            var target = GetTarget(SessionState.Established, buffersLimit);
-
-            var receiveMessage = await target.ReceiveMessageAsync(cancellationToken);            
-        }
-#endif
-
         [Test]
         [Category("ReceiveMessageAsync")]
         public async Task ReceiveMessageAsync_NoRecipients_FillsFromTheSession()
@@ -398,34 +374,6 @@ namespace Lime.Protocol.UnitTests.Network
             var actual = await target.ReceiveCommandAsync(cancellationToken);
         }
 
-#if MONO
-        [Test]
-        [Category("ReceiveCommandAsync")]
-        [ExpectedException(typeof(InvalidOperationException))]
-        public void ReceiveCommandAsync_LimitedBuffers_ThrowsInvalidOperationException()
-        {
-            int buffersLimit = 5;
-
-            var resource = Dummy.CreatePing();
-            var command = Dummy.CreateCommand(resource);
-
-            var cancellationToken = Dummy.CreateCancellationToken();
-
-            _transport
-                .SetupSequence(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
-                .Returns(Task.FromResult<Envelope>(command))
-                .Returns(Task.FromResult<Envelope>(command))
-                .Returns(Task.FromResult<Envelope>(command))
-                .Returns(Task.FromResult<Envelope>(command))
-                .Returns(Task.FromResult<Envelope>(command))
-                .Returns(Task.FromResult<Envelope>(command));
-
-            var target = GetTarget(SessionState.Established, buffersLimit);
-            
-            var receiveCommandTask = target.ReceiveCommandAsync(cancellationToken);            
-        }
-#endif
-
         #endregion
 
         #region SendNotificationAsync
@@ -528,34 +476,6 @@ namespace Lime.Protocol.UnitTests.Network
 
             var actual = await target.ReceiveNotificationAsync(cancellationToken);
         }
-
-#if MONO
-        [Test]
-        [Category("ReceiveNotificationAsync")]
-        [ExpectedException(typeof(InvalidOperationException))]
-        public void ReceiveNotificationAsync_LimitedBuffers_ThrowsInvalidOperationException()
-        {
-            int buffersLimit = 5;
-
-            var notification = Dummy.CreateNotification(Event.Received);
-
-            var cancellationToken = Dummy.CreateCancellationToken();
-
-            var tcs = new TaskCompletionSource<Envelope>();
-            _transport
-                .SetupSequence(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
-                .Returns(Task.FromResult<Envelope>(notification))
-                .Returns(Task.FromResult<Envelope>(notification))
-                .Returns(Task.FromResult<Envelope>(notification))
-                .Returns(Task.FromResult<Envelope>(notification))
-                .Returns(Task.FromResult<Envelope>(notification))
-                .Returns(Task.FromResult<Envelope>(notification));
-
-            var target = GetTarget(SessionState.Established, buffersLimit);            
-            var receiveNotificationTask = target.ReceiveNotificationAsync(cancellationToken);
-            
-        }
-#endif
 
         #endregion
 
