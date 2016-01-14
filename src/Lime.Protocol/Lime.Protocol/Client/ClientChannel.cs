@@ -221,7 +221,7 @@ namespace Lime.Protocol.Client
         {
             if (State != SessionState.Established)
             {
-                throw new InvalidOperationException(string.Format("Cannot receive a finished session in the '{0}' state", State));
+                throw new InvalidOperationException($"Cannot receive a finished session in the '{State}' state");
             }
 
             return ReceiveSessionAsync(cancellationToken);

@@ -17,8 +17,8 @@ namespace Lime.Protocol.Network
         public const string PING_MEDIA_TYPE = "application/vnd.lime.ping+json";
         public const string PING_URI = "/ping";
 
-        private readonly static Document PingDocument = new JsonDocument(MediaType.Parse(PING_MEDIA_TYPE));
-        private readonly static TimeSpan OnRemoteIdleTimeout = TimeSpan.FromSeconds(30);
+        private static readonly Document PingDocument = new JsonDocument(MediaType.Parse(PING_MEDIA_TYPE));
+        private static readonly TimeSpan OnRemoteIdleTimeout = TimeSpan.FromSeconds(30);
 
         private readonly TimeSpan _sendTimeout;
         private readonly bool _fillEnvelopeRecipients;
@@ -283,9 +283,9 @@ namespace Lime.Protocol.Network
             }
 
             var result = await ReceiveAsync(cancellationToken).ConfigureAwait(false);
-
             var session = result as Session;
             if (session != null) return session;
+
             await Transport.CloseAsync(_channelCancellationTokenSource.Token).ConfigureAwait(false);
             throw new InvalidOperationException("An unexpected envelope type was received from the transport.");
         }
@@ -626,7 +626,7 @@ namespace Lime.Protocol.Network
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
         private async Task<T> ReceiveEnvelopeAsync<T>(IAsyncQueue<T> buffer, CancellationToken cancellationToken) where T : Envelope
-        {
+        {            
             if (State != SessionState.Established ||                 
                 _isConsumeTransportTaskFaulting ||
                 _consumeTransportTask.IsFaulted)
@@ -807,6 +807,5 @@ namespace Lime.Protocol.Network
                 SentDate = DateTimeOffset.UtcNow;
             }
         }
-
     }
 }
