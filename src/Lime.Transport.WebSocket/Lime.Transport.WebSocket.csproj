@@ -63,14 +63,16 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\Lime.Transport.Tcp\JsonBuffer.cs">
+      <Link>JsonBuffer.cs</Link>
+    </Compile>
     <Compile Include="ClientWebSocketTransport.cs" />
-    <Compile Include="JsonBuffer.cs" />
     <Compile Include="ServerWebSocketTransport.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="WebSocketTransportListener.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Lime.Protocol\Lime.Protocol.Net45\Lime.Protocol.csproj">
+    <ProjectReference Include="..\Lime.Protocol\Lime.Protocol.csproj">
       <Project>{0cfee3a4-f914-4c45-be13-a344c9cfa134}</Project>
       <Name>Lime.Protocol</Name>
     </ProjectReference>
