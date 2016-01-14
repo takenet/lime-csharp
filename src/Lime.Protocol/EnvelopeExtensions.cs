@@ -14,5 +14,15 @@
         {
             return (TEnvelope)envelope.MemberwiseClone();
         }
+
+        /// <summary>
+        /// Gets the sender node of the envelope.
+        /// </summary>
+        /// <param name="envelope">The envelope.</param>
+        /// <returns></returns>
+        public static Node GetSender(this Envelope envelope)
+        {
+            return envelope.Pp ?? envelope.From;
+        }
     }
 }

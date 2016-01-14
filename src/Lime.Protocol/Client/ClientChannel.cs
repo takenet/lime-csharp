@@ -2,6 +2,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using Lime.Protocol.Network;
+using Lime.Protocol.Network.Modules;
 using Lime.Protocol.Security;
 
 namespace Lime.Protocol.Client
@@ -11,11 +12,6 @@ namespace Lime.Protocol.Client
     /// </summary>
     public class ClientChannel : ChannelBase, IClientChannel, IDisposable
     {
-        #region Private fields
-
-        private readonly bool _autoNotifyReceipt;
-
-        #endregion
 
         #region Constructor
 
@@ -24,14 +20,21 @@ namespace Lime.Protocol.Client
         /// </summary>
         /// <param name="transport">The transport to be used by the channel.</param>
         /// <param name="sendTimeout">The channel send timeout.</param>
+        /// <param name="fillEnvelopeRecipients"></param>
         /// <param name="autoReplyPings">Indicates if the channel should reply automatically to ping request commands. In this case, the ping command are not returned by the ReceiveCommandAsync method.</param>
         /// <param name="autoNotifyReceipt">Indicates if the client should automatically send 'received' notifications for messages.</param>
         /// <param name="remotePingInterval">The interval to ping the remote party.</param>
         /// <param name="remoteIdleTimeout">The timeout to close the channel due to inactivity.</param>
+        /// <param name="buffersLimit"></param>
+        /// <param name="resendMessageTryCount"></param>
+        /// <param name="resendMessageInterval"></param>
         public ClientChannel(ITransport transport, TimeSpan sendTimeout, int buffersLimit = 5, bool fillEnvelopeRecipients = false, bool autoReplyPings = true, bool autoNotifyReceipt = false, TimeSpan? remotePingInterval = null, TimeSpan? remoteIdleTimeout = null, int resendMessageTryCount = 0, TimeSpan? resendMessageInterval = null)
             : base(transport, sendTimeout, buffersLimit, fillEnvelopeRecipients, autoReplyPings, remotePingInterval, remoteIdleTimeout, resendMessageTryCount, resendMessageInterval)
         {
-            _autoNotifyReceipt = autoNotifyReceipt;
+            if (autoNotifyReceipt)
+            {
+                MessageModules.Add(new NotifyReceiptChannelModule(this));
+            }
         }
 
         ~ClientChannel()
@@ -55,7 +58,7 @@ namespace Lime.Protocol.Client
         {
             if (State != SessionState.New)
             {
-                throw new InvalidOperationException(string.Format("Cannot start a session in the '{0}' state.", State));
+                throw new InvalidOperationException($"Cannot start a session in the '{State}' state.");
             }
 
             var session = new Session
@@ -83,7 +86,7 @@ namespace Lime.Protocol.Client
         {
             if (State != SessionState.Negotiating)
             {
-                throw new InvalidOperationException(string.Format("Cannot negotiate a session in the '{0}' state", State));
+                throw new InvalidOperationException($"Cannot negotiate a session in the '{State}' state");
             }
 
             var session = new Session
@@ -114,7 +117,7 @@ namespace Lime.Protocol.Client
         {
             if (State != SessionState.Negotiating)
             {
-                throw new InvalidOperationException(string.Format("Cannot receive a authenticating session in the '{0}' state", State));
+                throw new InvalidOperationException($"Cannot receive a authenticating session in the '{State}' state");
             }
 
             return await ReceiveSessionAsync(cancellationToken).ConfigureAwait(false);
@@ -140,7 +143,7 @@ namespace Lime.Protocol.Client
         {
             if (State != SessionState.Authenticating)
             {
-                throw new InvalidOperationException(string.Format("Cannot authenticate a session in the '{0}' state", State));
+                throw new InvalidOperationException($"Cannot authenticate a session in the '{State}' state");
             }
 
             if (identity == null) throw new ArgumentNullException(nameof(identity));
@@ -196,7 +199,7 @@ namespace Lime.Protocol.Client
         {
             if (State != SessionState.Established)
             {
-                throw new InvalidOperationException(string.Format("Cannot finish a session in the '{0}' state", State));
+                throw new InvalidOperationException($"Cannot finish a session in the '{State}' state");
             }
 
             var session = new Session
@@ -230,26 +233,6 @@ namespace Lime.Protocol.Client
         #endregion
 
         #region ChannelBase Members
-
-        /// <summary>
-        /// Receives a message
-        /// from the remote node.
-        /// </summary>
-        /// <param name="cancellationToken">The cancellation token.</param>
-        /// <returns></returns>
-        public override async Task<Message> ReceiveMessageAsync(CancellationToken cancellationToken)
-        {
-            var message = await base.ReceiveMessageAsync(cancellationToken).ConfigureAwait(false);
-
-            if (_autoNotifyReceipt &&
-                message.Id != Guid.Empty &&
-                message.From != null)
-            {
-                await SendReceivedNotificationAsync(message.Id, message.From).ConfigureAwait(false);
-            }
-
-            return message;
-        }
 
         /// <summary>
         /// Receives a session
