@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Lime.Protocol.Util;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using Lime.Protocol.Network.Modules;
 
 namespace Lime.Protocol.Network
 {
@@ -22,7 +23,6 @@ namespace Lime.Protocol.Network
 
         private readonly TimeSpan _sendTimeout;
         private readonly bool _fillEnvelopeRecipients;
-        private readonly bool _autoReplyPings;
 
         // Ping remote task
         private readonly TimeSpan _remotePingInterval;
@@ -71,8 +71,8 @@ namespace Lime.Protocol.Network
             Transport.Closing += Transport_Closing;
 
             _sendTimeout = sendTimeout;
-            _fillEnvelopeRecipients = fillEnvelopeRecipients;
-            _autoReplyPings = autoReplyPings;
+            _fillEnvelopeRecipients = fillEnvelopeRecipients;                        
+
             _remotePingInterval = remotePingInterval ?? TimeSpan.Zero;
             _remoteIdleTimeout = remoteIdleTimeout ?? TimeSpan.Zero;
 
@@ -87,6 +87,15 @@ namespace Lime.Protocol.Network
             _commandBuffer = new BufferBlockAsyncQueue<Command>(buffersLimit);
             _notificationBuffer = new BufferBlockAsyncQueue<Notification>(buffersLimit);
             _sessionBuffer = new BufferBlockAsyncQueue<Session>(1);
+            
+            MessageModules = new List<IChannelModule<Message>>();
+            NotificationModules = new List<IChannelModule<Notification>>();
+            CommandModules = new List<IChannelModule<Command>>();
+
+            if (autoReplyPings)
+            {
+                CommandModules.Add(new ReplyPingChannelModule(this));
+            }
         }
 
         ~ChannelBase()
@@ -134,6 +143,10 @@ namespace Lime.Protocol.Network
                 }
             }
         }
+
+        public ICollection<IChannelModule<Message>> MessageModules { get; }
+        public ICollection<IChannelModule<Notification>> NotificationModules { get; }
+        public ICollection<IChannelModule<Command>> CommandModules { get; }
 
         #endregion
 
@@ -511,29 +524,9 @@ namespace Lime.Protocol.Network
             }
         }
 
-        private Task ConsumeMessageAsync(Message message) => SendEnvelopeToBufferAsync(_messageBuffer, message);
+        private Task ConsumeMessageAsync(Message message) => ConsumeEnvelopeAsync(_messageBuffer, MessageModules, message);
 
-        private async Task ConsumeCommandAsync(Command command)
-        {
-            if (_autoReplyPings &&
-                command.IsPingRequest())
-            {
-                var pingCommandResponse = new Command
-                {
-                    Id = command.Id,
-                    To = command.From,
-                    Status = CommandStatus.Success,
-                    Method = CommandMethod.Get,
-                    Resource = PingDocument
-                };
-
-                await SendCommandAsync(pingCommandResponse).ConfigureAwait(false);
-            }
-            else
-            {
-                await SendEnvelopeToBufferAsync(_commandBuffer, command);
-            }
-        }
+        private Task ConsumeCommandAsync(Command command) => ConsumeEnvelopeAsync(_commandBuffer, CommandModules, command);
 
         private Task ConsumeNotificationAsync(Notification notification)
         {
@@ -547,7 +540,7 @@ namespace Lime.Protocol.Network
                 }
             }            
 
-            return SendEnvelopeToBufferAsync(_notificationBuffer, notification);
+            return ConsumeEnvelopeAsync(_notificationBuffer, NotificationModules, notification);
         }
 
         private Task ConsumeSessionAsync(Session session)
@@ -560,11 +553,20 @@ namespace Lime.Protocol.Network
             return Task.FromResult<object>(null);
         }
 
-        private async Task SendEnvelopeToBufferAsync<T>(IAsyncQueue<T> buffer, T envelope) where T : Envelope, new()
+        private async Task ConsumeEnvelopeAsync<T>(IAsyncQueue<T> buffer, IEnumerable<IChannelModule<T>> modules, T envelope) where T : Envelope, new()
         {
-            if (!await buffer.SendAsync(envelope, _channelCancellationTokenSource.Token))
+            foreach (var module in modules.ToList())
             {
-                throw new InvalidOperationException($"{typeof(T).Name} buffer limit reached");
+                if (envelope == null) break;
+                envelope = await module.OnReceiving(envelope, _channelCancellationTokenSource.Token);                
+            }
+
+            if (envelope != null)
+            {
+                if (!await buffer.SendAsync(envelope, _channelCancellationTokenSource.Token))
+                {
+                    throw new InvalidOperationException($"{typeof (T).Name} buffer limit reached");
+                }
             }
         }
 
@@ -617,15 +619,7 @@ namespace Lime.Protocol.Network
 
             return envelope;
         }
-
-        /// <summary>
-        /// Receives an envelope
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="buffer"></param>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        private async Task<T> ReceiveEnvelopeAsync<T>(IAsyncQueue<T> buffer, CancellationToken cancellationToken) where T : Envelope
+        private async Task<T> ReceiveEnvelopeAsync<T>(IAsyncQueue<T> buffer, CancellationToken cancellationToken) where T : Envelope, new()
         {            
             if (State != SessionState.Established ||                 
                 _isConsumeTransportTaskFaulting ||
@@ -663,7 +657,7 @@ namespace Lime.Protocol.Network
         /// <param name="buffer"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        private async Task<T> ReceiveFromBufferAsync<T>(IAsyncQueue<T> buffer, CancellationToken cancellationToken) where T : Envelope
+        private async Task<T> ReceiveFromBufferAsync<T>(IAsyncQueue<T> buffer, CancellationToken cancellationToken) where T : Envelope, new()
         {
             using (var linkedCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(
                 _channelCancellationTokenSource.Token, cancellationToken))

@@ -68,10 +68,12 @@
     <Compile Include="Message.cs" />
     <Compile Include="Network\ChannelBase.cs" />
     <Compile Include="Network\ChannelExtensions.cs" />
+    <Compile Include="Network\ChannelModuleBase.cs" />
     <Compile Include="Network\DeferralEventArgs.cs" />
     <Compile Include="Network\EnvelopeEventArgs.cs" />
     <Compile Include="Network\ExceptionEventArgs.cs" />
     <Compile Include="Network\IChannel.cs" />
+    <Compile Include="Network\IChannelModule.cs" />
     <Compile Include="Network\ICommandChannel.cs" />
     <Compile Include="Network\IEnvelopeContainer.cs" />
     <Compile Include="Network\IMessageChannel.cs" />
@@ -80,6 +82,7 @@
     <Compile Include="Network\ITraceWriter.cs" />
     <Compile Include="Network\ITransport.cs" />
     <Compile Include="Network\LimeException.cs" />
+    <Compile Include="Network\Modules\ReplyPingChannelModule.cs" />
     <Compile Include="Network\TraceWriter.cs" />
     <Compile Include="Network\TransportBase.cs" />
     <Compile Include="Node.cs" />

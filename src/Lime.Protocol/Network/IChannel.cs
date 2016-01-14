@@ -37,5 +37,19 @@ namespace Lime.Protocol.Network
         /// </summary>
         SessionState State { get; }
 
+        /// <summary>
+        /// Gets the message modules for processing sent and received messages.
+        /// </summary>
+        ICollection<IChannelModule<Message>> MessageModules { get; }
+
+        /// <summary>
+        /// Gets the notification modules for processing sent and received notifications.
+        /// </summary>
+        ICollection<IChannelModule<Notification>> NotificationModules { get; }
+
+        /// <summary>
+        /// Gets the command modules for processing sent and received commands.
+        /// </summary>
+        ICollection<IChannelModule<Command>> CommandModules { get; }
     }
 }
