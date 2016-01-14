@@ -265,33 +265,6 @@ namespace Lime.Protocol.Client
         }
 
         /// <summary>
-        /// Fills the envelope recipients using the session information.
-        /// </summary>
-        /// <param name="envelope"></param>
-        /// <param name="isSending"></param>
-        protected override void FillEnvelope(Envelope envelope, bool isSending)
-        {
-            base.FillEnvelope(envelope, isSending);
-
-            if (isSending &&
-                LocalNode != null)
-            {
-                if (envelope.Pp == null)
-                {
-                    if (envelope.From != null &&
-                        !envelope.From.Equals(LocalNode))
-                    {
-                        envelope.Pp = LocalNode.Copy();
-                    }
-                }
-                else if (string.IsNullOrWhiteSpace(envelope.Pp.Domain))
-                {
-                    envelope.Pp.Domain = LocalNode.Domain;
-                }
-            }
-        }
-
-        /// <summary>
         /// Closes the idle channel with the remote party.
         /// </summary>
         /// <param name="cancellationToken"></param>

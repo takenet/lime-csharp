@@ -22,7 +22,6 @@ namespace Lime.Protocol.Network
         private static readonly TimeSpan OnRemoteIdleTimeout = TimeSpan.FromSeconds(30);
 
         private readonly TimeSpan _sendTimeout;
-        private readonly bool _fillEnvelopeRecipients;
 
         // Ping remote task
         private readonly TimeSpan _remotePingInterval;
@@ -71,7 +70,6 @@ namespace Lime.Protocol.Network
             Transport.Closing += Transport_Closing;
 
             _sendTimeout = sendTimeout;
-            _fillEnvelopeRecipients = fillEnvelopeRecipients;                        
 
             _remotePingInterval = remotePingInterval ?? TimeSpan.Zero;
             _remoteIdleTimeout = remoteIdleTimeout ?? TimeSpan.Zero;
@@ -96,6 +94,14 @@ namespace Lime.Protocol.Network
             {
                 CommandModules.Add(new ReplyPingChannelModule(this));
             }
+
+            if (fillEnvelopeRecipients)
+            {
+                MessageModules.Add(new FillEnvelopeRecipientsChannelModule<Message>(this));
+                NotificationModules.Add(new FillEnvelopeRecipientsChannelModule<Notification>(this));
+                CommandModules.Add(new FillEnvelopeRecipientsChannelModule<Command>(this));
+            }
+
         }
 
         ~ChannelBase()
@@ -167,7 +173,7 @@ namespace Lime.Protocol.Network
                 throw new InvalidOperationException($"Cannot send a message in the '{State}' session state");
             }
 
-            await SendAsync(message).ConfigureAwait(false);
+            await SendAsync(message, MessageModules).ConfigureAwait(false);
 
             if (message.Id != Guid.Empty &&
                 _sentMessageDictionary != null &&
@@ -206,7 +212,7 @@ namespace Lime.Protocol.Network
                 throw new InvalidOperationException($"Cannot send a command in the '{State}' session state");
             }
 
-            return SendAsync(command);
+            return SendAsync(command, CommandModules);
         }
 
         /// <summary>
@@ -239,7 +245,7 @@ namespace Lime.Protocol.Network
                 throw new InvalidOperationException($"Cannot send a notification in the '{State}' session state");
             }
 
-            return SendAsync(notification);
+            return SendAsync(notification, NotificationModules);
         }
 
         /// <summary>
@@ -272,7 +278,7 @@ namespace Lime.Protocol.Network
                 throw new InvalidOperationException($"Cannot send a session in the '{State}' session state");
             }
 
-            return SendAsync(session);
+            return SendAsync(session, null);
         }
 
         /// <summary>
@@ -575,27 +581,34 @@ namespace Lime.Protocol.Network
         /// </summary>
         /// <param name="envelope">The envelope.</param>
         /// <returns></returns>
-        private async Task SendAsync(Envelope envelope)
+        private async Task SendAsync<T>(T envelope, IEnumerable<IChannelModule<T>> modules) where T : Envelope, new()
         {
             if (!Transport.IsConnected)
             {
                 throw new InvalidOperationException("The transport is not connected");
             }
 
-            if (_fillEnvelopeRecipients)
+            if (modules != null)
             {
-                FillEnvelope(envelope, true);
+                foreach (var module in modules.ToList())
+                {
+                    if (envelope == null) break;
+                    envelope = await module.OnSending(envelope, _channelCancellationTokenSource.Token);
+                }
             }
 
-            using (var timeoutCancellationTokenSource = new CancellationTokenSource(_sendTimeout))
+            if (envelope != null)
             {
-                using (var linkedCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(
-                        _channelCancellationTokenSource.Token, timeoutCancellationTokenSource.Token))
+                using (var timeoutCancellationTokenSource = new CancellationTokenSource(_sendTimeout))
                 {
-                    await Transport.SendAsync(
-                        envelope,
-                        linkedCancellationTokenSource.Token)
-                        .ConfigureAwait(false);
+                    using (var linkedCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(
+                        _channelCancellationTokenSource.Token, timeoutCancellationTokenSource.Token))
+                    {
+                        await Transport.SendAsync(
+                            envelope,
+                            linkedCancellationTokenSource.Token)
+                            .ConfigureAwait(false);
+                    }
                 }
             }
         }
@@ -610,12 +623,6 @@ namespace Lime.Protocol.Network
             var envelope = await Transport.ReceiveAsync(cancellationToken);
 
             LastReceivedEnvelope = DateTimeOffset.UtcNow;
-
-            if (envelope != null &&
-                _fillEnvelopeRecipients)
-            {
-                FillEnvelope(envelope, false);
-            }
 
             return envelope;
         }
@@ -670,44 +677,6 @@ namespace Lime.Protocol.Network
 
         #region Protected Methods
 
-        /// <summary>
-        /// Fills the envelope recipients using the session information.
-        /// </summary>
-        /// <param name="envelope"></param>
-        /// <param name="isSending"></param>
-        protected virtual void FillEnvelope(Envelope envelope, bool isSending)
-        {
-            if (!isSending)
-            {
-                // Receiving
-                var from = RemoteNode;
-                var to = LocalNode;
-
-                if (from != null)
-                {
-                    if (envelope.From == null)
-                    {
-                        envelope.From = from.Copy();
-                    }
-                    else if (string.IsNullOrEmpty(envelope.From.Domain))
-                    {
-                        envelope.From.Domain = from.Domain;
-                    }
-                }
-
-                if (to != null)
-                {
-                    if (envelope.To == null)
-                    {
-                        envelope.To = to.Copy();
-                    }
-                    else if (string.IsNullOrEmpty(envelope.To.Domain))
-                    {
-                        envelope.To.Domain = to.Domain;
-                    }
-                }
-            }
-        }
 
         /// <summary>
         /// Handles a remote idle event.
