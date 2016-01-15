@@ -17,11 +17,6 @@ namespace Lime.Protocol.Network
     {
         private readonly TimeSpan _sendTimeout;
 
-        // Resend unotified messages task
-        private readonly int _resendMessageTryCount;
-        private readonly TimeSpan _resendMessageInterval;
-        private ConcurrentDictionary<Guid, SentMessage> _sentMessageDictionary;
-
         private readonly IAsyncQueue<Message> _messageBuffer;
         private readonly IAsyncQueue<Command> _commandBuffer;
         private readonly IAsyncQueue<Notification> _notificationBuffer;
@@ -31,7 +26,6 @@ namespace Lime.Protocol.Network
         private SessionState _state;
 
         private Task _consumeTransportTask;
-        private Task _resendMessagesTask;
 
         private bool _isConsumeTransportTaskFaulting;
         private bool _isDisposing;
@@ -49,7 +43,7 @@ namespace Lime.Protocol.Network
         /// <param name="autoReplyPings">Indicates if the channel should reply automatically to ping request commands. In this case, the ping command are not returned by the ReceiveCommandAsync method.</param>
         /// <param name="remotePingInterval">The interval to ping the remote party.</param>
         /// <param name="remoteIdleTimeout">The timeout to close the channel due to inactivity.</param>
-        /// <param name="resendMessageTryCount">Indicates the number of attemps to resend messages that were not notified as received by the destination.</param>
+        /// <param name="resendMessageTryCount">Indicates the number of attempts to resend messages that were not notified as received by the destination.</param>
         /// <param name="resendMessageInterval">The interval to resend the messages.</param>
         protected ChannelBase(ITransport transport, TimeSpan sendTimeout, int buffersLimit, bool fillEnvelopeRecipients, bool autoReplyPings, TimeSpan? remotePingInterval, TimeSpan? remoteIdleTimeout, int resendMessageTryCount, TimeSpan? resendMessageInterval)
         {
@@ -57,11 +51,7 @@ namespace Lime.Protocol.Network
             Transport = transport;
             Transport.Closing += Transport_Closing;
 
-            _sendTimeout = sendTimeout;
-     
-            _resendMessageTryCount = resendMessageTryCount;
-            _resendMessageInterval = resendMessageInterval ?? TimeSpan.Zero;
-
+            _sendTimeout = sendTimeout;     
             _channelCancellationTokenSource = new CancellationTokenSource();
             _syncRoot = new object();           
             _messageBuffer = new BufferBlockAsyncQueue<Message>(buffersLimit);
@@ -72,6 +62,7 @@ namespace Lime.Protocol.Network
             MessageModules = new List<IChannelModule<Message>>();
             NotificationModules = new List<IChannelModule<Notification>>();
             CommandModules = new List<IChannelModule<Command>>();
+
 
             if (autoReplyPings)
             {
@@ -88,7 +79,11 @@ namespace Lime.Protocol.Network
                 RemotePingChannelModule.Register(this, remotePingInterval.Value, remoteIdleTimeout);               
             }
 
-            State = SessionState.New;
+            if (resendMessageTryCount > 0 &&
+                resendMessageInterval != null)
+            {
+                ResendMessagesChannelModule.Register(this, resendMessageTryCount, resendMessageInterval.Value);
+            }
         }
 
         ~ChannelBase()
@@ -135,9 +130,9 @@ namespace Lime.Protocol.Network
                     StartChannelTasks();
                 }
                 
-                NotifyStateChanged(MessageModules, _state);
-                NotifyStateChanged(NotificationModules, _state);
-                NotifyStateChanged(CommandModules, _state);
+                OnStateChanged(MessageModules, _state);
+                OnStateChanged(NotificationModules, _state);
+                OnStateChanged(CommandModules, _state);
             }
         }
 
@@ -177,12 +172,7 @@ namespace Lime.Protocol.Network
 
             await SendAsync(message, MessageModules).ConfigureAwait(false);
 
-            if (message.Id != Guid.Empty &&
-                _sentMessageDictionary != null &&
-                _resendMessagesTask?.Status == TaskStatus.Running)
-            {
-                _sentMessageDictionary.TryAdd(message.Id, new SentMessage(message));                
-            }
+
         }
 
         /// <summary>
@@ -325,14 +315,6 @@ namespace Lime.Protocol.Network
                         Task.Factory.StartNew(ConsumeTransportAsync, TaskCreationOptions.LongRunning)
                         .Unwrap();
                 }
-
-                if (_resendMessagesTask == null &&
-                    _resendMessageTryCount > 0)
-                {
-                    _resendMessagesTask =
-                        Task.Factory.StartNew(ResendMessagesAsync)
-                        .Unwrap();
-                }
             }
         }
 
@@ -387,49 +369,7 @@ namespace Lime.Protocol.Network
             }
         }
 
-        private async Task ResendMessagesAsync()
-        {
-            _sentMessageDictionary = new ConcurrentDictionary<Guid, SentMessage>();
 
-            while (IsChannelEstablished())
-            {
-                try
-                {
-                    await Task.Delay(_resendMessageInterval, _channelCancellationTokenSource.Token);
-
-                    var referenceDate = DateTimeOffset.UtcNow - _resendMessageInterval;
-                    var messageIds = _sentMessageDictionary
-                        .Where(s => s.Value.SentDate <= referenceDate)
-                        .Select(s => s.Key)
-                        .ToArray();
-
-                    foreach (var messageId in messageIds)
-                    {
-                        _channelCancellationTokenSource.Token.ThrowIfCancellationRequested();
-
-                        SentMessage sentMessage;
-                        if (_sentMessageDictionary.TryGetValue(messageId, out sentMessage))
-                        {
-                            await SendMessageAsync(sentMessage.Message);
-
-                            if (sentMessage.SentCount > _resendMessageTryCount)
-                            {
-                                _sentMessageDictionary.TryRemove(messageId, out sentMessage);
-                            }
-                            else
-                            {
-                                sentMessage.IncrementSentCount();
-                            }
-                        }                        
-                    }
-                }
-                catch (OperationCanceledException)
-                {
-                    if (!_channelCancellationTokenSource.IsCancellationRequested) throw;
-                    break;
-                }
-            }
-        }
 
         private bool IsChannelEstablished()
         {
@@ -485,20 +425,7 @@ namespace Lime.Protocol.Network
 
         private Task ConsumeCommandAsync(Command command) => ConsumeEnvelopeAsync(_commandBuffer, CommandModules, command);
 
-        private Task ConsumeNotificationAsync(Notification notification)
-        {
-            if (notification.Event == Event.Received ||
-                notification.Event == Event.Failed)
-            {
-                if (_sentMessageDictionary != null)
-                {
-                    SentMessage sentMessage;
-                    _sentMessageDictionary.TryRemove(notification.Id, out sentMessage);
-                }
-            }            
-
-            return ConsumeEnvelopeAsync(_notificationBuffer, NotificationModules, notification);
-        }
+        private Task ConsumeNotificationAsync(Notification notification) => ConsumeEnvelopeAsync(_notificationBuffer, NotificationModules, notification);
 
         private Task ConsumeSessionAsync(Session session)
         {
@@ -630,7 +557,7 @@ namespace Lime.Protocol.Network
             }
         }
 
-        private static void NotifyStateChanged<T>(IEnumerable<IChannelModule<T>> modules, SessionState state) where T : Envelope, new()
+        private static void OnStateChanged<T>(IEnumerable<IChannelModule<T>> modules, SessionState state) where T : Envelope, new()
         {
             foreach (var module in modules)
             {
@@ -676,47 +603,5 @@ namespace Lime.Protocol.Network
         }
 
         #endregion
-
-        private class SentMessage
-        {
-            private readonly Message _message;
-
-            private const string SENT_COUNT_KEY = "#sendCount";
-
-            public SentMessage(Message message)
-                : this(message, DateTimeOffset.UtcNow, 1)
-            {
-
-            }
-
-            private SentMessage(Message message, DateTimeOffset sentDate, int sentCount)
-            {
-                if (message == null) throw new ArgumentNullException(nameof(Message));
-                _message = message;
-                SentDate = sentDate;
-                SentCount = sentCount;
-            }
-
-            public Message Message
-            {
-                get
-                {
-                    if (_message.Metadata == null) _message.Metadata = new Dictionary<string, string>();
-                    _message.Metadata.Remove(SENT_COUNT_KEY);
-                    _message.Metadata.Add(SENT_COUNT_KEY, SentCount.ToString());
-                    return _message;
-                }
-            }
-
-            public DateTimeOffset SentDate { get; private set; }
-
-            public int SentCount { get; private set; }
-
-            public void IncrementSentCount()
-            {
-                SentCount++;
-                SentDate = DateTimeOffset.UtcNow;
-            }
-        }
     }
 }

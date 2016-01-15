@@ -9,7 +9,7 @@ using Lime.Protocol.Server;
 
 namespace Lime.Protocol.Network.Modules
 {
-    public sealed class RemotePingChannelModule : IChannelModule<Message>, IChannelModule<Notification>, IChannelModule<Command>
+    public sealed class RemotePingChannelModule : IChannelModule<Message>, IChannelModule<Notification>, IChannelModule<Command>, IDisposable
     {
         public const string PING_URI = "/ping";
         private static readonly TimeSpan OnRemoteIdleTimeout = TimeSpan.FromSeconds(30);
@@ -86,8 +86,6 @@ namespace Lime.Protocol.Network.Modules
 
         public static void Register(IChannel channel, TimeSpan remotePingInterval, TimeSpan? remoteIdleTimeout = null)
         {
-            if (channel == null) throw new ArgumentNullException(nameof(channel));
-
             var remotePingChannelModule = new RemotePingChannelModule(channel, remotePingInterval, remoteIdleTimeout);
             channel.MessageModules.Add(remotePingChannelModule);
             channel.NotificationModules.Add(remotePingChannelModule);
@@ -105,42 +103,43 @@ namespace Lime.Protocol.Network.Modules
             LastReceivedEnvelope = DateTime.UtcNow;
 
             // Awaits for the session establishment
-            while (_channel.State == SessionState.Established && _channel.Transport.IsConnected)
+            while (!_cancellationTokenSource.IsCancellationRequested && 
+                _channel.State == SessionState.Established && 
+                _channel.Transport.IsConnected)
             {
                 try
                 {
                     await Task.Delay(_remotePingInterval, _cancellationTokenSource.Token).ConfigureAwait(false);
-                    if (_channel.State == SessionState.Established && _channel.Transport.IsConnected)
+
+                    if (_channel.State != SessionState.Established || !_channel.Transport.IsConnected) continue;
+
+                    var idleTime = DateTimeOffset.UtcNow - LastReceivedEnvelope;
+                    if (_remoteIdleTimeout > TimeSpan.Zero &&
+                        idleTime >= _remoteIdleTimeout)
                     {
-                        var idleTime = DateTimeOffset.UtcNow - LastReceivedEnvelope;
-
-                        if (_remoteIdleTimeout > TimeSpan.Zero &&
-                            idleTime >= _remoteIdleTimeout)
+                        using (var cts = new CancellationTokenSource(OnRemoteIdleTimeout))
                         {
-                            using (var cts = new CancellationTokenSource(OnRemoteIdleTimeout))
+                            if (_channel is IClientChannel)
                             {
-                                if (_channel is IClientChannel)
-                                {
-                                    await OnClientRemoteIdleAsync((IClientChannel)_channel, cts.Token).ConfigureAwait(false);
+                                await OnClientRemoteIdleAsync((IClientChannel)_channel, cts.Token).ConfigureAwait(false);
 
-                                }
-                                else if (_channel is IServerChannel)
-                                {
-                                    await OnServerRemoteIdleAsync((IServerChannel)_channel, cts.Token).ConfigureAwait(false);
-                                }
+                            }
+                            else if (_channel is IServerChannel)
+                            {
+                                await OnServerRemoteIdleAsync((IServerChannel)_channel, cts.Token).ConfigureAwait(false);
                             }
                         }
-                        else if (idleTime >= _remotePingInterval)
+                    }
+                    else if (idleTime >= _remotePingInterval)
+                    {
+                        // Send a ping command to the remote party
+                        var pingCommandRequest = new Command(Guid.NewGuid())
                         {
-                            // Send a ping command to the remote party
-                            var pingCommandRequest = new Command(Guid.NewGuid())
-                            {
-                                Method = CommandMethod.Get,
-                                Uri = new LimeUri(PING_URI)
-                            };
+                            Method = CommandMethod.Get,
+                            Uri = new LimeUri(PING_URI)
+                        };
 
-                            await _channel.SendCommandAsync(pingCommandRequest).ConfigureAwait(false);
-                        }
+                        await _channel.SendCommandAsync(pingCommandRequest).ConfigureAwait(false);
                     }
                 }
                 catch (OperationCanceledException)
@@ -161,6 +160,12 @@ namespace Lime.Protocol.Network.Modules
         private static Task OnServerRemoteIdleAsync(IServerChannel serverChannel, CancellationToken cancellationToken)
         {
             return serverChannel.SendFinishedSessionAsync();
+        }
+
+        public void Dispose()
+        {
+            _cancellationTokenSource.Dispose();
+            _pingRemoteTask?.Dispose();
         }
     }
 }
