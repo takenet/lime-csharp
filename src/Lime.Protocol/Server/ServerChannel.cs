@@ -319,12 +319,7 @@ namespace Lime.Protocol.Server
             }
 
             return session;
-        }
-
-        protected override Task OnRemoteIdleAsync(CancellationToken cancellationToken)
-        {
-            return SendFinishedSessionAsync();
-        }
+        }  
 
         #endregion
 

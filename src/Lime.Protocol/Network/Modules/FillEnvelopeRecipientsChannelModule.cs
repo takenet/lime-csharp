@@ -8,6 +8,11 @@ using Lime.Protocol.Client;
 
 namespace Lime.Protocol.Network.Modules
 {
+    /// <summary>
+    /// Defines a channel module that fills envelope receipts based on the channel information.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <seealso cref="Lime.Protocol.Network.ChannelModuleBase{T}" />
     public sealed class FillEnvelopeRecipientsChannelModule<T> : ChannelModuleBase<T> where T : Envelope, new()
     {
         private readonly IChannel _channel;

@@ -14,18 +14,8 @@ namespace Lime.Protocol.Network
     /// Base class for the protocol communication channels.
     /// </summary>
     public abstract class ChannelBase : IChannel, IDisposable
-    {        
-        public const string PING_MEDIA_TYPE = "application/vnd.lime.ping+json";
-        public const string PING_URI = "/ping";
-
-        private static readonly Document PingDocument = new JsonDocument(MediaType.Parse(PING_MEDIA_TYPE));
-        private static readonly TimeSpan OnRemoteIdleTimeout = TimeSpan.FromSeconds(30);
-
+    {
         private readonly TimeSpan _sendTimeout;
-
-        // Ping remote task
-        private readonly TimeSpan _remotePingInterval;
-        private readonly TimeSpan _remoteIdleTimeout;
 
         // Resend unotified messages task
         private readonly int _resendMessageTryCount;
@@ -41,13 +31,11 @@ namespace Lime.Protocol.Network
         private SessionState _state;
 
         private Task _consumeTransportTask;
-        private Task _pingRemoteTask;
         private Task _resendMessagesTask;
 
         private bool _isConsumeTransportTaskFaulting;
         private bool _isDisposing;
         
-        protected DateTimeOffset LastReceivedEnvelope;
 
         #region Constructors
 
@@ -70,17 +58,12 @@ namespace Lime.Protocol.Network
             Transport.Closing += Transport_Closing;
 
             _sendTimeout = sendTimeout;
-
-            _remotePingInterval = remotePingInterval ?? TimeSpan.Zero;
-            _remoteIdleTimeout = remoteIdleTimeout ?? TimeSpan.Zero;
-
+     
             _resendMessageTryCount = resendMessageTryCount;
             _resendMessageInterval = resendMessageInterval ?? TimeSpan.Zero;
 
             _channelCancellationTokenSource = new CancellationTokenSource();
-            _syncRoot = new object();
-            State = SessionState.New;
-
+            _syncRoot = new object();           
             _messageBuffer = new BufferBlockAsyncQueue<Message>(buffersLimit);
             _commandBuffer = new BufferBlockAsyncQueue<Command>(buffersLimit);
             _notificationBuffer = new BufferBlockAsyncQueue<Notification>(buffersLimit);
@@ -102,6 +85,15 @@ namespace Lime.Protocol.Network
                 CommandModules.Add(new FillEnvelopeRecipientsChannelModule<Command>(this));
             }
 
+            if (remotePingInterval != null)
+            {
+                var remotePingChannelModule = new RemotePingChannelModule(this, remotePingInterval.Value, remoteIdleTimeout);
+                MessageModules.Add(remotePingChannelModule);
+                NotificationModules.Add(remotePingChannelModule);
+                CommandModules.Add(remotePingChannelModule);
+            }
+
+            State = SessionState.New;
         }
 
         ~ChannelBase()
@@ -147,11 +139,26 @@ namespace Lime.Protocol.Network
                 {
                     StartChannelTasks();
                 }
+                
+                NotifyStateChanged(MessageModules, _state);
+                NotifyStateChanged(NotificationModules, _state);
+                NotifyStateChanged(CommandModules, _state);
             }
         }
 
+        /// <summary>
+        /// Gets the message modules for processing sent and received messages.
+        /// </summary>
         public ICollection<IChannelModule<Message>> MessageModules { get; }
+
+        /// <summary>
+        /// Gets the notification modules for processing sent and received notifications.
+        /// </summary>
         public ICollection<IChannelModule<Notification>> NotificationModules { get; }
+
+        /// <summary>
+        /// Gets the command modules for processing sent and received commands.
+        /// </summary>
         public ICollection<IChannelModule<Command>> CommandModules { get; }
 
         #endregion
@@ -324,14 +331,6 @@ namespace Lime.Protocol.Network
                         .Unwrap();
                 }
 
-                if (_pingRemoteTask == null &&
-                    _remotePingInterval > TimeSpan.Zero)
-                {
-                    _pingRemoteTask =
-                        Task.Factory.StartNew(PingRemoteAsync)
-                        .Unwrap();
-                }
-
                 if (_resendMessagesTask == null &&
                     _resendMessageTryCount > 0)
                 {
@@ -341,7 +340,6 @@ namespace Lime.Protocol.Network
                 }
             }
         }
-
 
         private async Task ConsumeTransportAsync()
         {
@@ -393,48 +391,6 @@ namespace Lime.Protocol.Network
                 }
             }
         }
-
-        private async Task PingRemoteAsync()
-        {
-            LastReceivedEnvelope = DateTime.UtcNow;
-            while (IsChannelEstablished())
-            {
-                try
-                {
-                    await Task.Delay(_remotePingInterval, _channelCancellationTokenSource.Token).ConfigureAwait(false);
-                    if (IsChannelEstablished())
-                    {
-                        var idleTime = DateTimeOffset.UtcNow - LastReceivedEnvelope;
-
-                        if (_remoteIdleTimeout > TimeSpan.Zero &&
-                            idleTime >= _remoteIdleTimeout)
-                        {
-                            using (var cts = new CancellationTokenSource(OnRemoteIdleTimeout))
-                            {
-                                await OnRemoteIdleAsync(cts.Token).ConfigureAwait(false);
-                            }
-                        }
-                        else if (idleTime >= _remotePingInterval)
-                        {
-                            // Send a ping command to the remote party
-                            var pingCommandRequest = new Command(Guid.NewGuid())
-                            {
-                                Method = CommandMethod.Get,
-                                Uri = new LimeUri(PING_URI)
-                            };
-
-                            await SendCommandAsync(pingCommandRequest).ConfigureAwait(false);
-                        }
-                    }
-                }
-                catch (OperationCanceledException)
-                {
-                    if (!_channelCancellationTokenSource.IsCancellationRequested) throw;
-                    break;
-                }
-            }
-        }
-
 
         private async Task ResendMessagesAsync()
         {
@@ -539,9 +495,9 @@ namespace Lime.Protocol.Network
             if (notification.Event == Event.Received ||
                 notification.Event == Event.Failed)
             {
-                SentMessage sentMessage;
                 if (_sentMessageDictionary != null)
                 {
+                    SentMessage sentMessage;
                     _sentMessageDictionary.TryRemove(notification.Id, out sentMessage);
                 }
             }            
@@ -629,9 +585,7 @@ namespace Lime.Protocol.Network
         private async Task<Envelope> ReceiveAsync(CancellationToken cancellationToken)
         {
             var envelope = await Transport.ReceiveAsync(cancellationToken);
-
-            LastReceivedEnvelope = DateTimeOffset.UtcNow;
-
+            
             return envelope;
         }
         private async Task<T> ReceiveEnvelopeAsync<T>(IAsyncQueue<T> buffer, CancellationToken cancellationToken) where T : Envelope, new()
@@ -681,17 +635,13 @@ namespace Lime.Protocol.Network
             }
         }
 
-        #endregion
-
-        #region Protected Methods
-
-
-        /// <summary>
-        /// Handles a remote idle event.
-        /// </summary>
-        /// <param name="cancellationToken">The operation cancellation token.</param>
-        /// <returns></returns>
-        protected abstract Task OnRemoteIdleAsync(CancellationToken cancellationToken);
+        private static void NotifyStateChanged<T>(IEnumerable<IChannelModule<T>> modules, SessionState state) where T : Envelope, new()
+        {
+            foreach (var module in modules)
+            {
+                module.OnStateChanged(state);
+            }
+        }
 
         #endregion
 
@@ -727,11 +677,6 @@ namespace Lime.Protocol.Network
                 {
                     _consumeTransportTask?.Dispose();
                 }
-
-                if (_pingRemoteTask?.IsCompleted ?? false)
-                {
-                    _pingRemoteTask?.Dispose();
-                }
             }
         }
 
@@ -739,7 +684,7 @@ namespace Lime.Protocol.Network
 
         private class SentMessage
         {
-            private Message _message;
+            private readonly Message _message;
 
             private const string SENT_COUNT_KEY = "#sendCount";
 

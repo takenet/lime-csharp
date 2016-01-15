@@ -13,6 +13,12 @@ namespace Lime.Protocol.Network
     public interface IChannelModule<T> where T: Envelope, new()
     {
         /// <summary>
+        /// Called when the session state is changed.
+        /// </summary>
+        /// <param name="state">The state.</param>
+        void OnStateChanged(SessionState state);
+
+        /// <summary>
         /// Called when an envelope is being received by the channel.
         /// </summary>
         /// <param name="envelope">The envelope.</param>

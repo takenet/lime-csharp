@@ -264,17 +264,6 @@ namespace Lime.Protocol.Client
             return session;
         }
 
-        /// <summary>
-        /// Closes the idle channel with the remote party.
-        /// </summary>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        protected override async Task OnRemoteIdleAsync(CancellationToken cancellationToken)
-        {
-            await SendFinishingSessionAsync().ConfigureAwait(false);
-            await ReceiveFinishedSessionAsync(cancellationToken).ConfigureAwait(false);
-        }
-
         #endregion
     }
 }

@@ -908,7 +908,6 @@ namespace Lime.Protocol.UnitTests.Network
             // Assert
             _transport
                 .Verify(t => t.SendAsync(It.Is<Envelope>(e => e is Command && ((Command)e).Method == CommandMethod.Get && ((Command)e).Uri.ToString().Equals("/ping")), It.IsAny<CancellationToken>()), Times.AtMostOnce);
-            ((TestChannel)target).IsRemoteIdle.ShouldBe(true);
         }
 
 
@@ -936,7 +935,6 @@ namespace Lime.Protocol.UnitTests.Network
                 .Verify(t => t.SendAsync(It.Is<Envelope>(e => e is Command && ((Command)e).Method == CommandMethod.Get && ((Command)e).Uri.ToString().Equals("/ping")), It.IsAny<CancellationToken>()), Times.AtLeastOnce);
             _transport
                 .Verify(t => t.SendAsync(It.Is<Envelope>(e => e is Command && ((Command)e).Method == CommandMethod.Get && ((Command)e).Uri.ToString().Equals("/ping")), It.IsAny<CancellationToken>()), Times.AtMost(2));
-            ((TestChannel)target).IsRemoteIdle.ShouldBe(false);
         }
 
         #endregion
@@ -951,14 +949,6 @@ namespace Lime.Protocol.UnitTests.Network
                 RemoteNode = remoteNode;
                 LocalNode = localNode;
                 State = state;
-            }
-
-            public bool IsRemoteIdle { get; private set; }
-
-            protected override Task OnRemoteIdleAsync(CancellationToken cancellationToken)
-            {
-                IsRemoteIdle = true;
-                return TaskUtil.CompletedTask;
             }
         }
 

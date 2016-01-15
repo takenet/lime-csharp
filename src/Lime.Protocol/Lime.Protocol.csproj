@@ -84,6 +84,7 @@
     <Compile Include="Network\LimeException.cs" />
     <Compile Include="Network\Modules\FillEnvelopeRecipientsChannelModule.cs" />
     <Compile Include="Network\Modules\NotifyReceiptChannelModule.cs" />
+    <Compile Include="Network\Modules\RemotePingChannelModule.cs" />
     <Compile Include="Network\Modules\ReplyPingChannelModule.cs" />
     <Compile Include="Network\TraceWriter.cs" />
     <Compile Include="Network\TransportBase.cs" />

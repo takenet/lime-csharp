@@ -5,6 +5,11 @@ namespace Lime.Protocol.Network
 {
     public abstract class ChannelModuleBase<T> : IChannelModule<T> where T : Envelope, new()
     {
+        public virtual void OnStateChanged(SessionState state)
+        {
+            
+        }
+
         public virtual Task<T> OnReceiving(T envelope, CancellationToken cancellationToken)
         {
             return Task.FromResult(envelope);
