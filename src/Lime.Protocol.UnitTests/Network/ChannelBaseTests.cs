@@ -143,6 +143,7 @@ namespace Lime.Protocol.UnitTests.Network
             await target.SendMessageAsync(message);
 
             // Assert
+            moduleMock.Verify(m => m.OnStateChanged(SessionState.Established), Times.Once());
             _transport.Verify(t => t.SendAsync(moduleMessage, It.IsAny<CancellationToken>()), Times.Once());
         }
 
@@ -170,6 +171,7 @@ namespace Lime.Protocol.UnitTests.Network
             await target.SendMessageAsync(message);
 
             // Assert
+            moduleMock.Verify(m => m.OnStateChanged(SessionState.Established), Times.Once());
             _transport.Verify(t => t.SendAsync(message, It.IsAny<CancellationToken>()), Times.Never);
         }
 
