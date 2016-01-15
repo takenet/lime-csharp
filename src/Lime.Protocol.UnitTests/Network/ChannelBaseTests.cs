@@ -125,22 +125,22 @@ namespace Lime.Protocol.UnitTests.Network
         [Test]
         [Category("ReceiveMessageAsync")]
         public async Task ReceiveMessageAsync_EstablishedState_ReadsTransport()
-        {            
+        {
+            // Arrange
             var content = Dummy.CreateTextContent();
             var message = Dummy.CreateMessage(content);
-
             var cancellationToken = Dummy.CreateCancellationToken();
-
             var tcs = new TaskCompletionSource<Envelope>();
-
             _transport
                 .SetupSequence(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
                 .Returns(Task.FromResult<Envelope>(message))
                 .Returns(tcs.Task);
-
             var target = GetTarget(SessionState.Established);
+
+            // Act
             var actual = await target.ReceiveMessageAsync(cancellationToken);
 
+            // Assert
             Assert.AreEqual(message, actual);
             _transport.Verify();
         }
@@ -269,6 +269,72 @@ namespace Lime.Protocol.UnitTests.Network
             _transport.Verify();
         }
 
+        [Test]
+        [Category("ReceiveMessageAsync")]
+        public async Task ReceiveMessageAsync_ModuleReturnsMessage_ReturnsModuleMessage()
+        {
+            // Arrange
+            var content = Dummy.CreateTextContent();
+            var message = Dummy.CreateMessage(content);
+            var moduleMessage = Dummy.CreateMessage(content);
+
+            var cancellationToken = Dummy.CreateCancellationToken();
+            var tcs = new TaskCompletionSource<Envelope>();
+            _transport
+                .SetupSequence(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(Task.FromResult<Envelope>(message))
+                .Returns(tcs.Task);            
+            var target = (TestChannel)GetTarget(SessionState.New);
+            var moduleMock = new Mock<IChannelModule<Message>>();
+            moduleMock
+                .Setup(t => t.OnReceiving(message, It.IsAny<CancellationToken>()))
+                .Returns(moduleMessage.AsCompletedTask());
+            target.MessageModules.Add(moduleMock.Object);
+            target.SetState(SessionState.Established);
+
+            // Act
+            var actual = await target.ReceiveMessageAsync(cancellationToken);
+
+            // Assert
+            Assert.AreEqual(moduleMessage, actual);
+            moduleMock.Verify(m => m.OnReceiving(message, It.IsAny<CancellationToken>()), Times.Once);
+        }
+
+
+        [Test]
+        [Category("ReceiveMessageAsync")]
+        public async Task ReceiveMessageAsync_ModuleReturnsNull_IgnoresMessage()
+        {
+            // Arrange
+            var content = Dummy.CreateTextContent();
+            var message1 = Dummy.CreateMessage(content);
+            var message2 = Dummy.CreateMessage(content);
+            var cancellationToken = Dummy.CreateCancellationToken();
+            var tcs = new TaskCompletionSource<Envelope>();
+            _transport
+                .SetupSequence(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(Task.FromResult<Envelope>(message1))
+                .Returns(Task.FromResult<Envelope>(message2))
+                .Returns(tcs.Task);
+            var target = (TestChannel)GetTarget(SessionState.New);
+            var moduleMock = new Mock<IChannelModule<Message>>();
+            moduleMock
+                .Setup(t => t.OnReceiving(message1, It.IsAny<CancellationToken>()))
+                .Returns(Task.FromResult<Message>(null));
+            moduleMock
+                .Setup(t => t.OnReceiving(message2, It.IsAny<CancellationToken>()))
+                .Returns(Task.FromResult(message2));
+            target.MessageModules.Add(moduleMock.Object);
+            target.SetState(SessionState.Established);
+
+            // Act
+            var actual = await target.ReceiveMessageAsync(cancellationToken);
+
+            // Assert
+            Assert.AreEqual(message2, actual);
+            moduleMock.Verify(m => m.OnReceiving(message1, It.IsAny<CancellationToken>()), Times.Once);
+        }
+
         #endregion
 
         #region SendCommandAsync
@@ -374,10 +440,77 @@ namespace Lime.Protocol.UnitTests.Network
             var actual = await target.ReceiveCommandAsync(cancellationToken);
         }
 
+
+        [Test]
+        [Category("ReceiveCommandAsync")]
+        public async Task ReceiveCommandAsync_ModuleReturnsCommand_ReturnsModuleCommand()
+        {
+            // Arrange
+            var content = Dummy.CreateTextContent();
+            var command = Dummy.CreateCommand(content);
+            var moduleCommand = Dummy.CreateCommand(content);
+
+            var cancellationToken = Dummy.CreateCancellationToken();
+            var tcs = new TaskCompletionSource<Envelope>();
+            _transport
+                .SetupSequence(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(Task.FromResult<Envelope>(command))
+                .Returns(tcs.Task);
+            var target = (TestChannel)GetTarget(SessionState.New);
+            var moduleMock = new Mock<IChannelModule<Command>>();
+            moduleMock
+                .Setup(t => t.OnReceiving(command, It.IsAny<CancellationToken>()))
+                .Returns(moduleCommand.AsCompletedTask());
+            target.CommandModules.Add(moduleMock.Object);
+            target.SetState(SessionState.Established);
+
+            // Act
+            var actual = await target.ReceiveCommandAsync(cancellationToken);
+
+            // Assert
+            Assert.AreEqual(moduleCommand, actual);
+            moduleMock.Verify(m => m.OnReceiving(command, It.IsAny<CancellationToken>()), Times.Once);
+        }
+
+
+        [Test]
+        [Category("ReceiveCommandAsync")]
+        public async Task ReceiveCommandAsync_ModuleReturnsNull_IgnoresCommand()
+        {
+            // Arrange
+            var content = Dummy.CreateTextContent();
+            var command1 = Dummy.CreateCommand(content);
+            var command2 = Dummy.CreateCommand(content);
+            var cancellationToken = Dummy.CreateCancellationToken();
+            var tcs = new TaskCompletionSource<Envelope>();
+            _transport
+                .SetupSequence(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(Task.FromResult<Envelope>(command1))
+                .Returns(Task.FromResult<Envelope>(command2))
+                .Returns(tcs.Task);
+            var target = (TestChannel)GetTarget(SessionState.New);
+            var moduleMock = new Mock<IChannelModule<Command>>();
+            moduleMock
+                .Setup(t => t.OnReceiving(command1, It.IsAny<CancellationToken>()))
+                .Returns(Task.FromResult<Command>(null));
+            moduleMock
+                .Setup(t => t.OnReceiving(command2, It.IsAny<CancellationToken>()))
+                .Returns(Task.FromResult(command2));
+            target.CommandModules.Add(moduleMock.Object);
+            target.SetState(SessionState.Established);
+
+            // Act
+            var actual = await target.ReceiveCommandAsync(cancellationToken);
+
+            // Assert
+            Assert.AreEqual(command2, actual);
+            moduleMock.Verify(m => m.OnReceiving(command1, It.IsAny<CancellationToken>()), Times.Once);
+        }
+
         #endregion
 
         #region SendNotificationAsync
-        
+
         [Test]
         [Category("SendNotificationAsync")]
         public async Task SendNotificationAsync_EstablishedState_CallsTransport()
@@ -475,6 +608,71 @@ namespace Lime.Protocol.UnitTests.Network
                 .Returns(() => Task.FromResult<Envelope>(notification));
 
             var actual = await target.ReceiveNotificationAsync(cancellationToken);
+        }
+
+
+        [Test]
+        [Category("ReceiveNotificationAsync")]
+        public async Task ReceiveNotificationAsync_ModuleReturnsNotification_ReturnsModuleNotification()
+        {
+            // Arrange
+            var notification = Dummy.CreateNotification(Event.Authorized);
+            var moduleNotification = Dummy.CreateNotification(Event.Received);
+
+            var cancellationToken = Dummy.CreateCancellationToken();
+            var tcs = new TaskCompletionSource<Envelope>();
+            _transport
+                .SetupSequence(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(Task.FromResult<Envelope>(notification))
+                .Returns(tcs.Task);
+            var target = (TestChannel)GetTarget(SessionState.New);
+            var moduleMock = new Mock<IChannelModule<Notification>>();
+            moduleMock
+                .Setup(t => t.OnReceiving(notification, It.IsAny<CancellationToken>()))
+                .Returns(moduleNotification.AsCompletedTask());
+            target.NotificationModules.Add(moduleMock.Object);
+            target.SetState(SessionState.Established);
+
+            // Act
+            var actual = await target.ReceiveNotificationAsync(cancellationToken);
+
+            // Assert
+            Assert.AreEqual(moduleNotification, actual);
+            moduleMock.Verify(m => m.OnReceiving(notification, It.IsAny<CancellationToken>()), Times.Once);
+        }
+
+
+        [Test]
+        [Category("ReceiveNotificationAsync")]
+        public async Task ReceiveNotificationAsync_ModuleReturnsNull_IgnoresNotification()
+        {
+            // Arrange
+            var notification1 = Dummy.CreateNotification(Event.Authorized);
+            var notification2 = Dummy.CreateNotification(Event.Received);
+            var cancellationToken = Dummy.CreateCancellationToken();
+            var tcs = new TaskCompletionSource<Envelope>();
+            _transport
+                .SetupSequence(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(Task.FromResult<Envelope>(notification1))
+                .Returns(Task.FromResult<Envelope>(notification2))
+                .Returns(tcs.Task);
+            var target = (TestChannel)GetTarget(SessionState.New);
+            var moduleMock = new Mock<IChannelModule<Notification>>();
+            moduleMock
+                .Setup(t => t.OnReceiving(notification1, It.IsAny<CancellationToken>()))
+                .Returns(Task.FromResult<Notification>(null));
+            moduleMock
+                .Setup(t => t.OnReceiving(notification2, It.IsAny<CancellationToken>()))
+                .Returns(Task.FromResult(notification2));
+            target.NotificationModules.Add(moduleMock.Object);
+            target.SetState(SessionState.Established);
+
+            // Act
+            var actual = await target.ReceiveNotificationAsync(cancellationToken);
+
+            // Assert
+            Assert.AreEqual(notification2, actual);
+            moduleMock.Verify(m => m.OnReceiving(notification1, It.IsAny<CancellationToken>()), Times.Once);
         }
 
         #endregion
@@ -948,6 +1146,11 @@ namespace Lime.Protocol.UnitTests.Network
             {                
                 RemoteNode = remoteNode;
                 LocalNode = localNode;
+                State = state;
+            }
+
+            public void SetState(SessionState state)
+            {
                 State = state;
             }
         }

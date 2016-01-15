@@ -127,7 +127,15 @@ namespace Lime.Protocol.Network
 
                 if (_state == SessionState.Established)
                 {
-                    StartChannelTasks();
+                    lock (_syncRoot)
+                    {
+                        if (_consumeTransportTask == null)
+                        {
+                            _consumeTransportTask =
+                                Task.Factory.StartNew(ConsumeTransportAsync, TaskCreationOptions.LongRunning)
+                                .Unwrap();
+                        }
+                    }
                 }
                 
                 OnStateChanged(MessageModules, _state);
@@ -303,20 +311,7 @@ namespace Lime.Protocol.Network
 
         #endregion
 
-        #region Private Methods
-
-        private void StartChannelTasks()
-        {
-            lock (_syncRoot)
-            {
-                if (_consumeTransportTask == null)
-                {
-                    _consumeTransportTask =
-                        Task.Factory.StartNew(ConsumeTransportAsync, TaskCreationOptions.LongRunning)
-                        .Unwrap();
-                }
-            }
-        }
+        #region Private Methods       
 
         private async Task ConsumeTransportAsync()
         {
