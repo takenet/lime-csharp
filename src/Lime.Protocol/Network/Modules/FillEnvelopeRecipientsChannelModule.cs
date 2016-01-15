@@ -78,4 +78,20 @@ namespace Lime.Protocol.Network.Modules
             return envelope.AsCompletedTask();
         }
     }
+
+    public static class FillEnvelopeRecipientsChannelModule
+    {
+        /// <summary>
+        /// Registers instances of <see cref="FillEnvelopeRecipientsChannelModule"/> for all envelope types into the specified channel.
+        /// </summary>
+        /// <param name="channel">The channel.</param>
+        /// <exception cref="System.ArgumentNullException"></exception>
+        public static void Register(IChannel channel)
+        {
+            if (channel == null) throw new ArgumentNullException(nameof(channel));
+            channel.MessageModules.Add(new FillEnvelopeRecipientsChannelModule<Message>(channel));
+            channel.NotificationModules.Add(new FillEnvelopeRecipientsChannelModule<Notification>(channel));
+            channel.CommandModules.Add(new FillEnvelopeRecipientsChannelModule<Command>(channel));
+        }
+    }
 }

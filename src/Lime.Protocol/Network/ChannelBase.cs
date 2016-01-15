@@ -80,17 +80,12 @@ namespace Lime.Protocol.Network
 
             if (fillEnvelopeRecipients)
             {
-                MessageModules.Add(new FillEnvelopeRecipientsChannelModule<Message>(this));
-                NotificationModules.Add(new FillEnvelopeRecipientsChannelModule<Notification>(this));
-                CommandModules.Add(new FillEnvelopeRecipientsChannelModule<Command>(this));
+                FillEnvelopeRecipientsChannelModule.Register(this);
             }
 
             if (remotePingInterval != null)
             {
-                var remotePingChannelModule = new RemotePingChannelModule(this, remotePingInterval.Value, remoteIdleTimeout);
-                MessageModules.Add(remotePingChannelModule);
-                NotificationModules.Add(remotePingChannelModule);
-                CommandModules.Add(remotePingChannelModule);
+                RemotePingChannelModule.Register(this, remotePingInterval.Value, remoteIdleTimeout);               
             }
 
             State = SessionState.New;

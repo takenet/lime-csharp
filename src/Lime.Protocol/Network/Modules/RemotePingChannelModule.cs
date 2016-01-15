@@ -22,7 +22,7 @@ namespace Lime.Protocol.Network.Modules
        
         private Task _pingRemoteTask;        
 
-        public RemotePingChannelModule(IChannel channel, TimeSpan remotePingInterval, TimeSpan? remoteIdleTimeout = null)
+        private RemotePingChannelModule(IChannel channel, TimeSpan remotePingInterval, TimeSpan? remoteIdleTimeout = null)
         {
             if (channel == null) throw new ArgumentNullException(nameof(channel));
             _channel = channel;
@@ -82,6 +82,16 @@ namespace Lime.Protocol.Network.Modules
         public Task<Command> OnSending(Command envelope, CancellationToken cancellationToken)
         {
             return envelope.AsCompletedTask();
+        }
+
+        public static void Register(IChannel channel, TimeSpan remotePingInterval, TimeSpan? remoteIdleTimeout = null)
+        {
+            if (channel == null) throw new ArgumentNullException(nameof(channel));
+
+            var remotePingChannelModule = new RemotePingChannelModule(channel, remotePingInterval, remoteIdleTimeout);
+            channel.MessageModules.Add(remotePingChannelModule);
+            channel.NotificationModules.Add(remotePingChannelModule);
+            channel.CommandModules.Add(remotePingChannelModule);
         }
 
         private Task<T> ReceiveEnvelope<T>(T envelope) where T : Envelope, new()
