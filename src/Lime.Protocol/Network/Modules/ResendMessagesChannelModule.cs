@@ -22,7 +22,7 @@ namespace Lime.Protocol.Network.Modules
 
         private Task _resendMessagesTask;
 
-        private ResendMessagesChannelModule(IChannel channel, int resendMessageTryCount, TimeSpan resendMessageInterval)
+        internal ResendMessagesChannelModule(IChannel channel, int resendMessageTryCount, TimeSpan resendMessageInterval)
         {
             if (channel == null) throw new ArgumentNullException(nameof(channel));
             if (resendMessageTryCount <= 0) throw new ArgumentOutOfRangeException(nameof(resendMessageTryCount));
