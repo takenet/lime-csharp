@@ -8,6 +8,9 @@ using System.Threading.Tasks;
 
 namespace Lime.Protocol.Network.Modules
 {
+    /// <summary>
+    /// Defines a module that resend messages that
+    /// </summary>
     public sealed class ResendMessagesChannelModule : IChannelModule<Message>, IChannelModule<Notification>, IDisposable
     {
         private readonly IChannel _channel;

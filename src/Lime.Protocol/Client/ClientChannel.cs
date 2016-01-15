@@ -10,7 +10,7 @@ namespace Lime.Protocol.Client
     /// <summary>
     /// Defines the communication channel between a node and a server.
     /// </summary>
-    public class ClientChannel : ChannelBase, IClientChannel, IDisposable
+    public class ClientChannel : ChannelBase, IClientChannel
     {
 
         #region Constructor
