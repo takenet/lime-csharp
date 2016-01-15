@@ -65,18 +65,19 @@ namespace Lime.Protocol.UnitTests.Network
         [Category("SendMessageAsync")]
         public async Task SendMessageAsync_EstablishedState_CallsTransport()
         {
+            // Arrange
             var tcs = new TaskCompletionSource<Envelope>();
             _transport
                 .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
-                .Returns(tcs.Task);
-
-            var target = GetTarget(SessionState.Established);
-
+                .Returns(tcs.Task);            
             var content = Dummy.CreateTextContent();
             var message = Dummy.CreateMessage(content);
+            var target = GetTarget(SessionState.Established);
 
+            // Act
             await target.SendMessageAsync(message);
 
+            // Assert
             _transport.Verify(
                 t => t.SendAsync(It.Is<Message>(
                         e => e.Id == message.Id &&
@@ -116,6 +117,60 @@ namespace Lime.Protocol.UnitTests.Network
             var message = Dummy.CreateMessage(content);
 
             await target.SendMessageAsync(message);
+        }
+
+        [Test]
+        [Category("SendMessageAsync")]
+        public async Task SendMessageAsync_ModuleReturnsMessage_SendsModuleMessage()
+        {
+            // Arrange
+            var content = Dummy.CreateTextContent();
+            var message = Dummy.CreateMessage(content);
+            var moduleMessage = Dummy.CreateMessage(content);
+            var tcs = new TaskCompletionSource<Envelope>();
+            _transport
+                .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(tcs.Task);
+            var target = (TestChannel)GetTarget(SessionState.New);
+            var moduleMock = new Mock<IChannelModule<Message>>();
+            moduleMock
+                .Setup(t => t.OnSending(message, It.IsAny<CancellationToken>()))
+                .Returns(moduleMessage.AsCompletedTask());
+            target.MessageModules.Add(moduleMock.Object);
+            target.SetState(SessionState.Established);
+
+            // Act
+            await target.SendMessageAsync(message);
+
+            // Assert
+            _transport.Verify(t => t.SendAsync(moduleMessage, It.IsAny<CancellationToken>()), Times.Once());
+        }
+
+        [Test]
+        [Category("SendMessageAsync")]
+        public async Task SendMessageAsync_ModuleReturnsNull_DoNotCallTransport()
+        {
+            // Arrange
+            var content = Dummy.CreateTextContent();
+            var message = Dummy.CreateMessage(content);
+            
+            var tcs = new TaskCompletionSource<Envelope>();
+            _transport
+                .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(tcs.Task);
+            var target = (TestChannel)GetTarget(SessionState.New);
+            var moduleMock = new Mock<IChannelModule<Message>>();
+            moduleMock
+                .Setup(t => t.OnSending(message, It.IsAny<CancellationToken>()))
+                .Returns(Task.FromResult<Message>(null));
+            target.MessageModules.Add(moduleMock.Object);
+            target.SetState(SessionState.Established);
+
+            // Act
+            await target.SendMessageAsync(message);
+
+            // Assert
+            _transport.Verify(t => t.SendAsync(message, It.IsAny<CancellationToken>()), Times.Never);
         }
 
         #endregion
@@ -395,6 +450,60 @@ namespace Lime.Protocol.UnitTests.Network
             await target.SendCommandAsync(command);
         }
 
+        [Test]
+        [Category("SendCommandAsync")]
+        public async Task SendCommandAsync_ModuleReturnsCommand_SendsModuleCommand()
+        {
+            // Arrange
+            var content = Dummy.CreateTextContent();
+            var command = Dummy.CreateCommand(content);
+            var moduleCommand = Dummy.CreateCommand(content);
+            var tcs = new TaskCompletionSource<Envelope>();
+            _transport
+                .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(tcs.Task);
+            var target = (TestChannel)GetTarget(SessionState.New);
+            var moduleMock = new Mock<IChannelModule<Command>>();
+            moduleMock
+                .Setup(t => t.OnSending(command, It.IsAny<CancellationToken>()))
+                .Returns(moduleCommand.AsCompletedTask());
+            target.CommandModules.Add(moduleMock.Object);
+            target.SetState(SessionState.Established);
+
+            // Act
+            await target.SendCommandAsync(command);
+
+            // Assert
+            _transport.Verify(t => t.SendAsync(moduleCommand, It.IsAny<CancellationToken>()), Times.Once());
+        }
+
+        [Test]
+        [Category("SendCommandAsync")]
+        public async Task SendCommandAsync_ModuleReturnsNull_DoNotCallTransport()
+        {
+            // Arrange
+            var content = Dummy.CreateTextContent();
+            var command = Dummy.CreateCommand(content);
+
+            var tcs = new TaskCompletionSource<Envelope>();
+            _transport
+                .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(tcs.Task);
+            var target = (TestChannel)GetTarget(SessionState.New);
+            var moduleMock = new Mock<IChannelModule<Command>>();
+            moduleMock
+                .Setup(t => t.OnSending(command, It.IsAny<CancellationToken>()))
+                .Returns(Task.FromResult<Command>(null));
+            target.CommandModules.Add(moduleMock.Object);
+            target.SetState(SessionState.Established);
+
+            // Act
+            await target.SendCommandAsync(command);
+
+            // Assert
+            _transport.Verify(t => t.SendAsync(command, It.IsAny<CancellationToken>()), Times.Never);
+        }
+
         #endregion
 
         #region ReceiveCommandAsync
@@ -563,6 +672,58 @@ namespace Lime.Protocol.UnitTests.Network
             var notification = Dummy.CreateNotification(Event.Received);
 
             await target.SendNotificationAsync(notification);
+        }
+
+        [Test]
+        [Category("SendNotificationAsync")]
+        public async Task SendNotificationAsync_ModuleReturnsNotification_SendsModuleNotification()
+        {
+            // Arrange
+            var notification = Dummy.CreateNotification(Event.Authorized);
+            var moduleNotification = Dummy.CreateNotification(Event.Received);
+            var tcs = new TaskCompletionSource<Envelope>();
+            _transport
+                .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(tcs.Task);
+            var target = (TestChannel)GetTarget(SessionState.New);
+            var moduleMock = new Mock<IChannelModule<Notification>>();
+            moduleMock
+                .Setup(t => t.OnSending(notification, It.IsAny<CancellationToken>()))
+                .Returns(moduleNotification.AsCompletedTask());
+            target.NotificationModules.Add(moduleMock.Object);
+            target.SetState(SessionState.Established);
+
+            // Act
+            await target.SendNotificationAsync(notification);
+
+            // Assert
+            _transport.Verify(t => t.SendAsync(moduleNotification, It.IsAny<CancellationToken>()), Times.Once());
+        }
+
+        [Test]
+        [Category("SendNotificationAsync")]
+        public async Task SendNotificationAsync_ModuleReturnsNull_DoNotCallTransport()
+        {
+            // Arrange
+            var notification = Dummy.CreateNotification(Event.Authorized);
+
+            var tcs = new TaskCompletionSource<Envelope>();
+            _transport
+                .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(tcs.Task);
+            var target = (TestChannel)GetTarget(SessionState.New);
+            var moduleMock = new Mock<IChannelModule<Notification>>();
+            moduleMock
+                .Setup(t => t.OnSending(notification, It.IsAny<CancellationToken>()))
+                .Returns(Task.FromResult<Notification>(null));
+            target.NotificationModules.Add(moduleMock.Object);
+            target.SetState(SessionState.Established);
+
+            // Act
+            await target.SendNotificationAsync(notification);
+
+            // Assert
+            _transport.Verify(t => t.SendAsync(notification, It.IsAny<CancellationToken>()), Times.Never);
         }
 
         #endregion
