@@ -278,7 +278,7 @@ namespace Lime.Protocol.Network
                 throw new InvalidOperationException($"Cannot send a session in the '{State}' session state");
             }
 
-            return SendAsync(session, null);
+            return SendAsync(session);
         }
 
         /// <summary>
@@ -580,35 +580,43 @@ namespace Lime.Protocol.Network
         /// Sends the envelope to the transport.
         /// </summary>
         /// <param name="envelope">The envelope.</param>
+        /// <param name="modules"></param>
         /// <returns></returns>
         private async Task SendAsync<T>(T envelope, IEnumerable<IChannelModule<T>> modules) where T : Envelope, new()
+        {            
+            foreach (var module in modules.ToList())
+            {
+                if (envelope == null) break;
+                envelope = await module.OnSending(envelope, _channelCancellationTokenSource.Token);
+            }            
+
+            if (envelope != null)
+            {
+                await SendAsync(envelope);
+            }
+        }
+
+        /// <summary>
+        /// Sends the envelope to the transport.
+        /// </summary>
+        /// <param name="envelope">The envelope.</param>
+        /// <returns></returns>
+        private async Task SendAsync<T>(T envelope) where T : Envelope, new()
         {
             if (!Transport.IsConnected)
             {
                 throw new InvalidOperationException("The transport is not connected");
             }
 
-            if (modules != null)
+            using (var timeoutCancellationTokenSource = new CancellationTokenSource(_sendTimeout))
             {
-                foreach (var module in modules.ToList())
+                using (var linkedCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(
+                    _channelCancellationTokenSource.Token, timeoutCancellationTokenSource.Token))
                 {
-                    if (envelope == null) break;
-                    envelope = await module.OnSending(envelope, _channelCancellationTokenSource.Token);
-                }
-            }
-
-            if (envelope != null)
-            {
-                using (var timeoutCancellationTokenSource = new CancellationTokenSource(_sendTimeout))
-                {
-                    using (var linkedCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(
-                        _channelCancellationTokenSource.Token, timeoutCancellationTokenSource.Token))
-                    {
-                        await Transport.SendAsync(
-                            envelope,
-                            linkedCancellationTokenSource.Token)
-                            .ConfigureAwait(false);
-                    }
+                    await Transport.SendAsync(
+                        envelope,
+                        linkedCancellationTokenSource.Token)
+                        .ConfigureAwait(false);
                 }
             }
         }
