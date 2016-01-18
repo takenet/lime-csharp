@@ -103,7 +103,7 @@ namespace Lime.Protocol.Serialization.Newtonsoft.Converters
             throw new ArgumentException("Unknown token type");
         }
 
-        public override void WriteJson(global::Newtonsoft.Json.JsonWriter writer, object value, global::Newtonsoft.Json.JsonSerializer serializer)
+        public override void WriteJson(JsonWriter writer, object value, global::Newtonsoft.Json.JsonSerializer serializer)
         {
             var message = (Message)value;
             writer.WriteStartObject();
@@ -128,7 +128,7 @@ namespace Lime.Protocol.Serialization.Newtonsoft.Converters
 
             if (message.Metadata != null)
             {
-                writer.WritePropertyName(Message.METADATA_KEY);
+                writer.WritePropertyName(Envelope.METADATA_KEY);
                 writer.WriteStartObject();
                 foreach (var item in message.Metadata)
                 {

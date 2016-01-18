@@ -79,19 +79,59 @@ namespace Lime.Protocol.Network.Modules
         }
     }
 
-    public static class FillEnvelopeRecipientsChannelModule
+    /// <summary>
+    /// Wrapper class for <see cref="FillEnvelopeRecipientsChannelModule{T}"/> instances.
+    /// </summary>
+    /// <seealso cref="Lime.Protocol.Network.ChannelModuleBase{T}" />
+    public sealed class FillEnvelopeRecipientsChannelModule
     {
+        private FillEnvelopeRecipientsChannelModule(FillEnvelopeRecipientsChannelModule<Message> messageChannelModule, FillEnvelopeRecipientsChannelModule<Notification> notificationChannelModule, FillEnvelopeRecipientsChannelModule<Command> commandChannelModule)
+        {
+            MessageChannelModule = messageChannelModule;
+            NotificationChannelModule = notificationChannelModule;
+            CommandChannelModule = commandChannelModule;
+        }
+
+        public FillEnvelopeRecipientsChannelModule<Message> MessageChannelModule { get; }
+
+        public FillEnvelopeRecipientsChannelModule<Notification> NotificationChannelModule { get; }
+
+        public FillEnvelopeRecipientsChannelModule<Command> CommandChannelModule { get; }
+
+
+        public static implicit operator FillEnvelopeRecipientsChannelModule<Message>(
+            FillEnvelopeRecipientsChannelModule fillEnvelopeRecipientsChannelModule)
+        {
+            return fillEnvelopeRecipientsChannelModule.MessageChannelModule;
+        }
+
+        public static implicit operator FillEnvelopeRecipientsChannelModule<Notification>(
+            FillEnvelopeRecipientsChannelModule fillEnvelopeRecipientsChannelModule)
+        {
+            return fillEnvelopeRecipientsChannelModule.NotificationChannelModule;
+        }
+
+        public static implicit operator FillEnvelopeRecipientsChannelModule<Command>(
+            FillEnvelopeRecipientsChannelModule fillEnvelopeRecipientsChannelModule)
+        {
+            return fillEnvelopeRecipientsChannelModule.CommandChannelModule;
+        }
+
         /// <summary>
-        /// Registers instances of <see cref="FillEnvelopeRecipientsChannelModule"/> for all envelope types into the specified channel.
+        /// Creates a new instance of<see cref= "FillEnvelopeRecipientsChannelModule" /> class and register it for all envelope types into the specified channel.
         /// </summary>
         /// <param name="channel">The channel.</param>
-        /// <exception cref="System.ArgumentNullException"></exception>
-        public static void Register(IChannel channel)
+        public static FillEnvelopeRecipientsChannelModule CreateAndRegister(IChannel channel)
         {
-            if (channel == null) throw new ArgumentNullException(nameof(channel));
-            channel.MessageModules.Add(new FillEnvelopeRecipientsChannelModule<Message>(channel));
-            channel.NotificationModules.Add(new FillEnvelopeRecipientsChannelModule<Notification>(channel));
-            channel.CommandModules.Add(new FillEnvelopeRecipientsChannelModule<Command>(channel));
+            var fillEnvelopeRecipientsChannelModule = new FillEnvelopeRecipientsChannelModule(
+                new FillEnvelopeRecipientsChannelModule<Message>(channel),
+                new FillEnvelopeRecipientsChannelModule<Notification>(channel),
+                new FillEnvelopeRecipientsChannelModule<Command>(channel));
+            channel.MessageModules.Add(fillEnvelopeRecipientsChannelModule.MessageChannelModule);
+            channel.NotificationModules.Add(fillEnvelopeRecipientsChannelModule.NotificationChannelModule);
+            channel.CommandModules.Add(fillEnvelopeRecipientsChannelModule.CommandChannelModule);
+            return fillEnvelopeRecipientsChannelModule;
+
         }
     }
 }

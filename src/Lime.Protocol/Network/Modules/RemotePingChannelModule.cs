@@ -15,24 +15,25 @@ namespace Lime.Protocol.Network.Modules
     public sealed class RemotePingChannelModule : IChannelModule<Message>, IChannelModule<Notification>, IChannelModule<Command>, IDisposable
     {
         public const string PING_URI = "/ping";
-        private static readonly TimeSpan OnRemoteIdleTimeout = TimeSpan.FromSeconds(30);
+        private static readonly TimeSpan DefaultFinishChannelTimeout = TimeSpan.FromSeconds(30);
 
         private readonly IChannel _channel;
         private readonly TimeSpan _remotePingInterval;
         private readonly TimeSpan _remoteIdleTimeout;
+        private readonly TimeSpan _finishChannelTimeout;
         private readonly CancellationTokenSource _cancellationTokenSource;
         private readonly object _syncRoot = new object();
        
         private Task _pingRemoteTask;        
 
-        private RemotePingChannelModule(IChannel channel, TimeSpan remotePingInterval, TimeSpan? remoteIdleTimeout = null)
+        private RemotePingChannelModule(IChannel channel, TimeSpan remotePingInterval, TimeSpan? remoteIdleTimeout = null, TimeSpan? finishChannelTimeout = null)
         {
             if (channel == null) throw new ArgumentNullException(nameof(channel));
             _channel = channel;
             _remotePingInterval = remotePingInterval;
             _remoteIdleTimeout = remoteIdleTimeout ?? TimeSpan.Zero;
+            _finishChannelTimeout = finishChannelTimeout ?? DefaultFinishChannelTimeout;
             _cancellationTokenSource = new CancellationTokenSource();
-
         }
 
         public DateTimeOffset LastReceivedEnvelope { get; private set; }
@@ -87,12 +88,19 @@ namespace Lime.Protocol.Network.Modules
             return envelope.AsCompletedTask();
         }
 
-        public static void Register(IChannel channel, TimeSpan remotePingInterval, TimeSpan? remoteIdleTimeout = null)
+        /// <summary>
+        /// Creates a new instance of <see cref="RemotePingChannelModule"/> class and register it to the specified channel.
+        /// </summary>
+        /// <param name="channel">The channel.</param>
+        /// <param name="remotePingInterval">The remote ping interval.</param>
+        /// <param name="remoteIdleTimeout">The remote idle timeout.</param>
+        public static RemotePingChannelModule CreateAndRegister(IChannel channel, TimeSpan remotePingInterval, TimeSpan? remoteIdleTimeout = null)
         {
             var remotePingChannelModule = new RemotePingChannelModule(channel, remotePingInterval, remoteIdleTimeout);
             channel.MessageModules.Add(remotePingChannelModule);
             channel.NotificationModules.Add(remotePingChannelModule);
             channel.CommandModules.Add(remotePingChannelModule);
+            return remotePingChannelModule;
         }
 
         private Task<T> ReceiveEnvelope<T>(T envelope) where T : Envelope, new()
@@ -105,7 +113,6 @@ namespace Lime.Protocol.Network.Modules
         {
             LastReceivedEnvelope = DateTime.UtcNow;
 
-            // Awaits for the session establishment
             while (!_cancellationTokenSource.IsCancellationRequested && 
                 _channel.State == SessionState.Established && 
                 _channel.Transport.IsConnected)
@@ -120,16 +127,16 @@ namespace Lime.Protocol.Network.Modules
                     if (_remoteIdleTimeout > TimeSpan.Zero &&
                         idleTime >= _remoteIdleTimeout)
                     {
-                        using (var cts = new CancellationTokenSource(OnRemoteIdleTimeout))
+                        using (var cts = new CancellationTokenSource(_finishChannelTimeout))
                         {
                             if (_channel is IClientChannel)
                             {
-                                await OnClientRemoteIdleAsync((IClientChannel)_channel, cts.Token).ConfigureAwait(false);
+                                await FinishAsync((IClientChannel)_channel, cts.Token).ConfigureAwait(false);
 
                             }
                             else if (_channel is IServerChannel)
                             {
-                                await OnServerRemoteIdleAsync((IServerChannel)_channel, cts.Token).ConfigureAwait(false);
+                                await FinishAsync((IServerChannel)_channel, cts.Token).ConfigureAwait(false);
                             }
                         }
                     }
@@ -145,22 +152,21 @@ namespace Lime.Protocol.Network.Modules
                         await _channel.SendCommandAsync(pingCommandRequest).ConfigureAwait(false);
                     }
                 }
-                catch (OperationCanceledException)
+                catch (OperationCanceledException) when (_cancellationTokenSource.IsCancellationRequested)
                 {
-                    if (!_cancellationTokenSource.IsCancellationRequested) throw;
                     break;
                 }
             }
         }
 
-        private static async Task OnClientRemoteIdleAsync(IClientChannel clientChannel, CancellationToken cancellationToken)
+        private static async Task FinishAsync(IClientChannel clientChannel, CancellationToken cancellationToken)
         {
             var receivedFinishedSessionTask = clientChannel.ReceiveFinishedSessionAsync(cancellationToken);
             await clientChannel.SendFinishingSessionAsync().ConfigureAwait(false);
             await receivedFinishedSessionTask.ConfigureAwait(false);
         }
 
-        private static Task OnServerRemoteIdleAsync(IServerChannel serverChannel, CancellationToken cancellationToken)
+        private static Task FinishAsync(IServerChannel serverChannel, CancellationToken cancellationToken)
         {
             return serverChannel.SendFinishedSessionAsync();
         }

@@ -322,7 +322,7 @@ namespace Lime.Protocol.Serialization
         }
 
         /// <summary>
-        /// Register a document type for serialization support.
+        /// CreateAndRegister a document type for serialization support.
         /// </summary>
         /// <typeparam name="TDocument"></typeparam>
         public static void RegisterDocument<TDocument>() 

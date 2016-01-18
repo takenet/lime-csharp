@@ -12,19 +12,19 @@ namespace Lime.Protocol.Serialization.Newtonsoft
         static JsonNetSerializer()
         {
             JsonConvert.DefaultSettings = () => Settings;
-            _serializer = global::Newtonsoft.Json.JsonSerializer.Create(JsonNetSerializer.Settings);
+            _serializer = global::Newtonsoft.Json.JsonSerializer.Create(Settings);
         }
 
-        private static global::Newtonsoft.Json.JsonSerializerSettings _settings;
-        private static global::Newtonsoft.Json.JsonSerializer _serializer;
+        private static JsonSerializerSettings _settings;
+        private static readonly global::Newtonsoft.Json.JsonSerializer _serializer;
 
-        public static global::Newtonsoft.Json.JsonSerializerSettings Settings
+        public static JsonSerializerSettings Settings
         {
             get
             {
                 if (_settings == null)
                 {
-                    _settings = new global::Newtonsoft.Json.JsonSerializerSettings
+                    _settings = new JsonSerializerSettings
                     {
                         NullValueHandling = NullValueHandling.Ignore,
                         ReferenceLoopHandling = ReferenceLoopHandling.Serialize

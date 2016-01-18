@@ -24,7 +24,7 @@ namespace Lime.Protocol.Serialization.Newtonsoft.Converters
             return null;
         }
 
-        public override void WriteJson(global::Newtonsoft.Json.JsonWriter writer, object value, global::Newtonsoft.Json.JsonSerializer serializer)
+        public override void WriteJson(JsonWriter writer, object value, global::Newtonsoft.Json.JsonSerializer serializer)
         {
             throw new NotImplementedException();
         }

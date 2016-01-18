@@ -71,18 +71,18 @@ namespace Lime.Protocol.Network
 
             if (fillEnvelopeRecipients)
             {
-                FillEnvelopeRecipientsChannelModule.Register(this);
+                FillEnvelopeRecipientsChannelModule.CreateAndRegister(this);
             }
 
             if (remotePingInterval != null)
             {
-                RemotePingChannelModule.Register(this, remotePingInterval.Value, remoteIdleTimeout);               
+                RemotePingChannelModule.CreateAndRegister(this, remotePingInterval.Value, remoteIdleTimeout);               
             }
 
             if (resendMessageTryCount > 0 &&
                 resendMessageInterval != null)
             {
-                ResendMessagesChannelModule.Register(this, resendMessageTryCount, resendMessageInterval.Value);
+                ResendMessagesChannelModule.CreateAndRegister(this, resendMessageTryCount, resendMessageInterval.Value);
             }
         }
 

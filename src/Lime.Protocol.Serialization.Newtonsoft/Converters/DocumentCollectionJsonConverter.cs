@@ -63,9 +63,9 @@ namespace Lime.Protocol.Serialization.Newtonsoft.Converters
     {
         internal JsonDocumentCollection(DocumentCollection collection)
         {
-            this.Items = collection.Items;
-            this.ItemType = collection.ItemType;
-            this.Total = collection.Total;
+            Items = collection.Items;
+            ItemType = collection.ItemType;
+            Total = collection.Total;
         }
     }
 }
