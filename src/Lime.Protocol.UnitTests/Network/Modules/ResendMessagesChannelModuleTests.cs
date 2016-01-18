@@ -195,5 +195,44 @@ namespace Lime.Protocol.UnitTests.Network.Modules
             actualNotification.ShouldBe(notification);
             _channel.Verify(c => c.SendMessageAsync(message), Times.Exactly(2));
         }
+
+        [Test]
+        public async Task OnStateChanged_EstablishedToFinished_ShouldNotResend()
+        {
+            // Arrange
+            var message = Dummy.CreateMessage(Dummy.CreateTextContent());
+            message.Id = Guid.NewGuid();
+            var target = GetTarget();
+            target.OnStateChanged(SessionState.Established);
+
+            // Act
+            var actual = await ((IChannelModule<Message>)target).OnSending(message, _cancellationToken);
+            target.OnStateChanged(SessionState.Finished);            
+
+            // Assert
+            actual.ShouldBe(message);
+            _channel.Verify(c => c.SendMessageAsync(message), Times.Never);
+        }
+
+
+        [Test]
+        public async Task OnStateChanged_EstablishedToFinishedAfterSecondResend_ShouldNotResendAgain()
+        {
+            // Arrange
+            var message = Dummy.CreateMessage(Dummy.CreateTextContent());
+            message.Id = Guid.NewGuid();           
+            var target = GetTarget();
+            target.OnStateChanged(SessionState.Established);
+
+            // Act
+            var actual = await ((IChannelModule<Message>)target).OnSending(message, _cancellationToken);
+            await Task.Delay(TimeSpan.FromTicks(_resendMessageIntervalWithSafeMargin.Ticks * 2));
+            target.OnStateChanged(SessionState.Finished);
+            await Task.Delay(_resendMessageIntervalWithSafeMargin);
+
+            // Assert
+            actual.ShouldBe(message);
+            _channel.Verify(c => c.SendMessageAsync(message), Times.Exactly(2));
+        }
     }
 }
