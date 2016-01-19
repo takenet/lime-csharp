@@ -12,7 +12,7 @@ namespace Lime.Protocol.Network.Modules
     /// Defines a channel module that fills envelope receipts based on the channel information.
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    /// <seealso cref="Lime.Protocol.Network.ChannelModuleBase{T}" />
+    /// <seealso cref="ChannelModuleBase{T}" />
     public sealed class FillEnvelopeRecipientsChannelModule<T> : ChannelModuleBase<T> where T : Envelope, new()
     {
         private readonly IChannel _channel;
@@ -82,7 +82,7 @@ namespace Lime.Protocol.Network.Modules
     /// <summary>
     /// Wrapper class for <see cref="FillEnvelopeRecipientsChannelModule{T}"/> instances.
     /// </summary>
-    /// <seealso cref="Lime.Protocol.Network.ChannelModuleBase{T}" />
+    /// <seealso cref="ChannelModuleBase{T}" />
     public sealed class FillEnvelopeRecipientsChannelModule
     {
         private FillEnvelopeRecipientsChannelModule(FillEnvelopeRecipientsChannelModule<Message> messageChannelModule, FillEnvelopeRecipientsChannelModule<Notification> notificationChannelModule, FillEnvelopeRecipientsChannelModule<Command> commandChannelModule)

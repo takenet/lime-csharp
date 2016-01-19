@@ -10,7 +10,7 @@ namespace Lime.Protocol.Network.Modules
     /// <summary>
     /// Defines a channel module that automatically send a <see cref="Event.Received"/> <see cref="Notification"/> for each received message.
     /// </summary>
-    /// <seealso cref="Lime.Protocol.Network.ChannelModuleBase{Lime.Protocol.Message}" />
+    /// <seealso cref="ChannelModuleBase{T}.Protocol.Message}" />
     public sealed class NotifyReceiptChannelModule : ChannelModuleBase<Message>
     {
         private readonly INotificationChannel _notificationChannel;

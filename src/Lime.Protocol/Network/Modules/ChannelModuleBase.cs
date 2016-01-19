@@ -1,7 +1,7 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
 
-namespace Lime.Protocol.Network
+namespace Lime.Protocol.Network.Modules
 {
     public abstract class ChannelModuleBase<T> : IChannelModule<T> where T : Envelope, new()
     {

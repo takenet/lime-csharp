@@ -7,7 +7,7 @@ namespace Lime.Protocol.Network.Modules
     /// <summary>
     /// Defines a channel module that automatically replies to ping request commands.
     /// </summary>
-    /// <seealso cref="Lime.Protocol.Network.ChannelModuleBase{Lime.Protocol.Command}" />
+    /// <seealso cref="ChannelModuleBase{T}.Protocol.Command}" />
     public sealed class ReplyPingChannelModule : ChannelModuleBase<Command>
     {
         public const string PING_MEDIA_TYPE = "application/vnd.lime.ping+json";
