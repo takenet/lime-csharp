@@ -475,12 +475,11 @@ namespace Lime.Protocol.Network
         /// </summary>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns></returns>
-        private async Task<Envelope> ReceiveAsync(CancellationToken cancellationToken)
+        private Task<Envelope> ReceiveAsync(CancellationToken cancellationToken)
         {
-            var envelope = await Transport.ReceiveAsync(cancellationToken);
-            
-            return envelope;
+            return Transport.ReceiveAsync(cancellationToken);                      
         }
+
         private async Task<T> ReceiveEnvelopeAsync<T>(IAsyncQueue<T> buffer, CancellationToken cancellationToken) where T : Envelope, new()
         {            
             if (State != SessionState.Established ||                 
