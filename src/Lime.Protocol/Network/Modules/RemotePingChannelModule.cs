@@ -10,7 +10,7 @@ using Lime.Protocol.Server;
 namespace Lime.Protocol.Network.Modules
 {
     /// <summary>
-    /// Defines a module that pings the remove party after a period of inactivity.
+    /// Defines a module that pings the remote party after a period of inactivity.
     /// </summary>
     public sealed class RemotePingChannelModule : IChannelModule<Message>, IChannelModule<Notification>, IChannelModule<Command>, IDisposable
     {

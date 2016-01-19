@@ -128,6 +128,7 @@ namespace Lime.Protocol.Network.Modules
                         SentMessage sentMessage;
                         if (!_sentMessageDictionary.TryGetValue(messageId, out sentMessage)) continue;
 
+                        // This calls the modules again!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                         await _channel.SendMessageAsync(sentMessage.Message);
                         if (sentMessage.SentCount >= _resendMessageTryCount)
                         {
@@ -193,7 +194,7 @@ namespace Lime.Protocol.Network.Modules
         private class SentMessage
         {
             private readonly Message _message;
-            private const string SENT_COUNT_KEY = "#sendCount";
+            private const string SENT_COUNT_KEY = "#sentCount";
 
             public SentMessage(Message message)
                 : this(message, DateTimeOffset.UtcNow, 1)

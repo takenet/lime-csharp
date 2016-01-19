@@ -59,7 +59,11 @@ namespace Lime.Protocol.UnitTests.Network.Modules
 
         public ResendMessagesChannelModule GetTarget()
         {
-            return ResendMessagesChannelModule.CreateAndRegister(_channel.Object, _resendMessageTryCount, _resendMessageInterval, _filterByDestination);
+            var target = ResendMessagesChannelModule.CreateAndRegister(_channel.Object, _resendMessageTryCount, _resendMessageInterval, _filterByDestination);
+            _channel
+                .Setup(c => c.SendMessageAsync(It.IsAny<Message>())).Returns((Message m) => ((IChannelModule<Message>) target).OnSending(m, _cancellationToken));
+            
+            return target;
         }
 
 
@@ -112,12 +116,12 @@ namespace Lime.Protocol.UnitTests.Network.Modules
             target.OnStateChanged(SessionState.Established);
 
             // Act
-            var actual = await ((IChannelModule<Message>)target).OnSending(message, _cancellationToken);
+            var actualMessage = await ((IChannelModule<Message>)target).OnSending(message, _cancellationToken);
             var actualNotification = await ((IChannelModule<Notification>)target).OnReceiving(notification, _cancellationToken);
             await Task.Delay(_resendMessageIntervalWithSafeMargin);
 
             // Assert
-            actual.ShouldBe(message);
+            actualMessage.ShouldBe(message);
             actualNotification.ShouldBe(notification);
             _channel.Verify(c => c.SendMessageAsync(message), Times.Never);
         }
@@ -136,13 +140,13 @@ namespace Lime.Protocol.UnitTests.Network.Modules
             target.OnStateChanged(SessionState.Established);
 
             // Act
-            var actual = await ((IChannelModule<Message>)target).OnSending(message, _cancellationToken);
+            var actualMessage = await ((IChannelModule<Message>)target).OnSending(message, _cancellationToken);
             await Task.Delay(_resendMessageIntervalWithSafeMargin);
             var actualNotification = await ((IChannelModule<Notification>)target).OnReceiving(notification, _cancellationToken);
             await Task.Delay(_resendMessageIntervalWithSafeMargin);
 
             // Assert
-            actual.ShouldBe(message);
+            actualMessage.ShouldBe(message);
             actualNotification.ShouldBe(notification);
             _channel.Verify(c => c.SendMessageAsync(message), Times.Exactly(1));
         }
@@ -207,7 +211,8 @@ namespace Lime.Protocol.UnitTests.Network.Modules
 
             // Act
             var actual = await ((IChannelModule<Message>)target).OnSending(message, _cancellationToken);
-            target.OnStateChanged(SessionState.Finished);            
+            target.OnStateChanged(SessionState.Finished);
+            await Task.Delay(_resendMessageIntervalWithSafeMargin);
 
             // Assert
             actual.ShouldBe(message);
@@ -228,6 +233,46 @@ namespace Lime.Protocol.UnitTests.Network.Modules
             var actual = await ((IChannelModule<Message>)target).OnSending(message, _cancellationToken);
             await Task.Delay(TimeSpan.FromTicks(_resendMessageIntervalWithSafeMargin.Ticks * 2));
             target.OnStateChanged(SessionState.Finished);
+            await Task.Delay(_resendMessageIntervalWithSafeMargin);
+
+            // Assert
+            actual.ShouldBe(message);
+            _channel.Verify(c => c.SendMessageAsync(message), Times.Exactly(2));
+        }
+
+        [Test]
+        public async Task OnStateChanged_EstablishedToFailed_ShouldNotResend()
+        {
+            // Arrange
+            var message = Dummy.CreateMessage(Dummy.CreateTextContent());
+            message.Id = Guid.NewGuid();
+            var target = GetTarget();
+            target.OnStateChanged(SessionState.Established);
+
+            // Act
+            var actual = await ((IChannelModule<Message>)target).OnSending(message, _cancellationToken);
+            target.OnStateChanged(SessionState.Failed);
+            await Task.Delay(_resendMessageIntervalWithSafeMargin);
+
+            // Assert
+            actual.ShouldBe(message);
+            _channel.Verify(c => c.SendMessageAsync(message), Times.Never);
+        }
+
+
+        [Test]
+        public async Task OnStateChanged_EstablishedToFailedAfterSecondResend_ShouldNotResendAgain()
+        {
+            // Arrange
+            var message = Dummy.CreateMessage(Dummy.CreateTextContent());
+            message.Id = Guid.NewGuid();
+            var target = GetTarget();
+            target.OnStateChanged(SessionState.Established);
+
+            // Act
+            var actual = await ((IChannelModule<Message>)target).OnSending(message, _cancellationToken);
+            await Task.Delay(TimeSpan.FromTicks(_resendMessageIntervalWithSafeMargin.Ticks * 2));
+            target.OnStateChanged(SessionState.Failed);
             await Task.Delay(_resendMessageIntervalWithSafeMargin);
 
             // Assert
