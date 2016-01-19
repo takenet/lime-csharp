@@ -170,18 +170,8 @@ namespace Lime.Protocol.Network
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">message</exception>
         /// <exception cref="System.InvalidOperationException"></exception>
-        public virtual async Task SendMessageAsync(Message message)
-        {
-            if (message == null) throw new ArgumentNullException(nameof(message));
-            if (State != SessionState.Established)
-            {
-                throw new InvalidOperationException($"Cannot send a message in the '{State}' session state");
-            }
-
-            await SendAsync(message, MessageModules).ConfigureAwait(false);
-
-
-        }
+        public virtual Task SendMessageAsync(Message message) => SendAsync(message, MessageModules);
+        
 
         /// <summary>
         /// Receives a message from the remote node.
@@ -189,9 +179,8 @@ namespace Lime.Protocol.Network
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns></returns>
         public virtual Task<Message> ReceiveMessageAsync(CancellationToken cancellationToken)
-        {
-            return ReceiveEnvelopeAsync(_messageBuffer, cancellationToken);
-        }
+            => ReceiveEnvelopeAsync(_messageBuffer, cancellationToken);
+
 
         #endregion
 
@@ -204,16 +193,8 @@ namespace Lime.Protocol.Network
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">message</exception>
         /// <exception cref="System.InvalidOperationException"></exception>
-        public virtual Task SendCommandAsync(Command command)
-        {
-            if (command == null) throw new ArgumentNullException(nameof(command));
-            if (State != SessionState.Established)
-            {
-                throw new InvalidOperationException($"Cannot send a command in the '{State}' session state");
-            }
+        public virtual Task SendCommandAsync(Command command) => SendAsync(command, CommandModules);
 
-            return SendAsync(command, CommandModules);
-        }
 
         /// <summary>
         /// Receives a command from the remote node.
@@ -222,9 +203,7 @@ namespace Lime.Protocol.Network
         /// <returns></returns>
         /// <exception cref="System.NotImplementedException"></exception>
         public virtual Task<Command> ReceiveCommandAsync(CancellationToken cancellationToken)
-        {
-            return ReceiveEnvelopeAsync(_commandBuffer, cancellationToken);
-        }
+            => ReceiveEnvelopeAsync(_commandBuffer, cancellationToken);
 
         #endregion
 
@@ -237,16 +216,8 @@ namespace Lime.Protocol.Network
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">notification</exception>
         /// <exception cref="System.InvalidOperationException"></exception>
-        public virtual Task SendNotificationAsync(Notification notification)
-        {
-            if (notification == null) throw new ArgumentNullException(nameof(notification));
-            if (State != SessionState.Established)
-            {
-                throw new InvalidOperationException($"Cannot send a notification in the '{State}' session state");
-            }
-
-            return SendAsync(notification, NotificationModules);
-        }
+        public virtual Task SendNotificationAsync(Notification notification) 
+            => SendAsync(notification, NotificationModules);
 
         /// <summary>
         /// Receives a notification from the remote node.
@@ -254,10 +225,9 @@ namespace Lime.Protocol.Network
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns></returns>
         /// <exception cref="System.NotImplementedException"></exception>
-        public virtual Task<Notification> ReceiveNotificationAsync(CancellationToken cancellationToken)
-        {
-            return ReceiveEnvelopeAsync(_notificationBuffer, cancellationToken);
-        }
+        public virtual Task<Notification> ReceiveNotificationAsync(CancellationToken cancellationToken) 
+            => ReceiveEnvelopeAsync(_notificationBuffer, cancellationToken);
+
 
         #endregion
 
@@ -456,7 +426,13 @@ namespace Lime.Protocol.Network
         /// <param name="modules"></param>
         /// <returns></returns>
         private async Task SendAsync<T>(T envelope, IEnumerable<IChannelModule<T>> modules) where T : Envelope, new()
-        {            
+        {
+            if (envelope == null) throw new ArgumentNullException(nameof(envelope));
+            if (State != SessionState.Established)
+            {
+                throw new InvalidOperationException($"Cannot send a {typeof(T).Name} in the '{State}' session state");
+            }
+
             foreach (var module in modules.ToList())
             {
                 if (envelope == null) break;
