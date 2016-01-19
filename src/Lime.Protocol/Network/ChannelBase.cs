@@ -407,7 +407,7 @@ namespace Lime.Protocol.Network
             foreach (var module in modules.ToList())
             {
                 if (envelope == null) break;
-                envelope = await module.OnReceiving(envelope, _channelCancellationTokenSource.Token);                
+                envelope = await module.OnReceivingAsync(envelope, _channelCancellationTokenSource.Token);                
             }
 
             if (envelope != null)
@@ -436,7 +436,7 @@ namespace Lime.Protocol.Network
             foreach (var module in modules.ToList())
             {
                 if (envelope == null) break;
-                envelope = await module.OnSending(envelope, _channelCancellationTokenSource.Token);
+                envelope = await module.OnSendingAsync(envelope, _channelCancellationTokenSource.Token);
             }            
 
             if (envelope != null)

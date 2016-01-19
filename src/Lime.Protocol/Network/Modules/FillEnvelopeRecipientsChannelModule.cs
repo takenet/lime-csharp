@@ -23,7 +23,7 @@ namespace Lime.Protocol.Network.Modules
             _channel = channel;
         }
 
-        public override Task<T> OnSending(T envelope, CancellationToken cancellationToken)
+        public override Task<T> OnSendingAsync(T envelope, CancellationToken cancellationToken)
         {
             if (_channel is ClientChannel &&
                 _channel.LocalNode != null)
@@ -46,7 +46,7 @@ namespace Lime.Protocol.Network.Modules
         }
 
 
-        public override Task<T> OnReceiving(T envelope, CancellationToken cancellationToken)
+        public override Task<T> OnReceivingAsync(T envelope, CancellationToken cancellationToken)
         {
             var from = _channel.RemoteNode;
             var to = _channel.LocalNode;

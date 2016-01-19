@@ -10,12 +10,12 @@ namespace Lime.Protocol.Network.Modules
             
         }
 
-        public virtual Task<T> OnReceiving(T envelope, CancellationToken cancellationToken)
+        public virtual Task<T> OnReceivingAsync(T envelope, CancellationToken cancellationToken)
         {
             return Task.FromResult(envelope);
         }
 
-        public virtual Task<T> OnSending(T envelope, CancellationToken cancellationToken)
+        public virtual Task<T> OnSendingAsync(T envelope, CancellationToken cancellationToken)
         {
             return Task.FromResult(envelope);
         }

@@ -134,7 +134,7 @@ namespace Lime.Protocol.UnitTests.Network
             var target = (TestChannel)GetTarget(SessionState.New);
             var moduleMock = new Mock<IChannelModule<Message>>();
             moduleMock
-                .Setup(t => t.OnSending(message, It.IsAny<CancellationToken>()))
+                .Setup(t => t.OnSendingAsync(message, It.IsAny<CancellationToken>()))
                 .Returns(moduleMessage.AsCompletedTask());
             target.MessageModules.Add(moduleMock.Object);
             target.SetState(SessionState.Established);
@@ -162,7 +162,7 @@ namespace Lime.Protocol.UnitTests.Network
             var target = (TestChannel)GetTarget(SessionState.New);
             var moduleMock = new Mock<IChannelModule<Message>>();
             moduleMock
-                .Setup(t => t.OnSending(message, It.IsAny<CancellationToken>()))
+                .Setup(t => t.OnSendingAsync(message, It.IsAny<CancellationToken>()))
                 .Returns(Task.FromResult<Message>(null));
             target.MessageModules.Add(moduleMock.Object);
             target.SetState(SessionState.Established);
@@ -194,7 +194,7 @@ namespace Lime.Protocol.UnitTests.Network
             {
                 var moduleMock = new Mock<IChannelModule<Message>>();
                 moduleMock
-                    .Setup(t => t.OnSending(message, It.IsAny<CancellationToken>()))
+                    .Setup(t => t.OnSendingAsync(message, It.IsAny<CancellationToken>()))
                     .Returns(message.AsCompletedTask());
                 target.MessageModules.Add(moduleMock.Object);
                 modulesMockList.Add(moduleMock);
@@ -209,7 +209,7 @@ namespace Lime.Protocol.UnitTests.Network
             _transport.Verify(t => t.SendAsync(message, It.IsAny<CancellationToken>()), Times.Once());
             foreach (var mock in modulesMockList)
             {
-                mock.Verify(m => m.OnSending(message, It.IsAny<CancellationToken>()), Times.Once());
+                mock.Verify(m => m.OnSendingAsync(message, It.IsAny<CancellationToken>()), Times.Once());
             }
         }
 
@@ -382,7 +382,7 @@ namespace Lime.Protocol.UnitTests.Network
             var target = (TestChannel)GetTarget(SessionState.New);
             var moduleMock = new Mock<IChannelModule<Message>>();
             moduleMock
-                .Setup(t => t.OnReceiving(message, It.IsAny<CancellationToken>()))
+                .Setup(t => t.OnReceivingAsync(message, It.IsAny<CancellationToken>()))
                 .Returns(moduleMessage.AsCompletedTask());
             target.MessageModules.Add(moduleMock.Object);
             target.SetState(SessionState.Established);
@@ -392,7 +392,7 @@ namespace Lime.Protocol.UnitTests.Network
 
             // Assert
             Assert.AreEqual(moduleMessage, actual);
-            moduleMock.Verify(m => m.OnReceiving(message, It.IsAny<CancellationToken>()), Times.Once);
+            moduleMock.Verify(m => m.OnReceivingAsync(message, It.IsAny<CancellationToken>()), Times.Once);
         }
 
 
@@ -414,10 +414,10 @@ namespace Lime.Protocol.UnitTests.Network
             var target = (TestChannel)GetTarget(SessionState.New);
             var moduleMock = new Mock<IChannelModule<Message>>();
             moduleMock
-                .Setup(t => t.OnReceiving(message1, It.IsAny<CancellationToken>()))
+                .Setup(t => t.OnReceivingAsync(message1, It.IsAny<CancellationToken>()))
                 .Returns(Task.FromResult<Message>(null));
             moduleMock
-                .Setup(t => t.OnReceiving(message2, It.IsAny<CancellationToken>()))
+                .Setup(t => t.OnReceivingAsync(message2, It.IsAny<CancellationToken>()))
                 .Returns(Task.FromResult(message2));
             target.MessageModules.Add(moduleMock.Object);
             target.SetState(SessionState.Established);
@@ -427,7 +427,7 @@ namespace Lime.Protocol.UnitTests.Network
 
             // Assert
             Assert.AreEqual(message2, actual);
-            moduleMock.Verify(m => m.OnReceiving(message1, It.IsAny<CancellationToken>()), Times.Once);
+            moduleMock.Verify(m => m.OnReceivingAsync(message1, It.IsAny<CancellationToken>()), Times.Once);
         }
 
         [Test]
@@ -452,7 +452,7 @@ namespace Lime.Protocol.UnitTests.Network
             {
                 var moduleMock = new Mock<IChannelModule<Message>>();
                 moduleMock
-                    .Setup(t => t.OnReceiving(message, It.IsAny<CancellationToken>()))
+                    .Setup(t => t.OnReceivingAsync(message, It.IsAny<CancellationToken>()))
                     .Returns(message.AsCompletedTask());
                 target.MessageModules.Add(moduleMock.Object);
                 modulesMockList.Add(moduleMock);
@@ -466,7 +466,7 @@ namespace Lime.Protocol.UnitTests.Network
             Assert.AreEqual(message, actual);
             foreach (var mock in modulesMockList)
             {
-                mock.Verify(m => m.OnReceiving(message, It.IsAny<CancellationToken>()), Times.Once());
+                mock.Verify(m => m.OnReceivingAsync(message, It.IsAny<CancellationToken>()), Times.Once());
             }
         }
 
@@ -545,7 +545,7 @@ namespace Lime.Protocol.UnitTests.Network
             var target = (TestChannel)GetTarget(SessionState.New);
             var moduleMock = new Mock<IChannelModule<Command>>();
             moduleMock
-                .Setup(t => t.OnSending(command, It.IsAny<CancellationToken>()))
+                .Setup(t => t.OnSendingAsync(command, It.IsAny<CancellationToken>()))
                 .Returns(moduleCommand.AsCompletedTask());
             target.CommandModules.Add(moduleMock.Object);
             target.SetState(SessionState.Established);
@@ -554,7 +554,7 @@ namespace Lime.Protocol.UnitTests.Network
             await target.SendCommandAsync(command);
 
             // Assert
-            moduleMock.Verify(m => m.OnSending(command, It.IsAny<CancellationToken>()), Times.Once());
+            moduleMock.Verify(m => m.OnSendingAsync(command, It.IsAny<CancellationToken>()), Times.Once());
             _transport.Verify(t => t.SendAsync(moduleCommand, It.IsAny<CancellationToken>()), Times.Once());            
         }
 
@@ -573,7 +573,7 @@ namespace Lime.Protocol.UnitTests.Network
             var target = (TestChannel)GetTarget(SessionState.New);
             var moduleMock = new Mock<IChannelModule<Command>>();
             moduleMock
-                .Setup(t => t.OnSending(command, It.IsAny<CancellationToken>()))
+                .Setup(t => t.OnSendingAsync(command, It.IsAny<CancellationToken>()))
                 .Returns(Task.FromResult<Command>(null));
             target.CommandModules.Add(moduleMock.Object);
             target.SetState(SessionState.Established);
@@ -604,7 +604,7 @@ namespace Lime.Protocol.UnitTests.Network
             {
                 var moduleMock = new Mock<IChannelModule<Command>>();
                 moduleMock
-                    .Setup(t => t.OnSending(command, It.IsAny<CancellationToken>()))
+                    .Setup(t => t.OnSendingAsync(command, It.IsAny<CancellationToken>()))
                     .Returns(command.AsCompletedTask());
                 target.CommandModules.Add(moduleMock.Object);
                 modulesMockList.Add(moduleMock);
@@ -619,7 +619,7 @@ namespace Lime.Protocol.UnitTests.Network
             _transport.Verify(t => t.SendAsync(command, It.IsAny<CancellationToken>()), Times.Once());
             foreach (var mock in modulesMockList)
             {
-                mock.Verify(m => m.OnSending(command, It.IsAny<CancellationToken>()), Times.Once());
+                mock.Verify(m => m.OnSendingAsync(command, It.IsAny<CancellationToken>()), Times.Once());
             }
         }
 
@@ -687,7 +687,7 @@ namespace Lime.Protocol.UnitTests.Network
             var target = (TestChannel)GetTarget(SessionState.New);
             var moduleMock = new Mock<IChannelModule<Command>>();
             moduleMock
-                .Setup(t => t.OnReceiving(command, It.IsAny<CancellationToken>()))
+                .Setup(t => t.OnReceivingAsync(command, It.IsAny<CancellationToken>()))
                 .Returns(moduleCommand.AsCompletedTask());
             target.CommandModules.Add(moduleMock.Object);
             target.SetState(SessionState.Established);
@@ -697,7 +697,7 @@ namespace Lime.Protocol.UnitTests.Network
 
             // Assert
             Assert.AreEqual(moduleCommand, actual);
-            moduleMock.Verify(m => m.OnReceiving(command, It.IsAny<CancellationToken>()), Times.Once);
+            moduleMock.Verify(m => m.OnReceivingAsync(command, It.IsAny<CancellationToken>()), Times.Once);
         }
 
 
@@ -719,10 +719,10 @@ namespace Lime.Protocol.UnitTests.Network
             var target = (TestChannel)GetTarget(SessionState.New);
             var moduleMock = new Mock<IChannelModule<Command>>();
             moduleMock
-                .Setup(t => t.OnReceiving(command1, It.IsAny<CancellationToken>()))
+                .Setup(t => t.OnReceivingAsync(command1, It.IsAny<CancellationToken>()))
                 .Returns(Task.FromResult<Command>(null));
             moduleMock
-                .Setup(t => t.OnReceiving(command2, It.IsAny<CancellationToken>()))
+                .Setup(t => t.OnReceivingAsync(command2, It.IsAny<CancellationToken>()))
                 .Returns(Task.FromResult(command2));
             target.CommandModules.Add(moduleMock.Object);
             target.SetState(SessionState.Established);
@@ -732,7 +732,7 @@ namespace Lime.Protocol.UnitTests.Network
 
             // Assert
             Assert.AreEqual(command2, actual);
-            moduleMock.Verify(m => m.OnReceiving(command1, It.IsAny<CancellationToken>()), Times.Once);
+            moduleMock.Verify(m => m.OnReceivingAsync(command1, It.IsAny<CancellationToken>()), Times.Once);
         }
 
         [Test]
@@ -757,7 +757,7 @@ namespace Lime.Protocol.UnitTests.Network
             {
                 var moduleMock = new Mock<IChannelModule<Command>>();
                 moduleMock
-                    .Setup(t => t.OnReceiving(command, It.IsAny<CancellationToken>()))
+                    .Setup(t => t.OnReceivingAsync(command, It.IsAny<CancellationToken>()))
                     .Returns(command.AsCompletedTask());
                 target.CommandModules.Add(moduleMock.Object);
                 modulesMockList.Add(moduleMock);
@@ -771,7 +771,7 @@ namespace Lime.Protocol.UnitTests.Network
             Assert.AreEqual(command, actual);
             foreach (var mock in modulesMockList)
             {
-                mock.Verify(m => m.OnReceiving(command, It.IsAny<CancellationToken>()), Times.Once());
+                mock.Verify(m => m.OnReceivingAsync(command, It.IsAny<CancellationToken>()), Times.Once());
             }            
         }
 
@@ -847,7 +847,7 @@ namespace Lime.Protocol.UnitTests.Network
             var target = (TestChannel)GetTarget(SessionState.New);
             var moduleMock = new Mock<IChannelModule<Notification>>();
             moduleMock
-                .Setup(t => t.OnSending(notification, It.IsAny<CancellationToken>()))
+                .Setup(t => t.OnSendingAsync(notification, It.IsAny<CancellationToken>()))
                 .Returns(moduleNotification.AsCompletedTask());
             target.NotificationModules.Add(moduleMock.Object);
             target.SetState(SessionState.Established);
@@ -873,7 +873,7 @@ namespace Lime.Protocol.UnitTests.Network
             var target = (TestChannel)GetTarget(SessionState.New);
             var moduleMock = new Mock<IChannelModule<Notification>>();
             moduleMock
-                .Setup(t => t.OnSending(notification, It.IsAny<CancellationToken>()))
+                .Setup(t => t.OnSendingAsync(notification, It.IsAny<CancellationToken>()))
                 .Returns(Task.FromResult<Notification>(null));
             target.NotificationModules.Add(moduleMock.Object);
             target.SetState(SessionState.Established);
@@ -903,7 +903,7 @@ namespace Lime.Protocol.UnitTests.Network
             {
                 var moduleMock = new Mock<IChannelModule<Notification>>();
                 moduleMock
-                    .Setup(t => t.OnSending(notification, It.IsAny<CancellationToken>()))
+                    .Setup(t => t.OnSendingAsync(notification, It.IsAny<CancellationToken>()))
                     .Returns(notification.AsCompletedTask());
                 target.NotificationModules.Add(moduleMock.Object);
                 modulesMockList.Add(moduleMock);
@@ -918,7 +918,7 @@ namespace Lime.Protocol.UnitTests.Network
             _transport.Verify(t => t.SendAsync(notification, It.IsAny<CancellationToken>()), Times.Once());
             foreach (var mock in modulesMockList)
             {
-                mock.Verify(m => m.OnSending(notification, It.IsAny<CancellationToken>()), Times.Once());
+                mock.Verify(m => m.OnSendingAsync(notification, It.IsAny<CancellationToken>()), Times.Once());
             }
         }
 
@@ -985,7 +985,7 @@ namespace Lime.Protocol.UnitTests.Network
             var target = (TestChannel)GetTarget(SessionState.New);
             var moduleMock = new Mock<IChannelModule<Notification>>();
             moduleMock
-                .Setup(t => t.OnReceiving(notification, It.IsAny<CancellationToken>()))
+                .Setup(t => t.OnReceivingAsync(notification, It.IsAny<CancellationToken>()))
                 .Returns(moduleNotification.AsCompletedTask());
             target.NotificationModules.Add(moduleMock.Object);
             target.SetState(SessionState.Established);
@@ -995,7 +995,7 @@ namespace Lime.Protocol.UnitTests.Network
 
             // Assert
             Assert.AreEqual(moduleNotification, actual);
-            moduleMock.Verify(m => m.OnReceiving(notification, It.IsAny<CancellationToken>()), Times.Once);
+            moduleMock.Verify(m => m.OnReceivingAsync(notification, It.IsAny<CancellationToken>()), Times.Once);
         }
 
 
@@ -1016,10 +1016,10 @@ namespace Lime.Protocol.UnitTests.Network
             var target = (TestChannel)GetTarget(SessionState.New);
             var moduleMock = new Mock<IChannelModule<Notification>>();
             moduleMock
-                .Setup(t => t.OnReceiving(notification1, It.IsAny<CancellationToken>()))
+                .Setup(t => t.OnReceivingAsync(notification1, It.IsAny<CancellationToken>()))
                 .Returns(Task.FromResult<Notification>(null));
             moduleMock
-                .Setup(t => t.OnReceiving(notification2, It.IsAny<CancellationToken>()))
+                .Setup(t => t.OnReceivingAsync(notification2, It.IsAny<CancellationToken>()))
                 .Returns(Task.FromResult(notification2));
             target.NotificationModules.Add(moduleMock.Object);
             target.SetState(SessionState.Established);
@@ -1029,7 +1029,7 @@ namespace Lime.Protocol.UnitTests.Network
 
             // Assert
             Assert.AreEqual(notification2, actual);
-            moduleMock.Verify(m => m.OnReceiving(notification1, It.IsAny<CancellationToken>()), Times.Once);
+            moduleMock.Verify(m => m.OnReceivingAsync(notification1, It.IsAny<CancellationToken>()), Times.Once);
         }
 
         [Test]
@@ -1053,7 +1053,7 @@ namespace Lime.Protocol.UnitTests.Network
             {
                 var moduleMock = new Mock<IChannelModule<Notification>>();
                 moduleMock
-                    .Setup(t => t.OnReceiving(notification, It.IsAny<CancellationToken>()))
+                    .Setup(t => t.OnReceivingAsync(notification, It.IsAny<CancellationToken>()))
                     .Returns(notification.AsCompletedTask());
                 target.NotificationModules.Add(moduleMock.Object);
                 modulesMockList.Add(moduleMock);
@@ -1067,7 +1067,7 @@ namespace Lime.Protocol.UnitTests.Network
             Assert.AreEqual(notification, actual);
             foreach (var mock in modulesMockList)
             {
-                mock.Verify(m => m.OnReceiving(notification, It.IsAny<CancellationToken>()), Times.Once());
+                mock.Verify(m => m.OnReceivingAsync(notification, It.IsAny<CancellationToken>()), Times.Once());
             }
         }
 

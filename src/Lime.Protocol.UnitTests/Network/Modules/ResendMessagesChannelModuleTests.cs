@@ -61,7 +61,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
         {
             var target = ResendMessagesChannelModule.CreateAndRegister(_channel.Object, _resendMessageTryCount, _resendMessageInterval, _filterByDestination);
             _channel
-                .Setup(c => c.SendMessageAsync(It.IsAny<Message>())).Returns((Message m) => ((IChannelModule<Message>) target).OnSending(m, _cancellationToken));
+                .Setup(c => c.SendMessageAsync(It.IsAny<Message>())).Returns((Message m) => ((IChannelModule<Message>) target).OnSendingAsync(m, _cancellationToken));
             
             return target;
         }
@@ -77,7 +77,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
             target.OnStateChanged(SessionState.Established);
 
             // Act
-            var actual = await ((IChannelModule<Message>)target).OnSending(message, _cancellationToken);
+            var actual = await ((IChannelModule<Message>)target).OnSendingAsync(message, _cancellationToken);
             await Task.Delay(_resendMessageIntervalWithSafeMargin);
 
             // Assert
@@ -95,7 +95,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
             target.OnStateChanged(SessionState.Established);
 
             // Act
-            var actual = await ((IChannelModule<Message>)target).OnSending(message, _cancellationToken);
+            var actual = await ((IChannelModule<Message>)target).OnSendingAsync(message, _cancellationToken);
             await Task.Delay(TimeSpan.FromTicks(_resendMessageIntervalWithSafeMargin.Ticks * (_resendMessageTryCount + 1)));
 
             // Assert
@@ -116,8 +116,8 @@ namespace Lime.Protocol.UnitTests.Network.Modules
             target.OnStateChanged(SessionState.Established);
 
             // Act
-            var actualMessage = await ((IChannelModule<Message>)target).OnSending(message, _cancellationToken);
-            var actualNotification = await ((IChannelModule<Notification>)target).OnReceiving(notification, _cancellationToken);
+            var actualMessage = await ((IChannelModule<Message>)target).OnSendingAsync(message, _cancellationToken);
+            var actualNotification = await ((IChannelModule<Notification>)target).OnReceivingAsync(notification, _cancellationToken);
             await Task.Delay(_resendMessageIntervalWithSafeMargin);
 
             // Assert
@@ -140,9 +140,9 @@ namespace Lime.Protocol.UnitTests.Network.Modules
             target.OnStateChanged(SessionState.Established);
 
             // Act
-            var actualMessage = await ((IChannelModule<Message>)target).OnSending(message, _cancellationToken);
+            var actualMessage = await ((IChannelModule<Message>)target).OnSendingAsync(message, _cancellationToken);
             await Task.Delay(_resendMessageIntervalWithSafeMargin);
-            var actualNotification = await ((IChannelModule<Notification>)target).OnReceiving(notification, _cancellationToken);
+            var actualNotification = await ((IChannelModule<Notification>)target).OnReceivingAsync(notification, _cancellationToken);
             await Task.Delay(_resendMessageIntervalWithSafeMargin);
 
             // Assert
@@ -165,8 +165,8 @@ namespace Lime.Protocol.UnitTests.Network.Modules
             target.OnStateChanged(SessionState.Established);
 
             // Act
-            var actual = await ((IChannelModule<Message>)target).OnSending(message, _cancellationToken);            
-            var actualNotification = await ((IChannelModule<Notification>)target).OnReceiving(notification, _cancellationToken);
+            var actual = await ((IChannelModule<Message>)target).OnSendingAsync(message, _cancellationToken);            
+            var actualNotification = await ((IChannelModule<Notification>)target).OnReceivingAsync(notification, _cancellationToken);
             await Task.Delay(TimeSpan.FromTicks(_resendMessageIntervalWithSafeMargin.Ticks * (_resendMessageTryCount + 1)));
 
             // Assert
@@ -189,9 +189,9 @@ namespace Lime.Protocol.UnitTests.Network.Modules
             target.OnStateChanged(SessionState.Established);
 
             // Act
-            var actual = await ((IChannelModule<Message>)target).OnSending(message, _cancellationToken);
+            var actual = await ((IChannelModule<Message>)target).OnSendingAsync(message, _cancellationToken);
             await Task.Delay(TimeSpan.FromTicks(_resendMessageIntervalWithSafeMargin.Ticks * 2));
-            var actualNotification = await ((IChannelModule<Notification>)target).OnReceiving(notification, _cancellationToken);
+            var actualNotification = await ((IChannelModule<Notification>)target).OnReceivingAsync(notification, _cancellationToken);
             await Task.Delay(_resendMessageIntervalWithSafeMargin);
 
             // Assert
@@ -210,7 +210,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
             target.OnStateChanged(SessionState.Established);
 
             // Act
-            var actual = await ((IChannelModule<Message>)target).OnSending(message, _cancellationToken);
+            var actual = await ((IChannelModule<Message>)target).OnSendingAsync(message, _cancellationToken);
             target.OnStateChanged(SessionState.Finished);
             await Task.Delay(_resendMessageIntervalWithSafeMargin);
 
@@ -230,7 +230,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
             target.OnStateChanged(SessionState.Established);
 
             // Act
-            var actual = await ((IChannelModule<Message>)target).OnSending(message, _cancellationToken);
+            var actual = await ((IChannelModule<Message>)target).OnSendingAsync(message, _cancellationToken);
             await Task.Delay(TimeSpan.FromTicks(_resendMessageIntervalWithSafeMargin.Ticks * 2));
             target.OnStateChanged(SessionState.Finished);
             await Task.Delay(_resendMessageIntervalWithSafeMargin);
@@ -250,7 +250,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
             target.OnStateChanged(SessionState.Established);
 
             // Act
-            var actual = await ((IChannelModule<Message>)target).OnSending(message, _cancellationToken);
+            var actual = await ((IChannelModule<Message>)target).OnSendingAsync(message, _cancellationToken);
             target.OnStateChanged(SessionState.Failed);
             await Task.Delay(_resendMessageIntervalWithSafeMargin);
 
@@ -270,7 +270,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
             target.OnStateChanged(SessionState.Established);
 
             // Act
-            var actual = await ((IChannelModule<Message>)target).OnSending(message, _cancellationToken);
+            var actual = await ((IChannelModule<Message>)target).OnSendingAsync(message, _cancellationToken);
             await Task.Delay(TimeSpan.FromTicks(_resendMessageIntervalWithSafeMargin.Ticks * 2));
             target.OnStateChanged(SessionState.Failed);
             await Task.Delay(_resendMessageIntervalWithSafeMargin);

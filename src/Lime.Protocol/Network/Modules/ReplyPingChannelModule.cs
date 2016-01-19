@@ -22,7 +22,7 @@ namespace Lime.Protocol.Network.Modules
             _commandChannel = commandChannel;
         }
 
-        public override async Task<Command> OnReceiving(Command envelope, CancellationToken cancellationToken)
+        public override async Task<Command> OnReceivingAsync(Command envelope, CancellationToken cancellationToken)
         {
             if (!envelope.IsPingRequest()) return envelope;
 

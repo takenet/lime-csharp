@@ -55,7 +55,7 @@ namespace Lime.Protocol.Network.Modules
             }
         }
 
-        Task<Notification> IChannelModule<Notification>.OnReceiving(Notification envelope, CancellationToken cancellationToken)
+        Task<Notification> IChannelModule<Notification>.OnReceivingAsync(Notification envelope, CancellationToken cancellationToken)
         {            
             if (envelope.Event == Event.Received || envelope.Event == Event.Failed)
             {                
@@ -66,17 +66,17 @@ namespace Lime.Protocol.Network.Modules
             return envelope.AsCompletedTask();
         }
 
-        Task<Notification> IChannelModule<Notification>.OnSending(Notification envelope, CancellationToken cancellationToken)
+        Task<Notification> IChannelModule<Notification>.OnSendingAsync(Notification envelope, CancellationToken cancellationToken)
         {
             return envelope.AsCompletedTask();
         }
 
-        Task<Message> IChannelModule<Message>.OnReceiving(Message envelope, CancellationToken cancellationToken)
+        Task<Message> IChannelModule<Message>.OnReceivingAsync(Message envelope, CancellationToken cancellationToken)
         {
             return envelope.AsCompletedTask();
         }
 
-        Task<Message> IChannelModule<Message>.OnSending(Message envelope, CancellationToken cancellationToken)
+        Task<Message> IChannelModule<Message>.OnSendingAsync(Message envelope, CancellationToken cancellationToken)
         {
             if (envelope.Id != Guid.Empty &&                 
                 _resendMessagesTask?.Status <= TaskStatus.Running)

@@ -58,32 +58,32 @@ namespace Lime.Protocol.Network.Modules
             }
         }
 
-        public Task<Message> OnReceiving(Message envelope, CancellationToken cancellationToken)
+        public Task<Message> OnReceivingAsync(Message envelope, CancellationToken cancellationToken)
         {
             return ReceiveEnvelope(envelope);
         }
 
-        public Task<Message> OnSending(Message envelope, CancellationToken cancellationToken)
+        public Task<Message> OnSendingAsync(Message envelope, CancellationToken cancellationToken)
         {
             return envelope.AsCompletedTask();
         }
 
-        public Task<Notification> OnReceiving(Notification envelope, CancellationToken cancellationToken)
+        public Task<Notification> OnReceivingAsync(Notification envelope, CancellationToken cancellationToken)
         {
             return ReceiveEnvelope(envelope);
         }
 
-        public Task<Notification> OnSending(Notification envelope, CancellationToken cancellationToken)
+        public Task<Notification> OnSendingAsync(Notification envelope, CancellationToken cancellationToken)
         {
             return envelope.AsCompletedTask();
         }
 
-        public Task<Command> OnReceiving(Command envelope, CancellationToken cancellationToken)
+        public Task<Command> OnReceivingAsync(Command envelope, CancellationToken cancellationToken)
         {
             return ReceiveEnvelope(envelope);
         }
 
-        public Task<Command> OnSending(Command envelope, CancellationToken cancellationToken)
+        public Task<Command> OnSendingAsync(Command envelope, CancellationToken cancellationToken)
         {
             return envelope.AsCompletedTask();
         }

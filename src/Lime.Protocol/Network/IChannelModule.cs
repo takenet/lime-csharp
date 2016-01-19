@@ -24,7 +24,7 @@ namespace Lime.Protocol.Network
         /// <param name="envelope">The envelope.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>The received envelope. If the value is null, the received envelope will be ignored.</returns>
-        Task<T> OnReceiving(T envelope, CancellationToken cancellationToken);
+        Task<T> OnReceivingAsync(T envelope, CancellationToken cancellationToken);
 
         /// <summary>
         /// Called when an envelope is being sent by the channel.
@@ -32,6 +32,6 @@ namespace Lime.Protocol.Network
         /// <param name="envelope">The envelope.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>The envelope to be sent. If the value is null, the sent envelope will be ignored.</returns>
-        Task<T> OnSending(T envelope, CancellationToken cancellationToken);
+        Task<T> OnSendingAsync(T envelope, CancellationToken cancellationToken);
     }
 }
