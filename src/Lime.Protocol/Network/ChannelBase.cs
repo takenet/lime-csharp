@@ -43,9 +43,7 @@ namespace Lime.Protocol.Network
         /// <param name="autoReplyPings">Indicates if the channel should reply automatically to ping request commands. In this case, the ping command are not returned by the ReceiveCommandAsync method.</param>
         /// <param name="remotePingInterval">The interval to ping the remote party.</param>
         /// <param name="remoteIdleTimeout">The timeout to close the channel due to inactivity.</param>
-        /// <param name="resendMessageTryCount">Indicates the number of attempts to resend messages that were not notified as received by the destination.</param>
-        /// <param name="resendMessageInterval">The interval to resend the messages.</param>
-        protected ChannelBase(ITransport transport, TimeSpan sendTimeout, int buffersLimit, bool fillEnvelopeRecipients, bool autoReplyPings, TimeSpan? remotePingInterval, TimeSpan? remoteIdleTimeout, int resendMessageTryCount, TimeSpan? resendMessageInterval)
+        protected ChannelBase(ITransport transport, TimeSpan sendTimeout, int buffersLimit, bool fillEnvelopeRecipients, bool autoReplyPings, TimeSpan? remotePingInterval, TimeSpan? remoteIdleTimeout)
         {
             if (transport == null) throw new ArgumentNullException(nameof(transport));
             Transport = transport;
@@ -77,12 +75,6 @@ namespace Lime.Protocol.Network
             if (remotePingInterval != null)
             {
                 RemotePingChannelModule.CreateAndRegister(this, remotePingInterval.Value, remoteIdleTimeout);               
-            }
-
-            if (resendMessageTryCount > 0 &&
-                resendMessageInterval != null)
-            {
-                ResendMessagesChannelModule.CreateAndRegister(this, resendMessageTryCount, resendMessageInterval.Value);
             }
         }
 

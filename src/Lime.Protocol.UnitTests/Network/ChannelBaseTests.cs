@@ -1538,7 +1538,7 @@ namespace Lime.Protocol.UnitTests.Network
         private class TestChannel : ChannelBase
         {
             public TestChannel(SessionState state, ITransport transport, TimeSpan sendTimeout, int buffersLimit, bool fillEnvelopeRecipients, Node remoteNode = null, Node localNode = null, bool autoReplyPings = false, TimeSpan? remotePingInterval = null, TimeSpan? remoteIdleTimeout = null, int resendMessageTryCount = 0, TimeSpan? resendMessageInterval = null)
-                : base(transport, sendTimeout, buffersLimit, fillEnvelopeRecipients, autoReplyPings, remotePingInterval, remoteIdleTimeout, resendMessageTryCount, resendMessageInterval)
+                : base(transport, sendTimeout, buffersLimit, fillEnvelopeRecipients, autoReplyPings, remotePingInterval, remoteIdleTimeout)
             {                
                 RemoteNode = remoteNode;
                 LocalNode = localNode;

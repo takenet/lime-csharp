@@ -59,7 +59,9 @@ namespace Lime.Protocol.UnitTests.Network.Modules
 
         public ResendMessagesChannelModule GetTarget()
         {
-            var target = ResendMessagesChannelModule.CreateAndRegister(_channel.Object, _resendMessageTryCount, _resendMessageInterval, _filterByDestination);
+            var target = new ResendMessagesChannelModule(_resendMessageTryCount, _resendMessageInterval, _filterByDestination);
+            target.Bind(_channel.Object, true);
+            
             _channel
                 .Setup(c => c.SendMessageAsync(It.IsAny<Message>())).Returns((Message m) => ((IChannelModule<Message>) target).OnSendingAsync(m, _cancellationToken));
             
@@ -125,7 +127,6 @@ namespace Lime.Protocol.UnitTests.Network.Modules
             actualNotification.ShouldBe(notification);
             _channel.Verify(c => c.SendMessageAsync(message), Times.Never);
         }
-
 
         [Test]
         public async Task OnSending_ReceivedNotificationAfterFirstResend_ShouldNotResendAgain()

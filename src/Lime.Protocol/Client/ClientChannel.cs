@@ -26,10 +26,8 @@ namespace Lime.Protocol.Client
         /// <param name="remotePingInterval">The interval to ping the remote party.</param>
         /// <param name="remoteIdleTimeout">The timeout to close the channel due to inactivity.</param>
         /// <param name="buffersLimit"></param>
-        /// <param name="resendMessageTryCount"></param>
-        /// <param name="resendMessageInterval"></param>
-        public ClientChannel(ITransport transport, TimeSpan sendTimeout, int buffersLimit = 5, bool fillEnvelopeRecipients = false, bool autoReplyPings = true, bool autoNotifyReceipt = false, TimeSpan? remotePingInterval = null, TimeSpan? remoteIdleTimeout = null, int resendMessageTryCount = 0, TimeSpan? resendMessageInterval = null)
-            : base(transport, sendTimeout, buffersLimit, fillEnvelopeRecipients, autoReplyPings, remotePingInterval, remoteIdleTimeout, resendMessageTryCount, resendMessageInterval)
+        public ClientChannel(ITransport transport, TimeSpan sendTimeout, int buffersLimit = 5, bool fillEnvelopeRecipients = false, bool autoReplyPings = true, bool autoNotifyReceipt = false, TimeSpan? remotePingInterval = null, TimeSpan? remoteIdleTimeout = null)
+            : base(transport, sendTimeout, buffersLimit, fillEnvelopeRecipients, autoReplyPings, remotePingInterval, remoteIdleTimeout)
         {
             if (autoNotifyReceipt)
             {
