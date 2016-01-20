@@ -118,7 +118,7 @@ namespace Lime.Protocol.Network.Modules
                 else
                 {
                     sentMessage = new SentMessage(envelope);
-                    _sentMessageDictionary.TryAdd(Create(envelope), sentMessage);
+                    _sentMessageDictionary.TryAdd(key, sentMessage);
                 }
 
                 if (sentMessage.ResentCount <= _resendMessageTryCount)
