@@ -79,6 +79,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
             // Arrange
             var message = Dummy.CreateMessage(Dummy.CreateTextContent());
             message.Id = Guid.NewGuid();
+            _resendMessageTryCount = 1;
             var target = GetTarget();
 
             // Act
@@ -136,6 +137,37 @@ namespace Lime.Protocol.UnitTests.Network.Modules
             // Assert
             actual.ShouldBe(message);
             _channel.Verify(c => c.SendMessageAsync(message), Times.Exactly(_resendMessageTryCount));
+        }
+
+
+        [Test]
+        public async Task OnSending_MultipleMessagesWithoutNotification_ShouldResendUntilLimit()
+        {
+            // Arrange
+            var messages = new List<Message>();
+            for (int i = 0; i < Dummy.CreateRandomInt(100) + 1; i++)
+            {
+                var message = Dummy.CreateMessage(Dummy.CreateTextContent());
+                message.Id = Guid.NewGuid();
+                messages.Add(message);
+            }
+            var target = GetTarget();
+
+            // Act
+            var actuals = new List<Message>();
+            foreach (var message in messages)
+            {
+                var actual = await ((IChannelModule<Message>)target).OnSendingAsync(message, _cancellationToken);
+                actuals.Add(actual);
+            }
+            await Task.Delay(TimeSpan.FromTicks(_resendMessageIntervalWithSafeMargin.Ticks * (_resendMessageTryCount + 1)));
+
+            // Assert            
+            foreach (var message in messages)
+            {
+                actuals.ShouldContain(message);
+                _channel.Verify(c => c.SendMessageAsync(message), Times.Exactly(_resendMessageTryCount));
+            }
         }
 
         [Test]
@@ -306,7 +338,30 @@ namespace Lime.Protocol.UnitTests.Network.Modules
         }
 
         [Test]
-        public async Task Unbind_PendingMessages_ShouldNotResend()
+        [ExpectedException(typeof(InvalidOperationException))]
+        public void Bind_AlreadyBound_ThrowInvalidOperationException()
+        {
+            // Arrange
+            var target = GetTarget();
+            var channel2Mock = CreateChannel();
+
+            // Act
+            target.Bind(channel2Mock.Object, true);
+        }
+
+        [Test]
+        [ExpectedException(typeof(InvalidOperationException))]
+        public void Unbind_NotBound_ThrowInvalidOperationException()
+        {
+            // Arrange
+            var target = GetTarget(false);
+
+            // Act
+            target.Unbind();
+        }
+
+        [Test]
+        public async Task Unbind_PendingMessage_ShouldNotResend()
         {
             // Arrange
             var message = Dummy.CreateMessage(Dummy.CreateTextContent());
@@ -323,8 +378,41 @@ namespace Lime.Protocol.UnitTests.Network.Modules
             _channel.Verify(c => c.SendMessageAsync(message), Times.Never);
         }
 
+
         [Test]
-        public async Task Unbind_BindToNewChannel_SendsToBoundChannel()
+        public async Task Unbind_MultiplePendingMessages_ShouldNotResend()
+        {
+            // Arrange
+            var messages = new List<Message>();
+            for (int i = 0; i < Dummy.CreateRandomInt(100) + 1; i++)
+            {
+                var message = Dummy.CreateMessage(Dummy.CreateTextContent());
+                message.Id = Guid.NewGuid();
+                messages.Add(message);
+            }
+            _resendMessageTryCount = 1;
+            var target = GetTarget();
+
+            // Act
+            var actuals = new List<Message>();
+            foreach (var message in messages)
+            {
+                var actual = await ((IChannelModule<Message>)target).OnSendingAsync(message, _cancellationToken);
+                actuals.Add(actual);
+            }
+            target.Unbind();
+            await Task.Delay(_resendMessageIntervalWithSafeMargin);
+
+            // Assert
+            foreach (var message in messages)
+            {
+                actuals.ShouldContain(message);
+                _channel.Verify(c => c.SendMessageAsync(message), Times.Never);
+            }
+        }
+
+        [Test]
+        public async Task Unbind_PendingMessageAndBindToNewChannel_SendsToBoundChannel()
         {
             // Arrange
             var message = Dummy.CreateMessage(Dummy.CreateTextContent());
@@ -342,6 +430,40 @@ namespace Lime.Protocol.UnitTests.Network.Modules
             actual.ShouldBe(message);
             _channel.Verify(c => c.SendMessageAsync(message), Times.Never);
             channel2Mock.Verify(c => c.SendMessageAsync(message), Times.Once);
+        }
+
+        [Test]
+        public async Task Unbind_MultiplePendingMessagesAndBindToNewChannel_SendsToBoundChannel()
+        {
+            // Arrange
+            var messages = new List<Message>();
+            for (int i = 0; i < Dummy.CreateRandomInt(100) + 1; i++)
+            {
+                var message = Dummy.CreateMessage(Dummy.CreateTextContent());
+                message.Id = Guid.NewGuid();
+                messages.Add(message);
+            }
+            var target = GetTarget();
+            var channel2Mock = CreateChannel();
+
+            // Act
+            var actuals = new List<Message>();
+            foreach (var message in messages)
+            {
+                var actual = await ((IChannelModule<Message>)target).OnSendingAsync(message, _cancellationToken);
+                actuals.Add(actual);
+            }
+            target.Unbind();
+            target.Bind(channel2Mock.Object, true);
+            await Task.Delay(_resendMessageIntervalWithSafeMargin);
+            
+            // Assert
+            foreach (var message in messages)
+            {
+                actuals.ShouldContain(message);
+                _channel.Verify(c => c.SendMessageAsync(message), Times.Never);
+                channel2Mock.Verify(c => c.SendMessageAsync(message), Times.Once);
+            }            
         }
     }
 }

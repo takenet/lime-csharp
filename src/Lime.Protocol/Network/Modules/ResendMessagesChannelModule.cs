@@ -104,10 +104,10 @@ namespace Lime.Protocol.Network.Modules
                 {
                     await _inputBlock.SendAsync(sentMessage, cancellationToken);
                 }
-                else
+                else if (_sentMessageDictionary.TryRemove(key, out sentMessage))
                 {
-                    _sentMessageDictionary.TryRemove(key, out sentMessage);
-                }                                
+                    sentMessage.Dispose();
+                }
             }
 
             return envelope;
