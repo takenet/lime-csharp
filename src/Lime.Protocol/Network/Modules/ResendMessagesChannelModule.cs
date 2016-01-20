@@ -113,7 +113,7 @@ namespace Lime.Protocol.Network.Modules
                 SentMessage sentMessage;
                 if (_sentMessageDictionary.TryGetValue(key, out sentMessage))
                 {
-                    sentMessage.IncrementSentCount();
+                    sentMessage.IncrementResentCount();
                 }
                 else
                 {
@@ -243,7 +243,7 @@ namespace Lime.Protocol.Network.Modules
 
             public CancellationToken CancellationToken => _cts.Token;
 
-            public void IncrementSentCount()
+            public void IncrementResentCount()
             {
                 ResentCount++;
             }
