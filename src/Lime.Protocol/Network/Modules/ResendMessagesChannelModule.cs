@@ -50,41 +50,6 @@ namespace Lime.Protocol.Network.Modules
             _inputBlock.LinkTo(_waitForRetryBlock);
         }
 
-        private async Task<SentMessage> WaitForRetryAsync(SentMessage sentMessage)
-        {                                        
-            try
-            {
-                var now = DateTimeOffset.UtcNow;                
-                var resendDate = sentMessage.LastSentDate + _resendMessageInterval;
-                if (resendDate > now)
-                {
-                    var waitInterval = resendDate - now;
-                    await Task.Delay(waitInterval, sentMessage.CancellationToken);
-                }                
-                return sentMessage;
-            }            
-            catch (OperationCanceledException) when (sentMessage.CancellationToken.IsCancellationRequested)
-            {
-                return null;
-            }                       
-        }
-
-        private async Task ResendMessageAsync(SentMessage sentMessage)
-        {
-            if (sentMessage != null && 
-                !sentMessage.CancellationToken.IsCancellationRequested)
-            {
-                try
-                {
-                    await _channel.SendMessageAsync(sentMessage.Message);
-                }
-                catch
-                {
-                    Unbind();
-                }
-            }                    
-        }
-
         public void OnStateChanged(SessionState state)
         {            
             if (state > SessionState.Established &&
@@ -190,6 +155,41 @@ namespace Lime.Protocol.Network.Modules
                 notification.Id, 
                 _filterByDestination ? 
                 (notification.GetSender() ?? _channel.RemoteNode).ToIdentity() : null);
+        }
+
+        private async Task<SentMessage> WaitForRetryAsync(SentMessage sentMessage)
+        {
+            try
+            {
+                var now = DateTimeOffset.UtcNow;
+                var resendDate = sentMessage.LastSentDate + _resendMessageInterval;
+                if (resendDate > now)
+                {
+                    var waitInterval = resendDate - now;
+                    await Task.Delay(waitInterval, sentMessage.CancellationToken);
+                }
+                return sentMessage;
+            }
+            catch (OperationCanceledException) when (sentMessage.CancellationToken.IsCancellationRequested)
+            {
+                return null;
+            }
+        }
+
+        private async Task ResendMessageAsync(SentMessage sentMessage)
+        {
+            if (sentMessage != null &&
+                !sentMessage.CancellationToken.IsCancellationRequested)
+            {
+                try
+                {
+                    await _channel.SendMessageAsync(sentMessage.Message);
+                }
+                catch
+                {
+                    Unbind();
+                }
+            }
         }
 
         private sealed class MessageIdDestination
