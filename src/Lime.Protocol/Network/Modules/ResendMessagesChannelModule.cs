@@ -54,11 +54,11 @@ namespace Lime.Protocol.Network.Modules
         {                                        
             try
             {
-                var now = DateTimeOffset.UtcNow;
-                var sentDate = sentMessage.LastSentDate;
-                if (sentDate + _resendMessageInterval > now)
+                var now = DateTimeOffset.UtcNow;                
+                var resendDate = sentMessage.LastSentDate + _resendMessageInterval;
+                if (resendDate > now)
                 {
-                    var waitInterval = (sentDate + _resendMessageInterval) - now;
+                    var waitInterval = resendDate - now;
                     await Task.Delay(waitInterval, sentMessage.CancellationToken);
                 }                
                 return sentMessage;
