@@ -412,7 +412,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
         }
 
         [Test]
-        public async Task Unbind_PendingMessageAndBindToNewChannel_SendsToBoundChannel()
+        public async Task Unbind_PendingMessageAndBoundToNewChannel_SendsToBoundChannel()
         {
             // Arrange
             var message = Dummy.CreateMessage(Dummy.CreateTextContent());
@@ -433,7 +433,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
         }
 
         [Test]
-        public async Task Unbind_MultiplePendingMessagesAndBindToNewChannel_SendsToBoundChannel()
+        public async Task Unbind_MultiplePendingMessagesAndBoundToNewChannel_SendsToBoundChannel()
         {
             // Arrange
             var messages = new List<Message>();

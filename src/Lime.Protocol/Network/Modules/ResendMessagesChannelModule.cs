@@ -51,13 +51,20 @@ namespace Lime.Protocol.Network.Modules
         }
 
         public void OnStateChanged(SessionState state)
-        {            
-            if (state > SessionState.Established &&
-                IsBound &&
-                _unbindWhenClosed)
+        {
+            lock (_syncRoot)
             {
-                Unbind();
-            }            
+                if (state == SessionState.Established)
+                {
+                    _link = _waitForRetryBlock.LinkTo(_resendBlock);
+                }
+                else if (state > SessionState.Established &&
+                         IsBound &&
+                         _unbindWhenClosed)
+                {
+                    Unbind();
+                }
+            }
         }
 
         Task<Notification> IChannelModule<Notification>.OnReceivingAsync(Notification envelope, CancellationToken cancellationToken)
@@ -118,6 +125,7 @@ namespace Lime.Protocol.Network.Modules
         public void Bind(IChannel channel, bool unbindWhenClosed)
         {
             if (channel == null) throw new ArgumentNullException(nameof(channel));
+            if (channel.State > SessionState.Established) throw new ArgumentException("The channel has an invalid state");
 
             lock (_syncRoot)
             {                
@@ -126,7 +134,10 @@ namespace Lime.Protocol.Network.Modules
                 _unbindWhenClosed = unbindWhenClosed;
                 _channel.MessageModules.Add(this);
                 _channel.NotificationModules.Add(this);
-                _link = _waitForRetryBlock.LinkTo(_resendBlock);
+                if (channel.State != SessionState.New)
+                {
+                    OnStateChanged(_channel.State);
+                }
             }
         }
 
