@@ -37,10 +37,16 @@ namespace Lime.Protocol.Network.Modules
             _inputBlock = new BufferBlock<SentMessage>();
             _waitForRetryBlock =  new TransformBlock<SentMessage, SentMessage>(
                 m => WaitForRetryAsync(m),
-                new ExecutionDataflowBlockOptions() { BoundedCapacity = DataflowBlockOptions.Unbounded});
+                new ExecutionDataflowBlockOptions()
+                {
+                    BoundedCapacity = DataflowBlockOptions.Unbounded
+                });
             _resendBlock = new ActionBlock<SentMessage>(
                 ResendMessageAsync, 
-                new ExecutionDataflowBlockOptions() { MaxDegreeOfParallelism = 1 });
+                new ExecutionDataflowBlockOptions()
+                {
+                    MaxDegreeOfParallelism = 1
+                });
             _inputBlock.LinkTo(_waitForRetryBlock);
         }
 
@@ -48,7 +54,13 @@ namespace Lime.Protocol.Network.Modules
         {                                        
             try
             {
-                await Task.Delay(_resendMessageInterval, sentMessage.CancellationToken);
+                var now = DateTimeOffset.UtcNow;
+                var sentDate = sentMessage.LastSentDate;
+                if (sentDate + _resendMessageInterval > now)
+                {
+                    var waitInterval = (sentDate + _resendMessageInterval) - now;
+                    await Task.Delay(waitInterval, sentMessage.CancellationToken);
+                }                
                 return sentMessage;
             }            
             catch (OperationCanceledException) when (sentMessage.CancellationToken.IsCancellationRequested)
@@ -59,16 +71,18 @@ namespace Lime.Protocol.Network.Modules
 
         private async Task ResendMessageAsync(SentMessage sentMessage)
         {
-            if (sentMessage == null || sentMessage.CancellationToken.IsCancellationRequested) return;
-            
-            try
+            if (sentMessage != null && 
+                !sentMessage.CancellationToken.IsCancellationRequested)
             {
-                await _channel.SendMessageAsync(sentMessage.Message);
-            }
-            catch
-            {
-                Unbind();
-            }            
+                try
+                {
+                    await _channel.SendMessageAsync(sentMessage.Message);
+                }
+                catch
+                {
+                    Unbind();
+                }
+            }                    
         }
 
         public void OnStateChanged(SessionState state)
@@ -225,6 +239,7 @@ namespace Lime.Protocol.Network.Modules
                 if (message == null) throw new ArgumentNullException(nameof(Message));
                 _message = message;                
                 ResentCount = resentCount;
+                LastSentDate = DateTimeOffset.UtcNow;
                 _cts = new CancellationTokenSource();
             }
 
@@ -241,11 +256,14 @@ namespace Lime.Protocol.Network.Modules
 
             public int ResentCount { get; private set; }
 
+            public DateTimeOffset LastSentDate { get; private set; }
+
             public CancellationToken CancellationToken => _cts.Token;
 
             public void IncrementResentCount()
             {
                 ResentCount++;
+                LastSentDate = DateTimeOffset.UtcNow;
             }
 
             public void Dispose()
