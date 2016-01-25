@@ -7,10 +7,7 @@ namespace Lime.Messaging.Resources
 {
     /// <summary>
     /// Represents the availability status of a node in a network. 
-    /// A node can only receive envelopes from another nodes in the network 
-    /// if it sets its presence to an available status (except from the server, 
-    /// who always knows if a node is available or node, since this information 
-    /// is enforced by the existing session). 
+    /// A node can only receive envelopes from another nodes in the network if it sets its presence to an available status (except from the server, who always knows if a node is available or node, since this information is enforced by the existing session). 
     /// In a new session, the node starts with an unavailable status.
     /// </summary>
     [DataContract(Namespace = "http://limeprotocol.org/2014")]
@@ -25,6 +22,8 @@ namespace Lime.Messaging.Resources
         public const string ROUTING_RULE_KEY = "routingRule";
         public const string LAST_SEEN_KEY = "lastSeen";
         public const string PRIORITY_KEY = "priority";
+        public const string FILTER_BY_DISTANCE_KEY = "filterByDistance";
+        public const string ROUND_ROBIN_KEY = "roundRobin";
         public const string INSTANCES_KEY = "instances";
 
         /// <summary>
@@ -54,15 +53,31 @@ namespace Lime.Messaging.Resources
         [DataMember(Name = ROUTING_RULE_KEY)]
         public RoutingRule? RoutingRule { get; set; }
 
+        /// <summary>
+        /// The date of the last known presence status for the node.
+        /// </summary>
         [DataMember(Name = LAST_SEEN_KEY)]
         public DateTimeOffset? LastSeen { get; set; }
 
         /// <summary>
         /// The value of the priority of the presence.
-        /// Setting this value can affect the way the envelopes are routed to the current session.
+        /// This value can affect the way the envelopes are routed to the current session.
         /// </summary>
         [DataMember(Name = PRIORITY_KEY, EmitDefaultValue = false)]
         public int Priority { get; set; }
+
+        /// <summary>
+        /// If true, indicates that the delivery of envelopes for the current session should only occurs if the distance from the originator is the smallest among the resolved routes with this setting. 
+        /// This configuration is not exclusive, so if there's more than one route with the same smallest distance, these sessions should receive the envelopes.
+        /// </summary>
+        [DataMember(Name = FILTER_BY_DISTANCE_KEY, EmitDefaultValue = false)]
+        public bool? FilterByDistance { get; set; }
+
+        /// <summary>
+        /// If true, indicates that the delivery of envelopes for the current session should be distributed by using the round-robin strategy between the resolved routes with this setting.
+        /// </summary>
+        [DataMember(Name = ROUND_ROBIN_KEY, EmitDefaultValue = false)]
+        public bool? RoundRobin { get; set; }
 
         /// <summary>
         /// Present instances for a identity.
@@ -96,6 +111,7 @@ namespace Lime.Messaging.Resources
         /// originator is the smallest among the available 
         /// nodes of the identity with this setting.
         /// </summary>
+        [Obsolete("Use presence's 'FilterByDistance' property instead")]
         [EnumMember(Value = "identityByDistance")]
         IdentityByDistance,
         /// <summary>
@@ -120,6 +136,7 @@ namespace Lime.Messaging.Resources
         /// This rule is intended to be used only for external domain authorities
         /// (gateways) and sub-domain authorities (applications)
         /// </summary>
+        [Obsolete("Use presence's 'FilterByDistance' property instead")]
         [EnumMember(Value = "domainByDistance")]
         DomainByDistance
     }
