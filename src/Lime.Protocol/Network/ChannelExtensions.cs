@@ -13,21 +13,6 @@ namespace Lime.Protocol.Network
     /// </summary>
     public static class ChannelExtensions
     {
-        #region Private Fields
-
-        private static SemaphoreSlim _processCommandSemaphore;
-
-        #endregion
-
-        #region Constructor
-
-        static ChannelExtensions()
-        {
-            _processCommandSemaphore = new SemaphoreSlim(1);
-        }
-
-        #endregion
-
         /// <summary>
         /// Sends the envelope using the appropriate
         /// method for its type.
@@ -38,7 +23,7 @@ namespace Lime.Protocol.Network
         /// <returns></returns>
         public static async Task SendAsync<T>(this IChannel channel, T envelope) where T : Envelope
         {
-            if (channel == null) throw new ArgumentNullException(nameof(channel));            
+            if (channel == null) throw new ArgumentNullException(nameof(channel));
 
             if (typeof(T) == typeof(Notification))
             {
@@ -129,7 +114,7 @@ namespace Lime.Protocol.Network
         /// <exception cref="System.ArgumentNullException">channel</exception>
         public static Task SetResourceAsync<TResource>(this IChannel channel, LimeUri uri, TResource resource, CancellationToken cancellationToken, Func<Command, Task> unrelatedCommandHandler = null) where TResource : Document
         {
-            return SetResourceAsync(channel, uri, resource, null, cancellationToken, unrelatedCommandHandler);            
+            return SetResourceAsync(channel, uri, resource, null, cancellationToken, unrelatedCommandHandler);
         }
 
         /// <summary>
@@ -249,43 +234,36 @@ namespace Lime.Protocol.Network
         /// <returns></returns>
         public static async Task<Command> ProcessCommandAsync(this IChannel channel, Command requestCommand, CancellationToken cancellationToken, Func<Command, Task> unrelatedCommandHandler = null)
         {
-            if (channel == null) throw new ArgumentNullException(nameof(channel));            
+            if (channel == null) throw new ArgumentNullException(nameof(channel));
             if (requestCommand == null) throw new ArgumentNullException(nameof(requestCommand));
-            
-            await _processCommandSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
 
-            try
+            await channel.SendCommandAsync(requestCommand).ConfigureAwait(false);
+            Command responseCommand = null;
+            while (
+                responseCommand == null || 
+                !responseCommand.Id.Equals(requestCommand.Id))
             {
-                await channel.SendCommandAsync(requestCommand).ConfigureAwait(false);
-                Command responseCommand = null;
-                while (responseCommand == null|| !responseCommand.Id.Equals(requestCommand.Id))
-                {
-                    cancellationToken.ThrowIfCancellationRequested();
-                    responseCommand = await channel.ReceiveCommandAsync(cancellationToken).ConfigureAwait(false);
+                cancellationToken.ThrowIfCancellationRequested();
+                responseCommand = await channel.ReceiveCommandAsync(cancellationToken).ConfigureAwait(false);
 
-                    if (responseCommand != null &&
-                        responseCommand.Id != requestCommand.Id)
+                if (responseCommand != null &&
+                    responseCommand.Id != requestCommand.Id)
+                {
+                    if (unrelatedCommandHandler != null)
                     {
-                        if (unrelatedCommandHandler != null)
-                        {
-                            await unrelatedCommandHandler(responseCommand).ConfigureAwait(false);
-                        }
-                        else
-                        {
-                            throw new InvalidOperationException(
-                                string.Format(
-                                    "A different command id response was received. Expected was '{0}' but received was '{1}'.",
-                                    requestCommand.Id, responseCommand.Id));
-                        }
+                        await unrelatedCommandHandler(responseCommand).ConfigureAwait(false);
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException(
+                            $"A different command id response was received. Expected was '{requestCommand.Id}' but received was '{responseCommand.Id}'.");
                     }
                 }
+            }
 
-                return responseCommand;
-            }
-            finally
-            {
-                _processCommandSemaphore.Release();
-            }
+            return responseCommand;
+
+
         }
     }
 }
