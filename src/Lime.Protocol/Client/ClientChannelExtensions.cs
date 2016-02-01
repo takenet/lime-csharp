@@ -26,7 +26,7 @@ namespace Lime.Protocol.Client
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
         public async static Task<Session> EstablishSessionAsync(this IClientChannel channel, Func<SessionCompression[], SessionCompression> compressionSelector,
-            Func<SessionEncryption[], SessionEncryption> encryptionSelector, Identity identity, Func<AuthenticationScheme[], Authentication, Authentication> authenticator, 
+            Func<SessionEncryption[], SessionEncryption> encryptionSelector, Identity identity, Func<AuthenticationScheme[], Authentication, Authentication> authenticator,
             string instance, CancellationToken cancellationToken)
         {
             if (channel == null) throw new ArgumentNullException(nameof(channel));
@@ -38,7 +38,6 @@ namespace Lime.Protocol.Client
             if (receivedSession.State == SessionState.Negotiating)
             {
                 if (compressionSelector == null) throw new ArgumentNullException(nameof(compressionSelector));
-
                 if (encryptionSelector == null) throw new ArgumentNullException(nameof(encryptionSelector));
 
                 // Select options
@@ -50,14 +49,20 @@ namespace Lime.Protocol.Client
                 if (receivedSession.State == SessionState.Negotiating)
                 {
                     // Configure transport
-                    if (receivedSession.Compression != channel.Transport.Compression)
+                    if (receivedSession.Compression != null &&
+                        receivedSession.Compression != channel.Transport.Compression)
                     {
-                        await channel.Transport.SetCompressionAsync(receivedSession.Compression.Value, cancellationToken).ConfigureAwait(false);
+                        await channel.Transport.SetCompressionAsync(
+                            receivedSession.Compression.Value,
+                            cancellationToken).ConfigureAwait(false);
                     }
 
-                    if (receivedSession.Encryption != channel.Transport.Encryption)
+                    if (receivedSession.Encryption != null &&
+                        receivedSession.Encryption != channel.Transport.Encryption)
                     {
-                        await channel.Transport.SetEncryptionAsync(receivedSession.Encryption.Value, cancellationToken).ConfigureAwait(false);
+                        await channel.Transport.SetEncryptionAsync(
+                            receivedSession.Encryption.Value,
+                            cancellationToken).ConfigureAwait(false);
                     }
                 }
 
@@ -70,10 +75,9 @@ namespace Lime.Protocol.Client
             {
                 if (identity == null) throw new ArgumentNullException(nameof(identity));
 
+                Authentication roundtrip = null;
                 do
                 {
-                    Authentication roundtrip = null;
-
                     receivedSession = await channel.AuthenticateSessionAsync(
                         identity,
                         authenticator(receivedSession.SchemeOptions, roundtrip),

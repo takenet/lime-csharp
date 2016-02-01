@@ -86,6 +86,7 @@
     <Otherwise />
   </Choose>
   <ItemGroup>
+    <Compile Include="Client\ClientChannelBuilderTests.cs" />
     <Compile Include="Client\ClientChannelTests.cs" />
     <Compile Include="Dummy.cs" />
     <Compile Include="EnvelopeTests.cs" />
