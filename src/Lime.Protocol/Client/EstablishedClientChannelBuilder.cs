@@ -81,6 +81,44 @@ namespace Lime.Protocol.Client
         }
 
         /// <summary>
+        /// Sets the authentication password to be used in the session establishment.
+        /// </summary>
+        /// <param name="password">The authentication password.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException"></exception>
+        public EstablishedClientChannelBuilder WithPlainAuthentication(string password)
+        {
+            if (string.IsNullOrEmpty(password)) throw new ArgumentException("Argument is null or empty", nameof(password));
+            var authentication = new PlainAuthentication();
+            authentication.SetToBase64Password(password);
+            return WithAuthentication(authentication);
+        }
+
+        /// <summary>
+        /// Sets the authentication key to be used in the session establishment.
+        /// </summary>
+        /// <param name="key">The authentication key.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException"></exception>
+        public EstablishedClientChannelBuilder WithKeyAuthentication(string key)
+        {
+            if (string.IsNullOrEmpty(key)) throw new ArgumentException("Argument is null or empty", nameof(key));
+            var authentication = new KeyAuthentication();
+            authentication.SetToBase64Key(key);
+            return WithAuthentication(authentication);
+        }
+
+        /// <summary>
+        /// Sets the authentication to be used in the session establishment.
+        /// </summary>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException"></exception>
+        public EstablishedClientChannelBuilder WithAuthentication<TAuthentication>() where TAuthentication : Authentication, new()
+        {
+            return WithAuthentication((schemes, roundtrip) => new TAuthentication());
+        }
+
+        /// <summary>
         /// Sets the authentication to be used in the session establishment.
         /// </summary>
         /// <param name="authentication">The authentication.</param>

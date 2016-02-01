@@ -12,7 +12,7 @@ namespace Lime.Protocol.Security
     /// authentication scheme. 
     /// </summary>
     [DataContract(Namespace = "http://limeprotocol.org/2014")]
-    public partial class TransportAuthentication : Authentication
+    public class TransportAuthentication : Authentication
     {
         public TransportAuthentication()
             : base(AuthenticationScheme.Transport)

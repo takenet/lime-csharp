@@ -11,7 +11,7 @@ namespace Lime.Protocol.Security
     /// Defines a guest authentication scheme
     /// </summary>
     [DataContract(Namespace = "http://limeprotocol.org/2014")]
-    public partial class GuestAuthentication : Authentication
+    public class GuestAuthentication : Authentication
     {
         public GuestAuthentication()
             : base(AuthenticationScheme.Guest)
