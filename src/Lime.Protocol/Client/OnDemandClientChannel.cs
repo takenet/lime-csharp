@@ -11,6 +11,8 @@ namespace Lime.Protocol.Client
     /// <summary>
     /// Defines a client channel that manages the session state and connects to the server on demand.
     /// </summary>
+    /// <seealso cref="Lime.Protocol.Client.IOnDemandClientChannel" />
+    /// <seealso cref="System.IDisposable" />
     /// <seealso cref="ICommandChannel" />
     /// <seealso cref="IMessageChannel" />
     /// <seealso cref="INotificationChannel" />
@@ -56,8 +58,7 @@ namespace Lime.Protocol.Client
         }
 
         /// <summary>
-        /// Sends a message to the
-        /// remote node
+        /// Sends a message to the remote node.
         /// </summary>
         /// <param name="message"></param>
         /// <returns></returns>
@@ -67,8 +68,7 @@ namespace Lime.Protocol.Client
         }
 
         /// <summary>
-        /// Receives a message
-        /// from the remote node.
+        /// Receives a message from the remote node.
         /// </summary>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns></returns>
@@ -78,8 +78,7 @@ namespace Lime.Protocol.Client
         }
 
         /// <summary>
-        /// Sends a notification to the
-        /// remote node
+        /// Sends a notification to the remote node.
         /// </summary>
         /// <param name="notification"></param>
         /// <returns></returns>
@@ -89,8 +88,7 @@ namespace Lime.Protocol.Client
         }
 
         /// <summary>
-        /// Receives a notification
-        /// from the remote node.
+        /// Receives a notification from the remote node.
         /// </summary>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns></returns>
@@ -129,11 +127,12 @@ namespace Lime.Protocol.Client
             }
         }
 
-        private async Task<IClientChannel> GetChannel(CancellationToken cancellationToken)
+        private async Task<IClientChannel> GetChannelAsync(CancellationToken cancellationToken)
         {
             while (_clientChannel == null)
             {
                 cancellationToken.ThrowIfCancellationRequested();
+
                 await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
                 try
                 {
@@ -173,8 +172,8 @@ namespace Lime.Protocol.Client
             while (!_disposed)
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                var channel = await GetChannel(cancellationToken).ConfigureAwait(false);
 
+                var channel = await GetChannelAsync(cancellationToken).ConfigureAwait(false);
                 try
                 {                    
                     await sendFunc(channel, envelope).ConfigureAwait(false);
@@ -182,7 +181,7 @@ namespace Lime.Protocol.Client
                 }
                 catch (InvalidOperationException)
                 {
-                    _clientChannel.DisposeIfDisposable();
+                    channel.DisposeIfDisposable();
                     _clientChannel = null;
                 }
                 catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
@@ -201,15 +200,15 @@ namespace Lime.Protocol.Client
             while (!_disposed)
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                var channel = await GetChannel(cancellationToken).ConfigureAwait(false);
 
+                var channel = await GetChannelAsync(cancellationToken).ConfigureAwait(false);
                 try
                 {                    
                     return await receiveFunc(channel, cancellationToken).ConfigureAwait(false);
                 }
                 catch (InvalidOperationException)
                 {
-                    _clientChannel.DisposeIfDisposable();
+                    channel.DisposeIfDisposable();
                     _clientChannel = null;
                 }
                 catch (Exception ex) when (!cancellationToken.IsCancellationRequested)

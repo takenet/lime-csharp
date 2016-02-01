@@ -13,15 +13,13 @@ namespace Lime.Protocol.Network
     public interface INotificationChannel
     {
         /// <summary>
-        /// Sends a notification to the
-        /// remote node
+        /// Sends a notification to the remote node.
         /// </summary>
         /// <param name="notification"></param>
         Task SendNotificationAsync(Notification notification);
 
         /// <summary>
-        /// Receives a notification
-        /// from the remote node.
+        /// Receives a notification from the remote node.
         /// </summary>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns></returns>

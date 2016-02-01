@@ -13,8 +13,7 @@ namespace Lime.Protocol.Network
     public interface IMessageChannel
     {
         /// <summary>
-        /// Sends a message to the
-        /// remote node
+        /// Sends a message to the remote node.
         /// </summary>
         /// <param name="message"></param>
         /// <returns></returns>
@@ -22,8 +21,7 @@ namespace Lime.Protocol.Network
 
 
         /// <summary>
-        /// Receives a message
-        /// from the remote node.
+        /// Receives a message from the remote node.
         /// </summary>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns></returns>
