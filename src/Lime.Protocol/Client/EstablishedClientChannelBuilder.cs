@@ -1,7 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Lime.Protocol.Network;
 using Lime.Protocol.Security;
 
 namespace Lime.Protocol.Client
@@ -10,10 +12,12 @@ namespace Lime.Protocol.Client
     {
         private readonly ClientChannelBuilder _clientChannelBuilder;
         private readonly Identity _identity;
+        private readonly List<Func<IClientChannel, CancellationToken, Task>> _establishedHandlers;
+
         private Func<SessionCompression[], SessionCompression> _compressionSelector;
         private Func<SessionEncryption[], SessionEncryption> _encryptionSelector;       
         private Func<AuthenticationScheme[], Authentication, Authentication> _authenticator;
-        private string _instance;
+        private string _instance;        
 
         internal EstablishedClientChannelBuilder(ClientChannelBuilder clientChannelBuilder, Identity identity)
         {
@@ -21,6 +25,7 @@ namespace Lime.Protocol.Client
             if (identity == null) throw new ArgumentNullException(nameof(identity));
             _clientChannelBuilder = clientChannelBuilder;
             _identity = identity;
+            _establishedHandlers = new List<Func<IClientChannel, CancellationToken, Task>>();
             _compressionSelector = options => options.First();
             _encryptionSelector = options => options.First();
             _authenticator = (options, roundtrip) => new GuestAuthentication();
@@ -115,6 +120,19 @@ namespace Lime.Protocol.Client
         }
 
         /// <summary>
+        /// Adds a handler to be executed after the channel is built and established.
+        /// </summary>
+        /// <param name="establishedHandler">The handler to be executed.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException"></exception>
+        public EstablishedClientChannelBuilder AddEstablishedHandler(Func<IClientChannel, CancellationToken, Task> establishedHandler)
+        {
+            if (establishedHandler == null) throw new ArgumentNullException(nameof(establishedHandler));
+            _establishedHandlers.Add(establishedHandler);
+            return this;
+        }
+
+        /// <summary>
         /// Builds a <see cref="ClientChannel"/> instance and establish the session using the builder options.
         /// </summary>
         /// <param name="cancellationToken">The cancellation token.</param>
@@ -125,14 +143,38 @@ namespace Lime.Protocol.Client
                 .BuildAsync(cancellationToken)
                 .ConfigureAwait(false);
 
-            var session = await clientChannel.EstablishSessionAsync(
-                _compressionSelector,
-                _encryptionSelector,
-                _identity,
-                _authenticator,
-                _instance,
-                cancellationToken)
-                .ConfigureAwait(false);
+            try
+            {
+                var session = await clientChannel.EstablishSessionAsync(
+                    _compressionSelector,
+                    _encryptionSelector,
+                    _identity,
+                    _authenticator,
+                    _instance,
+                    cancellationToken)
+                    .ConfigureAwait(false);
+
+                if (session.State != SessionState.Established)
+                {
+                    var reason = session.Reason ?? new Reason()
+                    {
+                        Code = ReasonCodes.GENERAL_ERROR,
+                        Description = "Could not establish the session for unknown reason"
+                    };
+
+                    throw new LimeException(reason);
+                }
+                foreach (var handler in _establishedHandlers.ToList())
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    await handler(clientChannel, cancellationToken).ConfigureAwait(false);
+                }
+            }
+            catch 
+            {
+                clientChannel.DisposeIfDisposable();
+                throw;
+            }
 
             return clientChannel;
         }

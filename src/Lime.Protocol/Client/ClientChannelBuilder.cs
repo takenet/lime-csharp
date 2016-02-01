@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Lime.Protocol.Network;
@@ -16,6 +17,7 @@ namespace Lime.Protocol.Client
         private readonly List<IChannelModule<Message>> _messageChannelModules;
         private readonly List<IChannelModule<Notification>> _notificationChannelModules;
         private readonly List<IChannelModule<Command>> _commandChannelModules;
+        private readonly List<Func<IClientChannel, CancellationToken, Task>> _builtHandlers;
         private TimeSpan _sendTimeout;
         private int _buffersLimit;
         
@@ -28,6 +30,7 @@ namespace Lime.Protocol.Client
             _messageChannelModules = new List<IChannelModule<Message>>();
             _notificationChannelModules = new List<IChannelModule<Notification>>();
             _commandChannelModules = new List<IChannelModule<Command>>();
+            _builtHandlers = new List<Func<IClientChannel, CancellationToken, Task>>();
 
             _sendTimeout = TimeSpan.FromSeconds(60);
             _buffersLimit = 5;
@@ -128,6 +131,19 @@ namespace Lime.Protocol.Client
         }
 
         /// <summary>
+        /// Adds a handler to be executed after the channel is built.
+        /// </summary>
+        /// <param name="builtHandler">The handler to be executed.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException"></exception>
+        public ClientChannelBuilder AddBuiltHandler(Func<IClientChannel, CancellationToken, Task> builtHandler)
+        {
+            if (builtHandler == null) throw new ArgumentNullException(nameof(builtHandler));
+            _builtHandlers.Add(builtHandler);
+            return this;
+        }
+
+        /// <summary>
         /// Builds a <see cref="ClientChannel"/> instance connecting the transport.
         /// </summary>
         /// <param name="cancellationToken">The cancellation token.</param>
@@ -140,27 +156,40 @@ namespace Lime.Protocol.Client
                 await transport.OpenAsync(_serverUri, cancellationToken).ConfigureAwait(false);
             }
 
-            var channel = new ClientChannel(
+            var clientChannel = new ClientChannel(
                 transport,
                 _sendTimeout,
                 _buffersLimit);
 
-            foreach (var module in _messageChannelModules)
+            try
             {
-                channel.MessageModules.Add(module);
-            }
+                foreach (var module in _messageChannelModules.ToList())
+                {
+                    clientChannel.MessageModules.Add(module);
+                }
 
-            foreach (var module in _notificationChannelModules)
+                foreach (var module in _notificationChannelModules.ToList())
+                {
+                    clientChannel.NotificationModules.Add(module);
+                }
+
+                foreach (var module in _commandChannelModules.ToList())
+                {
+                    clientChannel.CommandModules.Add(module);
+                }
+
+                foreach (var handler in _builtHandlers.ToList())
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    await handler(clientChannel, cancellationToken).ConfigureAwait(false);
+                }
+            }
+            catch
             {
-                channel.NotificationModules.Add(module);
+                clientChannel.DisposeIfDisposable();
+                throw;
             }
-
-            foreach (var module in _commandChannelModules)
-            {
-                channel.CommandModules.Add(module);
-            }
-
-            return channel;
+            return clientChannel;
         }
 
         /// <summary>

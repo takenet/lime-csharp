@@ -9,8 +9,7 @@ using System.Threading.Tasks;
 namespace Lime.Protocol.Client
 {
     /// <summary>
-    /// Helper extensions for the 
-    /// IClientChannel interface
+    /// Helper extensions for the IClientChannel interface.
     /// </summary>
     public static class ClientChannelExtensions
     {
