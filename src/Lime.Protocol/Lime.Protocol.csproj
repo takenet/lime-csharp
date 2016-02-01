@@ -51,7 +51,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Client\ClientChannel.cs" />
+    <Compile Include="Client\ClientChannelBuilder.cs" />
     <Compile Include="Client\ClientChannelExtensions.cs" />
+    <Compile Include="Client\EstablishedClientChannelBuilder.cs" />
     <Compile Include="Client\IClientChannel.cs" />
     <Compile Include="Command.cs" />
     <Compile Include="Document.cs" />
