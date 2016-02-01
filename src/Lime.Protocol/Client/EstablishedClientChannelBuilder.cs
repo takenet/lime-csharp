@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.NetworkInformation;
 using System.Threading;
 using System.Threading.Tasks;
 using Lime.Protocol.Network;
@@ -8,29 +9,48 @@ using Lime.Protocol.Security;
 
 namespace Lime.Protocol.Client
 {
+    /// <summary>
+    /// Helper class for building instances of <see cref="ClientChannel"/> and handling the establishment of the session for the channel.
+    /// </summary>
     public sealed class EstablishedClientChannelBuilder
-    {
-        private readonly ClientChannelBuilder _clientChannelBuilder;
-        private readonly Identity _identity;
+    {        
         private readonly List<Func<IClientChannel, CancellationToken, Task>> _establishedHandlers;
-
         private Func<SessionCompression[], SessionCompression> _compressionSelector;
         private Func<SessionEncryption[], SessionEncryption> _encryptionSelector;       
         private Func<AuthenticationScheme[], Authentication, Authentication> _authenticator;
-        private string _instance;        
-
-        internal EstablishedClientChannelBuilder(ClientChannelBuilder clientChannelBuilder, Identity identity)
+        
+        /// <summary>
+        /// Initializes a new instance of the <see cref="EstablishedClientChannelBuilder"/> class.
+        /// </summary>
+        /// <param name="clientChannelBuilder">The client channel builder.</param>
+        /// <exception cref="System.ArgumentNullException">
+        /// </exception>
+        public EstablishedClientChannelBuilder(ClientChannelBuilder clientChannelBuilder)
         {
             if (clientChannelBuilder == null) throw new ArgumentNullException(nameof(clientChannelBuilder));
-            if (identity == null) throw new ArgumentNullException(nameof(identity));
-            _clientChannelBuilder = clientChannelBuilder;
-            _identity = identity;
+            ChannelBuilder = clientChannelBuilder;
             _establishedHandlers = new List<Func<IClientChannel, CancellationToken, Task>>();
             _compressionSelector = options => options.First();
             _encryptionSelector = options => options.First();
             _authenticator = (options, roundtrip) => new GuestAuthentication();
-            _instance = Environment.MachineName;
+            Identity = new Identity(Guid.NewGuid().ToString(), clientChannelBuilder.ServerUri.Host);
+            Instance = Environment.MachineName;
         }
+
+        /// <summary>
+        /// Gets the associated channel builder.
+        /// </summary>
+        internal ClientChannelBuilder ChannelBuilder { get; }
+
+        /// <summary>
+        /// Gets the identity.
+        /// </summary>        
+        internal Identity Identity { get; private set; }
+
+        /// <summary>
+        /// Gets the instance.
+        /// </summary>
+        internal string Instance { get; private set; }
 
         /// <summary>
         /// Sets the compression options to be used in the session establishment.
@@ -145,15 +165,28 @@ namespace Lime.Protocol.Client
         }
 
         /// <summary>
+        /// Sets the identity to be used in the session establishment.
+        /// </summary>
+        /// <param name="identity">The identity to be used.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException"></exception>
+        public EstablishedClientChannelBuilder WithIdentity(Identity identity)
+        {
+            if (identity == null) throw new ArgumentNullException(nameof(identity));
+            Identity = identity;
+            return this;
+        }
+
+        /// <summary>
         /// Sets the instance name to be used in the session establishment.
         /// </summary>
-        /// <param name="instance">The instance.</param>
+        /// <param name="instance">The instance to be used.</param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException"></exception>
         public EstablishedClientChannelBuilder WithInstance(string instance)
         {
             if (instance == null) throw new ArgumentNullException(nameof(instance));
-            _instance = instance;
+            Instance = instance;
             return this;
         }
 
@@ -177,7 +210,7 @@ namespace Lime.Protocol.Client
         /// <returns></returns>
         public async Task<IClientChannel> BuildAndEstablishAsync(CancellationToken cancellationToken)
         {
-            var clientChannel = await _clientChannelBuilder
+            var clientChannel = await ChannelBuilder
                 .BuildAsync(cancellationToken)
                 .ConfigureAwait(false);
 
@@ -186,9 +219,9 @@ namespace Lime.Protocol.Client
                 var session = await clientChannel.EstablishSessionAsync(
                     _compressionSelector,
                     _encryptionSelector,
-                    _identity,
+                    Identity,
                     _authenticator,
-                    _instance,
+                    Instance,
                     cancellationToken)
                     .ConfigureAwait(false);
 
@@ -202,6 +235,7 @@ namespace Lime.Protocol.Client
 
                     throw new LimeException(reason);
                 }
+
                 foreach (var handler in _establishedHandlers.ToList())
                 {
                     cancellationToken.ThrowIfCancellationRequested();

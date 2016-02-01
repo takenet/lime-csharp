@@ -43,7 +43,7 @@ namespace Lime.Protocol.Client
         /// </summary>
         /// <param name="cancellationToken"></param>
         /// <returns>An authenticating session envelope or a failed session envelope.</returns>
-        Task<Session> ReceiveAuthenticatingSessionAsync(CancellationToken cancellationToken); 
+        Task<Session> ReceiveAuthenticatingSessionAsync(CancellationToken cancellationToken);
 
         /// <summary>
         /// Sends a authenticate session envelope
@@ -54,6 +54,7 @@ namespace Lime.Protocol.Client
         /// <param name="identity"></param>
         /// <param name="authentication"></param>
         /// <param name="instance"></param>
+        /// <param name="cancellationToken"></param>
         /// <returns>An established session envelope or a failed session envelope.</returns>
         Task<Session> AuthenticateSessionAsync(Identity identity, Authentication authentication, string instance, CancellationToken cancellationToken);
 

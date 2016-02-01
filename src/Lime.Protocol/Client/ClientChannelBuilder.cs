@@ -12,29 +12,47 @@ namespace Lime.Protocol.Client
     /// </summary>
     public sealed class ClientChannelBuilder
     {
-        private readonly Func<ITransport> _transportFactory;
-        private readonly Uri _serverUri;
+        private readonly Func<ITransport> _transportFactory;        
         private readonly List<IChannelModule<Message>> _messageChannelModules;
         private readonly List<IChannelModule<Notification>> _notificationChannelModules;
         private readonly List<IChannelModule<Command>> _commandChannelModules;
         private readonly List<Func<IClientChannel, CancellationToken, Task>> _builtHandlers;
-        private TimeSpan _sendTimeout;
-        private int _buffersLimit;
         
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ClientChannelBuilder"/> class.
+        /// </summary>
+        /// <param name="transportFactory">The transport factory.</param>
+        /// <param name="serverUri">The server URI.</param>
+        /// <exception cref="System.ArgumentNullException">
+        /// </exception>
         private ClientChannelBuilder(Func<ITransport> transportFactory, Uri serverUri)
         {
             if (transportFactory == null) throw new ArgumentNullException(nameof(transportFactory));
             if (serverUri == null) throw new ArgumentNullException(nameof(serverUri));
             _transportFactory = transportFactory;
-            _serverUri = serverUri;
+            ServerUri = serverUri;
             _messageChannelModules = new List<IChannelModule<Message>>();
             _notificationChannelModules = new List<IChannelModule<Notification>>();
             _commandChannelModules = new List<IChannelModule<Command>>();
             _builtHandlers = new List<Func<IClientChannel, CancellationToken, Task>>();
-
-            _sendTimeout = TimeSpan.FromSeconds(60);
-            _buffersLimit = 5;
+            SendTimeout = TimeSpan.FromSeconds(60);
+            BuffersLimit = 5;
         }
+
+        /// <summary>
+        /// Gets the server URI.
+        /// </summary>
+        internal Uri ServerUri { get; }
+
+        /// <summary>
+        /// Gets the send timeout.
+        /// </summary>        
+        internal TimeSpan SendTimeout { get; private set; }
+
+        /// <summary>
+        /// Gets the buffers limit.
+        /// </summary>        
+        internal int BuffersLimit { get; private set; }
 
         /// <summary>
         /// Creates an instance of <see cref="ClientChannelBuilder"/> using the specified transport type.
@@ -80,7 +98,7 @@ namespace Lime.Protocol.Client
         /// <returns></returns>
         public ClientChannelBuilder WithSendTimeout(TimeSpan sendTimeout)
         {
-            _sendTimeout = sendTimeout;
+            SendTimeout = sendTimeout;
             return this;
         }
 
@@ -93,7 +111,7 @@ namespace Lime.Protocol.Client
         public ClientChannelBuilder WithBuffersLimit(int buffersLimit)
         {
             if (buffersLimit <= 0) throw new ArgumentOutOfRangeException(nameof(buffersLimit));
-            _buffersLimit = buffersLimit;
+            BuffersLimit = buffersLimit;
             return this;
         }
 
@@ -153,13 +171,13 @@ namespace Lime.Protocol.Client
             var transport = _transportFactory();
             if (!transport.IsConnected)
             {
-                await transport.OpenAsync(_serverUri, cancellationToken).ConfigureAwait(false);
+                await transport.OpenAsync(ServerUri, cancellationToken).ConfigureAwait(false);
             }
 
             var clientChannel = new ClientChannel(
                 transport,
-                _sendTimeout,
-                _buffersLimit);
+                SendTimeout,
+                BuffersLimit);
 
             try
             {
@@ -195,13 +213,11 @@ namespace Lime.Protocol.Client
         /// <summary>
         /// Creates an <see cref="EstablishedClientChannelBuilder"/> to allow building and establishment of <see cref="ClientChannel"/> instances.
         /// </summary>
-        /// <param name="identity">The identity.</param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException"></exception>
-        public EstablishedClientChannelBuilder CreateEstablishedClientChannelBuilder(Identity identity)
+        public EstablishedClientChannelBuilder CreateEstablishedClientChannelBuilder()
         {
-            if (identity == null) throw new ArgumentNullException(nameof(identity));
-            return new EstablishedClientChannelBuilder(this, identity);
+            return new EstablishedClientChannelBuilder(this);
         }
     }
 }
