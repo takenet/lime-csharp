@@ -20,8 +20,13 @@ namespace Lime.Protocol.Client
         private readonly TimeSpan _sendTimeout;
         private readonly SemaphoreSlim _semaphore;
         private IClientChannel _clientChannel;
-        private bool _disposed;    
+        private bool _disposed;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="OnDemandClientChannel"/> class.
+        /// </summary>
+        /// <param name="builder">The builder.</param>
+        /// <exception cref="System.ArgumentNullException"></exception>
         public OnDemandClientChannel(EstablishedClientChannelBuilder builder)
         {
             if (builder == null) throw new ArgumentNullException(nameof(builder));
@@ -30,31 +35,65 @@ namespace Lime.Protocol.Client
             _semaphore = new SemaphoreSlim(0, 1);
         }
 
+        /// <summary>
+        /// Sends a command envelope to the remote node.
+        /// </summary>
+        /// <param name="command"></param>
+        /// <returns></returns>
         public Task SendCommandAsync(Command command)
         {
             return SendAsync(command, (channel, envelope) => channel.SendCommandAsync(envelope));
         }
 
+        /// <summary>
+        /// Receives a command from the remote node.
+        /// </summary>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns></returns>
         public Task<Command> ReceiveCommandAsync(CancellationToken cancellationToken)
         {
             return ReceiveAsync(cancellationToken, (channel, token) => channel.ReceiveCommandAsync(token));
         }
 
+        /// <summary>
+        /// Sends a message to the
+        /// remote node
+        /// </summary>
+        /// <param name="message"></param>
+        /// <returns></returns>
         public Task SendMessageAsync(Message message)
         {
             return SendAsync(message, (channel, envelope) => channel.SendMessageAsync(envelope));
         }
 
+        /// <summary>
+        /// Receives a message
+        /// from the remote node.
+        /// </summary>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns></returns>
         public Task<Message> ReceiveMessageAsync(CancellationToken cancellationToken)
         {
             return ReceiveAsync(cancellationToken, (channel, token) => channel.ReceiveMessageAsync(token));
         }
 
+        /// <summary>
+        /// Sends a notification to the
+        /// remote node
+        /// </summary>
+        /// <param name="notification"></param>
+        /// <returns></returns>
         public Task SendNotificationAsync(Notification notification)
         {
             return SendAsync(notification, (channel, envelope) => channel.SendNotificationAsync(envelope));
         }
 
+        /// <summary>
+        /// Receives a notification
+        /// from the remote node.
+        /// </summary>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns></returns>
         public Task<Notification> ReceiveNotificationAsync(CancellationToken cancellationToken)
         {
             return ReceiveAsync(cancellationToken, (channel, token) => channel.ReceiveNotificationAsync(token));
