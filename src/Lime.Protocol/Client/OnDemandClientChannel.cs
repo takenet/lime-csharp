@@ -127,38 +127,6 @@ namespace Lime.Protocol.Client
             }
         }
 
-        private async Task<IClientChannel> GetChannelAsync(CancellationToken cancellationToken)
-        {
-            while (_clientChannel == null)
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-
-                await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
-                try
-                {
-                    if (_clientChannel == null)
-                    {
-                        _clientChannel = await _builder
-                            .BuildAndEstablishAsync(cancellationToken)
-                            .ConfigureAwait(false);
-                    }
-                }
-                catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
-                {
-                    var eventArgs = new ExceptionEventArgs(ex);                                                                
-                    ChannelCreationFailed?.RaiseEvent(this, eventArgs);
-                    await eventArgs.WaitForDeferralsAsync().ConfigureAwait(false);
-                }
-                finally
-                {
-                    _semaphore.Release();
-                }
-            }
-
-            return _clientChannel;
-        }
-
-
         private Task SendAsync<T>(T envelope, Func<IClientChannel, T, Task> sendFunc) where T : Envelope, new()
         {
             using (var cts = new CancellationTokenSource(_sendTimeout))
@@ -178,14 +146,15 @@ namespace Lime.Protocol.Client
                 {                    
                     await sendFunc(channel, envelope).ConfigureAwait(false);
                     break;
-                }
-                catch (InvalidOperationException)
-                {
-                    channel.DisposeIfDisposable();
-                    _clientChannel = null;
-                }
+                }                
                 catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
                 {
+                    if (channel.State != SessionState.Established ||
+                        !channel.Transport.IsConnected)
+                    {
+                        await DiscardChannelAsync(channel, cancellationToken).ConfigureAwait(false);
+                    }
+
                     var eventArgs = new ExceptionEventArgs(ex);
                     ChannelOperationFailed?.RaiseEvent(this, eventArgs);
                     await eventArgs.WaitForDeferralsAsync().ConfigureAwait(false);
@@ -205,14 +174,15 @@ namespace Lime.Protocol.Client
                 try
                 {                    
                     return await receiveFunc(channel, cancellationToken).ConfigureAwait(false);
-                }
-                catch (InvalidOperationException)
-                {
-                    channel.DisposeIfDisposable();
-                    _clientChannel = null;
-                }
+                }                
                 catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
                 {
+                    if (channel.State != SessionState.Established ||
+                        !channel.Transport.IsConnected)
+                    {
+                        await DiscardChannelAsync(channel, cancellationToken).ConfigureAwait(false);
+                    }
+
                     var eventArgs = new ExceptionEventArgs(ex);
                     ChannelOperationFailed?.RaiseEvent(this, eventArgs);
                     await eventArgs.WaitForDeferralsAsync().ConfigureAwait(false);
@@ -220,6 +190,55 @@ namespace Lime.Protocol.Client
             }
 
             throw new ObjectDisposedException(nameof(OnDemandClientChannel));
+        }
+
+        private async Task<IClientChannel> GetChannelAsync(CancellationToken cancellationToken)
+        {
+            while (_clientChannel == null)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+                try
+                {
+                    if (_clientChannel == null)
+                    {
+                        _clientChannel = await _builder
+                            .BuildAndEstablishAsync(cancellationToken)
+                            .ConfigureAwait(false);
+                    }
+                }
+                catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
+                {
+                    var eventArgs = new ExceptionEventArgs(ex);
+                    ChannelCreationFailed?.RaiseEvent(this, eventArgs);
+                    await eventArgs.WaitForDeferralsAsync().ConfigureAwait(false);
+                }
+                finally
+                {
+                    _semaphore.Release();
+                }
+            }
+
+            return _clientChannel;
+        }
+
+        private async Task DiscardChannelAsync(IClientChannel clientChannel, CancellationToken cancellationToken)
+        {
+            clientChannel.DisposeIfDisposable();
+
+            await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+            try
+            {
+                if (ReferenceEquals(clientChannel, _clientChannel))
+                {
+                    _clientChannel = null;
+                }
+            }
+            finally
+            {
+                _semaphore.Release();
+            }
         }
 
         public void Dispose()
