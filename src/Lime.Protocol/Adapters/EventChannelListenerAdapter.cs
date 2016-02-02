@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Lime.Protocol.Client;
 using Lime.Protocol.Network;
 
 namespace Lime.Protocol.Adapters
@@ -17,6 +18,16 @@ namespace Lime.Protocol.Adapters
             : base(channel, channel, channel)
         {
             
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="EventChannelListenerAdapter"/> class.
+        /// </summary>
+        /// <param name="channel">The channel.</param>
+        public EventChannelListenerAdapter(IOnDemandClientChannel channel)
+            : base(channel, channel, channel)
+        {
+
         }
 
         /// <summary>

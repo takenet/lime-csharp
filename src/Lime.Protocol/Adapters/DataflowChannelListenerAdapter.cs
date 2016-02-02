@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
+using Lime.Protocol.Client;
 using Lime.Protocol.Network;
 
 namespace Lime.Protocol.Adapters
@@ -28,6 +29,19 @@ namespace Lime.Protocol.Adapters
             
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="DataflowChannelListenerAdapter" /> class.
+        /// </summary>
+        /// <param name="channel">The channel.</param>
+        /// <param name="messageTargetBlock">The message target block.</param>
+        /// <param name="notificationTargetBlock">The notification target block.</param>
+        /// <param name="commandTargetBlock">The command target block.</param>
+        public DataflowChannelListenerAdapter(IOnDemandClientChannel channel, ITargetBlock<Message> messageTargetBlock, ITargetBlock<Notification> notificationTargetBlock, ITargetBlock<Command> commandTargetBlock)
+            : this(channel, channel, channel, messageTargetBlock, notificationTargetBlock, commandTargetBlock)
+        {
+
+        }
+        
         /// <summary>
         /// Initializes a new instance of the <see cref="DataflowChannelListenerAdapter" /> class.
         /// </summary>

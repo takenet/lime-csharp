@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Lime.Protocol.Client;
 using Lime.Protocol.Network;
@@ -21,8 +22,7 @@ namespace Lime.Protocol.UnitTests.Client
         private TimeSpan _sendTimeout;
         private CancellationToken _cancellationToken;
 
-        #region Scenario
-
+        
         [SetUp]
         public void Setup()
         {
@@ -37,12 +37,11 @@ namespace Lime.Protocol.UnitTests.Client
         {
             _transport = null;
         }
-
-        #endregion
+        
 
         private ClientChannelBuilder GetTarget()
         {
-            return ClientChannelBuilder.Create(_transport.Object, serverUri);
+            return ClientChannelBuilder.Create(_transport.Object, _serverUri);
         }
 
         [Test]
@@ -51,7 +50,7 @@ namespace Lime.Protocol.UnitTests.Client
             // Arrange            
             _transport.Setup(t => t.IsConnected).Returns(false);
             _transport
-                .Setup(t => t.OpenAsync(serverUri, cancellationToken))
+                .Setup(t => t.OpenAsync(_serverUri, _cancellationToken))
                 .Returns(TaskUtil.CompletedTask)
                 .Verifiable();
             var target = GetTarget();
@@ -76,7 +75,7 @@ namespace Lime.Protocol.UnitTests.Client
 
             // Assert            
             channel.Transport.ShouldBe(_transport.Object);
-            _transport.Verify(t => t.OpenAsync(serverUri, _cancellationToken), Times.Never);
+            _transport.Verify(t => t.OpenAsync(_serverUri, _cancellationToken), Times.Never);
         }
         
         [Test]
@@ -92,7 +91,7 @@ namespace Lime.Protocol.UnitTests.Client
             var channel = await target.BuildAsync(_cancellationToken);
 
             // Assert            
-            channel.MessageModules.ShouldContains(target.Object);
+            channel.MessageModules.ShouldContain(moduleMock.Object);
         }
         
         [Test]
@@ -108,7 +107,7 @@ namespace Lime.Protocol.UnitTests.Client
             var channel = await target.BuildAsync(_cancellationToken);
 
             // Assert            
-            channel.CommandModules.ShouldContains(target.Object);
+            channel.CommandModules.ShouldContain(moduleMock.Object);
         }
         
         [Test]
@@ -124,7 +123,7 @@ namespace Lime.Protocol.UnitTests.Client
             var channel = await target.BuildAsync(_cancellationToken);
 
             // Assert            
-            channel.NotificationModules.ShouldContains(target.Object);
+            channel.NotificationModules.ShouldContain(moduleMock.Object);
         }       
         
         [Test]
@@ -132,13 +131,13 @@ namespace Lime.Protocol.UnitTests.Client
         {
             // Arrange            
             _transport.Setup(t => t.IsConnected).Returns(true);                        
-            var moduleMock = new Mock<IChannelModule<Notification>>();                        
             IClientChannel handlerClientChannel = null;
-            CancellationToken handlerCancellationToken = default(CancellationToken);
-            Func<IClientChannel, CancellationToken, Task> builtHandler = async (clientChannel, cancellationToken) =>
+            var handlerCancellationToken = default(CancellationToken);
+            Func<IClientChannel, CancellationToken, Task> builtHandler = (clientChannel, cancellationToken) =>
             {
                 handlerClientChannel = clientChannel;
-                handlerCancellationToken = cancellationToken;                
+                handlerCancellationToken = cancellationToken;
+                return TaskUtil.CompletedTask;
             };
             
             var target = GetTarget();
@@ -150,7 +149,7 @@ namespace Lime.Protocol.UnitTests.Client
             // Assert            
             handlerClientChannel.ShouldNotBeNull();
             handlerClientChannel.ShouldBe(channel);
-            cancellationToken.ShouldBe(_cancellationToken);
+            handlerCancellationToken.ShouldBe(_cancellationToken);
         }        
     }
 }

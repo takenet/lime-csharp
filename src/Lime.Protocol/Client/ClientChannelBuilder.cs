@@ -10,7 +10,7 @@ namespace Lime.Protocol.Client
     /// <summary>
     /// Helper class for building instances of <see cref="ClientChannel"/>.
     /// </summary>
-    public sealed class ClientChannelBuilder
+    public sealed class ClientChannelBuilder : IClientChannelBuilder
     {
         private readonly Func<ITransport> _transportFactory;        
         private readonly List<IChannelModule<Message>> _messageChannelModules;
@@ -42,17 +42,17 @@ namespace Lime.Protocol.Client
         /// <summary>
         /// Gets the server URI.
         /// </summary>
-        internal Uri ServerUri { get; }
+        public Uri ServerUri { get; }
 
         /// <summary>
         /// Gets the send timeout.
         /// </summary>        
-        internal TimeSpan SendTimeout { get; private set; }
+        public TimeSpan SendTimeout { get; private set; }
 
         /// <summary>
         /// Gets the buffers limit.
         /// </summary>        
-        internal int BuffersLimit { get; private set; }
+        public int BuffersLimit { get; private set; }
 
         /// <summary>
         /// Creates an instance of <see cref="ClientChannelBuilder"/> using the specified transport type.

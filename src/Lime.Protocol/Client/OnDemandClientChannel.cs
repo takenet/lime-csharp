@@ -18,7 +18,7 @@ namespace Lime.Protocol.Client
     /// <seealso cref="INotificationChannel" />
     public sealed class OnDemandClientChannel : IOnDemandClientChannel, IDisposable
     {
-        private readonly EstablishedClientChannelBuilder _builder;
+        private readonly IEstablishedClientChannelBuilder _builder;
         private readonly TimeSpan _sendTimeout;
         private readonly SemaphoreSlim _semaphore;
         private IClientChannel _clientChannel;
@@ -29,12 +29,13 @@ namespace Lime.Protocol.Client
         /// </summary>
         /// <param name="builder">The builder.</param>
         /// <exception cref="System.ArgumentNullException"></exception>
-        public OnDemandClientChannel(EstablishedClientChannelBuilder builder)
+        public OnDemandClientChannel(IEstablishedClientChannelBuilder builder)
         {
             if (builder == null) throw new ArgumentNullException(nameof(builder));
+            if (builder.ChannelBuilder == null) throw new ArgumentException("The specified builder is invalid", nameof(builder));
             _builder = builder;
             _sendTimeout = builder.ChannelBuilder.SendTimeout;
-            _semaphore = new SemaphoreSlim(0, 1);
+            _semaphore = new SemaphoreSlim(1, 1);
         }
 
         /// <summary>
@@ -158,7 +159,7 @@ namespace Lime.Protocol.Client
                 try
                 {                    
                     await sendFunc(channel, envelope).ConfigureAwait(false);
-                    break;
+                    return;
                 }
                 catch (Exception ex) when (!(ex is OperationCanceledException && cancellationToken.IsCancellationRequested))
                 {

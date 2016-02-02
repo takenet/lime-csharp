@@ -88,6 +88,8 @@
   <ItemGroup>
     <Compile Include="Client\ClientChannelBuilderTests.cs" />
     <Compile Include="Client\ClientChannelTests.cs" />
+    <Compile Include="Client\EstablishedClientChannelBuilderTests.cs" />
+    <Compile Include="Client\OnDemandClientChannelTests.cs" />
     <Compile Include="Dummy.cs" />
     <Compile Include="EnvelopeTests.cs" />
     <Compile Include="Network\ChannelBaseTests.cs" />

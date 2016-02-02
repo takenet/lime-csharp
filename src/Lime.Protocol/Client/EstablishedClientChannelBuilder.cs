@@ -12,7 +12,7 @@ namespace Lime.Protocol.Client
     /// <summary>
     /// Helper class for building instances of <see cref="ClientChannel"/> and handling the establishment of the session for the channel.
     /// </summary>
-    public sealed class EstablishedClientChannelBuilder
+    public sealed class EstablishedClientChannelBuilder : IEstablishedClientChannelBuilder
     {        
         private readonly List<Func<IClientChannel, CancellationToken, Task>> _establishedHandlers;
         private Func<SessionCompression[], SessionCompression> _compressionSelector;
@@ -25,7 +25,7 @@ namespace Lime.Protocol.Client
         /// <param name="clientChannelBuilder">The client channel builder.</param>
         /// <exception cref="System.ArgumentNullException">
         /// </exception>
-        public EstablishedClientChannelBuilder(ClientChannelBuilder clientChannelBuilder)
+        public EstablishedClientChannelBuilder(IClientChannelBuilder clientChannelBuilder)
         {
             if (clientChannelBuilder == null) throw new ArgumentNullException(nameof(clientChannelBuilder));
             ChannelBuilder = clientChannelBuilder;
@@ -40,17 +40,17 @@ namespace Lime.Protocol.Client
         /// <summary>
         /// Gets the associated channel builder.
         /// </summary>
-        internal ClientChannelBuilder ChannelBuilder { get; }
+        public IClientChannelBuilder ChannelBuilder { get; }
 
         /// <summary>
         /// Gets the identity.
         /// </summary>        
-        internal Identity Identity { get; private set; }
+        public Identity Identity { get; private set; }
 
         /// <summary>
         /// Gets the instance.
         /// </summary>
-        internal string Instance { get; private set; }
+        public string Instance { get; private set; }
 
         /// <summary>
         /// Sets the compression options to be used in the session establishment.
