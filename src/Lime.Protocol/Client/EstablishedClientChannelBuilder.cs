@@ -230,7 +230,7 @@ namespace Lime.Protocol.Client
                     var reason = session.Reason ?? new Reason()
                     {
                         Code = ReasonCodes.GENERAL_ERROR,
-                        Description = "Could not establish the session for unknown reason"
+                        Description = "Could not establish the session for an unknown reason"
                     };
 
                     throw new LimeException(reason);

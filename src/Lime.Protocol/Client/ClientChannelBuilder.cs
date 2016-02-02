@@ -122,6 +122,7 @@ namespace Lime.Protocol.Client
         /// <returns></returns>
         public ClientChannelBuilder AddMessageModule(IChannelModule<Message> module)
         {
+            if (module == null) throw new ArgumentNullException(nameof(module));
             _messageChannelModules.Add(module);
             return this;
         }
@@ -133,6 +134,7 @@ namespace Lime.Protocol.Client
         /// <returns></returns>
         public ClientChannelBuilder AddNotificationModule(IChannelModule<Notification> module)
         {
+            if (module == null) throw new ArgumentNullException(nameof(module));
             _notificationChannelModules.Add(module);
             return this;
         }
@@ -144,6 +146,7 @@ namespace Lime.Protocol.Client
         /// <returns></returns>
         public ClientChannelBuilder AddCommandModule(IChannelModule<Command> module)
         {
+            if (module == null) throw new ArgumentNullException(nameof(module));
             _commandChannelModules.Add(module);
             return this;
         }
