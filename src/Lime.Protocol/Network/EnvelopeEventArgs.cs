@@ -7,25 +7,19 @@ using System.Threading.Tasks;
 namespace Lime.Protocol.Network
 {
     /// <summary>
-    /// Holds the information for a 
-    /// envelope related event
+    /// Holds the information for a envelope related event.
     /// </summary>
-    public class EnvelopeEventArgs<T> : EventArgs, IEnvelopeContainer<T> where T : Envelope
+    public class EnvelopeEventArgs<T> : DeferralEventArgs, IEnvelopeContainer<T> where T : Envelope
     {
         public EnvelopeEventArgs(T envelope)
         {
-            if (envelope == null)
-            {
-                throw new ArgumentNullException("envelope");
-            }
-
-            this.Envelope = envelope;
+            if (envelope == null) throw new ArgumentNullException(nameof(envelope));            
+            Envelope = envelope;
         }
 
         /// <summary>
-        /// The envelope related 
-        /// to the event
+        /// The envelope related to the event.
         /// </summary>
-        public T Envelope { get; private set; }
+        public T Envelope { get; }
     }
 }
