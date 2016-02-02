@@ -8,24 +8,19 @@ using System.Threading.Tasks;
 namespace Lime.Protocol.Network
 {
     /// <summary>
-    /// Provides informations about an event
-    /// for an exception
+    /// Provides informations about an event for an exception.
     /// </summary>
     public class ExceptionEventArgs : DeferralEventArgs
     {
         public ExceptionEventArgs(Exception exception)
         {
-            if (exception == null)
-            {
-                throw new ArgumentNullException("exception");
-            }
-
-            this.Exception = exception;
+            if (exception == null) throw new ArgumentNullException(nameof(exception));            
+            Exception = exception;
         }
 
         /// <summary>
-        /// Exception related to the event
+        /// Exception related to the event.
         /// </summary>
-        public Exception Exception { get; private set; }
+        public Exception Exception { get; }
     }
 }
