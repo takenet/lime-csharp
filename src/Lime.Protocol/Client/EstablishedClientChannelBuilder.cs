@@ -103,12 +103,12 @@ namespace Lime.Protocol.Client
         /// <summary>
         /// Sets the authentication password to be used in the session establishment.
         /// </summary>
-        /// <param name="password">The authentication password.</param>
+        /// <param name="password">The authentication password, in plain text.</param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException"></exception>
         public EstablishedClientChannelBuilder WithPlainAuthentication(string password)
         {
-            if (string.IsNullOrEmpty(password)) throw new ArgumentException("Argument is null or empty", nameof(password));
+            if (password == null) throw new ArgumentNullException(nameof(password));        
             var authentication = new PlainAuthentication();
             authentication.SetToBase64Password(password);
             return WithAuthentication(authentication);
@@ -122,7 +122,7 @@ namespace Lime.Protocol.Client
         /// <exception cref="System.ArgumentNullException"></exception>
         public EstablishedClientChannelBuilder WithKeyAuthentication(string key)
         {
-            if (string.IsNullOrEmpty(key)) throw new ArgumentException("Argument is null or empty", nameof(key));
+            if (key == null) throw new ArgumentNullException(nameof(key));            
             var authentication = new KeyAuthentication();
             authentication.SetToBase64Key(key);
             return WithAuthentication(authentication);

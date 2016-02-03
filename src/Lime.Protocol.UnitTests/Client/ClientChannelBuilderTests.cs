@@ -127,7 +127,7 @@ namespace Lime.Protocol.UnitTests.Client
         }       
         
         [Test]
-        public async Task AddBuiltHandler_CallsBuildAsync_ShouldExecuteHandler()
+        public async Task AddBuiltHandler_SingleHandler_ShouldExecuteHandler()
         {
             // Arrange            
             _transport.Setup(t => t.IsConnected).Returns(true);                        
@@ -150,6 +150,54 @@ namespace Lime.Protocol.UnitTests.Client
             handlerClientChannel.ShouldNotBeNull();
             handlerClientChannel.ShouldBe(channel);
             handlerCancellationToken.ShouldBe(_cancellationToken);
-        }        
+        }
+
+        [Test]
+        [ExpectedException(typeof(ApplicationException))]
+        public async Task AddBuiltHandler_HandlerThrowsException_ShouldRethrowToCaller()
+        {
+            // Arrange            
+            var exception = Dummy.CreateException<ApplicationException>();
+            _transport.Setup(t => t.IsConnected).Returns(true);            
+            Func<IClientChannel, CancellationToken, Task> builtHandler = (clientChannel, cancellationToken) =>
+            {
+                throw exception;
+            };
+            var target = GetTarget();
+
+            // Act
+            target.AddBuiltHandler(builtHandler);
+            var channel = await target.BuildAsync(_cancellationToken);
+        }
+
+        [Test]
+        public async Task AddBuiltHandler_MultipleHandlers_ShouldExecuteHandlers()
+        {
+            // Arrange            
+            _transport.Setup(t => t.IsConnected).Returns(true);
+            var handlerClientChannels = new List<IClientChannel>();
+            var handlerCancellationTokens = new List<CancellationToken>();            
+            var target = GetTarget();
+
+            // Act
+            var count = Dummy.CreateRandomInt(100);
+            for (int i = 0; i < count; i++)
+            {
+                Func<IClientChannel, CancellationToken, Task> builtHandler = (clientChannel, cancellationToken) =>
+                {
+                    handlerClientChannels.Add(clientChannel);
+                    handlerCancellationTokens.Add(cancellationToken);
+                    return TaskUtil.CompletedTask;
+                };
+                target.AddBuiltHandler(builtHandler);
+            }
+            var channel = await target.BuildAsync(_cancellationToken);
+
+            // Assert            
+            handlerClientChannels.Count.ShouldBe(count);
+            handlerCancellationTokens.Count.ShouldBe(count);
+            handlerClientChannels.ShouldAllBe(c => c == channel);
+            handlerCancellationTokens.ShouldAllBe(t => t == _cancellationToken);            
+        }
     }
 }

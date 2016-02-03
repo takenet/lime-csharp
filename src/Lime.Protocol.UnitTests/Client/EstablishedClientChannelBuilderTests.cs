@@ -22,6 +22,7 @@ namespace Lime.Protocol.UnitTests.Client
         private CancellationToken _cancellationToken;
         private Mock<ITransport> _transport;
         private Mock<IClientChannel> _clientChannel;
+        private Mock<IDisposable> _disposableClientChannel;
         private Mock<IClientChannelBuilder> _clientChannelBuilder;
 
         private Uri _serverUri;
@@ -40,7 +41,7 @@ namespace Lime.Protocol.UnitTests.Client
         {                  
             _cancellationToken = TimeSpan.FromSeconds(5).ToCancellationToken();
             _clientChannel = new Mock<IClientChannel>();
-                        
+            _disposableClientChannel = _clientChannel.As<IDisposable>();
             _clientChannelBuilder = new Mock<IClientChannelBuilder>();
             _clientChannelBuilder
                 .Setup(b => b.BuildAsync(_cancellationToken))
@@ -154,6 +155,18 @@ namespace Lime.Protocol.UnitTests.Client
         }
 
         [Test]
+        [ExpectedException(typeof(ArgumentNullException))]
+        public void WithCompression_NullCompressionSelector_ThrowsArgumentNullException()
+        {
+            // Arrange                    
+            Func<SessionCompression[], SessionCompression> selector = null;
+            var target = GetTarget();
+
+            // Act            
+            target.WithCompression(selector);
+        }
+
+        [Test]
         public async Task WithEncryption_TLSEncryption_EstablishesSessionWithSelectedOption()
         {
             // Arrange                        
@@ -185,6 +198,18 @@ namespace Lime.Protocol.UnitTests.Client
         }
 
         [Test]
+        [ExpectedException(typeof(ArgumentNullException))]
+        public void WithEncryption_NullEncryptionSelector_ThrowsArgumentNullException()
+        {
+            // Arrange                    
+            Func<SessionEncryption[], SessionEncryption> selector = null;
+            var target = GetTarget();
+
+            // Act            
+            target.WithEncryption(selector);
+        }
+
+        [Test]
         public async Task WithAuthentication_PlainAuthentication_EstablishesSessionWithSelectedOption()
         {
             // Arrange                        
@@ -200,7 +225,7 @@ namespace Lime.Protocol.UnitTests.Client
         }
 
         [Test]
-        public async Task WithAuthentication_PlainAuthenticationSelector_EstablishesSessionWithSelectedOption()
+        public async Task WithAuthentication_PlainAuthenticationAuthenticator_EstablishesSessionWithSelectedOption()
         {
             // Arrange                        
             var authentication = Dummy.CreatePlainAuthentication();
@@ -214,6 +239,236 @@ namespace Lime.Protocol.UnitTests.Client
 
             // Assert
             _clientChannel.Verify(c => c.AuthenticateSessionAsync(It.IsAny<Identity>(), authentication, It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Once);
+        }
+
+        [Test]
+        [ExpectedException(typeof(ArgumentNullException))]
+        public void WithAuthentication_NullAuthenticator_ThrowsArgumentNullException()
+        {
+            // Arrange                        
+            Func<AuthenticationScheme[], Authentication, Authentication> authenticator =
+                null;
+            var target = GetTarget();
+
+            // Act            
+            target.WithAuthentication(authenticator);
+        }
+
+        [Test]
+        public async Task WithPlainAuthentication_AnyPassword_EstablishesSessionWithSelectedOption()
+        {
+            // Arrange                        
+            var password = Dummy.CreateRandomString(100);
+            var target = GetTarget();
+
+            // Act            
+            target.WithPlainAuthentication(password);
+            var channel = await target.BuildAndEstablishAsync(_cancellationToken);
+
+            // Assert
+            _clientChannel.Verify(c => c.AuthenticateSessionAsync(
+                It.IsAny<Identity>(), 
+                It.Is<Authentication>(a => a is PlainAuthentication && ((PlainAuthentication)a).GetFromBase64Password().Equals(password)), 
+                It.IsAny<string>(), 
+                It.IsAny<CancellationToken>()), 
+                Times.Once);
+        }
+
+        [Test]
+        [ExpectedException(typeof(ArgumentNullException))]
+        public void WithPlainAuthentication_NullPassword_ThrowsArgumentNullException()
+        {
+            // Arrange                        
+            string password = null;
+            var target = GetTarget();
+
+            // Act            
+            target.WithPlainAuthentication(password);
+        }
+
+        [Test]
+        public async Task WithKeyAuthentication_AnyPassword_EstablishesSessionWithSelectedOption()
+        {
+            // Arrange                        
+            var key = Dummy.CreateRandomString(100);
+            var target = GetTarget();
+
+            // Act            
+            target.WithKeyAuthentication(key);
+            var channel = await target.BuildAndEstablishAsync(_cancellationToken);
+
+            // Assert
+            _clientChannel.Verify(c => c.AuthenticateSessionAsync(
+                It.IsAny<Identity>(), 
+                It.Is<Authentication>(a => a is KeyAuthentication && ((KeyAuthentication)a).GetFromBase64Key().Equals(key)), 
+                It.IsAny<string>(), 
+                It.IsAny<CancellationToken>()), 
+                Times.Once);
+        }
+
+        [Test]
+        [ExpectedException(typeof(ArgumentNullException))]
+        public void WithKeyAuthentication_NullPassword_ThrowsArgumentNullException()
+        {
+            // Arrange                        
+            string password = null;
+            var target = GetTarget();
+
+            // Act            
+            target.WithKeyAuthentication(password);
+        }
+
+        [Test]
+        public async Task WithIdentity_AnyIdentity_EstablishesSessionWithSelectedOption()
+        {
+            // Arrange                        
+            var identity = Dummy.CreateIdentity();
+            var target = GetTarget();
+
+            // Act            
+            target.WithIdentity(identity);
+            var channel = await target.BuildAndEstablishAsync(_cancellationToken);
+
+            // Assert
+            _clientChannel.Verify(c => c.AuthenticateSessionAsync(
+                identity,
+                It.IsAny<Authentication>(),
+                It.IsAny<string>(),
+                It.IsAny<CancellationToken>()),
+                Times.Once);
+        }
+
+        [Test]
+        public async Task WithInstance_AnyInstance_EstablishesSessionWithSelectedOption()
+        {
+            // Arrange                        
+            var instance = Dummy.CreateRandomString(10);
+            var target = GetTarget();
+
+            // Act            
+            target.WithInstance(instance);
+            var channel = await target.BuildAndEstablishAsync(_cancellationToken);
+
+            // Assert
+            _clientChannel.Verify(c => c.AuthenticateSessionAsync(
+                It.IsAny<Identity>(),
+                It.IsAny<Authentication>(),
+                instance,
+                It.IsAny<CancellationToken>()),
+                Times.Once);
+        }
+
+        [Test]
+        public async Task WithCompression_Encryption_Identity_Authentication_Instance_AnyOptions_EstablishesSessionWithSelectedOptions()
+        {
+            // Arrange                
+            var compression = SessionCompression.GZip;
+            var encryption = SessionEncryption.TLS;
+            var identity = Dummy.CreateIdentity();
+            var authentication = Dummy.CreatePlainAuthentication();            
+            var instance = Dummy.CreateRandomString(10);
+            var target = GetTarget();
+
+            // Act            
+            target
+                .WithCompression(compression)
+                .WithEncryption(encryption)
+                .WithIdentity(identity)
+                .WithAuthentication(authentication)
+                .WithInstance(instance);
+            var channel = await target.BuildAndEstablishAsync(_cancellationToken);
+
+            // Assert
+            _transport.Verify(t => t.SetCompressionAsync(compression, It.IsAny<CancellationToken>()), Times.Once);
+            _transport.Verify(t => t.SetEncryptionAsync(encryption, It.IsAny<CancellationToken>()), Times.Once);
+            _clientChannel.Verify(c => c.AuthenticateSessionAsync(
+                identity,
+                authentication,
+                instance,
+                It.IsAny<CancellationToken>()),
+                Times.Once);
+        }
+
+        [Test]
+        public async Task AddEstablishedHandler_CallsBuildAsync_ShouldExecuteHandler()
+        {
+            // Arrange            
+            _transport.Setup(t => t.IsConnected).Returns(true);
+            IClientChannel handlerClientChannel = null;
+            var handlerCancellationToken = default(CancellationToken);
+            Func<IClientChannel, CancellationToken, Task> establishedHandler = (clientChannel, cancellationToken) =>
+            {
+                handlerClientChannel = clientChannel;
+                handlerCancellationToken = cancellationToken;
+                return TaskUtil.CompletedTask;
+            };
+
+            var target = GetTarget();
+
+            // Act
+            target.AddEstablishedHandler(establishedHandler);
+            var channel = await target.BuildAndEstablishAsync(_cancellationToken);
+
+            // Assert            
+            handlerClientChannel.ShouldNotBeNull();
+            handlerClientChannel.ShouldBe(channel);
+            handlerCancellationToken.ShouldBe(_cancellationToken);
+        }
+
+        [Test]
+        [ExpectedException(typeof(ApplicationException))]
+        public async Task AddEstablishedHandler_HandlerThrowsException_ShouldDisposeChannelAndRethrowToCaller()
+        {
+            // Arrange            
+            var exception = Dummy.CreateException<ApplicationException>();
+            _transport.Setup(t => t.IsConnected).Returns(true);
+            Func<IClientChannel, CancellationToken, Task> establishedHandler = (clientChannel, cancellationToken) =>
+            {
+                throw exception;
+            };
+            var target = GetTarget();
+
+            // Act
+            target.AddEstablishedHandler(establishedHandler);
+            try
+            {
+                var channel = await target.BuildAndEstablishAsync(_cancellationToken);
+            }
+            catch (ApplicationException)
+            {
+                _disposableClientChannel.Verify(d => d.Dispose(), Times.Once);
+                throw;
+            }                        
+        }
+
+        [Test]
+        public async Task AddEstablishedHandler_MultipleHandlers_ShouldExecuteHandlers()
+        {
+            // Arrange            
+            _transport.Setup(t => t.IsConnected).Returns(true);
+            var handlerClientChannels = new List<IClientChannel>();
+            var handlerCancellationTokens = new List<CancellationToken>();
+            var target = GetTarget();
+
+            // Act
+            var count = Dummy.CreateRandomInt(100);
+            for (int i = 0; i < count; i++)
+            {
+                Func<IClientChannel, CancellationToken, Task> establishedHandler = (clientChannel, cancellationToken) =>
+                {
+                    handlerClientChannels.Add(clientChannel);
+                    handlerCancellationTokens.Add(cancellationToken);
+                    return TaskUtil.CompletedTask;
+                };
+                target.AddEstablishedHandler(establishedHandler);
+            }
+            var channel = await target.BuildAndEstablishAsync(_cancellationToken);
+
+            // Assert            
+            handlerClientChannels.Count.ShouldBe(count);
+            handlerCancellationTokens.Count.ShouldBe(count);
+            handlerClientChannels.ShouldAllBe(c => c == channel);
+            handlerCancellationTokens.ShouldAllBe(t => t == _cancellationToken);
         }
     }
 }
