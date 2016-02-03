@@ -33,7 +33,7 @@ namespace Lime.Transport.Http
         }
 
         /// <summary>
-        /// Gets the root path from a HTTP Listener request
+        /// Gets the root path from a HTTP ProducerConsumer request
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>

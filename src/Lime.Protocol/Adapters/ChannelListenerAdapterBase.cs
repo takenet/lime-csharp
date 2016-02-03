@@ -52,11 +52,11 @@ namespace Lime.Protocol.Adapters
             if (notificationConsumer == null) throw new ArgumentNullException(nameof(notificationConsumer));
             if (commandConsumer == null) throw new ArgumentNullException(nameof(commandConsumer));
 
-            MessageListenerTask = Listener.ListenAsync(_messageChannel.ReceiveMessageAsync,
+            MessageListenerTask = ProducerConsumer.StartAsync(_messageChannel.ReceiveMessageAsync,
                 messageConsumer, _cts.Token);
-            NotificationListenerTask = Listener.ListenAsync(_notificationChannel.ReceiveNotificationAsync,
+            NotificationListenerTask = ProducerConsumer.StartAsync(_notificationChannel.ReceiveNotificationAsync,
                 notificationConsumer, _cts.Token);
-            CommandListenerTask = Listener.ListenAsync(_commandChannel.ReceiveCommandAsync,
+            CommandListenerTask = ProducerConsumer.StartAsync(_commandChannel.ReceiveCommandAsync,
                 commandConsumer, _cts.Token);
         }
 

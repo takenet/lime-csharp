@@ -53,7 +53,7 @@
     <Compile Include="Adapters\ChannelListenerAdapterBase.cs" />
     <Compile Include="Adapters\DataflowChannelListenerAdapter.cs" />
     <Compile Include="Adapters\EventChannelListenerAdapter.cs" />
-    <Compile Include="Adapters\Listener.cs" />
+    <Compile Include="Adapters\ProducerConsumer.cs" />
     <Compile Include="Client\ClientChannel.cs" />
     <Compile Include="Client\ClientChannelBuilder.cs" />
     <Compile Include="Client\ClientChannelExceptionEventArgs.cs" />
