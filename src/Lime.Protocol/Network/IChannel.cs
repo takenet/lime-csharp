@@ -7,10 +7,11 @@ using System.Threading.Tasks;
 namespace Lime.Protocol.Network
 {
     /// <summary>
-    /// Defines a communication channel 
-    /// for the protocol
+    /// Defines a communication channel for the protocol.
     /// </summary>
-    public interface IChannel : IMessageChannel, ICommandChannel, INotificationChannel, ISessionChannel
+    /// <seealso cref="IEstablishedChannel" />
+    /// <seealso cref="ISessionChannel" />
+    public interface IChannel : IEstablishedChannel, ISessionChannel
     {
         /// <summary>
         /// Gets the current session transport.

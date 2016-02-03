@@ -14,20 +14,10 @@ namespace Lime.Protocol.Adapters
         /// Initializes a new instance of the <see cref="EventChannelListenerAdapter"/> class.
         /// </summary>
         /// <param name="channel">The channel.</param>
-        public EventChannelListenerAdapter(IChannel channel)
+        public EventChannelListenerAdapter(IEstablishedChannel channel)
             : base(channel, channel, channel)
         {
             
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="EventChannelListenerAdapter"/> class.
-        /// </summary>
-        /// <param name="channel">The channel.</param>
-        public EventChannelListenerAdapter(IOnDemandClientChannel channel)
-            : base(channel, channel, channel)
-        {
-
         }
 
         /// <summary>

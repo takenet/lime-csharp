@@ -254,48 +254,7 @@ namespace Lime.Protocol.UnitTests.Client
             handlerArgs.Exception.ShouldBe(exception);
             handlerArgs.IsConnected.ShouldBeFalse();
         }
-
-        [Test]
-        public async Task SendMessageAsync_ChannelOperationFailedButStillValid_CallsSendAgain()
-        {
-            // Arrange
-            var message = Dummy.CreateMessage(Dummy.CreatePlainDocument());
-            var target = GetTarget();
-            var exception = Dummy.CreateException();            
-            object handlerSender = null;
-            ClientChannelExceptionEventArgs handlerArgs = null;
-            target.ChannelOperationFailed += (sender, args) =>
-            {
-                using (args.GetDeferral())
-                {
-                    handlerSender = sender;
-                    handlerArgs = args;
-                }
-            };
-            _clientChannel
-                .SetupGet(c => c.State)
-                .Returns(SessionState.Established);
-            _transport
-                .SetupGet(t => t.IsConnected)
-                .Returns(true);
-            _clientChannel
-                .SetupSequence(c => c.SendMessageAsync(message))
-                .Throws(exception)
-                .Returns(TaskUtil.CompletedTask);
-
-            // Act
-            await target.SendMessageAsync(message);
-
-            // Assert
-            _establishedClientChannelBuilder.Verify(c => c.BuildAndEstablishAsync(It.IsAny<CancellationToken>()),
-                Times.Exactly(1));
-            _clientChannel.Verify(c => c.SendMessageAsync(message), Times.Exactly(2));            
-            handlerSender.ShouldNotBeNull();
-            handlerSender.ShouldBe(target);
-            handlerArgs.Exception.ShouldBe(exception);
-            handlerArgs.IsConnected.ShouldBeTrue();
-        }
-
+        
         [Test]
         public async Task SendNotificationAsync_NotEstablishedChannel_BuildChannelAndSends()
         {
@@ -476,48 +435,7 @@ namespace Lime.Protocol.UnitTests.Client
             handlerArgs.Exception.ShouldBe(exception);
             handlerArgs.IsConnected.ShouldBeFalse();
         }
-
-        [Test]
-        public async Task SendNotificationAsync_ChannelOperationFailedButStillValid_CallsSendAgain()
-        {
-            // Arrange
-            var notification = Dummy.CreateNotification(Event.Consumed);
-            var target = GetTarget();
-            var exception = Dummy.CreateException();
-            object handlerSender = null;
-            ClientChannelExceptionEventArgs handlerArgs = null;
-            target.ChannelOperationFailed += (sender, args) =>
-            {
-                using (args.GetDeferral())
-                {
-                    handlerSender = sender;
-                    handlerArgs = args;
-                }
-            };
-            _clientChannel
-                .SetupGet(c => c.State)
-                .Returns(SessionState.Established);
-            _transport
-                .SetupGet(t => t.IsConnected)
-                .Returns(true);
-            _clientChannel
-                .SetupSequence(c => c.SendNotificationAsync(notification))
-                .Throws(exception)
-                .Returns(TaskUtil.CompletedTask);
-
-            // Act
-            await target.SendNotificationAsync(notification);
-
-            // Assert
-            _establishedClientChannelBuilder.Verify(c => c.BuildAndEstablishAsync(It.IsAny<CancellationToken>()),
-                Times.Exactly(1));
-            _clientChannel.Verify(c => c.SendNotificationAsync(notification), Times.Exactly(2));
-            handlerSender.ShouldNotBeNull();
-            handlerSender.ShouldBe(target);
-            handlerArgs.Exception.ShouldBe(exception);
-            handlerArgs.IsConnected.ShouldBeTrue();
-        }
-
+        
         [Test]
         public async Task SendCommandAsync_NotEstablishedChannel_BuildChannelAndSends()
         {
@@ -699,49 +617,7 @@ namespace Lime.Protocol.UnitTests.Client
             handlerArgs.Exception.ShouldBe(exception);
             handlerArgs.IsConnected.ShouldBeFalse();
         }
-
-        [Test]
-        public async Task SendCommandAsync_ChannelOperationFailedButStillValid_CallsSendAgain()
-        {
-            // Arrange
-            var command = Dummy.CreateCommand(Dummy.CreatePlainDocument());
-            var target = GetTarget();
-            var exception = Dummy.CreateException();
-            object handlerSender = null;
-            ClientChannelExceptionEventArgs handlerArgs = null;
-            target.ChannelOperationFailed += (sender, args) =>
-            {
-                using (args.GetDeferral())
-                {
-                    handlerSender = sender;
-                    handlerArgs = args;
-                }
-            };
-            _clientChannel
-                .SetupGet(c => c.State)
-                .Returns(SessionState.Established);
-            _transport
-                .SetupGet(t => t.IsConnected)
-                .Returns(true);
-            _clientChannel
-                .SetupSequence(c => c.SendCommandAsync(command))
-                .Throws(exception)
-                .Returns(TaskUtil.CompletedTask);
-
-            // Act
-            await target.SendCommandAsync(command);
-
-            // Assert
-            _establishedClientChannelBuilder.Verify(c => c.BuildAndEstablishAsync(It.IsAny<CancellationToken>()),
-                Times.Exactly(1));
-            _clientChannel.Verify(c => c.SendCommandAsync(command), Times.Exactly(2));
-            handlerSender.ShouldNotBeNull();
-            handlerSender.ShouldBe(target);
-            handlerArgs.Exception.ShouldBe(exception);
-            handlerArgs.IsConnected.ShouldBeTrue();
-        }
-
-
+        
         [Test]
         public async Task ReceiveMessageAsync_NotEstablishedChannel_BuildChannelAndReceives()
         {
@@ -975,48 +851,6 @@ namespace Lime.Protocol.UnitTests.Client
         }
 
         [Test]
-        public async Task ReceiveMessageAsync_ChannelOperationFailedButStillValid_CallsReceiveAgain()
-        {
-            // Arrange
-            var message = Dummy.CreateMessage(Dummy.CreatePlainDocument());
-            var target = GetTarget();
-            var exception = Dummy.CreateException();
-            object handlerSender = null;
-            ClientChannelExceptionEventArgs handlerArgs = null;
-            target.ChannelOperationFailed += (sender, args) =>
-            {
-                using (args.GetDeferral())
-                {
-                    handlerSender = sender;
-                    handlerArgs = args;
-                }
-            };
-            _clientChannel
-                .SetupGet(c => c.State)
-                .Returns(SessionState.Established);
-            _transport
-                .SetupGet(t => t.IsConnected)
-                .Returns(true);
-            _clientChannel
-                .SetupSequence(c => c.ReceiveMessageAsync(It.IsAny<CancellationToken>()))
-                .Throws(exception)
-                .Returns(Task.FromResult(message));
-
-            // Act
-            var actual = await target.ReceiveMessageAsync(_cancellationToken);
-
-            // Assert
-            actual.ShouldBe(message);
-            _establishedClientChannelBuilder.Verify(c => c.BuildAndEstablishAsync(It.IsAny<CancellationToken>()),
-                Times.Exactly(1));
-            _clientChannel.Verify(c => c.ReceiveMessageAsync(_cancellationToken), Times.Exactly(2));
-            handlerSender.ShouldNotBeNull();
-            handlerSender.ShouldBe(target);
-            handlerArgs.Exception.ShouldBe(exception);
-            handlerArgs.IsConnected.ShouldBeTrue();
-        }
-
-        [Test]
         public async Task ReceiveNotificationAsync_NotEstablishedChannel_BuildChannelAndReceives()
         {
             // Arrange
@@ -1246,48 +1080,6 @@ namespace Lime.Protocol.UnitTests.Client
             handlerSender.ShouldBe(target);
             handlerArgs.Exception.ShouldBe(exception);
             handlerArgs.IsConnected.ShouldBeFalse();
-        }
-
-        [Test]
-        public async Task ReceiveNotificationAsync_ChannelOperationFailedButStillValid_CallsReceiveAgain()
-        {
-            // Arrange
-            var notification = Dummy.CreateNotification(Event.Consumed);
-            var target = GetTarget();
-            var exception = Dummy.CreateException();
-            object handlerSender = null;
-            ClientChannelExceptionEventArgs handlerArgs = null;
-            target.ChannelOperationFailed += (sender, args) =>
-            {
-                using (args.GetDeferral())
-                {
-                    handlerSender = sender;
-                    handlerArgs = args;
-                }
-            };
-            _clientChannel
-                .SetupGet(c => c.State)
-                .Returns(SessionState.Established);
-            _transport
-                .SetupGet(t => t.IsConnected)
-                .Returns(true);
-            _clientChannel
-                .SetupSequence(c => c.ReceiveNotificationAsync(It.IsAny<CancellationToken>()))
-                .Throws(exception)
-                .Returns(Task.FromResult(notification));
-
-            // Act
-            var actual = await target.ReceiveNotificationAsync(_cancellationToken);
-
-            // Assert
-            actual.ShouldBe(notification);
-            _establishedClientChannelBuilder.Verify(c => c.BuildAndEstablishAsync(It.IsAny<CancellationToken>()),
-                Times.Exactly(1));
-            _clientChannel.Verify(c => c.ReceiveNotificationAsync(_cancellationToken), Times.Exactly(2));
-            handlerSender.ShouldNotBeNull();
-            handlerSender.ShouldBe(target);
-            handlerArgs.Exception.ShouldBe(exception);
-            handlerArgs.IsConnected.ShouldBeTrue();
         }
         
         [Test]
@@ -1522,46 +1314,5 @@ namespace Lime.Protocol.UnitTests.Client
             handlerArgs.IsConnected.ShouldBeFalse();
         }
 
-        [Test]
-        public async Task ReceiveCommandAsync_ChannelOperationFailedButStillValid_CallsReceiveAgain()
-        {
-            // Arrange
-            var command = Dummy.CreateCommand(Dummy.CreatePlainDocument());
-            var target = GetTarget();
-            var exception = Dummy.CreateException();
-            object handlerSender = null;
-            ClientChannelExceptionEventArgs handlerArgs = null;
-            target.ChannelOperationFailed += (sender, args) =>
-            {
-                using (args.GetDeferral())
-                {
-                    handlerSender = sender;
-                    handlerArgs = args;
-                }
-            };
-            _clientChannel
-                .SetupGet(c => c.State)
-                .Returns(SessionState.Established);
-            _transport
-                .SetupGet(t => t.IsConnected)
-                .Returns(true);
-            _clientChannel
-                .SetupSequence(c => c.ReceiveCommandAsync(It.IsAny<CancellationToken>()))
-                .Throws(exception)
-                .Returns(Task.FromResult(command));
-
-            // Act
-            var actual = await target.ReceiveCommandAsync(_cancellationToken);
-
-            // Assert
-            actual.ShouldBe(command);
-            _establishedClientChannelBuilder.Verify(c => c.BuildAndEstablishAsync(It.IsAny<CancellationToken>()),
-                Times.Exactly(1));
-            _clientChannel.Verify(c => c.ReceiveCommandAsync(_cancellationToken), Times.Exactly(2));
-            handlerSender.ShouldNotBeNull();
-            handlerSender.ShouldBe(target);
-            handlerArgs.Exception.ShouldBe(exception);
-            handlerArgs.IsConnected.ShouldBeTrue();
-        }
     }
 }

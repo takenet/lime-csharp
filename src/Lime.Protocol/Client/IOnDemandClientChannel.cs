@@ -11,10 +11,8 @@ namespace Lime.Protocol.Client
     /// <summary>
     /// Defines a client channel that manages the session state and connects to the server on demand.
     /// </summary>
-    /// <seealso cref="ICommandChannel" />
-    /// <seealso cref="IMessageChannel" />
-    /// <seealso cref="INotificationChannel" />
-    public interface IOnDemandClientChannel : ICommandChannel, IMessageChannel, INotificationChannel
+    /// <seealso cref="IEstablishedChannel" />
+    public interface IOnDemandClientChannel : IEstablishedChannel
     {
         /// <summary>
         /// Gets a value indicating whether this instance has an established client channel.

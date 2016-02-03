@@ -195,12 +195,7 @@ namespace Lime.Protocol.Client
             var eventArgs = new ClientChannelExceptionEventArgs(channel.SessionId, channel.State, channel.Transport.IsConnected, true, ex);
             ChannelOperationFailed?.RaiseEvent(this, eventArgs);
             await eventArgs.WaitForDeferralsAsync().ConfigureAwait(false);
-
-            if (channel.State != SessionState.Established || !channel.Transport.IsConnected)
-            {
-                await DiscardChannelAsync(channel, cancellationToken).ConfigureAwait(false);
-            }
-
+            await DiscardChannelAsync(channel, cancellationToken).ConfigureAwait(false);
             return eventArgs.IsHandled;
         }
 
