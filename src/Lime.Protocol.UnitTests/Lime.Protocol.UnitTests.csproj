@@ -86,6 +86,7 @@
     <Otherwise />
   </Choose>
   <ItemGroup>
+    <Compile Include="Adapters\ChannelListenerAdapterBaseTests.cs" />
     <Compile Include="Client\ClientChannelBuilderTests.cs" />
     <Compile Include="Client\ClientChannelTests.cs" />
     <Compile Include="Client\EstablishedClientChannelBuilderTests.cs" />

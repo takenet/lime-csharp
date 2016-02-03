@@ -12,8 +12,10 @@ namespace Lime.Protocol.UnitTests
 {
     public class Dummy
     {
-        private static Random _random = new Random();
-        private static string _chars = "abcdefghijklmnopqrstuvwxyz0123456789";
+        private static readonly Random _random = new Random();
+        private static readonly string _chars = "abcdefghijklmnopqrstuvwxyz0123456789";
+        private static readonly string _extendedChars = _chars + "!@#$%¨&*()_+-=\"'{}[],.;/<>:?^~ ";
+
         public static int CreateRandomInt(int maxValue)
         {
             return _random.Next(maxValue);
@@ -21,8 +23,13 @@ namespace Lime.Protocol.UnitTests
 
         public static string CreateRandomString(int size)
         {
+            return CreateRandomString(size, _chars);
+        }
+
+        public static string CreateRandomString(int size, string chars)
+        {
             return new string(
-                Enumerable.Repeat(_chars, size)
+                Enumerable.Repeat(chars, size)
                           .Select(s => s[_random.Next(s.Length)])
                           .ToArray());
         }
@@ -148,7 +155,7 @@ namespace Lime.Protocol.UnitTests
         public static PlainAuthentication CreatePlainAuthentication()
         {
             var authentication = new PlainAuthentication();
-            authentication.SetToBase64Password(CreateRandomString(8));
+            authentication.SetToBase64Password(CreateRandomString(8, _extendedChars));
             return authentication;
         }
 
@@ -188,7 +195,7 @@ namespace Lime.Protocol.UnitTests
         {
             return new PlainText()
             {
-                Text = CreateRandomString(150)
+                Text = CreateRandomString(150, _extendedChars)
             };
         }
 
@@ -203,7 +210,7 @@ namespace Lime.Protocol.UnitTests
         {
             var dictionary = new Dictionary<string, object>
             {
-                {CreateRandomString(10), CreateRandomString(50)},
+                {CreateRandomString(10), CreateRandomString(50, _extendedChars)},
                 {CreateRandomString(10), CreateRandomInt(50)},
                 {CreateRandomString(10), DateTimeOffset.UtcNow},
             };

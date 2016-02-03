@@ -13,11 +13,19 @@ namespace Lime.Protocol.UnitTests.Serialization
     {
         public static bool HasValidJsonStackedBrackets(this string json)
         {
-            int openedBrackets = 0;
-            bool jsonStarted = false;
+            var openedBrackets = 0;
+            var jsonStarted = false;
+            var insideQuotes = false;
 
             foreach (var c in json)
             {
+                if (c == '"')
+                {
+                    insideQuotes = !insideQuotes;
+                }
+
+                if (insideQuotes) continue;
+
                 if (c == '{')
                 {
                     if (!jsonStarted)
