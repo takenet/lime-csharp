@@ -23,6 +23,7 @@ namespace Lime.Protocol.UnitTests.Client
         private Mock<IClientChannelBuilder> _clientChannelBuilder;
         private Mock<IEstablishedClientChannelBuilder> _establishedClientChannelBuilder;
         private Mock<IClientChannel> _clientChannel;
+        private Mock<IDisposable> _disposableClientChannel;
         private Mock<ITransport> _transport;
 
         [SetUp]
@@ -31,6 +32,7 @@ namespace Lime.Protocol.UnitTests.Client
             _sendTimeout = TimeSpan.FromSeconds(5);
             _cancellationToken = _sendTimeout.ToCancellationToken();
             _clientChannel = new Mock<IClientChannel>();
+            _disposableClientChannel = _clientChannel.As<IDisposable>();
             _transport = new Mock<ITransport>();
             _transport
                 .SetupGet(t => t.IsConnected)
@@ -864,6 +866,7 @@ namespace Lime.Protocol.UnitTests.Client
             _establishedClientChannelBuilder.Verify(c => c.BuildAndEstablishAsync(It.IsAny<CancellationToken>()),
                 Times.Exactly(2));
             _clientChannel.Verify(c => c.ReceiveMessageAsync(_cancellationToken), Times.Once());
+            _disposableClientChannel.Verify(c => c.Dispose(), Times.Once);
             clientChannel2.Verify(c => c.ReceiveMessageAsync(_cancellationToken), Times.Once());
             handlerSender.ShouldNotBeNull();
             handlerSender.ShouldBe(target);
@@ -1330,6 +1333,52 @@ namespace Lime.Protocol.UnitTests.Client
             handlerSender.ShouldNotBeNull();
             handlerSender.ShouldBe(target);
             handlerArgs.Exception.ShouldBe(exception);
+        }
+
+        [Test]
+        public async Task FinishAsync_EstablishedChannel_SendFinishingAndAwaitsForFinishedSession()
+        {
+            // Arrange
+            var message = Dummy.CreateMessage(Dummy.CreatePlainDocument());
+            var target = GetTarget();
+            await target.SendMessageAsync(message);
+            var session = Dummy.CreateSession(SessionState.Finished);
+            _establishedClientChannelBuilder.ResetCalls();
+            _clientChannel.ResetCalls();
+            _clientChannel
+                .Setup(c => c.ReceiveFinishedSessionAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(session);                
+
+            // Act
+            await target.FinishAsync(_cancellationToken);
+
+            // Assert
+            _clientChannel.Verify(c => c.SendFinishingSessionAsync(), Times.Once);
+            _clientChannel.Verify(c => c.ReceiveFinishedSessionAsync(_cancellationToken), Times.Once);
+            _disposableClientChannel.Verify(c => c.Dispose(), Times.Once);
+        }
+
+        [Test]
+        public async Task FinishAsync_NotEstablishedChannel_DoNotSendEnvelopes()
+        {
+            // Arrange
+            var message = Dummy.CreateMessage(Dummy.CreatePlainDocument());
+            var target = GetTarget();
+            await target.SendMessageAsync(message);
+            var session = Dummy.CreateSession(SessionState.Finished);
+            _establishedClientChannelBuilder.ResetCalls();
+            _clientChannel.ResetCalls();
+            _clientChannel
+                .SetupGet(c => c.State)
+                .Returns(SessionState.Finished);
+
+            // Act
+            await target.FinishAsync(_cancellationToken);
+
+            // Assert
+            _clientChannel.Verify(c => c.SendFinishingSessionAsync(), Times.Never);
+            _clientChannel.Verify(c => c.ReceiveFinishedSessionAsync(_cancellationToken), Times.Never);
+            _disposableClientChannel.Verify(c => c.Dispose(), Times.Once);
         }
 
     }

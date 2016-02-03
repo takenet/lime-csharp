@@ -127,8 +127,9 @@ namespace Lime.Protocol.Client
                 {
                     var finishedSessionTask = _clientChannel.ReceiveFinishedSessionAsync(cancellationToken);
                     await _clientChannel.SendFinishingSessionAsync().ConfigureAwait(false);
-                    await finishedSessionTask.ConfigureAwait(false);
+                    await finishedSessionTask.ConfigureAwait(false);                    
                 }
+                DiscardChannel(_clientChannel);
             }            
             finally
             {
@@ -240,16 +241,11 @@ namespace Lime.Protocol.Client
                                                                       channel.Transport.IsConnected;
 
         private async Task DiscardChannelAsync(IClientChannel clientChannel, CancellationToken cancellationToken)
-        {
-            clientChannel.DisposeIfDisposable();
-
+        {            
             await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
             try
             {
-                if (ReferenceEquals(clientChannel, _clientChannel))
-                {
-                    _clientChannel = null;
-                }
+                DiscardChannel(clientChannel);
             }
             finally
             {
@@ -257,9 +253,19 @@ namespace Lime.Protocol.Client
             }
         }
 
+        private void DiscardChannel(IClientChannel clientChannel)
+        {
+            clientChannel.DisposeIfDisposable();
+            if (ReferenceEquals(clientChannel, _clientChannel))
+            {
+                _clientChannel = null;
+            }
+        }
+
         public void Dispose()
         {
             _clientChannel?.DisposeIfDisposable();
+            _clientChannel = null;
             _disposed = true;
         }
     }
