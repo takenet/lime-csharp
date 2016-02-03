@@ -101,10 +101,7 @@ namespace Lime.Protocol.Client
         /// <summary>
         /// Gets a value indicating whether this instance has an established client channel.
         /// </summary>
-        public bool IsEstablished
-            => _clientChannel != null &&
-            _clientChannel.State == SessionState.Established && 
-            _clientChannel.Transport.IsConnected;
+        public bool IsEstablished => ChannelIsEstablished(_clientChannel);
 
         /// <summary>
         /// Occurs when the channel creation failed.
@@ -121,14 +118,12 @@ namespace Lime.Protocol.Client
         /// </summary>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns></returns>
-        public async Task FinishClientChannelAsync(CancellationToken cancellationToken)
+        public async Task FinishAsync(CancellationToken cancellationToken)
         {
             await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
             try
             {
-                if (_clientChannel != null &&
-                    _clientChannel.State == SessionState.Established &&
-                    _clientChannel.Transport.IsConnected)
+                if (IsEstablished)
                 {
                     var finishedSessionTask = _clientChannel.ReceiveFinishedSessionAsync(cancellationToken);
                     await _clientChannel.SendFinishingSessionAsync().ConfigureAwait(false);
@@ -155,7 +150,7 @@ namespace Lime.Protocol.Client
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                var channel = await GetChannelAsync(cancellationToken).ConfigureAwait(false);
+                var channel = await GetChannelAsync(cancellationToken, true).ConfigureAwait(false);
                 try
                 {                    
                     await sendFunc(channel, envelope).ConfigureAwait(false);
@@ -176,7 +171,8 @@ namespace Lime.Protocol.Client
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                var channel = await GetChannelAsync(cancellationToken).ConfigureAwait(false);
+                // For receiving, we should not check if the channel is established, since that can exists received envelopes in the buffer.
+                var channel = await GetChannelAsync(cancellationToken, false).ConfigureAwait(false);
                 try
                 {                    
                     return await receiveFunc(channel, cancellationToken).ConfigureAwait(false);
@@ -199,10 +195,10 @@ namespace Lime.Protocol.Client
             return eventArgs.IsHandled;
         }
 
-        private async Task<IClientChannel> GetChannelAsync(CancellationToken cancellationToken)
+        private async Task<IClientChannel> GetChannelAsync(CancellationToken cancellationToken, bool checkIfEstablished)
         {
-            var clientChannel = _clientChannel;
-            while (clientChannel == null)
+            var clientChannel = _clientChannel;            
+            while (ShouldBuildChannel(clientChannel, checkIfEstablished))
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
@@ -210,7 +206,7 @@ namespace Lime.Protocol.Client
                 try
                 {
                     clientChannel = _clientChannel;
-                    if (clientChannel == null)
+                    if (ShouldBuildChannel(clientChannel, checkIfEstablished))
                     {
                         clientChannel = _clientChannel = await _builder
                             .BuildAndEstablishAsync(cancellationToken)
@@ -233,6 +229,15 @@ namespace Lime.Protocol.Client
 
             return clientChannel;
         }
+
+        private static bool ShouldBuildChannel(IChannel channel, bool checkIfEstablished)
+        {
+            return channel == null || (checkIfEstablished && !ChannelIsEstablished(channel));
+        }
+
+        private static bool ChannelIsEstablished(IChannel channel) => channel != null &&
+                                                                      channel.State == SessionState.Established &&
+                                                                      channel.Transport.IsConnected;
 
         private async Task DiscardChannelAsync(IClientChannel clientChannel, CancellationToken cancellationToken)
         {

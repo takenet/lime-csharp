@@ -34,6 +34,6 @@ namespace Lime.Protocol.Client
         /// </summary>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns></returns>
-        Task FinishClientChannelAsync(CancellationToken cancellationToken);
+        Task FinishAsync(CancellationToken cancellationToken);
     }
 }

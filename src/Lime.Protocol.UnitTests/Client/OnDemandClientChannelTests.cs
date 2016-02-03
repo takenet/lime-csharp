@@ -32,9 +32,15 @@ namespace Lime.Protocol.UnitTests.Client
             _cancellationToken = _sendTimeout.ToCancellationToken();
             _clientChannel = new Mock<IClientChannel>();
             _transport = new Mock<ITransport>();
+            _transport
+                .SetupGet(t => t.IsConnected)
+                .Returns(true);
             _clientChannel
                 .SetupGet(c => c.Transport)
                 .Returns(_transport.Object);
+            _clientChannel
+                .SetupGet(c => c.State)
+                .Returns(SessionState.Established);
             _clientChannelBuilder = new Mock<IClientChannelBuilder>();
             _establishedClientChannelBuilder = new Mock<IEstablishedClientChannelBuilder>();
             _establishedClientChannelBuilder
@@ -240,6 +246,12 @@ namespace Lime.Protocol.UnitTests.Client
                 .SetupSequence(b => b.BuildAndEstablishAsync(It.IsAny<CancellationToken>()))
                 .Returns(Task.FromResult(_clientChannel.Object))
                 .Returns(Task.FromResult(clientChannel2.Object));
+            clientChannel2
+                .SetupGet(c => c.Transport)
+                .Returns(_transport.Object);
+            clientChannel2
+                .SetupGet(c => c.State)
+                .Returns(SessionState.Established);
 
             // Act
             await target.SendMessageAsync(message);
@@ -252,7 +264,6 @@ namespace Lime.Protocol.UnitTests.Client
             handlerSender.ShouldNotBeNull();
             handlerSender.ShouldBe(target);
             handlerArgs.Exception.ShouldBe(exception);
-            handlerArgs.IsConnected.ShouldBeFalse();
         }
         
         [Test]
@@ -421,6 +432,12 @@ namespace Lime.Protocol.UnitTests.Client
                 .SetupSequence(b => b.BuildAndEstablishAsync(It.IsAny<CancellationToken>()))
                 .Returns(Task.FromResult(_clientChannel.Object))
                 .Returns(Task.FromResult(clientChannel2.Object));
+            clientChannel2
+                .SetupGet(c => c.Transport)
+                .Returns(_transport.Object);
+            clientChannel2
+                .SetupGet(c => c.State)
+                .Returns(SessionState.Established);
 
             // Act
             await target.SendNotificationAsync(notification);
@@ -433,7 +450,6 @@ namespace Lime.Protocol.UnitTests.Client
             handlerSender.ShouldNotBeNull();
             handlerSender.ShouldBe(target);
             handlerArgs.Exception.ShouldBe(exception);
-            handlerArgs.IsConnected.ShouldBeFalse();
         }
         
         [Test]
@@ -603,6 +619,12 @@ namespace Lime.Protocol.UnitTests.Client
                 .SetupSequence(b => b.BuildAndEstablishAsync(It.IsAny<CancellationToken>()))
                 .Returns(Task.FromResult(_clientChannel.Object))
                 .Returns(Task.FromResult(clientChannel2.Object));
+            clientChannel2
+                .SetupGet(c => c.Transport)
+                .Returns(_transport.Object);
+            clientChannel2
+                .SetupGet(c => c.State)
+                .Returns(SessionState.Established);
 
             // Act
             await target.SendCommandAsync(command);
@@ -615,7 +637,6 @@ namespace Lime.Protocol.UnitTests.Client
             handlerSender.ShouldNotBeNull();
             handlerSender.ShouldBe(target);
             handlerArgs.Exception.ShouldBe(exception);
-            handlerArgs.IsConnected.ShouldBeFalse();
         }
         
         [Test]
@@ -847,7 +868,6 @@ namespace Lime.Protocol.UnitTests.Client
             handlerSender.ShouldNotBeNull();
             handlerSender.ShouldBe(target);
             handlerArgs.Exception.ShouldBe(exception);
-            handlerArgs.IsConnected.ShouldBeFalse();
         }
 
         [Test]
@@ -1079,7 +1099,6 @@ namespace Lime.Protocol.UnitTests.Client
             handlerSender.ShouldNotBeNull();
             handlerSender.ShouldBe(target);
             handlerArgs.Exception.ShouldBe(exception);
-            handlerArgs.IsConnected.ShouldBeFalse();
         }
         
         [Test]
@@ -1311,7 +1330,6 @@ namespace Lime.Protocol.UnitTests.Client
             handlerSender.ShouldNotBeNull();
             handlerSender.ShouldBe(target);
             handlerArgs.Exception.ShouldBe(exception);
-            handlerArgs.IsConnected.ShouldBeFalse();
         }
 
     }
