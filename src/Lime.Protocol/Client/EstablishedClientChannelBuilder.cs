@@ -53,7 +53,7 @@ namespace Lime.Protocol.Client
         public string Instance { get; private set; }
 
         /// <summary>
-        /// Sets the compression options to be used in the session establishment.
+        /// Sets the compression option to be used in the session establishment.
         /// </summary>
         /// <param name="compression">The compression.</param>
         /// <returns></returns>
@@ -63,7 +63,7 @@ namespace Lime.Protocol.Client
         }
 
         /// <summary>
-        /// Sets the compression options to be used in the session establishment.
+        /// Sets the compression selector to be used in the session establishment.
         /// </summary>
         /// <param name="compressionSelector">The compression selector.</param>
         /// <returns></returns>
@@ -77,7 +77,7 @@ namespace Lime.Protocol.Client
         }
 
         /// <summary>
-        /// Sets the encryption options to be used in the session establishment.
+        /// Sets the encryption option to be used in the session establishment.
         /// </summary>
         /// <param name="encryption">The encryption.</param>
         /// <returns></returns>
@@ -87,7 +87,7 @@ namespace Lime.Protocol.Client
         }
 
         /// <summary>
-        /// Sets the encryption options to be used in the session establishment.
+        /// Sets the encryption selector to be used in the session establishment.
         /// </summary>
         /// <param name="encryptionSelector">The encryption selector.</param>
         /// <returns></returns>

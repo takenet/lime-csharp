@@ -7,8 +7,7 @@ namespace Lime.Transport.Http
     public static class UtilExtensions
     {
         /// <summary>
-        /// Extracts an variable value
-        /// from the header or the query string.
+        /// Extracts an variable value from the header or the query string.
         /// </summary>
         /// <param name="request"></param>
         /// <param name="headerKey"></param>
@@ -20,8 +19,7 @@ namespace Lime.Transport.Http
         }
 
         /// <summary>
-        /// Extracts an variable value
-        /// from the header or the query string.
+        /// Extracts an variable value from the header or the query string.
         /// </summary>
         /// <param name="request"></param>
         /// <param name="headerKey"></param>
@@ -33,7 +31,7 @@ namespace Lime.Transport.Http
         }
 
         /// <summary>
-        /// Gets the root path from a HTTP ProducerConsumer request
+        /// Gets the root path from a HTTP listener request.
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
@@ -52,8 +50,7 @@ namespace Lime.Transport.Http
         }
 
         /// <summary>
-        /// Gets a related HTTP code
-        /// for the specified reason.
+        /// Gets a related HTTP code for the specified reason.
         /// </summary>
         /// <param name="reason"></param>
         /// <returns></returns>
@@ -73,6 +70,11 @@ namespace Lime.Transport.Http
             return HttpStatusCode.Forbidden;
         }
 
+        /// <summary>
+        /// Indicates if the given <see cref="HttpStatusCode"/> represents a successful operation.
+        /// </summary>
+        /// <param name="httpStatusCode"></param>
+        /// <returns></returns>
         public static bool IsSuccess(this HttpStatusCode httpStatusCode)
         {
             return (int)httpStatusCode >= 200 && (int)httpStatusCode < 300;
