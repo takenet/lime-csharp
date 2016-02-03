@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.Eventing.Reader;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -20,7 +21,21 @@ namespace Lime.Protocol.UnitTests.Client
         private CancellationToken _cancellationToken;
         private Mock<IClientChannel> _clientChannel;
         private Mock<IClientChannelBuilder> _clientChannelBuilder;
-                
+
+
+        private SessionCompression[] _compressionOptions;
+        private SessionCompression _compression;
+
+        private SessionEncryption[] _encryptionOptions;
+        private SessionEncryption _encryption;
+
+        private SessionAuthentication[] _authenticationSchemes;
+        private SessionAuthentication _authenticationScheme;
+
+        private Session _negotiatingSession;
+        private Session _authenticatingSession;
+        private Session _establishedSession;
+
         #region Scenario
 
         [SetUp]
@@ -32,6 +47,17 @@ namespace Lime.Protocol.UnitTests.Client
             _clientChannelBuilder
                 .Setup(b => b.BuildAsync(_cancellationToken))
                 .ReturnsAsync(_clientChannel.Object);
+
+            _negotiatingSession = Dummy.CreateSession(SessionState.Negotiating);
+            _authenticatingSession = Dummy.CreateSession(SessionState.Authenticating);
+            _establishedSession = Dummy.CreateSession(SessionState.Established);
+
+            _clientChannel
+                .Setup(c => c.StartNewSessionAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(_negotiatingSession);
+
+            
+
         }
 
         [TearDown]
@@ -61,6 +87,6 @@ namespace Lime.Protocol.UnitTests.Client
         //    // Assert
         //    //_transport.Verify();
         //    //channel.Transport.ShouldBe(_transport.Object);
-        //}       
+        //}
     }
 }
