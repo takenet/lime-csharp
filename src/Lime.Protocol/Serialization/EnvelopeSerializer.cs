@@ -10,6 +10,7 @@ namespace Lime.Protocol.Serialization
     /// <summary>
     /// Default protocol serialization
     /// </summary>
+    [Obsolete("Use JsonNetSerializer from Lime.Protocol.Serialization.Newtonsoft package instead")]
     public class EnvelopeSerializer : IEnvelopeSerializer
     {
         #region IEnvelopeSerializer Members

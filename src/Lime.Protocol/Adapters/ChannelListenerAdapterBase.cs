@@ -93,10 +93,7 @@ namespace Lime.Protocol.Adapters
             if (disposing)
             {                                
                 _cts.Cancel();
-                _cts.Dispose();
-                MessageListenerTask?.Dispose();
-                NotificationListenerTask?.Dispose();
-                CommandListenerTask?.Dispose();        
+                _cts.Dispose();   
             }
         }
     }

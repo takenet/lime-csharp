@@ -1077,21 +1077,21 @@ namespace Lime.Protocol.UnitTests.Serialization
 		   
 			var type = Dummy.CreateJsonMediaType();
 
-			var propertyName1 = Dummy.CreateRandomStringExtended(10);
-			var propertyName2 = Dummy.CreateRandomStringExtended(10);
-			var propertyName3 = Dummy.CreateRandomStringExtended(10);
-			var propertyName4 = Dummy.CreateRandomStringExtended(10);
+			var propertyName1 = Dummy.CreateRandomStringExtended(100);
+			var propertyName2 = Dummy.CreateRandomStringExtended(100);
+			var propertyName3 = Dummy.CreateRandomStringExtended(100);
+			var propertyName4 = Dummy.CreateRandomStringExtended(100);
 
-			var arrayPropertyName1 = Dummy.CreateRandomStringExtended(10);
-			var arrayPropertyName2 = Dummy.CreateRandomStringExtended(10);
-			var arrayPropertyName3 = Dummy.CreateRandomStringExtended(10);
-			var arrayPropertyName4 = Dummy.CreateRandomStringExtended(10);
-			var arrayPropertyValue1 = Dummy.CreateRandomString(10);            
+			var arrayPropertyName1 = Dummy.CreateRandomStringExtended(100);
+			var arrayPropertyName2 = Dummy.CreateRandomStringExtended(100);
+			var arrayPropertyName3 = Dummy.CreateRandomStringExtended(100);
+			var arrayPropertyName4 = Dummy.CreateRandomStringExtended(100);
+			var arrayPropertyValue1 = Dummy.CreateRandomString(100);            
 			var arrayPropertyValue2 = (long)Dummy.CreateRandomInt(1000);
-			var arrayPropertyValue3 = Dummy.CreateRandomStringExtended(10);
+			var arrayPropertyValue3 = Dummy.CreateRandomStringExtended(100);
 			var arrayPropertyValue4 = false;
 
-			var propertyValue1 = Dummy.CreateRandomStringExtended(10);
+			var propertyValue1 = Dummy.CreateRandomStringExtended(100);
 			var propertyValue2 = (long)Dummy.CreateRandomInt(1000);
 			var propertyValue4 = DateTime.UtcNow;
 

@@ -15,6 +15,7 @@ using Shouldly;
 namespace Lime.Protocol.UnitTests.Serialization
 {
 	[TestFixture]
+    [Ignore]
 	public class EnvelopeSerializerTests : EnvelopeSerializerBaseTests
 	{
 		protected override IEnvelopeSerializer GetTarget()
