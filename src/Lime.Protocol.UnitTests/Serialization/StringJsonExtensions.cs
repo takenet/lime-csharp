@@ -16,28 +16,31 @@ namespace Lime.Protocol.UnitTests.Serialization
             var openedBrackets = 0;
             var jsonStarted = false;
             var insideQuotes = false;
+            var previousC = default(char);
 
             foreach (var c in json)
             {
-                if (c == '"')
+                if (c == '"' && !previousC.Equals('\\'))
                 {
                     insideQuotes = !insideQuotes;
                 }
 
-                if (insideQuotes) continue;
-
-                if (c == '{')
+                if (!insideQuotes)
                 {
-                    if (!jsonStarted)
+                    if (c == '{')
                     {
-                        jsonStarted = true;
+                        if (!jsonStarted)
+                        {
+                            jsonStarted = true;
+                        }
+                        openedBrackets++;
                     }
-                    openedBrackets++;
+                    else if (c == '}')
+                    {
+                        openedBrackets--;
+                    }
                 }
-                else if (c == '}')
-                {
-                    openedBrackets--;
-                }
+                previousC = c;
             }
 
             return jsonStarted && openedBrackets == 0;
@@ -111,7 +114,7 @@ namespace Lime.Protocol.UnitTests.Serialization
                     }
                     else
                     {
-                        stringBuilder.AppendFormat("\"{0}\",", v);
+                        stringBuilder.AppendFormat("\"{0}\",", v.ToString().EscapeQuotes());
                     }
                 }
 
@@ -121,15 +124,13 @@ namespace Lime.Protocol.UnitTests.Serialization
             }
 
             return json.Contains(
-                string.Format("\"{0}\":\"{1}\"",
-                    key,
-                    value));
+                $"\"{key}\":\"{value.ToString().EscapeQuotes()}\"");
         }
 
         public static bool ContainsJsonKey(this string json, string key)
         {
             return json.Contains(
-                string.Format("\"{0}\":", key));
+                $"\"{key.EscapeQuotes()}\":");
         }
     }
 }

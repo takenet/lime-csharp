@@ -14,7 +14,8 @@ namespace Lime.Transport
         private int _jsonCurPos;
         private int _jsonStackedBrackets;
         private bool _jsonStarted;
-        
+        private bool _insideQuotes;
+
         public JsonBuffer(int bufferSize)
         {
             _buffer = new byte[bufferSize];
@@ -46,6 +47,14 @@ namespace Lime.Transport
             for (int i = _jsonCurPos; i < _bufferCurPos; i++)
             {
                 _jsonCurPos = i + 1;
+
+                if (_buffer[i] == '"' &&
+                    (i == 0 || _buffer[i - 1] != '\\'))
+                {
+                    _insideQuotes = !_insideQuotes;
+                }
+
+                if (_insideQuotes) continue;                
 
                 if (_buffer[i] == '{')
                 {

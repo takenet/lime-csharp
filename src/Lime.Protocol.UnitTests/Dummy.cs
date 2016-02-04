@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Lime.Protocol.Serialization;
 
 namespace Lime.Protocol.UnitTests
 {
@@ -26,7 +27,12 @@ namespace Lime.Protocol.UnitTests
             return CreateRandomString(size, _chars);
         }
 
-        public static string CreateRandomString(int size, string chars)
+        public static string CreateRandomStringExtended(int size)
+        {
+            return CreateRandomString(size, _extendedChars);
+        }
+
+        private static string CreateRandomString(int size, string chars)
         {
             return new string(
                 Enumerable.Repeat(chars, size)
@@ -43,8 +49,8 @@ namespace Lime.Protocol.UnitTests
 
             string randomKey1 = "randomString1";
             string randomKey2 = "randomString2";
-            string randomString1 = Dummy.CreateRandomString(Dummy.CreateRandomInt(50));
-            string randomString2 = Dummy.CreateRandomString(Dummy.CreateRandomInt(50));
+            string randomString1 = Dummy.CreateRandomStringExtended(Dummy.CreateRandomInt(100));
+            string randomString2 = Dummy.CreateRandomStringExtended(Dummy.CreateRandomInt(100));
 
             var text = Dummy.CreateRandomString(Dummy.CreateRandomInt(50));
 
@@ -56,9 +62,9 @@ namespace Lime.Protocol.UnitTests
                 pp,
                 to,
                 randomKey1,
-                randomString1,
+                randomString1.EscapeQuotes(),
                 randomKey2,
-                randomString2
+                randomString2.EscapeQuotes()
                 );
         }
 
@@ -195,7 +201,7 @@ namespace Lime.Protocol.UnitTests
         {
             return new PlainText()
             {
-                Text = CreateRandomString(150, _extendedChars)
+                Text = CreateRandomStringExtended(150)
             };
         }
 
@@ -210,7 +216,7 @@ namespace Lime.Protocol.UnitTests
         {
             var dictionary = new Dictionary<string, object>
             {
-                {CreateRandomString(10), CreateRandomString(50, _extendedChars)},
+                {CreateRandomString(10), CreateRandomStringExtended(50)},
                 {CreateRandomString(10), CreateRandomInt(50)},
                 {CreateRandomString(10), DateTimeOffset.UtcNow},
             };
@@ -290,7 +296,7 @@ namespace Lime.Protocol.UnitTests
         {
             return new Presence()
             {
-                Message = CreateRandomString(50),
+                Message = CreateRandomStringExtended(50),
                 Priority = 1,
                 RoutingRule = RoutingRule.IdentityByDistance,
                 Status = PresenceStatus.Available,
