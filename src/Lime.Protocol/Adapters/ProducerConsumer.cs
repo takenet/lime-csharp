@@ -42,7 +42,8 @@ namespace Lime.Protocol.Adapters
                     }
                 }
             },            
-            TaskCreationOptions.LongRunning);
+            TaskCreationOptions.LongRunning)
+            .Unwrap();
         }
     }
 }

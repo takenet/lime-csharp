@@ -76,7 +76,7 @@ namespace Lime.Protocol.Adapters
         public Task CommandListenerTask { get; private set; }
 
         /// <summary>
-        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// Stops the listener tasks and releases any related resource.
         /// </summary>
         public void Dispose()
         {

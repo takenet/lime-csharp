@@ -60,13 +60,13 @@ namespace Lime.Protocol.UnitTests.Adapters
 
             _messageChannel
                 .Setup(m => m.ReceiveMessageAsync(It.IsAny<CancellationToken>()))
-                .Returns(() => _producedMessages.Take().AsCompletedTask());
+                .Returns((CancellationToken cancellationToken) => _producedMessages.Take(cancellationToken).AsCompletedTask());
             _notificationChannel
                 .Setup(m => m.ReceiveNotificationAsync(It.IsAny<CancellationToken>()))
-                .Returns(() => _producedNotifications.Take().AsCompletedTask());
+                .Returns((CancellationToken cancellationToken) => _producedNotifications.Take(cancellationToken).AsCompletedTask());
             _commandChannel
                 .Setup(m => m.ReceiveCommandAsync(It.IsAny<CancellationToken>()))
-                .Returns(() => _producedCommands.Take().AsCompletedTask());
+                .Returns((CancellationToken cancellationToken) => _producedCommands.Take(cancellationToken).AsCompletedTask());
 
             _consumedMessages = new BlockingCollection<Message>();
             _consumedNotifications = new BlockingCollection<Notification>();
@@ -150,7 +150,7 @@ namespace Lime.Protocol.UnitTests.Adapters
         }
 
         [Test]
-        public void StartListenerTasks_MessageReceived_CallsConsumer()
+        public async Task StartListenerTasks_MessageReceived_CallsConsumer()
         {
             // Arrange
             var message = Dummy.CreateMessage(Dummy.CreateTextContent());
@@ -162,7 +162,12 @@ namespace Lime.Protocol.UnitTests.Adapters
 
             // Assert
             actual.ShouldBe(message);
+            _messageChannel.Verify(c => c.ReceiveMessageAsync(It.IsAny<CancellationToken>()), Times.Exactly(2));
+
             target.Dispose();
+            await target.MessageListenerTask;
+            await target.NotificationListenerTask;
+            await target.CommandListenerTask;
         }
 
         [Test]
@@ -188,6 +193,275 @@ namespace Lime.Protocol.UnitTests.Adapters
             // Assert
             await _messageTcs.Task;
             _consumedMessages.Count.ShouldBe(count);
+            _messageChannel.Verify(c => c.ReceiveMessageAsync(It.IsAny<CancellationToken>()), Times.Exactly(count));
+            target.Dispose();
+            await target.MessageListenerTask;
+            await target.NotificationListenerTask;
+            await target.CommandListenerTask;
+        }
+
+        [Test]
+        public async Task StartListenerTasks_DisposedWhileConsumingMessages_StopsConsuming()
+        {
+            // Arrange
+            var messages = new List<Message>();
+            var count = Dummy.CreateRandomInt(500) + 2;
+            var halfCount = count/2;
+            for (int i = 0; i < count - 1; i++)
+            {
+                messages.Add(
+                    Dummy.CreateMessage(Dummy.CreateTextContent()));
+            }
+
+            ChannelListenerAdapterBase target = null;
+
+            int consumedCount = 0;
+            _messageConsumer = (m) =>
+            {
+                consumedCount++;
+                if (consumedCount == halfCount)
+                {
+                    _messageTcs.TrySetResult(m);
+                    target?.Dispose();
+                }
+                return TaskUtil.CompletedTask;
+            };
+
+            target = GetTargetAndStartListenerTasks();
+
+            // Act
+            foreach (var message in messages)
+            {
+                _producedMessages.Add(message);
+            }
+
+            // Assert
+            await _messageTcs.Task;
+            consumedCount.ShouldBe(halfCount);
+            _messageChannel.Verify(c => c.ReceiveMessageAsync(It.IsAny<CancellationToken>()), Times.Exactly(halfCount));
+            _producedMessages.Count.ShouldBe(count - halfCount - 1);
+            await target.MessageListenerTask;
+            await target.NotificationListenerTask;
+            await target.CommandListenerTask;
+        }
+
+        [Test]
+        [ExpectedException(typeof(ApplicationException))]
+        public async Task StartListenerTasks_MessageChannelThrowsException_StopsListenerTaskAndThrows()
+        {
+            // Arrange
+            var exception = Dummy.CreateException<ApplicationException>();            
+            _messageChannel
+                .Setup(m => m.ReceiveMessageAsync(It.IsAny<CancellationToken>()))
+                .ThrowsAsync(exception);
+            var target = GetTargetAndStartListenerTasks();
+
+            // Act                           
+            _messageChannel.Verify(c => c.ReceiveMessageAsync(It.IsAny<CancellationToken>()), Times.Exactly(1));
+            await target.MessageListenerTask;
+        }
+
+        [Test]
+        [ExpectedException(typeof(ApplicationException))]
+        public async Task StartListenerTasks_MessageConsumerThrowsException_StopsListenerTaskAndThrows()
+        {
+            // Arrange
+            var message = Dummy.CreateMessage(Dummy.CreateTextContent());
+            var exception = Dummy.CreateException<ApplicationException>();
+            _messageConsumer = m =>
+            {
+                if (ReferenceEquals(message, m))
+                {
+                    throw exception;
+                }
+                throw new AssertionException("An unexpected message was received by the consumer");                
+            };
+            var target = GetTargetAndStartListenerTasks();
+
+            // Act                           
+            _producedMessages.Add(message);
+            _messageChannel.Verify(c => c.ReceiveMessageAsync(It.IsAny<CancellationToken>()), Times.Exactly(1));
+            await target.MessageListenerTask;
+        }
+        
+        [Test]
+        public async Task StartListenerTasks_NotificationReceived_CallsConsumer()
+        {
+            // Arrange
+            var notification = Dummy.CreateNotification(Event.Authorized);
+            var target = GetTargetAndStartListenerTasks();
+
+            // Act
+            _producedNotifications.Add(notification);
+            var actual = _consumedNotifications.Take(_cancellationToken);
+
+            // Assert
+            actual.ShouldBe(notification);
+            _notificationChannel.Verify(c => c.ReceiveNotificationAsync(It.IsAny<CancellationToken>()), Times.Exactly(2));
+
+            target.Dispose();
+            await target.NotificationListenerTask;
+            await target.NotificationListenerTask;
+            await target.CommandListenerTask;
+        }
+
+        [Test]
+        public async Task StartListenerTasks_MultipleNotificationsReceived_CallsConsumer()
+        {
+            // Arrange
+            var notifications = new List<Notification>();
+            var count = Dummy.CreateRandomInt(500) + 2;
+            for (int i = 0; i < count - 1; i++)
+            {
+                notifications.Add(
+                    Dummy.CreateNotification(Event.Authorized));
+            }
+            notifications.Add(_completionNotification);
+            var target = GetTargetAndStartListenerTasks();
+
+            // Act
+            foreach (var notification in notifications)
+            {
+                _producedNotifications.Add(notification);
+            }
+
+            // Assert
+            await _notificationTcs.Task;
+            _consumedNotifications.Count.ShouldBe(count);
+            _notificationChannel.Verify(c => c.ReceiveNotificationAsync(It.IsAny<CancellationToken>()), Times.Exactly(count));
+            target.Dispose();
+            await target.NotificationListenerTask;
+            await target.NotificationListenerTask;
+            await target.CommandListenerTask;
+        }
+
+        [Test]
+        public async Task StartListenerTasks_DisposedWhileConsumingNotifications_StopsConsuming()
+        {
+            // Arrange
+            var notifications = new List<Notification>();
+            var count = Dummy.CreateRandomInt(500) + 2;
+            var halfCount = count / 2;
+            for (int i = 0; i < count - 1; i++)
+            {
+                notifications.Add(
+                    Dummy.CreateNotification(Event.Authorized));
+            }
+
+            ChannelListenerAdapterBase target = null;
+
+            int consumedCount = 0;
+            _notificationConsumer = (m) =>
+            {
+                consumedCount++;
+                if (consumedCount == halfCount)
+                {
+                    _notificationTcs.TrySetResult(m);
+                    target?.Dispose();
+                }
+                return TaskUtil.CompletedTask;
+            };
+
+            target = GetTargetAndStartListenerTasks();
+
+            // Act
+            foreach (var notification in notifications)
+            {
+                _producedNotifications.Add(notification);
+            }
+
+            // Assert
+            await _notificationTcs.Task;
+            consumedCount.ShouldBe(halfCount);
+            _notificationChannel.Verify(c => c.ReceiveNotificationAsync(It.IsAny<CancellationToken>()), Times.Exactly(halfCount));
+            _producedNotifications.Count.ShouldBe(count - halfCount - 1);
+            await target.NotificationListenerTask;
+            await target.NotificationListenerTask;
+            await target.CommandListenerTask;
+        }
+
+        [Test]
+        [ExpectedException(typeof(ApplicationException))]
+        public async Task StartListenerTasks_NotificationChannelThrowsException_StopsListenerTaskAndThrows()
+        {
+            // Arrange
+            var exception = Dummy.CreateException<ApplicationException>();
+            _notificationChannel
+                .Setup(m => m.ReceiveNotificationAsync(It.IsAny<CancellationToken>()))
+                .ThrowsAsync(exception);
+            var target = GetTargetAndStartListenerTasks();
+
+            // Act                           
+            _notificationChannel.Verify(c => c.ReceiveNotificationAsync(It.IsAny<CancellationToken>()), Times.Exactly(1));
+            await target.NotificationListenerTask;
+        }
+
+        [Test]
+        [ExpectedException(typeof(ApplicationException))]
+        public async Task StartListenerTasks_NotificationConsumerThrowsException_StopsListenerTaskAndThrows()
+        {
+            // Arrange
+            var notification = Dummy.CreateNotification(Event.Authorized);
+            var exception = Dummy.CreateException<ApplicationException>();
+            _notificationConsumer = m =>
+            {
+                if (ReferenceEquals(notification, m))
+                {
+                    throw exception;
+                }
+                throw new AssertionException("An unexpected notification was received by the consumer");
+            };
+            var target = GetTargetAndStartListenerTasks();
+
+            // Act                           
+            _producedNotifications.Add(notification);
+            _notificationChannel.Verify(c => c.ReceiveNotificationAsync(It.IsAny<CancellationToken>()), Times.Exactly(1));
+            await target.NotificationListenerTask;
+        }
+
+        [Test]
+        public async Task StartListenerTasks_DisposedWhileConsumingCommands_StopsConsuming()
+        {
+            // Arrange
+            var commands = new List<Command>();
+            var count = Dummy.CreateRandomInt(500) + 2;
+            var halfCount = count / 2;
+            for (int i = 0; i < count - 1; i++)
+            {
+                commands.Add(
+                    Dummy.CreateCommand(Dummy.CreateTextContent()));
+            }
+
+            ChannelListenerAdapterBase target = null;
+
+            int consumedCount = 0;
+            _commandConsumer = (m) =>
+            {
+                consumedCount++;
+                if (consumedCount == halfCount)
+                {
+                    _commandTcs.TrySetResult(m);
+                    target?.Dispose();
+                }
+                return TaskUtil.CompletedTask;
+            };
+
+            target = GetTargetAndStartListenerTasks();
+
+            // Act
+            foreach (var command in commands)
+            {
+                _producedCommands.Add(command);
+            }
+
+            // Assert
+            await _commandTcs.Task;
+            consumedCount.ShouldBe(halfCount);
+            _commandChannel.Verify(c => c.ReceiveCommandAsync(It.IsAny<CancellationToken>()), Times.Exactly(halfCount));
+            _producedCommands.Count.ShouldBe(count - halfCount - 1);
+            await target.CommandListenerTask;
+            await target.NotificationListenerTask;
+            await target.CommandListenerTask;
         }
     }
 
