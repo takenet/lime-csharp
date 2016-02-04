@@ -18,8 +18,6 @@ namespace Lime.Protocol.UnitTests.Adapters
     [TestFixture]
     public class ChannelListenerAdapterBaseTests
     {
-
-
         private Mock<IMessageChannel> _messageChannel;
         private Mock<INotificationChannel> _notificationChannel;
         private Mock<ICommandChannel> _commandChannel;
@@ -152,17 +150,16 @@ namespace Lime.Protocol.UnitTests.Adapters
         [Test]
         public async Task StartListenerTasks_MessageReceived_CallsConsumer()
         {
-            // Arrange
-            var message = Dummy.CreateMessage(Dummy.CreateTextContent());
+            // Arrange            
             var target = GetTargetAndStartListenerTasks();
            
             // Act
-            _producedMessages.Add(message);            
+            _producedMessages.Add(_completionMessage);            
             var actual = _consumedMessages.Take(_cancellationToken);
 
             // Assert
-            actual.ShouldBe(message);
-            _messageChannel.Verify(c => c.ReceiveMessageAsync(It.IsAny<CancellationToken>()), Times.Exactly(2));
+            actual.ShouldBe(_completionMessage);
+            _messageChannel.Verify(c => c.ReceiveMessageAsync(It.IsAny<CancellationToken>()), Times.Between(1, 2, Range.Inclusive));
 
             target.Dispose();
             await target.MessageListenerTask;
@@ -193,7 +190,7 @@ namespace Lime.Protocol.UnitTests.Adapters
             // Assert
             await _messageTcs.Task;
             _consumedMessages.Count.ShouldBe(count);
-            _messageChannel.Verify(c => c.ReceiveMessageAsync(It.IsAny<CancellationToken>()), Times.Exactly(count));
+            _messageChannel.Verify(c => c.ReceiveMessageAsync(It.IsAny<CancellationToken>()), Times.Between(count, count+1, Range.Inclusive));
             target.Dispose();
             await target.MessageListenerTask;
             await target.NotificationListenerTask;
@@ -297,7 +294,7 @@ namespace Lime.Protocol.UnitTests.Adapters
 
             // Assert
             actual.ShouldBe(notification);
-            _notificationChannel.Verify(c => c.ReceiveNotificationAsync(It.IsAny<CancellationToken>()), Times.Exactly(2));
+            _notificationChannel.Verify(c => c.ReceiveNotificationAsync(It.IsAny<CancellationToken>()), Times.Between(1, 2, Range.Inclusive));
 
             target.Dispose();
             await target.NotificationListenerTask;
@@ -328,7 +325,7 @@ namespace Lime.Protocol.UnitTests.Adapters
             // Assert
             await _notificationTcs.Task;
             _consumedNotifications.Count.ShouldBe(count);
-            _notificationChannel.Verify(c => c.ReceiveNotificationAsync(It.IsAny<CancellationToken>()), Times.Exactly(count));
+            _notificationChannel.Verify(c => c.ReceiveNotificationAsync(It.IsAny<CancellationToken>()), Times.Between(count, count + 1, Range.Inclusive));
             target.Dispose();
             await target.NotificationListenerTask;
             await target.NotificationListenerTask;
@@ -418,6 +415,56 @@ namespace Lime.Protocol.UnitTests.Adapters
             _notificationChannel.Verify(c => c.ReceiveNotificationAsync(It.IsAny<CancellationToken>()), Times.Exactly(1));
             await target.NotificationListenerTask;
         }
+        
+        [Test]
+        public async Task StartListenerTasks_CommandReceived_CallsConsumer()
+        {
+            // Arrange            
+            var target = GetTargetAndStartListenerTasks();
+
+            // Act
+            _producedCommands.Add(_completionCommand);
+            var actual = _consumedCommands.Take(_cancellationToken);
+
+            // Assert
+            actual.ShouldBe(_completionCommand);
+            _commandChannel.Verify(c => c.ReceiveCommandAsync(It.IsAny<CancellationToken>()), Times.Between(1, 2, Range.Inclusive));
+
+            target.Dispose();
+            await target.CommandListenerTask;
+            await target.NotificationListenerTask;
+            await target.CommandListenerTask;
+        }
+
+        [Test]
+        public async Task StartListenerTasks_MultipleCommandsReceived_CallsConsumer()
+        {
+            // Arrange
+            var commands = new List<Command>();
+            var count = Dummy.CreateRandomInt(500) + 2;
+            for (int i = 0; i < count - 1; i++)
+            {
+                commands.Add(
+                    Dummy.CreateCommand(Dummy.CreateTextContent()));
+            }
+            commands.Add(_completionCommand);
+            var target = GetTargetAndStartListenerTasks();
+
+            // Act
+            foreach (var command in commands)
+            {
+                _producedCommands.Add(command);
+            }
+
+            // Assert
+            await _commandTcs.Task;
+            _consumedCommands.Count.ShouldBe(count);
+            _commandChannel.Verify(c => c.ReceiveCommandAsync(It.IsAny<CancellationToken>()), Times.Between(count, count + 1, Range.Inclusive));
+            target.Dispose();
+            await target.CommandListenerTask;
+            await target.NotificationListenerTask;
+            await target.CommandListenerTask;
+        }
 
         [Test]
         public async Task StartListenerTasks_DisposedWhileConsumingCommands_StopsConsuming()
@@ -461,6 +508,45 @@ namespace Lime.Protocol.UnitTests.Adapters
             _producedCommands.Count.ShouldBe(count - halfCount - 1);
             await target.CommandListenerTask;
             await target.NotificationListenerTask;
+            await target.CommandListenerTask;
+        }
+
+        [Test]
+        [ExpectedException(typeof(ApplicationException))]
+        public async Task StartListenerTasks_CommandChannelThrowsException_StopsListenerTaskAndThrows()
+        {
+            // Arrange
+            var exception = Dummy.CreateException<ApplicationException>();
+            _commandChannel
+                .Setup(m => m.ReceiveCommandAsync(It.IsAny<CancellationToken>()))
+                .ThrowsAsync(exception);
+            var target = GetTargetAndStartListenerTasks();
+
+            // Act                           
+            _commandChannel.Verify(c => c.ReceiveCommandAsync(It.IsAny<CancellationToken>()), Times.Exactly(1));
+            await target.CommandListenerTask;
+        }
+
+        [Test]
+        [ExpectedException(typeof(ApplicationException))]
+        public async Task StartListenerTasks_CommandConsumerThrowsException_StopsListenerTaskAndThrows()
+        {
+            // Arrange
+            var command = Dummy.CreateCommand(Dummy.CreateTextContent());
+            var exception = Dummy.CreateException<ApplicationException>();
+            _commandConsumer = m =>
+            {
+                if (ReferenceEquals(command, m))
+                {
+                    throw exception;
+                }
+                throw new AssertionException("An unexpected command was received by the consumer");
+            };
+            var target = GetTargetAndStartListenerTasks();
+
+            // Act                           
+            _producedCommands.Add(command);
+            _commandChannel.Verify(c => c.ReceiveCommandAsync(It.IsAny<CancellationToken>()), Times.Exactly(1));
             await target.CommandListenerTask;
         }
     }
