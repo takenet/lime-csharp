@@ -254,7 +254,6 @@ namespace Lime.Protocol.UnitTests.Adapters
             var target = GetTargetAndStartListenerTasks();
 
             // Act                           
-            _messageChannel.Verify(c => c.ReceiveMessageAsync(It.IsAny<CancellationToken>()), Times.Exactly(1));
             await target.MessageListenerTask;
         }
 
@@ -277,7 +276,6 @@ namespace Lime.Protocol.UnitTests.Adapters
 
             // Act                           
             _producedMessages.Add(message);
-            _messageChannel.Verify(c => c.ReceiveMessageAsync(It.IsAny<CancellationToken>()), Times.Exactly(1));
             await target.MessageListenerTask;
         }
         
@@ -389,7 +387,6 @@ namespace Lime.Protocol.UnitTests.Adapters
             var target = GetTargetAndStartListenerTasks();
 
             // Act                           
-            _notificationChannel.Verify(c => c.ReceiveNotificationAsync(It.IsAny<CancellationToken>()), Times.Exactly(1));
             await target.NotificationListenerTask;
         }
 
@@ -412,7 +409,6 @@ namespace Lime.Protocol.UnitTests.Adapters
 
             // Act                           
             _producedNotifications.Add(notification);
-            _notificationChannel.Verify(c => c.ReceiveNotificationAsync(It.IsAny<CancellationToken>()), Times.Exactly(1));
             await target.NotificationListenerTask;
         }
         
@@ -523,7 +519,6 @@ namespace Lime.Protocol.UnitTests.Adapters
             var target = GetTargetAndStartListenerTasks();
 
             // Act                           
-            _commandChannel.Verify(c => c.ReceiveCommandAsync(It.IsAny<CancellationToken>()), Times.Exactly(1));
             await target.CommandListenerTask;
         }
 
@@ -546,7 +541,6 @@ namespace Lime.Protocol.UnitTests.Adapters
 
             // Act                           
             _producedCommands.Add(command);
-            _commandChannel.Verify(c => c.ReceiveCommandAsync(It.IsAny<CancellationToken>()), Times.Exactly(1));
             await target.CommandListenerTask;
         }
     }
