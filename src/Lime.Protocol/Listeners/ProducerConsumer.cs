@@ -1,11 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Lime.Protocol.Adapters
+namespace Lime.Protocol.Listeners
 {
     public static class ProducerConsumer
     {
@@ -21,7 +18,7 @@ namespace Lime.Protocol.Adapters
         /// <exception cref="System.ArgumentNullException">
         /// </exception>
         /// <exception cref="System.ArgumentException">A valid cancellation token must be provided</exception>
-        public static Task StartAsync<T>(Func<CancellationToken, Task<T>> producer, Func<T, Task> consumer, CancellationToken cancellationToken)
+        public static Task CreateAsync<T>(Func<CancellationToken, Task<T>> producer, Func<T, Task<bool>> consumer, CancellationToken cancellationToken)
         {
             if (producer == null) throw new ArgumentNullException(nameof(producer));
             if (consumer == null) throw new ArgumentNullException(nameof(consumer));            
@@ -34,7 +31,7 @@ namespace Lime.Protocol.Adapters
                     {
                         cancellationToken.ThrowIfCancellationRequested();
                         var item = await producer(cancellationToken);
-                        await consumer(item);
+                        if (!await consumer(item)) break;
                     }
                     catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
                     {

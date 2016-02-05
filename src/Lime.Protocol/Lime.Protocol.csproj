@@ -50,10 +50,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Adapters\ChannelListenerAdapterBase.cs" />
-    <Compile Include="Adapters\DataflowChannelListenerAdapter.cs" />
-    <Compile Include="Adapters\EventChannelListenerAdapter.cs" />
-    <Compile Include="Adapters\ProducerConsumer.cs" />
+    <Compile Include="Listeners\ChannelListener.cs" />
+    <Compile Include="Listeners\DataflowChannelListener.cs" />
+    <Compile Include="Listeners\EventChannelListener.cs" />
+    <Compile Include="Listeners\IChanneListener.cs" />
+    <Compile Include="Listeners\IStartable.cs" />
+    <Compile Include="Listeners\IStoppable.cs" />
+    <Compile Include="Listeners\ProducerConsumer.cs" />
     <Compile Include="Client\ClientChannel.cs" />
     <Compile Include="Client\ClientChannelBuilder.cs" />
     <Compile Include="Client\ClientChannelExceptionEventArgs.cs" />

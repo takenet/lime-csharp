@@ -1,42 +1,40 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Lime.Protocol.Adapters;
+using Lime.Protocol.Listeners;
 using Lime.Protocol.Network;
 using Lime.Protocol.Util;
 using Moq;
-using NUnit.Core;
 using NUnit.Framework;
 using Shouldly;
 
-namespace Lime.Protocol.UnitTests.Adapters
+namespace Lime.Protocol.UnitTests.Listeners
 {
+    
     [TestFixture]
-    public class ChannelListenerAdapterBaseTests
+    public class ChannelListenerTests
     {
-        private Mock<IMessageChannel> _messageChannel;
-        private Mock<INotificationChannel> _notificationChannel;
-        private Mock<ICommandChannel> _commandChannel;
+        protected Mock<IMessageChannel> _messageChannel;
+        protected Mock<INotificationChannel> _notificationChannel;
+        protected Mock<ICommandChannel> _commandChannel;
 
-        private BlockingCollection<Message> _producedMessages;
-        private BlockingCollection<Notification> _producedNotifications;
-        private BlockingCollection<Command> _producedCommands;
+        protected BlockingCollection<Message> _producedMessages;
+        protected BlockingCollection<Notification> _producedNotifications;
+        protected BlockingCollection<Command> _producedCommands;
 
-        private BlockingCollection<Message> _consumedMessages;
-        private BlockingCollection<Notification> _consumedNotifications;
-        private BlockingCollection<Command> _consumedCommands;
+        protected BlockingCollection<Message> _consumedMessages;
+        protected BlockingCollection<Notification> _consumedNotifications;
+        protected BlockingCollection<Command> _consumedCommands;
 
         private TaskCompletionSource<Message> _messageTcs;
         private TaskCompletionSource<Command> _commandTcs;
         private TaskCompletionSource<Notification> _notificationTcs;
 
-        private Func<Message, Task> _messageConsumer;
-        private Func<Notification, Task> _notificationConsumer;
-        private Func<Command, Task> _commandConsumer;
+        protected Func<Message, Task<bool>> _messageConsumer;
+        protected Func<Notification, Task<bool>> _notificationConsumer;
+        protected Func<Command, Task<bool>> _commandConsumer;
 
         private CancellationToken _cancellationToken;
 
@@ -82,7 +80,7 @@ namespace Lime.Protocol.UnitTests.Adapters
                     _consumedMessages.CompleteAdding();
                     _messageTcs.SetResult(m);
                 }
-                return TaskUtil.CompletedTask;
+                return TaskUtil.TrueCompletedTask;
             };
             _notificationConsumer = n =>
             {
@@ -92,7 +90,7 @@ namespace Lime.Protocol.UnitTests.Adapters
                     _consumedNotifications.CompleteAdding();
                     _notificationTcs.SetResult(n);
                 }
-                return TaskUtil.CompletedTask;
+                return TaskUtil.TrueCompletedTask;
             };
             _commandConsumer = c =>
             {
@@ -102,7 +100,7 @@ namespace Lime.Protocol.UnitTests.Adapters
                     _consumedCommands.CompleteAdding();
                     _commandTcs.SetResult(c);
                 }
-                return TaskUtil.CompletedTask;
+                return TaskUtil.TrueCompletedTask;
             };
 
             _completionMessage = Dummy.CreateMessage(Dummy.CreateTextContent());
@@ -118,7 +116,7 @@ namespace Lime.Protocol.UnitTests.Adapters
             });
         }
 
-        [TearDown]
+        [TearDown]   
         public void TearDown()
         {
             _messageChannel = null;
@@ -133,25 +131,22 @@ namespace Lime.Protocol.UnitTests.Adapters
             _cancellationToken = CancellationToken.None;
         }
 
-        private TestChannelListenerAdapterBase GetTarget()
-        {
-            return new TestChannelListenerAdapterBase(_messageChannel.Object, _notificationChannel.Object,
-                _commandChannel.Object);
-            
-        }
 
-        private TestChannelListenerAdapterBase GetTargetAndStartListenerTasks()
+        protected ChannelListener GetAndStartTarget()
         {
-            var target = GetTarget();
-            target.StartListenerTasks(_messageConsumer, _notificationConsumer, _commandConsumer);
+            var target = new ChannelListener(_messageChannel.Object, _notificationChannel.Object,
+                _commandChannel.Object,
+                _messageConsumer, _notificationConsumer, _commandConsumer);
+
+            target.Start();
             return target;
         }
 
         [Test]
-        public async Task StartListenerTasks_MessageReceived_CallsConsumer()
+        public async Task Start_MessageReceived_CallsConsumer()
         {
             // Arrange            
-            var target = GetTargetAndStartListenerTasks();
+            var target = GetAndStartTarget();
            
             // Act
             _producedMessages.Add(_completionMessage);            
@@ -168,7 +163,7 @@ namespace Lime.Protocol.UnitTests.Adapters
         }
 
         [Test]
-        public async Task StartListenerTasks_MultipleMessagesReceived_CallsConsumer()
+        public async Task Start_MultipleMessagesReceived_CallsConsumer()
         {
             // Arrange
             var messages = new List<Message>();
@@ -179,7 +174,7 @@ namespace Lime.Protocol.UnitTests.Adapters
                     Dummy.CreateMessage(Dummy.CreateTextContent()));
             }
             messages.Add(_completionMessage);            
-            var target = GetTargetAndStartListenerTasks();
+            var target = GetAndStartTarget();
 
             // Act
             foreach (var message in messages)
@@ -198,7 +193,7 @@ namespace Lime.Protocol.UnitTests.Adapters
         }
 
         [Test]
-        public async Task StartListenerTasks_DisposedWhileConsumingMessages_StopsConsuming()
+        public async Task Start_StoppedhileConsumingMessages_StopsConsuming()
         {
             // Arrange
             var messages = new List<Message>();
@@ -210,7 +205,7 @@ namespace Lime.Protocol.UnitTests.Adapters
                     Dummy.CreateMessage(Dummy.CreateTextContent()));
             }
 
-            ChannelListenerAdapterBase target = null;
+            ChannelListener target = null;
 
             int consumedCount = 0;
             _messageConsumer = (m) =>
@@ -219,12 +214,12 @@ namespace Lime.Protocol.UnitTests.Adapters
                 if (consumedCount == halfCount)
                 {
                     _messageTcs.TrySetResult(m);
-                    target?.Dispose();
+                    return TaskUtil.FalseCompletedTask;
                 }
-                return TaskUtil.CompletedTask;
+                return TaskUtil.TrueCompletedTask;
             };
 
-            target = GetTargetAndStartListenerTasks();
+            target = GetAndStartTarget();
 
             // Act
             foreach (var message in messages)
@@ -237,21 +232,19 @@ namespace Lime.Protocol.UnitTests.Adapters
             consumedCount.ShouldBe(halfCount);
             _messageChannel.Verify(c => c.ReceiveMessageAsync(It.IsAny<CancellationToken>()), Times.Exactly(halfCount));
             _producedMessages.Count.ShouldBe(count - halfCount - 1);
-            await target.MessageListenerTask;
-            await target.NotificationListenerTask;
-            await target.CommandListenerTask;
+            await target.MessageListenerTask;            
         }
 
         [Test]
         [ExpectedException(typeof(ApplicationException))]
-        public async Task StartListenerTasks_MessageChannelThrowsException_StopsListenerTaskAndThrows()
+        public async Task Start_MessageChannelThrowsException_StopsListenerTaskAndThrows()
         {
             // Arrange
             var exception = Dummy.CreateException<ApplicationException>();            
             _messageChannel
                 .Setup(m => m.ReceiveMessageAsync(It.IsAny<CancellationToken>()))
                 .ThrowsAsync(exception);
-            var target = GetTargetAndStartListenerTasks();
+            var target = GetAndStartTarget();
 
             // Act                           
             await target.MessageListenerTask;
@@ -259,7 +252,7 @@ namespace Lime.Protocol.UnitTests.Adapters
 
         [Test]
         [ExpectedException(typeof(ApplicationException))]
-        public async Task StartListenerTasks_MessageConsumerThrowsException_StopsListenerTaskAndThrows()
+        public async Task Start_MessageConsumerThrowsException_StopsListenerTaskAndThrows()
         {
             // Arrange
             var message = Dummy.CreateMessage(Dummy.CreateTextContent());
@@ -272,7 +265,7 @@ namespace Lime.Protocol.UnitTests.Adapters
                 }
                 throw new AssertionException("An unexpected message was received by the consumer");                
             };
-            var target = GetTargetAndStartListenerTasks();
+            var target = GetAndStartTarget();
 
             // Act                           
             _producedMessages.Add(message);
@@ -280,11 +273,11 @@ namespace Lime.Protocol.UnitTests.Adapters
         }
         
         [Test]
-        public async Task StartListenerTasks_NotificationReceived_CallsConsumer()
+        public async Task Start_NotificationReceived_CallsConsumer()
         {
             // Arrange
             var notification = Dummy.CreateNotification(Event.Authorized);
-            var target = GetTargetAndStartListenerTasks();
+            var target = GetAndStartTarget();
 
             // Act
             _producedNotifications.Add(notification);
@@ -301,7 +294,7 @@ namespace Lime.Protocol.UnitTests.Adapters
         }
 
         [Test]
-        public async Task StartListenerTasks_MultipleNotificationsReceived_CallsConsumer()
+        public async Task Start_MultipleNotificationsReceived_CallsConsumer()
         {
             // Arrange
             var notifications = new List<Notification>();
@@ -312,7 +305,7 @@ namespace Lime.Protocol.UnitTests.Adapters
                     Dummy.CreateNotification(Event.Authorized));
             }
             notifications.Add(_completionNotification);
-            var target = GetTargetAndStartListenerTasks();
+            var target = GetAndStartTarget();
 
             // Act
             foreach (var notification in notifications)
@@ -331,7 +324,7 @@ namespace Lime.Protocol.UnitTests.Adapters
         }
 
         [Test]
-        public async Task StartListenerTasks_DisposedWhileConsumingNotifications_StopsConsuming()
+        public async Task Start_StoppedWhileConsumingNotifications_StopsConsuming()
         {
             // Arrange
             var notifications = new List<Notification>();
@@ -343,7 +336,7 @@ namespace Lime.Protocol.UnitTests.Adapters
                     Dummy.CreateNotification(Event.Authorized));
             }
 
-            ChannelListenerAdapterBase target = null;
+            ChannelListener target = null;
 
             int consumedCount = 0;
             _notificationConsumer = (m) =>
@@ -352,12 +345,12 @@ namespace Lime.Protocol.UnitTests.Adapters
                 if (consumedCount == halfCount)
                 {
                     _notificationTcs.TrySetResult(m);
-                    target?.Dispose();
+                    return TaskUtil.FalseCompletedTask;
                 }
-                return TaskUtil.CompletedTask;
+                return TaskUtil.TrueCompletedTask;
             };
 
-            target = GetTargetAndStartListenerTasks();
+            target = GetAndStartTarget();
 
             // Act
             foreach (var notification in notifications)
@@ -371,20 +364,18 @@ namespace Lime.Protocol.UnitTests.Adapters
             _notificationChannel.Verify(c => c.ReceiveNotificationAsync(It.IsAny<CancellationToken>()), Times.Exactly(halfCount));
             _producedNotifications.Count.ShouldBe(count - halfCount - 1);
             await target.NotificationListenerTask;
-            await target.NotificationListenerTask;
-            await target.CommandListenerTask;
         }
 
         [Test]
         [ExpectedException(typeof(ApplicationException))]
-        public async Task StartListenerTasks_NotificationChannelThrowsException_StopsListenerTaskAndThrows()
+        public async Task Start_NotificationChannelThrowsException_StopsListenerTaskAndThrows()
         {
             // Arrange
             var exception = Dummy.CreateException<ApplicationException>();
             _notificationChannel
                 .Setup(m => m.ReceiveNotificationAsync(It.IsAny<CancellationToken>()))
                 .ThrowsAsync(exception);
-            var target = GetTargetAndStartListenerTasks();
+            var target = GetAndStartTarget();
 
             // Act                           
             await target.NotificationListenerTask;
@@ -392,7 +383,7 @@ namespace Lime.Protocol.UnitTests.Adapters
 
         [Test]
         [ExpectedException(typeof(ApplicationException))]
-        public async Task StartListenerTasks_NotificationConsumerThrowsException_StopsListenerTaskAndThrows()
+        public async Task Start_NotificationConsumerThrowsException_StopsListenerTaskAndThrows()
         {
             // Arrange
             var notification = Dummy.CreateNotification(Event.Authorized);
@@ -405,7 +396,7 @@ namespace Lime.Protocol.UnitTests.Adapters
                 }
                 throw new AssertionException("An unexpected notification was received by the consumer");
             };
-            var target = GetTargetAndStartListenerTasks();
+            var target = GetAndStartTarget();
 
             // Act                           
             _producedNotifications.Add(notification);
@@ -413,10 +404,10 @@ namespace Lime.Protocol.UnitTests.Adapters
         }
         
         [Test]
-        public async Task StartListenerTasks_CommandReceived_CallsConsumer()
+        public async Task Start_CommandReceived_CallsConsumer()
         {
             // Arrange            
-            var target = GetTargetAndStartListenerTasks();
+            var target = GetAndStartTarget();
 
             // Act
             _producedCommands.Add(_completionCommand);
@@ -433,7 +424,7 @@ namespace Lime.Protocol.UnitTests.Adapters
         }
 
         [Test]
-        public async Task StartListenerTasks_MultipleCommandsReceived_CallsConsumer()
+        public async Task Start_MultipleCommandsReceived_CallsConsumer()
         {
             // Arrange
             var commands = new List<Command>();
@@ -444,7 +435,7 @@ namespace Lime.Protocol.UnitTests.Adapters
                     Dummy.CreateCommand(Dummy.CreateTextContent()));
             }
             commands.Add(_completionCommand);
-            var target = GetTargetAndStartListenerTasks();
+            var target = GetAndStartTarget();
 
             // Act
             foreach (var command in commands)
@@ -463,7 +454,7 @@ namespace Lime.Protocol.UnitTests.Adapters
         }
 
         [Test]
-        public async Task StartListenerTasks_DisposedWhileConsumingCommands_StopsConsuming()
+        public async Task Start_StoppedWhileConsumingCommands_StopsConsuming()
         {
             // Arrange
             var commands = new List<Command>();
@@ -475,7 +466,7 @@ namespace Lime.Protocol.UnitTests.Adapters
                     Dummy.CreateCommand(Dummy.CreateTextContent()));
             }
 
-            ChannelListenerAdapterBase target = null;
+            ChannelListener target = null;
 
             int consumedCount = 0;
             _commandConsumer = (m) =>
@@ -484,12 +475,12 @@ namespace Lime.Protocol.UnitTests.Adapters
                 if (consumedCount == halfCount)
                 {
                     _commandTcs.TrySetResult(m);
-                    target?.Dispose();
+                    return TaskUtil.FalseCompletedTask;
                 }
-                return TaskUtil.CompletedTask;
+                return TaskUtil.TrueCompletedTask;
             };
 
-            target = GetTargetAndStartListenerTasks();
+            target = GetAndStartTarget();
 
             // Act
             foreach (var command in commands)
@@ -503,20 +494,18 @@ namespace Lime.Protocol.UnitTests.Adapters
             _commandChannel.Verify(c => c.ReceiveCommandAsync(It.IsAny<CancellationToken>()), Times.Exactly(halfCount));
             _producedCommands.Count.ShouldBe(count - halfCount - 1);
             await target.CommandListenerTask;
-            await target.NotificationListenerTask;
-            await target.CommandListenerTask;
         }
 
         [Test]
         [ExpectedException(typeof(ApplicationException))]
-        public async Task StartListenerTasks_CommandChannelThrowsException_StopsListenerTaskAndThrows()
+        public async Task Start_CommandChannelThrowsException_StopsListenerTaskAndThrows()
         {
             // Arrange
             var exception = Dummy.CreateException<ApplicationException>();
             _commandChannel
                 .Setup(m => m.ReceiveCommandAsync(It.IsAny<CancellationToken>()))
                 .ThrowsAsync(exception);
-            var target = GetTargetAndStartListenerTasks();
+            var target = GetAndStartTarget();
 
             // Act                           
             await target.CommandListenerTask;
@@ -524,7 +513,7 @@ namespace Lime.Protocol.UnitTests.Adapters
 
         [Test]
         [ExpectedException(typeof(ApplicationException))]
-        public async Task StartListenerTasks_CommandConsumerThrowsException_StopsListenerTaskAndThrows()
+        public async Task Start_CommandConsumerThrowsException_StopsListenerTaskAndThrows()
         {
             // Arrange
             var command = Dummy.CreateCommand(Dummy.CreateTextContent());
@@ -537,24 +526,11 @@ namespace Lime.Protocol.UnitTests.Adapters
                 }
                 throw new AssertionException("An unexpected command was received by the consumer");
             };
-            var target = GetTargetAndStartListenerTasks();
+            var target = GetAndStartTarget();
 
             // Act                           
             _producedCommands.Add(command);
             await target.CommandListenerTask;
-        }
-    }
-
-    public class TestChannelListenerAdapterBase : ChannelListenerAdapterBase
-    {
-        public TestChannelListenerAdapterBase(IMessageChannel messageChannel, INotificationChannel notificationChannel, ICommandChannel commandChannel) 
-            : base(messageChannel, notificationChannel, commandChannel)
-        {
-        }
-
-        public new void StartListenerTasks(Func<Message, Task> messageConsumer, Func<Notification, Task> notificationConsumer, Func<Command, Task> commandConsumer)
-        {
-            base.StartListenerTasks(messageConsumer, notificationConsumer, commandConsumer);
         }
     }
 }
