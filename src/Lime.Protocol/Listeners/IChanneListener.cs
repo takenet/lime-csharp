@@ -2,6 +2,11 @@
 
 namespace Lime.Protocol.Listeners
 {
+    /// <summary>
+    /// Defines a channel listener service.
+    /// </summary>
+    /// <seealso cref="IStartable" />
+    /// <seealso cref="IStoppable" />
     public interface IChanneListener : IStartable, IStoppable
     {
         /// <summary>
