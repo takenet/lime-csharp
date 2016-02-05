@@ -13,9 +13,9 @@ namespace Lime.Protocol.UnitTests
 {
     public class Dummy
     {
-        private static readonly Random _random = new Random();
-        private static readonly string _chars = "abcdefghijklmnopqrstuvwxyz0123456789";
-        private static readonly string _extendedChars = _chars + "!@#$%¨&*()_+-=\"'{}[],.;/<>:?^~ ";
+        private static readonly Random _random        = new Random();
+        private static readonly string _chars         = "abcdefghijklmnopqrstuvwxyz0123456789";
+        private static readonly string _extendedChars = _chars + "!@#$%¨&*()_+-=\"'{}[],.;/<>:?^~\\áéíóúàèìòùºç ";
 
         public static int CreateRandomInt(int maxValue)
         {
@@ -62,9 +62,9 @@ namespace Lime.Protocol.UnitTests
                 pp,
                 to,
                 randomKey1,
-                randomString1.EscapeQuotes(),
+                randomString1.Escape(),
                 randomKey2,
-                randomString2.EscapeQuotes()
+                randomString2.Escape()
                 );
         }
 

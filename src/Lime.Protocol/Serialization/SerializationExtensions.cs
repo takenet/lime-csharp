@@ -211,10 +211,10 @@ namespace Lime.Protocol.Serialization
                 valueBytes.Length);
         }
 
-        public static string EscapeQuotes(this string value)
+        public static string Escape(this string value)
         {
             if (value == null) throw new ArgumentNullException(nameof(value));
-            return value.Replace("\"", "\\\"");
+            return value.Replace("\\", "\\\\").Replace("\"", "\\\"");
         }
     }
 }

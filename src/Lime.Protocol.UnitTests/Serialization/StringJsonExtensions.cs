@@ -114,7 +114,7 @@ namespace Lime.Protocol.UnitTests.Serialization
                     }
                     else
                     {
-                        stringBuilder.AppendFormat("\"{0}\",", v.ToString().EscapeQuotes());
+                        stringBuilder.AppendFormat("\"{0}\",", v.ToString().Escape());
                     }
                 }
 
@@ -124,13 +124,13 @@ namespace Lime.Protocol.UnitTests.Serialization
             }
 
             return json.Contains(
-                $"\"{key}\":\"{value.ToString().EscapeQuotes()}\"");
+                $"\"{key}\":\"{value.ToString().Escape()}\"");
         }
 
         public static bool ContainsJsonKey(this string json, string key)
         {
             return json.Contains(
-                $"\"{key.EscapeQuotes()}\":");
+                $"\"{key.Escape()}\":");
         }
     }
 }

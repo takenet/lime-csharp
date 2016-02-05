@@ -643,7 +643,7 @@ namespace Lime.Protocol.UnitTests.Serialization
 			var resourceUri = new LimeUri("/capability");
 
 			string json =
-			    $"{{\"uri\":\"{resourceUri}\",\"type\":\"application/vnd.lime.capability+json\",\"resource\":{{\"contentTypes\":[\"{contentType1}\",\"{contentType2}\",\"{contentType3}\"],\"resourceTypes\":[\"{resourceType1}\",\"{resourceType2}\",\"{resourceType3}\"]}},\"method\":\"{method.ToString().ToCamelCase()}\",\"id\":\"{id}\",\"from\":\"{@from}\",\"pp\":\"{pp}\",\"to\":\"{to}\",\"metadata\":{{\"{randomKey1}\":\"{randomString1.EscapeQuotes()}\",\"{randomKey2}\":\"{randomString2.EscapeQuotes()}\"}}}}";
+			    $"{{\"uri\":\"{resourceUri}\",\"type\":\"application/vnd.lime.capability+json\",\"resource\":{{\"contentTypes\":[\"{contentType1}\",\"{contentType2}\",\"{contentType3}\"],\"resourceTypes\":[\"{resourceType1}\",\"{resourceType2}\",\"{resourceType3}\"]}},\"method\":\"{method.ToString().ToCamelCase()}\",\"id\":\"{id}\",\"from\":\"{@from}\",\"pp\":\"{pp}\",\"to\":\"{to}\",\"metadata\":{{\"{randomKey1}\":\"{randomString1.Escape()}\",\"{randomKey2}\":\"{randomString2.Escape()}\"}}}}";
 
 			var envelope = target.Deserialize(json);
 
@@ -688,7 +688,7 @@ namespace Lime.Protocol.UnitTests.Serialization
 			var photoUri = Dummy.CreateUri();
 
 			string json =
-			    $"{{\"uri\":\"{resourceUri}\",\"type\":\"application/vnd.lime.account+json\",\"resource\":{{\"fullName\": \"{fullName.EscapeQuotes()}\", \"photoUri\": \"{photoUri}\"}},\"method\":\"{method.ToString().ToCamelCase()}\",\"id\":\"{id}\",\"from\":\"{@from}\",\"to\":\"{to}\"}}";
+			    $"{{\"uri\":\"{resourceUri}\",\"type\":\"application/vnd.lime.account+json\",\"resource\":{{\"fullName\": \"{fullName.Escape()}\", \"photoUri\": \"{photoUri}\"}},\"method\":\"{method.ToString().ToCamelCase()}\",\"id\":\"{id}\",\"from\":\"{@from}\",\"to\":\"{to}\"}}";
 
 			var envelope = target.Deserialize(json);
 
@@ -725,7 +725,7 @@ namespace Lime.Protocol.UnitTests.Serialization
 			var priority = Dummy.CreateRandomInt(100);
 			
 			string json =
-			    $"{{\"uri\":\"{resourceUri}\",\"type\":\"application/vnd.lime.presence+json\",\"resource\":{{\"status\": \"{status.ToString().ToCamelCase()}\",\"message\":\"{message.EscapeQuotes()}\",\"routingRule\":\"{routingRule.ToString().ToCamelCase()}\",\"lastSeen\":\"{lastSeen.ToUniversalTime().ToString(TextJsonWriter.DATE_FORMAT, CultureInfo.InvariantCulture)}\",\"priority\":{priority}}},\"method\":\"{method.ToString().ToCamelCase()}\",\"id\":\"{id}\",\"from\":\"{@from}\",\"to\":\"{to}\"}}";
+			    $"{{\"uri\":\"{resourceUri}\",\"type\":\"application/vnd.lime.presence+json\",\"resource\":{{\"status\": \"{status.ToString().ToCamelCase()}\",\"message\":\"{message.Escape()}\",\"routingRule\":\"{routingRule.ToString().ToCamelCase()}\",\"lastSeen\":\"{lastSeen.ToUniversalTime().ToString(TextJsonWriter.DATE_FORMAT, CultureInfo.InvariantCulture)}\",\"priority\":{priority}}},\"method\":\"{method.ToString().ToCamelCase()}\",\"id\":\"{id}\",\"from\":\"{@from}\",\"to\":\"{to}\"}}";
 
 			var envelope = target.Deserialize(json);
 
@@ -776,7 +776,7 @@ namespace Lime.Protocol.UnitTests.Serialization
 			var resourceUri = Dummy.CreateAbsoluteLimeUri();
 
 			string json =
-			    $"{{\"uri\":\"{resourceUri}\",\"method\":\"get\",\"id\":\"{id}\",\"from\":\"{@from}\",\"pp\":\"{pp}\",\"to\":\"{to}\",\"metadata\":{{\"{randomKey1}\":\"{randomString1.EscapeQuotes()}\",\"{randomKey2}\":\"{randomString2.EscapeQuotes()}\"}}}}";
+			    $"{{\"uri\":\"{resourceUri}\",\"method\":\"get\",\"id\":\"{id}\",\"from\":\"{@from}\",\"pp\":\"{pp}\",\"to\":\"{to}\",\"metadata\":{{\"{randomKey1}\":\"{randomString1.Escape()}\",\"{randomKey2}\":\"{randomString2.Escape()}\"}}}}";
 
 			var envelope = target.Deserialize(json);
 
@@ -854,7 +854,7 @@ namespace Lime.Protocol.UnitTests.Serialization
 			string randomString2 = Dummy.CreateRandomStringExtended(50);
 
 			string json =
-			    $"{{\"type\":\"application/vnd.lime.collection+json\",\"resource\":{{\"itemType\":\"application/vnd.lime.contact+json\",\"total\":3,\"items\":[{{\"identity\":\"{identity1}\",\"name\":\"{name1.EscapeQuotes()}\",\"isPending\":true,\"shareAccountInfo\":false}},{{\"identity\":\"{identity2}\",\"name\":\"{name2.EscapeQuotes()}\",\"sharePresence\":false}},{{\"identity\":\"{identity3}\",\"name\":\"{name3.EscapeQuotes()}\",\"isPending\":true,\"sharePresence\":false}}]}},\"method\":\"get\",\"status\":\"success\",\"id\":\"{id}\",\"from\":\"{@from}\",\"pp\":\"{pp}\",\"to\":\"{to}\",\"metadata\":{{\"{randomKey1}\":\"{randomString1.EscapeQuotes()}\",\"{randomKey2}\":\"{randomString2.EscapeQuotes()}\"}}}}";
+			    $"{{\"type\":\"application/vnd.lime.collection+json\",\"resource\":{{\"itemType\":\"application/vnd.lime.contact+json\",\"total\":3,\"items\":[{{\"identity\":\"{identity1}\",\"name\":\"{name1.Escape()}\",\"isPending\":true,\"shareAccountInfo\":false}},{{\"identity\":\"{identity2}\",\"name\":\"{name2.Escape()}\",\"sharePresence\":false}},{{\"identity\":\"{identity3}\",\"name\":\"{name3.Escape()}\",\"isPending\":true,\"sharePresence\":false}}]}},\"method\":\"get\",\"status\":\"success\",\"id\":\"{id}\",\"from\":\"{@from}\",\"pp\":\"{pp}\",\"to\":\"{to}\",\"metadata\":{{\"{randomKey1}\":\"{randomString1.Escape()}\",\"{randomKey2}\":\"{randomString2.Escape()}\"}}}}";
 
 			var envelope = target.Deserialize(json);
 
@@ -954,7 +954,7 @@ namespace Lime.Protocol.UnitTests.Serialization
 			var text = Dummy.CreateRandomStringExtended(50);
 
 			string json =
-			    $"{{\"type\":\"text/plain\",\"content\":\"{text.EscapeQuotes()}\",\"id\":\"{id}\",\"from\":\"{@from}\",\"pp\":\"{pp}\",\"to\":\"{to}\",\"metadata\":{{\"{randomKey1}\":\"{randomString1.EscapeQuotes()}\",\"{randomKey2}\":\"{randomString2.EscapeQuotes()}\"}}}}";
+			    $"{{\"type\":\"text/plain\",\"content\":\"{text.Escape()}\",\"id\":\"{id}\",\"from\":\"{@from}\",\"pp\":\"{pp}\",\"to\":\"{to}\",\"metadata\":{{\"{randomKey1}\":\"{randomString1.Escape()}\",\"{randomKey2}\":\"{randomString2.Escape()}\"}}}}";
 
 			var envelope = target.Deserialize(json);
 
@@ -994,7 +994,7 @@ namespace Lime.Protocol.UnitTests.Serialization
 			var state = ChatStateEvent.Deleting;
 
 			string json =
-			    $"{{\"type\":\"application/vnd.lime.chatstate+json\",\"content\":{{\"state\":\"{state.ToString().ToLowerInvariant()}\"}},\"id\":\"{id}\",\"from\":\"{@from}\",\"pp\":\"{pp}\",\"to\":\"{to}\",\"metadata\":{{\"{randomKey1}\":\"{randomString1.EscapeQuotes()}\",\"{randomKey2}\":\"{randomString2.EscapeQuotes()}\"}}}}";
+			    $"{{\"type\":\"application/vnd.lime.chatstate+json\",\"content\":{{\"state\":\"{state.ToString().ToLowerInvariant()}\"}},\"id\":\"{id}\",\"from\":\"{@from}\",\"pp\":\"{pp}\",\"to\":\"{to}\",\"metadata\":{{\"{randomKey1}\":\"{randomString1.Escape()}\",\"{randomKey2}\":\"{randomString2.Escape()}\"}}}}";
 
 			var envelope = target.Deserialize(json);
 
@@ -1035,7 +1035,7 @@ namespace Lime.Protocol.UnitTests.Serialization
 			var text = Dummy.CreateRandomString(50);
 
 			string json =
-			    $"{{\"type\":\"{type}\",\"content\":\"{text}\",\"id\":\"{id}\",\"from\":\"{@from}\",\"pp\":\"{pp}\",\"to\":\"{to}\",\"metadata\":{{\"{randomKey1}\":\"{randomString1.EscapeQuotes()}\",\"{randomKey2}\":\"{randomString2.EscapeQuotes()}\"}}}}";
+			    $"{{\"type\":\"{type}\",\"content\":\"{text}\",\"id\":\"{id}\",\"from\":\"{@from}\",\"pp\":\"{pp}\",\"to\":\"{to}\",\"metadata\":{{\"{randomKey1}\":\"{randomString1.Escape()}\",\"{randomKey2}\":\"{randomString2.Escape()}\"}}}}";
 
 			var envelope = target.Deserialize(json);
 
@@ -1097,7 +1097,7 @@ namespace Lime.Protocol.UnitTests.Serialization
 
 
 			string json =
-			    $"{{\"type\":\"{type}\",\"content\":{{\"{propertyName1.EscapeQuotes()}\":\"{propertyValue1.EscapeQuotes()}\",\"{propertyName2.EscapeQuotes()}\":{propertyValue2},\"{propertyName3.EscapeQuotes()}\":[{{\"{arrayPropertyName1.EscapeQuotes()}\":\"{arrayPropertyValue1}\",\"{arrayPropertyName2.EscapeQuotes()}\":{arrayPropertyValue2}}},{{\"{arrayPropertyName3.EscapeQuotes()}\":\"{arrayPropertyValue3.EscapeQuotes()}\",\"{arrayPropertyName4.EscapeQuotes()}\":{arrayPropertyValue4.ToString().ToLower()}}}],\"{propertyName4.EscapeQuotes()}\":\"{propertyValue4.ToUniversalTime().ToString(TextJsonWriter.DATE_FORMAT, CultureInfo.InvariantCulture)}\"}},\"id\":\"{id}\",\"from\":\"{@from}\",\"pp\":\"{pp}\",\"to\":\"{to}\",\"metadata\":{{\"{randomKey1}\":\"{randomString1.EscapeQuotes()}\",\"{randomKey2}\":\"{randomString2.EscapeQuotes()}\"}}}}";
+			    $"{{\"type\":\"{type}\",\"content\":{{\"{propertyName1.Escape()}\":\"{propertyValue1.Escape()}\",\"{propertyName2.Escape()}\":{propertyValue2},\"{propertyName3.Escape()}\":[{{\"{arrayPropertyName1.Escape()}\":\"{arrayPropertyValue1}\",\"{arrayPropertyName2.Escape()}\":{arrayPropertyValue2}}},{{\"{arrayPropertyName3.Escape()}\":\"{arrayPropertyValue3.Escape()}\",\"{arrayPropertyName4.Escape()}\":{arrayPropertyValue4.ToString().ToLower()}}}],\"{propertyName4.Escape()}\":\"{propertyValue4.ToUniversalTime().ToString(TextJsonWriter.DATE_FORMAT, CultureInfo.InvariantCulture)}\"}},\"id\":\"{id}\",\"from\":\"{@from}\",\"pp\":\"{pp}\",\"to\":\"{to}\",\"metadata\":{{\"{randomKey1}\":\"{randomString1.Escape()}\",\"{randomKey2}\":\"{randomString2.Escape()}\"}}}}";
 
 			var envelope = target.Deserialize(json);
 
@@ -1191,7 +1191,7 @@ namespace Lime.Protocol.UnitTests.Serialization
 
 
 			string json =
-			    $"{{\"type\":\"{type}\",\"content\":{{\"{propertyName1.EscapeQuotes()}\":\"{propertyValue1.EscapeQuotes()}\",\"{propertyName2.EscapeQuotes()}\":{propertyValue2}}},\"id\":\"{id}\",\"from\":\"{@from}\",\"pp\":\"{pp}\",\"to\":\"{to}\",\"metadata\":{{\"{randomKey1}\":\"{randomString1.EscapeQuotes()}\",\"{randomKey2}\":\"{randomString2.EscapeQuotes()}\"}}}}";
+			    $"{{\"type\":\"{type}\",\"content\":{{\"{propertyName1.Escape()}\":\"{propertyValue1.Escape()}\",\"{propertyName2.Escape()}\":{propertyValue2}}},\"id\":\"{id}\",\"from\":\"{@from}\",\"pp\":\"{pp}\",\"to\":\"{to}\",\"metadata\":{{\"{randomKey1}\":\"{randomString1.Escape()}\",\"{randomKey2}\":\"{randomString2.Escape()}\"}}}}";
 
 			var envelope = target.Deserialize(json);
 
@@ -1230,7 +1230,7 @@ namespace Lime.Protocol.UnitTests.Serialization
 			var text = Dummy.CreateRandomStringExtended(50);
 
 			string json =
-			    $"{{\"type\":\"text/plain\",\"content\":\"{text.EscapeQuotes()}\",\"from\":\"{@from}\",\"to\":\"{to}\"}}";
+			    $"{{\"type\":\"text/plain\",\"content\":\"{text.Escape()}\",\"from\":\"{@from}\",\"to\":\"{to}\"}}";
 
 			var envelope = target.Deserialize(json);
 
@@ -1293,7 +1293,7 @@ namespace Lime.Protocol.UnitTests.Serialization
 			var @event = Event.Received;
 
 			string json =
-			    $"{{\"type\":\"application/vnd.lime.text+json\",\"event\":\"{@event.ToString().ToCamelCase()}\",\"id\":\"{id}\",\"from\":\"{@from}\",\"pp\":\"{pp}\",\"to\":\"{to}\",\"metadata\":{{\"{randomKey1}\":\"{randomString1.EscapeQuotes()}\",\"{randomKey2}\":\"{randomString2.EscapeQuotes()}\"}}}}";
+			    $"{{\"type\":\"application/vnd.lime.text+json\",\"event\":\"{@event.ToString().ToCamelCase()}\",\"id\":\"{id}\",\"from\":\"{@from}\",\"pp\":\"{pp}\",\"to\":\"{to}\",\"metadata\":{{\"{randomKey1}\":\"{randomString1.Escape()}\",\"{randomKey2}\":\"{randomString2.Escape()}\"}}}}";
 
 			var envelope = target.Deserialize(json);
 			var notification = envelope.ShouldBeOfType<Notification>();
@@ -1328,7 +1328,7 @@ namespace Lime.Protocol.UnitTests.Serialization
 			var to = Dummy.CreateNode();
 
 			string json =
-			    $"{{\"event\":\"{@event.ToString().ToCamelCase()}\",\"id\":\"{id}\",\"from\":\"{@from}\",\"to\":\"{to}\",\"reason\":{{\"code\":{reasonCode},\"description\":\"{reasonDescription.EscapeQuotes()}\"}}}}";
+			    $"{{\"event\":\"{@event.ToString().ToCamelCase()}\",\"id\":\"{id}\",\"from\":\"{@from}\",\"to\":\"{to}\",\"reason\":{{\"code\":{reasonCode},\"description\":\"{reasonDescription.Escape()}\"}}}}";
 
 			var envelope = target.Deserialize(json);
 
@@ -1368,7 +1368,7 @@ namespace Lime.Protocol.UnitTests.Serialization
 			var state = SessionState.Authenticating;
 
 			string json =
-			    $"{{\"state\":\"{state.ToString().ToCamelCase()}\",\"scheme\":\"plain\",\"authentication\":{{\"password\":\"{password}\"}},\"id\":\"{id}\",\"from\":\"{@from}\",\"to\":\"{to}\",\"metadata\":{{\"{randomKey1}\":\"{randomString1.EscapeQuotes()}\",\"{randomKey2}\":\"{randomString2.EscapeQuotes()}\"}}}}";
+			    $"{{\"state\":\"{state.ToString().ToCamelCase()}\",\"scheme\":\"plain\",\"authentication\":{{\"password\":\"{password}\"}},\"id\":\"{id}\",\"from\":\"{@from}\",\"to\":\"{to}\",\"metadata\":{{\"{randomKey1}\":\"{randomString1.Escape()}\",\"{randomKey2}\":\"{randomString2.Escape()}\"}}}}";
 
 			var envelope = target.Deserialize(json);
             
@@ -1403,7 +1403,7 @@ namespace Lime.Protocol.UnitTests.Serialization
 			var reasonDescription = Dummy.CreateRandomStringExtended(100);
 
 			string json =
-			    $"{{\"state\":\"{state.ToString().ToCamelCase()}\",\"id\":\"{id}\",\"from\":\"{@from}\",\"to\":\"{to}\",\"reason\":{{\"code\":{reasonCode},\"description\":\"{reasonDescription.EscapeQuotes()}\"}},\"encryptionOptions\":null,\"compressionOptions\":null,\"compression\":null,\"encryption\":null}}";
+			    $"{{\"state\":\"{state.ToString().ToCamelCase()}\",\"id\":\"{id}\",\"from\":\"{@from}\",\"to\":\"{to}\",\"reason\":{{\"code\":{reasonCode},\"description\":\"{reasonDescription.Escape()}\"}},\"encryptionOptions\":null,\"compressionOptions\":null,\"compression\":null,\"encryption\":null}}";
 
 			var envelope = target.Deserialize(json);
 

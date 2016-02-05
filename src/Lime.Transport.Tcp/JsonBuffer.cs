@@ -15,6 +15,7 @@ namespace Lime.Transport
         private int _jsonStackedBrackets;
         private bool _jsonStarted;
         private bool _insideQuotes;
+        private bool _isEscaping;
 
         public JsonBuffer(int bufferSize)
         {
@@ -48,33 +49,44 @@ namespace Lime.Transport
             {
                 _jsonCurPos = i + 1;
 
-                if (_buffer[i] == '"' &&
-                    (i == 0 || _buffer[i - 1] != '\\'))
+                if (_buffer[i] == '"' && !_isEscaping)
                 {
                     _insideQuotes = !_insideQuotes;
                 }
 
-                if (_insideQuotes) continue;                
-
-                if (_buffer[i] == '{')
+                if (!_insideQuotes)
                 {
-                    _jsonStackedBrackets++;
-                    if (!_jsonStarted)
+                    if (_buffer[i] == '{')
                     {
-                        _jsonStartPos = i;
-                        _jsonStarted = true;
+                        _jsonStackedBrackets++;
+                        if (!_jsonStarted)
+                        {
+                            _jsonStartPos = i;
+                            _jsonStarted = true;
+                        }
+                    }
+                    else if (_buffer[i] == '}')
+                    {
+                        _jsonStackedBrackets--;
+                    }
+
+                    if (_jsonStarted &&
+                        _jsonStackedBrackets == 0)
+                    {
+                        jsonLenght = i - _jsonStartPos + 1;
+                        break;
                     }
                 }
-                else if (_buffer[i] == '}')
+                else
                 {
-                    _jsonStackedBrackets--;
-                }
-
-                if (_jsonStarted &&
-                    _jsonStackedBrackets == 0)
-                {
-                    jsonLenght = i - _jsonStartPos + 1;
-                    break;
+                    if (_isEscaping)
+                    {
+                        _isEscaping = false;
+                    }
+                    else if (_buffer[i] == '\\')
+                    {
+                        _isEscaping = true;
+                    }
                 }
             }
 
