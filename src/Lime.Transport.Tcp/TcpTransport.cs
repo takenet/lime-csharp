@@ -11,6 +11,7 @@ using Lime.Protocol;
 using Lime.Protocol.Network;
 using Lime.Protocol.Security;
 using Lime.Protocol.Serialization;
+using Lime.Protocol.Serialization.Newtonsoft;
 
 namespace Lime.Transport.Tcp
 {
@@ -51,7 +52,7 @@ namespace Lime.Transport.Tcp
         /// <param name="traceWriter">The trace writer.</param>
         /// <param name="serverCertificateValidationCallback">A callback to validate the server certificate in the TLS authentication process.</param>
         public TcpTransport(X509Certificate2 clientCertificate = null, int bufferSize = DEFAULT_BUFFER_SIZE, ITraceWriter traceWriter = null, RemoteCertificateValidationCallback serverCertificateValidationCallback = null)
-			: this(new EnvelopeSerializer(), clientCertificate, bufferSize, traceWriter, serverCertificateValidationCallback)
+			: this(new JsonNetSerializer(), clientCertificate, bufferSize, traceWriter, serverCertificateValidationCallback)
 	    {
 	    }
 

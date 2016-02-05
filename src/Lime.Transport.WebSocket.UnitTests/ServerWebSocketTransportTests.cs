@@ -9,6 +9,7 @@ using Lime.Protocol;
 using Lime.Protocol.Network;
 using Lime.Protocol.Security;
 using Lime.Protocol.Serialization;
+using Lime.Protocol.Serialization.Newtonsoft;
 using Lime.Protocol.UnitTests;
 using Moq;
 using NUnit.Framework;
@@ -44,7 +45,7 @@ namespace Lime.Transport.WebSocket.UnitTests
         public void SetUp()
         {
             ListenerUri = new Uri("ws://localhost:8081");
-            EnvelopeSerializer = new EnvelopeSerializer();
+            EnvelopeSerializer = new JsonNetSerializer();
             TraceWriter = new Mock<ITraceWriter>();
             Listener = new WebSocketTransportListener(ListenerUri, SslCertificate, EnvelopeSerializer, TraceWriter.Object);
             CancellationToken = TimeSpan.FromSeconds(5).ToCancellationToken();

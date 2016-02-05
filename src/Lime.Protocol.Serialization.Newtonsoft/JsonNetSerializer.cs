@@ -7,6 +7,10 @@ using System.Globalization;
 
 namespace Lime.Protocol.Serialization.Newtonsoft
 {
+    /// <summary>
+    /// Serializes using the Newtonsoft.Json library.
+    /// </summary>
+    /// <seealso cref="Lime.Protocol.Serialization.IEnvelopeSerializer" />
     public class JsonNetSerializer : IEnvelopeSerializer
     {
         static JsonNetSerializer()

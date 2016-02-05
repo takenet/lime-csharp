@@ -16,11 +16,11 @@ namespace Lime.Protocol.UnitTests.Serialization
             var openedBrackets = 0;
             var jsonStarted = false;
             var insideQuotes = false;
-            var previousC = default(char);
+            var isEscaping = false;
 
             foreach (var c in json)
             {
-                if (c == '"' && !previousC.Equals('\\'))
+                if (c == '"' && !isEscaping)
                 {
                     insideQuotes = !insideQuotes;
                 }
@@ -40,7 +40,17 @@ namespace Lime.Protocol.UnitTests.Serialization
                         openedBrackets--;
                     }
                 }
-                previousC = c;
+                else
+                {
+                    if (isEscaping)
+                    {
+                        isEscaping = false;
+                    }
+                    else if (c == '\\')
+                    {
+                        isEscaping = true;
+                    }
+                }
             }
 
             return jsonStarted && openedBrackets == 0;

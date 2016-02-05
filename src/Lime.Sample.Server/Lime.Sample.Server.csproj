@@ -50,6 +50,10 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Lime.Protocol.Serialization.Newtonsoft\Lime.Protocol.Serialization.Newtonsoft.csproj">
+      <Project>{07EF6707-B284-4068-9B2F-48998782BC9F}</Project>
+      <Name>Lime.Protocol.Serialization.Newtonsoft</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Lime.Protocol\Lime.Protocol.csproj">
       <Project>{0cfee3a4-f914-4c45-be13-a344c9cfa134}</Project>
       <Name>Lime.Protocol</Name>

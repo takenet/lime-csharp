@@ -24,6 +24,7 @@ using System.Windows.Data;
 using System.Windows.Threading;
 using Lime.Transport.Tcp;
 using System.Windows.Controls;
+using Lime.Protocol.Serialization.Newtonsoft;
 
 namespace Lime.Client.TestConsole.ViewModels
 {
@@ -527,7 +528,7 @@ namespace Lime.Client.TestConsole.ViewModels
 
                     Transport = new TcpTransport(
                         TcpClient,
-                        new EnvelopeSerializer(),
+                        new JsonNetSerializer(), 
                         _hostUri.Host,
                         clientCertificate: clientCertificate,
                         traceWriter: this);

@@ -12,6 +12,7 @@ using Lime.Protocol.Server;
 using Lime.Transport.Tcp;
 using Lime.Protocol.Network;
 using Lime.Protocol.Security;
+using Lime.Protocol.Serialization.Newtonsoft;
 using Lime.Transport.WebSocket;
 
 namespace Lime.Sample.Server
@@ -70,7 +71,7 @@ namespace Lime.Sample.Server
         static ITransportListener GetTransportListenerForUri(Uri uri)
         {
             X509Certificate2 serverCertificate = null;  // You should provide a certificate for TLS
-            var serializer = new EnvelopeSerializer();  // Built-in serializer
+            var serializer = new JsonNetSerializer(); 
 
             switch (uri.Scheme)
             {

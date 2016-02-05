@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Lime.Protocol.Serialization.Newtonsoft;
 
 namespace Lime.Client.TestConsole.ViewModels
 {
@@ -17,7 +18,7 @@ namespace Lime.Client.TestConsole.ViewModels
 
         static EnvelopeViewModel()
         {
-            _serializer = new EnvelopeSerializer();
+            _serializer = new JsonNetSerializer();
         }
 
 

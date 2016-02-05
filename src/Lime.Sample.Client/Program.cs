@@ -36,19 +36,20 @@ namespace Lime.Sample.Client
                 portNumber = 55321;
             }
 
-            Console.Write("Identity (name@domain): ");
+            Console.Write("Identity (name@domain - ENTER for none): ");
 
             Identity identity;
             if (!Identity.TryParse(Console.ReadLine(), out identity))
             {
-                identity = new Identity("samples", "take.io");
+                identity = null;
             }
 
-            Console.Write("Password: ");
-            var password = Console.ReadLine();
-            if (string.IsNullOrWhiteSpace(password))
+            string password = null;
+
+            if (identity != null)
             {
-                password = "123456";
+                Console.Write("Password: ");
+                password = Console.ReadLine();                
             }
 
             // Creates a new transport and connect to the server
@@ -65,9 +66,14 @@ namespace Lime.Sample.Client
                 var session = await clientChannel.EstablishSessionAsync(
                     compressionOptions => compressionOptions.First(),     // Compression selector 
                     encryptionOptions => encryptionOptions.First(),       // Encryption selector
-                    identity,                                                   // Client identity
-                    (authenticationSchemes, roundtrip) =>
+                    identity ?? new Identity(),                           // Client identity
+                    (authenticationSchemes, roundtrip) =>                    
                     {
+                        if (identity == null && authenticationSchemes.Contains(AuthenticationScheme.Guest))
+                        {
+                            return new GuestAuthentication();
+                        }
+
                         var authentication = new PlainAuthentication();
                         authentication.SetToBase64Password(password);
                         return authentication;

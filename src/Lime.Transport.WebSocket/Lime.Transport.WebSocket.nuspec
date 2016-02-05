@@ -13,7 +13,7 @@
     <copyright>Copyright ©  2015 Curupira S/A</copyright>
     <tags>lime</tags>
     <dependencies>
-      <dependency id="Lime.Protocol" />
+      <dependency id="Lime.Protocol" version="$version$" />
       <dependency id="Microsoft.Tpl.Dataflow" version="4.5.24" />
       <dependency id="vtortola.WebSocketListener" version="2.1.7.0" />
     </dependencies>

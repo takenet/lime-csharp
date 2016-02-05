@@ -13,8 +13,8 @@
     <copyright>Copyright ©  2014 Curupira S/A</copyright>
     <tags>lime</tags>
     <dependencies>
-      <dependency id="Lime.Protocol" />
-      <dependency id="Newtonsoft.Json" version="7.0"/>
+      <dependency id="Lime.Protocol" version="$version$" />
+      <dependency id="Newtonsoft.Json" version="8.0.2"/>
     </dependencies>
   </metadata>
   <files>

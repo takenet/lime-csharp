@@ -102,6 +102,8 @@ namespace Lime.Transport
                 _jsonCurPos = 0;
                 _jsonStartPos = 0;
                 _jsonStarted = false;
+                _insideQuotes = false;
+                _isEscaping = false;
 
                 return true;
             }

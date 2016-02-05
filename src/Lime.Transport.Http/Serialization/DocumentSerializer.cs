@@ -6,14 +6,13 @@ namespace Lime.Transport.Http.Serialization
 {
     public sealed class DocumentSerializer : IDocumentSerializer
     {
-
         #region IDocumentSerializer Members
 
         public string Serialize(Document document)
         {
             if (document == null)
             {
-                throw new ArgumentNullException("document");
+                throw new ArgumentNullException(nameof(document));
             }
 
             var mediaType = document.GetMediaType();
@@ -31,12 +30,12 @@ namespace Lime.Transport.Http.Serialization
         {
             if (documentString == null)
             {
-                throw new ArgumentNullException("documentString");
+                throw new ArgumentNullException(nameof(documentString));
             }
 
             if (mediaType == null)
             {
-                throw new ArgumentNullException("mediaType");
+                throw new ArgumentNullException(nameof(mediaType));
             }
 
             Document document = null;
