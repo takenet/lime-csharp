@@ -10,18 +10,21 @@ namespace Lime.Protocol.Listeners
     public interface IChanneListener : IStartable, IStoppable
     {
         /// <summary>
-        /// Gets the message listener task.
+        /// Gets the message listener task. 
+        /// When completed, return the last unconsumed <see cref="Message"/>, if there's any.
         /// </summary>
-        Task MessageListenerTask { get; }
+        Task<Message> MessageListenerTask { get; }
 
         /// <summary>
         /// Gets the notification listener task.
+        /// When completed, return the last unconsumed <see cref="Notification"/>, if there's any.
         /// </summary>
-        Task NotificationListenerTask { get; }
+        Task<Notification> NotificationListenerTask { get; }
 
         /// <summary>
         /// Gets the command listener task.
+        /// When completed, return the last unconsumed <see cref="Command"/>, if there's any.
         /// </summary>
-        Task CommandListenerTask { get; }
+        Task<Command> CommandListenerTask { get; }
     }
 }

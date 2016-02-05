@@ -28,9 +28,6 @@ namespace Lime.Protocol.UnitTests.Listeners
         protected BlockingCollection<Notification> _consumedNotifications;
         protected BlockingCollection<Command> _consumedCommands;
 
-        private TaskCompletionSource<Message> _messageTcs;
-        private TaskCompletionSource<Command> _commandTcs;
-        private TaskCompletionSource<Notification> _notificationTcs;
 
         protected Func<Message, Task<bool>> _messageConsumer;
         protected Func<Notification, Task<bool>> _notificationConsumer;
@@ -68,38 +65,35 @@ namespace Lime.Protocol.UnitTests.Listeners
             _consumedNotifications = new BlockingCollection<Notification>();
             _consumedCommands = new BlockingCollection<Command>();
 
-            _messageTcs= new TaskCompletionSource<Message>();
-            _notificationTcs = new TaskCompletionSource<Notification>();
-            _commandTcs = new TaskCompletionSource<Command>();
 
             _messageConsumer = m =>
-            {
-                _consumedMessages.Add(m);
+            {                
                 if (ReferenceEquals(m, _completionMessage))
                 {
                     _consumedMessages.CompleteAdding();
-                    _messageTcs.SetResult(m);
+                    return TaskUtil.FalseCompletedTask;
                 }
+                _consumedMessages.Add(m);
                 return TaskUtil.TrueCompletedTask;
             };
             _notificationConsumer = n =>
-            {
-                _consumedNotifications.Add(n);
+            {                
                 if (ReferenceEquals(n, _completionNotification))
                 {
                     _consumedNotifications.CompleteAdding();
-                    _notificationTcs.SetResult(n);
+                    return TaskUtil.FalseCompletedTask;
                 }
+                _consumedNotifications.Add(n);
                 return TaskUtil.TrueCompletedTask;
             };
             _commandConsumer = c =>
-            {
-                _consumedCommands.Add(c);
+            {                
                 if (ReferenceEquals(c, _completionCommand))
                 {
                     _consumedCommands.CompleteAdding();
-                    _commandTcs.SetResult(c);
+                    return TaskUtil.FalseCompletedTask;
                 }
+                _consumedCommands.Add(c);
                 return TaskUtil.TrueCompletedTask;
             };
 
@@ -108,12 +102,6 @@ namespace Lime.Protocol.UnitTests.Listeners
             _completionCommand = Dummy.CreateCommand();
 
             _cancellationToken = TimeSpan.FromSeconds(5).ToCancellationToken();
-            _cancellationToken.Register(() =>
-            {
-                _messageTcs.TrySetCanceled();
-                _notificationTcs.TrySetCanceled();
-                _commandTcs.TrySetCanceled();
-            });
         }
 
         [TearDown]   
@@ -145,21 +133,19 @@ namespace Lime.Protocol.UnitTests.Listeners
         [Test]
         public async Task Start_MessageReceived_CallsConsumer()
         {
-            // Arrange            
+            // Arrange
+            var message = Dummy.CreateMessage(Dummy.CreateTextContent());
             var target = GetAndStartTarget();
-           
+
             // Act
-            _producedMessages.Add(_completionMessage);            
+            _producedMessages.Add(message);
             var actual = _consumedMessages.Take(_cancellationToken);
 
-            // Assert
-            actual.ShouldBe(_completionMessage);
-            _messageChannel.Verify(c => c.ReceiveMessageAsync(It.IsAny<CancellationToken>()), Times.Between(1, 2, Range.Inclusive));
-
-            target.Dispose();
-            await target.MessageListenerTask;
-            await target.NotificationListenerTask;
-            await target.CommandListenerTask;
+            // Assert            
+            actual.ShouldBe(message);            
+            _producedMessages.Add(_completionMessage);            
+            (await target.MessageListenerTask).ShouldBe(_completionMessage);
+            _messageChannel.Verify(c => c.ReceiveMessageAsync(It.IsAny<CancellationToken>()), Times.Exactly(2));
         }
 
         [Test]
@@ -168,44 +154,38 @@ namespace Lime.Protocol.UnitTests.Listeners
             // Arrange
             var messages = new List<Message>();
             var count = Dummy.CreateRandomInt(500) + 2;
-            for (int i = 0; i < count - 1; i++)
+            for (int i = 0; i < count; i++)
             {
                 messages.Add(
                     Dummy.CreateMessage(Dummy.CreateTextContent()));
-            }
-            messages.Add(_completionMessage);            
-            var target = GetAndStartTarget();
+            }            
+            var target = GetAndStartTarget();            
 
             // Act
             foreach (var message in messages)
             {
                 _producedMessages.Add(message);
             }
-            
+
             // Assert
-            await _messageTcs.Task;
+            _producedMessages.Add(_completionMessage);
+            (await target.MessageListenerTask).ShouldBe(_completionMessage);            
             _consumedMessages.Count.ShouldBe(count);
-            _messageChannel.Verify(c => c.ReceiveMessageAsync(It.IsAny<CancellationToken>()), Times.Between(count, count+1, Range.Inclusive));
-            target.Dispose();
-            await target.MessageListenerTask;
-            await target.NotificationListenerTask;
-            await target.CommandListenerTask;
+            _messageChannel.Verify(c => c.ReceiveMessageAsync(It.IsAny<CancellationToken>()), Times.Exactly(count + 1));                        
         }
 
         [Test]
-        public async Task Start_StoppedhileConsumingMessages_StopsConsuming()
+        public async Task Start_ConsumerCompletedWhileProducingMessages_StopsConsuming()
         {
             // Arrange
             var messages = new List<Message>();
             var count = Dummy.CreateRandomInt(500) + 2;
             var halfCount = count/2;
-            for (int i = 0; i < count - 1; i++)
+            for (int i = 0; i < count; i++)
             {
                 messages.Add(
                     Dummy.CreateMessage(Dummy.CreateTextContent()));
             }
-
-            ChannelListener target = null;
 
             int consumedCount = 0;
             _messageConsumer = (m) =>
@@ -213,13 +193,12 @@ namespace Lime.Protocol.UnitTests.Listeners
                 consumedCount++;
                 if (consumedCount == halfCount)
                 {
-                    _messageTcs.TrySetResult(m);
                     return TaskUtil.FalseCompletedTask;
                 }
                 return TaskUtil.TrueCompletedTask;
             };
 
-            target = GetAndStartTarget();
+            var target = GetAndStartTarget();
 
             // Act
             foreach (var message in messages)
@@ -228,11 +207,13 @@ namespace Lime.Protocol.UnitTests.Listeners
             }
 
             // Assert
-            await _messageTcs.Task;
+            var unconsumedMessage = await target.MessageListenerTask;
+            unconsumedMessage.ShouldNotBeNull();
+            _producedMessages.ShouldNotContain(unconsumedMessage);
+            _consumedMessages.ShouldNotContain(unconsumedMessage);
             consumedCount.ShouldBe(halfCount);
             _messageChannel.Verify(c => c.ReceiveMessageAsync(It.IsAny<CancellationToken>()), Times.Exactly(halfCount));
-            _producedMessages.Count.ShouldBe(count - halfCount - 1);
-            await target.MessageListenerTask;            
+            _producedMessages.Count.ShouldBe(count - halfCount);                                 
         }
 
         [Test]
@@ -271,7 +252,20 @@ namespace Lime.Protocol.UnitTests.Listeners
             _producedMessages.Add(message);
             await target.MessageListenerTask;
         }
-        
+
+        [Test]        
+        public async Task Start_StoppedWhileProducingMessage_ReturnsNull()
+        {
+            // Arrange            
+            var target = GetAndStartTarget();
+
+            // Act
+            target.Stop();
+
+            // Act                           
+            (await target.MessageListenerTask).ShouldBeNull();
+        }       
+
         [Test]
         public async Task Start_NotificationReceived_CallsConsumer()
         {
@@ -283,14 +277,11 @@ namespace Lime.Protocol.UnitTests.Listeners
             _producedNotifications.Add(notification);
             var actual = _consumedNotifications.Take(_cancellationToken);
 
-            // Assert
+            // Assert            
             actual.ShouldBe(notification);
-            _notificationChannel.Verify(c => c.ReceiveNotificationAsync(It.IsAny<CancellationToken>()), Times.Between(1, 2, Range.Inclusive));
-
-            target.Dispose();
-            await target.NotificationListenerTask;
-            await target.NotificationListenerTask;
-            await target.CommandListenerTask;
+            _producedNotifications.Add(_completionNotification);
+            (await target.NotificationListenerTask).ShouldBe(_completionNotification);
+            _notificationChannel.Verify(c => c.ReceiveNotificationAsync(It.IsAny<CancellationToken>()), Times.Exactly(2));
         }
 
         [Test]
@@ -299,12 +290,11 @@ namespace Lime.Protocol.UnitTests.Listeners
             // Arrange
             var notifications = new List<Notification>();
             var count = Dummy.CreateRandomInt(500) + 2;
-            for (int i = 0; i < count - 1; i++)
+            for (int i = 0; i < count; i++)
             {
                 notifications.Add(
                     Dummy.CreateNotification(Event.Authorized));
             }
-            notifications.Add(_completionNotification);
             var target = GetAndStartTarget();
 
             // Act
@@ -314,29 +304,24 @@ namespace Lime.Protocol.UnitTests.Listeners
             }
 
             // Assert
-            await _notificationTcs.Task;
+            _producedNotifications.Add(_completionNotification);
+            (await target.NotificationListenerTask).ShouldBe(_completionNotification);
             _consumedNotifications.Count.ShouldBe(count);
-            _notificationChannel.Verify(c => c.ReceiveNotificationAsync(It.IsAny<CancellationToken>()), Times.Between(count, count + 1, Range.Inclusive));
-            target.Dispose();
-            await target.NotificationListenerTask;
-            await target.NotificationListenerTask;
-            await target.CommandListenerTask;
+            _notificationChannel.Verify(c => c.ReceiveNotificationAsync(It.IsAny<CancellationToken>()), Times.Exactly(count + 1));
         }
 
         [Test]
-        public async Task Start_StoppedWhileConsumingNotifications_StopsConsuming()
+        public async Task Start_ConsumerCompletedWhileProducingNotifications_StopsConsuming()
         {
             // Arrange
             var notifications = new List<Notification>();
             var count = Dummy.CreateRandomInt(500) + 2;
             var halfCount = count / 2;
-            for (int i = 0; i < count - 1; i++)
+            for (int i = 0; i < count; i++)
             {
                 notifications.Add(
                     Dummy.CreateNotification(Event.Authorized));
             }
-
-            ChannelListener target = null;
 
             int consumedCount = 0;
             _notificationConsumer = (m) =>
@@ -344,13 +329,12 @@ namespace Lime.Protocol.UnitTests.Listeners
                 consumedCount++;
                 if (consumedCount == halfCount)
                 {
-                    _notificationTcs.TrySetResult(m);
                     return TaskUtil.FalseCompletedTask;
                 }
                 return TaskUtil.TrueCompletedTask;
             };
 
-            target = GetAndStartTarget();
+            var target = GetAndStartTarget();
 
             // Act
             foreach (var notification in notifications)
@@ -359,11 +343,13 @@ namespace Lime.Protocol.UnitTests.Listeners
             }
 
             // Assert
-            await _notificationTcs.Task;
+            var unconsumedNotification = await target.NotificationListenerTask;
+            unconsumedNotification.ShouldNotBeNull();
+            _producedNotifications.ShouldNotContain(unconsumedNotification);
+            _consumedNotifications.ShouldNotContain(unconsumedNotification);
             consumedCount.ShouldBe(halfCount);
             _notificationChannel.Verify(c => c.ReceiveNotificationAsync(It.IsAny<CancellationToken>()), Times.Exactly(halfCount));
-            _producedNotifications.Count.ShouldBe(count - halfCount - 1);
-            await target.NotificationListenerTask;
+            _producedNotifications.Count.ShouldBe(count - halfCount);
         }
 
         [Test]
@@ -402,25 +388,36 @@ namespace Lime.Protocol.UnitTests.Listeners
             _producedNotifications.Add(notification);
             await target.NotificationListenerTask;
         }
-        
+
         [Test]
-        public async Task Start_CommandReceived_CallsConsumer()
+        public async Task Start_StoppedWhileProducingNotification_ReturnsNull()
         {
             // Arrange            
             var target = GetAndStartTarget();
 
             // Act
-            _producedCommands.Add(_completionCommand);
+            target.Stop();
+
+            // Act                           
+            (await target.NotificationListenerTask).ShouldBeNull();
+        }
+
+        [Test]
+        public async Task Start_CommandReceived_CallsConsumer()
+        {
+            // Arrange
+            var command = Dummy.CreateCommand(Dummy.CreateTextContent());
+            var target = GetAndStartTarget();
+
+            // Act
+            _producedCommands.Add(command);
             var actual = _consumedCommands.Take(_cancellationToken);
 
-            // Assert
-            actual.ShouldBe(_completionCommand);
-            _commandChannel.Verify(c => c.ReceiveCommandAsync(It.IsAny<CancellationToken>()), Times.Between(1, 2, Range.Inclusive));
-
-            target.Dispose();
-            await target.CommandListenerTask;
-            await target.NotificationListenerTask;
-            await target.CommandListenerTask;
+            // Assert            
+            actual.ShouldBe(command);
+            _producedCommands.Add(_completionCommand);
+            (await target.CommandListenerTask).ShouldBe(_completionCommand);
+            _commandChannel.Verify(c => c.ReceiveCommandAsync(It.IsAny<CancellationToken>()), Times.Exactly(2));
         }
 
         [Test]
@@ -429,12 +426,11 @@ namespace Lime.Protocol.UnitTests.Listeners
             // Arrange
             var commands = new List<Command>();
             var count = Dummy.CreateRandomInt(500) + 2;
-            for (int i = 0; i < count - 1; i++)
+            for (int i = 0; i < count; i++)
             {
                 commands.Add(
                     Dummy.CreateCommand(Dummy.CreateTextContent()));
             }
-            commands.Add(_completionCommand);
             var target = GetAndStartTarget();
 
             // Act
@@ -444,29 +440,24 @@ namespace Lime.Protocol.UnitTests.Listeners
             }
 
             // Assert
-            await _commandTcs.Task;
+            _producedCommands.Add(_completionCommand);
+            (await target.CommandListenerTask).ShouldBe(_completionCommand);
             _consumedCommands.Count.ShouldBe(count);
-            _commandChannel.Verify(c => c.ReceiveCommandAsync(It.IsAny<CancellationToken>()), Times.Between(count, count + 1, Range.Inclusive));
-            target.Dispose();
-            await target.CommandListenerTask;
-            await target.NotificationListenerTask;
-            await target.CommandListenerTask;
+            _commandChannel.Verify(c => c.ReceiveCommandAsync(It.IsAny<CancellationToken>()), Times.Exactly(count + 1));
         }
 
         [Test]
-        public async Task Start_StoppedWhileConsumingCommands_StopsConsuming()
+        public async Task Start_ConsumerCompletedWhileProducingCommands_StopsConsuming()
         {
             // Arrange
             var commands = new List<Command>();
             var count = Dummy.CreateRandomInt(500) + 2;
             var halfCount = count / 2;
-            for (int i = 0; i < count - 1; i++)
+            for (int i = 0; i < count; i++)
             {
                 commands.Add(
                     Dummy.CreateCommand(Dummy.CreateTextContent()));
             }
-
-            ChannelListener target = null;
 
             int consumedCount = 0;
             _commandConsumer = (m) =>
@@ -474,13 +465,12 @@ namespace Lime.Protocol.UnitTests.Listeners
                 consumedCount++;
                 if (consumedCount == halfCount)
                 {
-                    _commandTcs.TrySetResult(m);
                     return TaskUtil.FalseCompletedTask;
                 }
                 return TaskUtil.TrueCompletedTask;
             };
 
-            target = GetAndStartTarget();
+            var target = GetAndStartTarget();
 
             // Act
             foreach (var command in commands)
@@ -489,11 +479,13 @@ namespace Lime.Protocol.UnitTests.Listeners
             }
 
             // Assert
-            await _commandTcs.Task;
+            var unconsumedCommand = await target.CommandListenerTask;
+            unconsumedCommand.ShouldNotBeNull();
+            _producedCommands.ShouldNotContain(unconsumedCommand);
+            _consumedCommands.ShouldNotContain(unconsumedCommand);
             consumedCount.ShouldBe(halfCount);
             _commandChannel.Verify(c => c.ReceiveCommandAsync(It.IsAny<CancellationToken>()), Times.Exactly(halfCount));
-            _producedCommands.Count.ShouldBe(count - halfCount - 1);
-            await target.CommandListenerTask;
+            _producedCommands.Count.ShouldBe(count - halfCount);
         }
 
         [Test]
@@ -532,5 +524,19 @@ namespace Lime.Protocol.UnitTests.Listeners
             _producedCommands.Add(command);
             await target.CommandListenerTask;
         }
+
+        [Test]
+        public async Task Start_StoppedWhileProducingCommand_ReturnsNull()
+        {
+            // Arrange            
+            var target = GetAndStartTarget();
+
+            // Act
+            target.Stop();
+
+            // Act                           
+            (await target.CommandListenerTask).ShouldBeNull();
+        }
+
     }
 }

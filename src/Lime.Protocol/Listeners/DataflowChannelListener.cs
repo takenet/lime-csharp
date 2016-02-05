@@ -61,11 +61,11 @@ namespace Lime.Protocol.Listeners
             _channelListener.Stop();
         }
 
-        public Task MessageListenerTask => _channelListener.MessageListenerTask;
+        public Task<Message> MessageListenerTask => _channelListener.MessageListenerTask;
 
-        public Task NotificationListenerTask => _channelListener.NotificationListenerTask;
+        public Task<Notification> NotificationListenerTask => _channelListener.NotificationListenerTask;
 
-        public Task CommandListenerTask => _channelListener.CommandListenerTask;
+        public Task<Command> CommandListenerTask => _channelListener.CommandListenerTask;
 
         public void Dispose()
         {

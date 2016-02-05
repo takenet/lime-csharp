@@ -73,7 +73,7 @@ namespace Lime.Protocol.UnitTests.Listeners
             target.Start();
             return target;            
         }
-
+        
         [Test]
         public async Task Start_MessageReceived_SendsToBuffer()
         {
@@ -83,13 +83,11 @@ namespace Lime.Protocol.UnitTests.Listeners
 
             // Act
             _producedMessages.Add(message);
-            await Task.Delay(250);
 
             // Assert
-            Message actual;
-            _messageBufferBlock.TryReceive(out actual).ShouldBeTrue();
+            Message actual = await _messageBufferBlock.ReceiveAsync();
             actual.ShouldBe(message);
-            target.Stop();            
+            target.Stop();
         }
 
         [Test]
@@ -111,16 +109,12 @@ namespace Lime.Protocol.UnitTests.Listeners
                 _producedMessages.Add(message);
             }
 
-            await Task.Delay(count * 15);
-
             // Assert
-            _messageBufferBlock.Count.ShouldBe(count);
-
-            Message actual;
-            while (_messageBufferBlock.TryReceive(out actual))
+            for (int i = 0; i < count; i++)
             {
+                var actual = await _messageBufferBlock.ReceiveAsync();
                 messages.ShouldContain(actual);
-            }           
+            }
         }
 
         [Test]
@@ -135,9 +129,9 @@ namespace Lime.Protocol.UnitTests.Listeners
             _producedMessages.Add(message);
 
             // Assert
-            await target.MessageListenerTask;
+            (await target.MessageListenerTask).ShouldBe(message);
         }
-        
+
         [Test]
         public async Task Start_NotificationReceived_SendsToBuffer()
         {
@@ -147,11 +141,9 @@ namespace Lime.Protocol.UnitTests.Listeners
 
             // Act
             _producedNotifications.Add(notification);
-            await Task.Delay(250);
 
             // Assert
-            Notification actual;
-            _notificationBufferBlock.TryReceive(out actual).ShouldBeTrue();
+            Notification actual = await _notificationBufferBlock.ReceiveAsync();
             actual.ShouldBe(notification);
             target.Stop();            
         }
@@ -175,16 +167,12 @@ namespace Lime.Protocol.UnitTests.Listeners
                 _producedNotifications.Add(notification);
             }
 
-            await Task.Delay(count * 15);
-
             // Assert
-            _notificationBufferBlock.Count.ShouldBe(count);
-
-            Notification actual;
-            while (_notificationBufferBlock.TryReceive(out actual))
+            for (int i = 0; i < count; i++)
             {
+                var actual = await _notificationBufferBlock.ReceiveAsync();
                 notifications.ShouldContain(actual);
-            }           
+            }            
         }
 
         [Test]
@@ -199,9 +187,9 @@ namespace Lime.Protocol.UnitTests.Listeners
             _producedNotifications.Add(notification);
 
             // Assert
-            await target.NotificationListenerTask;
+            (await target.NotificationListenerTask).ShouldBe(notification);
         }
-
+        
         [Test]
         public async Task Start_CommandReceived_SendsToBuffer()
         {
@@ -211,11 +199,9 @@ namespace Lime.Protocol.UnitTests.Listeners
 
             // Act
             _producedCommands.Add(command);
-            await Task.Delay(250);
 
             // Assert
-            Command actual;
-            _commandBufferBlock.TryReceive(out actual).ShouldBeTrue();
+            Command actual = await _commandBufferBlock.ReceiveAsync();
             actual.ShouldBe(command);
             target.Stop();
         }
@@ -239,14 +225,10 @@ namespace Lime.Protocol.UnitTests.Listeners
                 _producedCommands.Add(command);
             }
 
-            await Task.Delay(count * 15);
-
             // Assert
-            _commandBufferBlock.Count.ShouldBe(count);
-
-            Command actual;
-            while (_commandBufferBlock.TryReceive(out actual))
+            for (int i = 0; i < count; i++)
             {
+                var actual = await _commandBufferBlock.ReceiveAsync();
                 commands.ShouldContain(actual);
             }
         }
@@ -263,7 +245,7 @@ namespace Lime.Protocol.UnitTests.Listeners
             _producedCommands.Add(command);
 
             // Assert
-            await target.CommandListenerTask;
+            (await target.CommandListenerTask).ShouldBe(command);
         }
     }
 }

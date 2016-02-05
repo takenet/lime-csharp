@@ -112,17 +112,17 @@ namespace Lime.Protocol.Listeners
         /// <summary>
         /// Gets the message listener task.
         /// </summary>
-        public Task MessageListenerTask { get; private set; }
+        public Task<Message> MessageListenerTask { get; private set; }
 
         /// <summary>
         /// Gets the notification listener task.
         /// </summary>
-        public Task NotificationListenerTask { get; private set; }
+        public Task<Notification> NotificationListenerTask { get; private set; }
 
         /// <summary>
         /// Gets the command listener task.
         /// </summary>
-        public Task CommandListenerTask { get; private set; }
+        public Task<Command> CommandListenerTask { get; private set; }
 
         /// <summary>
         /// Stops the listener tasks and releases any related resource.
