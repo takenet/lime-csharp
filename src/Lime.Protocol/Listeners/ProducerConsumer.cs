@@ -23,15 +23,16 @@ namespace Lime.Protocol.Listeners
             if (producer == null) throw new ArgumentNullException(nameof(producer));
             if (consumer == null) throw new ArgumentNullException(nameof(consumer));            
             if (cancellationToken == CancellationToken.None) throw new ArgumentException("A valid cancellation token must be provided", nameof(cancellationToken));
-            return Task.Run<T>(async () =>
+            
+            return Task.Factory.StartNew(async () =>
             {
                 while (!cancellationToken.IsCancellationRequested)
                 {
                     try
                     {
                         cancellationToken.ThrowIfCancellationRequested();
-                        var item = await producer(cancellationToken);
-                        if (!await consumer(item))
+                        var item = await producer(cancellationToken).ConfigureAwait(false);
+                        if (!await consumer(item).ConfigureAwait(false))
                         {
                             return item;
                         }
@@ -42,7 +43,9 @@ namespace Lime.Protocol.Listeners
                     }
                 }
                 return default(T);
-            });
+            },
+            TaskCreationOptions.LongRunning)
+            .Unwrap();
         }
     }
 }
