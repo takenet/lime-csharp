@@ -20,6 +20,16 @@ namespace Lime.Protocol.Client
         bool IsEstablished { get; }
 
         /// <summary>
+        /// Occurs when a channel is created.
+        /// </summary>
+        event EventHandler<ClientChannelEventArgs> ChannelCreated;
+
+        /// <summary>
+        /// Occurs when a channel is discarded.
+        /// </summary>
+        event EventHandler<ClientChannelEventArgs> ChannelDiscarded;
+
+        /// <summary>
         /// Occurs when the channel creation failed.
         /// </summary>
         event EventHandler<ClientChannelExceptionEventArgs> ChannelCreationFailed;
@@ -35,5 +45,32 @@ namespace Lime.Protocol.Client
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns></returns>
         Task FinishAsync(CancellationToken cancellationToken);
+    }
+
+    /// <summary>
+    /// Provides information about a client channel.
+    /// </summary>
+    public class ClientChannelEventArgs : DeferralEventArgs
+    {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ClientChannelEventArgs"/> class.
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="state"></param>
+        public ClientChannelEventArgs(Guid id, SessionState state)
+        {
+            Id = id;
+            State = state;
+        }
+
+        /// <summary>
+        /// Gets the associated channel session identifier.
+        /// </summary>
+        public Guid Id { get; }
+
+        /// <summary>
+        /// Gets the channel state.
+        /// </summary>
+        public SessionState State { get; }
     }
 }

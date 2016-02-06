@@ -27,11 +27,11 @@ namespace Lime.Protocol.Client
         /// <param name="isConnected">if set to <c>true</c> [is reconnecting].</param>
         /// <param name="isHandled"></param>
         /// <param name="exception">The exception.</param>
-        /// <param name="sessionId"></param>
-        public ClientChannelExceptionEventArgs(Guid sessionId, SessionState state, bool isConnected, bool isHandled, Exception exception) 
+        /// <param name="id"></param>
+        public ClientChannelExceptionEventArgs(Guid id, SessionState state, bool isConnected, bool isHandled, Exception exception) 
             : base(exception)
         {
-            SessionId = sessionId;
+            Id = id;
             State = state;
             IsConnected = isConnected;
             IsHandled = isHandled;
@@ -40,7 +40,7 @@ namespace Lime.Protocol.Client
         /// <summary>
         /// Gets the associated channel session identifier.
         /// </summary>
-        public Guid SessionId { get; }
+        public Guid Id { get; }
 
         /// <summary>
         /// Gets the channel state.

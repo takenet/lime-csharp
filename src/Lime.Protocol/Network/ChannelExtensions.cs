@@ -14,16 +14,16 @@ namespace Lime.Protocol.Network
     public static class ChannelExtensions
     {
         /// <summary>
-        /// Sends the envelope using the appropriate
-        /// method for its type.
+        /// Sends the envelope using the appropriate method for its type.
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="channel"></param>
         /// <param name="envelope"></param>
         /// <returns></returns>
-        public static async Task SendAsync<T>(this IChannel channel, T envelope) where T : Envelope
+        public static async Task SendAsync<T>(this IEstablishedChannel channel, T envelope) where T : Envelope, new()
         {
             if (channel == null) throw new ArgumentNullException(nameof(channel));
+            if (envelope == null) throw new ArgumentNullException(nameof(envelope));
 
             if (typeof(T) == typeof(Notification))
             {
@@ -37,10 +37,6 @@ namespace Lime.Protocol.Network
             {
                 await channel.SendCommandAsync(envelope as Command).ConfigureAwait(false);
             }
-            else if (typeof(T) == typeof(Session))
-            {
-                await channel.SendSessionAsync(envelope as Session).ConfigureAwait(false);
-            }
             else
             {
                 throw new ArgumentException("Invalid or unknown envelope type");
@@ -53,12 +49,12 @@ namespace Lime.Protocol.Network
         /// <param name="channel">The channel.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <param name="unrelatedCommandHandler">Defines a handler for unexpected commands received while awaiting for the actual command response. If not provided, the method will throw an <exception cref="InvalidOperationException"> in these cases.</exception>.</param>
-        /// <param name="uri">todo: describe uri parameter on GetResourceAsync</param>
+        /// <param name="uri">The resource uri.</param>
         /// <typeparam name="TResource">The type of the resource.</typeparam>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">channel</exception>
         /// <exception cref="LimeException">Returns an exception with the failure reason</exception>
-        public static Task<TResource> GetResourceAsync<TResource>(this IChannel channel, LimeUri uri, CancellationToken cancellationToken, Func<Command, Task> unrelatedCommandHandler = null) where TResource : Document, new()
+        public static Task<TResource> GetResourceAsync<TResource>(this ICommandChannel channel, LimeUri uri, CancellationToken cancellationToken, Func<Command, Task> unrelatedCommandHandler = null) where TResource : Document, new()
         {
             return GetResourceAsync<TResource>(channel, uri, null, cancellationToken, unrelatedCommandHandler);
         }
@@ -69,13 +65,13 @@ namespace Lime.Protocol.Network
         /// <typeparam name="TResource">The type of the resource.</typeparam>
         /// <param name="channel">The channel.</param>
         /// <param name="uri">The resource uri.</param>
-        /// <param name="from">From.</param>
+        /// <param name="from">The originator to be used in the command.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <param name="unrelatedCommandHandler">Defines a handler for unexpected commands received while awaiting for the actual command response. If not provided, the method will throw an <exception cref="InvalidOperationException"> in these cases.</exception>.</param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">channel</exception>
         /// <exception cref="LimeException">Returns an exception with the failure reason</exception>
-        public static async Task<TResource> GetResourceAsync<TResource>(this IChannel channel, LimeUri uri, Node from, CancellationToken cancellationToken, Func<Command, Task> unrelatedCommandHandler = null) where TResource : Document
+        public static async Task<TResource> GetResourceAsync<TResource>(this ICommandChannel channel, LimeUri uri, Node from, CancellationToken cancellationToken, Func<Command, Task> unrelatedCommandHandler = null) where TResource : Document
         {
             if (channel == null) throw new ArgumentNullException(nameof(channel));
             if (uri == null) throw new ArgumentNullException(nameof(uri));
@@ -108,11 +104,12 @@ namespace Lime.Protocol.Network
         /// <typeparam name="TResource">The type of the resource.</typeparam>
         /// <param name="channel">The channel.</param>
         /// <param name="uri">The resource uri.</param>
+        /// <param name="resource">The resource to be set.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <param name="unrelatedCommandHandler">Defines a handler for unexpected commands received while awaiting for the actual command response. If not provided, the method will throw an <exception cref="InvalidOperationException"> in these cases.</exception>.</param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">channel</exception>
-        public static Task SetResourceAsync<TResource>(this IChannel channel, LimeUri uri, TResource resource, CancellationToken cancellationToken, Func<Command, Task> unrelatedCommandHandler = null) where TResource : Document
+        public static Task SetResourceAsync<TResource>(this ICommandChannel channel, LimeUri uri, TResource resource, CancellationToken cancellationToken, Func<Command, Task> unrelatedCommandHandler = null) where TResource : Document
         {
             return SetResourceAsync(channel, uri, resource, null, cancellationToken, unrelatedCommandHandler);
         }
@@ -123,14 +120,14 @@ namespace Lime.Protocol.Network
         /// <typeparam name="TResource">The type of the resource.</typeparam>
         /// <param name="channel">The channel.</param>
         /// <param name="uri">The resource uri.</param>
-        /// <param name="resource">The resource.</param>
-        /// <param name="from">From.</param>
+        /// <param name="resource">The resource to be set.</param>
+        /// <param name="from">The originator to be used in the command.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <param name="unrelatedCommandHandler">Defines a handler for unexpected commands received while awaiting for the actual command response. If not provided, the method will throw an <exception cref="InvalidOperationException"> in these cases.</exception>.</param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">channel</exception>
         /// <exception cref="LimeException"></exception>
-        public static async Task SetResourceAsync<TResource>(this IChannel channel, LimeUri uri, TResource resource, Node from, CancellationToken cancellationToken, Func<Command, Task> unrelatedCommandHandler = null) where TResource : Document
+        public static async Task SetResourceAsync<TResource>(this ICommandChannel channel, LimeUri uri, TResource resource, Node from, CancellationToken cancellationToken, Func<Command, Task> unrelatedCommandHandler = null) where TResource : Document
         {
             if (channel == null) throw new ArgumentNullException(nameof(channel));
             if (uri == null) throw new ArgumentNullException(nameof(uri));
@@ -169,14 +166,14 @@ namespace Lime.Protocol.Network
         /// Composes a command envelope with a
         /// delete method for the specified resource.
         /// </summary>
-        /// <typeparam name="TResource">The type of the resource.</typeparam>
         /// <param name="channel">The channel.</param>
+        /// <param name="uri">The resource uri.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <param name="unrelatedCommandHandler">Defines a handler for unexpected commands received while awaiting for the actual command response. If not provided, the method will throw an <exception cref="InvalidOperationException"> in these cases.</exception>.</param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">channel</exception>
         /// <exception cref="LimeException">Returns an exception with the failure reason</exception>
-        public static Task DeleteResourceAsync(this IChannel channel, LimeUri uri, CancellationToken cancellationToken, Func<Command, Task> unrelatedCommandHandler = null)
+        public static Task DeleteResourceAsync(this ICommandChannel channel, LimeUri uri, CancellationToken cancellationToken, Func<Command, Task> unrelatedCommandHandler = null)
         {
             return DeleteResourceAsync(channel, uri, null, cancellationToken, unrelatedCommandHandler);
         }
@@ -185,16 +182,15 @@ namespace Lime.Protocol.Network
         /// Composes a command envelope with a
         /// delete method for the specified resource.
         /// </summary>
-        /// <typeparam name="TResource">The type of the resource.</typeparam>
         /// <param name="channel">The channel.</param>
-        /// <param name="resource">The resource.</param>
-        /// <param name="from">From.</param>
+        /// <param name="uri">The resource uri.</param>
+        /// <param name="from">The originator to be used in the command.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <param name="unrelatedCommandHandler">Defines a handler for unexpected commands received while awaiting for the actual command response. If not provided, the method will throw an <exception cref="InvalidOperationException"> in these cases.</exception>.</param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">channel</exception>
         /// <exception cref="LimeException">Returns an exception with the failure reason</exception>
-        public static async Task DeleteResourceAsync(this IChannel channel, LimeUri uri, Node from, CancellationToken cancellationToken, Func<Command, Task> unrelatedCommandHandler = null)
+        public static async Task DeleteResourceAsync(this ICommandChannel channel, LimeUri uri, Node from, CancellationToken cancellationToken, Func<Command, Task> unrelatedCommandHandler = null)
         {
             if (channel == null) throw new ArgumentNullException(nameof(channel));
             if (uri == null) throw new ArgumentNullException(nameof(uri));
@@ -232,7 +228,7 @@ namespace Lime.Protocol.Network
         /// <param name="cancellationToken"></param>
         /// <param name="unrelatedCommandHandler">Defines a handler for unexpected commands received while awaiting for the actual command response. If not provided, the method will throw an <exception cref="InvalidOperationException"> in these cases.</exception>.</param>
         /// <returns></returns>
-        public static async Task<Command> ProcessCommandAsync(this IChannel channel, Command requestCommand, CancellationToken cancellationToken, Func<Command, Task> unrelatedCommandHandler = null)
+        public static async Task<Command> ProcessCommandAsync(this ICommandChannel channel, Command requestCommand, CancellationToken cancellationToken, Func<Command, Task> unrelatedCommandHandler = null)
         {
             if (channel == null) throw new ArgumentNullException(nameof(channel));
             if (requestCommand == null) throw new ArgumentNullException(nameof(requestCommand));
@@ -262,8 +258,6 @@ namespace Lime.Protocol.Network
             }
 
             return responseCommand;
-
-
         }
     }
 }
