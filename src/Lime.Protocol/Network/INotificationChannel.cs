@@ -8,16 +8,31 @@ using System.Threading.Tasks;
 namespace Lime.Protocol.Network
 {
     /// <summary>
-    /// Defines a notification envelopes exchanging channel
+    /// Defines a channel to exchange notification envelopes.
     /// </summary>
-    public interface INotificationChannel
+    public interface INotificationChannel : INotificationSenderChannel, INotificationReceiverChannel
+    {
+
+    }
+
+    /// <summary>
+    /// Defines a channel to send notification envelopes.
+    /// </summary>
+    public interface INotificationSenderChannel
     {
         /// <summary>
         /// Sends a notification to the remote node.
         /// </summary>
         /// <param name="notification"></param>
+        /// <returns></returns>
         Task SendNotificationAsync(Notification notification);
+    }
 
+    /// <summary>
+    /// Defines a channel to receive notification envelopes.
+    /// </summary>
+    public interface INotificationReceiverChannel
+    {
         /// <summary>
         /// Receives a notification from the remote node.
         /// </summary>

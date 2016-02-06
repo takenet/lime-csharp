@@ -1,9 +1,10 @@
 ﻿namespace Lime.Protocol.Network
 {
     /// <summary>
-    /// Defines a channel for exchanging envelopes in an established session.
+    /// Defines a channel to exchange envelopes in an established session.
     /// </summary>
-    public interface IEstablishedChannel : IMessageChannel, ICommandChannel, INotificationChannel
+    public interface IEstablishedChannel : IEstablishedSenderChannel, IEstablishedReceiverChannel, IMessageChannel, INotificationChannel, ICommandChannel
     {
+
     }
 }
