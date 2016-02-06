@@ -20,7 +20,7 @@ namespace Lime.Protocol.Listeners
         /// <param name="messageTargetBlock">The message target block.</param>
         /// <param name="notificationTargetBlock">The notification target block.</param>
         /// <param name="commandTargetBlock">The command target block.</param>
-        public DataflowChannelListener(IEstablishedChannel channel, ITargetBlock<Message> messageTargetBlock, ITargetBlock<Notification> notificationTargetBlock, ITargetBlock<Command> commandTargetBlock)
+        public DataflowChannelListener(IEstablishedReceiverChannel channel, ITargetBlock<Message> messageTargetBlock, ITargetBlock<Notification> notificationTargetBlock, ITargetBlock<Command> commandTargetBlock)
             : this(channel, channel, channel, messageTargetBlock, notificationTargetBlock, commandTargetBlock)
         {           
             
@@ -37,7 +37,7 @@ namespace Lime.Protocol.Listeners
         /// <param name="commandTargetBlock">The command target block.</param>
         /// <exception cref="System.ArgumentNullException">
         /// </exception>
-        public DataflowChannelListener(IMessageChannel messageChannel, INotificationChannel notificationChannel, ICommandChannel commandChannel, 
+        public DataflowChannelListener(IMessageReceiverChannel messageChannel, INotificationReceiverChannel notificationChannel, ICommandReceiverChannel commandChannel, 
             ITargetBlock<Message> messageTargetBlock, ITargetBlock<Notification> notificationTargetBlock, ITargetBlock<Command> commandTargetBlock)            
         {
             if (messageTargetBlock == null) throw new ArgumentNullException(nameof(messageTargetBlock));
