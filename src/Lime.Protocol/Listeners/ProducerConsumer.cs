@@ -24,7 +24,7 @@ namespace Lime.Protocol.Listeners
             if (consumer == null) throw new ArgumentNullException(nameof(consumer));            
             if (cancellationToken == CancellationToken.None) throw new ArgumentException("A valid cancellation token must be provided", nameof(cancellationToken));
             
-            return Task.Factory.StartNew(async () =>
+            return Task.Run(async () =>
             {
                 while (!cancellationToken.IsCancellationRequested)
                 {
@@ -43,9 +43,7 @@ namespace Lime.Protocol.Listeners
                     }
                 }
                 return default(T);
-            },
-            TaskCreationOptions.LongRunning)
-            .Unwrap();
+            });
         }
     }
 }

@@ -20,7 +20,7 @@ namespace Lime.Protocol.Network
         /// <param name="channel"></param>
         /// <param name="envelope"></param>
         /// <returns></returns>
-        public static async Task SendAsync<T>(this IEstablishedChannel channel, T envelope) where T : Envelope, new()
+        public static async Task SendAsync<T>(this IEstablishedSenderChannel channel, T envelope) where T : Envelope, new()
         {
             if (channel == null) throw new ArgumentNullException(nameof(channel));
             if (envelope == null) throw new ArgumentNullException(nameof(envelope));
@@ -217,10 +217,7 @@ namespace Lime.Protocol.Network
         }
 
         /// <summary>
-        /// Sends a command request through the 
-        /// channel and awaits for the response.
-        /// This method synchronizes the channel
-        /// calls to avoid multiple command processing
+        /// Sends a command request through the channel and awaits for the response.
         /// conflicts. 
         /// </summary>
         /// <param name="channel">The channel.</param>
