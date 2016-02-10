@@ -88,6 +88,36 @@ namespace Lime.Protocol.UnitTests.Client
         }
 
         [Test]
+        public async Task SendMessageAsync_NotEstablishedChannelMultipleCalls_BuildChannelOnceAndSends()
+        {
+            // Arrange
+            var count = 100;
+            var messages = new Message[count];
+            for (int i = 0; i < count; i++)
+            {
+                messages[i] = Dummy.CreateMessage(Dummy.CreatePlainDocument());
+            }
+            
+            var target = GetTarget();
+
+            // Act
+            await Task.WhenAll(
+                Enumerable
+                    .Range(0, count)
+                    .Select(i => Task.Run(() => target.SendMessageAsync(messages[i]))));
+
+
+            // Assert
+            _establishedClientChannelBuilder.Verify(c => c.BuildAndEstablishAsync(It.IsAny<CancellationToken>()),
+                Times.Once());
+            foreach (var message in messages)
+            {
+                _clientChannel.Verify(c => c.SendMessageAsync(message), Times.Once());
+            }            
+        }
+
+
+        [Test]
         public async Task SendMessageAsync_EstablishedChannel_SendsToExistingChannel()
         {
             // Arrange
