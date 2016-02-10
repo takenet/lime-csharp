@@ -12,9 +12,9 @@ namespace Lime.Protocol.Listeners
     /// <seealso cref="System.IDisposable" />
     public sealed class ChannelListener : IChanneListener, IDisposable
     {
-        private readonly IMessageChannel _messageChannel;
-        private readonly INotificationChannel _notificationChannel;
-        private readonly ICommandChannel _commandChannel;
+        private readonly IMessageReceiverChannel _messageChannel;
+        private readonly INotificationReceiverChannel _notificationChannel;
+        private readonly ICommandReceiverChannel _commandChannel;
         private readonly Func<Message, Task<bool>> _messageConsumer;
         private readonly Func<Notification, Task<bool>> _notificationConsumer;
         private readonly Func<Command, Task<bool>> _commandConsumer;
@@ -28,7 +28,7 @@ namespace Lime.Protocol.Listeners
         /// <param name="messageConsumer">The message consumer.</param>
         /// <param name="notificationConsumer">The notification consumer.</param>
         /// <param name="commandConsumer">The command consumer.</param>
-        public ChannelListener(IEstablishedChannel channel,
+        public ChannelListener(IEstablishedReceiverChannel channel,
             Func<Message, Task<bool>> messageConsumer, Func<Notification, Task<bool>> notificationConsumer,
             Func<Command, Task<bool>> commandConsumer)
             : this(channel, channel, channel, messageConsumer, notificationConsumer, commandConsumer)
@@ -47,7 +47,7 @@ namespace Lime.Protocol.Listeners
         /// <param name="commandConsumer">The command consumer.</param>
         /// <exception cref="System.ArgumentNullException">
         /// </exception>
-        public ChannelListener(IMessageChannel messageChannel, INotificationChannel notificationChannel, ICommandChannel commandChannel,
+        public ChannelListener(IMessageReceiverChannel messageChannel, INotificationReceiverChannel notificationChannel, ICommandReceiverChannel commandChannel,
             Func<Message, Task<bool>> messageConsumer, Func<Notification, Task<bool>> notificationConsumer, Func<Command, Task<bool>> commandConsumer)
         {
             if (messageChannel == null) throw new ArgumentNullException(nameof(messageChannel));

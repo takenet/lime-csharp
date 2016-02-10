@@ -20,6 +20,7 @@ namespace Lime.Protocol.UnitTests.Client
     {
         private TimeSpan _sendTimeout;
         private CancellationToken _cancellationToken;
+        private Guid _sessionId;
         private Mock<IClientChannelBuilder> _clientChannelBuilder;
         private Mock<IEstablishedClientChannelBuilder> _establishedClientChannelBuilder;
         private Mock<IClientChannel> _clientChannel;
@@ -31,18 +32,22 @@ namespace Lime.Protocol.UnitTests.Client
         {
             _sendTimeout = TimeSpan.FromSeconds(5);
             _cancellationToken = _sendTimeout.ToCancellationToken();
-            _clientChannel = new Mock<IClientChannel>();
-            _disposableClientChannel = _clientChannel.As<IDisposable>();
+            _sessionId = Guid.NewGuid();            
             _transport = new Mock<ITransport>();
             _transport
                 .SetupGet(t => t.IsConnected)
                 .Returns(true);
+            _clientChannel = new Mock<IClientChannel>();
+            _clientChannel
+                .SetupGet(c => c.SessionId)
+                .Returns(_sessionId);
             _clientChannel
                 .SetupGet(c => c.Transport)
                 .Returns(_transport.Object);
             _clientChannel
                 .SetupGet(c => c.State)
                 .Returns(SessionState.Established);
+            _disposableClientChannel = _clientChannel.As<IDisposable>();
             _clientChannelBuilder = new Mock<IClientChannelBuilder>();
             _establishedClientChannelBuilder = new Mock<IEstablishedClientChannelBuilder>();
             _establishedClientChannelBuilder
@@ -76,6 +81,16 @@ namespace Lime.Protocol.UnitTests.Client
             // Arrange
             var message = Dummy.CreateMessage(Dummy.CreatePlainDocument());
             var target = GetTarget();
+            object handlerSender = null;
+            ClientChannelEventArgs handlerArgs = null;
+            target.ChannelCreated += (sender, e) =>
+            {
+                using (e.GetDeferral())
+                {
+                    handlerSender = sender;
+                    handlerArgs = e;
+                }
+            };
 
             // Act
             await target.SendMessageAsync(message);
@@ -84,7 +99,10 @@ namespace Lime.Protocol.UnitTests.Client
             _establishedClientChannelBuilder.Verify(c => c.BuildAndEstablishAsync(It.IsAny<CancellationToken>()),
                 Times.Once());
             _clientChannel.Verify(c => c.SendMessageAsync(message), Times.Once());
-
+            handlerSender.ShouldBe(target);
+            handlerArgs.ShouldNotBeNull();
+            handlerArgs.Id.ShouldBe(_sessionId);
+            handlerArgs.State.ShouldBe(SessionState.Established);
         }
 
         [Test]
@@ -143,15 +161,24 @@ namespace Lime.Protocol.UnitTests.Client
             var message = Dummy.CreateMessage(Dummy.CreatePlainDocument());
             var target = GetTarget();
             var exception = Dummy.CreateException();
-
-            object handlerSender = null;
-            ClientChannelExceptionEventArgs handlerArgs = null;
+            object channelFailedHandlerSender = null;
+            ClientChannelExceptionEventArgs channelFailedHandlerArgs = null;
             target.ChannelCreationFailed += (sender, args) =>
             {
                 using (args.GetDeferral())
                 {
-                    handlerSender = sender;
-                    handlerArgs = args;
+                    channelFailedHandlerSender = sender;
+                    channelFailedHandlerArgs = args;
+                }
+            };
+            object channelCreatedHandlerSender = null;
+            ClientChannelEventArgs channelCreatedHandlerArgs = null;
+            target.ChannelCreated += (sender, args) =>
+            {
+                using (args.GetDeferral())
+                {
+                    channelCreatedHandlerSender = sender;
+                    channelCreatedHandlerArgs = args;
                 }
             };
 
@@ -167,10 +194,14 @@ namespace Lime.Protocol.UnitTests.Client
             _establishedClientChannelBuilder.Verify(c => c.BuildAndEstablishAsync(It.IsAny<CancellationToken>()),
                 Times.Exactly(2));
             _clientChannel.Verify(c => c.SendMessageAsync(message), Times.Once());
-            handlerSender.ShouldNotBeNull();
-            handlerSender.ShouldBe(target);
-            handlerArgs.Exception.ShouldBe(exception);
-            handlerArgs.IsConnected.ShouldBeFalse();
+            channelFailedHandlerSender.ShouldNotBeNull();
+            channelFailedHandlerSender.ShouldBe(target);
+            channelFailedHandlerArgs.Exception.ShouldBe(exception);
+            channelFailedHandlerArgs.IsConnected.ShouldBeFalse();
+            channelCreatedHandlerSender.ShouldNotBeNull();
+            channelCreatedHandlerSender.ShouldBe(target);
+            channelCreatedHandlerArgs.ShouldNotBeNull();
+            channelCreatedHandlerArgs.Id.ShouldBe(_sessionId);
         }
 
         [Test]
@@ -260,15 +291,36 @@ namespace Lime.Protocol.UnitTests.Client
             var message = Dummy.CreateMessage(Dummy.CreatePlainDocument());
             var target = GetTarget();
             var exception = Dummy.CreateException();
+            var sessionId = Guid.NewGuid();
             var clientChannel2 = new Mock<IClientChannel>();
-            object handlerSender = null;
-            ClientChannelExceptionEventArgs handlerArgs = null;
+            object failedHandlerSender = null;
+            ClientChannelExceptionEventArgs failedHandlerArgs = null;
             target.ChannelOperationFailed += (sender, args) =>
             {
                 using (args.GetDeferral())
                 {
-                    handlerSender = sender;
-                    handlerArgs = args;
+                    failedHandlerSender = sender;
+                    failedHandlerArgs = args;
+                }
+            };
+            var createdHandlerSenders = new List<object>();
+            var createdHandlerArgs = new List<ClientChannelEventArgs>();
+            target.ChannelCreated += (sender, args) =>
+            {
+                using (args.GetDeferral())
+                {
+                    createdHandlerSenders.Add(sender);
+                    createdHandlerArgs.Add(args);
+                }
+            };
+            object discardedHandlerSender = null;
+            ClientChannelEventArgs discardedHandlerArgs = null;
+            target.ChannelDiscarded += (sender, args) =>
+            {
+                using (args.GetDeferral())
+                {
+                    discardedHandlerSender = sender;
+                    discardedHandlerArgs = args;
                 }
             };
             _clientChannel
@@ -278,6 +330,9 @@ namespace Lime.Protocol.UnitTests.Client
                 .SetupSequence(b => b.BuildAndEstablishAsync(It.IsAny<CancellationToken>()))
                 .Returns(Task.FromResult(_clientChannel.Object))
                 .Returns(Task.FromResult(clientChannel2.Object));
+            clientChannel2
+                .SetupGet(c => c.SessionId)
+                .Returns(sessionId);
             clientChannel2
                 .SetupGet(c => c.Transport)
                 .Returns(_transport.Object);
@@ -293,9 +348,19 @@ namespace Lime.Protocol.UnitTests.Client
                 Times.Exactly(2));
             _clientChannel.Verify(c => c.SendMessageAsync(message), Times.Once());
             clientChannel2.Verify(c => c.SendMessageAsync(message), Times.Once());
-            handlerSender.ShouldNotBeNull();
-            handlerSender.ShouldBe(target);
-            handlerArgs.Exception.ShouldBe(exception);
+            failedHandlerSender.ShouldNotBeNull();
+            failedHandlerSender.ShouldBe(target);
+            failedHandlerArgs.Exception.ShouldBe(exception);
+            createdHandlerSenders.Count.ShouldBe(2);
+            createdHandlerSenders[0].ShouldBe(target);
+            createdHandlerSenders[1].ShouldBe(target);
+            createdHandlerArgs.Count.ShouldBe(2);
+            createdHandlerArgs[0].Id.ShouldBe(_sessionId);
+            createdHandlerArgs[1].Id.ShouldBe(sessionId);
+            discardedHandlerSender.ShouldNotBeNull();
+            discardedHandlerSender.ShouldBe(target);
+            discardedHandlerArgs.ShouldNotBeNull();
+            discardedHandlerArgs.Id.ShouldBe(_sessionId);
         }
         
         [Test]

@@ -83,6 +83,10 @@
     <Compile Include="Network\ChannelBase.cs" />
     <Compile Include="Network\ChannelExtensions.cs" />
     <Compile Include="Network\IEstablishedChannel.cs" />
+    <Compile Include="Network\IEstablishedReceiverChannel.cs" />
+    <Compile Include="Network\IEstablishedSenderChannel.cs" />
+    <Compile Include="Network\IReceiverChannel.cs" />
+    <Compile Include="Network\ISenderChannel.cs" />
     <Compile Include="Network\Modules\ChannelModuleBase.cs" />
     <Compile Include="Network\DeferralEventArgs.cs" />
     <Compile Include="Network\EnvelopeEventArgs.cs" />

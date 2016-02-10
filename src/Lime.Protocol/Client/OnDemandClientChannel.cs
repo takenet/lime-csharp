@@ -104,6 +104,16 @@ namespace Lime.Protocol.Client
         public bool IsEstablished => ChannelIsEstablished(_clientChannel);
 
         /// <summary>
+        /// Occurs when a channel is created.
+        /// </summary>
+        public event EventHandler<ClientChannelEventArgs> ChannelCreated;
+
+        /// <summary>
+        /// Occurs when a channel is discarded.
+        /// </summary>
+        public event EventHandler<ClientChannelEventArgs> ChannelDiscarded;
+
+        /// <summary>
         /// Occurs when the channel creation failed.
         /// </summary>
         public event EventHandler<ClientChannelExceptionEventArgs> ChannelCreationFailed;
@@ -129,7 +139,7 @@ namespace Lime.Protocol.Client
                     await _clientChannel.SendFinishingSessionAsync().ConfigureAwait(false);
                     await finishedSessionTask.ConfigureAwait(false);                    
                 }
-                DiscardChannel(_clientChannel);
+                await DiscardChannelUnsynchronized(_clientChannel).ConfigureAwait(false);
             }            
             finally
             {
@@ -212,6 +222,10 @@ namespace Lime.Protocol.Client
                         clientChannel = _clientChannel = await _builder
                             .BuildAndEstablishAsync(cancellationToken)
                             .ConfigureAwait(false);
+
+                        var eventArgs = new ClientChannelEventArgs(clientChannel.SessionId, clientChannel.State);
+                        ChannelCreated?.RaiseEvent(this, eventArgs);
+                        await eventArgs.WaitForDeferralsAsync().ConfigureAwait(false);
                     }
                 }
                 catch (Exception ex) when (!(ex is OperationCanceledException && cancellationToken.IsCancellationRequested))
@@ -245,7 +259,7 @@ namespace Lime.Protocol.Client
             await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
             try
             {
-                DiscardChannel(clientChannel);
+                await DiscardChannelUnsynchronized(clientChannel).ConfigureAwait(false);
             }
             finally
             {
@@ -253,13 +267,17 @@ namespace Lime.Protocol.Client
             }
         }
 
-        private void DiscardChannel(IClientChannel clientChannel)
+        private async Task DiscardChannelUnsynchronized(IClientChannel clientChannel)
         {
             clientChannel.DisposeIfDisposable();
             if (ReferenceEquals(clientChannel, _clientChannel))
             {
                 _clientChannel = null;
             }
+
+            var eventArgs = new ClientChannelEventArgs(clientChannel.SessionId, clientChannel.State);
+            ChannelDiscarded?.RaiseEvent(this, eventArgs);
+            await eventArgs.WaitForDeferralsAsync().ConfigureAwait(false);
         }
 
         public void Dispose()

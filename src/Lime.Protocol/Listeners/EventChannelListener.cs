@@ -12,7 +12,7 @@ namespace Lime.Protocol.Listeners
         /// Initializes a new instance of the <see cref="EventChannelListener"/> class.
         /// </summary>
         /// <param name="channel">The channel.</param>
-        public EventChannelListener(IEstablishedChannel channel)
+        public EventChannelListener(IEstablishedReceiverChannel channel)
             : this(channel, channel, channel)
         {
             
@@ -24,7 +24,7 @@ namespace Lime.Protocol.Listeners
         /// <param name="messageChannel">The message channel.</param>
         /// <param name="notificationChannel">The notification channel.</param>
         /// <param name="commandChannel">The command channel.</param>
-        public EventChannelListener(IMessageChannel messageChannel, INotificationChannel notificationChannel, ICommandChannel commandChannel)             
+        public EventChannelListener(IMessageReceiverChannel messageChannel, INotificationReceiverChannel notificationChannel, ICommandReceiverChannel commandChannel)             
         {
             _channelListener = new ChannelListener(
                 messageChannel, notificationChannel, commandChannel,

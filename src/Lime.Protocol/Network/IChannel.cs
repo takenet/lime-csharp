@@ -11,7 +11,7 @@ namespace Lime.Protocol.Network
     /// </summary>
     /// <seealso cref="IEstablishedChannel" />
     /// <seealso cref="ISessionChannel" />
-    public interface IChannel : IEstablishedChannel, ISessionChannel
+    public interface IChannel : ISenderChannel, IReceiverChannel, IEstablishedChannel, ISessionChannel
     {
         /// <summary>
         /// Gets the current session transport.

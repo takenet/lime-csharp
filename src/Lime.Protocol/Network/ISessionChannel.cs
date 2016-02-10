@@ -8,20 +8,33 @@ using System.Threading.Tasks;
 namespace Lime.Protocol.Network
 {
     /// <summary>
-    /// Defines a session envelopes exchanging channel
+    /// Defines a channel to exchange session envelopes.
     /// </summary>
-    public interface ISessionChannel
+    public interface ISessionChannel : ISessionSenderChannel, ISessionReceiverChannel
+    {
+
+    }
+
+    /// <summary>
+    /// Defines a channel to send session envelopes.
+    /// </summary>
+    public interface ISessionSenderChannel
     {
         /// <summary>
-        /// Sends a session change message to 
-        /// the remote node.
+        /// Sends a session to the remote node.
         /// </summary>
         /// <param name="session"></param>
+        /// <returns></returns>
         Task SendSessionAsync(Session session);
+    }
 
+    /// <summary>
+    /// Defines a channel to receive session envelopes.
+    /// </summary>
+    public interface ISessionReceiverChannel
+    {
         /// <summary>
-        /// Receives a session
-        /// from the remote node.
+        /// Receives a session from the remote node.
         /// </summary>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns></returns>
