@@ -101,7 +101,7 @@ namespace Lime.Protocol.UnitTests.Listeners
             _completionNotification = Dummy.CreateNotification(Event.Authorized);
             _completionCommand = Dummy.CreateCommand();
 
-            _cancellationToken = TimeSpan.FromSeconds(5).ToCancellationToken();
+            _cancellationToken = TimeSpan.FromSeconds(15).ToCancellationToken();
         }
 
         [TearDown]   
@@ -153,7 +153,7 @@ namespace Lime.Protocol.UnitTests.Listeners
         {
             // Arrange
             var messages = new List<Message>();
-            var count = Dummy.CreateRandomInt(500) + 2;
+            var count = Dummy.CreateRandomInt(100) + 2;
             for (int i = 0; i < count; i++)
             {
                 messages.Add(
@@ -289,7 +289,7 @@ namespace Lime.Protocol.UnitTests.Listeners
         {
             // Arrange
             var notifications = new List<Notification>();
-            var count = Dummy.CreateRandomInt(500) + 2;
+            var count = Dummy.CreateRandomInt(100) + 2;
             for (int i = 0; i < count; i++)
             {
                 notifications.Add(
@@ -416,7 +416,7 @@ namespace Lime.Protocol.UnitTests.Listeners
             // Assert            
             actual.ShouldBe(command);
             _producedCommands.Add(_completionCommand);
-            (await target.CommandListenerTask.WithCancellation(_cancellationToken).WithCancellation(_cancellationToken)).ShouldBe(_completionCommand);
+            (await target.CommandListenerTask.WithCancellation(_cancellationToken)).ShouldBe(_completionCommand);
             _commandChannel.Verify(c => c.ReceiveCommandAsync(It.IsAny<CancellationToken>()), Times.Exactly(2));
         }
 
@@ -425,11 +425,11 @@ namespace Lime.Protocol.UnitTests.Listeners
         {
             // Arrange
             var commands = new List<Command>();
-            var count = Dummy.CreateRandomInt(500) + 2;
+            var count = Dummy.CreateRandomInt(100) + 2;
             for (int i = 0; i < count; i++)
             {
                 commands.Add(
-                    Dummy.CreateCommand(Dummy.CreateTextContent()));
+                    Dummy.CreateCommand());
             }
             var target = GetAndStartTarget();
 
