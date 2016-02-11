@@ -36,6 +36,11 @@ namespace Lime.Protocol.Client
             _builder = builder;
             _sendTimeout = builder.ChannelBuilder.SendTimeout;
             _semaphore = new SemaphoreSlim(1, 1);
+
+            ChannelCreatedHandlers = new List<Func<ChannelInformation, Task>>();
+            ChannelDiscardedHandlers = new List<Func<ChannelInformation, Task>>();
+            ChannelCreationFailedHandlers = new List<Func<FailedChannelInformation, Task<bool>>>();
+            ChannelOperationFailedHandlers = new List<Func<FailedChannelInformation, Task<bool>>>();
         }
 
         /// <summary>
@@ -104,24 +109,29 @@ namespace Lime.Protocol.Client
         public bool IsEstablished => ChannelIsEstablished(_clientChannel);
 
         /// <summary>
-        /// Occurs when a channel is created.
+        /// Gets the channel created handlers, which are called when a channel is created.
         /// </summary>
-        public event EventHandler<ClientChannelEventArgs> ChannelCreated;
+        public ICollection<Func<ChannelInformation, Task>> ChannelCreatedHandlers { get; }
 
         /// <summary>
-        /// Occurs when a channel is discarded.
+        /// Gets the channel discarded handlers, which are called when a channel is discarded.
         /// </summary>
-        public event EventHandler<ClientChannelEventArgs> ChannelDiscarded;
+        public ICollection<Func<ChannelInformation, Task>> ChannelDiscardedHandlers { get; }
 
         /// <summary>
-        /// Occurs when the channel creation failed.
+        /// Gets the channel creation failed handlers, which are called when the channel creation failed.
+        /// Each handler must return <c>true</c> if the failure was handled and a channel should be created again or <c>false</c> if not, which causes the exception to be thrown to the caller.
+        /// The default action is the recreation of a channel. If a single handler return <c>false</c>, no channel will not be recreated.
         /// </summary>
-        public event EventHandler<ClientChannelExceptionEventArgs> ChannelCreationFailed;
+        public ICollection<Func<FailedChannelInformation, Task<bool>>> ChannelCreationFailedHandlers { get; }
 
         /// <summary>
-        /// Occurs when the channel send or receive action failed.
+        /// Gets the channel operation failed handlers, which are called when the channel fails during an operation.
+        /// Each handler must return <c>true</c> if the failure was handled and a channel should be created again or <c>false</c> if not, which causes the exception to be thrown to the caller.
+        /// The default action is the recreation of a channel. If a single handler return <c>false</c>, no channel will not be recreated.
         /// </summary>
-        public event EventHandler<ClientChannelExceptionEventArgs> ChannelOperationFailed;
+        public ICollection<Func<FailedChannelInformation, Task<bool>>> ChannelOperationFailedHandlers { get; }
+
 
         /// <summary>
         /// Finishes the associated client channel, if established.
@@ -139,7 +149,7 @@ namespace Lime.Protocol.Client
                     await _clientChannel.SendFinishingSessionAsync().ConfigureAwait(false);
                     await finishedSessionTask.ConfigureAwait(false);                    
                 }
-                await DiscardChannelUnsynchronized(_clientChannel).ConfigureAwait(false);
+                await DiscardChannelUnsynchronized(_clientChannel, cancellationToken).ConfigureAwait(false);
             }            
             finally
             {
@@ -197,19 +207,76 @@ namespace Lime.Protocol.Client
             throw new ObjectDisposedException(nameof(OnDemandClientChannel));
         }
 
-        private async Task<bool> HandleChannelOperationExceptionAsync(Exception ex, IClientChannel channel, CancellationToken cancellationToken)
+        private async Task<bool> HandleChannelOperationExceptionAsync(Exception ex, IChannel channel, CancellationToken cancellationToken)
         {
-            var eventArgs = new ClientChannelExceptionEventArgs(channel.SessionId, channel.State, channel.Transport.IsConnected, true, ex);
-            ChannelOperationFailed?.RaiseEvent(this, eventArgs);
-            await eventArgs.WaitForDeferralsAsync().ConfigureAwait(false);
-            await DiscardChannelAsync(channel, cancellationToken).ConfigureAwait(false);
-            return eventArgs.IsHandled;
+            try
+            {            
+                var failedChannelInformation = new FailedChannelInformation(
+                    channel.SessionId, channel.State, channel.Transport.IsConnected, ex);
+
+                // Make a copy of the handlers
+                var handlers = ChannelOperationFailedHandlers.ToList();            
+                return await InvokeHandlers(handlers, failedChannelInformation, cancellationToken).ConfigureAwait(false);            
+            }
+            finally
+            {
+                await DiscardChannelAsync(channel, cancellationToken).ConfigureAwait(false);
+            }
+        }
+
+        private static async Task<bool> InvokeHandlers(IEnumerable<Func<FailedChannelInformation, Task<bool>>> handlers, FailedChannelInformation failedChannelInformation, CancellationToken cancellationToken)
+        {
+            var exceptions = new List<Exception>();
+            var handled = true;
+            foreach (var handler in handlers)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                try
+                {
+                    if (!await handler(failedChannelInformation).ConfigureAwait(false))
+                    {
+                        handled = false;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    exceptions.Add(ex);
+                }
+            }
+            ThrowIfAny(exceptions);
+            return handled;
+        }
+
+        private static async Task InvokeHandlers(IEnumerable<Func<ChannelInformation, Task>> handlers, ChannelInformation channelInformation, CancellationToken cancellationToken)
+        {
+            var exceptions = new List<Exception>();
+            foreach (var handler in handlers)
+            {                
+                cancellationToken.ThrowIfCancellationRequested();
+                try
+                {
+                    await handler(channelInformation).ConfigureAwait(false);
+                }
+                catch (Exception ex)
+                {
+                    exceptions.Add(ex);
+                }
+            }
+            ThrowIfAny(exceptions);
+        }
+
+        private static void ThrowIfAny(IReadOnlyList<Exception> exceptions)
+        {
+            if (!exceptions.Any()) return;
+            if (exceptions.Count == 1) throw exceptions[0];            
+            throw new AggregateException(exceptions);
         }
 
         private async Task<IClientChannel> GetChannelAsync(CancellationToken cancellationToken, bool checkIfEstablished)
         {
+            var channelCreated = false;
             var clientChannel = _clientChannel;            
-            while (ShouldBuildChannel(clientChannel, checkIfEstablished))
+            while (ShouldCreateChannel(clientChannel, checkIfEstablished))
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
@@ -217,24 +284,22 @@ namespace Lime.Protocol.Client
                 try
                 {
                     clientChannel = _clientChannel;
-                    if (ShouldBuildChannel(clientChannel, checkIfEstablished))
+                    if (ShouldCreateChannel(clientChannel, checkIfEstablished))
                     {
                         clientChannel = _clientChannel = await _builder
                             .BuildAndEstablishAsync(cancellationToken)
                             .ConfigureAwait(false);
 
-                        var eventArgs = new ClientChannelEventArgs(clientChannel.SessionId, clientChannel.State);
-                        ChannelCreated?.RaiseEvent(this, eventArgs);
-                        await eventArgs.WaitForDeferralsAsync().ConfigureAwait(false);
+                        channelCreated = true;
                     }
                 }
                 catch (Exception ex) when (!(ex is OperationCanceledException && cancellationToken.IsCancellationRequested))
                 {
-                    var eventArgs = new ClientChannelExceptionEventArgs(true, ex);
-                    ChannelCreationFailed?.RaiseEvent(this, eventArgs);
-                    await eventArgs.WaitForDeferralsAsync().ConfigureAwait(false);
+                    var failedChannelInformation = new FailedChannelInformation(
+                        Guid.Empty, SessionState.New, false, ex);
 
-                    if (!eventArgs.IsHandled) throw;
+                    var handlers = ChannelCreationFailedHandlers.ToList();
+                    if (!await InvokeHandlers(handlers, failedChannelInformation, cancellationToken).ConfigureAwait(false)) throw;
                 }
                 finally
                 {
@@ -242,10 +307,17 @@ namespace Lime.Protocol.Client
                 }
             }
 
+            if (channelCreated && clientChannel != null)
+            {
+                var channelInformation = new ChannelInformation(clientChannel.SessionId, clientChannel.State);
+                var handlers = ChannelCreatedHandlers.ToList();
+                await InvokeHandlers(handlers, channelInformation, cancellationToken).ConfigureAwait(false);
+            }
+
             return clientChannel;
         }
 
-        private static bool ShouldBuildChannel(IChannel channel, bool checkIfEstablished)
+        private static bool ShouldCreateChannel(IChannel channel, bool checkIfEstablished)
         {
             return channel == null || (checkIfEstablished && !ChannelIsEstablished(channel));
         }
@@ -254,12 +326,12 @@ namespace Lime.Protocol.Client
                                                                       channel.State == SessionState.Established &&
                                                                       channel.Transport.IsConnected;
 
-        private async Task DiscardChannelAsync(IClientChannel clientChannel, CancellationToken cancellationToken)
+        private async Task DiscardChannelAsync(IChannel clientChannel, CancellationToken cancellationToken)
         {            
             await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
             try
             {
-                await DiscardChannelUnsynchronized(clientChannel).ConfigureAwait(false);
+                await DiscardChannelUnsynchronized(clientChannel, cancellationToken).ConfigureAwait(false);
             }
             finally
             {
@@ -267,7 +339,7 @@ namespace Lime.Protocol.Client
             }
         }
 
-        private async Task DiscardChannelUnsynchronized(IClientChannel clientChannel)
+        private async Task DiscardChannelUnsynchronized(IChannel clientChannel, CancellationToken cancellationToken)
         {
             clientChannel.DisposeIfDisposable();
             if (ReferenceEquals(clientChannel, _clientChannel))
@@ -275,9 +347,9 @@ namespace Lime.Protocol.Client
                 _clientChannel = null;
             }
 
-            var eventArgs = new ClientChannelEventArgs(clientChannel.SessionId, clientChannel.State);
-            ChannelDiscarded?.RaiseEvent(this, eventArgs);
-            await eventArgs.WaitForDeferralsAsync().ConfigureAwait(false);
+            var channelInformation = new ChannelInformation(clientChannel.SessionId, clientChannel.State);
+            var handlers = ChannelDiscardedHandlers.ToList();
+            await InvokeHandlers(handlers, channelInformation, cancellationToken).ConfigureAwait(false);
         }
 
         public void Dispose()

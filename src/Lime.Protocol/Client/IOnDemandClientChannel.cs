@@ -20,24 +20,28 @@ namespace Lime.Protocol.Client
         bool IsEstablished { get; }
 
         /// <summary>
-        /// Occurs when a channel is created.
+        /// Gets the channel created handlers, which are called when a channel is created.
         /// </summary>
-        event EventHandler<ClientChannelEventArgs> ChannelCreated;
+        ICollection<Func<ChannelInformation, Task>> ChannelCreatedHandlers { get; }
 
         /// <summary>
-        /// Occurs when a channel is discarded.
+        /// Gets the channel discarded handlers, which are called when a channel is discarded.
         /// </summary>
-        event EventHandler<ClientChannelEventArgs> ChannelDiscarded;
+        ICollection<Func<ChannelInformation, Task>> ChannelDiscardedHandlers { get; }
 
         /// <summary>
-        /// Occurs when the channel creation failed.
+        /// Gets the channel creation failed handlers, which are called when the channel creation failed.
+        /// Each handler must return <c>true</c> if the failure was handled and a channel should be created again or <c>false</c> if not, which causes the exception to be thrown to the caller.
+        /// The default action is the recreation of a channel. If a single handler return <c>false</c>, no channel will not be recreated.
         /// </summary>
-        event EventHandler<ClientChannelExceptionEventArgs> ChannelCreationFailed;
+        ICollection<Func<FailedChannelInformation, Task<bool>>> ChannelCreationFailedHandlers { get; }
 
         /// <summary>
-        /// Occurs when the channel send or receive action failed.
+        /// Gets the channel operation failed handlers, which are called when the channel fails during an operation.
+        /// Each handler must return <c>true</c> if the failure was handled and a channel should be created again or <c>false</c> if not, which causes the exception to be thrown to the caller.
+        /// The default action is the recreation of a channel. If a single handler return <c>false</c>, no channel will not be recreated.
         /// </summary>
-        event EventHandler<ClientChannelExceptionEventArgs> ChannelOperationFailed;
+        ICollection<Func<FailedChannelInformation, Task<bool>>> ChannelOperationFailedHandlers { get; }
 
         /// <summary>
         /// Finishes the associated client channel, if established.
@@ -48,16 +52,46 @@ namespace Lime.Protocol.Client
     }
 
     /// <summary>
-    /// Provides information about a client channel.
+    /// Provides information about a failed channel.
     /// </summary>
-    public class ClientChannelEventArgs : DeferralEventArgs
+    /// <seealso cref="Lime.Protocol.Client.ChannelInformation" />
+    public class FailedChannelInformation : ChannelInformation
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="ClientChannelEventArgs"/> class.
+        /// Initializes a new instance of the <see cref="FailedChannelInformation"/> class.
         /// </summary>
-        /// <param name="id"></param>
-        /// <param name="state"></param>
-        public ClientChannelEventArgs(Guid id, SessionState state)
+        /// <param name="id">The identifier.</param>
+        /// <param name="state">The state.</param>
+        /// <param name="isConnected">if set to <c>true</c> [is connected].</param>
+        /// <param name="exception">The exception.</param>
+        public FailedChannelInformation(Guid id, SessionState state, bool isConnected, Exception exception) : base(id, state)
+        {                        
+            IsConnected = isConnected;
+            Exception = exception;
+        }
+
+        /// <summary>
+        /// Gets a value indicating whether this instance is connected.
+        /// </summary>
+        public bool IsConnected { get; }
+
+        /// <summary>
+        /// Gets the exception that caused the channel to fail.
+        /// </summary>
+        public Exception Exception { get; }
+    }
+
+    /// <summary>
+    /// Provides information about a channel.
+    /// </summary>
+    public class ChannelInformation
+    {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ChannelInformation"/> class.
+        /// </summary>
+        /// <param name="id">The identifier.</param>
+        /// <param name="state">The state.</param>
+        public ChannelInformation(Guid id, SessionState state)
         {
             Id = id;
             State = state;

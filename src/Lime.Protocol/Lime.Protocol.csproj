@@ -59,7 +59,6 @@
     <Compile Include="Listeners\ProducerConsumer.cs" />
     <Compile Include="Client\ClientChannel.cs" />
     <Compile Include="Client\ClientChannelBuilder.cs" />
-    <Compile Include="Client\ClientChannelExceptionEventArgs.cs" />
     <Compile Include="Client\ClientChannelExtensions.cs" />
     <Compile Include="Client\IClientChannelBuilder.cs" />
     <Compile Include="Client\IEstablishedClientChannelBuilder.cs" />
