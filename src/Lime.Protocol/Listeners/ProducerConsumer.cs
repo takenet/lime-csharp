@@ -32,7 +32,8 @@ namespace Lime.Protocol.Listeners
                     {
                         cancellationToken.ThrowIfCancellationRequested();
                         var item = await producer(cancellationToken).ConfigureAwait(false);
-                        if (!await consumer(item).ConfigureAwait(false))
+                        if (cancellationToken.IsCancellationRequested ||
+                            !await consumer(item).ConfigureAwait(false))
                         {
                             return item;
                         }
