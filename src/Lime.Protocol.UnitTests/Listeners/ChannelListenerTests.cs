@@ -39,6 +39,7 @@ namespace Lime.Protocol.UnitTests.Listeners
         private Notification _completionNotification;
         private Command _completionCommand;
 
+        private List<ChannelListener> _createdTargets;
 
         [SetUp]
         public void Setup()
@@ -65,6 +66,7 @@ namespace Lime.Protocol.UnitTests.Listeners
             _consumedNotifications = new BlockingCollection<Notification>();
             _consumedCommands = new BlockingCollection<Command>();
 
+            _cancellationToken = TimeSpan.FromSeconds(15).ToCancellationToken();
 
             _messageConsumer = m =>
             {                
@@ -73,7 +75,7 @@ namespace Lime.Protocol.UnitTests.Listeners
                     _consumedMessages.CompleteAdding();
                     return TaskUtil.FalseCompletedTask;
                 }
-                _consumedMessages.Add(m);
+                _consumedMessages.Add(m, _cancellationToken);
                 return TaskUtil.TrueCompletedTask;
             };
             _notificationConsumer = n =>
@@ -83,7 +85,7 @@ namespace Lime.Protocol.UnitTests.Listeners
                     _consumedNotifications.CompleteAdding();
                     return TaskUtil.FalseCompletedTask;
                 }
-                _consumedNotifications.Add(n);
+                _consumedNotifications.Add(n, _cancellationToken);
                 return TaskUtil.TrueCompletedTask;
             };
             _commandConsumer = c =>
@@ -93,7 +95,7 @@ namespace Lime.Protocol.UnitTests.Listeners
                     _consumedCommands.CompleteAdding();
                     return TaskUtil.FalseCompletedTask;
                 }
-                _consumedCommands.Add(c);
+                _consumedCommands.Add(c, _cancellationToken);
                 return TaskUtil.TrueCompletedTask;
             };
 
@@ -101,7 +103,7 @@ namespace Lime.Protocol.UnitTests.Listeners
             _completionNotification = Dummy.CreateNotification(Event.Authorized);
             _completionCommand = Dummy.CreateCommand();
 
-            _cancellationToken = TimeSpan.FromSeconds(15).ToCancellationToken();
+            
         }
 
         [TearDown]   
@@ -117,16 +119,31 @@ namespace Lime.Protocol.UnitTests.Listeners
             _consumedNotifications = null;
             _consumedCommands = null;
             _cancellationToken = CancellationToken.None;
+
+            if (_createdTargets != null)
+            {
+                foreach (var target in _createdTargets)
+                {
+                    target.Dispose();
+                }
+            }
         }
 
 
         protected ChannelListener GetAndStartTarget()
         {
+            if (_createdTargets == null)
+            {
+                _createdTargets = new List<ChannelListener>();
+            }
+
             var target = new ChannelListener(_messageChannel.Object, _notificationChannel.Object,
                 _commandChannel.Object,
                 _messageConsumer, _notificationConsumer, _commandConsumer);
 
             target.Start();
+
+            _createdTargets.Add(target);
             return target;
         }
 
