@@ -14,17 +14,18 @@ namespace Lime.Protocol.Listeners
         /// <param name="producer">The producer func.</param>
         /// <param name="consumer">The consumer func.</param>
         /// <param name="cancellationToken">The cancellation token to stop the listener. It must be a valid token.</param>
+        /// <param name="taskCreationOptions"></param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">
         /// </exception>
         /// <exception cref="System.ArgumentException">A valid cancellation token must be provided</exception>
-        public static Task<T> CreateAsync<T>(Func<CancellationToken, Task<T>> producer, Func<T, Task<bool>> consumer, CancellationToken cancellationToken)
+        public static Task<T> CreateAsync<T>(Func<CancellationToken, Task<T>> producer, Func<T, Task<bool>> consumer, CancellationToken cancellationToken, TaskCreationOptions taskCreationOptions = TaskCreationOptions.None)
         {
             if (producer == null) throw new ArgumentNullException(nameof(producer));
             if (consumer == null) throw new ArgumentNullException(nameof(consumer));            
             if (cancellationToken == CancellationToken.None) throw new ArgumentException("A valid cancellation token must be provided", nameof(cancellationToken));
             
-            return Task.Run(async () =>
+            return Task.Factory.StartNew(async () =>
             {
                 while (!cancellationToken.IsCancellationRequested)
                 {
@@ -44,7 +45,9 @@ namespace Lime.Protocol.Listeners
                     }
                 }
                 return default(T);
-            });
+            },
+            taskCreationOptions)
+            .Unwrap();
         }
     }
 }

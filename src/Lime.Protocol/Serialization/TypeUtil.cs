@@ -40,7 +40,7 @@ namespace Lime.Protocol.Serialization
             _dataContractTypes = new HashSet<Type>();
 
             // Caches the known type (types decorated with DataContract in all loaded assemblies)
-            foreach (var type in GetAllTypesFromApplication().Where(t => t.GetCustomAttribute<DataContractAttribute>() != null))
+            foreach (var type in GetAllLoadedTypes().Where(t => t.GetCustomAttribute<DataContractAttribute>() != null))
             {
                 AddDataContractType(type);
             }          
@@ -455,11 +455,7 @@ namespace Lime.Protocol.Serialization
         /// <returns></returns>
         public static object CreateInstance(Type type)
         {
-            if (type == null)
-            {
-                throw new ArgumentNullException("type");
-            }
-
+            if (type == null) throw new ArgumentNullException(nameof(type));           
             return Activator.CreateInstance(type);
         }
 
@@ -467,9 +463,14 @@ namespace Lime.Protocol.Serialization
             a => !a.FullName.StartsWith("System.", StringComparison.OrdinalIgnoreCase) &&
                  !a.FullName.StartsWith("Microsoft.", StringComparison.OrdinalIgnoreCase);
 
-        private static IEnumerable<Type> GetAllTypesFromApplication()
+        /// <summary>
+        /// Gets all loaded types in the current <see cref="AppDomain"/>, except the ones in the <c>System</c> and <c>Microsoft</c> namespaces.
+        /// </summary>
+        /// <param name="loadReferences">Load all referenced assemblies before retrieve the types.</param>
+        /// <returns></returns>
+        public static IEnumerable<Type> GetAllLoadedTypes(bool loadReferences = true)
         {
-            LoadReferencedAssemblies();
+            if (loadReferences) LoadReferencedAssemblies();
             return AppDomain
                     .CurrentDomain
                     .GetAssemblies()
@@ -477,11 +478,24 @@ namespace Lime.Protocol.Serialization
                     .SelectMany(a => a.GetTypes());
         }
 
+        private static bool _referencedAssembliesLoaded;
+        private static readonly object _loadAssembliesSyncRoot = new object();
+
         private static void LoadReferencedAssemblies()
         {
-            foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies().Where(_assemblyFilter))
+            if (!_referencedAssembliesLoaded)
             {
-                LoadReferencedAssembly(assembly);
+                lock (_loadAssembliesSyncRoot)
+                {
+                    if (!_referencedAssembliesLoaded)
+                    {
+                        foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies().Where(_assemblyFilter))
+                        {
+                            LoadReferencedAssembly(assembly);
+                        }
+                        _referencedAssembliesLoaded = true;
+                    }
+                }
             }
         }
 
