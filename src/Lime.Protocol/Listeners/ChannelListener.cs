@@ -18,6 +18,7 @@ namespace Lime.Protocol.Listeners
         private readonly Func<Message, Task<bool>> _messageConsumer;
         private readonly Func<Notification, Task<bool>> _notificationConsumer;
         private readonly Func<Command, Task<bool>> _commandConsumer;
+        private readonly TaskCreationOptions _taskCreationOptions;
         private readonly CancellationTokenSource _cts;
         private readonly object _syncRoot;
 
@@ -45,10 +46,11 @@ namespace Lime.Protocol.Listeners
         /// <param name="messageConsumer">The message consumer.</param>
         /// <param name="notificationConsumer">The notification consumer.</param>
         /// <param name="commandConsumer">The command consumer.</param>
+        /// <param name="taskCreationOptions">The task creation options to be used in the producer-consumer tasks.</param>
         /// <exception cref="System.ArgumentNullException">
         /// </exception>
         public ChannelListener(IMessageReceiverChannel messageChannel, INotificationReceiverChannel notificationChannel, ICommandReceiverChannel commandChannel,
-            Func<Message, Task<bool>> messageConsumer, Func<Notification, Task<bool>> notificationConsumer, Func<Command, Task<bool>> commandConsumer)
+            Func<Message, Task<bool>> messageConsumer, Func<Notification, Task<bool>> notificationConsumer, Func<Command, Task<bool>> commandConsumer, TaskCreationOptions taskCreationOptions = TaskCreationOptions.None)
         {
             if (messageChannel == null) throw new ArgumentNullException(nameof(messageChannel));
             if (notificationChannel == null) throw new ArgumentNullException(nameof(notificationChannel));
@@ -63,6 +65,7 @@ namespace Lime.Protocol.Listeners
             _messageConsumer = messageConsumer;
             _notificationConsumer = notificationConsumer;
             _commandConsumer = commandConsumer;
+            _taskCreationOptions = taskCreationOptions;
             _cts = new CancellationTokenSource();
             _syncRoot = new object();
         }
@@ -78,19 +81,19 @@ namespace Lime.Protocol.Listeners
                 if (MessageListenerTask == null)
                 {
                     MessageListenerTask = ProducerConsumer.CreateAsync(_messageChannel.ReceiveMessageAsync,
-                        _messageConsumer, _cts.Token);
+                        _messageConsumer, _cts.Token, _taskCreationOptions);
                 }
 
                 if (NotificationListenerTask == null)
                 {
                     NotificationListenerTask = ProducerConsumer.CreateAsync(_notificationChannel.ReceiveNotificationAsync,
-                        _notificationConsumer, _cts.Token);
+                        _notificationConsumer, _cts.Token, _taskCreationOptions);
                 }
 
                 if (CommandListenerTask == null)
                 {
                     CommandListenerTask = ProducerConsumer.CreateAsync(_commandChannel.ReceiveCommandAsync,
-                        _commandConsumer, _cts.Token);
+                        _commandConsumer, _cts.Token, _taskCreationOptions);
                 }
             }
         }
