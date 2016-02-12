@@ -14,21 +14,23 @@ using System.Diagnostics;
 namespace Lime.Protocol.Serialization
 {
     /// <summary>
-    /// Provides metadata information 
-    /// about the protocol types
+    /// Provides metadata information about the types.
     /// </summary>
     public static class TypeUtil
     {
-        #region Private Fields
-
         private static IDictionary<MediaType, Type> _documentMediaTypeDictionary;
         private static IDictionary<AuthenticationScheme, Type> _authenticationSchemeDictionary;
         private static IDictionary<Type, IDictionary<string, object>> _enumTypeValueDictionary;
         private static ConcurrentDictionary<Type, Func<string, object>> _typeParseFuncDictionary;
         private static HashSet<Type> _dataContractTypes;
 
-        #endregion
-        
+        public static readonly Func<AssemblyName, bool> IgnoreSystemAndMicrosoftAssembliesFilter =
+            a => !a.FullName.StartsWith("System.", StringComparison.OrdinalIgnoreCase) &&
+                 !a.FullName.StartsWith("Microsoft.", StringComparison.OrdinalIgnoreCase);
+
+        private static readonly object _loadAssembliesSyncRoot = new object();
+        private static bool _referencedAssembliesLoaded;
+
         #region Constructor
 
         static TypeUtil()
@@ -45,8 +47,6 @@ namespace Lime.Protocol.Serialization
                 AddDataContractType(type);
             }          
         }
-
-
 
         #endregion
 
@@ -459,61 +459,114 @@ namespace Lime.Protocol.Serialization
             return Activator.CreateInstance(type);
         }
 
-        private static readonly Func<Assembly, bool> _assemblyFilter = 
-            a => !a.FullName.StartsWith("System.", StringComparison.OrdinalIgnoreCase) &&
-                 !a.FullName.StartsWith("Microsoft.", StringComparison.OrdinalIgnoreCase);
-
         /// <summary>
         /// Gets all loaded types in the current <see cref="AppDomain"/>, except the ones in the <c>System</c> and <c>Microsoft</c> namespaces.
         /// </summary>
-        /// <param name="loadReferences">Load all referenced assemblies before retrieve the types.</param>
+        /// <param name="loadReferences">Load all referenced assemblies before retrieving the types.</param>
         /// <returns></returns>
         public static IEnumerable<Type> GetAllLoadedTypes(bool loadReferences = true)
         {
-            if (loadReferences) LoadReferencedAssemblies();
+            if (loadReferences)
+            {
+                if (!_referencedAssembliesLoaded)
+                {
+                    lock (_loadAssembliesSyncRoot)
+                    {
+                        if (!_referencedAssembliesLoaded)
+                        {
+                            try
+                            {
+                                LoadAssemblyAndReferences(Assembly.GetExecutingAssembly().GetName(), IgnoreSystemAndMicrosoftAssembliesFilter);
+                            }
+                            catch (Exception ex)
+                            {
+                                Trace.TraceError("LIME - An error occurred while loading the referenced assemblies: {0}",
+                                    ex.ToString());
+                            }
+                            finally
+                            {
+                                _referencedAssembliesLoaded = true;
+                            }
+                        }
+                    }
+                }
+            }
             return AppDomain
                     .CurrentDomain
                     .GetAssemblies()
-                    .Where(_assemblyFilter)
+                    .Where(a => IgnoreSystemAndMicrosoftAssembliesFilter(a.GetName()))
                     .SelectMany(a => a.GetTypes());
         }
 
-        private static bool _referencedAssembliesLoaded;
-        private static readonly object _loadAssembliesSyncRoot = new object();
-
-        private static void LoadReferencedAssemblies()
+        /// <summary>
+        /// Loads all assemblies and its references in a given path.
+        /// </summary>
+        /// <param name="path">The path to look for assemblies.</param>
+        /// <param name="searchPattern">The search pattern.</param>
+        /// <param name="assemblyFilter">The assembly filter.</param>
+        /// <exception cref="System.ArgumentNullException">
+        /// </exception>
+        public static void LoadAssembliesAndReferences(string path, string searchPattern = "*.dll", Func<AssemblyName, bool> assemblyFilter = null)
         {
-            if (!_referencedAssembliesLoaded)
+            if (path == null) throw new ArgumentNullException(nameof(path));
+            if (searchPattern == null) throw new ArgumentNullException(nameof(searchPattern));            
+
+            foreach (var filePath in Directory.GetFiles(path, searchPattern))
             {
-                lock (_loadAssembliesSyncRoot)
-                {
-                    if (!_referencedAssembliesLoaded)
-                    {
-                        foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies().Where(_assemblyFilter))
-                        {
-                            LoadReferencedAssembly(assembly);
-                        }
-                        _referencedAssembliesLoaded = true;
-                    }
-                }
+                LoadAssemblyAndReferences(AssemblyName.GetAssemblyName(filePath), assemblyFilter);
             }
         }
 
-        private static void LoadReferencedAssembly(Assembly assembly)
+        /// <summary>
+        /// Loads an assembly and its references.
+        /// Only references that are used are actually loaded, since the .NET compiler ignores assemblies that are not used in the code.
+        /// </summary>
+        /// <param name="assemblyName">Name of the assembly.</param>
+        /// <param name="assemblyFilter">The assembly filter.</param>
+        /// <exception cref="System.ArgumentNullException"></exception>
+        public static void LoadAssemblyAndReferences(AssemblyName assemblyName, Func<AssemblyName, bool> assemblyFilter = null)
         {
+            if (assemblyName == null) throw new ArgumentNullException(nameof(assemblyName));
+            var loadedAssemblieNames =
+                new HashSet<string>(
+                    AppDomain
+                        .CurrentDomain
+                        .GetAssemblies()
+                        .Select(a => a.GetName().FullName));
+            
+            LoadAssemblyAndReferences(assemblyName, assemblyFilter, loadedAssemblieNames);
+        }
+
+        private static void LoadAssemblyAndReferences(AssemblyName assemblyName, Func<AssemblyName, bool> assemblyFilter, ISet<string> loadedAssembliesNames)
+        {
+            Assembly assembly;
             try
             {
-                foreach (var name in assembly.GetReferencedAssemblies())
-                {
-                    if (AppDomain.CurrentDomain.GetAssemblies().All(a => a.FullName != name.FullName && _assemblyFilter(a)))
-                    {
-                        LoadReferencedAssembly(Assembly.Load(name));
-                    }
-                }
+                assembly = Assembly.Load(assemblyName);                
             }
-            catch (SystemException ex)
+            catch (Exception ex)
             {
-                Trace.TraceError($"LIME - Error loading the assembly {assembly.FullName}: {ex}");
+                throw new TypeLoadException($"Could not load the assembly '{assemblyName.FullName}'", ex);
+            }
+            
+            loadedAssembliesNames.Add(assemblyName.FullName);
+
+            var referencedAssemblyNames =
+                assembly.GetReferencedAssemblies()
+                    .Where(
+                        a =>
+                            (assemblyFilter == null || assemblyFilter(a)) && !loadedAssembliesNames.Contains(a.FullName));
+
+            foreach (var referencedAssemblyName in referencedAssemblyNames)
+            {
+                try
+                {
+                    LoadAssemblyAndReferences(referencedAssemblyName, assemblyFilter, loadedAssembliesNames);
+                }
+                catch (Exception ex)
+                {
+                    throw new TypeLoadException($"Could not load the referenced assembly '{referencedAssemblyName.FullName}' of assembly '{assemblyName.FullName}'", ex);
+                }                
             }
         }
 
