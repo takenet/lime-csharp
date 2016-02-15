@@ -9,7 +9,7 @@ namespace Lime.Protocol.Listeners
     /// Listens to a <see cref="IChannel"/> instance and pushes the received envelopes to a <see cref="ITargetBlock{T}"/>.
     /// </summary>
     /// <seealso cref="ChannelListener" />
-    public sealed class DataflowChannelListener : IChanneListener, IDisposable
+    public sealed class DataflowChannelListener : IChannelListener, IDisposable
     {
         private readonly ChannelListener _channelListener;
 

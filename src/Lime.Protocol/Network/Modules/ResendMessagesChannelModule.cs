@@ -164,8 +164,7 @@ namespace Lime.Protocol.Network.Modules
         {
             return new MessageIdDestination(
                 notification.Id, 
-                _filterByDestination ? 
-                (notification.GetSender() ?? _channel.RemoteNode).ToIdentity() : null);
+                _filterByDestination ? (notification.GetSender() ?? _channel.RemoteNode).ToIdentity() : null);
         }
 
         private async Task<SentMessage> WaitForRetryAsync(SentMessage sentMessage)

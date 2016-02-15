@@ -7,7 +7,7 @@ namespace Lime.Protocol.Listeners
     /// </summary>
     /// <seealso cref="IStartable" />
     /// <seealso cref="IStoppable" />
-    public interface IChanneListener : IStartable, IStoppable
+    public interface IChannelListener : IStartable, IStoppable
     {
         /// <summary>
         /// Gets the message listener task. 

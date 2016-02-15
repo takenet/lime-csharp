@@ -4,7 +4,7 @@ using Lime.Protocol.Network;
 
 namespace Lime.Protocol.Listeners
 {
-    public sealed class EventChannelListener : IChanneListener, IDisposable
+    public sealed class EventChannelListener : IChannelListener, IDisposable
     {
         private readonly ChannelListener _channelListener;
 

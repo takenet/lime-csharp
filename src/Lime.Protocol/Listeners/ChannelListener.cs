@@ -10,7 +10,7 @@ namespace Lime.Protocol.Listeners
     /// A task is created for each envelope type.
     /// </summary>
     /// <seealso cref="System.IDisposable" />
-    public sealed class ChannelListener : IChanneListener, IDisposable
+    public sealed class ChannelListener : IChannelListener, IDisposable
     {
         private readonly IMessageReceiverChannel _messageChannel;
         private readonly INotificationReceiverChannel _notificationChannel;
