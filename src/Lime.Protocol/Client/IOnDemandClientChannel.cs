@@ -60,11 +60,14 @@ namespace Lime.Protocol.Client
         /// <summary>
         /// Initializes a new instance of the <see cref="FailedChannelInformation"/> class.
         /// </summary>
-        /// <param name="id">The identifier.</param>
+        /// <param name="sessionId">The identifier.</param>
         /// <param name="state">The state.</param>
         /// <param name="isConnected">if set to <c>true</c> [is connected].</param>
         /// <param name="exception">The exception.</param>
-        public FailedChannelInformation(Guid id, SessionState state, bool isConnected, Exception exception) : base(id, state)
+        /// <param name="localNode"></param>
+        /// <param name="remoteNode"></param>
+        public FailedChannelInformation(Guid sessionId, SessionState state, Node localNode, Node remoteNode, bool isConnected, Exception exception) 
+            : base(sessionId, state, localNode, remoteNode)
         {                        
             IsConnected = isConnected;
             Exception = exception;
@@ -89,22 +92,36 @@ namespace Lime.Protocol.Client
         /// <summary>
         /// Initializes a new instance of the <see cref="ChannelInformation"/> class.
         /// </summary>
-        /// <param name="id">The identifier.</param>
+        /// <param name="sessionId">The session identifier.</param>
         /// <param name="state">The state.</param>
-        public ChannelInformation(Guid id, SessionState state)
+        /// <param name="localNode">The channel local node.</param>
+        /// <param name="remoteNode">The channel remote node.</param>
+        public ChannelInformation(Guid sessionId, SessionState state, Node localNode, Node remoteNode)
         {
-            Id = id;
+            SessionId = sessionId;
             State = state;
+            LocalNode = localNode;
+            RemoteNode = remoteNode;
         }
 
         /// <summary>
         /// Gets the associated channel session identifier.
         /// </summary>
-        public Guid Id { get; }
+        public Guid SessionId { get; }
 
         /// <summary>
         /// Gets the channel state.
         /// </summary>
         public SessionState State { get; }
+
+        /// <summary>
+        /// Gets the channel local node.
+        /// </summary>
+        public Node LocalNode { get; }
+
+        /// <summary>
+        /// Gets the channel remote node.
+        /// </summary>
+        public Node RemoteNode { get; }
     }
 }

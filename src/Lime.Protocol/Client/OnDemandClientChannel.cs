@@ -239,7 +239,7 @@ namespace Lime.Protocol.Client
             try
             {            
                 var failedChannelInformation = new FailedChannelInformation(
-                    channel.SessionId, channel.State, channel.Transport.IsConnected, ex);
+                    channel.SessionId, channel.State, channel.LocalNode, channel.RemoteNode, channel.Transport.IsConnected, ex);
 
                 // Make a copy of the handlers
                 var handlers = ChannelOperationFailedHandlers.ToList();            
@@ -323,7 +323,7 @@ namespace Lime.Protocol.Client
                 catch (Exception ex) when (!(ex is OperationCanceledException && cancellationToken.IsCancellationRequested))
                 {
                     var failedChannelInformation = new FailedChannelInformation(
-                        Guid.Empty, SessionState.New, false, ex);
+                        Guid.Empty, SessionState.New, null, null, false, ex);
 
                     var handlers = ChannelCreationFailedHandlers.ToList();
                     if (!await InvokeHandlers(handlers, failedChannelInformation, cancellationToken).ConfigureAwait(false)) throw;
@@ -336,7 +336,7 @@ namespace Lime.Protocol.Client
 
             if (channelCreated && clientChannel != null)
             {
-                var channelInformation = new ChannelInformation(clientChannel.SessionId, clientChannel.State);
+                var channelInformation = new ChannelInformation(clientChannel.SessionId, clientChannel.State, clientChannel.LocalNode, clientChannel.RemoteNode);
                 var handlers = ChannelCreatedHandlers.ToList();
                 await InvokeHandlers(handlers, channelInformation, cancellationToken).ConfigureAwait(false);
             }
@@ -374,7 +374,7 @@ namespace Lime.Protocol.Client
                 _clientChannel = null;
             }
 
-            var channelInformation = new ChannelInformation(clientChannel.SessionId, clientChannel.State);
+            var channelInformation = new ChannelInformation(clientChannel.SessionId, clientChannel.State, clientChannel.LocalNode, clientChannel.RemoteNode);
             var handlers = ChannelDiscardedHandlers.ToList();
             await InvokeHandlers(handlers, channelInformation, cancellationToken).ConfigureAwait(false);
         }

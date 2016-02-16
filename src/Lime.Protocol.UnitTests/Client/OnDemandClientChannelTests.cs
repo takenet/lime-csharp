@@ -96,7 +96,7 @@ namespace Lime.Protocol.UnitTests.Client
                 Times.Once());
             _clientChannel.Verify(c => c.SendMessageAsync(message), Times.Once());
             channelInformation.ShouldNotBeNull();
-            channelInformation.Id.ShouldBe(_sessionId);
+            channelInformation.SessionId.ShouldBe(_sessionId);
             channelInformation.State.ShouldBe(SessionState.Established);
         }
 
@@ -231,7 +231,7 @@ namespace Lime.Protocol.UnitTests.Client
             failedChannelInformation.Exception.ShouldBe(exception);
             failedChannelInformation.IsConnected.ShouldBeFalse();            
             createdChannelInformation.ShouldNotBeNull();
-            createdChannelInformation.Id.ShouldBe(_sessionId);
+            createdChannelInformation.SessionId.ShouldBe(_sessionId);
         }
 
         [Test]
@@ -401,10 +401,10 @@ namespace Lime.Protocol.UnitTests.Client
             clientChannel2.Verify(c => c.SendMessageAsync(message), Times.Once());
             failedChannelInformation.Exception.ShouldBe(exception);
             createdChannelInformations.Count.ShouldBe(2);
-            createdChannelInformations[0].Id.ShouldBe(_sessionId);
-            createdChannelInformations[1].Id.ShouldBe(sessionId);
+            createdChannelInformations[0].SessionId.ShouldBe(_sessionId);
+            createdChannelInformations[1].SessionId.ShouldBe(sessionId);
             discardedChannelInformation.ShouldNotBeNull();
-            discardedChannelInformation.Id.ShouldBe(_sessionId);
+            discardedChannelInformation.SessionId.ShouldBe(_sessionId);
         }
                         
         [Test]
@@ -637,7 +637,7 @@ namespace Lime.Protocol.UnitTests.Client
                 Times.Once());
             _clientChannel.Verify(c => c.SendNotificationAsync(notification), Times.Once());
             channelInformation.ShouldNotBeNull();
-            channelInformation.Id.ShouldBe(_sessionId);
+            channelInformation.SessionId.ShouldBe(_sessionId);
             channelInformation.State.ShouldBe(SessionState.Established);
         }
 
@@ -742,7 +742,7 @@ namespace Lime.Protocol.UnitTests.Client
             failedChannelInformation.Exception.ShouldBe(exception);
             failedChannelInformation.IsConnected.ShouldBeFalse();
             createdChannelInformation.ShouldNotBeNull();
-            createdChannelInformation.Id.ShouldBe(_sessionId);
+            createdChannelInformation.SessionId.ShouldBe(_sessionId);
         }
 
         [Test]
@@ -869,10 +869,10 @@ namespace Lime.Protocol.UnitTests.Client
             clientChannel2.Verify(c => c.SendNotificationAsync(notification), Times.Once());
             failedChannelInformation.Exception.ShouldBe(exception);
             createdChannelInformations.Count.ShouldBe(2);
-            createdChannelInformations[0].Id.ShouldBe(_sessionId);
-            createdChannelInformations[1].Id.ShouldBe(sessionId);
+            createdChannelInformations[0].SessionId.ShouldBe(_sessionId);
+            createdChannelInformations[1].SessionId.ShouldBe(sessionId);
             discardedChannelInformation.ShouldNotBeNull();
-            discardedChannelInformation.Id.ShouldBe(_sessionId);
+            discardedChannelInformation.SessionId.ShouldBe(_sessionId);
         }
 
         [Test]
@@ -1105,7 +1105,7 @@ namespace Lime.Protocol.UnitTests.Client
                 Times.Once());
             _clientChannel.Verify(c => c.SendCommandAsync(command), Times.Once());
             channelInformation.ShouldNotBeNull();
-            channelInformation.Id.ShouldBe(_sessionId);
+            channelInformation.SessionId.ShouldBe(_sessionId);
             channelInformation.State.ShouldBe(SessionState.Established);
         }
 
@@ -1210,7 +1210,7 @@ namespace Lime.Protocol.UnitTests.Client
             failedChannelInformation.Exception.ShouldBe(exception);
             failedChannelInformation.IsConnected.ShouldBeFalse();
             createdChannelInformation.ShouldNotBeNull();
-            createdChannelInformation.Id.ShouldBe(_sessionId);
+            createdChannelInformation.SessionId.ShouldBe(_sessionId);
         }
 
         [Test]
@@ -1337,10 +1337,10 @@ namespace Lime.Protocol.UnitTests.Client
             clientChannel2.Verify(c => c.SendCommandAsync(command), Times.Once());
             failedChannelInformation.Exception.ShouldBe(exception);
             createdChannelInformations.Count.ShouldBe(2);
-            createdChannelInformations[0].Id.ShouldBe(_sessionId);
-            createdChannelInformations[1].Id.ShouldBe(sessionId);
+            createdChannelInformations[0].SessionId.ShouldBe(_sessionId);
+            createdChannelInformations[1].SessionId.ShouldBe(sessionId);
             discardedChannelInformation.ShouldNotBeNull();
-            discardedChannelInformation.Id.ShouldBe(_sessionId);
+            discardedChannelInformation.SessionId.ShouldBe(_sessionId);
         }
 
         [Test]
