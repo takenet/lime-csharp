@@ -11,32 +11,12 @@ namespace Lime.Protocol.Network
     /// </summary>
     /// <seealso cref="IEstablishedChannel" />
     /// <seealso cref="ISessionChannel" />
-    public interface IChannel : ISenderChannel, IReceiverChannel, IEstablishedChannel, ISessionChannel
+    public interface IChannel : ISenderChannel, IReceiverChannel, IEstablishedChannel, ISessionChannel, IChannelInformation
     {
         /// <summary>
         /// Gets the current session transport.
         /// </summary>
         ITransport Transport { get; }
-
-        /// <summary>
-        /// Gets the remote node identifier.
-        /// </summary>
-        Node RemoteNode { get; }
-
-        /// <summary>
-        /// Gets the local node identifier.
-        /// </summary>
-        Node LocalNode { get; }
-
-        /// <summary>
-        /// Gets the current session Id.
-        /// </summary>
-        Guid SessionId { get; }
-
-        /// <summary>
-        /// Gets the current session state.
-        /// </summary>
-        SessionState State { get; }
 
         /// <summary>
         /// Gets the message modules for processing sent and received messages.

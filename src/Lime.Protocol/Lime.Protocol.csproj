@@ -50,6 +50,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Network\ChannelInformation.cs" />
+    <Compile Include="Network\FailedChannelInformation.cs" />
     <Compile Include="Listeners\ChannelListener.cs" />
     <Compile Include="Listeners\DataflowChannelListener.cs" />
     <Compile Include="Listeners\EventChannelListener.cs" />
@@ -79,6 +81,7 @@
     <Compile Include="Message.cs" />
     <Compile Include="Network\ChannelBase.cs" />
     <Compile Include="Network\ChannelExtensions.cs" />
+    <Compile Include="Network\IChannelInformation.cs" />
     <Compile Include="Network\IEstablishedChannel.cs" />
     <Compile Include="Network\IEstablishedReceiverChannel.cs" />
     <Compile Include="Network\IEstablishedSenderChannel.cs" />
