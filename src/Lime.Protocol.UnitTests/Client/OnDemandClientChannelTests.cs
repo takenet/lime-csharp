@@ -273,7 +273,7 @@ namespace Lime.Protocol.UnitTests.Client
 
         [Test]
         [ExpectedException(typeof(ObjectDisposedException))]
-        public async Task SendMessageAsync_ChannelDispose_ThrowsObjectDisposed()
+        public async Task SendMessageAsync_ChannelDisposed_ThrowsObjectDisposed()
         {
             // Arrange
             var message = Dummy.CreateMessage(Dummy.CreatePlainDocument());
@@ -529,7 +529,7 @@ namespace Lime.Protocol.UnitTests.Client
 
         [Test]
         [ExpectedException(typeof(ObjectDisposedException))]
-        public async Task ReceiveMessageAsync_ChannelDispose_ThrowsObjectDisposed()
+        public async Task ReceiveMessageAsync_ChannelDisposed_ThrowsObjectDisposed()
         {
             // Arrange            
             var target = GetTarget();
@@ -784,7 +784,7 @@ namespace Lime.Protocol.UnitTests.Client
 
         [Test]
         [ExpectedException(typeof(ObjectDisposedException))]
-        public async Task SendNotificationAsync_ChannelDispose_ThrowsObjectDisposed()
+        public async Task SendNotificationAsync_ChannelDisposed_ThrowsObjectDisposed()
         {
             // Arrange
             var notification = Dummy.CreateNotification(Event.Received);
@@ -997,7 +997,7 @@ namespace Lime.Protocol.UnitTests.Client
 
         [Test]
         [ExpectedException(typeof(ObjectDisposedException))]
-        public async Task ReceiveNotificationAsync_ChannelDispose_ThrowsObjectDisposed()
+        public async Task ReceiveNotificationAsync_ChannelDisposed_ThrowsObjectDisposed()
         {
             // Arrange            
             var target = GetTarget();
@@ -1252,7 +1252,7 @@ namespace Lime.Protocol.UnitTests.Client
 
         [Test]
         [ExpectedException(typeof(ObjectDisposedException))]
-        public async Task SendCommandAsync_ChannelDispose_ThrowsObjectDisposed()
+        public async Task SendCommandAsync_ChannelDisposed_ThrowsObjectDisposed()
         {
             // Arrange
             var command = Dummy.CreateCommand(Dummy.CreatePlainDocument());
@@ -1465,7 +1465,7 @@ namespace Lime.Protocol.UnitTests.Client
 
         [Test]
         [ExpectedException(typeof(ObjectDisposedException))]
-        public async Task ReceiveCommandAsync_ChannelDispose_ThrowsObjectDisposed()
+        public async Task ReceiveCommandAsync_ChannelDisposed_ThrowsObjectDisposed()
         {
             // Arrange            
             var target = GetTarget();
@@ -1515,9 +1515,6 @@ namespace Lime.Protocol.UnitTests.Client
         {
             // Arrange
             var command = Dummy.CreateCommand(Dummy.CreatePlainDocument());
-            _clientChannel
-                .Setup(c => c.ReceiveCommandAsync(It.IsAny<CancellationToken>()))
-                .ReturnsAsync(command);
             var target = GetTarget();
             var exception = Dummy.CreateException();
             var clientChannel2 = new Mock<IClientChannel>();
@@ -1530,7 +1527,7 @@ namespace Lime.Protocol.UnitTests.Client
             });
             _clientChannel
                 .Setup(c => c.ReceiveCommandAsync(It.IsAny<CancellationToken>()))
-                .Throws(exception);
+                .ThrowsAsync(exception);
             clientChannel2
                 .Setup(c => c.ReceiveCommandAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(command);
@@ -1551,7 +1548,236 @@ namespace Lime.Protocol.UnitTests.Client
             clientChannel2.Verify(c => c.ReceiveCommandAsync(_cancellationToken), Times.Once());
             failedChannelInformation.Exception.ShouldBe(exception);
         }
-        
+
+        [Test]
+        public async Task ProcessCommandAsync_NotEstablishedChannel_BuildChannelAndProcesses()
+        {
+            // Arrange
+            var requestCommand = Dummy.CreateCommand();
+            var responseCommand = Dummy.CreateCommand(Dummy.CreatePing(), status: CommandStatus.Success);
+            responseCommand.Id = requestCommand.Id;
+            _clientChannel
+                .Setup(c => c.ProcessCommandAsync(It.IsAny<Command>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(responseCommand);
+            var target = GetTarget();
+
+            // Act
+            var actual = await target.ProcessCommandAsync(requestCommand, _cancellationToken);
+
+            // Assert
+            actual.ShouldBe(responseCommand);
+            _establishedClientChannelBuilder.Verify(c => c.BuildAndEstablishAsync(It.IsAny<CancellationToken>()),
+                Times.Once());
+            _clientChannel.Verify(c => c.ProcessCommandAsync(requestCommand, _cancellationToken), Times.Once());
+        }
+
+        [Test]
+        public async Task ProcessCommandAsync_EstablishedChannel_ProcessesWithExistingChannel()
+        {
+            // Arrange
+            var requestCommand = Dummy.CreateCommand();
+            var responseCommand = Dummy.CreateCommand(Dummy.CreatePing(), status: CommandStatus.Success);
+            responseCommand.Id = requestCommand.Id;
+            _clientChannel
+                .Setup(c => c.ProcessCommandAsync(It.IsAny<Command>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(responseCommand);
+            var target = GetTarget();
+            await target.ProcessCommandAsync(requestCommand, _cancellationToken);
+            _establishedClientChannelBuilder.ResetCalls();
+            _clientChannel.ResetCalls();
+
+            // Act
+            var actual = await target.ProcessCommandAsync(requestCommand, _cancellationToken);
+
+            // Assert
+            actual.ShouldBe(responseCommand);      
+            _establishedClientChannelBuilder.Verify(c => c.BuildAndEstablishAsync(It.IsAny<CancellationToken>()),
+                Times.Never());
+            _clientChannel.Verify(c => c.ProcessCommandAsync(requestCommand, _cancellationToken), Times.Once());
+        }
+
+        [Test]
+        public async Task ProcessCommandAsync_ChannelCreationFailed_RecreateChannelAndProcesses()
+        {
+            // Arrange
+            var requestCommand = Dummy.CreateCommand();
+            var responseCommand = Dummy.CreateCommand(Dummy.CreatePing(), status: CommandStatus.Success);
+            responseCommand.Id = requestCommand.Id;
+            _clientChannel
+                .Setup(c => c.ProcessCommandAsync(It.IsAny<Command>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(responseCommand);
+            var target = GetTarget();
+            var exception = Dummy.CreateException();
+
+            FailedChannelInformation failedChannelInformation = null;
+            target.ChannelCreationFailedHandlers.Add(f =>
+            {
+                failedChannelInformation = f;
+                return TaskUtil.TrueCompletedTask;
+            });
+
+            _establishedClientChannelBuilder
+                .SetupSequence(b => b.BuildAndEstablishAsync(It.IsAny<CancellationToken>()))
+                .Throws(exception)
+                .Returns(Task.FromResult(_clientChannel.Object));
+
+            // Act
+            var actual = await target.ProcessCommandAsync(requestCommand, _cancellationToken);
+
+            // Assert
+            actual.ShouldBe(responseCommand);
+            _establishedClientChannelBuilder.Verify(c => c.BuildAndEstablishAsync(It.IsAny<CancellationToken>()),
+                Times.Exactly(2));
+            _clientChannel.Verify(c => c.ProcessCommandAsync(requestCommand, _cancellationToken), Times.Once());
+            failedChannelInformation.Exception.ShouldBe(exception);
+            failedChannelInformation.IsConnected.ShouldBeFalse();
+        }
+
+        [Test]
+        public async Task ProcessCommandAsync_ChannelCreationFailsMultipleTimes_TryRecreateChannelAndProcesses()
+        {
+            // Arrange
+            var requestCommand = Dummy.CreateCommand();
+            var responseCommand = Dummy.CreateCommand(Dummy.CreatePing(), status: CommandStatus.Success);
+            responseCommand.Id = requestCommand.Id;
+            _clientChannel
+                .Setup(c => c.ProcessCommandAsync(It.IsAny<Command>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(responseCommand);
+            var target = GetTarget();
+            var exception1 = Dummy.CreateException();
+            var exception2 = Dummy.CreateException();
+            var exception3 = Dummy.CreateException();
+
+            var failedChannelInformations = new List<FailedChannelInformation>();
+            target.ChannelCreationFailedHandlers.Add(f =>
+            {
+                failedChannelInformations.Add(f);
+                return TaskUtil.TrueCompletedTask;
+            });
+
+            _establishedClientChannelBuilder
+                .SetupSequence(b => b.BuildAndEstablishAsync(It.IsAny<CancellationToken>()))
+                .Throws(exception1)
+                .Throws(exception2)
+                .Throws(exception3)
+                .Returns(Task.FromResult(_clientChannel.Object));
+
+            // Act
+            var actual = await target.ProcessCommandAsync(requestCommand, _cancellationToken);
+
+            // Assert
+            actual.ShouldBe(responseCommand);
+            _establishedClientChannelBuilder.Verify(c => c.BuildAndEstablishAsync(It.IsAny<CancellationToken>()),
+                Times.Exactly(4));
+            _clientChannel.Verify(c => c.ProcessCommandAsync(requestCommand, _cancellationToken), Times.Once());
+            failedChannelInformations.Count.ShouldBe(3);
+            failedChannelInformations.Any(h => h.IsConnected).ShouldBeFalse();
+            failedChannelInformations.Select(e => e.Exception).ShouldContain(exception1);
+            failedChannelInformations.Select(e => e.Exception).ShouldContain(exception2);
+            failedChannelInformations.Select(e => e.Exception).ShouldContain(exception3);
+        }
+
+        [Test]
+        [ExpectedException(typeof(ObjectDisposedException))]
+        public async Task ProcessCommandAsync_ChannelDisposed_ThrowsObjectDisposed()
+        {
+            // Arrange            
+            var requestCommand = Dummy.CreateCommand();
+            var target = GetTarget();
+            target.Dispose();
+
+            // Act
+            var actual = await target.ProcessCommandAsync(requestCommand, _cancellationToken);
+        }
+
+        [Test]
+        [ExpectedException(typeof(TaskCanceledException))]
+        public async Task ProcessCommandAsync_CanceledToken_ThrowsTaskCanceledException()
+        {
+            // Arrange
+            var requestCommand = Dummy.CreateCommand();
+            var responseCommand = Dummy.CreateCommand(Dummy.CreatePing(), status: CommandStatus.Success);
+            responseCommand.Id = requestCommand.Id;
+            _clientChannel
+                .Setup(c => c.ProcessCommandAsync(It.IsAny<Command>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(responseCommand);
+            var target = GetTarget();
+            var cts = new CancellationTokenSource();
+            cts.Cancel();
+
+            // Act
+            var actual = await target.ProcessCommandAsync(requestCommand, cts.Token);
+        }
+
+        [Test]
+        [ExpectedException(typeof(ApplicationException))]
+        public async Task ProcessCommandAsync_ChannelCreationFailedHandlerReturnFalse_ThrowsException()
+        {
+            // Arrange
+            var requestCommand = Dummy.CreateCommand(Dummy.CreatePlainDocument());
+            var target = GetTarget();
+            var exception = Dummy.CreateException<ApplicationException>();
+            target.ChannelCreationFailedHandlers.Add(f => TaskUtil.FalseCompletedTask);
+            _establishedClientChannelBuilder
+                .SetupSequence(b => b.BuildAndEstablishAsync(It.IsAny<CancellationToken>()))
+                .Throws(exception)
+                .Returns(Task.FromResult(_clientChannel.Object));
+
+            // Act
+            var actual = await target.ProcessCommandAsync(requestCommand, _cancellationToken);
+        }
+
+        [Test]
+        public async Task ProcessCommandAsync_ChannelOperationFailed_RecreateChannelAndProcesses()
+        {
+            // Arrange
+            var requestCommand = Dummy.CreateCommand();
+            var responseCommand = Dummy.CreateCommand(Dummy.CreatePing(), status: CommandStatus.Success);
+            var sessionId = Guid.NewGuid();
+            responseCommand.Id = requestCommand.Id;
+            var target = GetTarget();
+            var exception = Dummy.CreateException();
+            var clientChannel2 = new Mock<IClientChannel>();
+
+            FailedChannelInformation failedChannelInformation = null;
+            target.ChannelOperationFailedHandlers.Add(f =>
+            {
+                failedChannelInformation = f;
+                return TaskUtil.TrueCompletedTask;
+            });
+            _clientChannel
+                .Setup(c => c.ProcessCommandAsync(It.IsAny<Command>(), It.IsAny<CancellationToken>()))
+                .ThrowsAsync(exception);
+            clientChannel2
+                .Setup(c => c.ProcessCommandAsync(It.IsAny<Command>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(responseCommand);
+            _establishedClientChannelBuilder
+                .SetupSequence(b => b.BuildAndEstablishAsync(It.IsAny<CancellationToken>()))
+                .Returns(Task.FromResult(_clientChannel.Object))
+                .Returns(Task.FromResult(clientChannel2.Object));
+            clientChannel2
+                .SetupGet(c => c.SessionId)
+                .Returns(sessionId);
+            clientChannel2
+                .SetupGet(c => c.Transport)
+                .Returns(_transport.Object);
+            clientChannel2
+                .SetupGet(c => c.State)
+                .Returns(SessionState.Established);
+
+            // Act
+            var actual = await target.ProcessCommandAsync(requestCommand, _cancellationToken);
+
+            // Assert
+            actual.ShouldBe(responseCommand);
+            _establishedClientChannelBuilder.Verify(c => c.BuildAndEstablishAsync(It.IsAny<CancellationToken>()),
+                Times.Exactly(2));
+            _clientChannel.Verify(c => c.ProcessCommandAsync(requestCommand, _cancellationToken), Times.Once());
+            _disposableClientChannel.Verify(c => c.Dispose(), Times.Once);
+            clientChannel2.Verify(c => c.ProcessCommandAsync(requestCommand, _cancellationToken), Times.Once());
+            failedChannelInformation.Exception.ShouldBe(exception);          
+        }
+
         [Test]
         public async Task FinishAsync_EstablishedChannel_SendFinishingAndAwaitsForFinishedSession()
         {
