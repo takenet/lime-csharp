@@ -13,9 +13,9 @@ namespace Lime.Protocol.Client
     public sealed class ClientChannelBuilder : IClientChannelBuilder
     {
         private readonly Func<ITransport> _transportFactory;        
-        private readonly List<IChannelModule<Message>> _messageChannelModules;
-        private readonly List<IChannelModule<Notification>> _notificationChannelModules;
-        private readonly List<IChannelModule<Command>> _commandChannelModules;
+        private readonly List<Func<IClientChannel, IChannelModule<Message>>> _messageChannelModules;
+        private readonly List<Func<IClientChannel, IChannelModule<Notification>>> _notificationChannelModules;
+        private readonly List<Func<IClientChannel, IChannelModule<Command>>> _commandChannelModules;
         private readonly List<Func<IClientChannel, CancellationToken, Task>> _builtHandlers;
         
         /// <summary>
@@ -31,9 +31,9 @@ namespace Lime.Protocol.Client
             if (serverUri == null) throw new ArgumentNullException(nameof(serverUri));
             _transportFactory = transportFactory;
             ServerUri = serverUri;
-            _messageChannelModules = new List<IChannelModule<Message>>();
-            _notificationChannelModules = new List<IChannelModule<Notification>>();
-            _commandChannelModules = new List<IChannelModule<Command>>();
+            _messageChannelModules = new List<Func<IClientChannel, IChannelModule<Message>>>();
+            _notificationChannelModules = new List<Func<IClientChannel, IChannelModule<Notification>>>();
+            _commandChannelModules = new List<Func<IClientChannel, IChannelModule<Command>>>();
             _builtHandlers = new List<Func<IClientChannel, CancellationToken, Task>>();
             SendTimeout = TimeSpan.FromSeconds(60);
             BuffersLimit = 5;
@@ -123,7 +123,17 @@ namespace Lime.Protocol.Client
         public ClientChannelBuilder AddMessageModule(IChannelModule<Message> module)
         {
             if (module == null) throw new ArgumentNullException(nameof(module));
-            _messageChannelModules.Add(module);
+            return AddMessageModule(c => module);
+        }
+
+        /// <summary>
+        /// Adds a message module to the channel.
+        /// </summary>
+        /// <param name="moduleFactory">The module factory.</param>
+        /// <returns></returns>
+        public ClientChannelBuilder AddMessageModule(Func<IClientChannel, IChannelModule<Message>> moduleFactory)
+        {            
+            _messageChannelModules.Add(moduleFactory);
             return this;
         }
 
@@ -135,7 +145,18 @@ namespace Lime.Protocol.Client
         public ClientChannelBuilder AddNotificationModule(IChannelModule<Notification> module)
         {
             if (module == null) throw new ArgumentNullException(nameof(module));
-            _notificationChannelModules.Add(module);
+            return AddNotificationModule(c => module);
+        }
+
+        /// <summary>
+        /// Adds a notification module to the channel.
+        /// </summary>
+        /// <param name="moduleFactory">The module factory.</param>
+        /// <returns></returns>
+        public ClientChannelBuilder AddNotificationModule(Func<IClientChannel, IChannelModule<Notification>> moduleFactory)
+        {
+            if (moduleFactory == null) throw new ArgumentNullException(nameof(moduleFactory));
+            _notificationChannelModules.Add(moduleFactory);
             return this;
         }
 
@@ -146,8 +167,19 @@ namespace Lime.Protocol.Client
         /// <returns></returns>
         public ClientChannelBuilder AddCommandModule(IChannelModule<Command> module)
         {
-            if (module == null) throw new ArgumentNullException(nameof(module));
-            _commandChannelModules.Add(module);
+            if (module == null) throw new ArgumentNullException(nameof(module));            
+            return AddCommandModule(c => module);
+        }
+
+        /// <summary>
+        /// Adds a command module to the channel.
+        /// </summary>
+        /// <param name="moduleFactory">The module factory.</param>
+        /// <returns></returns>
+        public ClientChannelBuilder AddCommandModule(Func<IClientChannel, IChannelModule<Command>> moduleFactory)
+        {
+            if (moduleFactory == null) throw new ArgumentNullException(nameof(moduleFactory));
+            _commandChannelModules.Add(moduleFactory);
             return this;
         }
 
@@ -184,19 +216,19 @@ namespace Lime.Protocol.Client
 
             try
             {
-                foreach (var module in _messageChannelModules.ToList())
+                foreach (var moduleFactory in _messageChannelModules.ToList())
                 {
-                    clientChannel.MessageModules.Add(module);
+                    clientChannel.MessageModules.Add(moduleFactory(clientChannel));
                 }
 
-                foreach (var module in _notificationChannelModules.ToList())
+                foreach (var moduleFactory in _notificationChannelModules.ToList())
                 {
-                    clientChannel.NotificationModules.Add(module);
+                    clientChannel.NotificationModules.Add(moduleFactory(clientChannel));
                 }
 
-                foreach (var module in _commandChannelModules.ToList())
+                foreach (var moduleFactory in _commandChannelModules.ToList())
                 {
-                    clientChannel.CommandModules.Add(module);
+                    clientChannel.CommandModules.Add(moduleFactory(clientChannel));
                 }
 
                 foreach (var handler in _builtHandlers.ToList())
