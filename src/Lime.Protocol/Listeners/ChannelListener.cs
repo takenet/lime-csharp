@@ -11,10 +11,7 @@ namespace Lime.Protocol.Listeners
     /// </summary>
     /// <seealso cref="System.IDisposable" />
     public sealed class ChannelListener : IChannelListener, IDisposable
-    {
-        private readonly IMessageReceiverChannel _messageChannel;
-        private readonly INotificationReceiverChannel _notificationChannel;
-        private readonly ICommandReceiverChannel _commandChannel;
+    {        
         private readonly Func<Message, Task<bool>> _messageConsumer;
         private readonly Func<Notification, Task<bool>> _notificationConsumer;
         private readonly Func<Command, Task<bool>> _commandConsumer;
@@ -25,43 +22,18 @@ namespace Lime.Protocol.Listeners
         /// <summary>
         /// Initializes a new instance of the <see cref="ChannelListener"/> class.
         /// </summary>
-        /// <param name="channel">The channel.</param>
-        /// <param name="messageConsumer">The message consumer.</param>
-        /// <param name="notificationConsumer">The notification consumer.</param>
-        /// <param name="commandConsumer">The command consumer.</param>
-        public ChannelListener(IEstablishedReceiverChannel channel,
-            Func<Message, Task<bool>> messageConsumer, Func<Notification, Task<bool>> notificationConsumer,
-            Func<Command, Task<bool>> commandConsumer)
-            : this(channel, channel, channel, messageConsumer, notificationConsumer, commandConsumer)
-        {
-
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="ChannelListener"/> class.
-        /// </summary>
-        /// <param name="messageChannel">The message channel.</param>
-        /// <param name="notificationChannel">The notification channel.</param>
-        /// <param name="commandChannel">The command channel.</param>
         /// <param name="messageConsumer">The message consumer.</param>
         /// <param name="notificationConsumer">The notification consumer.</param>
         /// <param name="commandConsumer">The command consumer.</param>
         /// <param name="taskCreationOptions">The task creation options to be used in the producer-consumer tasks.</param>
         /// <exception cref="System.ArgumentNullException">
         /// </exception>
-        public ChannelListener(IMessageReceiverChannel messageChannel, INotificationReceiverChannel notificationChannel, ICommandReceiverChannel commandChannel,
-            Func<Message, Task<bool>> messageConsumer, Func<Notification, Task<bool>> notificationConsumer, Func<Command, Task<bool>> commandConsumer, TaskCreationOptions taskCreationOptions = TaskCreationOptions.None)
-        {
-            if (messageChannel == null) throw new ArgumentNullException(nameof(messageChannel));
-            if (notificationChannel == null) throw new ArgumentNullException(nameof(notificationChannel));
-            if (commandChannel == null) throw new ArgumentNullException(nameof(commandChannel));
+        public ChannelListener(Func<Message, Task<bool>> messageConsumer, Func<Notification, Task<bool>> notificationConsumer, Func<Command, Task<bool>> commandConsumer, TaskCreationOptions taskCreationOptions = TaskCreationOptions.None)
+        {            
             if (messageConsumer == null) throw new ArgumentNullException(nameof(messageConsumer));
             if (notificationConsumer == null) throw new ArgumentNullException(nameof(notificationConsumer));
             if (commandConsumer == null) throw new ArgumentNullException(nameof(commandConsumer));
 
-            _messageChannel = messageChannel;
-            _notificationChannel = notificationChannel;
-            _commandChannel = commandChannel;
             _messageConsumer = messageConsumer;
             _notificationConsumer = notificationConsumer;
             _commandConsumer = commandConsumer;
@@ -73,26 +45,27 @@ namespace Lime.Protocol.Listeners
         /// <summary>
         /// Starts the channel listener tasks.
         /// </summary>
-
-        public void Start()
+        /// <param name="channel"></param>
+        public void Start(IEstablishedReceiverChannel channel)
         {
+            if (channel == null) throw new ArgumentNullException(nameof(channel));
             lock (_syncRoot)
             {
                 if (MessageListenerTask == null)
                 {
-                    MessageListenerTask = ProducerConsumer.CreateAsync(_messageChannel.ReceiveMessageAsync,
+                    MessageListenerTask = ProducerConsumer.CreateAsync(channel.ReceiveMessageAsync,
                         _messageConsumer, _cts.Token, _taskCreationOptions);
                 }
 
                 if (NotificationListenerTask == null)
                 {
-                    NotificationListenerTask = ProducerConsumer.CreateAsync(_notificationChannel.ReceiveNotificationAsync,
+                    NotificationListenerTask = ProducerConsumer.CreateAsync(channel.ReceiveNotificationAsync,
                         _notificationConsumer, _cts.Token, _taskCreationOptions);
                 }
 
                 if (CommandListenerTask == null)
                 {
-                    CommandListenerTask = ProducerConsumer.CreateAsync(_commandChannel.ReceiveCommandAsync,
+                    CommandListenerTask = ProducerConsumer.CreateAsync(channel.ReceiveCommandAsync,
                         _commandConsumer, _cts.Token, _taskCreationOptions);
                 }
             }
@@ -134,16 +107,6 @@ namespace Lime.Protocol.Listeners
         {
             if (!_cts.IsCancellationRequested) _cts.Cancel();
             _cts.Dispose();
-            _messageChannel.DisposeIfDisposable();
-            if (!ReferenceEquals(_messageChannel, _notificationChannel))
-            {
-                _notificationConsumer.DisposeIfDisposable();
-            }
-            if (!ReferenceEquals(_messageChannel, _commandChannel) &&
-                !ReferenceEquals(_notificationChannel, _commandChannel))
-            {
-                _commandChannel.DisposeIfDisposable();
-            }
         }
     }
 }

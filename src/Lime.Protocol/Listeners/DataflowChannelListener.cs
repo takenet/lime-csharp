@@ -16,44 +16,25 @@ namespace Lime.Protocol.Listeners
         /// <summary>
         /// Initializes a new instance of the <see cref="DataflowChannelListener" /> class.
         /// </summary>
-        /// <param name="channel">The channel.</param>
-        /// <param name="messageTargetBlock">The message target block.</param>
-        /// <param name="notificationTargetBlock">The notification target block.</param>
-        /// <param name="commandTargetBlock">The command target block.</param>
-        public DataflowChannelListener(IEstablishedReceiverChannel channel, ITargetBlock<Message> messageTargetBlock, ITargetBlock<Notification> notificationTargetBlock, ITargetBlock<Command> commandTargetBlock)
-            : this(channel, channel, channel, messageTargetBlock, notificationTargetBlock, commandTargetBlock)
-        {           
-            
-        }
-        
-        /// <summary>
-        /// Initializes a new instance of the <see cref="DataflowChannelListener" /> class.
-        /// </summary>
-        /// <param name="messageChannel">The message channel.</param>
-        /// <param name="notificationChannel">The notification channel.</param>
-        /// <param name="commandChannel">The command channel.</param>
         /// <param name="messageTargetBlock">The message target block.</param>
         /// <param name="notificationTargetBlock">The notification target block.</param>
         /// <param name="commandTargetBlock">The command target block.</param>
         /// <exception cref="System.ArgumentNullException">
         /// </exception>
-        public DataflowChannelListener(IMessageReceiverChannel messageChannel, INotificationReceiverChannel notificationChannel, ICommandReceiverChannel commandChannel, 
-            ITargetBlock<Message> messageTargetBlock, ITargetBlock<Notification> notificationTargetBlock, ITargetBlock<Command> commandTargetBlock)            
+        public DataflowChannelListener(ITargetBlock<Message> messageTargetBlock, ITargetBlock<Notification> notificationTargetBlock, ITargetBlock<Command> commandTargetBlock)            
         {
             if (messageTargetBlock == null) throw new ArgumentNullException(nameof(messageTargetBlock));
             if (notificationTargetBlock == null) throw new ArgumentNullException(nameof(notificationTargetBlock));
             if (commandTargetBlock == null) throw new ArgumentNullException(nameof(commandTargetBlock));
 
-            _channelListener = new ChannelListener(
-                messageChannel, notificationChannel, commandChannel,
-                messageTargetBlock.SendAsync,
+            _channelListener = new ChannelListener(messageTargetBlock.SendAsync,
                 notificationTargetBlock.SendAsync,
                 commandTargetBlock.SendAsync);
         }
 
-        public void Start()
+        public void Start(IEstablishedReceiverChannel channel)
         {
-            _channelListener.Start();
+            _channelListener.Start(channel);
         }
 
         public void Stop()

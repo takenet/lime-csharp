@@ -14,10 +14,8 @@ namespace Lime.Protocol.UnitTests.Listeners
     [TestFixture]
     public class DataflowChannelListenerTests
     {
-        protected Mock<IMessageChannel> _messageChannel;
-        protected Mock<INotificationChannel> _notificationChannel;
-        protected Mock<ICommandChannel> _commandChannel;
-
+        protected Mock<IEstablishedReceiverChannel> _channel;
+        
         protected BlockingCollection<Message> _producedMessages;
         protected BlockingCollection<Notification> _producedNotifications;
         protected BlockingCollection<Command> _producedCommands;
@@ -30,21 +28,19 @@ namespace Lime.Protocol.UnitTests.Listeners
         [SetUp]
         public void Setup()
         {
-            _messageChannel = new Mock<IMessageChannel>();
-            _notificationChannel = new Mock<INotificationChannel>();
-            _commandChannel = new Mock<ICommandChannel>();
-
+            _channel = new Mock<IEstablishedReceiverChannel>();
+            
             _producedMessages = new BlockingCollection<Message>();
             _producedNotifications = new BlockingCollection<Notification>();
             _producedCommands = new BlockingCollection<Command>();
 
-            _messageChannel
+            _channel
                 .Setup(m => m.ReceiveMessageAsync(It.IsAny<CancellationToken>()))
                 .Returns((CancellationToken cancellationToken) => _producedMessages.Take(cancellationToken).AsCompletedTask());
-            _notificationChannel
+            _channel
                 .Setup(m => m.ReceiveNotificationAsync(It.IsAny<CancellationToken>()))
                 .Returns((CancellationToken cancellationToken) => _producedNotifications.Take(cancellationToken).AsCompletedTask());
-            _commandChannel
+            _channel
                 .Setup(m => m.ReceiveCommandAsync(It.IsAny<CancellationToken>()))
                 .Returns((CancellationToken cancellationToken) => _producedCommands.Take(cancellationToken).AsCompletedTask());
 
@@ -66,11 +62,9 @@ namespace Lime.Protocol.UnitTests.Listeners
 
         private DataflowChannelListener GetAndStartTarget()
         {
-            var target = new DataflowChannelListener(
-                _messageChannel.Object, _notificationChannel.Object, _commandChannel.Object,
-                _messageBufferBlock, _notificationBufferBlock, _commandBufferBlock);
+            var target = new DataflowChannelListener(_messageBufferBlock, _notificationBufferBlock, _commandBufferBlock);
 
-            target.Start();
+            target.Start(_channel.Object);
             return target;            
         }
         

@@ -16,9 +16,7 @@ namespace Lime.Protocol.UnitTests.Listeners
     [TestFixture]
     public class ChannelListenerTests
     {
-        protected Mock<IMessageChannel> _messageChannel;
-        protected Mock<INotificationChannel> _notificationChannel;
-        protected Mock<ICommandChannel> _commandChannel;
+        protected Mock<IEstablishedReceiverChannel> _channel;
 
         protected BlockingCollection<Message> _producedMessages;
         protected BlockingCollection<Notification> _producedNotifications;
@@ -44,21 +42,21 @@ namespace Lime.Protocol.UnitTests.Listeners
         [SetUp]
         public void Setup()
         {            
-            _messageChannel = new Mock<IMessageChannel>();
-            _notificationChannel = new Mock<INotificationChannel>();
-            _commandChannel = new Mock<ICommandChannel>();
+            _channel = new Mock<IEstablishedReceiverChannel>();
+            //_channel = new Mock<INotificationChannel>();
+            //_channel = new Mock<ICommandChannel>();
 
             _producedMessages = new BlockingCollection<Message>();
             _producedNotifications = new BlockingCollection<Notification>();
             _producedCommands = new BlockingCollection<Command>();
 
-            _messageChannel
+            _channel
                 .Setup(m => m.ReceiveMessageAsync(It.IsAny<CancellationToken>()))
                 .Returns((CancellationToken cancellationToken) => _producedMessages.Take(cancellationToken).AsCompletedTask());
-            _notificationChannel
+            _channel
                 .Setup(m => m.ReceiveNotificationAsync(It.IsAny<CancellationToken>()))
                 .Returns((CancellationToken cancellationToken) => _producedNotifications.Take(cancellationToken).AsCompletedTask());
-            _commandChannel
+            _channel
                 .Setup(m => m.ReceiveCommandAsync(It.IsAny<CancellationToken>()))
                 .Returns((CancellationToken cancellationToken) => _producedCommands.Take(cancellationToken).AsCompletedTask());
 
@@ -109,9 +107,9 @@ namespace Lime.Protocol.UnitTests.Listeners
         [TearDown]   
         public void TearDown()
         {
-            _messageChannel = null;
-            _notificationChannel = null;
-            _commandChannel = null;
+            _channel = null;
+            _channel = null;
+            _channel = null;
             _producedMessages = null;
             _producedNotifications = null;
             _producedCommands = null;
@@ -137,12 +135,8 @@ namespace Lime.Protocol.UnitTests.Listeners
                 _createdTargets = new List<ChannelListener>();
             }
 
-            var target = new ChannelListener(_messageChannel.Object, _notificationChannel.Object,
-                _commandChannel.Object,
-                _messageConsumer, _notificationConsumer, _commandConsumer);
-
-            target.Start();
-
+            var target = new ChannelListener(_messageConsumer, _notificationConsumer, _commandConsumer);
+            target.Start(_channel.Object);
             _createdTargets.Add(target);
             return target;
         }
@@ -162,7 +156,7 @@ namespace Lime.Protocol.UnitTests.Listeners
             actual.ShouldBe(message);            
             _producedMessages.Add(_completionMessage);            
             (await target.MessageListenerTask.WithCancellation(_cancellationToken)).ShouldBe(_completionMessage);
-            _messageChannel.Verify(c => c.ReceiveMessageAsync(It.IsAny<CancellationToken>()), Times.Exactly(2));
+            _channel.Verify(c => c.ReceiveMessageAsync(It.IsAny<CancellationToken>()), Times.Exactly(2));
         }
 
         [Test]
@@ -188,7 +182,7 @@ namespace Lime.Protocol.UnitTests.Listeners
             _producedMessages.Add(_completionMessage);
             (await target.MessageListenerTask.WithCancellation(_cancellationToken)).ShouldBe(_completionMessage);            
             _consumedMessages.Count.ShouldBe(count);
-            _messageChannel.Verify(c => c.ReceiveMessageAsync(It.IsAny<CancellationToken>()), Times.Exactly(count + 1));                        
+            _channel.Verify(c => c.ReceiveMessageAsync(It.IsAny<CancellationToken>()), Times.Exactly(count + 1));                        
         }
 
         [Test]
@@ -229,7 +223,7 @@ namespace Lime.Protocol.UnitTests.Listeners
             _producedMessages.ShouldNotContain(unconsumedMessage);
             _consumedMessages.ShouldNotContain(unconsumedMessage);
             consumedCount.ShouldBe(halfCount);
-            _messageChannel.Verify(c => c.ReceiveMessageAsync(It.IsAny<CancellationToken>()), Times.Exactly(halfCount));
+            _channel.Verify(c => c.ReceiveMessageAsync(It.IsAny<CancellationToken>()), Times.Exactly(halfCount));
             _producedMessages.Count.ShouldBe(count - halfCount);                                 
         }
 
@@ -239,7 +233,7 @@ namespace Lime.Protocol.UnitTests.Listeners
         {
             // Arrange
             var exception = Dummy.CreateException<ApplicationException>();            
-            _messageChannel
+            _channel
                 .Setup(m => m.ReceiveMessageAsync(It.IsAny<CancellationToken>()))
                 .ThrowsAsync(exception);
             var target = GetAndStartTarget();
@@ -298,7 +292,7 @@ namespace Lime.Protocol.UnitTests.Listeners
             actual.ShouldBe(notification);
             _producedNotifications.Add(_completionNotification);
             (await target.NotificationListenerTask.WithCancellation(_cancellationToken)).ShouldBe(_completionNotification);
-            _notificationChannel.Verify(c => c.ReceiveNotificationAsync(It.IsAny<CancellationToken>()), Times.Exactly(2));
+            _channel.Verify(c => c.ReceiveNotificationAsync(It.IsAny<CancellationToken>()), Times.Exactly(2));
         }
 
         [Test]
@@ -324,7 +318,7 @@ namespace Lime.Protocol.UnitTests.Listeners
             _producedNotifications.Add(_completionNotification);
             (await target.NotificationListenerTask.WithCancellation(_cancellationToken)).ShouldBe(_completionNotification);
             _consumedNotifications.Count.ShouldBe(count);
-            _notificationChannel.Verify(c => c.ReceiveNotificationAsync(It.IsAny<CancellationToken>()), Times.Exactly(count + 1));
+            _channel.Verify(c => c.ReceiveNotificationAsync(It.IsAny<CancellationToken>()), Times.Exactly(count + 1));
         }
 
         [Test]
@@ -365,7 +359,7 @@ namespace Lime.Protocol.UnitTests.Listeners
             _producedNotifications.ShouldNotContain(unconsumedNotification);
             _consumedNotifications.ShouldNotContain(unconsumedNotification);
             consumedCount.ShouldBe(halfCount);
-            _notificationChannel.Verify(c => c.ReceiveNotificationAsync(It.IsAny<CancellationToken>()), Times.Exactly(halfCount));
+            _channel.Verify(c => c.ReceiveNotificationAsync(It.IsAny<CancellationToken>()), Times.Exactly(halfCount));
             _producedNotifications.Count.ShouldBe(count - halfCount);
         }
 
@@ -375,7 +369,7 @@ namespace Lime.Protocol.UnitTests.Listeners
         {
             // Arrange
             var exception = Dummy.CreateException<ApplicationException>();
-            _notificationChannel
+            _channel
                 .Setup(m => m.ReceiveNotificationAsync(It.IsAny<CancellationToken>()))
                 .ThrowsAsync(exception);
             var target = GetAndStartTarget();
@@ -434,7 +428,7 @@ namespace Lime.Protocol.UnitTests.Listeners
             actual.ShouldBe(command);
             _producedCommands.Add(_completionCommand);
             (await target.CommandListenerTask.WithCancellation(_cancellationToken)).ShouldBe(_completionCommand);
-            _commandChannel.Verify(c => c.ReceiveCommandAsync(It.IsAny<CancellationToken>()), Times.Exactly(2));
+            _channel.Verify(c => c.ReceiveCommandAsync(It.IsAny<CancellationToken>()), Times.Exactly(2));
         }
 
         [Test]
@@ -460,7 +454,7 @@ namespace Lime.Protocol.UnitTests.Listeners
             _producedCommands.Add(_completionCommand);
             (await target.CommandListenerTask.WithCancellation(_cancellationToken)).ShouldBe(_completionCommand);
             _consumedCommands.Count.ShouldBe(count);
-            _commandChannel.Verify(c => c.ReceiveCommandAsync(It.IsAny<CancellationToken>()), Times.Exactly(count + 1));
+            _channel.Verify(c => c.ReceiveCommandAsync(It.IsAny<CancellationToken>()), Times.Exactly(count + 1));
         }
 
         [Test]
@@ -501,7 +495,7 @@ namespace Lime.Protocol.UnitTests.Listeners
             _producedCommands.ShouldNotContain(unconsumedCommand);
             _consumedCommands.ShouldNotContain(unconsumedCommand);
             consumedCount.ShouldBe(halfCount);
-            _commandChannel.Verify(c => c.ReceiveCommandAsync(It.IsAny<CancellationToken>()), Times.Exactly(halfCount));
+            _channel.Verify(c => c.ReceiveCommandAsync(It.IsAny<CancellationToken>()), Times.Exactly(halfCount));
             _producedCommands.Count.ShouldBe(count - halfCount);
         }
 
@@ -511,7 +505,7 @@ namespace Lime.Protocol.UnitTests.Listeners
         {
             // Arrange
             var exception = Dummy.CreateException<ApplicationException>();
-            _commandChannel
+            _channel
                 .Setup(m => m.ReceiveCommandAsync(It.IsAny<CancellationToken>()))
                 .ThrowsAsync(exception);
             var target = GetAndStartTarget();

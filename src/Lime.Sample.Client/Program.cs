@@ -109,16 +109,14 @@ namespace Lime.Sample.Client
             });
 
 
-            var channelListener = new ChannelListener(
-                onDemandChannel,
-                message =>
-                {
-                    Console.ForegroundColor = ConsoleColor.DarkRed;
-                    Console.WriteLine("Message with id '{0}' received from '{1}': {2}", message.Id, message.GetSender(),
-                        message.Content);
-                    Console.ResetColor();
-                    return TaskUtil.TrueCompletedTask;
-                },
+            var channelListener = new ChannelListener(message =>
+            {
+                Console.ForegroundColor = ConsoleColor.DarkRed;
+                Console.WriteLine("Message with id '{0}' received from '{1}': {2}", message.Id, message.GetSender(),
+                    message.Content);
+                Console.ResetColor();
+                return TaskUtil.TrueCompletedTask;
+            },
                 notification =>
                 {
                     Console.ForegroundColor = ConsoleColor.DarkBlue;
@@ -136,7 +134,7 @@ namespace Lime.Sample.Client
                     return TaskUtil.TrueCompletedTask;
                 });
 
-            channelListener.Start();
+            channelListener.Start(onDemandChannel);
 
             while (running)
             {

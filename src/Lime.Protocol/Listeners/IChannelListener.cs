@@ -1,13 +1,12 @@
 ﻿using System.Threading.Tasks;
+using Lime.Protocol.Network;
 
 namespace Lime.Protocol.Listeners
 {
     /// <summary>
     /// Defines a channel listener service.
-    /// </summary>
-    /// <seealso cref="IStartable" />
-    /// <seealso cref="IStoppable" />
-    public interface IChannelListener : IStartable, IStoppable
+    /// </summary>    
+    public interface IChannelListener
     {
         /// <summary>
         /// Gets the message listener task. 
@@ -26,5 +25,16 @@ namespace Lime.Protocol.Listeners
         /// When completed, return the last unconsumed <see cref="Command"/>, if there's any.
         /// </summary>
         Task<Command> CommandListenerTask { get; }
+
+        /// <summary>
+        /// Starts this instance.
+        /// </summary>
+        /// <param name="channel">The channel to be listened.</param>
+        void Start(IEstablishedReceiverChannel channel);
+
+        /// <summary>
+        /// Stops this instance.
+        /// </summary>
+        void Stop();
     }
 }

@@ -11,24 +11,9 @@ namespace Lime.Protocol.Listeners
         /// <summary>
         /// Initializes a new instance of the <see cref="EventChannelListener"/> class.
         /// </summary>
-        /// <param name="channel">The channel.</param>
-        public EventChannelListener(IEstablishedReceiverChannel channel)
-            : this(channel, channel, channel)
+        public EventChannelListener()
         {
-            
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="EventChannelListener"/> class.
-        /// </summary>
-        /// <param name="messageChannel">The message channel.</param>
-        /// <param name="notificationChannel">The notification channel.</param>
-        /// <param name="commandChannel">The command channel.</param>
-        public EventChannelListener(IMessageReceiverChannel messageChannel, INotificationReceiverChannel notificationChannel, ICommandReceiverChannel commandChannel)             
-        {
-            _channelListener = new ChannelListener(
-                messageChannel, notificationChannel, commandChannel,
-                RaiseMessageReceivedAsync, RaiseNotificationReceivedAsync, RaiseCommandReceivedAsync);
+            _channelListener = new ChannelListener(RaiseMessageReceivedAsync, RaiseNotificationReceivedAsync, RaiseCommandReceivedAsync);
         }
 
         private async Task<bool> RaiseMessageReceivedAsync(Message envelope)
@@ -70,9 +55,9 @@ namespace Lime.Protocol.Listeners
         /// </summary>
         public event EventHandler<EnvelopeEventArgs<Command>> CommandReceived;
 
-        public void Start()
+        public void Start(IEstablishedReceiverChannel channel)
         {
-            _channelListener.Start();
+            _channelListener.Start(channel);
         }
 
         public void Stop()

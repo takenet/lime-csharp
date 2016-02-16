@@ -54,8 +54,6 @@
     <Compile Include="Listeners\DataflowChannelListener.cs" />
     <Compile Include="Listeners\EventChannelListener.cs" />
     <Compile Include="Listeners\IChannelListener.cs" />
-    <Compile Include="Listeners\IStartable.cs" />
-    <Compile Include="Listeners\IStoppable.cs" />
     <Compile Include="Listeners\ProducerConsumer.cs" />
     <Compile Include="Client\ClientChannel.cs" />
     <Compile Include="Client\ClientChannelBuilder.cs" />
