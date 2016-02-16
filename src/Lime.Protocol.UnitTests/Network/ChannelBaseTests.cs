@@ -2,6 +2,7 @@
 using NUnit.Framework;
 using Moq;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -773,6 +774,172 @@ namespace Lime.Protocol.UnitTests.Network
             {
                 mock.Verify(m => m.OnReceivingAsync(command, It.IsAny<CancellationToken>()), Times.Once());
             }            
+        }
+
+        #endregion
+
+        #region ProcessCommandAsync
+
+        [Test]
+        [Category("ProcessCommandAsync")]
+        public async Task ProcessCommandAsync_SingleCommand_SendToTransportAndAwaitsForResponse()
+        {
+            // Arrange            
+            var requestCommand = Dummy.CreateCommand();
+            var cancellationToken = Dummy.CreateCancellationToken(TimeSpan.FromSeconds(5));
+            var responseCommand = Dummy.CreateCommand(Dummy.CreatePing(), status: CommandStatus.Success);
+            responseCommand.Id = requestCommand.Id;
+            var tcs = new TaskCompletionSource<Envelope>();
+            _transport
+                .Setup(t => t.SendAsync(It.IsAny<Command>(), It.IsAny<CancellationToken>()))
+                .Returns(() =>
+                {
+                    tcs.SetResult(responseCommand);
+                    return TaskUtil.CompletedTask;
+                });                
+            _transport
+                .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(tcs.Task);            
+            var target = GetTarget(SessionState.Established);
+
+
+            // Act
+            var actual = await target.ProcessCommandAsync(requestCommand, cancellationToken);
+
+            // Assert
+            _transport.Verify(
+                t => t.SendAsync(requestCommand,
+                    It.IsAny<CancellationToken>()),
+                    Times.Once());
+            actual.ShouldBe(responseCommand);            
+        }
+
+
+        [Test]
+        [Category("ProcessCommandAsync")]
+        public async Task ProcessCommandAsync_MultipleCommands_SendToTransportAndAwaitsForResponse()
+        {
+            // Arrange            
+            var count = Dummy.CreateRandomInt(100) + 1;
+            var requestCommands = new List<Command>();
+            var responseCommands = new Dictionary<Guid, Command>();
+
+            for (int i = 0; i < count; i++)
+            {
+                var requestCommand = Dummy.CreateCommand();
+                var responseCommand = Dummy.CreateCommand(Dummy.CreatePing(), status: CommandStatus.Success);
+                responseCommand.Id = requestCommand.Id;
+                requestCommands.Add(requestCommand);
+                responseCommands.Add(requestCommand.Id, responseCommand);
+            }
+            
+            var cancellationToken = Dummy.CreateCancellationToken(TimeSpan.FromSeconds(5));
+            var responseQueue = new BlockingCollection<Command>();
+            _transport
+                .Setup(t => t.SendAsync(It.Is<Command>(c => requestCommands.Contains(c)), It.IsAny<CancellationToken>()))
+                .Returns((Command c, CancellationToken t) =>
+                {
+                    responseQueue.Add(responseCommands[c.Id]);                    
+                    return TaskUtil.CompletedTask;
+                });
+            _transport
+                .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns((CancellationToken t) => ((Envelope)responseQueue.Take(t)).AsCompletedTask());
+            var target = GetTarget(SessionState.Established);
+            var actuals = new List<Command>();
+
+            // Act
+            foreach (var requestCommand in requestCommands)
+            {
+                actuals.Add(
+                    await target.ProcessCommandAsync(requestCommand, cancellationToken));
+            }
+
+            // Assert
+            foreach (var requestCommand in requestCommands)
+            {
+                _transport.Verify(
+                    t => t.SendAsync(requestCommand,
+                        It.IsAny<CancellationToken>()),
+                        Times.Once());                
+            }
+
+            foreach (var responseCommand in responseCommands)
+            {
+                actuals.ShouldContain(responseCommand.Value);
+            }
+        }
+
+        [Test]
+        [Category("ProcessCommandAsync")]        
+        [ExpectedException(typeof(InvalidOperationException))]
+        public async Task ProcessCommandAsync_DuplicatedIdWhileResponseNotReceived_ThrowsInvalidOperationException()
+        {
+            // Arrange            
+            var requestCommand = Dummy.CreateCommand();
+            var cancellationToken = Dummy.CreateCancellationToken(TimeSpan.FromSeconds(5));
+            
+            var tcs = new TaskCompletionSource<Envelope>();
+            _transport
+                .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(tcs.Task);
+            var target = GetTarget(SessionState.Established);
+            var processingTask = target.ProcessCommandAsync(requestCommand, cancellationToken);
+
+            // Act
+            await target.ProcessCommandAsync(requestCommand, cancellationToken);
+        }
+
+        [Test]
+        [Category("ProcessCommandAsync")]
+        public async Task ProcessCommandAsync_DuplicatedIdWhileFirstResponseReceived_SendsToBuffer()
+        {
+            // Arrange            
+            var requestCommand = Dummy.CreateCommand();
+            var cancellationToken = Dummy.CreateCancellationToken(TimeSpan.FromSeconds(2));
+            var responseCommand = Dummy.CreateCommand(Dummy.CreatePing(), status: CommandStatus.Success);
+            responseCommand.Id = requestCommand.Id;
+            var tcs1 = new TaskCompletionSource<Envelope>();
+            var tcs2 = new TaskCompletionSource<Envelope>();
+            _transport
+                .Setup(t => t.SendAsync(It.IsAny<Command>(), It.IsAny<CancellationToken>()))
+                .Returns(() =>
+                {
+                    tcs1.TrySetResult(responseCommand);
+                    return TaskUtil.CompletedTask;
+                });
+            _transport
+                .SetupSequence(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(tcs1.Task)
+                .Returns(tcs1.Task)
+                .Returns(tcs2.Task);
+            var target = GetTarget(SessionState.Established);
+            await target.ProcessCommandAsync(requestCommand, cancellationToken);
+
+
+            // Act
+            var processingTask = target.ProcessCommandAsync(requestCommand, cancellationToken);
+            var actual = await target.ReceiveCommandAsync(cancellationToken);
+
+            // Assert
+            _transport.Verify(
+                t => t.SendAsync(requestCommand,
+                    It.IsAny<CancellationToken>()),
+                    Times.Exactly(2));
+            actual.ShouldBe(responseCommand);
+
+            Exception exception = null;
+            try
+            {
+                await processingTask;
+            }
+            catch (Exception ex)
+            {
+                exception = ex;
+            }
+
+            exception.ShouldNotBeNull();
+            exception.ShouldBeOfType<TaskCanceledException>();
         }
 
         #endregion

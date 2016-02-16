@@ -10,7 +10,7 @@ namespace Lime.Protocol.Network
     /// <summary>
     /// Defines a channel to exchange command envelopes.
     /// </summary>
-    public interface ICommandChannel : ICommandSenderChannel, ICommandReceiverChannel
+    public interface ICommandChannel : ICommandSenderChannel, ICommandReceiverChannel, ICommandProcessor
     {
 
     }
@@ -39,5 +39,19 @@ namespace Lime.Protocol.Network
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns></returns>
         Task<Command> ReceiveCommandAsync(CancellationToken cancellationToken);
+    }
+
+    /// <summary>
+    /// Defines a command processor, that allows sending a command request and awaits for a response.
+    /// </summary>
+    public interface ICommandProcessor
+    {
+        /// <summary>
+        /// Processes a command request, awaiting for the response.
+        /// </summary>
+        /// <param name="requestCommand">The command request.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns></returns>
+        Task<Command> ProcessCommandAsync(Command requestCommand, CancellationToken cancellationToken);
     }
 }

@@ -64,6 +64,33 @@ namespace Lime.Protocol.Client
         }
 
         /// <summary>
+        /// Processes the command asynchronous.
+        /// </summary>
+        /// <param name="requestCommand">The request command.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ObjectDisposedException"></exception>
+        public async Task<Command> ProcessCommandAsync(Command requestCommand, CancellationToken cancellationToken)
+        {
+            while (!_disposed)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                var channel = await GetChannelAsync(cancellationToken, true).ConfigureAwait(false);
+                try
+                {
+                    return await channel.ProcessCommandAsync(requestCommand, cancellationToken).ConfigureAwait(false);
+                }
+                catch (Exception ex) when (!(ex is OperationCanceledException && cancellationToken.IsCancellationRequested))
+                {
+                    if (!await HandleChannelOperationExceptionAsync(ex, channel, cancellationToken)) throw;
+                }
+            }
+
+            throw new ObjectDisposedException(nameof(OnDemandClientChannel));
+        }
+
+        /// <summary>
         /// Sends a message to the remote node.
         /// </summary>
         /// <param name="message"></param>
@@ -358,5 +385,7 @@ namespace Lime.Protocol.Client
             _clientChannel = null;
             _disposed = true;
         }
+
+
     }
 }

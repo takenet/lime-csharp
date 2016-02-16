@@ -21,15 +21,15 @@ namespace Lime.Protocol.Network
         private readonly IAsyncQueue<Command> _commandBuffer;
         private readonly IAsyncQueue<Notification> _notificationBuffer;
         private readonly IAsyncQueue<Session> _sessionBuffer;
+        private readonly ConcurrentDictionary<Guid, TaskCompletionSource<Command>> _pendingCommandsDictionary;
+
         private readonly CancellationTokenSource _channelCancellationTokenSource;
         private readonly object _syncRoot;
         private SessionState _state;
-
         private Task _consumeTransportTask;
-
         private bool _isConsumeTransportTaskFaulting;
-        private bool _isDisposing;
-        
+        private bool _isDisposing;                
+
 
         #region Constructors
 
@@ -56,7 +56,8 @@ namespace Lime.Protocol.Network
             _commandBuffer = new BufferBlockAsyncQueue<Command>(buffersLimit);
             _notificationBuffer = new BufferBlockAsyncQueue<Notification>(buffersLimit);
             _sessionBuffer = new BufferBlockAsyncQueue<Session>(1);
-            
+            _pendingCommandsDictionary = new ConcurrentDictionary<Guid, TaskCompletionSource<Command>>();
+
             MessageModules = new List<IChannelModule<Message>>();
             NotificationModules = new List<IChannelModule<Notification>>();
             CommandModules = new List<IChannelModule<Command>>();
@@ -81,7 +82,7 @@ namespace Lime.Protocol.Network
         ~ChannelBase()
         {
             Dispose(false);
-        }
+        }    
 
         #endregion
 
@@ -196,6 +197,51 @@ namespace Lime.Protocol.Network
         /// <exception cref="System.NotImplementedException"></exception>
         public virtual Task<Command> ReceiveCommandAsync(CancellationToken cancellationToken)
             => ReceiveEnvelopeAsync(_commandBuffer, cancellationToken);
+
+        /// <summary>
+        /// Processes the command request.
+        /// </summary>
+        /// <param name="requestCommand">The request command.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns></returns>
+        /// <exception cref="System.NotImplementedException"></exception>
+        public virtual async Task<Command> ProcessCommandAsync(Command requestCommand, CancellationToken cancellationToken)
+        {
+            if (requestCommand == null) throw new ArgumentNullException(nameof(requestCommand));
+            if (requestCommand.Status != CommandStatus.Pending)
+            {
+                throw new ArgumentException("Invalid command status", nameof(requestCommand));
+            }
+
+            if (requestCommand.Method == CommandMethod.Observe)
+            {
+                throw new ArgumentException("Invalid command method", nameof(requestCommand));
+            }
+
+            if (requestCommand.Id == Guid.Empty)
+            {
+                throw new ArgumentException("Invalid command id", nameof(requestCommand));
+            }
+
+            var tcs = new TaskCompletionSource<Command>();
+            if (!_pendingCommandsDictionary.TryAdd(requestCommand.Id, tcs))
+            {
+                throw new InvalidOperationException("Could not register the pending command request. The command id is already in use.");
+            }
+            try
+            {
+                using (cancellationToken.Register(() => tcs.TrySetCanceled()))
+                {
+                    await SendCommandAsync(requestCommand).ConfigureAwait(false);
+                    return await tcs.Task;
+                }
+            }
+            finally
+            {
+                TaskCompletionSource<Command> removedTcs;
+                _pendingCommandsDictionary.TryRemove(requestCommand.Id, out removedTcs);
+            }                        
+        }
 
         #endregion
 
@@ -378,11 +424,28 @@ namespace Lime.Protocol.Network
             }
         }
 
-        private Task ConsumeMessageAsync(Message message) => ConsumeEnvelopeAsync(_messageBuffer, MessageModules, message);
+        private Task ConsumeMessageAsync(Message message) => ConsumeEnvelopeAsync(message, _messageBuffer, MessageModules);
 
-        private Task ConsumeCommandAsync(Command command) => ConsumeEnvelopeAsync(_commandBuffer, CommandModules, command);
+        private async Task ConsumeCommandAsync(Command command)
+        {
+            command = await InvokeModulesAsync(command, CommandModules).ConfigureAwait(false);
 
-        private Task ConsumeNotificationAsync(Notification notification) => ConsumeEnvelopeAsync(_notificationBuffer, NotificationModules, notification);
+            if (command != null)
+            {
+                TaskCompletionSource<Command> pendingCommand;
+
+                if (command.Id == Guid.Empty || 
+                    command.Status == CommandStatus.Pending ||
+                    command.Method == CommandMethod.Observe ||
+                    !_pendingCommandsDictionary.TryRemove(command.Id, out pendingCommand) ||
+                    !pendingCommand.TrySetResult(command))
+                {
+                    await ConsumeEnvelopeAsync(command, _commandBuffer).ConfigureAwait(false);
+                }
+            }
+        } 
+
+        private Task ConsumeNotificationAsync(Notification notification) => ConsumeEnvelopeAsync(notification, _notificationBuffer, NotificationModules);
 
         private Task ConsumeSessionAsync(Session session)
         {
@@ -394,19 +457,30 @@ namespace Lime.Protocol.Network
             return Task.FromResult<object>(null);
         }
 
-        private async Task ConsumeEnvelopeAsync<T>(IAsyncQueue<T> buffer, IEnumerable<IChannelModule<T>> modules, T envelope) where T : Envelope, new()
+        private async Task ConsumeEnvelopeAsync<T>(T envelope, IAsyncQueue<T> buffer, IEnumerable<IChannelModule<T>> modules) where T : Envelope, new()
+        {
+            envelope = await InvokeModulesAsync(envelope, modules);
+            await ConsumeEnvelopeAsync(envelope, buffer);
+        }
+
+        private async Task<T> InvokeModulesAsync<T>(T envelope, IEnumerable<IChannelModule<T>> modules) where T : Envelope, new()
         {
             foreach (var module in modules.ToList())
             {
                 if (envelope == null) break;
-                envelope = await module.OnReceivingAsync(envelope, _channelCancellationTokenSource.Token);                
+                envelope = await module.OnReceivingAsync(envelope, _channelCancellationTokenSource.Token);
             }
 
+            return envelope;
+        }
+
+        private async Task ConsumeEnvelopeAsync<T>(T envelope, IAsyncQueue<T> buffer) where T : Envelope, new()
+        {
             if (envelope != null)
             {
                 if (!await buffer.SendAsync(envelope, _channelCancellationTokenSource.Token))
                 {
-                    throw new InvalidOperationException($"{typeof (T).Name} buffer limit reached");
+                    throw new InvalidOperationException($"{typeof(T).Name} buffer limit reached");
                 }
             }
         }
