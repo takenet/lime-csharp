@@ -176,7 +176,11 @@ namespace Lime.Protocol.Client
                     await _clientChannel.SendFinishingSessionAsync().ConfigureAwait(false);
                     await finishedSessionTask.ConfigureAwait(false);                    
                 }
-                await DiscardChannelUnsynchronized(_clientChannel, cancellationToken).ConfigureAwait(false);
+
+                if (_clientChannel != null)
+                {
+                    await DiscardChannelUnsynchronized(_clientChannel, cancellationToken).ConfigureAwait(false);
+                }
             }            
             finally
             {
