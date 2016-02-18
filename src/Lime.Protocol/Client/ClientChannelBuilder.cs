@@ -212,7 +212,8 @@ namespace Lime.Protocol.Client
             var clientChannel = new ClientChannel(
                 transport,
                 SendTimeout,
-                BuffersLimit);
+                BuffersLimit,
+                autoReplyPings: false);
 
             try
             {
