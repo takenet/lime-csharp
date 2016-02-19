@@ -117,8 +117,7 @@ namespace Lime.Sample.Server
                         transport,
                         sendTimeout);
 
-                    var consumerTask = Task.Factory.StartNew(async() => await ConsumeAsync(serverChannel, cancellationToken), cancellationToken)
-                        .Unwrap();
+                    var consumerTask = Task.Run(async() => await ConsumeAsync(serverChannel, cancellationToken), cancellationToken);
 
                     var continuation = consumerTask
                         .ContinueWith(t =>

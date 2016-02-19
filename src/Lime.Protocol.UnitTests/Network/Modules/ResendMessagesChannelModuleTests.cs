@@ -35,7 +35,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
             _channel = CreateChannel();
             _resendMessageTryCount = 3;
             _resendMessageInterval = TimeSpan.FromMilliseconds(200);
-            _resendMessageIntervalWithSafeMargin = TimeSpan.FromMilliseconds(250);
+            _resendMessageIntervalWithSafeMargin = TimeSpan.FromMilliseconds(275);
             _cancellationToken = CancellationToken.None;
             _filterByDestination = false;
         }

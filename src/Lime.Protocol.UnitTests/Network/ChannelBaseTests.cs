@@ -916,11 +916,10 @@ namespace Lime.Protocol.UnitTests.Network
             var target = GetTarget(SessionState.Established);
             await target.ProcessCommandAsync(requestCommand, cancellationToken);
 
-
             // Act
-            var processingTask = target.ProcessCommandAsync(requestCommand, cancellationToken);
             var actual = await target.ReceiveCommandAsync(cancellationToken);
-
+            var processingTask = target.ProcessCommandAsync(requestCommand, cancellationToken);
+            
             // Assert
             _transport.Verify(
                 t => t.SendAsync(requestCommand,

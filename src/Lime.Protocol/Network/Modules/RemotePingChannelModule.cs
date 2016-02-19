@@ -46,9 +46,7 @@ namespace Lime.Protocol.Network.Modules
                 if (state == SessionState.Established &&
                     _pingRemoteTask == null)
                 {
-                    _pingRemoteTask =
-                        Task.Factory.StartNew(PingRemoteAsync)
-                            .Unwrap();
+                    _pingRemoteTask = Task.Run(PingRemoteAsync);
                 }
                 else if (state > SessionState.Established &&
                     !_cancellationTokenSource.IsCancellationRequested)

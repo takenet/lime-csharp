@@ -124,9 +124,7 @@ namespace Lime.Protocol.Network
                     {
                         if (_consumeTransportTask == null)
                         {
-                            _consumeTransportTask =
-                                Task.Factory.StartNew(ConsumeTransportAsync, TaskCreationOptions.LongRunning)
-                                .Unwrap();
+                            _consumeTransportTask = Task.Run(ConsumeTransportAsync);
                         }
                     }
                 }
