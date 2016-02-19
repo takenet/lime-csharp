@@ -387,6 +387,7 @@ namespace Lime.Protocol.Client
         {
             _clientChannel?.DisposeIfDisposable();
             _clientChannel = null;
+            _semaphore?.DisposeIfDisposable();
             _disposed = true;
         }
 
