@@ -567,7 +567,7 @@ namespace Lime.Protocol.UnitTests.Client
 
             var target = GetTarget(state: SessionState.Established, autoReplyPings: true);
             
-            await Task.Delay(100);
+            await Task.Delay(250);
 
             _transport.Verify(
                 t => t.SendAsync(It.Is<Command>(
@@ -597,7 +597,7 @@ namespace Lime.Protocol.UnitTests.Client
 
             var target = GetTarget(state: SessionState.Established, autoReplyPings: true);
 
-            await Task.Delay(100);
+            await Task.Delay(250);
 
             _transport.Verify(
                 t => t.SendAsync(It.Is<Command>(
