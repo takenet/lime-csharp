@@ -17,10 +17,6 @@ branches:
 build:
   project: src/Lime.sln
   verbosity: minimal
-test:
-  categories:
-    except:
-      - suppressed
 assembly_info:
   patch: true
   file: '**\AssemblyInfo.*'
