@@ -19,8 +19,8 @@ build:
   verbosity: minimal
 test:
   categories:
-    only:
-      - ok
+    except:
+      - suppressed
 assembly_info:
   patch: true
   file: '**\AssemblyInfo.*'
