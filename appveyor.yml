@@ -1,0 +1,36 @@
+version: 0.3.{build}
+configuration: Release
+platform: Any CPU
+cache: src/packages
+before_build:
+- nuget restore src/Lime.sln
+after_build:
+- nuget pack src/Lime.Protocol/Lime.Protocol.csproj -Symbols -Properties Configuration=Release -Properties Platform=AnyCPU
+- nuget pack src/Lime.Messaging/Lime.Messaging.csproj -Symbols -Properties Configuration=Release -Properties Platform=AnyCPU
+- nuget pack src/Lime.Protocol.Serialization.Newtonsoft/Lime.Protocol.Serialization.Newtonsoft.csproj -Symbols -Properties Configuration=Release -Properties Platform=AnyCPU
+- nuget pack src/Lime.Transport.Tcp/Lime.Transport.Tcp.csproj -Symbols -Properties Configuration=Release -Properties Platform=AnyCPU
+- nuget pack src/Lime.Transport.WebSocket/Lime.Transport.WebSocket.csproj -Symbols -Properties Configuration=Release -Properties Platform=AnyCPU
+- nuget pack src/Lime.Transport.Http/Lime.Transport.Http.csproj -Symbols -Properties Configuration=Release -Properties Platform=AnyCPU
+branches:
+  only:
+    - master
+build:
+  project: src/Lime.sln
+  verbosity: minimal
+test:
+  categories:
+    only:
+      - ok
+assembly_info:
+  patch: true
+  file: '**\AssemblyInfo.*'
+  assembly_file_version: '{version}'
+  assembly_version: '{version}'
+  assembly_informational_version: '{version}'
+artifacts:
+  - path: Lime.*.nupkg
+deploy:
+- provider: NuGet
+  api_key:
+    secure: 0huvVwDjQ/i7FNOrby1sd/KJ1NaSFNOmTh4uUuS/kp7K7W2O3sDdnEeeYz8MwAzb
+  skip_symbols: false

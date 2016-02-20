@@ -7,6 +7,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lime.Web", "Lime.Web\Lime.W
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution items", "Solution items", "{B5C3B9C9-FDAD-4CF1-87F0-133A31090FE9}"
 	ProjectSection(SolutionItems) = preProject
+		..\appveyor.yml = ..\appveyor.yml
 		..\LICENSE = ..\LICENSE
 		..\README.md = ..\README.md
 		Takenet.Lime.Protocol.pfx = Takenet.Lime.Protocol.pfx

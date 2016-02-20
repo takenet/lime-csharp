@@ -123,8 +123,7 @@ namespace Lime.Transport.Tcp.UnitTests
         }
 
         [Test]
-        [Category("OpenAsync")]
-        [ExpectedException(typeof(ArgumentException))]
+        [Category("OpenAsync")]        
         public async Task OpenAsync_NotConnectedInvalidUriScheme_ThrowsArgumentException()
         {
             var uri = Dummy.CreateUri(Uri.UriSchemeHttp);
@@ -137,7 +136,7 @@ namespace Lime.Transport.Tcp.UnitTests
 
             var target = GetTarget();
 
-            await target.OpenAsync(uri, cancellationToken);
+            Should.Throw<ArgumentException>(() => target.OpenAsync(uri, cancellationToken));
         }
 
         [Test]
@@ -234,7 +233,6 @@ namespace Lime.Transport.Tcp.UnitTests
 
         [Test]
         [Category("SendAsync")]
-        [ExpectedException(typeof(ArgumentNullException))]
         public async Task SendAsync_NullEnvelope_ThrowsArgumentNullException()
         {
             var target = this.GetTarget();
@@ -243,12 +241,11 @@ namespace Lime.Transport.Tcp.UnitTests
 
             var cancellationToken = CancellationToken.None;
 
-            await target.SendAsync(message, cancellationToken);
+            Should.Throw<ArgumentNullException>(() => target.SendAsync(message, cancellationToken));
         }
 
         [Test]
         [Category("SendAsync")]
-        [ExpectedException(typeof(InvalidOperationException))]
         public async Task SendAsync_ClosedTransport_ThrowsInvalidOperationException()
         {
             var target = this.GetTarget();
@@ -258,7 +255,7 @@ namespace Lime.Transport.Tcp.UnitTests
 
             var cancellationToken = CancellationToken.None;
 
-            await target.SendAsync(message, cancellationToken);
+            Should.Throw<InvalidOperationException>(() => target.SendAsync(message, cancellationToken));
         }
 
         [Test]
@@ -298,8 +295,8 @@ namespace Lime.Transport.Tcp.UnitTests
             _envelopeSerializer
                 .Setup(e => e.Serialize(message))
                 .Returns(serializedMessage);
-            
-            Assert.Throws<IOException>(async () => await target.SendAsync(message, cancellationToken));
+
+            Should.Throw<IOException>(() => target.SendAsync(message, cancellationToken));
 
             _tcpClient.Verify();
             _stream.Verify();
@@ -342,13 +339,13 @@ namespace Lime.Transport.Tcp.UnitTests
 
         [Test]
         [Category("ReceiveAsync")]
-        [ExpectedException(typeof(InvalidOperationException))]
+        
         public async Task ReceiveAsync_NotStarted_ThrowsInvalidOperationException()
         {
             var cancelationToken = Dummy.CreateCancellationToken();
             var target = GetTarget();
 
-            var actual = await target.ReceiveAsync(cancelationToken);
+            Should.Throw<InvalidOperationException>(() => target.ReceiveAsync(cancelationToken));
         }
 
         [Test]
