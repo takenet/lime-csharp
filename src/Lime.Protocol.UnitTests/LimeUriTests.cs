@@ -33,28 +33,29 @@ namespace Lime.Protocol.UnitTests
         }
 
         [Test]
-        [ExpectedException(typeof(ArgumentNullException))]
         public void Parse_NullString_ThrowsArgumentNullException()
         {
             string path = null;
-            var actual = LimeUri.Parse(path);
+            Action action = () => LimeUri.Parse(path);
+            action.ShouldThrow<ArgumentNullException>();
         }
 
         [Test]
-        [ExpectedException(typeof(ArgumentException))]
         public void Parse_InvalidRelativeString_ThrowsArgumentException()
         {
             var resourceName = Dummy.CreateRandomString(10);
             var invalidPath = string.Format("\\{0}", resourceName);            
-            var actual = LimeUri.Parse(invalidPath);
+            Action action = () => LimeUri.Parse(invalidPath);
+            action.ShouldThrow<ArgumentException>();
+
         }
 
         [Test]
-        [ExpectedException(typeof(ArgumentException))]
         public void Parse_InvalidSchemeAbsoluteString_ThrowsArgumentException()
         {
             var absolutePath = "http://server@limeprotocol.org/presence";
-            var actual = LimeUri.Parse(absolutePath);
+            Action action = () => LimeUri.Parse(absolutePath);
+            action.ShouldThrow<ArgumentException>();
         }
 
         [Test]
@@ -76,7 +77,6 @@ namespace Lime.Protocol.UnitTests
         }
 
         [Test]
-        [ExpectedException(typeof(InvalidOperationException))]
         public void ToUri_RelativeInstance_ThrowsInvalidOperationException()
         {
             var resourceName = Dummy.CreateRandomString(10);
@@ -84,9 +84,9 @@ namespace Lime.Protocol.UnitTests
             var limeUri = LimeUri.Parse(relativePath);
 
             // Act
-            var uri = limeUri.ToUri();
+            Action action = () => limeUri.ToUri();
+            action.ShouldThrow<InvalidOperationException>();
         }
-
 
         [Test]
         public void ToUriIdentity_RelativeInstance_ReturnsUri()
@@ -109,7 +109,6 @@ namespace Lime.Protocol.UnitTests
         }
 
         [Test]
-        [ExpectedException(typeof(InvalidOperationException))]
         public void ToUriIdentity_AbsoluteInstance_ThrowsInvalidOperationException()
         {
             var identity = Dummy.CreateIdentity();
@@ -118,7 +117,8 @@ namespace Lime.Protocol.UnitTests
             var limeUri = LimeUri.Parse(absolutePath);
 
             // Act
-            var uri = limeUri.ToUri(identity);
+            Action action = () => limeUri.ToUri(identity);
+            action.ShouldThrow<InvalidOperationException>();
         }
 
     }

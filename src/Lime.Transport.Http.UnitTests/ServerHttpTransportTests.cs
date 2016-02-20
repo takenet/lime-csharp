@@ -144,26 +144,24 @@ namespace Lime.Transport.Http.UnitTests
         }
 
         [Test]
-        [ExpectedException(typeof(ArgumentNullException))]
         public async Task SubmitAsync_NullEnvelope_ThrowsArgumentNullException()
         {
             // Arrange            
             Envelope envelope = null;
 
             // Act
-            await Target.Value.SubmitAsync(envelope, CancellationToken);
+            await Target.Value.SubmitAsync(envelope, CancellationToken).ShouldThrowAsync<ArgumentNullException>();
         }
 
 
         [Test]
-        [ExpectedException(typeof(InvalidOperationException))]
         public async Task SubmitAsync_CompletedBuffer_ThrowsInvalidOperationException()
         {
             // Arrange            
             await Target.Value.CloseAsync(CancellationToken);
 
             // Act
-            await Target.Value.SubmitAsync(TextMessage, CancellationToken);
+            await Target.Value.SubmitAsync(TextMessage, CancellationToken).ShouldThrowAsync<InvalidOperationException>();
         }
 
         [Test]
@@ -208,45 +206,41 @@ namespace Lime.Transport.Http.UnitTests
         }
 
         [Test]
-        [ExpectedException(typeof(ArgumentNullException))]
         public async Task ProcessMessageAsync_NullMessage_ThrowsArgumentNullException()
         {
             // Arrange
             Message message = null;
 
             // Act
-            await Target.Value.ProcessMessageAsync(message, WaitUntilEvent, CancellationToken);
+            await Target.Value.ProcessMessageAsync(message, WaitUntilEvent, CancellationToken).ShouldThrowAsync<ArgumentNullException>();
         }
 
         [Test]
-        [ExpectedException(typeof(ArgumentException))]
         public async Task ProcessMessageAsync_FireAndForgetMessage_ThrowsArgumentException()
         {
             // Arrange
             TextMessage.Id = Guid.Empty;
 
             // Act
-            await Target.Value.ProcessMessageAsync(TextMessage, WaitUntilEvent, CancellationToken);
+            await Target.Value.ProcessMessageAsync(TextMessage, WaitUntilEvent, CancellationToken).ShouldThrowAsync<ArgumentException>();
         }
 
         [Test]
-        [ExpectedException(typeof(InvalidOperationException))]
         public async Task ProcessMessageAsync_DuplicateMessageId_ThrowsInvalidOperationException()
         {
             // Act
             Target.Value.ProcessMessageAsync(TextMessage, WaitUntilEvent, CancellationToken);
-            await Target.Value.ProcessMessageAsync(TextMessage, WaitUntilEvent, CancellationToken);
+            await Target.Value.ProcessMessageAsync(TextMessage, WaitUntilEvent, CancellationToken).ShouldThrowAsync<InvalidOperationException>();
         }
 
         [Test]
-        [ExpectedException(typeof(TaskCanceledException))]
         public async Task ProcessMessageAsync_NoNotification_ThrowsOperationCanceledException()
         {
             // Arrange
             CancellationToken = TimeSpan.FromSeconds(1).ToCancellationToken();
 
             // Act
-            await Target.Value.ProcessMessageAsync(TextMessage, WaitUntilEvent, CancellationToken);
+            Target.Value.ProcessMessageAsync(TextMessage, WaitUntilEvent, CancellationToken).ShouldThrow<TaskCanceledException>();
         }
 
         [Test]
@@ -272,56 +266,51 @@ namespace Lime.Transport.Http.UnitTests
         }
 
         [Test]
-        [ExpectedException(typeof(ArgumentNullException))]
         public async Task ProcessCommandAsync_NullCommand_ThrowsArgumentNullException()
         {
             // Arrange
             Command command = null;
 
             // Act
-            await Target.Value.ProcessCommandAsync(command, CancellationToken);
+            await Target.Value.ProcessCommandAsync(command, CancellationToken).ShouldThrowAsync<ArgumentNullException>();
         }
 
         [Test]
-        [ExpectedException(typeof(ArgumentException))]
         public async Task ProcessCommandAsync_EmptyIdCommand_ThrowsArgumentException()
         {
             // Arrange
             PresenceRequestCommand.Id = Guid.Empty;
 
             // Act
-            await Target.Value.ProcessCommandAsync(PresenceRequestCommand, CancellationToken);
+            await Target.Value.ProcessCommandAsync(PresenceRequestCommand, CancellationToken).ShouldThrowAsync<ArgumentException>();
         }
 
         [Test]
-        [ExpectedException(typeof(InvalidOperationException))]
         public async Task ProcessCommandAsync_DuplicateCommandId_ThrowsInvalidOperationException()
         {
             // Act
             Target.Value.ProcessCommandAsync(PresenceRequestCommand, CancellationToken);
-            await Target.Value.ProcessCommandAsync(PresenceRequestCommand, CancellationToken);
+            Target.Value.ProcessCommandAsync(PresenceRequestCommand, CancellationToken).ShouldThrow<InvalidOperationException>();
         }
 
         [Test]
-        [ExpectedException(typeof(TaskCanceledException))]
-        public async Task ProcessCommandAsync_NoResponse_ThrowsOperationCanceledException()
+        public void ProcessCommandAsync_NoResponse_ThrowsOperationCanceledException()
         {
             // Arrange
             CancellationToken = TimeSpan.FromSeconds(1).ToCancellationToken();
 
             // Act
-            await Target.Value.ProcessCommandAsync(PresenceRequestCommand, CancellationToken);
+            Target.Value.ProcessCommandAsync(PresenceRequestCommand, CancellationToken).ShouldThrow<OperationCanceledException>();
         }
 
         [Test]
-        [ExpectedException(typeof(ArgumentException))]
         public async Task ProcessCommandAsync_ResponseCommand_ThrowsArgumentException()
         {
             // Arrange
             PresenceRequestCommand.Status = CommandStatus.Success;
 
             // Act
-            await Target.Value.ProcessCommandAsync(PresenceRequestCommand, CancellationToken);
+            await Target.Value.ProcessCommandAsync(PresenceRequestCommand, CancellationToken).ShouldThrowAsync<ArgumentException>();
         }
 
         [Test]
@@ -427,14 +416,13 @@ namespace Lime.Transport.Http.UnitTests
         }
 
         [Test]
-        [ExpectedException(typeof(InvalidOperationException))]
         public async Task FinishAsync_FailedSession_ThrowsInvalidOperationException()
         {
             // Arrange
             await Target.Value.SendAsync(FailedSession, CancellationToken);
 
             // Act                                    
-            await Target.Value.FinishAsync(CancellationToken);
+            await Target.Value.FinishAsync(CancellationToken).ShouldThrowAsync<InvalidOperationException>();
         }
 
         [Test]
@@ -481,7 +469,6 @@ namespace Lime.Transport.Http.UnitTests
         }
 
         [Test]
-        [ExpectedException(typeof(InvalidOperationException))]
         public async Task SendAsync_MessageStorageFailed_ThrowsInvalidOperationException()
         {
             // Arrange
@@ -491,7 +478,7 @@ namespace Lime.Transport.Http.UnitTests
                 .Verifiable();
 
             // Act
-            await Target.Value.SendAsync(TextMessage, CancellationToken);
+            await Target.Value.SendAsync(TextMessage, CancellationToken).ShouldThrowAsync<InvalidOperationException>();
         }
 
         [Test]
@@ -654,7 +641,6 @@ namespace Lime.Transport.Http.UnitTests
         }
 
         [Test]
-        [ExpectedException(typeof(InvalidOperationException))]
         public async Task SendAsync_NotificationStorageFailed_ThrowsInvalidOperationException()
         {
             // Arrange
@@ -663,7 +649,7 @@ namespace Lime.Transport.Http.UnitTests
                 .ReturnsAsync(false);
 
             // Act
-            await Target.Value.SendAsync(DispatchedNotification, CancellationToken);
+            await Target.Value.SendAsync(DispatchedNotification, CancellationToken).ShouldThrowAsync<InvalidOperationException>();
         }
 
         [Test]
@@ -699,7 +685,6 @@ namespace Lime.Transport.Http.UnitTests
         }
 
         [Test]
-        [ExpectedException(typeof(InvalidOperationException))]
         public async Task SendAsync_OrderedNotificationsUpdateFailed_ThrowsInvalidOperationException()
         {
             // Arrange
@@ -725,7 +710,7 @@ namespace Lime.Transport.Http.UnitTests
 
             // Act
             await Target.Value.SendAsync(DispatchedNotification, CancellationToken);
-            await Target.Value.SendAsync(FailedNotification, CancellationToken);            
+            await Target.Value.SendAsync(FailedNotification, CancellationToken).ShouldThrowAsync<InvalidOperationException>();            
         }
 
         [Test]

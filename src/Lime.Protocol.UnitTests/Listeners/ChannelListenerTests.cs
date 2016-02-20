@@ -227,8 +227,7 @@ namespace Lime.Protocol.UnitTests.Listeners
             _producedMessages.Count.ShouldBe(count - halfCount);                                 
         }
 
-        [Test]
-        [ExpectedException(typeof(ApplicationException))]
+        [Test]        
         public async Task Start_MessageChannelThrowsException_StopsListenerTaskAndThrows()
         {
             // Arrange
@@ -239,11 +238,10 @@ namespace Lime.Protocol.UnitTests.Listeners
             var target = GetAndStartTarget();
 
             // Act                           
-            await target.MessageListenerTask;
+            await target.MessageListenerTask.ShouldThrowAsync<ApplicationException>();
         }
 
         [Test]
-        [ExpectedException(typeof(ApplicationException))]
         public async Task Start_MessageConsumerThrowsException_StopsListenerTaskAndThrows()
         {
             // Arrange
@@ -261,7 +259,7 @@ namespace Lime.Protocol.UnitTests.Listeners
 
             // Act                           
             _producedMessages.Add(message);
-            await target.MessageListenerTask;
+            await target.MessageListenerTask.ShouldThrowAsync<ApplicationException>();
         }
 
         [Test]        
@@ -364,7 +362,6 @@ namespace Lime.Protocol.UnitTests.Listeners
         }
 
         [Test]
-        [ExpectedException(typeof(ApplicationException))]
         public async Task Start_NotificationChannelThrowsException_StopsListenerTaskAndThrows()
         {
             // Arrange
@@ -375,11 +372,10 @@ namespace Lime.Protocol.UnitTests.Listeners
             var target = GetAndStartTarget();
 
             // Act                           
-            await target.NotificationListenerTask;
+            await target.NotificationListenerTask.ShouldThrowAsync<ApplicationException>();
         }
 
         [Test]
-        [ExpectedException(typeof(ApplicationException))]
         public async Task Start_NotificationConsumerThrowsException_StopsListenerTaskAndThrows()
         {
             // Arrange
@@ -397,7 +393,7 @@ namespace Lime.Protocol.UnitTests.Listeners
 
             // Act                           
             _producedNotifications.Add(notification);
-            await target.NotificationListenerTask;
+            await target.NotificationListenerTask.ShouldThrowAsync<ApplicationException>();
         }
 
         [Test]
@@ -500,7 +496,6 @@ namespace Lime.Protocol.UnitTests.Listeners
         }
 
         [Test]
-        [ExpectedException(typeof(ApplicationException))]
         public async Task Start_CommandChannelThrowsException_StopsListenerTaskAndThrows()
         {
             // Arrange
@@ -511,11 +506,10 @@ namespace Lime.Protocol.UnitTests.Listeners
             var target = GetAndStartTarget();
 
             // Act                           
-            await target.CommandListenerTask;
+            await target.CommandListenerTask.ShouldThrowAsync<ApplicationException>();
         }
 
         [Test]
-        [ExpectedException(typeof(ApplicationException))]
         public async Task Start_CommandConsumerThrowsException_StopsListenerTaskAndThrows()
         {
             // Arrange
@@ -533,7 +527,7 @@ namespace Lime.Protocol.UnitTests.Listeners
 
             // Act                           
             _producedCommands.Add(command);
-            await target.CommandListenerTask;
+            await target.CommandListenerTask.ShouldThrowAsync<ApplicationException>();
         }
 
         [Test]

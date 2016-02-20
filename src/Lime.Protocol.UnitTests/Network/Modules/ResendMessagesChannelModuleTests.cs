@@ -35,7 +35,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
             _channel = CreateChannel();
             _resendMessageTryCount = 3;
             _resendMessageInterval = TimeSpan.FromMilliseconds(200);
-            _resendMessageIntervalWithSafeMargin = TimeSpan.FromMilliseconds(300);
+            _resendMessageIntervalWithSafeMargin = TimeSpan.FromMilliseconds(250);
             _cancellationToken = CancellationToken.None;
             _filterByDestination = false;
         }
@@ -338,7 +338,6 @@ namespace Lime.Protocol.UnitTests.Network.Modules
         }
 
         [Test]
-        [ExpectedException(typeof(InvalidOperationException))]
         public void Bind_AlreadyBound_ThrowInvalidOperationException()
         {
             // Arrange
@@ -346,18 +345,19 @@ namespace Lime.Protocol.UnitTests.Network.Modules
             var channel2Mock = CreateChannel();
 
             // Act
-            target.Bind(channel2Mock.Object, true);
+            Action action = () => target.Bind(channel2Mock.Object, true);
+            action.ShouldThrow<InvalidOperationException>();
         }
 
         [Test]
-        [ExpectedException(typeof(InvalidOperationException))]
         public void Unbind_NotBound_ThrowInvalidOperationException()
         {
             // Arrange
             var target = GetTarget(false);
 
             // Act
-            target.Unbind();
+            Action action = () => target.Unbind();
+            action.ShouldThrow<InvalidOperationException>();
         }
 
         [Test]

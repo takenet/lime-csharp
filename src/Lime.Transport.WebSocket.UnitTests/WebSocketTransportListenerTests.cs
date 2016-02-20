@@ -77,12 +77,11 @@ namespace Lime.Transport.WebSocket.UnitTests
         }
 
         [Test]
-        [ExpectedException(typeof(InvalidOperationException))]
         public async Task StartAsync_CallTwice_ThrowsInvalidOperationException()
         {
             // Act
             await Target.StartAsync();
-            await Target.StartAsync();
+            await Target.StartAsync().ShouldThrowAsync<InvalidOperationException>();
         }
 
         [Test]
@@ -132,11 +131,10 @@ namespace Lime.Transport.WebSocket.UnitTests
         }
 
         [Test]
-        [ExpectedException(typeof(InvalidOperationException))]
         public async Task AcceptTransportAsync_ListenerNotStarted_ThrowsInvalidOperationException()
         {
             // Act
-            var transport = await Target.AcceptTransportAsync(CancellationToken);
+            var transport = await Target.AcceptTransportAsync(CancellationToken).ShouldThrowAsync<InvalidOperationException>();
         }
 
         [Test]
@@ -162,11 +160,10 @@ namespace Lime.Transport.WebSocket.UnitTests
         }
 
         [Test]
-        [ExpectedException(typeof(InvalidOperationException))]
         public async Task StopAsync_ListenerNotStarted_ThrowsInvalidOperationException()
         {
             // Act
-            await Target.StopAsync();
+            await Target.StopAsync().ShouldThrowAsync<InvalidOperationException>();
         }
 
     }

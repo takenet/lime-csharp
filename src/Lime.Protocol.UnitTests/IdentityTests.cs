@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using NUnit.Framework;
+using Shouldly;
 
 namespace Lime.Protocol.UnitTests
 {
@@ -348,22 +349,22 @@ namespace Lime.Protocol.UnitTests
 
         [Test]
         [Category("Parse")]
-        [ExpectedException(typeof(ArgumentNullException))]
         public void Parse_NullString_ThrowsArgumentNullException()
         {
             string identityString = null;
 
-            var identity = Identity.Parse(identityString);
+            Action action = () => Identity.Parse(identityString);
+            action.ShouldThrow<ArgumentNullException>();
         }
 
         [Test]
         [Category("Parse")]
-        [ExpectedException(typeof(ArgumentNullException))]
-        public void Parse_EmptyString_ThrowsArgumentNullException()
+        public void Parse_EmptyString_ThrowsArgumentException()
         {
             string identityString = string.Empty;
 
-            var identity = Identity.Parse(identityString);
+            Action action = () => Identity.Parse(identityString);
+            action.ShouldThrow<ArgumentException>();
         }
 
         #endregion

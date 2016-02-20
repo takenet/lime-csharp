@@ -155,15 +155,15 @@ namespace Lime.Protocol.UnitTests.Client
         }
 
         [Test]
-        [ExpectedException(typeof(ArgumentNullException))]
         public void WithCompression_NullCompressionSelector_ThrowsArgumentNullException()
         {
             // Arrange                    
             Func<SessionCompression[], SessionCompression> selector = null;
             var target = GetTarget();
 
-            // Act            
-            target.WithCompression(selector);
+            // Act                        
+            Action action = () => target.WithCompression(selector);
+            action.ShouldThrow<ArgumentNullException>();
         }
 
         [Test]
@@ -198,7 +198,6 @@ namespace Lime.Protocol.UnitTests.Client
         }
 
         [Test]
-        [ExpectedException(typeof(ArgumentNullException))]
         public void WithEncryption_NullEncryptionSelector_ThrowsArgumentNullException()
         {
             // Arrange                    
@@ -206,7 +205,8 @@ namespace Lime.Protocol.UnitTests.Client
             var target = GetTarget();
 
             // Act            
-            target.WithEncryption(selector);
+            Action action = () => target.WithEncryption(selector);
+            action.ShouldThrow<ArgumentNullException>();
         }
 
         [Test]
@@ -242,7 +242,6 @@ namespace Lime.Protocol.UnitTests.Client
         }
 
         [Test]
-        [ExpectedException(typeof(ArgumentNullException))]
         public void WithAuthentication_NullAuthenticator_ThrowsArgumentNullException()
         {
             // Arrange                        
@@ -251,7 +250,8 @@ namespace Lime.Protocol.UnitTests.Client
             var target = GetTarget();
 
             // Act            
-            target.WithAuthentication(authenticator);
+            Action action = () => target.WithAuthentication(authenticator);
+            action.ShouldThrow<ArgumentNullException>();
         }
 
         [Test]
@@ -275,7 +275,6 @@ namespace Lime.Protocol.UnitTests.Client
         }
 
         [Test]
-        [ExpectedException(typeof(ArgumentNullException))]
         public void WithPlainAuthentication_NullPassword_ThrowsArgumentNullException()
         {
             // Arrange                        
@@ -283,7 +282,8 @@ namespace Lime.Protocol.UnitTests.Client
             var target = GetTarget();
 
             // Act            
-            target.WithPlainAuthentication(password);
+            Action action = () => target.WithPlainAuthentication(password);
+            action.ShouldThrow<ArgumentNullException>();
         }
 
         [Test]
@@ -307,7 +307,6 @@ namespace Lime.Protocol.UnitTests.Client
         }
 
         [Test]
-        [ExpectedException(typeof(ArgumentNullException))]
         public void WithKeyAuthentication_NullPassword_ThrowsArgumentNullException()
         {
             // Arrange                        
@@ -315,7 +314,8 @@ namespace Lime.Protocol.UnitTests.Client
             var target = GetTarget();
 
             // Act            
-            target.WithKeyAuthentication(password);
+            Action action = () => target.WithKeyAuthentication(password);
+            action.ShouldThrow<ArgumentNullException>();            
         }
 
         [Test]
@@ -416,7 +416,6 @@ namespace Lime.Protocol.UnitTests.Client
         }
 
         [Test]
-        [ExpectedException(typeof(ApplicationException))]
         public async Task AddEstablishedHandler_HandlerThrowsException_ShouldDisposeChannelAndRethrowToCaller()
         {
             // Arrange            
@@ -429,16 +428,11 @@ namespace Lime.Protocol.UnitTests.Client
             var target = GetTarget();
 
             // Act
-            target.AddEstablishedHandler(establishedHandler);
-            try
-            {
-                var channel = await target.BuildAndEstablishAsync(_cancellationToken);
-            }
-            catch (ApplicationException)
-            {
-                _disposableClientChannel.Verify(d => d.Dispose(), Times.Once);
-                throw;
-            }                        
+            target.AddEstablishedHandler(establishedHandler);            
+            await target
+                .BuildAndEstablishAsync(_cancellationToken)
+                .ShouldThrowAsync<ApplicationException>();            
+            _disposableClientChannel.Verify(d => d.Dispose(), Times.Once);                            
         }
 
         [Test]

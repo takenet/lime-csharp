@@ -134,7 +134,7 @@ namespace Lime.Transport.Http
             BuildPipeline();
             
             _httpServer.Start();
-            _httpServerListenerTask = ListenAsync();
+            _httpServerListenerTask = Task.Run(ListenAsync);
             return Task.FromResult<object>(null);
         }
 

@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.Threading;
 using Lime.Protocol.Security;
 using Lime.Protocol.Util;
+using Shouldly;
 
 namespace Lime.Protocol.UnitTests.Server
 {
@@ -88,14 +89,14 @@ namespace Lime.Protocol.UnitTests.Server
 
         [Test]
         [Category("ReceiveNewSessionAsync")]
-        [ExpectedException(typeof(InvalidOperationException))]
         public async Task ReceiveNewSessionAsync_NotNewState_ThrowsInvalidOperationException()
         {
+            // Arrange
             var target = GetTarget(SessionState.Established);
-
             var cancellationToken = Dummy.CreateCancellationToken();
 
-            var actual = await target.ReceiveNewSessionAsync(cancellationToken);
+            // Act
+            var actual = await target.ReceiveNewSessionAsync(cancellationToken).ShouldThrowAsync<InvalidOperationException>();
         }
 
         #endregion
@@ -146,77 +147,79 @@ namespace Lime.Protocol.UnitTests.Server
 
         [Test]
         [Category("NegotiateSessionAsync")]
-        [ExpectedException(typeof(InvalidOperationException))]
         public async Task NegotiateSessionAsync_InvalidStateValidOptions_ThrowsInvalidOperationException()
         {
+            // Arrange
             var target = GetTarget(SessionState.Negotiating);
-
             var compressionOptions = new SessionCompression[] { SessionCompression.None };
             var encryptionOptions = new SessionEncryption[] { SessionEncryption.None, SessionEncryption.TLS };
-
             var cancellationToken = Dummy.CreateCancellationToken();
 
-            var actual = await target.NegotiateSessionAsync(compressionOptions, encryptionOptions, cancellationToken);
+            // Act
+            var actual =
+                await
+                    target.NegotiateSessionAsync(compressionOptions, encryptionOptions, cancellationToken)
+                        .ShouldThrowAsync<InvalidOperationException>();
         }
 
         [Test]
         [Category("NegotiateSessionAsync")]
-        [ExpectedException(typeof(ArgumentNullException))]
         public async Task NegotiateSessionAsync_NullCompressionOptions_ThrowsArgumentNullException()
         {
             var target = GetTarget();
-
             SessionCompression[] compressionOptions = null;
             var encryptionOptions = new SessionEncryption[] { SessionEncryption.None, SessionEncryption.TLS };
-
             var cancellationToken = Dummy.CreateCancellationToken();
 
-            var actual = await target.NegotiateSessionAsync(compressionOptions, encryptionOptions, cancellationToken);
+            var actual =
+                await
+                    target.NegotiateSessionAsync(compressionOptions, encryptionOptions, cancellationToken)
+                        .ShouldThrowAsync<ArgumentNullException>();
         }
 
         [Test]
         [Category("NegotiateSessionAsync")]
-        [ExpectedException(typeof(ArgumentException))]
         public async Task NegotiateSessionAsync_EmptyCompressionOptions_ThrowsArgumentNullException()
         {
             var target = GetTarget();
-
             var compressionOptions = new SessionCompression[0];
             var encryptionOptions = new SessionEncryption[] { SessionEncryption.None, SessionEncryption.TLS };
-
             var cancellationToken = Dummy.CreateCancellationToken();
 
-            var actual = await target.NegotiateSessionAsync(compressionOptions, encryptionOptions, cancellationToken);
+            var actual =
+                await
+                    target.NegotiateSessionAsync(compressionOptions, encryptionOptions, cancellationToken)
+                        .ShouldThrowAsync<ArgumentException>();
         }
 
         [Test]
         [Category("NegotiateSessionAsync")]
-        [ExpectedException(typeof(ArgumentNullException))]
         public async Task NegotiateSessionAsync_NullEncryptionOptions_ThrowsArgumentNullException()
         {
             var target = GetTarget();
-
             var compressionOptions = new SessionCompression[] { SessionCompression.None };
             SessionEncryption[] encryptionOptions = null;
-
             var cancellationToken = Dummy.CreateCancellationToken();
 
-            var actual = await target.NegotiateSessionAsync(compressionOptions, encryptionOptions, cancellationToken);
+            var actual =
+                await
+                    target.NegotiateSessionAsync(compressionOptions, encryptionOptions, cancellationToken)
+                        .ShouldThrowAsync<ArgumentNullException>();
         }
 
         [Test]
         [Category("NegotiateSessionAsync")]
-        [ExpectedException(typeof(ArgumentException))]
         public async Task NegotiateSessionAsync_EmptyEncryptionOptions_ThrowsArgumentException()
         {
             var target = GetTarget();
-
             var compressionOptions = new SessionCompression[] { SessionCompression.None };
             var encryptionOptions = new SessionEncryption[0];
-
             var cancellationToken = Dummy.CreateCancellationToken();
 
-            var actual = await target.NegotiateSessionAsync(compressionOptions, encryptionOptions, cancellationToken);
+            var actual =
+                await
+                    target.NegotiateSessionAsync(compressionOptions, encryptionOptions, cancellationToken)
+                        .ShouldThrowAsync<ArgumentException>();
         }
 
         #endregion
@@ -297,44 +300,44 @@ namespace Lime.Protocol.UnitTests.Server
 
         [Test]
         [Category("AuthenticateSessionAsync")]
-        [ExpectedException(typeof(InvalidOperationException))]
         public async Task AuthenticateSessionAsync_InvalidStateValidOptions_ThrowsInvalidOperationException()
         {
             var target = GetTarget(SessionState.Established);
-
             var schemeOptions = Dummy.CreateSchemeOptions();            
-
             var cancellationToken = Dummy.CreateCancellationToken();
 
-            var actual = await target.AuthenticateSessionAsync(schemeOptions, cancellationToken);
+            var actual =
+                await
+                    target.AuthenticateSessionAsync(schemeOptions, cancellationToken)
+                        .ShouldThrowAsync<InvalidOperationException>();
         }
 
         [Test]
         [Category("AuthenticateSessionAsync")]
-        [ExpectedException(typeof(ArgumentNullException))]
         public async Task AuthenticateSessionAsync_NullOptions_ThrowsArgumentNullException()
         {
             var target = GetTarget(SessionState.Negotiating);
-
             AuthenticationScheme[] schemeOptions = null;
-
             var cancellationToken = Dummy.CreateCancellationToken();
 
-            var actual = await target.AuthenticateSessionAsync(schemeOptions, cancellationToken);
+            var actual =
+                await
+                    target.AuthenticateSessionAsync(schemeOptions, cancellationToken)
+                        .ShouldThrowAsync<ArgumentNullException>();
         }
 
         [Test]
         [Category("AuthenticateSessionAsync")]
-        [ExpectedException(typeof(ArgumentException))]
         public async Task AuthenticateSessionAsync_EmptyOptions_ThrowsArgumentException()
         {
             var target = GetTarget(SessionState.Negotiating);
-
             AuthenticationScheme[] schemeOptions = new AuthenticationScheme[0];
-
             var cancellationToken = Dummy.CreateCancellationToken();
 
-            var actual = await target.AuthenticateSessionAsync(schemeOptions, cancellationToken);
+            var actual =
+                await
+                    target.AuthenticateSessionAsync(schemeOptions, cancellationToken)
+                        .ShouldThrowAsync<ArgumentException>();
         }
 
         [Test]
@@ -379,30 +382,30 @@ namespace Lime.Protocol.UnitTests.Server
 
         [Test]
         [Category("AuthenticateSessionAsync")]
-        [ExpectedException(typeof(ArgumentNullException))]
         public async Task AuthenticateSessionAsync_AuthenticatingStateNullRoundtrip_ThrowsArgumentNullException()
         {
             var target = GetTarget(SessionState.Authenticating);
-
             Authentication authenticationRoundtrip = null;
-
             var cancellationToken = Dummy.CreateCancellationToken();
 
-            var actual = await target.AuthenticateSessionAsync(authenticationRoundtrip, cancellationToken);
+            var actual =
+                await
+                    target.AuthenticateSessionAsync(authenticationRoundtrip, cancellationToken)
+                        .ShouldThrowAsync<ArgumentNullException>();
         }
 
         [Test]
         [Category("AuthenticateSessionAsync")]
-        [ExpectedException(typeof(InvalidOperationException))]
         public async Task AuthenticateSessionAsync_InvalidStateValidRoundtrip_ThrowsInvalidOperationException()
         {
             var target = GetTarget(SessionState.New);
-
             var authenticationRoundtrip = Dummy.CreatePlainAuthentication();
-
             var cancellationToken = Dummy.CreateCancellationToken();
 
-            var actual = await target.AuthenticateSessionAsync(authenticationRoundtrip, cancellationToken);
+            var actual =
+                await
+                    target.AuthenticateSessionAsync(authenticationRoundtrip, cancellationToken)
+                        .ShouldThrowAsync<InvalidOperationException>();
         }
 
         #endregion
@@ -468,14 +471,13 @@ namespace Lime.Protocol.UnitTests.Server
 
         [Test]
         [Category("SendEstablishedSessionAsync")]
-        [ExpectedException(typeof(ArgumentNullException))]
-        public async Task SendEstablishedSessionAsync_NullNodeAuthenticatingState_ThrowsArgumentNullException()
+        public void SendEstablishedSessionAsync_NullNodeAuthenticatingState_ThrowsArgumentNullException()
         {
             var target = GetTarget(SessionState.Authenticating);
-
             Node node = null;
 
-            await target.SendEstablishedSessionAsync(node);
+            Should.Throw<ArgumentNullException>(() =>
+                target.SendEstablishedSessionAsync(node));
         }
 
         #endregion
@@ -508,14 +510,12 @@ namespace Lime.Protocol.UnitTests.Server
 
         [Test]
         [Category("ReceiveFinishingSessionAsync")]
-        [ExpectedException(typeof(InvalidOperationException))]
         public async Task ReceiveFinishingSessionAsync_InvalidState_ThrowsInvalidOperationException()
         {
             var target = GetTarget(SessionState.Authenticating);
-
             var cancellationToken = Dummy.CreateCancellationToken();
 
-            var actual = await target.ReceiveFinishingSessionAsync(cancellationToken);
+            var actual = await target.ReceiveFinishingSessionAsync(cancellationToken).ShouldThrowAsync<InvalidOperationException>();
         }
 
         #endregion
@@ -609,13 +609,12 @@ namespace Lime.Protocol.UnitTests.Server
 
         [Test]
         [Category("SendFailedSessionAsync")]
-        [ExpectedException(typeof(ArgumentNullException))]
         public async Task SendFailedSessionAsync_NullReason_ThrowsArgumentNullException()
         {
             var target = GetTarget();
             Reason reason = null;
 
-            await target.SendFailedSessionAsync(reason);
+            await target.SendFailedSessionAsync(reason).ShouldThrowAsync<ArgumentNullException>();
         }
 
         #endregion
@@ -659,6 +658,7 @@ namespace Lime.Protocol.UnitTests.Server
         }
 
         #endregion
+
         private class TestServerChannel : ServerChannel
         {
             public TestServerChannel(SessionState state, Guid sessionId, Node serverNode, ITransport transport, TimeSpan sendTimeout, Node remoteNode, TimeSpan? remotePingInterval = null, TimeSpan? remoteIdleTimeout = null)

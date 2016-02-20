@@ -191,7 +191,6 @@ namespace Lime.Transport.Http.UnitTests
         }
 
         [Test]
-        [ExpectedException(typeof(TaskCanceledException))]
         public async Task AcceptRequestAsync_CancelRequest_ThrowsTaskCanceledException()
         {
             // Arrange
@@ -201,7 +200,7 @@ namespace Lime.Transport.Http.UnitTests
             // Act
             var acceptRequestTask = Target.Value.AcceptRequestAsync(cts.Token);
             cts.CancelAfter(TimeSpan.FromMilliseconds(100));
-            var actual = await acceptRequestTask;
+            acceptRequestTask.ShouldThrowAsync<TaskCanceledException>();
         }
 
         [Test]
@@ -240,11 +239,10 @@ namespace Lime.Transport.Http.UnitTests
         }
 
         [Test]
-        [ExpectedException(typeof(ArgumentException))]
         public async Task SubmitResponseAsync_InvalidCorrelationId_ThrowsArgumentException()
         {
             // Act
-            await Target.Value.SubmitResponseAsync(HttpResponse);
+            await Target.Value.SubmitResponseAsync(HttpResponse).ShouldThrowAsync<ArgumentException>();
         }
     }
 }

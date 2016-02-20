@@ -175,34 +175,34 @@ namespace Lime.Transport.Http
         {
             if (command == null)
             {
-                throw new ArgumentNullException("command");
+                throw new ArgumentNullException(nameof(command));
             }
 
             if (command.Id.Equals(Guid.Empty))
             {
-                throw new ArgumentException("Invalid command id", "command");
+                throw new ArgumentException("Invalid command id", nameof(command));
             }
 
             if (command.Status != CommandStatus.Pending)
             {
-                throw new ArgumentException("Invalid command status", "command");
+                throw new ArgumentException("Invalid command status", nameof(command));
             }
 
             var tcs = new TaskCompletionSource<Command>();
-            cancellationToken.Register(() => 
-                {
-                    tcs.TrySetCanceled();
-                    _pendingCommandsDictionary.TryRemove(command.Id, out tcs);
-                });
-            
-            if (!_pendingCommandsDictionary.TryAdd(command.Id, tcs))
+            using (cancellationToken.Register(() =>
             {
-                throw new InvalidOperationException("Could not register the command");
+                tcs.TrySetCanceled();
+                _pendingCommandsDictionary.TryRemove(command.Id, out tcs);
+            }))
+            {
+                if (!_pendingCommandsDictionary.TryAdd(command.Id, tcs))
+                {
+                    throw new InvalidOperationException("Could not register the command");
+                }
+
+                await SubmitAsync(command, cancellationToken).ConfigureAwait(false);
+                return await tcs.Task;
             }
-
-            await SubmitAsync(command, cancellationToken).ConfigureAwait(false);
-
-            return await tcs.Task;
         }
 
         /// <summary>

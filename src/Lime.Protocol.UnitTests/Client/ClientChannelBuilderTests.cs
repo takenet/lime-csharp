@@ -153,7 +153,6 @@ namespace Lime.Protocol.UnitTests.Client
         }
 
         [Test]
-        [ExpectedException(typeof(ApplicationException))]
         public async Task AddBuiltHandler_HandlerThrowsException_ShouldRethrowToCaller()
         {
             // Arrange            
@@ -167,7 +166,8 @@ namespace Lime.Protocol.UnitTests.Client
 
             // Act
             target.AddBuiltHandler(builtHandler);
-            var channel = await target.BuildAsync(_cancellationToken);
+
+            await target.BuildAsync(_cancellationToken).ShouldThrowAsync<ApplicationException>();
         }
 
         [Test]

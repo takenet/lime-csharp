@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Security.Principal;
@@ -183,12 +184,11 @@ namespace Lime.Transport.Http.UnitTests
         }
 
         [Test]
-        [ExpectedException(typeof(InvalidOperationException))]
         public async Task StartAsync_CallTwice_ThrowsInvalidOperationException()
         {
             // Act
             await Target.StartAsync();
-            await Target.StartAsync();
+            Should.ThrowAsync<InvalidOperationException>(async () => await Target.StartAsync());
         }
 
         [Test]
@@ -204,11 +204,10 @@ namespace Lime.Transport.Http.UnitTests
         }
 
         [Test]
-        [ExpectedException(typeof(InvalidOperationException))]
         public async Task AcceptTransportAsync_ListenerNotStarted_ThrowsInvalidOperationException()
         {
             // Act
-            var transport = await Target.AcceptTransportAsync(CancellationToken);
+            var transport = await Target.AcceptTransportAsync(CancellationToken).ShouldThrowAsync<InvalidOperationException>();
         }
 
         [Test]
@@ -224,11 +223,10 @@ namespace Lime.Transport.Http.UnitTests
         }
 
         [Test]
-        [ExpectedException(typeof(InvalidOperationException))]
         public async Task StopAsync_ListenerNotStarted_ThrowsInvalidOperationException()
         {
             // Act
-            await Target.StopAsync();
+            await Target.StopAsync().ShouldThrowAsync<InvalidOperationException>();
         }
 
         [Test]

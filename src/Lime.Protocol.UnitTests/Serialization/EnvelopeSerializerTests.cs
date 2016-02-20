@@ -15,7 +15,7 @@ using Shouldly;
 namespace Lime.Protocol.UnitTests.Serialization
 {
 	[TestFixture]
-    [Ignore]
+    [Ignore("Deprecated class")]
 	public class EnvelopeSerializerTests : EnvelopeSerializerBaseTests
 	{
 		protected override IEnvelopeSerializer GetTarget()

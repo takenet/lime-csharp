@@ -130,7 +130,6 @@ namespace Lime.Protocol.UnitTests.Client
         }
 
         [Test]
-        [ExpectedException(typeof(ApplicationException))]
         public async Task SendMessageAsync_ChannelCreatedHandlerThrowsException_ThrowsExceptionToTheCaller()
         {
             // Arrange
@@ -143,7 +142,7 @@ namespace Lime.Protocol.UnitTests.Client
             });
 
             // Act
-            await target.SendMessageAsync(message);
+            await target.SendMessageAsync(message).ShouldThrowAsync<ApplicationException>();
         }
 
         [Test]
@@ -272,7 +271,6 @@ namespace Lime.Protocol.UnitTests.Client
         }
 
         [Test]
-        [ExpectedException(typeof(ObjectDisposedException))]
         public async Task SendMessageAsync_ChannelDisposed_ThrowsObjectDisposed()
         {
             // Arrange
@@ -281,11 +279,10 @@ namespace Lime.Protocol.UnitTests.Client
             target.Dispose();
 
             // Act
-            await target.SendMessageAsync(message);
+            await target.SendMessageAsync(message).ShouldThrowAsync<ObjectDisposedException>();
         }
 
         [Test]
-        [ExpectedException(typeof(ApplicationException))]
         public async Task SendMessageAsync_ChannelCreationFailedHandlerReturnFalse_ThrowsException()
         {
             // Arrange
@@ -299,11 +296,10 @@ namespace Lime.Protocol.UnitTests.Client
                 .Returns(Task.FromResult(_clientChannel.Object));
 
             // Act
-            await target.SendMessageAsync(message);
+            await target.SendMessageAsync(message).ShouldThrowAsync<ApplicationException>();
         }
 
         [Test]
-        [ExpectedException(typeof(ApplicationException))]
         public async Task SendMessageAsync_ChannelCreationFailedMultipleHandlersOneReturnsFalse_ThrowsException()
         {
             // Arrange
@@ -333,16 +329,9 @@ namespace Lime.Protocol.UnitTests.Client
                 .Throws(exception)
                 .Returns(Task.FromResult(_clientChannel.Object));
 
-            // Act
-            try
-            {
-                await target.SendMessageAsync(message);
-            }
-            catch
-            {
-                handlerCallCount.ShouldBe(3);
-                throw;
-            }
+            // Act            
+            await target.SendMessageAsync(message).ShouldThrowAsync<ApplicationException>();            
+            handlerCallCount.ShouldBe(3);            
         }
 
         [Test]
@@ -528,7 +517,6 @@ namespace Lime.Protocol.UnitTests.Client
         }
 
         [Test]
-        [ExpectedException(typeof(ObjectDisposedException))]
         public async Task ReceiveMessageAsync_ChannelDisposed_ThrowsObjectDisposed()
         {
             // Arrange            
@@ -536,12 +524,11 @@ namespace Lime.Protocol.UnitTests.Client
             target.Dispose();
 
             // Act
-            var actual = await target.ReceiveMessageAsync(_cancellationToken);
+            var actual = await target.ReceiveMessageAsync(_cancellationToken).ShouldThrowAsync<ObjectDisposedException>();
         }
 
         [Test]
-        [ExpectedException(typeof(TaskCanceledException))]
-        public async Task ReceiveMessageAsync_CanceledToken_ThrowsTaskCanceledException()
+        public void ReceiveMessageAsync_CanceledToken_ThrowsTaskCanceledException()
         {
             // Arrange
             var message = Dummy.CreateMessage(Dummy.CreatePlainDocument());
@@ -553,11 +540,10 @@ namespace Lime.Protocol.UnitTests.Client
             cts.Cancel();
 
             // Act
-            var actual = await target.ReceiveMessageAsync(cts.Token);
+            target.ReceiveMessageAsync(cts.Token).ShouldThrow<TaskCanceledException>();
         }
 
         [Test]
-        [ExpectedException(typeof(ApplicationException))]
         public async Task ReceiveMessageAsync_ChannelCreationFailedHandlerReturnFalse_ThrowsException()
         {
             // Arrange
@@ -571,7 +557,7 @@ namespace Lime.Protocol.UnitTests.Client
                 .Returns(Task.FromResult(_clientChannel.Object));
 
             // Act
-            var actual = await target.ReceiveMessageAsync(_cancellationToken);
+            var actual = await target.ReceiveMessageAsync(_cancellationToken).ShouldThrowAsync<ApplicationException>();
         }
 
         [Test]
@@ -615,7 +601,7 @@ namespace Lime.Protocol.UnitTests.Client
             clientChannel2.Verify(c => c.ReceiveMessageAsync(_cancellationToken), Times.Once());            
             failedChannelInformation.Exception.ShouldBe(exception);
         }
-
+        
         [Test]
         public async Task SendNotificationAsync_NotEstablishedChannel_BuildChannelAndSends()
         {
@@ -671,7 +657,6 @@ namespace Lime.Protocol.UnitTests.Client
         }
 
         [Test]
-        [ExpectedException(typeof(ApplicationException))]
         public async Task SendNotificationAsync_ChannelCreatedHandlerThrowsException_ThrowsExceptionToTheCaller()
         {
             // Arrange
@@ -684,7 +669,37 @@ namespace Lime.Protocol.UnitTests.Client
             });
 
             // Act
-            await target.SendNotificationAsync(notification);
+            await target.SendNotificationAsync(notification).ShouldThrowAsync<ApplicationException>();
+        }
+
+        [Test]
+        public async Task SendNotificationAsync_MultipleChannelCreatedHandlerThrowsException_ThrowsAggregateExceptionToTheCaller()
+        {
+            // Arrange
+            var notification = Dummy.CreateNotification(Event.Received);
+            var target = GetTarget();
+            var exception1 = Dummy.CreateException<ApplicationException>();
+            target.ChannelCreatedHandlers.Add((c) =>
+            {
+                throw exception1;
+            });
+            var exception2 = Dummy.CreateException<ApplicationException>();
+            target.ChannelCreatedHandlers.Add((c) =>
+            {
+                throw exception2;
+            });
+
+            // Act
+            try
+            {
+                await target.SendNotificationAsync(notification);
+            }
+            catch (AggregateException ex)
+            {
+                ex.InnerExceptions.Count.ShouldBe(2);
+                ex.InnerExceptions.ShouldContain(exception1);
+                ex.InnerExceptions.ShouldContain(exception2);
+            }
         }
 
         [Test]
@@ -783,7 +798,6 @@ namespace Lime.Protocol.UnitTests.Client
         }
 
         [Test]
-        [ExpectedException(typeof(ObjectDisposedException))]
         public async Task SendNotificationAsync_ChannelDisposed_ThrowsObjectDisposed()
         {
             // Arrange
@@ -792,11 +806,10 @@ namespace Lime.Protocol.UnitTests.Client
             target.Dispose();
 
             // Act
-            await target.SendNotificationAsync(notification);
+            await target.SendNotificationAsync(notification).ShouldThrowAsync<ObjectDisposedException>();
         }
 
         [Test]
-        [ExpectedException(typeof(ApplicationException))]
         public async Task SendNotificationAsync_ChannelCreationFailedHandlerReturnFalse_ThrowsException()
         {
             // Arrange
@@ -810,7 +823,42 @@ namespace Lime.Protocol.UnitTests.Client
                 .Returns(Task.FromResult(_clientChannel.Object));
 
             // Act
-            await target.SendNotificationAsync(notification);
+            await target.SendNotificationAsync(notification).ShouldThrowAsync<ApplicationException>();
+        }
+
+        [Test]
+        public async Task SendNotificationAsync_ChannelCreationFailedMultipleHandlersOneReturnsFalse_ThrowsException()
+        {
+            // Arrange
+            var notification = Dummy.CreateNotification(Event.Received);
+            var target = GetTarget();
+            var exception = Dummy.CreateException<ApplicationException>();
+
+            var handlerCallCount = 0;
+
+            target.ChannelCreationFailedHandlers.Add((f) =>
+            {
+                handlerCallCount++;
+                return TaskUtil.TrueCompletedTask;
+            });
+            target.ChannelCreationFailedHandlers.Add((f) =>
+            {
+                handlerCallCount++;
+                return TaskUtil.FalseCompletedTask;
+            });
+            target.ChannelCreationFailedHandlers.Add((f) =>
+            {
+                handlerCallCount++;
+                return TaskUtil.TrueCompletedTask;
+            });
+            _establishedClientChannelBuilder
+                .SetupSequence(b => b.BuildAndEstablishAsync(It.IsAny<CancellationToken>()))
+                .Throws(exception)
+                .Returns(Task.FromResult(_clientChannel.Object));
+
+            // Act            
+            await target.SendNotificationAsync(notification).ShouldThrowAsync<ApplicationException>();
+            handlerCallCount.ShouldBe(3);
         }
 
         [Test]
@@ -996,7 +1044,6 @@ namespace Lime.Protocol.UnitTests.Client
         }
 
         [Test]
-        [ExpectedException(typeof(ObjectDisposedException))]
         public async Task ReceiveNotificationAsync_ChannelDisposed_ThrowsObjectDisposed()
         {
             // Arrange            
@@ -1004,12 +1051,11 @@ namespace Lime.Protocol.UnitTests.Client
             target.Dispose();
 
             // Act
-            var actual = await target.ReceiveNotificationAsync(_cancellationToken);
+            var actual = await target.ReceiveNotificationAsync(_cancellationToken).ShouldThrowAsync<ObjectDisposedException>();
         }
 
         [Test]
-        [ExpectedException(typeof(TaskCanceledException))]
-        public async Task ReceiveNotificationAsync_CanceledToken_ThrowsTaskCanceledException()
+        public void ReceiveNotificationAsync_CanceledToken_ThrowsTaskCanceledException()
         {
             // Arrange
             var notification = Dummy.CreateNotification(Event.Received);
@@ -1021,11 +1067,10 @@ namespace Lime.Protocol.UnitTests.Client
             cts.Cancel();
 
             // Act
-            var actual = await target.ReceiveNotificationAsync(cts.Token);
+            target.ReceiveNotificationAsync(cts.Token).ShouldThrow<TaskCanceledException>();
         }
 
         [Test]
-        [ExpectedException(typeof(ApplicationException))]
         public async Task ReceiveNotificationAsync_ChannelCreationFailedHandlerReturnFalse_ThrowsException()
         {
             // Arrange
@@ -1039,7 +1084,7 @@ namespace Lime.Protocol.UnitTests.Client
                 .Returns(Task.FromResult(_clientChannel.Object));
 
             // Act
-            var actual = await target.ReceiveNotificationAsync(_cancellationToken);
+            var actual = await target.ReceiveNotificationAsync(_cancellationToken).ShouldThrowAsync<ApplicationException>();
         }
 
         [Test]
@@ -1139,7 +1184,6 @@ namespace Lime.Protocol.UnitTests.Client
         }
 
         [Test]
-        [ExpectedException(typeof(ApplicationException))]
         public async Task SendCommandAsync_ChannelCreatedHandlerThrowsException_ThrowsExceptionToTheCaller()
         {
             // Arrange
@@ -1152,7 +1196,37 @@ namespace Lime.Protocol.UnitTests.Client
             });
 
             // Act
-            await target.SendCommandAsync(command);
+            await target.SendCommandAsync(command).ShouldThrowAsync<ApplicationException>();
+        }
+
+        [Test]
+        public async Task SendCommandAsync_MultipleChannelCreatedHandlerThrowsException_ThrowsAggregateExceptionToTheCaller()
+        {
+            // Arrange
+            var command = Dummy.CreateCommand(Dummy.CreatePlainDocument());
+            var target = GetTarget();
+            var exception1 = Dummy.CreateException<ApplicationException>();
+            target.ChannelCreatedHandlers.Add((c) =>
+            {
+                throw exception1;
+            });
+            var exception2 = Dummy.CreateException<ApplicationException>();
+            target.ChannelCreatedHandlers.Add((c) =>
+            {
+                throw exception2;
+            });
+
+            // Act
+            try
+            {
+                await target.SendCommandAsync(command);
+            }
+            catch (AggregateException ex)
+            {
+                ex.InnerExceptions.Count.ShouldBe(2);
+                ex.InnerExceptions.ShouldContain(exception1);
+                ex.InnerExceptions.ShouldContain(exception2);
+            }
         }
 
         [Test]
@@ -1251,7 +1325,6 @@ namespace Lime.Protocol.UnitTests.Client
         }
 
         [Test]
-        [ExpectedException(typeof(ObjectDisposedException))]
         public async Task SendCommandAsync_ChannelDisposed_ThrowsObjectDisposed()
         {
             // Arrange
@@ -1260,11 +1333,10 @@ namespace Lime.Protocol.UnitTests.Client
             target.Dispose();
 
             // Act
-            await target.SendCommandAsync(command);
+            await target.SendCommandAsync(command).ShouldThrowAsync<ObjectDisposedException>();
         }
 
         [Test]
-        [ExpectedException(typeof(ApplicationException))]
         public async Task SendCommandAsync_ChannelCreationFailedHandlerReturnFalse_ThrowsException()
         {
             // Arrange
@@ -1278,7 +1350,42 @@ namespace Lime.Protocol.UnitTests.Client
                 .Returns(Task.FromResult(_clientChannel.Object));
 
             // Act
-            await target.SendCommandAsync(command);
+            await target.SendCommandAsync(command).ShouldThrowAsync<ApplicationException>();
+        }
+
+        [Test]
+        public async Task SendCommandAsync_ChannelCreationFailedMultipleHandlersOneReturnsFalse_ThrowsException()
+        {
+            // Arrange
+            var command = Dummy.CreateCommand(Dummy.CreatePlainDocument());
+            var target = GetTarget();
+            var exception = Dummy.CreateException<ApplicationException>();
+
+            var handlerCallCount = 0;
+
+            target.ChannelCreationFailedHandlers.Add((f) =>
+            {
+                handlerCallCount++;
+                return TaskUtil.TrueCompletedTask;
+            });
+            target.ChannelCreationFailedHandlers.Add((f) =>
+            {
+                handlerCallCount++;
+                return TaskUtil.FalseCompletedTask;
+            });
+            target.ChannelCreationFailedHandlers.Add((f) =>
+            {
+                handlerCallCount++;
+                return TaskUtil.TrueCompletedTask;
+            });
+            _establishedClientChannelBuilder
+                .SetupSequence(b => b.BuildAndEstablishAsync(It.IsAny<CancellationToken>()))
+                .Throws(exception)
+                .Returns(Task.FromResult(_clientChannel.Object));
+
+            // Act            
+            await target.SendCommandAsync(command).ShouldThrowAsync<ApplicationException>();
+            handlerCallCount.ShouldBe(3);
         }
 
         [Test]
@@ -1464,7 +1571,6 @@ namespace Lime.Protocol.UnitTests.Client
         }
 
         [Test]
-        [ExpectedException(typeof(ObjectDisposedException))]
         public async Task ReceiveCommandAsync_ChannelDisposed_ThrowsObjectDisposed()
         {
             // Arrange            
@@ -1472,11 +1578,10 @@ namespace Lime.Protocol.UnitTests.Client
             target.Dispose();
 
             // Act
-            var actual = await target.ReceiveCommandAsync(_cancellationToken);
+            var actual = await target.ReceiveCommandAsync(_cancellationToken).ShouldThrowAsync<ObjectDisposedException>();
         }
 
         [Test]
-        [ExpectedException(typeof(TaskCanceledException))]
         public async Task ReceiveCommandAsync_CanceledToken_ThrowsTaskCanceledException()
         {
             // Arrange
@@ -1489,11 +1594,10 @@ namespace Lime.Protocol.UnitTests.Client
             cts.Cancel();
 
             // Act
-            var actual = await target.ReceiveCommandAsync(cts.Token);
+            target.ReceiveCommandAsync(cts.Token).ShouldThrow<TaskCanceledException>();
         }
 
         [Test]
-        [ExpectedException(typeof(ApplicationException))]
         public async Task ReceiveCommandAsync_ChannelCreationFailedHandlerReturnFalse_ThrowsException()
         {
             // Arrange
@@ -1507,7 +1611,7 @@ namespace Lime.Protocol.UnitTests.Client
                 .Returns(Task.FromResult(_clientChannel.Object));
 
             // Act
-            var actual = await target.ReceiveCommandAsync(_cancellationToken);
+            var actual = await target.ReceiveCommandAsync(_cancellationToken).ShouldThrowAsync<ApplicationException>();
         }
 
         [Test]
@@ -1515,6 +1619,9 @@ namespace Lime.Protocol.UnitTests.Client
         {
             // Arrange
             var command = Dummy.CreateCommand(Dummy.CreatePlainDocument());
+            _clientChannel
+                .Setup(c => c.ReceiveCommandAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(command);
             var target = GetTarget();
             var exception = Dummy.CreateException();
             var clientChannel2 = new Mock<IClientChannel>();
@@ -1527,7 +1634,7 @@ namespace Lime.Protocol.UnitTests.Client
             });
             _clientChannel
                 .Setup(c => c.ReceiveCommandAsync(It.IsAny<CancellationToken>()))
-                .ThrowsAsync(exception);
+                .Throws(exception);
             clientChannel2
                 .Setup(c => c.ReceiveCommandAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(command);
@@ -1549,6 +1656,7 @@ namespace Lime.Protocol.UnitTests.Client
             failedChannelInformation.Exception.ShouldBe(exception);
         }
 
+        
         [Test]
         public async Task ProcessCommandAsync_NotEstablishedChannel_BuildChannelAndProcesses()
         {
@@ -1678,7 +1786,6 @@ namespace Lime.Protocol.UnitTests.Client
         }
 
         [Test]
-        [ExpectedException(typeof(ObjectDisposedException))]
         public async Task ProcessCommandAsync_ChannelDisposed_ThrowsObjectDisposed()
         {
             // Arrange            
@@ -1687,12 +1794,11 @@ namespace Lime.Protocol.UnitTests.Client
             target.Dispose();
 
             // Act
-            var actual = await target.ProcessCommandAsync(requestCommand, _cancellationToken);
+            var actual = await target.ProcessCommandAsync(requestCommand, _cancellationToken).ShouldThrowAsync<ObjectDisposedException>();
         }
 
         [Test]
-        [ExpectedException(typeof(TaskCanceledException))]
-        public async Task ProcessCommandAsync_CanceledToken_ThrowsTaskCanceledException()
+        public void ProcessCommandAsync_CanceledToken_ThrowsTaskCanceledException()
         {
             // Arrange
             var requestCommand = Dummy.CreateCommand();
@@ -1705,12 +1811,12 @@ namespace Lime.Protocol.UnitTests.Client
             var cts = new CancellationTokenSource();
             cts.Cancel();
 
-            // Act
-            var actual = await target.ProcessCommandAsync(requestCommand, cts.Token);
+            // Act            
+            var task = target.ProcessCommandAsync(requestCommand, cts.Token);
+            task.ShouldThrow<TaskCanceledException>();
         }
 
-        [Test]
-        [ExpectedException(typeof(ApplicationException))]
+        [Test]        
         public async Task ProcessCommandAsync_ChannelCreationFailedHandlerReturnFalse_ThrowsException()
         {
             // Arrange
@@ -1724,7 +1830,7 @@ namespace Lime.Protocol.UnitTests.Client
                 .Returns(Task.FromResult(_clientChannel.Object));
 
             // Act
-            var actual = await target.ProcessCommandAsync(requestCommand, _cancellationToken);
+            var actual = await target.ProcessCommandAsync(requestCommand, _cancellationToken).ShouldThrowAsync<ApplicationException>();
         }
 
         [Test]

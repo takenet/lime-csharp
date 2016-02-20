@@ -92,7 +92,6 @@ namespace Lime.Protocol.UnitTests.Network
 
         [Test]
         [Category("SendMessageAsync")]
-        [ExpectedException(typeof(ArgumentNullException))]
         public async Task SendMessageAsync_NullMessage_ThrowsArgumentNullException()
         {
             var tcs = new TaskCompletionSource<Envelope>();
@@ -104,12 +103,11 @@ namespace Lime.Protocol.UnitTests.Network
 
             Message message = null;
 
-            await target.SendMessageAsync(message);
+            await target.SendMessageAsync(message).ShouldThrowAsync<ArgumentNullException>();
         }
 
         [Test]
         [Category("SendMessageAsync")]
-        [ExpectedException(typeof(InvalidOperationException))]
         public async Task SendMessageAsync_NewState_ThrowsInvalidOperationException()
         {
             var target = GetTarget(SessionState.New);
@@ -117,7 +115,7 @@ namespace Lime.Protocol.UnitTests.Network
             var content = Dummy.CreateTextContent();
             var message = Dummy.CreateMessage(content);
 
-            await target.SendMessageAsync(message);
+            await target.SendMessageAsync(message).ShouldThrowAsync<InvalidOperationException>();
         }
 
         [Test]
@@ -243,7 +241,6 @@ namespace Lime.Protocol.UnitTests.Network
 
         [Test]
         [Category("ReceiveMessageAsync")]
-        [ExpectedException(typeof(InvalidOperationException))]
         public async Task ReceiveMessageAsync_NewState_ThrowsInvalidOperationException()
         {
             var target = GetTarget(SessionState.New);
@@ -257,7 +254,7 @@ namespace Lime.Protocol.UnitTests.Network
                 .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
                 .Returns(() => Task.FromResult<Envelope>(message));
 
-            var actual = await target.ReceiveMessageAsync(cancellationToken);
+            var actual = await target.ReceiveMessageAsync(cancellationToken).ShouldThrowAsync<InvalidOperationException>();
         }
 
         [Test]
@@ -265,8 +262,7 @@ namespace Lime.Protocol.UnitTests.Network
         public async Task ReceiveMessageAsync_TransportDisconnect_ReadFromBufferThenThrow()
         {
             var content = Dummy.CreateTextContent();
-            var message = Dummy.CreateMessage(content);
-            
+            var message = Dummy.CreateMessage(content);            
             _transport
                 .SetupSequence(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
                 .Returns(Task.FromResult<Envelope>(message))
@@ -275,16 +271,14 @@ namespace Lime.Protocol.UnitTests.Network
 
             var target = GetTarget(SessionState.Established, 5);
             var cancellationToken = Dummy.CreateCancellationToken();
-
             await Task.Delay(200);
 
-            Message messageReceived = null;
+            var messageReceived = await target.ReceiveMessageAsync(cancellationToken);
+            Assert.IsNotNull(messageReceived);
+            messageReceived = await target.ReceiveMessageAsync(cancellationToken);
+            Assert.IsNotNull(messageReceived);
 
-            Assert.DoesNotThrow(async () => messageReceived = await target.ReceiveMessageAsync(cancellationToken));
-            Assert.IsNotNull(messageReceived);
-            Assert.DoesNotThrow(async () => messageReceived = await target.ReceiveMessageAsync(cancellationToken));
-            Assert.IsNotNull(messageReceived);
-            Assert.Throws<OperationCanceledException>(async () => await target.ReceiveMessageAsync(cancellationToken));
+            target.ReceiveMessageAsync(cancellationToken).ShouldThrow<TaskCanceledException>();
         }
 
         [Test]
@@ -503,7 +497,6 @@ namespace Lime.Protocol.UnitTests.Network
 
         [Test]
         [Category("SendCommandAsync")]
-        [ExpectedException(typeof(ArgumentNullException))]
         public async Task SendCommandAsync_NullCommand_ThrowsArgumentNullException()
         {
             var tcs = new TaskCompletionSource<Envelope>();
@@ -515,12 +508,11 @@ namespace Lime.Protocol.UnitTests.Network
 
             Command command = null;
 
-            await target.SendCommandAsync(command);
+            await target.SendCommandAsync(command).ShouldThrowAsync<ArgumentNullException>();
         }
 
         [Test]
-        [Category("SendCommandAsync")]
-        [ExpectedException(typeof(InvalidOperationException))]
+        [Category("SendCommandAsync")]        
         public async Task SendCommandAsync_NewState_ThrowsInvalidOperationException()
         {
             var target = GetTarget(SessionState.New);
@@ -528,7 +520,7 @@ namespace Lime.Protocol.UnitTests.Network
             var content = Dummy.CreateTextContent();
             var command = Dummy.CreateCommand(content);
 
-            await target.SendCommandAsync(command);
+            await target.SendCommandAsync(command).ShouldThrowAsync<InvalidOperationException>();
         }
 
         [Test]
@@ -652,7 +644,6 @@ namespace Lime.Protocol.UnitTests.Network
 
         [Test]
         [Category("ReceiveCommandAsync")]
-        [ExpectedException(typeof(InvalidOperationException))]
         public async Task ReceiveCommandAsync_NewState_ThrowsInvalidOperationException()
         {
             var target = GetTarget(SessionState.New);
@@ -666,7 +657,7 @@ namespace Lime.Protocol.UnitTests.Network
                 .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
                 .Returns(() => Task.FromResult<Envelope>(command));
 
-            var actual = await target.ReceiveCommandAsync(cancellationToken);
+            var actual = await target.ReceiveCommandAsync(cancellationToken).ShouldThrowAsync<InvalidOperationException>();
         }
 
 
@@ -872,7 +863,6 @@ namespace Lime.Protocol.UnitTests.Network
 
         [Test]
         [Category("ProcessCommandAsync")]        
-        [ExpectedException(typeof(InvalidOperationException))]
         public async Task ProcessCommandAsync_DuplicatedIdWhileResponseNotReceived_ThrowsInvalidOperationException()
         {
             // Arrange            
@@ -887,7 +877,7 @@ namespace Lime.Protocol.UnitTests.Network
             var processingTask = target.ProcessCommandAsync(requestCommand, cancellationToken);
 
             // Act
-            await target.ProcessCommandAsync(requestCommand, cancellationToken);
+            await target.ProcessCommandAsync(requestCommand, cancellationToken).ShouldThrowAsync<InvalidOperationException>();
         }
 
         [Test]
@@ -972,7 +962,6 @@ namespace Lime.Protocol.UnitTests.Network
 
         [Test]
         [Category("SendNotificationAsync")]
-        [ExpectedException(typeof(ArgumentNullException))]
         public async Task SendNotificationAsync_NullNotification_ThrowsArgumentNullException()
         {
             var tcs = new TaskCompletionSource<Envelope>();
@@ -984,19 +973,18 @@ namespace Lime.Protocol.UnitTests.Network
 
             Notification notification = null;
 
-            await target.SendNotificationAsync(notification);
+            await target.SendNotificationAsync(notification).ShouldThrowAsync<ArgumentNullException>();
         }
 
         [Test]
         [Category("SendNotificationAsync")]
-        [ExpectedException(typeof(InvalidOperationException))]
         public async Task SendNotificationAsync_NewState_ThrowsInvalidOperationException()
         {
             var target = GetTarget(SessionState.New);
 
             var notification = Dummy.CreateNotification(Event.Received);
 
-            await target.SendNotificationAsync(notification);
+            await target.SendNotificationAsync(notification).ShouldThrowAsync<InvalidOperationException>();
         }
 
         [Test]
@@ -1117,7 +1105,6 @@ namespace Lime.Protocol.UnitTests.Network
 
         [Test]
         [Category("ReceiveNotificationAsync")]
-        [ExpectedException(typeof(InvalidOperationException))]
         public async Task ReceiveNotificationAsync_NewState_ThrowsInvalidOperationException()
         {
             var target = GetTarget(SessionState.New);
@@ -1130,7 +1117,7 @@ namespace Lime.Protocol.UnitTests.Network
                 .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
                 .Returns(() => Task.FromResult<Envelope>(notification));
 
-            var actual = await target.ReceiveNotificationAsync(cancellationToken);
+            var actual = await target.ReceiveNotificationAsync(cancellationToken).ShouldThrowAsync<InvalidOperationException>();
         }
 
 
@@ -1268,19 +1255,16 @@ namespace Lime.Protocol.UnitTests.Network
 
         [Test]
         [Category("SendSessionAsync")]
-        [ExpectedException(typeof(ArgumentNullException))]
-        public async Task SendSessionAsync_NullSession_ThrowsArgumentNullException()
+        public void SendSessionAsync_NullSession_ThrowsArgumentNullException()
         {
             var tcs = new TaskCompletionSource<Envelope>();
             _transport
                 .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
                 .Returns(tcs.Task);
-
             var target = (ISessionChannel)GetTarget(SessionState.Established);
-
             Session session = null;
 
-            await target.SendSessionAsync(session);
+            Should.Throw<ArgumentNullException>(() => target.SendSessionAsync(session));
         }
 
         #endregion
@@ -1310,7 +1294,6 @@ namespace Lime.Protocol.UnitTests.Network
 
         [Test]
         [Category("ReceiveSessionAsync")]
-        [ExpectedException(typeof(InvalidOperationException))]
         public async Task ReceiveSessionAsync_FinishedState_ThrowsInvalidOperationException()
         {
             var target = (ISessionChannel)GetTarget(SessionState.Finished);
@@ -1323,12 +1306,11 @@ namespace Lime.Protocol.UnitTests.Network
                 .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
                 .Returns(() => Task.FromResult<Envelope>(session));
 
-            var actual = await target.ReceiveSessionAsync(cancellationToken);
+            var actual = await target.ReceiveSessionAsync(cancellationToken).ShouldThrowAsync<InvalidOperationException>();
         }
 
         [Test]
         [Category("ReceiveSessionAsync")]
-        [ExpectedException(typeof(InvalidOperationException))]
         public async Task ReceiveSessionAsync_LimitedBuffers_ThrowsInvalidOperationException()
         {
             // Arrange
@@ -1343,8 +1325,8 @@ namespace Lime.Protocol.UnitTests.Network
             await Task.Delay(100);
 
             // Act
-            Assert.DoesNotThrow(async () => await target.ReceiveSessionAsync(cancellationToken));
             await target.ReceiveSessionAsync(cancellationToken);
+            target.ReceiveSessionAsync(cancellationToken).ShouldThrow<InvalidOperationException>();
         }
 
         #endregion
@@ -1353,7 +1335,6 @@ namespace Lime.Protocol.UnitTests.Network
 
         [Test]
         [Category("EnvelopeAsyncBuffer_PromiseAdded")]
-        [ExpectedException(typeof(InvalidOperationException))]
 
         public async Task EnvelopeAsyncBuffer_PromiseAdded_TransportThrowsException_CallsTransportCloseAsyncAndThrowsException()
         {
@@ -1377,20 +1358,12 @@ namespace Lime.Protocol.UnitTests.Network
             await Task.Delay(300);
             taskCompletionSource.SetException(exception);
 
-            try
-            {
-                await receiveTask;
-            }
-            catch (InvalidOperationException ex)
-            {
-                _transport.Verify();
-
-                _transport.Verify(
-                    t => t.CloseAsync(It.IsAny<CancellationToken>()),
-                    Times.Once());
-
-                throw;
-            }
+            // Assert
+            await receiveTask.ShouldThrowAsync<InvalidOperationException>();
+            _transport.Verify();
+            _transport.Verify(
+                t => t.CloseAsync(It.IsAny<CancellationToken>()),
+                Times.Once());    
         }
 
         [Test]
@@ -1502,7 +1475,6 @@ namespace Lime.Protocol.UnitTests.Network
 
         [Test]
         [Category("Dispose")]
-        [ExpectedException(typeof(TaskCanceledException))]
         public async Task Dispose_ReceiveMessageCalled_ThrowsTaskCancelledException()
         {
             var disposableTransport = _transport.As<IDisposable>();
@@ -1523,12 +1495,11 @@ namespace Lime.Protocol.UnitTests.Network
                 t => t.Dispose(),
                 Times.Once());
             
-            await receiveMessageTask;
+            receiveMessageTask.ShouldThrow<TaskCanceledException>();
         }
 
         [Test]
         [Category("Dispose")]
-        [ExpectedException(typeof(TaskCanceledException))]
         public async Task Dispose_ReceiveCommandCalled_ThrowsTaskCancelledException()
         {
             var disposableTransport = _transport.As<IDisposable>();
@@ -1549,12 +1520,11 @@ namespace Lime.Protocol.UnitTests.Network
                 t => t.Dispose(),
                 Times.Once());
 
-            await receiveCommandTask;
+            receiveCommandTask.ShouldThrow<TaskCanceledException>();
         }
 
         [Test]
         [Category("Dispose")]
-        [ExpectedException(typeof(TaskCanceledException))]
         public async Task Dispose_ReceiveNotificationCalled_ThrowsTaskCancelledException()
         {
             var disposableTransport = _transport.As<IDisposable>();
@@ -1575,12 +1545,11 @@ namespace Lime.Protocol.UnitTests.Network
                 t => t.Dispose(),
                 Times.Once());
 
-            await receiveNotificationTask;
+            receiveNotificationTask.ShouldThrow<TaskCanceledException>();
         }
 
         [Test]
         [Category("Dispose")]
-        [ExpectedException(typeof(TaskCanceledException))]
         public async Task Dispose_ReceiveSessionCalled_ThrowsTaskCancelledException()
         {
             var disposableTransport = _transport.As<IDisposable>();
@@ -1601,7 +1570,7 @@ namespace Lime.Protocol.UnitTests.Network
                 t => t.Dispose(),
                 Times.Once());
 
-            await receiveSessionTask;
+            receiveSessionTask.ShouldThrow<TaskCanceledException>();
         }
 
 

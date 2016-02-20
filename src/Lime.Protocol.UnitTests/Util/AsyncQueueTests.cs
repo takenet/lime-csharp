@@ -4,6 +4,7 @@ using NUnit.Framework;
 using Lime.Protocol.Util;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using Shouldly;
 
 namespace Lime.Protocol.UnitTests.Util
 {
@@ -176,16 +177,16 @@ namespace Lime.Protocol.UnitTests.Util
 
         [Test]
         [Category("Dequeue")]
-        [ExpectedException(typeof(InvalidOperationException))]
         public void Dequeue_PromisesLimitReached_ThrowsInvalidOperationException()
         {
             var target = GetTarget<string>(
                 promisesLimit: 2);
             var cancellationToken = Dummy.CreateCancellationToken();
 
-            var promiseTask1 = target.ReceiveAsync(cancellationToken);
-            var promiseTask2 = target.ReceiveAsync(cancellationToken);
-            var promiseTask3 = target.ReceiveAsync(cancellationToken);
+            target.ReceiveAsync(cancellationToken);
+            target.ReceiveAsync(cancellationToken);
+            Should.Throw<InvalidOperationException>( () => 
+                target.ReceiveAsync(cancellationToken));
         }
 
         [Test]

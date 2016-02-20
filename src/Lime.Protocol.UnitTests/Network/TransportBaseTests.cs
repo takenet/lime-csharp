@@ -6,6 +6,7 @@ using Moq;
 using System.Threading.Tasks;
 using System.Threading;
 using System.Collections.Generic;
+using Shouldly;
 
 namespace Lime.Protocol.UnitTests.Network
 {
@@ -68,15 +69,15 @@ namespace Lime.Protocol.UnitTests.Network
 
         [Test]
         [Category("SetCompressionAsync")]
-        [ExpectedException(typeof(NotSupportedException))]
-        public async Task SetCompressionAsync_GZipCompression_ThrowsNotSupportedException()
+        public void SetCompressionAsync_GZipCompression_ThrowsNotSupportedException()
         {
+            // Arrange
             var target = GetTarget();
-
             var compression = SessionCompression.GZip;
             var cancellationToken = CancellationToken.None;
 
-            await target.SetCompressionAsync(compression, cancellationToken);
+            // Act
+            Should.Throw<NotSupportedException>(() => target.SetCompressionAsync(compression, cancellationToken));
         }
 
         #endregion
@@ -112,15 +113,16 @@ namespace Lime.Protocol.UnitTests.Network
 
         [Test]
         [Category("SetEncryptionAsync")]
-        [ExpectedException(typeof(NotSupportedException))]
-        public async Task SetEncryptionAsync_TLSEncryption_ThrowsNotSupportedException()
+        public void SetEncryptionAsync_TLSEncryption_ThrowsNotSupportedException()
         {
+            // Arrange
             var target = GetTarget();
-
             var encryption = SessionEncryption.TLS;
             var cancellationToken = CancellationToken.None;
 
-            await target.SetEncryptionAsync(encryption, cancellationToken);
+            // Act
+            Should.Throw<NotSupportedException>(() =>
+                target.SetEncryptionAsync(encryption, cancellationToken));
         }
 
         #endregion
