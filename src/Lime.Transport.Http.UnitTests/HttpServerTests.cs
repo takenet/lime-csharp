@@ -9,13 +9,11 @@ using System.Threading;
 using System.Threading.Tasks;
 using Lime.Protocol;
 using Lime.Protocol.UnitTests;
-using Lime.Transport.Http;
-using NUnit.Framework;
+using Xunit;
 using Shouldly;
 
 namespace Lime.Transport.Http.UnitTests
-{
-    [TestFixture]
+{    
     public class HttpServerTests
     {
         public string Path { get; set; }
@@ -69,10 +67,8 @@ namespace Lime.Transport.Http.UnitTests
 
         public Lazy<HttpServer> Target { get; set; }
 
-
-
-        [SetUp]
-        public void Arrange()
+        
+        public HttpServerTests()
         {
             Path = "/" + Dummy.CreateRandomString(15);
             Port = 50000 + Dummy.CreateRandomInt(1000);            
@@ -112,7 +108,7 @@ namespace Lime.Transport.Http.UnitTests
             Target = new Lazy<HttpServer>(() => new HttpServer(Prefixes, AuthenticationSchemes));
         }
 
-        [Test]
+        [Fact]
         public void Start_LocalUri_ListensToAddress()
         {
             // Act
@@ -122,7 +118,7 @@ namespace Lime.Transport.Http.UnitTests
             TcpClient.Connect("localhost", Port);            
         }
 
-        [Test]
+        [Fact]
         public void Stop_LocalUri_StopsListening()
         {
             // Arrange
@@ -143,7 +139,7 @@ namespace Lime.Transport.Http.UnitTests
             }            
         }
 
-        [Test]
+        [Fact]
         public async Task AcceptRequestAsync_GetRequest_ReturnsHttpRequest()
         {
             // Arrange
@@ -166,7 +162,7 @@ namespace Lime.Transport.Http.UnitTests
             actual.QueryString.Get("value2").ShouldBe(QueryStringValue2.ToString());
         }
 
-        [Test]
+        [Fact]
         public async Task AcceptRequestAsync_PostRequestNoId_ReturnsHttpRequestWithBody()
         {
             // Arrange
@@ -190,7 +186,7 @@ namespace Lime.Transport.Http.UnitTests
             actual.ContentType.ShouldBe(RequestBodyMediaType);
         }
 
-        [Test]
+        [Fact]
         public async Task AcceptRequestAsync_CancelRequest_ThrowsTaskCanceledException()
         {
             // Arrange
@@ -203,7 +199,7 @@ namespace Lime.Transport.Http.UnitTests
             acceptRequestTask.ShouldThrowAsync<TaskCanceledException>();
         }
 
-        [Test]
+        [Fact]
         public async Task SubmitResponseAsync_ExistingCorrelationId_CompletesRequest()
         {
             // Arrange
@@ -238,7 +234,7 @@ namespace Lime.Transport.Http.UnitTests
             responseBody.ShouldBe(ResponseBody);
         }
 
-        [Test]
+        [Fact]
         public async Task SubmitResponseAsync_InvalidCorrelationId_ThrowsArgumentException()
         {
             // Act

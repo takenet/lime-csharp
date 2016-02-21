@@ -9,16 +9,15 @@ using Lime.Messaging.Resources;
 using Lime.Protocol;
 using Lime.Protocol.Serialization;
 using Lime.Protocol.UnitTests;
-using Lime.Transport.Http;
 using Lime.Transport.Http.Processors;
 using Lime.Transport.Http.Serialization;
-using NUnit.Framework;
+using Xunit;
 using Moq;
 using Shouldly;
 
 namespace Lime.Transport.Http.UnitTests.Processors
 {
-    [TestFixture]
+    
     public class SendCommandHttpProcessorTests
     {        
         public Mock<IPrincipal> Principal { get; set; }
@@ -57,8 +56,7 @@ namespace Lime.Transport.Http.UnitTests.Processors
 
         public SendCommandHttpProcessor Target { get; set; }
 
-        [SetUp]
-        public void Arrange()
+        public SendCommandHttpProcessorTests()
         {
             Principal = new Mock<IPrincipal>();
             PrincipalIdentity = new Mock<System.Security.Principal.IIdentity>();
@@ -94,7 +92,7 @@ namespace Lime.Transport.Http.UnitTests.Processors
         }
 
 
-        [Test]
+        [Fact]
         public async Task ProcessAsync_SuccessCommand_CallsTransportAndReturnsOKHttpResponse()
         {
             // Arrange
@@ -112,7 +110,7 @@ namespace Lime.Transport.Http.UnitTests.Processors
             DocumentSerializer.Verify(s => s.Serialize(It.IsAny<Document>()), Times.Never());
         }
 
-        [Test]
+        [Fact]
         public async Task ProcessAsync_ResourceSuccessCommand_CallsTransportAndReturnsOKHttpResponse()
         {
             // Arrange
@@ -136,7 +134,7 @@ namespace Lime.Transport.Http.UnitTests.Processors
 
         }
 
-        [Test]
+        [Fact]
         public async Task ProcessAsync_FailuresCommand_CallsTransportAndReturnsErrorHttpResponse()
         {
             // Arrange

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
@@ -6,27 +7,24 @@ using System.Threading.Tasks.Dataflow;
 using Lime.Protocol.Listeners;
 using Lime.Protocol.Network;
 using Moq;
-using NUnit.Framework;
+using Xunit;
 using Shouldly;
 
 namespace Lime.Protocol.UnitTests.Listeners
 {
-    [TestFixture]
-    public class DataflowChannelListenerTests
+    
+    public class DataflowChannelListenerTests : IDisposable
     {
-        protected Mock<IEstablishedReceiverChannel> _channel;
-        
+        protected Mock<IEstablishedReceiverChannel> _channel;        
         protected BlockingCollection<Message> _producedMessages;
         protected BlockingCollection<Notification> _producedNotifications;
         protected BlockingCollection<Command> _producedCommands;
-
         private BufferBlock<Message> _messageBufferBlock;        
         private BufferBlock<Notification> _notificationBufferBlock;
         private BufferBlock<Command> _commandBufferBlock;
         private CancellationTokenSource _cts;
 
-        [SetUp]
-        public void Setup()
+        public DataflowChannelListenerTests()
         {
             _channel = new Mock<IEstablishedReceiverChannel>();
             
@@ -53,9 +51,8 @@ namespace Lime.Protocol.UnitTests.Listeners
             _notificationBufferBlock = new BufferBlock<Notification>(options);
             _commandBufferBlock = new BufferBlock<Command>(options);
         }
-
-        [TearDown]
-        public void TearDown()
+        
+        public void Dispose()
         {
             _cts.Dispose();            
         }
@@ -68,7 +65,7 @@ namespace Lime.Protocol.UnitTests.Listeners
             return target;            
         }
         
-        [Test]
+        [Fact]
         public async Task Start_MessageReceived_SendsToBuffer()
         {
             // Arrange            
@@ -84,7 +81,7 @@ namespace Lime.Protocol.UnitTests.Listeners
             target.Stop();
         }
 
-        [Test]
+        [Fact]
         public async Task Start_MultipleMessagesReceived_SendsToBuffer()
         {
             // Arrange
@@ -111,7 +108,7 @@ namespace Lime.Protocol.UnitTests.Listeners
             }
         }
 
-        [Test]
+        [Fact]
         public async Task Start_CompletedMessageBufferBlock_StopsConsumerTask()
         {
             // Arrange            
@@ -126,7 +123,7 @@ namespace Lime.Protocol.UnitTests.Listeners
             (await target.MessageListenerTask).ShouldBe(message);
         }
 
-        [Test]
+        [Fact]
         public async Task Start_NotificationReceived_SendsToBuffer()
         {
             // Arrange            
@@ -142,7 +139,7 @@ namespace Lime.Protocol.UnitTests.Listeners
             target.Stop();            
         }
 
-        [Test]
+        [Fact]
         public async Task Start_MultipleNotificationsReceived_SendsToBuffer()
         {
             // Arrange
@@ -169,7 +166,7 @@ namespace Lime.Protocol.UnitTests.Listeners
             }            
         }
 
-        [Test]
+        [Fact]
         public async Task Start_CompletedNotificationBufferBlock_StopsConsumerTask()
         {
             // Arrange            
@@ -184,7 +181,7 @@ namespace Lime.Protocol.UnitTests.Listeners
             (await target.NotificationListenerTask).ShouldBe(notification);
         }
         
-        [Test]
+        [Fact]
         public async Task Start_CommandReceived_SendsToBuffer()
         {
             // Arrange            
@@ -200,7 +197,7 @@ namespace Lime.Protocol.UnitTests.Listeners
             target.Stop();
         }
 
-        [Test]
+        [Fact]
         public async Task Start_MultipleCommandsReceived_SendsToBuffer()
         {
             // Arrange
@@ -227,7 +224,7 @@ namespace Lime.Protocol.UnitTests.Listeners
             }
         }
 
-        [Test]
+        [Fact]
         public async Task Start_CompletedCommandBufferBlock_StopsConsumerTask()
         {
             // Arrange            

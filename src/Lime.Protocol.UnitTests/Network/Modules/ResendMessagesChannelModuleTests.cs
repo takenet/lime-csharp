@@ -1,19 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Lime.Protocol.Network;
 using Lime.Protocol.Network.Modules;
 using Moq;
-using NUnit.Core;
-using NUnit.Framework;
+using Xunit;
 using Shouldly;
 
 namespace Lime.Protocol.UnitTests.Network.Modules
-{
-    [TestFixture]
+{    
     public class ResendMessagesChannelModuleTests
     {
         private Mock<ITransport> _transport;
@@ -22,13 +18,12 @@ namespace Lime.Protocol.UnitTests.Network.Modules
         private TimeSpan _resendMessageInterval;
         private TimeSpan _resendMessageIntervalWithSafeMargin;
         private bool _filterByDestination;
-        private CancellationToken _cancellationToken;
-        
+        private CancellationToken _cancellationToken;        
 
         #region Scenario
 
-        [SetUp]
-        public void Setup()
+        
+        public ResendMessagesChannelModuleTests()
         {
             _transport = new Mock<ITransport>();
             _transport.Setup(t => t.IsConnected).Returns(true);
@@ -39,14 +34,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
             _cancellationToken = CancellationToken.None;
             _filterByDestination = false;
         }
-
-
-        [TearDown]
-        public void Teardown()
-        {
-            _channel = null;
-            _transport = null;
-        }
+       
 
         #endregion
 
@@ -73,7 +61,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
             return target;
         }
 
-        [Test]
+        [Fact]
         public async Task OnSending_MessageWithoutNotification_ShouldResendAfterInterval()
         {
             // Arrange
@@ -91,7 +79,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
             _channel.Verify(c => c.SendMessageAsync(message), Times.Exactly(1));            
         }
 
-        [Test]
+        [Fact]
         public async Task OnSending_MultipleMessagesWithoutNotification_ShouldResendAfterInterval()
         {
             // Arrange
@@ -122,7 +110,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
             }                            
         }
 
-        [Test]
+        [Fact]
         public async Task OnSending_MessageWithoutNotification_ShouldResendUntilLimit()
         {
             // Arrange
@@ -140,7 +128,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
         }
 
 
-        [Test]
+        [Fact]
         public async Task OnSending_MultipleMessagesWithoutNotification_ShouldResendUntilLimit()
         {
             // Arrange
@@ -170,7 +158,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
             }
         }
 
-        [Test]
+        [Fact]
         public async Task OnSending_ReceivedNotificationAfterSend_ShouldNotResend()
         {
             // Arrange
@@ -192,7 +180,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
             _channel.Verify(c => c.SendMessageAsync(message), Times.Never);
         }
 
-        [Test]
+        [Fact]
         public async Task OnSending_ReceivedNotificationAfterFirstResend_ShouldNotResendAgain()
         {
             // Arrange
@@ -215,7 +203,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
             _channel.Verify(c => c.SendMessageAsync(message), Times.Exactly(1));
         }
 
-        [Test]
+        [Fact]
         public async Task OnSending_ReceivedNotificationAFromDifferentSenderWhenFilteringByDestination_ShouldResendUntilLimit()
         {
             // Arrange
@@ -239,7 +227,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
         }
 
 
-        [Test]
+        [Fact]
         public async Task OnSending_ReceivedNotificationAfterSecondResend_ShouldNotResendAgain()
         {
             // Arrange
@@ -262,7 +250,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
             _channel.Verify(c => c.SendMessageAsync(message), Times.Exactly(2));
         }
 
-        [Test]
+        [Fact]
         public async Task OnStateChanged_EstablishedToFinished_ShouldNotResend()
         {
             // Arrange
@@ -281,7 +269,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
         }
 
 
-        [Test]
+        [Fact]
         public async Task OnStateChanged_EstablishedToFinishedAfterSecondResend_ShouldNotResendAgain()
         {
             // Arrange
@@ -300,7 +288,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
             _channel.Verify(c => c.SendMessageAsync(message), Times.Exactly(2));
         }
 
-        [Test]
+        [Fact]
         public async Task OnStateChanged_EstablishedToFailed_ShouldNotResend()
         {
             // Arrange
@@ -318,7 +306,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
             _channel.Verify(c => c.SendMessageAsync(message), Times.Never);
         }
 
-        [Test]
+        [Fact]
         public async Task OnStateChanged_EstablishedToFailedAfterSecondResend_ShouldNotResendAgain()
         {
             // Arrange
@@ -337,7 +325,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
             _channel.Verify(c => c.SendMessageAsync(message), Times.Exactly(2));
         }
 
-        [Test]
+        [Fact]
         public void Bind_AlreadyBound_ThrowInvalidOperationException()
         {
             // Arrange
@@ -349,7 +337,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
             action.ShouldThrow<InvalidOperationException>();
         }
 
-        [Test]
+        [Fact]
         public void Unbind_NotBound_ThrowInvalidOperationException()
         {
             // Arrange
@@ -360,7 +348,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
             action.ShouldThrow<InvalidOperationException>();
         }
 
-        [Test]
+        [Fact]
         public async Task Unbind_PendingMessage_ShouldNotResend()
         {
             // Arrange
@@ -379,7 +367,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
         }
 
 
-        [Test]
+        [Fact]
         public async Task Unbind_MultiplePendingMessages_ShouldNotResend()
         {
             // Arrange
@@ -411,7 +399,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
             }
         }
 
-        [Test]
+        [Fact]
         public async Task Unbind_PendingMessageAndBoundToNewChannel_SendsToBoundChannel()
         {
             // Arrange
@@ -432,7 +420,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
             channel2Mock.Verify(c => c.SendMessageAsync(message), Times.Once);
         }
 
-        [Test]
+        [Fact]
         public async Task Unbind_MultiplePendingMessagesAndBoundToNewChannel_SendsToBoundChannel()
         {
             // Arrange

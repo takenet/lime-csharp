@@ -5,15 +5,14 @@ using System.Threading;
 using Lime.Protocol;
 using Lime.Protocol.Network;
 using Lime.Protocol.UnitTests;
-using Lime.Transport.Http;
 using Lime.Transport.Http.Storage;
-using NUnit.Framework;
+using Xunit;
 using Moq;
 using Shouldly;
 
 namespace Lime.Transport.Http.UnitTests
 {
-    [TestFixture]
+    
     public class HttpTransportProviderTests
     {
         public CancellationToken CancellationToken { get; private set; }
@@ -42,8 +41,7 @@ namespace Lime.Transport.Http.UnitTests
 
         public Lazy<HttpTransportProvider> Target { get; set; }
 
-        [SetUp]
-        public void Arrange()
+        public HttpTransportProviderTests()
         {
             CancellationToken = TimeSpan.FromSeconds(5).ToCancellationToken();
 
@@ -66,7 +64,7 @@ namespace Lime.Transport.Http.UnitTests
         }
 
 
-        [Test]
+        [Fact]
         public void GetTransport_NewSessionCacheInstance_ReturnsAndCacheTransport()
         {
             // Act
@@ -77,7 +75,7 @@ namespace Lime.Transport.Http.UnitTests
             second.ShouldBe(first);
         }
 
-        [Test]
+        [Fact]
         public void GetTransport_CacheInstanceAndCloseTransport_ReturnsNewTransport()
         {
             // Act
@@ -89,7 +87,7 @@ namespace Lime.Transport.Http.UnitTests
             second.ShouldNotBe(first);
         }
 
-        [Test]
+        [Fact]
         public void GetTransport_DoNotCacheInstance_ReturnsNewTransport()
         {
             CacheInstance = false;
@@ -102,7 +100,7 @@ namespace Lime.Transport.Http.UnitTests
             second.ShouldNotBe(first);
         }
 
-        [Test]
+        [Fact]
         public void GetTransport_CacheFirstAndDoNotCacheAfter_ReturnsCachedAndNewTransport()
         {
             // Act
@@ -115,7 +113,7 @@ namespace Lime.Transport.Http.UnitTests
             third.ShouldNotBe(second);
         }
 
-        [Test]
+        [Fact]
         public void ExpirationTimer_Elapsed_ExpiredTransport_CloseTransport()
         {
             // Arrange

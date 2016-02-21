@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Linq;
-using NUnit.Framework;
+using Xunit;
 using Lime.Protocol.Network;
-using Moq;
 using System.Threading.Tasks;
 using System.Threading;
 using System.Collections.Generic;
@@ -10,7 +9,7 @@ using Shouldly;
 
 namespace Lime.Protocol.UnitTests.Network
 {
-    [TestFixture]
+    
     public class TransportBaseTests
     {
         private TestTransportBase GetTarget()
@@ -18,8 +17,8 @@ namespace Lime.Protocol.UnitTests.Network
             return new TestTransportBase();
         }
 
-        [Test]
-        [Category("CloseAsync")]
+        [Fact]
+        [Trait("Category", "CloseAsync")]
         public async Task CloseAsync_Default_RaisesClosingAndCallsPerformCloseAndRaisesClosed()
         {
             var closingRaised = false;
@@ -33,28 +32,28 @@ namespace Lime.Protocol.UnitTests.Network
             var cancellationToken = CancellationToken.None;
             await target.CloseAsync(cancellationToken);
 
-            Assert.IsTrue(closingRaised);
-            Assert.IsTrue(target.PerformCloseAsyncInvoked);
-            Assert.IsTrue(target.PerformCloseAsynCancellationToken == cancellationToken);
-            Assert.IsTrue(closedRaised);
+            Assert.True(closingRaised);
+            Assert.True(target.PerformCloseAsyncInvoked);
+            Assert.True(target.PerformCloseAsynCancellationToken == cancellationToken);
+            Assert.True(closedRaised);
         }
 
-        [Test]
-        [Category("GetSupportedCompression")]
+        [Fact]
+        [Trait("Category", "GetSupportedCompression")]
         public void GetSupportedCompression_Default_GetsSessionCompressionNone()
         {
             var target = GetTarget();
 
             var supportedCompression = target.GetSupportedCompression();
 
-            Assert.IsTrue(supportedCompression.Length == 1);
-            Assert.IsTrue(supportedCompression.Contains(SessionCompression.None));
+            Assert.True(supportedCompression.Length == 1);
+            Assert.True(supportedCompression.Contains(SessionCompression.None));
         }
 
         #region SetCompressionAsync
 
-        [Test]
-        [Category("SetCompressionAsync")]
+        [Fact]
+        [Trait("Category", "SetCompressionAsync")]
         public async Task SetCompressionAsync_NoneCompression_SetsProperty()
         {
             var target = GetTarget();
@@ -64,11 +63,11 @@ namespace Lime.Protocol.UnitTests.Network
 
             await target.SetCompressionAsync(compression, cancellationToken);
 
-            Assert.IsTrue(target.Compression == compression);
+            Assert.True(target.Compression == compression);
         }
 
-        [Test]
-        [Category("SetCompressionAsync")]
+        [Fact]
+        [Trait("Category", "SetCompressionAsync")]
         public void SetCompressionAsync_GZipCompression_ThrowsNotSupportedException()
         {
             // Arrange
@@ -83,22 +82,22 @@ namespace Lime.Protocol.UnitTests.Network
         #endregion
 
 
-        [Test]
-        [Category("GetSupportedEncryption")]
+        [Fact]
+        [Trait("Category", "GetSupportedEncryption")]
         public void GetSupportedEncryption_Default_GetsSessionEncryptionNone()
         {
             var target = GetTarget();
 
             var supportedEncryption = target.GetSupportedEncryption();
 
-            Assert.IsTrue(supportedEncryption.Length == 1);
-            Assert.IsTrue(supportedEncryption.Contains(SessionEncryption.None));
+            Assert.True(supportedEncryption.Length == 1);
+            Assert.True(supportedEncryption.Contains(SessionEncryption.None));
         }
 
         #region SetEncryptionAsync
 
-        [Test]
-        [Category("SetEncryptionAsync")]
+        [Fact]
+        [Trait("Category", "SetEncryptionAsync")]
         public async Task SetEncryptionAsync_NoneEncryption_SetsProperty()
         {
             var target = GetTarget();
@@ -108,11 +107,11 @@ namespace Lime.Protocol.UnitTests.Network
 
             await target.SetEncryptionAsync(encryption, cancellationToken);
 
-            Assert.IsTrue(target.Encryption == encryption);
+            Assert.True(target.Encryption == encryption);
         }
 
-        [Test]
-        [Category("SetEncryptionAsync")]
+        [Fact]
+        [Trait("Category", "SetEncryptionAsync")]
         public void SetEncryptionAsync_TLSEncryption_ThrowsNotSupportedException()
         {
             // Arrange
@@ -129,8 +128,8 @@ namespace Lime.Protocol.UnitTests.Network
 
         #region OnClosingAsync
 
-        [Test]
-        [Category("OnClosingAsync")]
+        [Fact]
+        [Trait("Category", "OnClosingAsync")]
         public async Task OnClosingAsync_AnyException_RaisesClosing()
         {
             var target = GetTarget();
@@ -140,11 +139,11 @@ namespace Lime.Protocol.UnitTests.Network
 
             await target.CallsOnClosingAsync();
 
-            Assert.IsTrue(closingRaised);
+            Assert.True(closingRaised);
         }
 
-        [Test]
-        [Category("OnClosingAsync")]
+        [Fact]
+        [Trait("Category", "OnClosingAsync")]
         public async Task OnClosingAsync_MultipleSubscribersOnClosingEvent_AwaitsForDeferral()
         {
             var target = GetTarget();
@@ -172,16 +171,16 @@ namespace Lime.Protocol.UnitTests.Network
 
             await target.CallsOnClosingAsync();
 
-            Assert.IsTrue(closingSubscriber1Raised);
-            Assert.IsTrue(closingSubscriber2Raised);
+            Assert.True(closingSubscriber1Raised);
+            Assert.True(closingSubscriber2Raised);
         }
 
         #endregion
 
         #region OnClosedAsync
 
-        [Test]
-        [Category("OnClosed")]
+        [Fact]
+        [Trait("Category", "OnClosed")]
         public void OnClosed_AnyException_RaisesClosed()
         {
             var target = GetTarget();
@@ -191,7 +190,7 @@ namespace Lime.Protocol.UnitTests.Network
 
             target.CallsOnClosed();
 
-            Assert.IsTrue(closedRaised);
+            Assert.True(closedRaised);
         }
 
         #endregion

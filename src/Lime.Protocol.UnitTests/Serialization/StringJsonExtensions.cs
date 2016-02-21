@@ -1,10 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using Lime.Protocol.Serialization;
-using System.Collections;
 using System.Globalization;
 
 namespace Lime.Protocol.UnitTests.Serialization

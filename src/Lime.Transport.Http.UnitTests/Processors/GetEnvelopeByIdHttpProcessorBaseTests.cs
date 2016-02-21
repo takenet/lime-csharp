@@ -5,16 +5,15 @@ using System.Threading;
 using System.Threading.Tasks;
 using Lime.Protocol;
 using Lime.Protocol.UnitTests;
-using Lime.Transport.Http;
 using Lime.Transport.Http.Processors;
 using Lime.Transport.Http.Storage;
-using NUnit.Framework;
+using Xunit;
 using Moq;
 using Shouldly;
 
 namespace Lime.Transport.Http.UnitTests.Processors
 {
-    [TestFixture]
+    
     public class GetEnvelopeByIdHttpProcessorBaseTests
     {
         public Mock<IEnvelopeStorage<Envelope>> EnvelopeStorage { get; set; }
@@ -43,9 +42,8 @@ namespace Lime.Transport.Http.UnitTests.Processors
         public CancellationToken CancellationToken { get; set; }
 
         public MockGetEnvelopeByIdHttpProcessorBase Target { get; private set; }
-
-        [SetUp]
-        public void Arrange()
+        
+        public GetEnvelopeByIdHttpProcessorBaseTests()
         {
             EnvelopeStorage = new Mock<IEnvelopeStorage<Envelope>>();
             Principal = new Mock<IPrincipal>();
@@ -68,7 +66,7 @@ namespace Lime.Transport.Http.UnitTests.Processors
             Target.GetEnvelopeResponseFunc = (m, r) => GetMessageHttpResponse;                      
         }
 
-        [Test]
+        [Fact]
         public async Task ProcessAsync_ExistingId_GetsFromStorageAndReturnsOKHttpResponse()
         {
             // Arrange
@@ -92,7 +90,7 @@ namespace Lime.Transport.Http.UnitTests.Processors
             actual.Headers[Constants.ENVELOPE_PP_HEADER].ShouldBe(Envelope.Pp.ToString());
         }
 
-        [Test]
+        [Fact]
         public async Task ProcessAsync_NonExistingId_ReturnsNotFoundHttpResponse()
         {
             // Arrange
@@ -110,7 +108,7 @@ namespace Lime.Transport.Http.UnitTests.Processors
             actual.StatusCode.ShouldBe(HttpStatusCode.NotFound);
         }
 
-        [Test]
+        [Fact]
         public async Task ProcessAsync_RequestUriWithoutId_RetunsBadRequestHttpResponse()
         {
             // Arrange
@@ -125,7 +123,7 @@ namespace Lime.Transport.Http.UnitTests.Processors
             EnvelopeStorage.Verify();
         }
 
-        [Test]
+        [Fact]
         public async Task ProcessAsync_InvalidPrincipalNameFormat_RetunsBadRequestHttpResponse()
         {
             // Arrange

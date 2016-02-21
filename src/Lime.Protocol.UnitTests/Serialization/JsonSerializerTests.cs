@@ -1,14 +1,14 @@
 ﻿using Lime.Protocol.Serialization;
-using NUnit.Framework;
+using Xunit;
 using Shouldly;
 using System;
 
 namespace Lime.Protocol.UnitTests.Serialization
 {
-    [TestFixture]
+    
     public class JsonSerializerTests
     {
-        [Test]
+        [Fact]
         public void Serialize_RandomObject_ReturnsValidJson()
         {
             // Arrange
@@ -31,7 +31,7 @@ namespace Lime.Protocol.UnitTests.Serialization
             json.ContainsJsonProperty("date", date).ShouldBe(true);
         }
 
-        [Test]
+        [Fact]
         public void Serialize_CollectionOfRandomObject_ReturnsValidJson()
         {
             // Arrange
@@ -58,7 +58,7 @@ namespace Lime.Protocol.UnitTests.Serialization
             json.ContainsJsonProperty("double", 1.12d).ShouldBe(true);
         }
 
-        [Test]
+        [Fact]
         public void Deserialize_RandomObject_ReturnsValidInstance()
         {
             // Arrange
@@ -74,7 +74,7 @@ namespace Lime.Protocol.UnitTests.Serialization
             document.Date.ShouldBe(DateTime.Parse(dateString));
         }
 
-        [Test]
+        [Fact]
         public void Deserialize_RandomObjectWithNullable_ReturnsValidInstance()
         {
             // Arrange

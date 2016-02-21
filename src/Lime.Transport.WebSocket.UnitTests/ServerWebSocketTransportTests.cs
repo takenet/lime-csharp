@@ -12,13 +12,13 @@ using Lime.Protocol.Serialization;
 using Lime.Protocol.Serialization.Newtonsoft;
 using Lime.Protocol.UnitTests;
 using Moq;
-using NUnit.Framework;
+using Xunit;
 using Shouldly;
 
 namespace Lime.Transport.WebSocket.UnitTests
 {
-    [TestFixture]
-    public class ServerWebSocketTransportTests
+    
+    public class ServerWebSocketTransportTests : IDisposable
     {
         public async Task<ServerWebSocketTransport> GetTargetAsync()
         {
@@ -41,8 +41,7 @@ namespace Lime.Transport.WebSocket.UnitTests
 
         public ClientWebSocketTransport Client { get; set; }
 
-        [SetUp]
-        public void SetUp()
+        public ServerWebSocketTransportTests()
         {
             ListenerUri = new Uri("ws://localhost:8081");
             EnvelopeSerializer = new JsonNetSerializer();
@@ -52,17 +51,16 @@ namespace Lime.Transport.WebSocket.UnitTests
             Client = new ClientWebSocketTransport(EnvelopeSerializer);
         }
 
-        [TearDown]
-        public void TearDown()
+        public void Dispose()
         {
             try
             {
-                Listener.StopAsync().Wait();
+                Listener.StopAsync().Wait(CancellationToken);
             }
             catch (AggregateException) { }
         }
 
-        [Test]
+        [Fact]
         public async Task SendAsync_EstablishedSessionEnvelope_ClientShouldReceive()
         {
             // Arrange            
@@ -93,7 +91,7 @@ namespace Lime.Transport.WebSocket.UnitTests
             actualSession.Metadata.ShouldBe(session.Metadata);
         }
 
-        [Test]
+        [Fact]
         public async Task SendAsync_FullSessionEnvelope_ClientShouldReceive()
         {
             // Arrange            
@@ -134,7 +132,7 @@ namespace Lime.Transport.WebSocket.UnitTests
             actualSession.Metadata.ShouldBe(session.Metadata);
         }
 
-        [Test]
+        [Fact]
         public async Task SendAsync_DispatchedNotification_ClientShouldReceive()
         {
             // Arrange            
@@ -158,7 +156,7 @@ namespace Lime.Transport.WebSocket.UnitTests
             actualNotification.Metadata.ShouldBe(notification.Metadata);
         }
 
-        [Test]
+        [Fact]
         public async Task SendAsync_MultipleParallelNotifications_ClientShouldReceive()
         {
             // Arrange            
@@ -210,7 +208,7 @@ namespace Lime.Transport.WebSocket.UnitTests
         }
 
 
-        [Test]
+        [Fact]
         public async Task ReceiveAsync_NewSessionEnvelope_ServerShouldReceive()
         {
             // Arrange            
@@ -241,7 +239,7 @@ namespace Lime.Transport.WebSocket.UnitTests
             actualSession.Metadata.ShouldBe(session.Metadata);
         }
 
-        [Test]
+        [Fact]
         public async Task ReceiveAsync_FullSessionEnvelope_ServerShouldReceive()
         {
             // Arrange            
@@ -282,7 +280,7 @@ namespace Lime.Transport.WebSocket.UnitTests
             actualSession.Metadata.ShouldBe(session.Metadata);
         }
 
-        [Test]
+        [Fact]
         public async Task CloseAsync_ConnectedTransport_PerformClose()
         {
             // Arrange
@@ -297,7 +295,7 @@ namespace Lime.Transport.WebSocket.UnitTests
             try
             {
                 await target.SendAsync(session, CancellationToken); // Send something to assert is connected
-                Assert.Fail("Send was succeeded but an exception was expected");
+                throw new Exception("Send was succeeded but an exception was expected");
             }
             catch (Exception ex)
             {

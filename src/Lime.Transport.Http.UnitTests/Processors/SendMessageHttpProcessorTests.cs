@@ -10,15 +10,13 @@ using Lime.Protocol;
 using Lime.Protocol.Serialization;
 using Lime.Protocol.UnitTests;
 using Lime.Transport.Http.Processors;
-using Lime.Transport.Http;
-using Lime.Transport.Http.Processors;
-using NUnit.Framework;
+using Xunit;
 using Moq;
 using Shouldly;
 
 namespace Lime.Transport.Http.UnitTests.Processors
 {
-    [TestFixture]
+    
     public class SendMessageHttpProcessorTests
     {
         public Mock<IPrincipal> Principal { get; set; }
@@ -54,8 +52,7 @@ namespace Lime.Transport.Http.UnitTests.Processors
 
         public SendMessageHttpProcessor Target { get; set; }
 
-        [SetUp]
-        public void Arrange()
+        public SendMessageHttpProcessorTests()
         {
             Principal = new Mock<IPrincipal>();
             PrincipalIdentity = new Mock<System.Security.Principal.IIdentity>();
@@ -86,7 +83,7 @@ namespace Lime.Transport.Http.UnitTests.Processors
             Target = new SendMessageHttpProcessor();
         }
 
-        [Test]
+        [Fact]
         public async Task ProcessAsync_SyncRequestDispatchedNotification_CallsTransportAndReturnsCreatedHttpResponse()
         {
             // Arrange
@@ -104,7 +101,7 @@ namespace Lime.Transport.Http.UnitTests.Processors
             TransportSession.Verify();
         }
 
-        [Test]
+        [Fact]
         public async Task ProcessAsync_SyncRequestFailedNotification_CallsTransportAndReturnsErrorHttpResponse()
         {
             // Arrange
@@ -123,7 +120,7 @@ namespace Lime.Transport.Http.UnitTests.Processors
             TransportSession.Verify();
         }
 
-        [Test]
+        [Fact]
         public async Task ProcessAsync_AsyncRequest_CallsTransportAndReturnsAcceptedHttpResponse()
         {
             // Arrange

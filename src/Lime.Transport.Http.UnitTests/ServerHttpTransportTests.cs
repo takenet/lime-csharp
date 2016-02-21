@@ -7,7 +7,7 @@ using Lime.Protocol.Network;
 using Lime.Protocol.Security;
 using Lime.Protocol.UnitTests;
 using Lime.Transport.Http.Storage;
-using NUnit.Framework;
+using Xunit;
 using Moq;
 using Shouldly;
 
@@ -16,7 +16,7 @@ namespace Lime.Transport.Http.UnitTests
     /// <summary>
     /// Summary description for ServerHttpTransportTests
     /// </summary>
-    [TestFixture]
+    
     public class ServerHttpTransportTests
     {
 
@@ -65,9 +65,7 @@ namespace Lime.Transport.Http.UnitTests
         public Session FailedSession { get; set; }
 
 
-
-        [SetUp]
-        public void Arrange()
+        public ServerHttpTransportTests()
         {
             Identity = Dummy.CreateIdentity();
             Authentication = Dummy.CreateAuthentication(AuthenticationScheme.Plain);
@@ -128,7 +126,7 @@ namespace Lime.Transport.Http.UnitTests
                 new ServerHttpTransport(Identity, Authentication, UseHttps, MessageStorage.Object, NotificationStorage.Object, ExpirationInactivityInternal));
         }
 
-        [Test]
+        [Fact]
         public async Task SubmitAsync_ValidEnvelope_SendsToBuffer()
         {            
             // Arrange
@@ -143,7 +141,7 @@ namespace Lime.Transport.Http.UnitTests
             Target.Value.Expiration.ShouldBeGreaterThanOrEqualTo(now.Add(ExpirationInactivityInternal));
         }
 
-        [Test]
+        [Fact]
         public async Task SubmitAsync_NullEnvelope_ThrowsArgumentNullException()
         {
             // Arrange            
@@ -154,7 +152,7 @@ namespace Lime.Transport.Http.UnitTests
         }
 
 
-        [Test]
+        [Fact]
         public async Task SubmitAsync_CompletedBuffer_ThrowsInvalidOperationException()
         {
             // Arrange            
@@ -164,7 +162,7 @@ namespace Lime.Transport.Http.UnitTests
             await Target.Value.SubmitAsync(TextMessage, CancellationToken).ShouldThrowAsync<InvalidOperationException>();
         }
 
-        [Test]
+        [Fact]
         public async Task ProcessMessageAsync_ValidMessage_ReturnsNotification()
         {
             // Arrange
@@ -187,7 +185,7 @@ namespace Lime.Transport.Http.UnitTests
             NotificationStorage.Verify(n => n.StoreEnvelopeAsync(It.IsAny<Identity>(), It.IsAny<Notification>()), Times.Once());
         }
 
-        [Test]
+        [Fact]
         public async Task ProcessMessageAsync_ValidMessageFailedNotification_ReturnsNotification()
         {
             // Arrange
@@ -205,7 +203,7 @@ namespace Lime.Transport.Http.UnitTests
             actual.ShouldBe(FailedNotification);
         }
 
-        [Test]
+        [Fact]
         public async Task ProcessMessageAsync_NullMessage_ThrowsArgumentNullException()
         {
             // Arrange
@@ -215,7 +213,7 @@ namespace Lime.Transport.Http.UnitTests
             await Target.Value.ProcessMessageAsync(message, WaitUntilEvent, CancellationToken).ShouldThrowAsync<ArgumentNullException>();
         }
 
-        [Test]
+        [Fact]
         public async Task ProcessMessageAsync_FireAndForgetMessage_ThrowsArgumentException()
         {
             // Arrange
@@ -225,7 +223,7 @@ namespace Lime.Transport.Http.UnitTests
             await Target.Value.ProcessMessageAsync(TextMessage, WaitUntilEvent, CancellationToken).ShouldThrowAsync<ArgumentException>();
         }
 
-        [Test]
+        [Fact]
         public async Task ProcessMessageAsync_DuplicateMessageId_ThrowsInvalidOperationException()
         {
             // Act
@@ -233,7 +231,7 @@ namespace Lime.Transport.Http.UnitTests
             await Target.Value.ProcessMessageAsync(TextMessage, WaitUntilEvent, CancellationToken).ShouldThrowAsync<InvalidOperationException>();
         }
 
-        [Test]
+        [Fact]
         public async Task ProcessMessageAsync_NoNotification_ThrowsOperationCanceledException()
         {
             // Arrange
@@ -243,7 +241,7 @@ namespace Lime.Transport.Http.UnitTests
             Target.Value.ProcessMessageAsync(TextMessage, WaitUntilEvent, CancellationToken).ShouldThrow<TaskCanceledException>();
         }
 
-        [Test]
+        [Fact]
         public async Task ProcessCommandAsync_ValidCommand_ReturnsResponse()
         {
             // Arrange
@@ -265,7 +263,7 @@ namespace Lime.Transport.Http.UnitTests
             NotificationStorage.Verify(n => n.StoreEnvelopeAsync(It.IsAny<Identity>(), It.IsAny<Notification>()), Times.Once());
         }
 
-        [Test]
+        [Fact]
         public async Task ProcessCommandAsync_NullCommand_ThrowsArgumentNullException()
         {
             // Arrange
@@ -275,7 +273,7 @@ namespace Lime.Transport.Http.UnitTests
             await Target.Value.ProcessCommandAsync(command, CancellationToken).ShouldThrowAsync<ArgumentNullException>();
         }
 
-        [Test]
+        [Fact]
         public async Task ProcessCommandAsync_EmptyIdCommand_ThrowsArgumentException()
         {
             // Arrange
@@ -285,7 +283,7 @@ namespace Lime.Transport.Http.UnitTests
             await Target.Value.ProcessCommandAsync(PresenceRequestCommand, CancellationToken).ShouldThrowAsync<ArgumentException>();
         }
 
-        [Test]
+        [Fact]
         public async Task ProcessCommandAsync_DuplicateCommandId_ThrowsInvalidOperationException()
         {
             // Act
@@ -293,7 +291,7 @@ namespace Lime.Transport.Http.UnitTests
             Target.Value.ProcessCommandAsync(PresenceRequestCommand, CancellationToken).ShouldThrow<InvalidOperationException>();
         }
 
-        [Test]
+        [Fact]
         public void ProcessCommandAsync_NoResponse_ThrowsOperationCanceledException()
         {
             // Arrange
@@ -303,7 +301,7 @@ namespace Lime.Transport.Http.UnitTests
             Target.Value.ProcessCommandAsync(PresenceRequestCommand, CancellationToken).ShouldThrow<OperationCanceledException>();
         }
 
-        [Test]
+        [Fact]
         public async Task ProcessCommandAsync_ResponseCommand_ThrowsArgumentException()
         {
             // Arrange
@@ -313,7 +311,7 @@ namespace Lime.Transport.Http.UnitTests
             await Target.Value.ProcessCommandAsync(PresenceRequestCommand, CancellationToken).ShouldThrowAsync<ArgumentException>();
         }
 
-        [Test]
+        [Fact]
         public async Task GetSessionAsync_FullSessionNegotiation_ReturnsSession()
         {
             // Act
@@ -334,7 +332,7 @@ namespace Lime.Transport.Http.UnitTests
             session2.State.ShouldBe(SessionState.Authenticating);            
         }
 
-        [Test]
+        [Fact]
         public async Task GetSessionAsync_AlreadyCompleted_ReturnsSession()
         {
             // Act
@@ -347,7 +345,7 @@ namespace Lime.Transport.Http.UnitTests
             actual.ShouldBe(EstablishedSession);
         }
 
-        [Test]
+        [Fact]
         public async Task FinishAsync_EstablishedSession_SendsSessionFinishing()
         {
             // Arrange
@@ -365,7 +363,7 @@ namespace Lime.Transport.Http.UnitTests
             session1.State.ShouldBe(SessionState.Finishing);
         }
 
-        [Test]
+        [Fact]
         public async Task FinishAsync_EstablishedSessionFinishingFailed_ThrowsLimeException()
         {
             // Arrange
@@ -390,7 +388,7 @@ namespace Lime.Transport.Http.UnitTests
             session1.State.ShouldBe(SessionState.Finishing);
         }
 
-        [Test]
+        [Fact]
         public async Task FinishAsync_EstablishedSessionFinishingFailedNoReason_ThrowsLimeException()
         {
             // Arrange
@@ -415,7 +413,7 @@ namespace Lime.Transport.Http.UnitTests
             session1.State.ShouldBe(SessionState.Finishing);
         }
 
-        [Test]
+        [Fact]
         public async Task FinishAsync_FailedSession_ThrowsInvalidOperationException()
         {
             // Arrange
@@ -425,14 +423,14 @@ namespace Lime.Transport.Http.UnitTests
             await Target.Value.FinishAsync(CancellationToken).ShouldThrowAsync<InvalidOperationException>();
         }
 
-        [Test]
+        [Fact]
         public void GetSupportedCompression_ReturnsNone()
         {
             // Assert
             Target.Value.Compression.ShouldBe(SessionCompression.None);
         }
 
-        [Test]
+        [Fact]
         public void GetSupportedEncryption_IsHttpsTrue_ReturnsTLS()
         {
             // Act
@@ -442,7 +440,7 @@ namespace Lime.Transport.Http.UnitTests
             Target.Value.Encryption.ShouldBe(SessionEncryption.TLS);
         }
 
-        [Test]
+        [Fact]
         public void GetSupportedEncryption_IsHttpsFalse_ReturnsNone()
         {
             // Act
@@ -452,7 +450,7 @@ namespace Lime.Transport.Http.UnitTests
             Target.Value.Encryption.ShouldBe(SessionEncryption.None);
         }
 
-        [Test]
+        [Fact]
         public async Task SendAsync_Message_SendsToStorage()
         {
             // Arrange
@@ -468,7 +466,7 @@ namespace Lime.Transport.Http.UnitTests
             MessageStorage.Verify();
         }
 
-        [Test]
+        [Fact]
         public async Task SendAsync_MessageStorageFailed_ThrowsInvalidOperationException()
         {
             // Arrange
@@ -481,7 +479,7 @@ namespace Lime.Transport.Http.UnitTests
             await Target.Value.SendAsync(TextMessage, CancellationToken).ShouldThrowAsync<InvalidOperationException>();
         }
 
-        [Test]
+        [Fact]
         public async Task SendAsync_OptionsNegotiatingSession_SendsNegotiatingResponseToBuffer()
         {            
             // Act
@@ -496,7 +494,7 @@ namespace Lime.Transport.Http.UnitTests
             negotiatingResponseSession.Encryption.ShouldBe(Target.Value.Encryption);
         }
 
-        [Test]
+        [Fact]
         public async Task SendAsync_ConfirmationNegotiatingSession_DoesNothing()
         {
             // Act
@@ -508,7 +506,7 @@ namespace Lime.Transport.Http.UnitTests
             envelopeTask.IsCompleted.ShouldBe(false);
         }
 
-        [Test]
+        [Fact]
         public async Task SendAsync_OptionsAuthenticatingSession_SendsAuthenticationResponseToBuffer()
         {
             // Act
@@ -525,7 +523,7 @@ namespace Lime.Transport.Http.UnitTests
             authenticationResponseSession.From.ToIdentity().ShouldBe(Identity);
         }
 
-        [Test]
+        [Fact]
         public async Task SendAsync_UnsupportedAuthenticationScheme_SendsFinishingToBuffer()
         {
             // Arrange
@@ -541,7 +539,7 @@ namespace Lime.Transport.Http.UnitTests
             authenticationResponseSession.State.ShouldBe(SessionState.Finishing);            
         }
 
-        [Test]
+        [Fact]
         public async Task SendAsync_EstablishedSession_CompletesAuthenticationTask()
         {            
             // Arrange
@@ -556,7 +554,7 @@ namespace Lime.Transport.Http.UnitTests
             actual.ShouldBe(EstablishedSession);
         }
 
-        [Test]
+        [Fact]
         public async Task SendAsync_FailedSession_CompletesAuthenticationTask()
         {
             // Arrange
@@ -571,7 +569,7 @@ namespace Lime.Transport.Http.UnitTests
             actual.ShouldBe(FailedSession);
         }
 
-        [Test]
+        [Fact]
         public async Task SendAsync_AlreadyEstablishedFinishedSession_CompletesFinishTask()
         {
             // Arrange
@@ -586,7 +584,7 @@ namespace Lime.Transport.Http.UnitTests
             await finishTask;
         }
 
-        [Test]
+        [Fact]
         public async Task SendAsync_AlreadyEstablishedFailedSession_CompletesFinishTask()
         {
             // Arrange
@@ -609,7 +607,7 @@ namespace Lime.Transport.Http.UnitTests
             }
         }
 
-        [Test]
+        [Fact]
         public async Task SendAsync_FailedNotificationForPendingMessage_CompletesTask()
         {
             // Arrange            
@@ -624,7 +622,7 @@ namespace Lime.Transport.Http.UnitTests
             actual.ShouldBe(FailedNotification);
         }
 
-        [Test]
+        [Fact]
         public async Task SendAsync_FailedNotification_SendsToStorage()
         {
             // Arrange
@@ -640,7 +638,7 @@ namespace Lime.Transport.Http.UnitTests
             NotificationStorage.Verify();            
         }
 
-        [Test]
+        [Fact]
         public async Task SendAsync_NotificationStorageFailed_ThrowsInvalidOperationException()
         {
             // Arrange
@@ -652,7 +650,7 @@ namespace Lime.Transport.Http.UnitTests
             await Target.Value.SendAsync(DispatchedNotification, CancellationToken).ShouldThrowAsync<InvalidOperationException>();
         }
 
-        [Test]
+        [Fact]
         public async Task SendAsync_OrderedNotifications_UpdatesOnStorage()
         {
             // Arrange
@@ -684,7 +682,7 @@ namespace Lime.Transport.Http.UnitTests
             NotificationStorage.Verify();
         }
 
-        [Test]
+        [Fact]
         public async Task SendAsync_OrderedNotificationsUpdateFailed_ThrowsInvalidOperationException()
         {
             // Arrange
@@ -713,7 +711,7 @@ namespace Lime.Transport.Http.UnitTests
             await Target.Value.SendAsync(FailedNotification, CancellationToken).ShouldThrowAsync<InvalidOperationException>();            
         }
 
-        [Test]
+        [Fact]
         public async Task SendAsync_UnorderedNotifications_KeepsTheLastestOnStorage()
         {
             // Arrange
@@ -737,7 +735,7 @@ namespace Lime.Transport.Http.UnitTests
             NotificationStorage.Verify(m => m.DeleteEnvelopeAsync(FailedNotification.To.ToIdentity(), DispatchedNotification.Id), Times.Never());               
         }
 
-        [Test]
+        [Fact]
         public async Task SendAsync_UnorderedNotificationsWithFailed_KeepsTheLastestOnStorage()
         {
             // Arrange
@@ -761,7 +759,7 @@ namespace Lime.Transport.Http.UnitTests
             NotificationStorage.Verify(m => m.DeleteEnvelopeAsync(FailedNotification.To.ToIdentity(), FailedNotification.Id), Times.Never());
         }
 
-        [Test]
+        [Fact]
         public async Task SendAsync_ResponseCommandWithPendingRequest_CompletesTask()
         {
             // Arrange
@@ -776,7 +774,7 @@ namespace Lime.Transport.Http.UnitTests
             actual.ShouldBe(PresenceResponseCommand);
         }
 
-        [Test]
+        [Fact]
         public async Task SendAsync_ResponseCommand_DoesNothing()
         {
             // Act
@@ -788,7 +786,7 @@ namespace Lime.Transport.Http.UnitTests
             envelopeTask.IsCompleted.ShouldBe(false);
         }
 
-        [Test]
+        [Fact]
         public async Task SendAsync_PingRequestCommand_SendsSuccessResponseToBuffer()
         {
             // Act
@@ -801,7 +799,7 @@ namespace Lime.Transport.Http.UnitTests
             responseCommand.Status.ShouldBe(CommandStatus.Success);
         }
 
-        [Test]
+        [Fact]
         public async Task SendAsync_RequestCommandWithPendingRequest_SendsNotSupportedResponseToBuffer()
         {
             // Act
@@ -816,7 +814,7 @@ namespace Lime.Transport.Http.UnitTests
             responseCommand.Reason.Code.ShouldBe(ReasonCodes.COMMAND_RESOURCE_NOT_SUPPORTED);
         }
         
-        [Test]
+        [Fact]
         public async Task OpenAsync_SendsNewSessionToBuffer()
         {
             // Act
@@ -829,7 +827,7 @@ namespace Lime.Transport.Http.UnitTests
             session.State.ShouldBe(SessionState.New);
         }
 
-        [Test]
+        [Fact]
         public async Task CloseAsync_ClosesInputBufferAndCancelsPendingTasks()
         {
             // Arrange

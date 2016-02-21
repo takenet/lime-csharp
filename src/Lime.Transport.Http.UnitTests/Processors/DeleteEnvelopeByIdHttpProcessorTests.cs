@@ -5,16 +5,15 @@ using System.Threading;
 using System.Threading.Tasks;
 using Lime.Protocol;
 using Lime.Protocol.UnitTests;
-using Lime.Transport.Http;
 using Lime.Transport.Http.Processors;
 using Lime.Transport.Http.Storage;
-using NUnit.Framework;
+using Xunit;
 using Moq;
 using Shouldly;
 
 namespace Lime.Transport.Http.UnitTests.Processors
 {
-    [TestFixture]
+    
     public class DeleteEnvelopeByIdHttpProcessorTests
     {
 
@@ -38,8 +37,7 @@ namespace Lime.Transport.Http.UnitTests.Processors
 
         public DeleteEnvelopeByIdHttpProcessor<Message> Target { get; set; }
 
-        [SetUp]
-        public void Arrange()
+        public DeleteEnvelopeByIdHttpProcessorTests()
         {
             MessageEnvelopeStorage = new Mock<IEnvelopeStorage<Message>>();
             Principal = new Mock<IPrincipal>();
@@ -56,7 +54,7 @@ namespace Lime.Transport.Http.UnitTests.Processors
             Target = new DeleteEnvelopeByIdHttpProcessor<Message>(MessageEnvelopeStorage.Object, Constants.MESSAGES_PATH);
         }
 
-        [Test]
+        [Fact]
         public async Task ProcessAsync_ValidHttpRequest_RetunsOKHttpResponse()
         {
             // Arrange
@@ -74,7 +72,7 @@ namespace Lime.Transport.Http.UnitTests.Processors
             MessageEnvelopeStorage.Verify();
         }
 
-        [Test]
+        [Fact]
         public async Task ProcessAsync_UnknownEnvelopeId_RetunsNotFoundHttpResponse()
         {
             // Arrange
@@ -92,7 +90,7 @@ namespace Lime.Transport.Http.UnitTests.Processors
             MessageEnvelopeStorage.Verify();
         }
 
-        [Test]
+        [Fact]
         public async Task ProcessAsync_RequestUriWithoutId_RetunsBadRequestHttpResponse()
         {
             // Arrange
@@ -107,7 +105,7 @@ namespace Lime.Transport.Http.UnitTests.Processors
             MessageEnvelopeStorage.Verify();
         }
 
-        [Test]
+        [Fact]
         public async Task ProcessAsync_InvalidPrincipalNameFormat_RetunsBadRequestHttpResponse()
         {
             // Arrange

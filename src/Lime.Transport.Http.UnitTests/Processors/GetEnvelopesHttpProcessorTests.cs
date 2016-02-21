@@ -6,16 +6,15 @@ using System.Threading;
 using System.Threading.Tasks;
 using Lime.Protocol;
 using Lime.Protocol.UnitTests;
-using Lime.Transport.Http;
 using Lime.Transport.Http.Processors;
 using Lime.Transport.Http.Storage;
-using NUnit.Framework;
+using Xunit;
 using Moq;
 using Shouldly;
 
 namespace Lime.Transport.Http.UnitTests.Processors
 {
-    [TestFixture]
+    
     public class GetEnvelopesHttpProcessorTests
     {
         public Mock<IEnvelopeStorage<Envelope>> EnvelopeStorage { get; set; }
@@ -40,8 +39,7 @@ namespace Lime.Transport.Http.UnitTests.Processors
 
         public GetEnvelopesHttpProcessor<Envelope> Target { get; set; }
 
-        [SetUp]
-        public void Arrange()
+        public GetEnvelopesHttpProcessorTests()
         {
             EnvelopeStorage = new Mock<IEnvelopeStorage<Envelope>>();
             Principal = new Mock<IPrincipal>();
@@ -63,7 +61,7 @@ namespace Lime.Transport.Http.UnitTests.Processors
             Target = new GetEnvelopesHttpProcessor<Envelope>(EnvelopeStorage.Object, Constants.MESSAGES_PATH);
         }
 
-        [Test]
+        [Fact]
         public async Task ProcessAsync_ValidHttpRequest_CallsStorageAndReturnsOKHttpResponse()
         {
             // Arrange
@@ -88,7 +86,7 @@ namespace Lime.Transport.Http.UnitTests.Processors
             EnvelopeStorage.Verify();
         }
 
-        [Test]
+        [Fact]
         public async Task ProcessAsync_NoStoredEnvelopesForIdentity_ReturnsNoContentHttpResponse()
         {
             // Arrange
@@ -107,7 +105,7 @@ namespace Lime.Transport.Http.UnitTests.Processors
             EnvelopeStorage.Verify();
         }
 
-        [Test]
+        [Fact]
         public async Task ProcessAsync_InvalidPrincipalNameFormat_RetunsBadRequestHttpResponse()
         {
             // Arrange
