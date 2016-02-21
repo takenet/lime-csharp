@@ -2,6 +2,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using Lime.Protocol.Network;
+using Lime.Protocol.Util;
 
 namespace Lime.Protocol.Listeners
 {
