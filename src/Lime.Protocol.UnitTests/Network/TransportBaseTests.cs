@@ -2,7 +2,6 @@
 using System.Linq;
 using NUnit.Framework;
 using Lime.Protocol.Network;
-using Moq;
 using System.Threading.Tasks;
 using System.Threading;
 using System.Collections.Generic;

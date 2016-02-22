@@ -2,15 +2,12 @@
 using Lime.Messaging.Resources;
 using Lime.Protocol.Security;
 using Lime.Protocol.Serialization;
-using Lime.Protocol.UnitTests;
 using NUnit.Framework;
 using Shouldly;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
 
 namespace Lime.Protocol.UnitTests.Serialization
 {

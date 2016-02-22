@@ -16,7 +16,7 @@ branches:
     - master
 build:
   project: src/Lime.sln
-  verbosity: minimal
+  verbosity: normal
 assembly_info:
   patch: true
   file: '**\AssemblyInfo.*'

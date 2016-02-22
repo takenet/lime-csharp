@@ -1,6 +1,4 @@
-﻿using System;
-using System.Linq;
-using Lime.Protocol.Security;
+﻿using Lime.Protocol.Security;
 using NUnit.Framework;
 using Shouldly;
 

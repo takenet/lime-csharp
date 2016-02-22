@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Linq;
 using NUnit.Framework;
 using Lime.Protocol.Util;
 using System.Threading.Tasks;
-using System.Collections.Generic;
 using Shouldly;
 
 namespace Lime.Protocol.UnitTests.Util

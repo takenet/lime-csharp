@@ -1,15 +1,12 @@
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
-using Lime.Messaging.Resources;
 using NUnit.Framework;
 using System.Threading.Tasks;
 using Lime.Protocol.Client;
 using Lime.Protocol.Network;
 using Moq;
 using System.Threading;
-using Lime.Protocol.Security;
 using Shouldly;
 using Lime.Protocol.Util;
 
