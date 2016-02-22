@@ -231,7 +231,7 @@ namespace Lime.Protocol.Network
                 using (cancellationToken.Register(() => tcs.TrySetCanceled()))
                 {
                     await SendCommandAsync(requestCommand).ConfigureAwait(false);
-                    return await tcs.Task;
+                    return await tcs.Task.ConfigureAwait(false);
                 }
             }
             finally
