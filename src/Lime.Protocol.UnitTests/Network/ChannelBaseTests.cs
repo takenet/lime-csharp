@@ -1473,7 +1473,7 @@ namespace Lime.Protocol.UnitTests.Network
 
         [Test]
         [Category("Dispose")]
-        public async Task Dispose_ReceiveMessageCalled_ThrowsTaskCancelledException()
+        public void Dispose_ReceiveMessageCalled_ThrowsTaskCancelledException()
         {
             var disposableTransport = _transport.As<IDisposable>();
 
@@ -1498,7 +1498,7 @@ namespace Lime.Protocol.UnitTests.Network
 
         [Test]
         [Category("Dispose")]
-        public async Task Dispose_ReceiveCommandCalled_ThrowsTaskCancelledException()
+        public void Dispose_ReceiveCommandCalled_ThrowsTaskCancelledException()
         {
             var disposableTransport = _transport.As<IDisposable>();
 
@@ -1523,7 +1523,7 @@ namespace Lime.Protocol.UnitTests.Network
 
         [Test]
         [Category("Dispose")]
-        public async Task Dispose_ReceiveNotificationCalled_ThrowsTaskCancelledException()
+        public void Dispose_ReceiveNotificationCalled_ThrowsTaskCancelledException()
         {
             var disposableTransport = _transport.As<IDisposable>();
 
@@ -1548,7 +1548,7 @@ namespace Lime.Protocol.UnitTests.Network
 
         [Test]
         [Category("Dispose")]
-        public async Task Dispose_ReceiveSessionCalled_ThrowsTaskCancelledException()
+        public void Dispose_ReceiveSessionCalled_ThrowsTaskCancelledException()
         {
             var disposableTransport = _transport.As<IDisposable>();
 

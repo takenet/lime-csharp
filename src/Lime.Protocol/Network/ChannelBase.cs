@@ -232,7 +232,6 @@ namespace Lime.Protocol.Network
                 {
                     await SendCommandAsync(requestCommand).ConfigureAwait(false);
                     var result = await tcs.Task.ConfigureAwait(false);
-                    await Task.Yield();
                     return result;
                 }
             }
@@ -434,12 +433,15 @@ namespace Lime.Protocol.Network
             {
                 TaskCompletionSource<Command> pendingCommand;
 
-                if (command.Id == Guid.Empty || 
-                    command.Status == CommandStatus.Pending ||
-                    command.Method == CommandMethod.Observe ||
-                    !_pendingCommandsDictionary.TryRemove(command.Id, out pendingCommand) ||
-                    !pendingCommand.TrySetResult(command))
-                {                    
+                if (command.Id != Guid.Empty && 
+                    command.Status != CommandStatus.Pending &&
+                    command.Method != CommandMethod.Observe &&
+                    _pendingCommandsDictionary.TryRemove(command.Id, out pendingCommand))
+                {
+                    Task.Run(() => pendingCommand.TrySetResult(command));
+                }
+                else
+                {
                     await ConsumeEnvelopeAsync(command, _commandBuffer).ConfigureAwait(false);
                 }
             }
