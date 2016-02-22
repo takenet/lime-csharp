@@ -24,6 +24,9 @@ namespace Lime.Protocol.Client
         private IClientChannel _clientChannel;
         private bool _disposed;
 
+        private Task<Session> _finishedSessionTask;
+        private CancellationTokenSource _cts;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="OnDemandClientChannel"/> class.
         /// </summary>
@@ -170,11 +173,11 @@ namespace Lime.Protocol.Client
             await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
             try
             {
-                if (IsEstablished)
-                {
-                    var finishedSessionTask = _clientChannel.ReceiveFinishedSessionAsync(cancellationToken);
+                if (IsEstablished &&
+                    _finishedSessionTask != null)
+                {                    
                     await _clientChannel.SendFinishingSessionAsync().ConfigureAwait(false);
-                    await finishedSessionTask.ConfigureAwait(false);                    
+                    await _finishedSessionTask.ConfigureAwait(false);                    
                 }
 
                 if (_clientChannel != null)
@@ -321,6 +324,11 @@ namespace Lime.Protocol.Client
                             .BuildAndEstablishAsync(cancellationToken)
                             .ConfigureAwait(false);
 
+                        _cts?.Cancel();
+                        _cts?.Dispose();
+                        _cts = new CancellationTokenSource();
+                        _finishedSessionTask = clientChannel.ReceiveFinishedSessionAsync(_cts.Token);
+
                         channelCreated = true;
                     }
                 }
@@ -388,9 +396,8 @@ namespace Lime.Protocol.Client
             _clientChannel?.DisposeIfDisposable();
             _clientChannel = null;
             _semaphore?.DisposeIfDisposable();
+            _cts?.Dispose();
             _disposed = true;
         }
-
-
     }
 }

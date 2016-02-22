@@ -1889,8 +1889,6 @@ namespace Lime.Protocol.UnitTests.Client
             var target = GetTarget();
             await target.SendMessageAsync(message);
             var session = Dummy.CreateSession(SessionState.Finished);
-            _establishedClientChannelBuilder.ResetCalls();
-            _clientChannel.ResetCalls();
             _clientChannel
                 .Setup(c => c.ReceiveFinishedSessionAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(session);                
@@ -1900,7 +1898,7 @@ namespace Lime.Protocol.UnitTests.Client
 
             // Assert
             _clientChannel.Verify(c => c.SendFinishingSessionAsync(), Times.Once);
-            _clientChannel.Verify(c => c.ReceiveFinishedSessionAsync(_cancellationToken), Times.Once);
+            _clientChannel.Verify(c => c.ReceiveFinishedSessionAsync(It.IsAny<CancellationToken>()), Times.Once);
             _disposableClientChannel.Verify(c => c.Dispose(), Times.Once);
         }
 
