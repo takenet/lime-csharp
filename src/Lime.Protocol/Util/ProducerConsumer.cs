@@ -35,8 +35,9 @@ namespace Lime.Protocol.Util
         public static Task<T> CreateAsync<T>(Func<CancellationToken, Task<T>> producer, Func<T, Task<bool>> consumer, CancellationToken cancellationToken, TaskCreationOptions taskCreationOptions, TaskScheduler taskScheduler)
         {
             if (producer == null) throw new ArgumentNullException(nameof(producer));
-            if (consumer == null) throw new ArgumentNullException(nameof(consumer));            
-            
+            if (consumer == null) throw new ArgumentNullException(nameof(consumer));
+            if (taskScheduler == null) throw new ArgumentNullException(nameof(taskScheduler));
+
             return Task.Factory.StartNew(async () =>
             {
                 while (true)

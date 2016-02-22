@@ -129,7 +129,7 @@ namespace Lime.Transport.Http.UnitTests
             var actual = Target.Value.GetTransport(Principal.Object, true);
             ((ITransport)actual).Closed += (sender, e) => closed = true;
             
-            Thread.Sleep(500);
+            Thread.Sleep(750);
 
             // Assert          
             closed.ShouldBe(true);

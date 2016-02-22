@@ -57,7 +57,11 @@ namespace Lime.Protocol.UnitTests.Listeners
         [TearDown]
         public void TearDown()
         {
-            _cts.Dispose();            
+            _cts.Dispose();
+            _channel = null;
+            _messageBufferBlock = null;
+            _notificationBufferBlock = null;
+            _commandBufferBlock = null;
         }
 
         private DataflowChannelListener GetAndStartTarget()
@@ -123,7 +127,7 @@ namespace Lime.Protocol.UnitTests.Listeners
             _producedMessages.Add(message);
 
             // Assert
-            (await target.MessageListenerTask).ShouldBe(message);
+            (await target.MessageListenerTask.WithCancellation(_cts.Token)).ShouldBe(message);
         }
 
         [Test]
@@ -181,7 +185,7 @@ namespace Lime.Protocol.UnitTests.Listeners
             _producedNotifications.Add(notification);
 
             // Assert
-            (await target.NotificationListenerTask).ShouldBe(notification);
+            (await target.NotificationListenerTask.WithCancellation(_cts.Token)).ShouldBe(notification);
         }
         
         [Test]
@@ -239,7 +243,7 @@ namespace Lime.Protocol.UnitTests.Listeners
             _producedCommands.Add(command);
 
             // Assert
-            (await target.CommandListenerTask).ShouldBe(command);
+            (await target.CommandListenerTask.WithCancellation(_cts.Token)).ShouldBe(command);
         }
     }
 }
