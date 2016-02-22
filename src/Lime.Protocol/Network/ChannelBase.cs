@@ -231,7 +231,9 @@ namespace Lime.Protocol.Network
                 using (cancellationToken.Register(() => tcs.TrySetCanceled()))
                 {
                     await SendCommandAsync(requestCommand).ConfigureAwait(false);
-                    return await tcs.Task.ConfigureAwait(false);
+                    var result = await tcs.Task.ConfigureAwait(false);
+                    await Task.Yield();
+                    return result;
                 }
             }
             finally
@@ -437,7 +439,7 @@ namespace Lime.Protocol.Network
                     command.Method == CommandMethod.Observe ||
                     !_pendingCommandsDictionary.TryRemove(command.Id, out pendingCommand) ||
                     !pendingCommand.TrySetResult(command))
-                {
+                {                    
                     await ConsumeEnvelopeAsync(command, _commandBuffer).ConfigureAwait(false);
                 }
             }
