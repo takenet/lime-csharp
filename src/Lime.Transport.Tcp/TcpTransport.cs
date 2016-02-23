@@ -151,7 +151,7 @@ namespace Lime.Transport.Tcp
 		/// <param name="cancellationToken"></param>
 		/// <returns></returns>
 		/// <exception cref="System.NotImplementedException"></exception>
-		protected async override Task PerformOpenAsync(Uri uri, CancellationToken cancellationToken)
+		protected override async Task PerformOpenAsync(Uri uri, CancellationToken cancellationToken)
 		{
 			cancellationToken.ThrowIfCancellationRequested();
 

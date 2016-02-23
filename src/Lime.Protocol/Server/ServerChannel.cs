@@ -11,9 +11,6 @@ namespace Lime.Protocol.Server
     /// </summary>
     public class ServerChannel : ChannelBase, IServerChannel
     {
-        private static readonly TimeSpan CloseTransportTimeout = TimeSpan.FromSeconds(30);
-
-
         #region Constructor
 
         /// <summary>
@@ -320,18 +317,6 @@ namespace Lime.Protocol.Server
 
             return session;
         }  
-
-        #endregion
-
-        #region Private methods
-
-        private Task CloseTransportAsync()
-        {
-            using (var cts = new CancellationTokenSource(CloseTransportTimeout))
-            {
-                return Transport.CloseAsync(cts.Token);
-            }
-        } 
 
         #endregion
     }

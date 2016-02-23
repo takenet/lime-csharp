@@ -236,10 +236,8 @@ namespace Lime.Protocol.Client
         #region ChannelBase Members
 
         /// <summary>
-        /// Receives a session
-        /// from the remote node.
-        /// Avoid to use this method directly. Instead,
-        /// use the Server or Client channel methods.
+        /// Receives a session from the remote node.
+        /// Avoid to use this method directly. Instead, use the Server or Client channel methods.
         /// </summary>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns></returns>
@@ -259,7 +257,7 @@ namespace Lime.Protocol.Client
             else if (session.State == SessionState.Finished || 
                      session.State == SessionState.Failed)
             {
-                await Transport.CloseAsync(cancellationToken).ConfigureAwait(false);
+                await CloseTransportAsync().ConfigureAwait(false);
             }
 
             return session;
