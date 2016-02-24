@@ -19,6 +19,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
         private TimeSpan _resendMessageInterval;
         private TimeSpan _resendMessageIntervalWithSafeMargin;
         private bool _filterByDestination;
+        private Func<Notification, Message, bool> _notificationValidator;
         private CancellationToken _cancellationToken;
         
 
@@ -35,6 +36,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
             _resendMessageIntervalWithSafeMargin = TimeSpan.FromMilliseconds(250);
             _cancellationToken = CancellationToken.None;
             _filterByDestination = false;
+            _notificationValidator = null;
         }
 
 
@@ -59,7 +61,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
 
         private ResendMessagesChannelModule GetTarget(bool bindToChannel = true)
         {
-            var target = new ResendMessagesChannelModule(_resendMessageTryCount, _resendMessageInterval, _filterByDestination);            
+            var target = new ResendMessagesChannelModule(_resendMessageTryCount, _resendMessageInterval, _filterByDestination, _notificationValidator);            
             if (bindToChannel)
             {
                 target.Bind(_channel.Object, true);
@@ -190,6 +192,29 @@ namespace Lime.Protocol.UnitTests.Network.Modules
         }
 
         [Test]
+        public async Task OnSending_ReceivedInvalidNotificationAfterSend_ShouldResentUntilLimit()
+        {
+            // Arrange
+            var message = Dummy.CreateMessage(Dummy.CreateTextContent());
+            message.Id = Guid.NewGuid();
+            var notification = Dummy.CreateNotification(Event.Received);
+            notification.Id = message.Id;
+            notification.From = message.To;
+            _notificationValidator = (notification1, message1) => false;
+            var target = GetTarget();
+
+            // Act
+            var actualMessage = await ((IChannelModule<Message>)target).OnSendingAsync(message, _cancellationToken);
+            var actualNotification = await ((IChannelModule<Notification>)target).OnReceivingAsync(notification, _cancellationToken);
+            await Task.Delay(TimeSpan.FromTicks(_resendMessageIntervalWithSafeMargin.Ticks * (_resendMessageTryCount + 1)));
+
+            // Assert
+            actualMessage.ShouldBe(message);
+            actualNotification.ShouldBe(notification);
+            _channel.Verify(c => c.SendMessageAsync(message), Times.Exactly(_resendMessageTryCount));
+        }
+
+        [Test]
         public async Task OnSending_ReceivedNotificationAfterFirstResend_ShouldNotResendAgain()
         {
             // Arrange
@@ -210,6 +235,30 @@ namespace Lime.Protocol.UnitTests.Network.Modules
             actualMessage.ShouldBe(message);
             actualNotification.ShouldBe(notification);
             _channel.Verify(c => c.SendMessageAsync(message), Times.Exactly(1));
+        }
+
+        [Test]
+        public async Task OnSending_ReceivedInvalidNotificationAfterFirstResend_ShouldResentUntilLimit()
+        {
+            // Arrange
+            var message = Dummy.CreateMessage(Dummy.CreateTextContent());
+            message.Id = Guid.NewGuid();
+            var notification = Dummy.CreateNotification(Event.Received);
+            notification.Id = message.Id;
+            notification.From = message.To;
+            _notificationValidator = (notification1, message1) => false;
+            var target = GetTarget();
+
+            // Act
+            var actualMessage = await ((IChannelModule<Message>)target).OnSendingAsync(message, _cancellationToken);
+            await Task.Delay(_resendMessageIntervalWithSafeMargin);
+            var actualNotification = await ((IChannelModule<Notification>)target).OnReceivingAsync(notification, _cancellationToken);
+            await Task.Delay(TimeSpan.FromTicks(_resendMessageIntervalWithSafeMargin.Ticks * (_resendMessageTryCount + 1)));
+
+            // Assert
+            actualMessage.ShouldBe(message);
+            actualNotification.ShouldBe(notification);
+            _channel.Verify(c => c.SendMessageAsync(message), Times.Exactly(_resendMessageTryCount));
         }
 
         [Test]

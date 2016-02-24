@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
+using Lime.Protocol.Util;
 
 namespace Lime.Protocol.Network.Modules
 {
@@ -16,6 +17,7 @@ namespace Lime.Protocol.Network.Modules
         private readonly int _resendMessageTryCount;
         private readonly TimeSpan _resendMessageInterval;
         private readonly bool _filterByDestination;
+        private readonly Func<Notification, Message, bool> _notificationValidator;
         private readonly ConcurrentDictionary<MessageIdDestination, SentMessage> _sentMessageDictionary;
         private readonly object _syncRoot = new object();        
         private readonly BufferBlock<SentMessage> _inputBlock;
@@ -26,12 +28,21 @@ namespace Lime.Protocol.Network.Modules
         private bool _unbindWhenClosed;
         private IDisposable _link;
 
-        public ResendMessagesChannelModule(int resendMessageTryCount, TimeSpan resendMessageInterval, bool filterByDestination = false)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ResendMessagesChannelModule"/> class.
+        /// </summary>
+        /// <param name="resendMessageTryCount">The resend message try count.</param>
+        /// <param name="resendMessageInterval">The resend message interval.</param>
+        /// <param name="filterByDestination">if set to <c>true</c> [filter by destination].</param>
+        /// <param name="notificationValidator">A validation delegate in order to determine if the received notification is valid for the message.</param>
+        /// <exception cref="System.ArgumentOutOfRangeException"></exception>
+        public ResendMessagesChannelModule(int resendMessageTryCount, TimeSpan resendMessageInterval, bool filterByDestination = false, Func<Notification, Message, bool> notificationValidator = null)
         {            
             if (resendMessageTryCount <= 0) throw new ArgumentOutOfRangeException(nameof(resendMessageTryCount));            
             _resendMessageTryCount = resendMessageTryCount;
             _resendMessageInterval = resendMessageInterval;
             _filterByDestination = filterByDestination;
+            _notificationValidator = notificationValidator ?? ((notification, message) => true);
 
             _sentMessageDictionary = new ConcurrentDictionary<MessageIdDestination, SentMessage>();            
             _inputBlock = new BufferBlock<SentMessage>();
@@ -70,11 +81,14 @@ namespace Lime.Protocol.Network.Modules
         Task<Notification> IChannelModule<Notification>.OnReceivingAsync(Notification envelope, CancellationToken cancellationToken)
         {            
             if (envelope.Event == Event.Received || envelope.Event == Event.Failed)
-            {                
-                SentMessage sentMessage;
-                if (_sentMessageDictionary.TryRemove(Create(envelope), out sentMessage))
-                {
-                    sentMessage.Dispose();
+            {
+                var key = Create(envelope);
+                SentMessage sentMessage;                  
+                if (_sentMessageDictionary.TryGetValue(key, out sentMessage) &&
+                    _notificationValidator(envelope, sentMessage.Message) &&
+                    _sentMessageDictionary.TryRemove(key, out sentMessage))
+                {                            
+                    sentMessage.Dispose();                            
                 }
             }
 
