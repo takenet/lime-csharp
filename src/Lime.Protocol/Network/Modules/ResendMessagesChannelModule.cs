@@ -12,12 +12,11 @@ namespace Lime.Protocol.Network.Modules
     /// <summary>
     /// Defines a module that resend messages that doesn't have <see cref="Event.Received"/> receipts from the destination.
     /// </summary>
-    public sealed class ResendMessagesChannelModule : IChannelModule<Message>, IChannelModule<Notification>
+    public class ResendMessagesChannelModule : IChannelModule<Message>, IChannelModule<Notification>
     {        
         private readonly int _resendMessageTryCount;
         private readonly TimeSpan _resendMessageInterval;
         private readonly bool _filterByDestination;
-        private readonly Func<Notification, Message, bool> _notificationValidator;
         private readonly ConcurrentDictionary<MessageIdDestination, SentMessage> _sentMessageDictionary;
         private readonly object _syncRoot = new object();        
         private readonly BufferBlock<SentMessage> _inputBlock;
@@ -34,16 +33,14 @@ namespace Lime.Protocol.Network.Modules
         /// <param name="resendMessageTryCount">The resend message try count.</param>
         /// <param name="resendMessageInterval">The resend message interval.</param>
         /// <param name="filterByDestination">if set to <c>true</c> [filter by destination].</param>
-        /// <param name="notificationValidator">A validation delegate in order to determine if the received notification is valid for the message.</param>
         /// <exception cref="System.ArgumentOutOfRangeException"></exception>
-        public ResendMessagesChannelModule(int resendMessageTryCount, TimeSpan resendMessageInterval, bool filterByDestination = false, Func<Notification, Message, bool> notificationValidator = null)
+        public ResendMessagesChannelModule(int resendMessageTryCount, TimeSpan resendMessageInterval, bool filterByDestination = false)
         {            
             if (resendMessageTryCount <= 0) throw new ArgumentOutOfRangeException(nameof(resendMessageTryCount));            
             _resendMessageTryCount = resendMessageTryCount;
             _resendMessageInterval = resendMessageInterval;
             _filterByDestination = filterByDestination;
-            _notificationValidator = notificationValidator ?? ((notification, message) => true);
-
+        
             _sentMessageDictionary = new ConcurrentDictionary<MessageIdDestination, SentMessage>();            
             _inputBlock = new BufferBlock<SentMessage>();
             _waitForRetryBlock =  new TransformBlock<SentMessage, SentMessage>(
@@ -61,7 +58,7 @@ namespace Lime.Protocol.Network.Modules
             _inputBlock.LinkTo(_waitForRetryBlock);
         }
 
-        public void OnStateChanged(SessionState state)
+        public virtual void OnStateChanged(SessionState state)
         {
             lock (_syncRoot)
             {
@@ -82,11 +79,9 @@ namespace Lime.Protocol.Network.Modules
         {            
             if (envelope.Event == Event.Received || envelope.Event == Event.Failed)
             {
-                var key = Create(envelope);
+                var key = CreateKey(envelope);
                 SentMessage sentMessage;                  
-                if (_sentMessageDictionary.TryGetValue(key, out sentMessage) &&
-                    _notificationValidator(envelope, sentMessage.Message) &&
-                    _sentMessageDictionary.TryRemove(key, out sentMessage))
+                if (_sentMessageDictionary.TryRemove(key, out sentMessage))
                 {                            
                     sentMessage.Dispose();                            
                 }
@@ -109,7 +104,7 @@ namespace Lime.Protocol.Network.Modules
         {
             if (envelope.Id != Guid.Empty)
             {
-                var key = Create(envelope);
+                var key = CreateKey(envelope);
                 SentMessage sentMessage;
                 if (_sentMessageDictionary.TryGetValue(key, out sentMessage))
                 {
@@ -136,7 +131,7 @@ namespace Lime.Protocol.Network.Modules
 
         public bool IsBound => _channel != null;
 
-        public void Bind(IChannel channel, bool unbindWhenClosed)
+        public virtual void Bind(IChannel channel, bool unbindWhenClosed)
         {
             if (channel == null) throw new ArgumentNullException(nameof(channel));
             if (channel.State > SessionState.Established) throw new ArgumentException("The channel has an invalid state");
@@ -155,7 +150,7 @@ namespace Lime.Protocol.Network.Modules
             }
         }
 
-        public void Unbind()
+        public virtual void Unbind()
         {
             lock (_syncRoot)
             {
@@ -167,14 +162,14 @@ namespace Lime.Protocol.Network.Modules
             }
         }
 
-        private MessageIdDestination Create(Message message)
+        protected virtual MessageIdDestination CreateKey(Message message)
         {
             return new MessageIdDestination(
                 message.Id, 
                 _filterByDestination ? (message.To ?? _channel.RemoteNode).ToIdentity() : null);
         }
 
-        private MessageIdDestination Create(Notification notification)
+        protected virtual MessageIdDestination CreateKey(Notification notification)
         {
             return new MessageIdDestination(
                 notification.Id, 
@@ -216,7 +211,7 @@ namespace Lime.Protocol.Network.Modules
             }
         }
 
-        private sealed class MessageIdDestination
+        protected sealed class MessageIdDestination
         {
             private readonly Guid _messageId;
             private readonly Identity _destination;
