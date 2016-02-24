@@ -428,7 +428,7 @@ namespace Lime.Protocol.Network
 
         private async Task ConsumeCommandAsync(Command command, CancellationToken cancellationToken)
         {
-            command = await InvokeModulesAsync(command, CommandModules, cancellationToken).ConfigureAwait(false);
+            command = await OnReceivingAsync(command, CommandModules, cancellationToken).ConfigureAwait(false);
 
             if (command != null)
             {
@@ -462,11 +462,11 @@ namespace Lime.Protocol.Network
 
         private async Task ConsumeEnvelopeAsync<T>(T envelope, IAsyncQueue<T> buffer, IEnumerable<IChannelModule<T>> modules, CancellationToken cancellationToken) where T : Envelope, new()
         {
-            envelope = await InvokeModulesAsync(envelope, modules, cancellationToken);
+            envelope = await OnReceivingAsync(envelope, modules, cancellationToken);
             await ConsumeEnvelopeAsync(envelope, buffer, cancellationToken);
         }
 
-        private async Task<T> InvokeModulesAsync<T>(T envelope, IEnumerable<IChannelModule<T>> modules, CancellationToken cancellationToken) where T : Envelope, new()
+        private async Task<T> OnReceivingAsync<T>(T envelope, IEnumerable<IChannelModule<T>> modules, CancellationToken cancellationToken) where T : Envelope, new()
         {
             foreach (var module in modules.ToList())
             {
@@ -599,7 +599,7 @@ namespace Lime.Protocol.Network
 
         private static void OnStateChanged<T>(IEnumerable<IChannelModule<T>> modules, SessionState state) where T : Envelope, new()
         {
-            foreach (var module in modules)
+            foreach (var module in modules.ToList())
             {
                 module.OnStateChanged(state);
             }
