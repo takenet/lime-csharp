@@ -189,7 +189,7 @@ namespace Lime.Protocol.Network.Modules
                 }
                 return sentMessage;
             }
-            catch (OperationCanceledException) when (sentMessage.CancellationToken.IsCancellationRequested)
+            catch
             {
                 return null;
             }
