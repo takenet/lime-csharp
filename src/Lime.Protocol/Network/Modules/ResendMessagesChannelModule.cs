@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -189,10 +190,13 @@ namespace Lime.Protocol.Network.Modules
                 }
                 return sentMessage;
             }
-            catch
+            catch (OperationCanceledException) { }
+            catch (Exception ex)
             {
-                return null;
+                Trace.TraceError("DestinationResendMessagesChannelModule.WaitForRetryAsync: {0}", ex.Message);
             }
+
+            return null;
         }
 
         private async Task ResendMessageAsync(SentMessage sentMessage)
@@ -204,8 +208,9 @@ namespace Lime.Protocol.Network.Modules
                 {
                     await _channel.SendMessageAsync(sentMessage.Message);
                 }
-                catch
+                catch (Exception ex)
                 {
+                    Trace.TraceError("DestinationResendMessagesChannelModule.ResendMessageAsync: {0}", ex.Message);
                     Unbind();
                 }
             }
