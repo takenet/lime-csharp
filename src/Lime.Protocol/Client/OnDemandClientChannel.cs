@@ -175,16 +175,16 @@ namespace Lime.Protocol.Client
             {
                 if (IsEstablished &&
                     _finishedSessionTask != null)
-                {                    
+                {
                     await _clientChannel.SendFinishingSessionAsync().ConfigureAwait(false);
-                    await _finishedSessionTask.ConfigureAwait(false);                    
+                    await _finishedSessionTask.ConfigureAwait(false);
                 }
 
                 if (_clientChannel != null)
                 {
                     await DiscardChannelUnsynchronized(_clientChannel, cancellationToken).ConfigureAwait(false);
                 }
-            }            
+            }
             finally
             {
                 _semaphore.Release();
@@ -207,7 +207,7 @@ namespace Lime.Protocol.Client
 
                 var channel = await GetChannelAsync(cancellationToken, true).ConfigureAwait(false);
                 try
-                {                    
+                {
                     await sendFunc(channel, envelope).ConfigureAwait(false);
                     return;
                 }
@@ -229,7 +229,7 @@ namespace Lime.Protocol.Client
                 // For receiving, we should not check if the channel is established, since that can exists received envelopes in the buffer.
                 var channel = await GetChannelAsync(cancellationToken, false).ConfigureAwait(false);
                 try
-                {                    
+                {
                     return await receiveFunc(channel, cancellationToken).ConfigureAwait(false);
                 }
                 catch (Exception ex) when (!(ex is OperationCanceledException && cancellationToken.IsCancellationRequested))
@@ -244,13 +244,13 @@ namespace Lime.Protocol.Client
         private async Task<bool> HandleChannelOperationExceptionAsync(Exception ex, IChannel channel, CancellationToken cancellationToken)
         {
             try
-            {            
+            {
                 var failedChannelInformation = new FailedChannelInformation(
                     channel.SessionId, channel.State, channel.LocalNode, channel.RemoteNode, channel.Transport.IsConnected, ex);
 
                 // Make a copy of the handlers
-                var handlers = ChannelOperationFailedHandlers.ToList();            
-                return await InvokeHandlers(handlers, failedChannelInformation, cancellationToken).ConfigureAwait(false);            
+                var handlers = ChannelOperationFailedHandlers.ToList();
+                return await InvokeHandlers(handlers, failedChannelInformation, cancellationToken).ConfigureAwait(false);
             }
             finally
             {
@@ -285,7 +285,7 @@ namespace Lime.Protocol.Client
         {
             var exceptions = new List<Exception>();
             foreach (var handler in handlers)
-            {                
+            {
                 cancellationToken.ThrowIfCancellationRequested();
                 try
                 {
@@ -302,14 +302,14 @@ namespace Lime.Protocol.Client
         private static void ThrowIfAny(IReadOnlyList<Exception> exceptions)
         {
             if (!exceptions.Any()) return;
-            if (exceptions.Count == 1) throw exceptions[0];            
+            if (exceptions.Count == 1) throw exceptions[0];
             throw new AggregateException(exceptions);
         }
 
         private async Task<IClientChannel> GetChannelAsync(CancellationToken cancellationToken, bool checkIfEstablished)
         {
             var channelCreated = false;
-            var clientChannel = _clientChannel;            
+            var clientChannel = _clientChannel;
             while (ShouldCreateChannel(clientChannel, checkIfEstablished))
             {
                 cancellationToken.ThrowIfCancellationRequested();
@@ -320,16 +320,22 @@ namespace Lime.Protocol.Client
                     clientChannel = _clientChannel;
                     if (ShouldCreateChannel(clientChannel, checkIfEstablished))
                     {
-                        clientChannel = _clientChannel = await _builder
-                            .BuildAndEstablishAsync(cancellationToken)
-                            .ConfigureAwait(false);
+                        using (var sendCancellationTokenSource = new CancellationTokenSource(_sendTimeout))
+                        {
+                            using (var linkedCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, sendCancellationTokenSource.Token))
+                            {
+                                clientChannel = _clientChannel = await _builder
+                                    .BuildAndEstablishAsync(linkedCancellationTokenSource.Token)
+                                    .ConfigureAwait(false);
 
-                        _cts?.Cancel();
-                        _cts?.Dispose();
-                        _cts = new CancellationTokenSource();
-                        _finishedSessionTask = clientChannel.ReceiveFinishedSessionAsync(_cts.Token);
+                                _cts?.Cancel();
+                                _cts?.Dispose();
+                                _cts = new CancellationTokenSource();
+                                _finishedSessionTask = clientChannel.ReceiveFinishedSessionAsync(_cts.Token);
 
-                        channelCreated = true;
+                                channelCreated = true;
+                            }
+                        }
                     }
                 }
                 catch (Exception ex) when (!(ex is OperationCanceledException && cancellationToken.IsCancellationRequested))
@@ -366,7 +372,7 @@ namespace Lime.Protocol.Client
                                                                       channel.Transport.IsConnected;
 
         private async Task DiscardChannelAsync(IChannel clientChannel, CancellationToken cancellationToken)
-        {            
+        {
             await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
             try
             {
