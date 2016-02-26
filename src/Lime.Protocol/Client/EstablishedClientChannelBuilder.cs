@@ -13,12 +13,12 @@ namespace Lime.Protocol.Client
     /// Helper class for building instances of <see cref="ClientChannel"/> and handling the establishment of the session for the channel.
     /// </summary>
     public sealed class EstablishedClientChannelBuilder : IEstablishedClientChannelBuilder
-    {        
+    {
         private readonly List<Func<IClientChannel, CancellationToken, Task>> _establishedHandlers;
         private Func<SessionCompression[], SessionCompression> _compressionSelector;
-        private Func<SessionEncryption[], SessionEncryption> _encryptionSelector;       
+        private Func<SessionEncryption[], SessionEncryption> _encryptionSelector;
         private Func<AuthenticationScheme[], Authentication, Authentication> _authenticator;
-        
+
         /// <summary>
         /// Initializes a new instance of the <see cref="EstablishedClientChannelBuilder"/> class.
         /// </summary>
@@ -33,6 +33,7 @@ namespace Lime.Protocol.Client
             _compressionSelector = options => options.First();
             _encryptionSelector = options => options.First();
             _authenticator = (options, roundtrip) => new GuestAuthentication();
+            EstablishmentTimeout = TimeSpan.FromSeconds(30);
             Identity = new Identity(Guid.NewGuid().ToString(), clientChannelBuilder.ServerUri.Host);
             Instance = Environment.MachineName;
         }
@@ -51,6 +52,22 @@ namespace Lime.Protocol.Client
         /// Gets the instance.
         /// </summary>
         public string Instance { get; private set; }
+
+        /// <summary>
+        /// Gets the establishment timeout
+        /// </summary>
+        public TimeSpan EstablishmentTimeout { get; private set; }
+
+        /// <summary>
+        /// Sets the timeout to Build and establish a new session
+        /// </summary>
+        /// <param name="timeout">The timeout</param>
+        /// <returns></returns>
+        public EstablishedClientChannelBuilder WithEstablishmentTimeout(TimeSpan timeout)
+        {
+            EstablishmentTimeout = timeout;
+            return this;
+        }
 
         /// <summary>
         /// Sets the compression option to be used in the session establishment.
@@ -108,7 +125,7 @@ namespace Lime.Protocol.Client
         /// <exception cref="System.ArgumentNullException"></exception>
         public EstablishedClientChannelBuilder WithPlainAuthentication(string password)
         {
-            if (password == null) throw new ArgumentNullException(nameof(password));        
+            if (password == null) throw new ArgumentNullException(nameof(password));
             var authentication = new PlainAuthentication();
             authentication.SetToBase64Password(password);
             return WithAuthentication(authentication);
@@ -122,7 +139,7 @@ namespace Lime.Protocol.Client
         /// <exception cref="System.ArgumentNullException"></exception>
         public EstablishedClientChannelBuilder WithKeyAuthentication(string key)
         {
-            if (key == null) throw new ArgumentNullException(nameof(key));            
+            if (key == null) throw new ArgumentNullException(nameof(key));
             var authentication = new KeyAuthentication();
             authentication.SetToBase64Key(key);
             return WithAuthentication(authentication);
@@ -216,14 +233,23 @@ namespace Lime.Protocol.Client
 
             try
             {
-                var session = await clientChannel.EstablishSessionAsync(
-                    _compressionSelector,
-                    _encryptionSelector,
-                    Identity,
-                    _authenticator,
-                    Instance,
-                    cancellationToken)
-                    .ConfigureAwait(false);
+
+                Session session;
+
+                using (var cancellationTokenSource = new CancellationTokenSource(EstablishmentTimeout))
+                {
+                    using (var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationTokenSource.Token, cancellationToken))
+                    {
+                        session = await clientChannel.EstablishSessionAsync(
+                            _compressionSelector,
+                            _encryptionSelector,
+                            Identity,
+                            _authenticator,
+                            Instance,
+                            linkedCts.Token)
+                            .ConfigureAwait(false);
+                    }
+                }
 
                 if (session.State != SessionState.Established)
                 {
@@ -242,7 +268,7 @@ namespace Lime.Protocol.Client
                     await handler(clientChannel, cancellationToken).ConfigureAwait(false);
                 }
             }
-            catch 
+            catch
             {
                 clientChannel.DisposeIfDisposable();
                 throw;

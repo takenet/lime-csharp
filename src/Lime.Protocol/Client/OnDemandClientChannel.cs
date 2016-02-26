@@ -320,22 +320,17 @@ namespace Lime.Protocol.Client
                     clientChannel = _clientChannel;
                     if (ShouldCreateChannel(clientChannel, checkIfEstablished))
                     {
-                        using (var sendCancellationTokenSource = new CancellationTokenSource(_sendTimeout))
-                        {
-                            using (var linkedCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, sendCancellationTokenSource.Token))
-                            {
-                                clientChannel = _clientChannel = await _builder
-                                    .BuildAndEstablishAsync(linkedCancellationTokenSource.Token)
-                                    .ConfigureAwait(false);
+                        clientChannel = _clientChannel = await _builder
+                            .BuildAndEstablishAsync(cancellationToken)
+                            .ConfigureAwait(false);
 
-                                _cts?.Cancel();
-                                _cts?.Dispose();
-                                _cts = new CancellationTokenSource();
-                                _finishedSessionTask = clientChannel.ReceiveFinishedSessionAsync(_cts.Token);
+                        _cts?.Cancel();
+                        _cts?.Dispose();
+                        _cts = new CancellationTokenSource();
+                        _finishedSessionTask = clientChannel.ReceiveFinishedSessionAsync(_cts.Token);
 
-                                channelCreated = true;
-                            }
-                        }
+                        channelCreated = true;
+
                     }
                 }
                 catch (Exception ex) when (!(ex is OperationCanceledException && cancellationToken.IsCancellationRequested))
