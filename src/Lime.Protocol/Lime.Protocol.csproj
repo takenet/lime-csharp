@@ -139,10 +139,7 @@
     <Compile Include="Session.cs" />
     <Compile Include="UtilExtensions.cs" />
     <Compile Include="Util\AsyncCountdownEvent.cs" />
-    <Compile Include="Util\AsyncQueue.cs" />
-    <Compile Include="Util\BufferBlockAsyncQueue.cs" />
     <Compile Include="Util\DeferralManager.cs" />
-    <Compile Include="Util\IAsyncQueue.cs" />
     <Compile Include="Util\TaskUtil.cs" />
   </ItemGroup>
   <ItemGroup>

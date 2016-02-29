@@ -91,7 +91,6 @@
     <Compile Include="Server\ServerChannelTests.cs" />
     <Compile Include="IdentityTests.cs" />
     <Compile Include="LimeUriTests.cs" />
-    <Compile Include="Util\AsyncQueueTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Lime.Protocol.UnitTests.snk" />
