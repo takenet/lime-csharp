@@ -1534,36 +1534,10 @@ namespace Lime.Protocol.UnitTests.Network
         [Category("Dispose")]
         public void Dispose_ReceiveNotificationCalled_ThrowsInvalidOperationException()
         {
+            // Arrange
             var disposableTransport = _transport.As<IDisposable>();
-
             var cancellationToken = Dummy.CreateCancellationToken();
             var tcs = new TaskCompletionSource<Envelope>();
-
-            _transport
-                .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
-                .Returns(() => tcs.Task);
-
-            var target = GetTarget(SessionState.Established);
-            var receiveNotificationTask = target.ReceiveNotificationAsync(cancellationToken);
-
-            target.Dispose();
-
-            disposableTransport.Verify(
-                t => t.Dispose(),
-                Times.Once());
-
-            receiveNotificationTask.ShouldThrow<InvalidOperationException>();
-        }
-
-        [Test]
-        [Category("Dispose")]
-        public void Dispose_ReceiveSessionCalled_ThrowsInvalidOperationException()
-        {
-            var disposableTransport = _transport.As<IDisposable>();
-
-            var cancellationToken = Dummy.CreateCancellationToken();
-            var tcs = new TaskCompletionSource<Envelope>();
-
             _transport
                 .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
                 .Returns((CancellationToken t) =>
@@ -1571,16 +1545,44 @@ namespace Lime.Protocol.UnitTests.Network
                     t.Register(() => tcs.SetCanceled());
                     return tcs.Task;
                 });
-
             var target = GetTarget(SessionState.Established);
-            var receiveSessionTask = target.ReceiveSessionAsync(cancellationToken);
+            var receiveNotificationTask = target.ReceiveNotificationAsync(cancellationToken);
 
+            // Act
             target.Dispose();
 
+            // Assert
             disposableTransport.Verify(
                 t => t.Dispose(),
                 Times.Once());
+            receiveNotificationTask.ShouldThrow<InvalidOperationException>();
+        }
 
+        [Test]
+        [Category("Dispose")]
+        public void Dispose_ReceiveSessionCalled_ThrowsInvalidOperationException()
+        {
+            // Arrange
+            var disposableTransport = _transport.As<IDisposable>();
+            var cancellationToken = Dummy.CreateCancellationToken();
+            var tcs = new TaskCompletionSource<Envelope>();
+            _transport
+                .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns((CancellationToken t) =>
+                {
+                    t.Register(() => tcs.SetCanceled());
+                    return tcs.Task;
+                });
+            var target = GetTarget(SessionState.Established);
+            var receiveSessionTask = target.ReceiveSessionAsync(cancellationToken);
+
+            // Act
+            target.Dispose();
+
+            // Assert
+            disposableTransport.Verify(
+                t => t.Dispose(),
+                Times.Once());
             receiveSessionTask.ShouldThrow<InvalidOperationException>();
         }
 
