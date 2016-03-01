@@ -19,11 +19,11 @@ namespace Lime.Protocol.Network.Modules
         private readonly TimeSpan _resendMessageInterval;
         private readonly bool _filterByDestination;
         private readonly ConcurrentDictionary<MessageIdDestination, SentMessage> _sentMessageDictionary;
-        private readonly object _syncRoot = new object();
         private readonly BufferBlock<SentMessage> _inputBlock;
         private readonly TransformBlock<SentMessage, SentMessage> _waitForRetryBlock;
         private readonly ActionBlock<SentMessage> _resendBlock;
         private readonly ITargetBlock<SentMessage> _discardBlock;
+        private readonly SemaphoreSlim _bindSemaphore;
 
         private IChannel _channel;
         private bool _unbindWhenClosed;
@@ -42,8 +42,6 @@ namespace Lime.Protocol.Network.Modules
             _resendMessageTryCount = resendMessageTryCount;
             _resendMessageInterval = resendMessageInterval;
             _filterByDestination = filterByDestination;
-
-
             _sentMessageDictionary = new ConcurrentDictionary<MessageIdDestination, SentMessage>();
             _inputBlock = new BufferBlock<SentMessage>();
             _waitForRetryBlock = new TransformBlock<SentMessage, SentMessage>(
@@ -61,24 +59,23 @@ namespace Lime.Protocol.Network.Modules
             _discardBlock = DataflowBlock.NullTarget<SentMessage>();
             _inputBlock.LinkTo(_waitForRetryBlock);
             _waitForRetryBlock.LinkTo(_discardBlock, m => m == null);
+            _bindSemaphore = new SemaphoreSlim(1, 1);
         }
 
         public virtual void OnStateChanged(SessionState state)
         {
-            lock (_syncRoot)
+            _bindSemaphore.Wait();
+            try
             {
-                if (state == SessionState.Established)
-                {
-                    _link = _waitForRetryBlock.LinkTo(_resendBlock, m => m != null);
-                }
-                else if (state > SessionState.Established &&
-                         IsBound &&
-                         _unbindWhenClosed)
-                {
-                    Unbind();
-                }
+                OnStateChangedImpl(state);
+            }
+            finally
+            {
+                _bindSemaphore.Release();
             }
         }
+
+
 
         Task<Notification> IChannelModule<Notification>.OnReceivingAsync(Notification envelope, CancellationToken cancellationToken)
         {
@@ -138,33 +135,66 @@ namespace Lime.Protocol.Network.Modules
 
         public virtual void Bind(IChannel channel, bool unbindWhenClosed)
         {
-            if (channel == null) throw new ArgumentNullException(nameof(channel));
-            if (channel.State > SessionState.Established) throw new ArgumentException("The channel has an invalid state");
-
-            lock (_syncRoot)
+            _bindSemaphore.Wait();
+            try
             {
-                if (IsBound) throw new InvalidOperationException("The module is already bound to a channel. Call Unbind first.");
-                _channel = channel;
-                _unbindWhenClosed = unbindWhenClosed;
-                _channel.MessageModules.Add(this);
-                _channel.NotificationModules.Add(this);
-                if (channel.State != SessionState.New)
-                {
-                    OnStateChanged(_channel.State);
-                }
+                BindImpl(channel, unbindWhenClosed);
+            }
+            finally
+            {
+                _bindSemaphore.Release();
             }
         }
 
         public virtual void Unbind()
         {
-            lock (_syncRoot)
+            _bindSemaphore.Wait();
+            try
             {
-                if (!IsBound) throw new InvalidOperationException("The module is not bound to a channel.");
-                _channel.MessageModules.Remove(this);
-                _channel.NotificationModules.Remove(this);
-                _channel = null;
-                _link.Dispose();
+                UnbindImpl();
             }
+            finally 
+            {
+                _bindSemaphore.Release();
+            }
+        }
+
+        protected void OnStateChangedImpl(SessionState state)
+        {
+            if (state == SessionState.Established)
+            {
+                _link = _waitForRetryBlock.LinkTo(_resendBlock, m => m != null);
+            }
+            else if (state > SessionState.Established &&
+                     IsBound &&
+                     _unbindWhenClosed)
+            {
+                UnbindImpl();
+            }
+        }
+
+        protected void BindImpl(IChannel channel, bool unbindWhenClosed)
+        {
+            if (channel == null) throw new ArgumentNullException(nameof(channel));
+            if (channel.State > SessionState.Established) throw new ArgumentException("The channel has an invalid state");
+            if (IsBound) throw new InvalidOperationException("The module is already bound to a channel. Call Unbind first.");
+            _channel = channel;
+            _unbindWhenClosed = unbindWhenClosed;
+            _channel.MessageModules.Add(this);
+            _channel.NotificationModules.Add(this);
+            if (channel.State != SessionState.New)
+            {
+                OnStateChangedImpl(_channel.State);
+            }
+        }
+
+        protected void UnbindImpl()
+        {
+            if (!IsBound) throw new InvalidOperationException("The module is not bound to a channel.");
+            _channel.MessageModules.Remove(this);
+            _channel.NotificationModules.Remove(this);
+            _channel = null;
+            _link.Dispose();
         }
 
         protected virtual MessageIdDestination CreateKey(Message message)
