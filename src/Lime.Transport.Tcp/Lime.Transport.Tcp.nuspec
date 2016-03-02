@@ -18,7 +18,7 @@
     </dependencies>
   </metadata>
   <files>
-    <file src="bin\Release\Lime.Transport.Tcp.dll" target="lib\net45\Lime.Transport.Tcp.dll" />
-    <file src="bin\Release\Lime.Transport.Tcp.XML" target="lib\net45\Lime.Transport.Tcp.XML" />
+    <file src="bin\Release\Lime.Transport.Tcp.dll" target="lib\net461\Lime.Transport.Tcp.dll" />
+    <file src="bin\Release\Lime.Transport.Tcp.XML" target="lib\net461\Lime.Transport.Tcp.XML" />
   </files>
 </package>

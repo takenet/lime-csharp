@@ -17,7 +17,7 @@
     </dependencies>
   </metadata>
   <files>
-    <file src="bin\Release\Lime.Transport.Http.dll" target="lib\net45\Lime.Transport.Http.dll" />
-    <file src="bin\Release\Lime.Transport.Http.XML" target="lib\net45\Lime.Transport.Http.XML" />
+    <file src="bin\Release\Lime.Transport.Http.dll" target="lib\net461\Lime.Transport.Http.dll" />
+    <file src="bin\Release\Lime.Transport.Http.XML" target="lib\net461\Lime.Transport.Http.XML" />
   </files>
 </package>

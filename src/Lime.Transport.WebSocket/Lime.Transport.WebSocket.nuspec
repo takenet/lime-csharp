@@ -19,7 +19,7 @@
     </dependencies>
   </metadata>
   <files>
-    <file src="bin\Release\Lime.Transport.WebSocket.dll" target="lib\net45\Lime.Transport.WebSocket.dll" />
-    <file src="bin\Release\Lime.Transport.WebSocket.XML" target="lib\net45\Lime.Transport.WebSocket.XML" />
+    <file src="bin\Release\Lime.Transport.WebSocket.dll" target="lib\net461\Lime.Transport.WebSocket.dll" />
+    <file src="bin\Release\Lime.Transport.WebSocket.XML" target="lib\net461\Lime.Transport.WebSocket.XML" />
   </files>
 </package>
