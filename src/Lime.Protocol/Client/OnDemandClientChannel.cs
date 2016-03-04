@@ -19,7 +19,6 @@ namespace Lime.Protocol.Client
     public sealed class OnDemandClientChannel : IOnDemandClientChannel, IDisposable
     {
         private readonly IEstablishedClientChannelBuilder _builder;
-        private readonly TimeSpan _sendTimeout;
         private readonly SemaphoreSlim _semaphore;
         private IClientChannel _clientChannel;
         private bool _disposed;
@@ -37,7 +36,6 @@ namespace Lime.Protocol.Client
             if (builder == null) throw new ArgumentNullException(nameof(builder));
             if (builder.ChannelBuilder == null) throw new ArgumentException("The specified builder is invalid", nameof(builder));
             _builder = builder;
-            _sendTimeout = builder.ChannelBuilder.SendTimeout;
             _semaphore = new SemaphoreSlim(1, 1);
 
             ChannelCreatedHandlers = new List<Func<ChannelInformation, Task>>();
@@ -54,7 +52,7 @@ namespace Lime.Protocol.Client
         /// <returns></returns>
         public Task SendCommandAsync(Command command, CancellationToken cancellationToken)
         {
-            return SendAsync(command, (channel, envelope) => channel.SendCommandAsync(envelope, cancellationToken));
+            return SendAsync(command, cancellationToken, (channel, envelope) => channel.SendCommandAsync(envelope, cancellationToken));
         }
 
         /// <summary>
@@ -102,7 +100,7 @@ namespace Lime.Protocol.Client
         /// <returns></returns>
         public Task SendMessageAsync(Message message, CancellationToken cancellationToken)
         {
-            return SendAsync(message, (channel, envelope) => channel.SendMessageAsync(envelope, cancellationToken));
+            return SendAsync(message, cancellationToken, (channel, envelope) => channel.SendMessageAsync(envelope, cancellationToken));
         }
 
         /// <summary>
@@ -123,7 +121,7 @@ namespace Lime.Protocol.Client
         /// <returns></returns>
         public Task SendNotificationAsync(Notification notification, CancellationToken cancellationToken)
         {
-            return SendAsync(notification, (channel, envelope) => channel.SendNotificationAsync(envelope, cancellationToken));
+            return SendAsync(notification, cancellationToken, (channel, envelope) => channel.SendNotificationAsync(envelope, cancellationToken));
         }
 
         /// <summary>
@@ -179,7 +177,7 @@ namespace Lime.Protocol.Client
                 if (IsEstablished &&
                     _finishedSessionTask != null)
                 {
-                    await _clientChannel.SendFinishingSessionAsync(CancellationToken.None).ConfigureAwait(false);
+                    await _clientChannel.SendFinishingSessionAsync(cancellationToken).ConfigureAwait(false);
                     await _finishedSessionTask.ConfigureAwait(false);
                 }
 
@@ -191,14 +189,6 @@ namespace Lime.Protocol.Client
             finally
             {
                 _semaphore.Release();
-            }
-        }
-
-        private Task SendAsync<T>(T envelope, Func<IClientChannel, T, Task> sendFunc) where T : Envelope, new()
-        {
-            using (var cts = new CancellationTokenSource(_sendTimeout))
-            {
-                return SendAsync(envelope, cts.Token, sendFunc);
             }
         }
 

@@ -1897,7 +1897,7 @@ namespace Lime.Protocol.UnitTests.Client
             await target.FinishAsync(_cancellationToken);
 
             // Assert
-            _clientChannel.Verify(c => c.SendFinishingSessionAsync(CancellationToken.None), Times.Once);
+            _clientChannel.Verify(c => c.SendFinishingSessionAsync(It.IsAny<CancellationToken>()), Times.Once);
             _clientChannel.Verify(c => c.ReceiveFinishedSessionAsync(It.IsAny<CancellationToken>()), Times.Once);
             _disposableClientChannel.Verify(c => c.Dispose(), Times.Once);
         }
