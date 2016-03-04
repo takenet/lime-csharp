@@ -24,8 +24,9 @@ namespace Lime.Protocol.Network
         /// Sends a notification to the remote node.
         /// </summary>
         /// <param name="notification"></param>
+        /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        Task SendNotificationAsync(Notification notification);
+        Task SendNotificationAsync(Notification notification, CancellationToken cancellationToken);
     }
 
     /// <summary>
@@ -39,5 +40,19 @@ namespace Lime.Protocol.Network
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns></returns>
         Task<Notification> ReceiveNotificationAsync(CancellationToken cancellationToken);
+    }
+
+    public static class NotificationSenderChannelExtensions
+    {
+        /// <summary>
+        /// Sends a notification to the remote node.
+        /// </summary>
+        /// <param name="channel"></param>
+        /// <param name="notification"></param>
+        /// <returns></returns>
+        public static Task SendNotificationAsync(this INotificationSenderChannel channel, Notification notification)
+        {
+            return channel.SendNotificationAsync(notification, CancellationToken.None);
+        }
     }
 }

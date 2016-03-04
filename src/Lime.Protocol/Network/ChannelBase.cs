@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Linq;
-using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Threading.Tasks;
-using Lime.Protocol.Util;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading.Tasks.Dataflow;
@@ -154,10 +152,11 @@ namespace Lime.Protocol.Network
         /// Sends a message to the remote node.
         /// </summary>
         /// <param name="message"></param>
+        /// <param name="cancellationToken"></param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">message</exception>
         /// <exception cref="System.InvalidOperationException"></exception>
-        public virtual Task SendMessageAsync(Message message) => SendAsync(message, MessageModules, CancellationToken.None);
+        public virtual Task SendMessageAsync(Message message, CancellationToken cancellationToken) => SendAsync(message, cancellationToken, MessageModules);
         
 
         /// <summary>
@@ -176,10 +175,11 @@ namespace Lime.Protocol.Network
         /// Sends a command envelope to the remote node.
         /// </summary>
         /// <param name="command"></param>
+        /// <param name="cancellationToken"></param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">message</exception>
         /// <exception cref="System.InvalidOperationException"></exception>
-        public virtual Task SendCommandAsync(Command command) => SendAsync(command, CommandModules, CancellationToken.None);
+        public virtual Task SendCommandAsync(Command command, CancellationToken cancellationToken) => SendAsync(command, cancellationToken, CommandModules);
 
         /// <summary>
         /// Receives a command from the remote node.
@@ -224,7 +224,7 @@ namespace Lime.Protocol.Network
             {
                 using (cancellationToken.Register(() => tcs.TrySetCanceled()))
                 {
-                    await SendCommandAsync(requestCommand).ConfigureAwait(false);
+                    await SendCommandAsync(requestCommand, cancellationToken).ConfigureAwait(false);
                     var result = await tcs.Task.ConfigureAwait(false);
                     return result;
                 }
@@ -244,10 +244,11 @@ namespace Lime.Protocol.Network
         /// Sends a notification to the remote node.
         /// </summary>
         /// <param name="notification"></param>
+        /// <param name="cancellationToken"></param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">notification</exception>
         /// <exception cref="System.InvalidOperationException"></exception>
-        public virtual Task SendNotificationAsync(Notification notification) => SendAsync(notification, NotificationModules, CancellationToken.None);
+        public virtual Task SendNotificationAsync(Notification notification, CancellationToken cancellationToken) => SendAsync(notification, cancellationToken, NotificationModules);
 
         /// <summary>
         /// Receives a notification from the remote node.
@@ -268,9 +269,10 @@ namespace Lime.Protocol.Network
         /// Avoid to use this method directly. Instead, use the Server or Client channel methods.
         /// </summary>
         /// <param name="session"></param>
+        /// <param name="cancellationToken"></param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">session</exception>
-        public virtual Task SendSessionAsync(Session session)
+        public virtual Task SendSessionAsync(Session session, CancellationToken cancellationToken)
         {
             if (session == null) throw new ArgumentNullException(nameof(session));
             if (State == SessionState.Finished || State == SessionState.Failed)
@@ -278,7 +280,7 @@ namespace Lime.Protocol.Network
                 throw new InvalidOperationException($"Cannot send a session in the '{State}' session state");
             }
 
-            return SendAsync(session, CancellationToken.None);
+            return SendAsync(session, cancellationToken);
         }
 
         /// <summary>
@@ -491,10 +493,10 @@ namespace Lime.Protocol.Network
         /// Sends the envelope to the transport.
         /// </summary>
         /// <param name="envelope">The envelope.</param>
-        /// <param name="modules"></param>
         /// <param name="cancellationToken"></param>
+        /// <param name="modules"></param>
         /// <returns></returns>
-        private async Task SendAsync<T>(T envelope, IEnumerable<IChannelModule<T>> modules, CancellationToken cancellationToken) where T : Envelope, new()
+        private async Task SendAsync<T>(T envelope, CancellationToken cancellationToken, IEnumerable<IChannelModule<T>> modules) where T : Envelope, new()
         {
             if (envelope == null) throw new ArgumentNullException(nameof(envelope));
             if (State != SessionState.Established)

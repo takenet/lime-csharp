@@ -33,7 +33,7 @@ namespace Lime.Protocol.Network.Modules
                     Event = Event.Received
                 };
 
-                await _notificationChannel.SendNotificationAsync(notification);
+                await _notificationChannel.SendNotificationAsync(notification, CancellationToken.None);
             }
 
             return envelope;

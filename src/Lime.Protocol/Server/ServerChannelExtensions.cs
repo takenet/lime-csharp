@@ -13,13 +13,22 @@ namespace Lime.Protocol.Server
         /// <summary>
         /// Establishes a server channel with transport options negotiation and authentication.
         /// </summary>
-        /// <param name="channel"></param>
-        /// <param name="enabledCompressionOptions"></param>
-        /// <param name="enabledEncryptionOptions"></param>
-        /// <param name="schemeOptions"></param>
-        /// <param name="authenticateFunc"></param>
-        /// <param name="cancellationToken"></param>
+        /// <param name="channel">The channel.</param>
+        /// <param name="enabledCompressionOptions">The enabled compression options.</param>
+        /// <param name="enabledEncryptionOptions">The enabled encryption options.</param>
+        /// <param name="schemeOptions">The scheme options.</param>
+        /// <param name="authenticateFunc">The authenticate function.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">
+        /// </exception>
+        /// <exception cref="System.ArgumentException">
+        /// The transport doesn't support one or more of the specified compression options
+        /// or
+        /// The transport doesn't support one or more of the specified compression options
+        /// or
+        /// The authentication scheme options is mandatory
+        /// </exception>
         public static async Task EstablishSessionAsync(
             this IServerChannel channel, 
             SessionCompression[] enabledCompressionOptions,
@@ -72,7 +81,7 @@ namespace Lime.Protocol.Server
                     {
                         await channel.SendNegotiatingSessionAsync(
                             receivedSession.Compression.Value,
-                            receivedSession.Encryption.Value);
+                            receivedSession.Encryption.Value, cancellationToken);
 
                         if (channel.Transport.Compression != receivedSession.Compression.Value)
                         {
@@ -94,7 +103,7 @@ namespace Lime.Protocol.Server
                         {
                             Code = ReasonCodes.SESSION_NEGOTIATION_INVALID_OPTIONS,
                             Description = "An invalid negotiation option was selected"
-                        });
+                        }, cancellationToken);
                     }
                 }
 
@@ -118,7 +127,7 @@ namespace Lime.Protocol.Server
                             }
                             else if (authenticationResult.Node != null)
                             {
-                                await channel.SendEstablishedSessionAsync(authenticationResult.Node);
+                                await channel.SendEstablishedSessionAsync(authenticationResult.Node, cancellationToken);
                             }
                             else
                             {
@@ -126,7 +135,7 @@ namespace Lime.Protocol.Server
                                 {
                                     Code = ReasonCodes.SESSION_AUTHENTICATION_FAILED,
                                     Description = "The session authentication failed"
-                                });
+                                }, cancellationToken);
                             }
                         }
                     }

@@ -24,8 +24,9 @@ namespace Lime.Protocol.Network
         /// Sends a session to the remote node.
         /// </summary>
         /// <param name="session"></param>
+        /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        Task SendSessionAsync(Session session);
+        Task SendSessionAsync(Session session, CancellationToken cancellationToken);
     }
 
     /// <summary>

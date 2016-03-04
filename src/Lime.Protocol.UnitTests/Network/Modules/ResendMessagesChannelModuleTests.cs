@@ -64,8 +64,8 @@ namespace Lime.Protocol.UnitTests.Network.Modules
             {
                 target.Bind(_channel.Object, true);
                 _channel
-                    .Setup(c => c.SendMessageAsync(It.IsAny<Message>()))
-                    .Returns((Message m) => ((IChannelModule<Message>) target).OnSendingAsync(m, _cancellationToken));
+                    .Setup(c => c.SendMessageAsync(It.IsAny<Message>(), It.IsAny<CancellationToken>()))
+                    .Returns((Message m, CancellationToken c) => ((IChannelModule<Message>) target).OnSendingAsync(m, _cancellationToken));
             }
             return target;
         }
@@ -85,7 +85,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
 
             // Assert
             actual.ShouldBe(message);
-            _channel.Verify(c => c.SendMessageAsync(message), Times.Exactly(1));            
+            _channel.Verify(c => c.SendMessageAsync(message, It.IsAny<CancellationToken>()), Times.Exactly(1));            
         }
 
         [Test]
@@ -115,8 +115,8 @@ namespace Lime.Protocol.UnitTests.Network.Modules
             foreach (var message in messages)
             {
                 actuals.ShouldContain(message);
-                _channel.Verify(c => c.SendMessageAsync(message), Times.Exactly(1));
-            }                            
+                _channel.Verify(c => c.SendMessageAsync(message, It.IsAny<CancellationToken>()), Times.Exactly(1));
+            }
         }
 
         [Test]
@@ -133,7 +133,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
 
             // Assert
             actual.ShouldBe(message);
-            _channel.Verify(c => c.SendMessageAsync(message), Times.Exactly(_resendMessageTryCount));
+            _channel.Verify(c => c.SendMessageAsync(message, It.IsAny<CancellationToken>()), Times.Exactly(_resendMessageTryCount));
         }
 
 
@@ -163,7 +163,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
             foreach (var message in messages)
             {
                 actuals.ShouldContain(message);
-                _channel.Verify(c => c.SendMessageAsync(message), Times.Exactly(_resendMessageTryCount));
+                _channel.Verify(c => c.SendMessageAsync(message, It.IsAny<CancellationToken>()), Times.Exactly(_resendMessageTryCount));
             }
         }
 
@@ -186,7 +186,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
             // Assert
             actualMessage.ShouldBe(message);
             actualNotification.ShouldBe(notification);
-            _channel.Verify(c => c.SendMessageAsync(message), Times.Never);
+            _channel.Verify(c => c.SendMessageAsync(message, CancellationToken.None), Times.Never);
         }
 
         [Test]
@@ -209,7 +209,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
             // Assert
             actualMessage.ShouldBe(message);
             actualNotification.ShouldBe(notification);
-            _channel.Verify(c => c.SendMessageAsync(message), Times.Exactly(1));
+            _channel.Verify(c => c.SendMessageAsync(message, It.IsAny<CancellationToken>()), Times.Exactly(1));
         }
 
         [Test]
@@ -232,7 +232,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
             // Assert
             actual.ShouldBe(message);
             actualNotification.ShouldBe(notification);
-            _channel.Verify(c => c.SendMessageAsync(message), Times.Exactly(_resendMessageTryCount));
+            _channel.Verify(c => c.SendMessageAsync(message, It.IsAny<CancellationToken>()), Times.Exactly(_resendMessageTryCount));
         }
 
 
@@ -256,7 +256,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
             // Assert
             actual.ShouldBe(message);
             actualNotification.ShouldBe(notification);
-            _channel.Verify(c => c.SendMessageAsync(message), Times.Exactly(2));
+            _channel.Verify(c => c.SendMessageAsync(message, It.IsAny<CancellationToken>()), Times.Exactly(2));
         }
 
         [Test]
@@ -274,7 +274,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
 
             // Assert
             actual.ShouldBe(message);
-            _channel.Verify(c => c.SendMessageAsync(message), Times.Never);
+            _channel.Verify(c => c.SendMessageAsync(message, CancellationToken.None), Times.Never);
         }
 
 
@@ -294,7 +294,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
 
             // Assert
             actual.ShouldBe(message);
-            _channel.Verify(c => c.SendMessageAsync(message), Times.Exactly(2));
+            _channel.Verify(c => c.SendMessageAsync(message, It.IsAny<CancellationToken>()), Times.Exactly(2));
         }
 
         [Test]
@@ -312,7 +312,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
 
             // Assert
             actual.ShouldBe(message);
-            _channel.Verify(c => c.SendMessageAsync(message), Times.Never);
+            _channel.Verify(c => c.SendMessageAsync(message, It.IsAny<CancellationToken>()), Times.Never);
         }
 
         [Test]
@@ -331,7 +331,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
 
             // Assert
             actual.ShouldBe(message);
-            _channel.Verify(c => c.SendMessageAsync(message), Times.Exactly(2));
+            _channel.Verify(c => c.SendMessageAsync(message, It.IsAny<CancellationToken>()), Times.Exactly(2));
         }
 
         [Test]
@@ -372,7 +372,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
 
             // Assert
             actual.ShouldBe(message);
-            _channel.Verify(c => c.SendMessageAsync(message), Times.Never);
+            _channel.Verify(c => c.SendMessageAsync(message, CancellationToken.None), Times.Never);
         }
 
 
@@ -404,7 +404,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
             foreach (var message in messages)
             {
                 actuals.ShouldContain(message);
-                _channel.Verify(c => c.SendMessageAsync(message), Times.Never);
+                _channel.Verify(c => c.SendMessageAsync(message, It.IsAny<CancellationToken>()), Times.Never);
             }
         }
 
@@ -425,8 +425,8 @@ namespace Lime.Protocol.UnitTests.Network.Modules
 
             // Assert
             actual.ShouldBe(message);
-            _channel.Verify(c => c.SendMessageAsync(message), Times.Never);
-            channel2Mock.Verify(c => c.SendMessageAsync(message), Times.Once);
+            _channel.Verify(c => c.SendMessageAsync(message, It.IsAny<CancellationToken>()), Times.Never);
+            channel2Mock.Verify(c => c.SendMessageAsync(message, It.IsAny<CancellationToken>()), Times.Once);
         }
 
         [Test]
@@ -458,8 +458,8 @@ namespace Lime.Protocol.UnitTests.Network.Modules
             foreach (var message in messages)
             {
                 actuals.ShouldContain(message);
-                _channel.Verify(c => c.SendMessageAsync(message), Times.Never);
-                channel2Mock.Verify(c => c.SendMessageAsync(message), Times.Once);
+                _channel.Verify(c => c.SendMessageAsync(message, It.IsAny<CancellationToken>()), Times.Never);
+                channel2Mock.Verify(c => c.SendMessageAsync(message, It.IsAny<CancellationToken>()), Times.Once);
             }            
         }
     }

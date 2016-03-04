@@ -262,7 +262,7 @@ namespace Lime.Protocol.UnitTests.Client
             var content = Dummy.CreateTextContent();
             var message = Dummy.CreateMessage(content);
 
-            await target.SendReceivedNotificationAsync(message.Id, message.From);
+            await target.SendReceivedNotificationAsync(message.Id, message.From, CancellationToken.None);
 
             _transport.Verify(
                 t => t.SendAsync(It.Is<Notification>(
@@ -286,7 +286,7 @@ namespace Lime.Protocol.UnitTests.Client
             var message = Dummy.CreateMessage(content: null);
 
             // Act
-            Should.Throw<ArgumentNullException>(() => target.SendReceivedNotificationAsync(message.Id, null));
+            Should.Throw<ArgumentNullException>(() => target.SendReceivedNotificationAsync(message.Id, null, CancellationToken.None));
         }
 
         #endregion
@@ -304,7 +304,7 @@ namespace Lime.Protocol.UnitTests.Client
 
             var target = GetTarget(state: SessionState.Established);
 
-            await target.SendFinishingSessionAsync();
+            await target.SendFinishingSessionAsync(CancellationToken.None);
 
             _transport.Verify(
                 t => t.SendAsync(It.Is<Session>(
@@ -323,7 +323,7 @@ namespace Lime.Protocol.UnitTests.Client
             
             // Act
             Should.Throw<InvalidOperationException>(() =>
-                target.SendFinishingSessionAsync());
+                target.SendFinishingSessionAsync(CancellationToken.None));
         }
 
         #endregion
@@ -398,7 +398,7 @@ namespace Lime.Protocol.UnitTests.Client
                 localNode: localNode);
 
 
-            await target.SendMessageAsync(message);
+            await target.SendMessageAsync(message, CancellationToken.None);
 
             _transport.Verify(
                 t => t.SendAsync(It.Is<Message>(
@@ -442,7 +442,7 @@ namespace Lime.Protocol.UnitTests.Client
                 localNode: localNode);
 
 
-            await target.SendMessageAsync(message);
+            await target.SendMessageAsync(message, CancellationToken.None);
 
             _transport.Verify(
                 t => t.SendAsync(It.Is<Message>(

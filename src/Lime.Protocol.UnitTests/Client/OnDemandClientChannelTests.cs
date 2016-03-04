@@ -86,12 +86,12 @@ namespace Lime.Protocol.UnitTests.Client
             });
 
             // Act
-            await target.SendMessageAsync(message);
+            await target.SendMessageAsync(message, CancellationToken.None);
 
             // Assert
             _establishedClientChannelBuilder.Verify(c => c.BuildAndEstablishAsync(It.IsAny<CancellationToken>()),
                 Times.Once());
-            _clientChannel.Verify(c => c.SendMessageAsync(message), Times.Once());
+            _clientChannel.Verify(c => c.SendMessageAsync(message, CancellationToken.None), Times.Once());
             channelInformation.ShouldNotBeNull();
             channelInformation.SessionId.ShouldBe(_sessionId);
             channelInformation.State.ShouldBe(SessionState.Established);
@@ -114,7 +114,7 @@ namespace Lime.Protocol.UnitTests.Client
             await Task.WhenAll(
                 Enumerable
                     .Range(0, count)
-                    .Select(i => Task.Run(() => target.SendMessageAsync(messages[i]))));
+                    .Select(i => Task.Run(() => target.SendMessageAsync(messages[i], CancellationToken.None))));
 
 
             // Assert
@@ -122,7 +122,7 @@ namespace Lime.Protocol.UnitTests.Client
                 Times.Once());
             foreach (var message in messages)
             {
-                _clientChannel.Verify(c => c.SendMessageAsync(message), Times.Once());
+                _clientChannel.Verify(c => c.SendMessageAsync(message, CancellationToken.None), Times.Once());
             }            
         }
 
@@ -139,7 +139,7 @@ namespace Lime.Protocol.UnitTests.Client
             });
 
             // Act
-            await target.SendMessageAsync(message).ShouldThrowAsync<ApplicationException>();
+            await target.SendMessageAsync(message, CancellationToken.None).ShouldThrowAsync<ApplicationException>();
         }
 
         [Test]
@@ -162,7 +162,7 @@ namespace Lime.Protocol.UnitTests.Client
             // Act
             try
             {
-                await target.SendMessageAsync(message);
+                await target.SendMessageAsync(message, CancellationToken.None);
             }
             catch (AggregateException ex)
             {
@@ -178,17 +178,17 @@ namespace Lime.Protocol.UnitTests.Client
             // Arrange
             var message = Dummy.CreateMessage(Dummy.CreatePlainDocument());
             var target = GetTarget();
-            await target.SendMessageAsync(message);
+            await target.SendMessageAsync(message, CancellationToken.None);
             _establishedClientChannelBuilder.ResetCalls();
             _clientChannel.ResetCalls();
 
             // Act
-            await target.SendMessageAsync(message);
+            await target.SendMessageAsync(message, CancellationToken.None);
 
             // Assert
             _establishedClientChannelBuilder.Verify(c => c.BuildAndEstablishAsync(It.IsAny<CancellationToken>()),
                 Times.Never());
-            _clientChannel.Verify(c => c.SendMessageAsync(message), Times.Once());
+            _clientChannel.Verify(c => c.SendMessageAsync(message, CancellationToken.None), Times.Once());
         }
 
         [Test]
@@ -218,12 +218,12 @@ namespace Lime.Protocol.UnitTests.Client
                 .Returns(Task.FromResult(_clientChannel.Object));
 
             // Act
-            await target.SendMessageAsync(message);
+            await target.SendMessageAsync(message, CancellationToken.None);
 
             // Assert
             _establishedClientChannelBuilder.Verify(c => c.BuildAndEstablishAsync(It.IsAny<CancellationToken>()),
                 Times.Exactly(2));
-            _clientChannel.Verify(c => c.SendMessageAsync(message), Times.Once());            
+            _clientChannel.Verify(c => c.SendMessageAsync(message, CancellationToken.None), Times.Once());            
             failedChannelInformation.Exception.ShouldBe(exception);
             failedChannelInformation.IsConnected.ShouldBeFalse();            
             createdChannelInformation.ShouldNotBeNull();
@@ -254,12 +254,12 @@ namespace Lime.Protocol.UnitTests.Client
                 .Returns(Task.FromResult(_clientChannel.Object));
 
             // Act
-            await target.SendMessageAsync(message);
+            await target.SendMessageAsync(message, CancellationToken.None);
 
             // Assert
             _establishedClientChannelBuilder.Verify(c => c.BuildAndEstablishAsync(It.IsAny<CancellationToken>()),
                 Times.Exactly(4));
-            _clientChannel.Verify(c => c.SendMessageAsync(message), Times.Once());
+            _clientChannel.Verify(c => c.SendMessageAsync(message, CancellationToken.None), Times.Once());
             handlerArgs.Count.ShouldBe(3);
             handlerArgs.Any(h => h.IsConnected).ShouldBeFalse();
             handlerArgs.Select(e => e.Exception).ShouldContain(exception1);
@@ -276,7 +276,7 @@ namespace Lime.Protocol.UnitTests.Client
             target.Dispose();
 
             // Act
-            await target.SendMessageAsync(message).ShouldThrowAsync<ObjectDisposedException>();
+            await target.SendMessageAsync(message, CancellationToken.None).ShouldThrowAsync<ObjectDisposedException>();
         }
 
         [Test]
@@ -293,7 +293,7 @@ namespace Lime.Protocol.UnitTests.Client
                 .Returns(Task.FromResult(_clientChannel.Object));
 
             // Act
-            await target.SendMessageAsync(message).ShouldThrowAsync<ApplicationException>();
+            await target.SendMessageAsync(message, CancellationToken.None).ShouldThrowAsync<ApplicationException>();
         }
 
         [Test]
@@ -327,7 +327,7 @@ namespace Lime.Protocol.UnitTests.Client
                 .Returns(Task.FromResult(_clientChannel.Object));
 
             // Act            
-            await target.SendMessageAsync(message).ShouldThrowAsync<ApplicationException>();            
+            await target.SendMessageAsync(message, CancellationToken.None).ShouldThrowAsync<ApplicationException>();            
             handlerCallCount.ShouldBe(3);            
         }
 
@@ -361,7 +361,7 @@ namespace Lime.Protocol.UnitTests.Client
                 return TaskUtil.CompletedTask;
             });
             _clientChannel
-                .Setup(c => c.SendMessageAsync(message))
+                .Setup(c => c.SendMessageAsync(message, CancellationToken.None))
                 .Throws(exception);
             _establishedClientChannelBuilder
                 .SetupSequence(b => b.BuildAndEstablishAsync(It.IsAny<CancellationToken>()))
@@ -378,13 +378,13 @@ namespace Lime.Protocol.UnitTests.Client
                 .Returns(SessionState.Established);
 
             // Act
-            await target.SendMessageAsync(message);
+            await target.SendMessageAsync(message, CancellationToken.None);
 
             // Assert
             _establishedClientChannelBuilder.Verify(c => c.BuildAndEstablishAsync(It.IsAny<CancellationToken>()),
                 Times.Exactly(2));
-            _clientChannel.Verify(c => c.SendMessageAsync(message), Times.Once());
-            clientChannel2.Verify(c => c.SendMessageAsync(message), Times.Once());
+            _clientChannel.Verify(c => c.SendMessageAsync(message, CancellationToken.None), Times.Once());
+            clientChannel2.Verify(c => c.SendMessageAsync(message, CancellationToken.None), Times.Once());
             failedChannelInformation.Exception.ShouldBe(exception);
             createdChannelInformations.Count.ShouldBe(2);
             createdChannelInformations[0].SessionId.ShouldBe(_sessionId);
@@ -613,12 +613,12 @@ namespace Lime.Protocol.UnitTests.Client
             });
 
             // Act
-            await target.SendNotificationAsync(notification);
+            await target.SendNotificationAsync(notification, CancellationToken.None);
 
             // Assert
             _establishedClientChannelBuilder.Verify(c => c.BuildAndEstablishAsync(It.IsAny<CancellationToken>()),
                 Times.Once());
-            _clientChannel.Verify(c => c.SendNotificationAsync(notification), Times.Once());
+            _clientChannel.Verify(c => c.SendNotificationAsync(notification, CancellationToken.None), Times.Once());
             channelInformation.ShouldNotBeNull();
             channelInformation.SessionId.ShouldBe(_sessionId);
             channelInformation.State.ShouldBe(SessionState.Established);
@@ -641,7 +641,7 @@ namespace Lime.Protocol.UnitTests.Client
             await Task.WhenAll(
                 Enumerable
                     .Range(0, count)
-                    .Select(i => Task.Run(() => target.SendNotificationAsync(notifications[i]))));
+                    .Select(i => Task.Run(() => target.SendNotificationAsync(notifications[i], CancellationToken.None))));
 
 
             // Assert
@@ -649,7 +649,7 @@ namespace Lime.Protocol.UnitTests.Client
                 Times.Once());
             foreach (var notification in notifications)
             {
-                _clientChannel.Verify(c => c.SendNotificationAsync(notification), Times.Once());
+                _clientChannel.Verify(c => c.SendNotificationAsync(notification, CancellationToken.None), Times.Once());
             }
         }
 
@@ -666,7 +666,7 @@ namespace Lime.Protocol.UnitTests.Client
             });
 
             // Act
-            await target.SendNotificationAsync(notification).ShouldThrowAsync<ApplicationException>();
+            await target.SendNotificationAsync(notification, CancellationToken.None).ShouldThrowAsync<ApplicationException>();
         }
 
         [Test]
@@ -689,7 +689,7 @@ namespace Lime.Protocol.UnitTests.Client
             // Act
             try
             {
-                await target.SendNotificationAsync(notification);
+                await target.SendNotificationAsync(notification, CancellationToken.None);
             }
             catch (AggregateException ex)
             {
@@ -705,17 +705,17 @@ namespace Lime.Protocol.UnitTests.Client
             // Arrange
             var notification = Dummy.CreateNotification(Event.Received);
             var target = GetTarget();
-            await target.SendNotificationAsync(notification);
+            await target.SendNotificationAsync(notification, CancellationToken.None);
             _establishedClientChannelBuilder.ResetCalls();
             _clientChannel.ResetCalls();
 
             // Act
-            await target.SendNotificationAsync(notification);
+            await target.SendNotificationAsync(notification, CancellationToken.None);
 
             // Assert
             _establishedClientChannelBuilder.Verify(c => c.BuildAndEstablishAsync(It.IsAny<CancellationToken>()),
                 Times.Never());
-            _clientChannel.Verify(c => c.SendNotificationAsync(notification), Times.Once());
+            _clientChannel.Verify(c => c.SendNotificationAsync(notification, CancellationToken.None), Times.Once());
         }
 
         [Test]
@@ -745,12 +745,12 @@ namespace Lime.Protocol.UnitTests.Client
                 .Returns(Task.FromResult(_clientChannel.Object));
 
             // Act
-            await target.SendNotificationAsync(notification);
+            await target.SendNotificationAsync(notification, CancellationToken.None);
 
             // Assert
             _establishedClientChannelBuilder.Verify(c => c.BuildAndEstablishAsync(It.IsAny<CancellationToken>()),
                 Times.Exactly(2));
-            _clientChannel.Verify(c => c.SendNotificationAsync(notification), Times.Once());
+            _clientChannel.Verify(c => c.SendNotificationAsync(notification, CancellationToken.None), Times.Once());
             failedChannelInformation.Exception.ShouldBe(exception);
             failedChannelInformation.IsConnected.ShouldBeFalse();
             createdChannelInformation.ShouldNotBeNull();
@@ -781,12 +781,12 @@ namespace Lime.Protocol.UnitTests.Client
                 .Returns(Task.FromResult(_clientChannel.Object));
 
             // Act
-            await target.SendNotificationAsync(notification);
+            await target.SendNotificationAsync(notification, CancellationToken.None);
 
             // Assert
             _establishedClientChannelBuilder.Verify(c => c.BuildAndEstablishAsync(It.IsAny<CancellationToken>()),
                 Times.Exactly(4));
-            _clientChannel.Verify(c => c.SendNotificationAsync(notification), Times.Once());
+            _clientChannel.Verify(c => c.SendNotificationAsync(notification, CancellationToken.None), Times.Once());
             handlerArgs.Count.ShouldBe(3);
             handlerArgs.Any(h => h.IsConnected).ShouldBeFalse();
             handlerArgs.Select(e => e.Exception).ShouldContain(exception1);
@@ -803,7 +803,7 @@ namespace Lime.Protocol.UnitTests.Client
             target.Dispose();
 
             // Act
-            await target.SendNotificationAsync(notification).ShouldThrowAsync<ObjectDisposedException>();
+            await target.SendNotificationAsync(notification, CancellationToken.None).ShouldThrowAsync<ObjectDisposedException>();
         }
 
         [Test]
@@ -820,7 +820,7 @@ namespace Lime.Protocol.UnitTests.Client
                 .Returns(Task.FromResult(_clientChannel.Object));
 
             // Act
-            await target.SendNotificationAsync(notification).ShouldThrowAsync<ApplicationException>();
+            await target.SendNotificationAsync(notification, CancellationToken.None).ShouldThrowAsync<ApplicationException>();
         }
 
         [Test]
@@ -854,7 +854,7 @@ namespace Lime.Protocol.UnitTests.Client
                 .Returns(Task.FromResult(_clientChannel.Object));
 
             // Act            
-            await target.SendNotificationAsync(notification).ShouldThrowAsync<ApplicationException>();
+            await target.SendNotificationAsync(notification, CancellationToken.None).ShouldThrowAsync<ApplicationException>();
             handlerCallCount.ShouldBe(3);
         }
 
@@ -888,7 +888,7 @@ namespace Lime.Protocol.UnitTests.Client
                 return TaskUtil.CompletedTask;
             });
             _clientChannel
-                .Setup(c => c.SendNotificationAsync(notification))
+                .Setup(c => c.SendNotificationAsync(notification, CancellationToken.None))
                 .Throws(exception);
             _establishedClientChannelBuilder
                 .SetupSequence(b => b.BuildAndEstablishAsync(It.IsAny<CancellationToken>()))
@@ -905,13 +905,13 @@ namespace Lime.Protocol.UnitTests.Client
                 .Returns(SessionState.Established);
 
             // Act
-            await target.SendNotificationAsync(notification);
+            await target.SendNotificationAsync(notification, CancellationToken.None);
 
             // Assert
             _establishedClientChannelBuilder.Verify(c => c.BuildAndEstablishAsync(It.IsAny<CancellationToken>()),
                 Times.Exactly(2));
-            _clientChannel.Verify(c => c.SendNotificationAsync(notification), Times.Once());
-            clientChannel2.Verify(c => c.SendNotificationAsync(notification), Times.Once());
+            _clientChannel.Verify(c => c.SendNotificationAsync(notification, CancellationToken.None), Times.Once());
+            clientChannel2.Verify(c => c.SendNotificationAsync(notification, CancellationToken.None), Times.Once());
             failedChannelInformation.Exception.ShouldBe(exception);
             createdChannelInformations.Count.ShouldBe(2);
             createdChannelInformations[0].SessionId.ShouldBe(_sessionId);
@@ -1140,12 +1140,12 @@ namespace Lime.Protocol.UnitTests.Client
             });
 
             // Act
-            await target.SendCommandAsync(command);
+            await target.SendCommandAsync(command, CancellationToken.None);
 
             // Assert
             _establishedClientChannelBuilder.Verify(c => c.BuildAndEstablishAsync(It.IsAny<CancellationToken>()),
                 Times.Once());
-            _clientChannel.Verify(c => c.SendCommandAsync(command), Times.Once());
+            _clientChannel.Verify(c => c.SendCommandAsync(command, CancellationToken.None), Times.Once());
             channelInformation.ShouldNotBeNull();
             channelInformation.SessionId.ShouldBe(_sessionId);
             channelInformation.State.ShouldBe(SessionState.Established);
@@ -1168,7 +1168,7 @@ namespace Lime.Protocol.UnitTests.Client
             await Task.WhenAll(
                 Enumerable
                     .Range(0, count)
-                    .Select(i => Task.Run(() => target.SendCommandAsync(commands[i]))));
+                    .Select(i => Task.Run(() => target.SendCommandAsync(commands[i], CancellationToken.None))));
 
 
             // Assert
@@ -1176,7 +1176,7 @@ namespace Lime.Protocol.UnitTests.Client
                 Times.Once());
             foreach (var command in commands)
             {
-                _clientChannel.Verify(c => c.SendCommandAsync(command), Times.Once());
+                _clientChannel.Verify(c => c.SendCommandAsync(command, CancellationToken.None), Times.Once());
             }
         }
 
@@ -1193,7 +1193,7 @@ namespace Lime.Protocol.UnitTests.Client
             });
 
             // Act
-            await target.SendCommandAsync(command).ShouldThrowAsync<ApplicationException>();
+            await target.SendCommandAsync(command, CancellationToken.None).ShouldThrowAsync<ApplicationException>();
         }
 
         [Test]
@@ -1216,7 +1216,7 @@ namespace Lime.Protocol.UnitTests.Client
             // Act
             try
             {
-                await target.SendCommandAsync(command);
+                await target.SendCommandAsync(command, CancellationToken.None);
             }
             catch (AggregateException ex)
             {
@@ -1232,17 +1232,17 @@ namespace Lime.Protocol.UnitTests.Client
             // Arrange
             var command = Dummy.CreateCommand(Dummy.CreatePlainDocument());
             var target = GetTarget();
-            await target.SendCommandAsync(command);
+            await target.SendCommandAsync(command, CancellationToken.None);
             _establishedClientChannelBuilder.ResetCalls();
             _clientChannel.ResetCalls();
 
             // Act
-            await target.SendCommandAsync(command);
+            await target.SendCommandAsync(command, CancellationToken.None);
 
             // Assert
             _establishedClientChannelBuilder.Verify(c => c.BuildAndEstablishAsync(It.IsAny<CancellationToken>()),
                 Times.Never());
-            _clientChannel.Verify(c => c.SendCommandAsync(command), Times.Once());
+            _clientChannel.Verify(c => c.SendCommandAsync(command, CancellationToken.None), Times.Once());
         }
 
         [Test]
@@ -1272,12 +1272,12 @@ namespace Lime.Protocol.UnitTests.Client
                 .Returns(Task.FromResult(_clientChannel.Object));
 
             // Act
-            await target.SendCommandAsync(command);
+            await target.SendCommandAsync(command, CancellationToken.None);
 
             // Assert
             _establishedClientChannelBuilder.Verify(c => c.BuildAndEstablishAsync(It.IsAny<CancellationToken>()),
                 Times.Exactly(2));
-            _clientChannel.Verify(c => c.SendCommandAsync(command), Times.Once());
+            _clientChannel.Verify(c => c.SendCommandAsync(command, CancellationToken.None), Times.Once());
             failedChannelInformation.Exception.ShouldBe(exception);
             failedChannelInformation.IsConnected.ShouldBeFalse();
             createdChannelInformation.ShouldNotBeNull();
@@ -1308,12 +1308,12 @@ namespace Lime.Protocol.UnitTests.Client
                 .Returns(Task.FromResult(_clientChannel.Object));
 
             // Act
-            await target.SendCommandAsync(command);
+            await target.SendCommandAsync(command, CancellationToken.None);
 
             // Assert
             _establishedClientChannelBuilder.Verify(c => c.BuildAndEstablishAsync(It.IsAny<CancellationToken>()),
                 Times.Exactly(4));
-            _clientChannel.Verify(c => c.SendCommandAsync(command), Times.Once());
+            _clientChannel.Verify(c => c.SendCommandAsync(command, CancellationToken.None), Times.Once());
             handlerArgs.Count.ShouldBe(3);
             handlerArgs.Any(h => h.IsConnected).ShouldBeFalse();
             handlerArgs.Select(e => e.Exception).ShouldContain(exception1);
@@ -1330,7 +1330,7 @@ namespace Lime.Protocol.UnitTests.Client
             target.Dispose();
 
             // Act
-            await target.SendCommandAsync(command).ShouldThrowAsync<ObjectDisposedException>();
+            await target.SendCommandAsync(command, CancellationToken.None).ShouldThrowAsync<ObjectDisposedException>();
         }
 
         [Test]
@@ -1347,7 +1347,7 @@ namespace Lime.Protocol.UnitTests.Client
                 .Returns(Task.FromResult(_clientChannel.Object));
 
             // Act
-            await target.SendCommandAsync(command).ShouldThrowAsync<ApplicationException>();
+            await target.SendCommandAsync(command, CancellationToken.None).ShouldThrowAsync<ApplicationException>();
         }
 
         [Test]
@@ -1381,7 +1381,7 @@ namespace Lime.Protocol.UnitTests.Client
                 .Returns(Task.FromResult(_clientChannel.Object));
 
             // Act            
-            await target.SendCommandAsync(command).ShouldThrowAsync<ApplicationException>();
+            await target.SendCommandAsync(command, CancellationToken.None).ShouldThrowAsync<ApplicationException>();
             handlerCallCount.ShouldBe(3);
         }
 
@@ -1415,7 +1415,7 @@ namespace Lime.Protocol.UnitTests.Client
                 return TaskUtil.CompletedTask;
             });
             _clientChannel
-                .Setup(c => c.SendCommandAsync(command))
+                .Setup(c => c.SendCommandAsync(command, CancellationToken.None))
                 .Throws(exception);
             _establishedClientChannelBuilder
                 .SetupSequence(b => b.BuildAndEstablishAsync(It.IsAny<CancellationToken>()))
@@ -1432,13 +1432,13 @@ namespace Lime.Protocol.UnitTests.Client
                 .Returns(SessionState.Established);
 
             // Act
-            await target.SendCommandAsync(command);
+            await target.SendCommandAsync(command, CancellationToken.None);
 
             // Assert
             _establishedClientChannelBuilder.Verify(c => c.BuildAndEstablishAsync(It.IsAny<CancellationToken>()),
                 Times.Exactly(2));
-            _clientChannel.Verify(c => c.SendCommandAsync(command), Times.Once());
-            clientChannel2.Verify(c => c.SendCommandAsync(command), Times.Once());
+            _clientChannel.Verify(c => c.SendCommandAsync(command, CancellationToken.None), Times.Once());
+            clientChannel2.Verify(c => c.SendCommandAsync(command, CancellationToken.None), Times.Once());
             failedChannelInformation.Exception.ShouldBe(exception);
             createdChannelInformations.Count.ShouldBe(2);
             createdChannelInformations[0].SessionId.ShouldBe(_sessionId);
@@ -1887,7 +1887,7 @@ namespace Lime.Protocol.UnitTests.Client
             // Arrange
             var message = Dummy.CreateMessage(Dummy.CreatePlainDocument());
             var target = GetTarget();
-            await target.SendMessageAsync(message);
+            await target.SendMessageAsync(message, CancellationToken.None);
             var session = Dummy.CreateSession(SessionState.Finished);
             _clientChannel
                 .Setup(c => c.ReceiveFinishedSessionAsync(It.IsAny<CancellationToken>()))
@@ -1897,7 +1897,7 @@ namespace Lime.Protocol.UnitTests.Client
             await target.FinishAsync(_cancellationToken);
 
             // Assert
-            _clientChannel.Verify(c => c.SendFinishingSessionAsync(), Times.Once);
+            _clientChannel.Verify(c => c.SendFinishingSessionAsync(CancellationToken.None), Times.Once);
             _clientChannel.Verify(c => c.ReceiveFinishedSessionAsync(It.IsAny<CancellationToken>()), Times.Once);
             _disposableClientChannel.Verify(c => c.Dispose(), Times.Once);
         }
@@ -1908,7 +1908,7 @@ namespace Lime.Protocol.UnitTests.Client
             // Arrange
             var message = Dummy.CreateMessage(Dummy.CreatePlainDocument());
             var target = GetTarget();
-            await target.SendMessageAsync(message);
+            await target.SendMessageAsync(message, CancellationToken.None);
             var session = Dummy.CreateSession(SessionState.Finished);
             _establishedClientChannelBuilder.ResetCalls();
             _clientChannel.ResetCalls();
@@ -1920,7 +1920,7 @@ namespace Lime.Protocol.UnitTests.Client
             await target.FinishAsync(_cancellationToken);
 
             // Assert
-            _clientChannel.Verify(c => c.SendFinishingSessionAsync(), Times.Never);
+            _clientChannel.Verify(c => c.SendFinishingSessionAsync(CancellationToken.None), Times.Never);
             _clientChannel.Verify(c => c.ReceiveFinishedSessionAsync(_cancellationToken), Times.Never);
             _disposableClientChannel.Verify(c => c.Dispose(), Times.Once);
         }

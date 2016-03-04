@@ -183,7 +183,7 @@ namespace Lime.Sample.Server
 
                     if (finishingSessionTask.IsCompleted)
                     {
-                        await serverChannel.SendFinishedSessionAsync();
+                        await serverChannel.SendFinishedSessionAsync(CancellationToken.None);
                     }
                 }
 
@@ -194,7 +194,7 @@ namespace Lime.Sample.Server
                     {
                         Code = ReasonCodes.SESSION_ERROR,
                         Description = "The session failed"
-                    });
+                    }, CancellationToken.None);
                 }
             }
             catch (OperationCanceledException ex)
@@ -234,14 +234,14 @@ namespace Lime.Sample.Server
                         Event = Event.Received
                     };
 
-                    await serverChannel.SendNotificationAsync(notification);
+                    await serverChannel.SendNotificationAsync(notification, CancellationToken.None);
                     Console.WriteLine("Message with id '{0}' received from '{1}': {2}", message.Id, message.From ?? serverChannel.RemoteNode, message.Content);
                 }
                 else if (_nodeChannelsDictionary.TryGetValue(message.To, out destinationServerChannel))
                 {
                     // Destination is a node that has a session with the server
                     message.From = serverChannel.RemoteNode;
-                    await destinationServerChannel.SendMessageAsync(message);
+                    await destinationServerChannel.SendMessageAsync(message, CancellationToken.None);
                     Console.WriteLine("Message forwarded from '{0}' to '{1}'", serverChannel.RemoteNode, destinationServerChannel.RemoteNode);
                 }
                 else
@@ -258,7 +258,7 @@ namespace Lime.Sample.Server
                         }
                     };
 
-                    await serverChannel.SendNotificationAsync(notification);
+                    await serverChannel.SendNotificationAsync(notification, CancellationToken.None);
                     Console.WriteLine("Invalid message destination from '{0}': '{1}'", serverChannel.RemoteNode, message.To);
                 }
             }
@@ -292,14 +292,14 @@ namespace Lime.Sample.Server
                         }
                     };
 
-                    await serverChannel.SendCommandAsync(responseCommand);
+                    await serverChannel.SendCommandAsync(responseCommand, CancellationToken.None);
                     Console.WriteLine("Command with id '{0}' received from '{1}' - Method: {2} - URI: {3}", command.Id, command.From ?? serverChannel.RemoteNode, command.Method, command.Uri);
                 }
                 else if (_nodeChannelsDictionary.TryGetValue(command.To, out destinationServerChannel))
                 {
                     // Destination is a node that has a session with the server
                     command.From = serverChannel.RemoteNode;
-                    await destinationServerChannel.SendCommandAsync(command);
+                    await destinationServerChannel.SendCommandAsync(command, CancellationToken.None);
                     Console.WriteLine("Command forwarded from '{0}' to '{1}'", serverChannel.RemoteNode, destinationServerChannel.RemoteNode);
                 }
                 else
@@ -316,7 +316,7 @@ namespace Lime.Sample.Server
                         }
                     };
 
-                    await serverChannel.SendCommandAsync(responseCommand);
+                    await serverChannel.SendCommandAsync(responseCommand, CancellationToken.None);
                     Console.WriteLine("Invalid command destination from '{0}': '{1}'", serverChannel.RemoteNode, command.To);
                 }
             }
@@ -343,7 +343,7 @@ namespace Lime.Sample.Server
                 {
                     // Destination is a node that has a session with the server
                     notification.From = serverChannel.RemoteNode;
-                    await destinationServerChannel.SendNotificationAsync(notification);
+                    await destinationServerChannel.SendNotificationAsync(notification, CancellationToken.None);
                 }
             }
         }

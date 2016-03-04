@@ -27,15 +27,15 @@ namespace Lime.Protocol.Network
 
             if (typeof(T) == typeof(Notification))
             {
-                await channel.SendNotificationAsync(envelope as Notification).ConfigureAwait(false);
+                await channel.SendNotificationAsync(envelope as Notification, CancellationToken.None).ConfigureAwait(false);
             }
             else if (typeof(T) == typeof(Message))
             {
-                await channel.SendMessageAsync(envelope as Message).ConfigureAwait(false);
+                await channel.SendMessageAsync(envelope as Message, CancellationToken.None).ConfigureAwait(false);
             }
             else if (typeof(T) == typeof(Command))
             {
-                await channel.SendCommandAsync(envelope as Command).ConfigureAwait(false);
+                await channel.SendCommandAsync(envelope as Command, CancellationToken.None).ConfigureAwait(false);
             }
             else
             {

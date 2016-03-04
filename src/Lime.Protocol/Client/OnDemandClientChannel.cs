@@ -50,10 +50,11 @@ namespace Lime.Protocol.Client
         /// Sends a command envelope to the remote node.
         /// </summary>
         /// <param name="command"></param>
+        /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public Task SendCommandAsync(Command command)
+        public Task SendCommandAsync(Command command, CancellationToken cancellationToken)
         {
-            return SendAsync(command, (channel, envelope) => channel.SendCommandAsync(envelope));
+            return SendAsync(command, (channel, envelope) => channel.SendCommandAsync(envelope, cancellationToken));
         }
 
         /// <summary>
@@ -97,10 +98,11 @@ namespace Lime.Protocol.Client
         /// Sends a message to the remote node.
         /// </summary>
         /// <param name="message"></param>
+        /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public Task SendMessageAsync(Message message)
+        public Task SendMessageAsync(Message message, CancellationToken cancellationToken)
         {
-            return SendAsync(message, (channel, envelope) => channel.SendMessageAsync(envelope));
+            return SendAsync(message, (channel, envelope) => channel.SendMessageAsync(envelope, cancellationToken));
         }
 
         /// <summary>
@@ -117,10 +119,11 @@ namespace Lime.Protocol.Client
         /// Sends a notification to the remote node.
         /// </summary>
         /// <param name="notification"></param>
+        /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public Task SendNotificationAsync(Notification notification)
+        public Task SendNotificationAsync(Notification notification, CancellationToken cancellationToken)
         {
-            return SendAsync(notification, (channel, envelope) => channel.SendNotificationAsync(envelope));
+            return SendAsync(notification, (channel, envelope) => channel.SendNotificationAsync(envelope, cancellationToken));
         }
 
         /// <summary>
@@ -176,7 +179,7 @@ namespace Lime.Protocol.Client
                 if (IsEstablished &&
                     _finishedSessionTask != null)
                 {
-                    await _clientChannel.SendFinishingSessionAsync().ConfigureAwait(false);
+                    await _clientChannel.SendFinishingSessionAsync(CancellationToken.None).ConfigureAwait(false);
                     await _finishedSessionTask.ConfigureAwait(false);
                 }
 

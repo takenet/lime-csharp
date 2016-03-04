@@ -104,7 +104,7 @@ namespace Lime.Protocol.Server
                 EncryptionOptions = encryptionOptions
             };
 
-            await SendSessionAsync(session).ConfigureAwait(false);
+            await SendSessionAsync(session, cancellationToken).ConfigureAwait(false);
             return await ReceiveSessionAsync(cancellationToken).ConfigureAwait(false);
         }
 
@@ -113,9 +113,10 @@ namespace Lime.Protocol.Server
         /// </summary>
         /// <param name="sessionCompression">The session compression option</param>
         /// <param name="sessionEncryption">The session encryption option</param>
+        /// <param name="cancellationToken"></param>
         /// <returns></returns>
         /// <exception cref="System.InvalidOperationException"></exception>
-        public Task SendNegotiatingSessionAsync(SessionCompression sessionCompression, SessionEncryption sessionEncryption)
+        public Task SendNegotiatingSessionAsync(SessionCompression sessionCompression, SessionEncryption sessionEncryption, CancellationToken cancellationToken)
         {
             if (State != SessionState.Negotiating)
             {
@@ -131,7 +132,7 @@ namespace Lime.Protocol.Server
                 Encryption = sessionEncryption
             };
 
-            return SendSessionAsync(session);
+            return SendSessionAsync(session, cancellationToken);
         }
 
         /// <summary>
@@ -169,7 +170,7 @@ namespace Lime.Protocol.Server
                 SchemeOptions = schemeOptions
             };
 
-            await SendSessionAsync(session).ConfigureAwait(false);
+            await SendSessionAsync(session, cancellationToken).ConfigureAwait(false);
             return await ReceiveSessionAsync(cancellationToken).ConfigureAwait(false);
         }
 
@@ -200,7 +201,7 @@ namespace Lime.Protocol.Server
                 Authentication = authenticationRoundtrip
             };
 
-            await SendSessionAsync(session).ConfigureAwait(false);
+            await SendSessionAsync(session, cancellationToken).ConfigureAwait(false);
             return await ReceiveSessionAsync(cancellationToken).ConfigureAwait(false);
         }
 
@@ -208,9 +209,10 @@ namespace Lime.Protocol.Server
         /// Changes the session state to the established state and sends a session envelope to the node to communicate the establishment of the session.
         /// </summary>
         /// <param name="node"></param>
+        /// <param name="cancellationToken"></param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">node</exception>
-        public Task SendEstablishedSessionAsync(Node node)
+        public Task SendEstablishedSessionAsync(Node node, CancellationToken cancellationToken)
         {
             if (node == null) throw new ArgumentNullException(nameof(node));            
             if (State > SessionState.Authenticating)
@@ -229,7 +231,7 @@ namespace Lime.Protocol.Server
                 State = State
             };
 
-            return SendSessionAsync(session);
+            return SendSessionAsync(session, cancellationToken);
         }
 
         /// <summary>
@@ -253,9 +255,10 @@ namespace Lime.Protocol.Server
         /// <summary>
         /// Changes the session state and sends a finished session envelope to the node to communicate the end of the session and closes the transport.
         /// </summary>
+        /// <param name="cancellationToken"></param>
         /// <returns></returns>
         /// <exception cref="System.InvalidOperationException"></exception>
-        public async Task SendFinishedSessionAsync()
+        public async Task SendFinishedSessionAsync(CancellationToken cancellationToken)
         {
             var session = new Session
             {
@@ -265,19 +268,19 @@ namespace Lime.Protocol.Server
                 State = SessionState.Finished
             };
 
-            await SendSessionAsync(session).ConfigureAwait(false);
+            await SendSessionAsync(session, cancellationToken).ConfigureAwait(false);
             await CloseTransportAsync().ConfigureAwait(false);
             State = session.State;
         }
-
 
         /// <summary>
         /// Changes the session state and sends a failed session envelope to the node to communicate the finished session and closes the transport.
         /// </summary>
         /// <param name="reason"></param>
+        /// <param name="cancellationToken"></param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">reason</exception>
-        public async Task SendFailedSessionAsync(Reason reason)
+        public async Task SendFailedSessionAsync(Reason reason, CancellationToken cancellationToken)
         {
             if (reason == null) throw new ArgumentNullException(nameof(reason));
             
@@ -290,7 +293,7 @@ namespace Lime.Protocol.Server
                 Reason = reason
             };
 
-            await SendSessionAsync(session).ConfigureAwait(false);
+            await SendSessionAsync(session, cancellationToken).ConfigureAwait(false);
             await CloseTransportAsync().ConfigureAwait(false);
             State = session.State;
         }
@@ -312,7 +315,8 @@ namespace Lime.Protocol.Server
                 {
                     Code = ReasonCodes.SESSION_ERROR,
                     Description = "Invalid session id"
-                });
+                },
+                cancellationToken);
             }
 
             return session;

@@ -877,7 +877,7 @@ namespace Lime.Client.Windows.ViewModels
             {
                 if (_clientChannel.State == SessionState.Established)
                 {
-                    await _clientChannel.SendFinishingSessionAsync();
+                    await _clientChannel.SendFinishingSessionAsync(CancellationToken.None);
                     var session = await _clientChannel.ReceiveFinishedSessionAsync(_receiveTimeout.ToCancellationToken());
                 }
 

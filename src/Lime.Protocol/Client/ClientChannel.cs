@@ -67,7 +67,7 @@ namespace Lime.Protocol.Client
                 State = SessionState.New
             };
 
-            await SendSessionAsync(session).ConfigureAwait(false);
+            await SendSessionAsync(session, cancellationToken).ConfigureAwait(false);
             return await ReceiveSessionAsync(cancellationToken).ConfigureAwait(false);
         }
 
@@ -98,7 +98,7 @@ namespace Lime.Protocol.Client
                 Encryption = sessionEncryption
             };
 
-            await SendSessionAsync(session).ConfigureAwait(false);
+            await SendSessionAsync(session, cancellationToken).ConfigureAwait(false);
             return await ReceiveSessionAsync(cancellationToken).ConfigureAwait(false);
         }
 
@@ -163,7 +163,7 @@ namespace Lime.Protocol.Client
                 Authentication = authentication
             };
 
-            await SendSessionAsync(session).ConfigureAwait(false);
+            await SendSessionAsync(session, cancellationToken).ConfigureAwait(false);
             return await ReceiveSessionAsync(cancellationToken).ConfigureAwait(false);
         }
 
@@ -174,9 +174,10 @@ namespace Lime.Protocol.Client
         /// </summary>
         /// <param name="messageId"></param>
         /// <param name="to"></param>
+        /// <param name="cancellationToken"></param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">to</exception>
-        public Task SendReceivedNotificationAsync(Guid messageId, Node to)
+        public Task SendReceivedNotificationAsync(Guid messageId, Node to, CancellationToken cancellationToken)
         {
             if (to == null) throw new ArgumentNullException(nameof(to));
 
@@ -187,16 +188,17 @@ namespace Lime.Protocol.Client
                 Event = Event.Received
             };
 
-            return SendNotificationAsync(notification);
+            return SendNotificationAsync(notification, cancellationToken);
         }
 
         /// <summary>
         /// Sends a finishing session 
         /// envelope to the server.
         /// </summary>
+        /// <param name="cancellationToken"></param>
         /// <returns></returns>
         /// <exception cref="System.InvalidOperationException"></exception>
-        public Task SendFinishingSessionAsync()
+        public Task SendFinishingSessionAsync(CancellationToken cancellationToken)
         {
             if (State != SessionState.Established)
             {
@@ -209,7 +211,7 @@ namespace Lime.Protocol.Client
                 State = SessionState.Finishing
             };
 
-            return SendSessionAsync(session);
+            return SendSessionAsync(session, cancellationToken);
         }
 
         /// <summary>

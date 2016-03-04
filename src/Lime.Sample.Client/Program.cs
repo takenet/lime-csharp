@@ -159,7 +159,7 @@ namespace Lime.Sample.Client
                         }
                     };
 
-                    await onDemandChannel.SendMessageAsync(message);
+                    await onDemandChannel.SendMessageAsync(message, CancellationToken.None);
                 }
 
             }

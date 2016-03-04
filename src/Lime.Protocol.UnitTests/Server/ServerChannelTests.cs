@@ -236,7 +236,7 @@ namespace Lime.Protocol.UnitTests.Server
 
             await target.SendNegotiatingSessionAsync(
                 sessionCompression,
-                sessionEncryption);
+                sessionEncryption, CancellationToken.None);
 
             _transport.Verify(
                 t => t.SendAsync(
@@ -420,7 +420,7 @@ namespace Lime.Protocol.UnitTests.Server
 
             var node = Dummy.CreateNode();
 
-            await target.SendEstablishedSessionAsync(node);
+            await target.SendEstablishedSessionAsync(node, CancellationToken.None);
 
             _transport.Verify(
                 t => t.SendAsync(
@@ -448,7 +448,7 @@ namespace Lime.Protocol.UnitTests.Server
             var target = GetTarget();
 
             var node = Dummy.CreateNode();
-            await target.SendEstablishedSessionAsync(node);
+            await target.SendEstablishedSessionAsync(node, CancellationToken.None);
 
             _transport.Verify(
                 t => t.SendAsync(
@@ -477,7 +477,7 @@ namespace Lime.Protocol.UnitTests.Server
             Node node = null;
 
             Should.Throw<ArgumentNullException>(() =>
-                target.SendEstablishedSessionAsync(node));
+                target.SendEstablishedSessionAsync(node, CancellationToken.None));
         }
 
         #endregion
@@ -530,7 +530,7 @@ namespace Lime.Protocol.UnitTests.Server
 
             var target = GetTarget(SessionState.Established, remoteNode);
 
-            await target.SendFinishedSessionAsync();
+            await target.SendFinishedSessionAsync(CancellationToken.None);
 
             _transport.Verify(
                 t => t.SendAsync(
@@ -559,7 +559,7 @@ namespace Lime.Protocol.UnitTests.Server
         public async Task SendFinishedSessionAsync_NewState_ClosesTransport()
         {
             var target = GetTarget();
-            await target.SendFinishedSessionAsync();
+            await target.SendFinishedSessionAsync(CancellationToken.None);
 
             _transport.Verify(
                 t => t.CloseAsync(
@@ -583,7 +583,7 @@ namespace Lime.Protocol.UnitTests.Server
 
             var reason = Dummy.CreateReason();
 
-            await target.SendFailedSessionAsync(reason);
+            await target.SendFailedSessionAsync(reason, CancellationToken.None);
 
             _transport.Verify(
                 t => t.SendAsync(
@@ -614,7 +614,7 @@ namespace Lime.Protocol.UnitTests.Server
             var target = GetTarget();
             Reason reason = null;
 
-            await target.SendFailedSessionAsync(reason).ShouldThrowAsync<ArgumentNullException>();
+            await target.SendFailedSessionAsync(reason, CancellationToken.None).ShouldThrowAsync<ArgumentNullException>();
         }
 
         #endregion

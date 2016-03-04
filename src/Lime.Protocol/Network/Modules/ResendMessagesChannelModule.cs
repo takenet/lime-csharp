@@ -242,7 +242,7 @@ namespace Lime.Protocol.Network.Modules
                     !sentMessage.IsDisposed &&
                     !sentMessage.CancellationToken.IsCancellationRequested)
                 {                    
-                    await _channel.SendMessageAsync(sentMessage.Message);              
+                    await _channel.SendMessageAsync(sentMessage.Message, sentMessage.CancellationToken);              
                 }
             }
             catch (ObjectDisposedException) { }

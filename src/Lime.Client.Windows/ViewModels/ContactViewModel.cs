@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Lime.Client.Windows.ViewModels
@@ -243,7 +244,7 @@ namespace Lime.Client.Windows.ViewModels
                             }
                         };
 
-                        await _clientChannel.SendMessageAsync(message);
+                        await _clientChannel.SendMessageAsync(message, CancellationToken.None);
                     }
                 }
             }
@@ -267,7 +268,7 @@ namespace Lime.Client.Windows.ViewModels
                     }
                 };
 
-                await _clientChannel.SendMessageAsync(message);
+                await _clientChannel.SendMessageAsync(message, CancellationToken.None);
             }
         }
 

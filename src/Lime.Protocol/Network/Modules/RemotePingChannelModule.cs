@@ -147,7 +147,7 @@ namespace Lime.Protocol.Network.Modules
                             Uri = new LimeUri(PING_URI)
                         };
 
-                        await _channel.SendCommandAsync(pingCommandRequest).ConfigureAwait(false);
+                        await _channel.SendCommandAsync(pingCommandRequest, CancellationToken.None).ConfigureAwait(false);
                     }
                 }
                 catch (OperationCanceledException) when (_cancellationTokenSource.IsCancellationRequested)
@@ -160,13 +160,13 @@ namespace Lime.Protocol.Network.Modules
         private static async Task FinishAsync(IClientChannel clientChannel, CancellationToken cancellationToken)
         {
             var receivedFinishedSessionTask = clientChannel.ReceiveFinishedSessionAsync(cancellationToken);
-            await clientChannel.SendFinishingSessionAsync().ConfigureAwait(false);
+            await clientChannel.SendFinishingSessionAsync(CancellationToken.None).ConfigureAwait(false);
             await receivedFinishedSessionTask.ConfigureAwait(false);
         }
 
         private static Task FinishAsync(IServerChannel serverChannel, CancellationToken cancellationToken)
         {
-            return serverChannel.SendFinishedSessionAsync();
+            return serverChannel.SendFinishedSessionAsync(CancellationToken.None);
         }
 
         public void Dispose()

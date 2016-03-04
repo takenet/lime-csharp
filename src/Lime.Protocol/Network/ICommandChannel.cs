@@ -24,8 +24,9 @@ namespace Lime.Protocol.Network
         /// Sends a command to the remote node.
         /// </summary>
         /// <param name="command"></param>
+        /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        Task SendCommandAsync(Command command);
+        Task SendCommandAsync(Command command, CancellationToken cancellationToken);
     }
 
     /// <summary>
@@ -53,5 +54,19 @@ namespace Lime.Protocol.Network
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns></returns>
         Task<Command> ProcessCommandAsync(Command requestCommand, CancellationToken cancellationToken);
+    }
+    
+    public static class CommandSenderChannelExtensions
+    {
+        /// <summary>
+        /// Sends a command to the remote node.
+        /// </summary>
+        /// <param name="channel"></param>
+        /// <param name="command"></param>
+        /// <returns></returns>
+        public static Task SendCommandAsync(this ICommandSenderChannel channel, Command command)
+        {
+            return channel.SendCommandAsync(command, CancellationToken.None);
+        }
     }
 }

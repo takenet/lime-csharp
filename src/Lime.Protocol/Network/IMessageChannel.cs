@@ -24,8 +24,9 @@ namespace Lime.Protocol.Network
         /// Sends a message to the remote node.
         /// </summary>
         /// <param name="message"></param>
+        /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        Task SendMessageAsync(Message message);
+        Task SendMessageAsync(Message message, CancellationToken cancellationToken);
     }
 
     /// <summary>
@@ -39,5 +40,19 @@ namespace Lime.Protocol.Network
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns></returns>
         Task<Message> ReceiveMessageAsync(CancellationToken cancellationToken);
+    }
+
+    public static class MessageSenderChannelExtensions
+    {
+        /// <summary>
+        /// Sends a message to the remote node.
+        /// </summary>
+        /// <param name="channel"></param>
+        /// <param name="message"></param>
+        /// <returns></returns>
+        public static Task SendMessageAsync(this IMessageSenderChannel channel, Message message)
+        {
+            return channel.SendMessageAsync(message, CancellationToken.None);
+        }
     }
 }

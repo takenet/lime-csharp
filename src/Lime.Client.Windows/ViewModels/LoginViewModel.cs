@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 using Lime.Transport.Tcp;
 
@@ -202,7 +203,7 @@ namespace Lime.Client.Windows.ViewModels
                             _userNameNode, 
                             cancellationToken);
 
-                        await client.SendFinishingSessionAsync();
+                        await client.SendFinishingSessionAsync(cancellationToken);
                         await client.ReceiveFinishedSessionAsync(cancellationToken);
 
                         client.DisposeIfDisposable();
