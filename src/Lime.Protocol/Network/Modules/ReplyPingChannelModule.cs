@@ -35,7 +35,7 @@ namespace Lime.Protocol.Network.Modules
                 Resource = PingDocument
             };
 
-            await _commandChannel.SendCommandAsync(pingCommandResponse, CancellationToken.None).ConfigureAwait(false);
+            await _commandChannel.SendCommandAsync(pingCommandResponse, cancellationToken).ConfigureAwait(false);
             return null;
         }
     }
