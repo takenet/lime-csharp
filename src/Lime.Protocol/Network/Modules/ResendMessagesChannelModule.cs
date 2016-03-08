@@ -194,7 +194,8 @@ namespace Lime.Protocol.Network.Modules
             _channel.MessageModules.Remove(this);
             _channel.NotificationModules.Remove(this);
             _channel = null;
-            _link.Dispose();
+            _link?.Dispose();
+            _link = null;
         }
 
         protected virtual MessageIdDestination CreateKey(Message message)
