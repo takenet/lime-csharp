@@ -8,13 +8,7 @@ namespace Lime.Protocol.Serialization.Newtonsoft.Converters
 {
     class CommandJsonConverter : JsonConverter
     {
-        public override bool CanWrite
-        {
-            get
-            {
-                return false;
-            }
-        }
+        public override bool CanWrite => false;
 
         public override bool CanConvert(Type objectType)
         {

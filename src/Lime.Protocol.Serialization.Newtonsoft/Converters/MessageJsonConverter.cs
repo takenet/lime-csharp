@@ -112,7 +112,6 @@ namespace Lime.Protocol.Serialization.Newtonsoft.Converters
             writer.WriteValueIfNotDefaultAsString(Envelope.FROM_KEY, message.From);
             writer.WriteValueIfNotDefaultAsString(Envelope.TO_KEY, message.To);
             writer.WriteValueIfNotDefaultAsString(Envelope.PP_KEY, message.Pp);
-
             writer.WritePropertyName(Message.TYPE_KEY);
             writer.WriteValue(message.Type.ToString());
 
@@ -138,6 +137,8 @@ namespace Lime.Protocol.Serialization.Newtonsoft.Converters
 
                 writer.WriteEndObject();
             }
+
+            writer.WriteEndObject();
         }
     }
 }
