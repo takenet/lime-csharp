@@ -420,5 +420,12 @@ namespace Lime.Protocol.UnitTests
                     scheme, CreateDomainName(), port));
         }
 
+        public static ChatState CreateChatState()
+        {
+            return new ChatState()
+            {
+                State = ChatStateEvent.Composing
+            };
+        }
     }
 }

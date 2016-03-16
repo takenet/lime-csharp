@@ -116,7 +116,7 @@ namespace Lime.Protocol.Serialization.Newtonsoft.Converters
             writer.WriteValue(message.Type.ToString());
 
             writer.WritePropertyName(Message.CONTENT_KEY);
-            if (message.Content is JsonDocument)
+            if (message.Type.IsJson)
             {
                 serializer.Serialize(writer, message.Content);
             }

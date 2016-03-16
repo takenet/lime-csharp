@@ -606,11 +606,32 @@ namespace Lime.Protocol.UnitTests.Serialization
 			Assert.IsFalse(resultString.ContainsJsonKey(Session.AUTHENTICATION_KEY));
 		}
 
-		#endregion
+        [Test]
+        [Category("Serialize")]
+        public void Serialize_ChatStateMessage_ReturnsValidJsonString()
+        {            
+            // Arrange
+            var chatState =  Dummy.CreateChatState();
+            var message = Dummy.CreateMessage(chatState);
+            var target = GetTarget();
 
-		#region Deserialize
+            // Act
+            var resultString = target.Serialize(message);
 
-		[Test]
+            // Assert
+            Assert.IsTrue(resultString.HasValidJsonStackedBrackets());
+            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.ID_KEY, message.Id));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.FROM_KEY, message.From));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.TO_KEY, message.To));
+            Assert.IsTrue(resultString.ContainsJsonProperty(ChatState.STATE_KEY, chatState.State));
+        }
+
+
+        #endregion
+
+        #region Deserialize
+
+        [Test]
 		[Category("Deserialize")]
 		public void Deserialize_CapabilityRequestCommand_ReturnsValidInstance()
 		{

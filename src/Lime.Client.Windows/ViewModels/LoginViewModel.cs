@@ -12,6 +12,7 @@ using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
+using Lime.Protocol.Serialization.Newtonsoft;
 using Lime.Transport.Tcp;
 
 namespace Lime.Client.Windows.ViewModels
@@ -39,10 +40,6 @@ namespace Lime.Client.Windows.ViewModels
             : base(new Uri("/Pages/Login.xaml", UriKind.Relative))
         {
             LoginCommand = new AsyncCommand(LoginAsync, CanLogin);
-
-#if DEBUG
-            ServerAddress = string.Format("net.tcp://{0}:55321", Dns.GetHostEntry("localhost").HostName); 
-#endif
         }
 
         #endregion
@@ -168,7 +165,7 @@ namespace Lime.Client.Windows.ViewModels
             {
                 var cancellationToken = _loginTimeout.ToCancellationToken();
 
-                var transport = new TcpTransport(traceWriter: traceWriter);
+                var transport = new TcpTransport(traceWriter: traceWriter, envelopeSerializer: new JsonNetSerializer());
                 await transport.OpenAsync(_serverAddressUri, cancellationToken);
 
                 client = new ClientChannel(

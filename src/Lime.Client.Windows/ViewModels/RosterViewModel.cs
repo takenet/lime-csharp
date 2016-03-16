@@ -738,22 +738,20 @@ namespace Lime.Client.Windows.ViewModels
                     
                     Contacts.Add(contactViewModel);                    
                 }
+                
+                contactViewModel.Conversation.ReceiveMessage(message);
 
-                if (contactViewModel != null)
+                // Don't focus/show the window if its a chat state message
+                if (!(message.Content is ChatState))
                 {
-                    contactViewModel.Conversation.ReceiveMessage(message);
-
-                    // Don't focus/show the window if its a chat state message
-                    if (!(message.Content is ChatState))
-                    {
-                        MessengerInstance.Send(
-                            new OpenWindowMessage
-                            {
-                                WindowName = "Conversation",
-                                DataContext = contactViewModel.Conversation
-                            });
-                    }
+                    MessengerInstance.Send(
+                        new OpenWindowMessage
+                        {
+                            WindowName = "Conversation",
+                            DataContext = contactViewModel.Conversation
+                        });
                 }
+                
             }
         }
 

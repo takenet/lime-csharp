@@ -98,7 +98,7 @@ namespace Lime.Client.Windows.ViewModels
             {
                 _name = value;
                 RaisePropertyChanged(() => Name);
-                Title = string.Format("{0} - Opa Messenger", Name);
+                Title = string.Format("{0} - LIME Messenger", Name);
             }
         }
 
@@ -158,15 +158,20 @@ namespace Lime.Client.Windows.ViewModels
             }
         }
 
-        private bool _hasUnreadMessage;
         public bool HasUnreadMessage
         {
-            get { return _hasUnreadMessage; }
+            get { return Messages.Any(m => m.IsUnreaded); }
             set
-            {
-                _hasUnreadMessage = value;
-                RaisePropertyChanged(() => HasUnreadMessage);
+            {                                
+                if (!value)
+                {
+                    foreach (var message in Messages.Where(m => m.IsUnreaded))
+                    {
+                        message.IsUnreaded = false;
+                    }
+                }
 
+                RaisePropertyChanged(() => HasUnreadMessage);
 
                 var flashMode = FlashMode.Stop;
 
@@ -301,7 +306,7 @@ namespace Lime.Client.Windows.ViewModels
         {
             if (message.Content is PlainText)
             {
-                Messages.Add(new MessageViewModel(message, MessageDirection.Input));
+                Messages.Add(new MessageViewModel(message, MessageDirection.Input, IsFocused));
             }
             else if (message.Content is ChatState)
             {

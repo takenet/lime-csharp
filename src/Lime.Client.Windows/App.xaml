@@ -8,8 +8,8 @@
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="/FirstFloor.ModernUI;component/Assets/ModernUI.xaml" />
                 <ResourceDictionary Source="/FirstFloor.ModernUI;component/Assets/ModernUI.Light.xaml"/>
-                <ResourceDictionary Source="/Converters/Converters.xaml"/>
-                <ResourceDictionary Source="/Images/Images.xaml"/>
+                <ResourceDictionary Source="Converters/Converters.xaml"/>
+                <ResourceDictionary Source="Images/Images.xaml"/>
             </ResourceDictionary.MergedDictionaries>
             <vm:MainViewModel x:Key="MainViewModel" />
             <Style x:Key="ContentRootNoMargin" BasedOn="{StaticResource ContentRoot}" TargetType="FrameworkElement">

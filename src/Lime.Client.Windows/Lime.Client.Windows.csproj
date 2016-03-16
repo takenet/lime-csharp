@@ -18,6 +18,7 @@
     <RestorePackages>true</RestorePackages>
     <UICulture>en-US</UICulture>
     <IsWebBootstrapper>false</IsWebBootstrapper>
+    <TargetFrameworkProfile />
     <PublishUrl>\\smc2\departamentos\Tecnologia\Binarios\Plataformas\Iris\Lime.Client.Windows\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Unc</InstallFrom>
@@ -35,12 +36,11 @@
     <SuiteName>Lime</SuiteName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>publish.htm</WebPage>
-    <ApplicationRevision>6</ApplicationRevision>
+    <ApplicationRevision>10</ApplicationRevision>
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
-    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -72,6 +72,12 @@
   </PropertyGroup>
   <PropertyGroup>
     <SignManifests>false</SignManifests>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>Images\appbar.message.smiley.blue.ico</ApplicationIcon>
+  </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject>Lime.Client.Windows.App</StartupObject>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="FirstFloor.ModernUI, Version=1.0.5.1, Culture=neutral, processorArchitecture=MSIL">
@@ -306,6 +312,10 @@
       <Project>{796a57b4-1fe0-4fe9-940f-e99083dc233a}</Project>
       <Name>Lime.Messaging</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Lime.Protocol.Serialization.Newtonsoft\Lime.Protocol.Serialization.Newtonsoft.csproj">
+      <Project>{07EF6707-B284-4068-9B2F-48998782BC9F}</Project>
+      <Name>Lime.Protocol.Serialization.Newtonsoft</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Lime.Transport.Tcp\Lime.Transport.Tcp.csproj">
       <Project>{d24b4ef4-9b8c-4f89-bfc6-f76007936382}</Project>
       <Name>Lime.Transport.Tcp</Name>
@@ -321,9 +331,9 @@
     <Resource Include="Images\placeholder.png" />
   </ItemGroup>
   <ItemGroup>
-    <BootstrapperPackage Include=".NETFramework,Version=v4.5.1">
+    <BootstrapperPackage Include=".NETFramework,Version=v4.6.1">
       <Visible>False</Visible>
-      <ProductName>Microsoft .NET Framework 4.5.1 %28x86 and x64%29</ProductName>
+      <ProductName>Microsoft .NET Framework 4.6.1 %28x86 and x64%29</ProductName>
       <Install>true</Install>
     </BootstrapperPackage>
     <BootstrapperPackage Include="Microsoft.Net.Client.3.5">

@@ -12,8 +12,7 @@ namespace Lime.Client.Windows.ViewModels
     {
         #region Constructor
 
-        public MessageViewModel(Message message, MessageDirection direction)
-            : this()
+        public MessageViewModel(Message message, MessageDirection direction, bool isUnreaded)            
         {
             if (message == null)
             {
@@ -22,6 +21,7 @@ namespace Lime.Client.Windows.ViewModels
 
             Id = message.Id;
             Direction = direction;
+            IsUnreaded = isUnreaded;
 
             if (message.Content is PlainText)
             {
@@ -97,9 +97,22 @@ namespace Lime.Client.Windows.ViewModels
             set
             {
                 _direction = value;
+                if (value == MessageDirection.Output) _isUnreaded = false;
                 RaisePropertyChanged(() => Direction);
             }
         }
+
+        private bool _isUnreaded;
+        public bool IsUnreaded
+        {
+            get { return _isUnreaded; }
+            set
+            {
+                _isUnreaded = value;
+                RaisePropertyChanged(() => IsUnreaded);
+            }
+        }
+
     }
 
 

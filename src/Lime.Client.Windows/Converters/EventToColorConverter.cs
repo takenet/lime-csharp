@@ -28,6 +28,8 @@ namespace Lime.Client.Windows.Converters
                         return Colors.LightGreen;
                     case Event.Received:
                         return Colors.YellowGreen;
+                    case Event.Consumed:
+                        return Colors.DodgerBlue;
                     default:
                         break;
                 }
