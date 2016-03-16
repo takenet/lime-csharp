@@ -171,33 +171,17 @@ namespace Lime.Client.Windows.ViewModels
 
         public PresenceStatus PresenceStatus
         {
-            get 
-            { 
-                if (Presence != null &&
-                    Presence.Status.HasValue)
-                {
-                    return Presence.Status.Value;
-                }
-
-                return PresenceStatus.Unavailable; 
+            get
+            {
+                return Presence?.Status ?? PresenceStatus.Unavailable;
             }
             set
             {
-                if (Presence == null || 
-                    value != Presence.Status)
+                Presence = new Presence
                 {
-                    if (Presence == null)
-                    {
-                        Presence = new Presence
-                        {
-                            Status = value
-                        };
-                    }
-                    else
-                    {
-                        Presence.Status = value;
-                    }
-                }
+                    Status = value,
+                    Message = PresenceMessage
+                };
             }
         }
 
@@ -205,30 +189,15 @@ namespace Lime.Client.Windows.ViewModels
         {
             get
             {
-                if (Presence != null)
-                {
-                    return Presence.Message;
-                }
-
-                return null;
+                return Presence?.Message;
             }
             set
             {
-                if (Presence == null ||
-                    value != Presence.Message)
+                Presence = new Presence
                 {
-                    if (Presence == null)
-                    {
-                        Presence = new Presence
-                        {
-                            Message = value
-                        };
-                    }
-                    else
-                    {
-                        Presence.Message = value;
-                    }
-                }
+                    Status = PresenceStatus,
+                    Message = value
+                };
             }
         }
 
@@ -705,8 +674,9 @@ namespace Lime.Client.Windows.ViewModels
             {
                 var listenMessagesTask = ListenMessagesAsync();
                 var listenNotificationsTask = ListenNotificationsAsync();
+                var listenCommandsTask = ListenCommandsAsync();
 
-                await Task.WhenAll(listenMessagesTask, listenNotificationsTask);
+                await Task.WhenAll(listenMessagesTask, listenNotificationsTask, listenCommandsTask);
             }
             catch (OperationCanceledException) { }
         }
@@ -773,6 +743,36 @@ namespace Lime.Client.Windows.ViewModels
                     contactViewModel.Conversation.ReceiveNotification(notification);                    
                 }
             }         
+        }
+
+        private async Task ListenCommandsAsync()
+        {
+            while (!_cancellationTokenSource.IsCancellationRequested)
+            {
+                var command = await _clientChannel.ReceiveCommandAsync(_cancellationTokenSource.Token);
+                ProcessCommand(command);
+            }
+        }
+
+        private void ProcessCommand(Command command)
+        {
+            if (command.Method == CommandMethod.Observe &&
+                command.Uri != null &&
+                !command.Uri.IsRelative)
+            {
+                var identity = command.Uri.ToUri().GetIdentity();                
+                foreach (var contact in Contacts.Where(c => c.Contact.Identity.Equals(identity)))
+                {
+                    if (command.Resource is Presence)
+                    {
+                        contact.Presence = (Presence) command.Resource;
+                    }
+                    else if (command.Resource is Account)
+                    {
+                        contact.Account = (Account)command.Resource;
+                    }
+                }
+            }
         }
 
         private async Task GetContactsAsync()
