@@ -193,7 +193,8 @@ namespace Lime.Client.Windows.ViewModels
                         // Creates the account
                         var account = new Account()
                         {
-                            Password = this.Password.ToBase64()
+                            FullName = _userNameNode.Name,
+                            Password = this.Password.ToBase64()                            
                         };
 
                         await client.SetResourceAsync<Account>(
