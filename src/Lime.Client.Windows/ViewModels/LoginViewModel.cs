@@ -14,6 +14,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Lime.Protocol.Serialization.Newtonsoft;
 using Lime.Transport.Tcp;
+using Microsoft.Win32;
 
 namespace Lime.Client.Windows.ViewModels
 {
@@ -40,6 +41,7 @@ namespace Lime.Client.Windows.ViewModels
             : base(new Uri("/Pages/Login.xaml", UriKind.Relative))
         {
             LoginCommand = new AsyncCommand(LoginAsync, CanLogin);
+            LoadPreferences();
         }
 
         #endregion
@@ -238,6 +240,8 @@ namespace Lime.Client.Windows.ViewModels
                 
                 if (sessionResult.State == SessionState.Established)
                 {
+                    SavePreferences();
+
                     var rosterViewModel = new RosterViewModel(client, this);
                     base.Owner.ContentViewModel = rosterViewModel;
                 }
@@ -297,5 +301,38 @@ namespace Lime.Client.Windows.ViewModels
         }
 
         #endregion
+
+        private void LoadPreferences()
+        {
+            var key = Registry.CurrentUser.CreateSubKey("Lime Messenger");
+            if (key != null)
+            {
+                UserName = key.GetValue(nameof(UserName)) as string;
+                Password = key.GetValue(nameof(Password)) as string;
+                ServerAddress = key.GetValue(nameof(ServerAddress)) as string;                
+                var showTraceWindowValue = key.GetValue(nameof(ShowTraceWindow)) as string;
+                bool showTraceWindow;
+                if (showTraceWindowValue != null && bool.TryParse(showTraceWindowValue, out showTraceWindow))
+                {
+                    ShowTraceWindow = showTraceWindow;
+                }
+
+            }
+        }
+
+
+        private void SavePreferences()
+        {
+            var key = Registry.CurrentUser.CreateSubKey("Lime Messenger");
+            if (key != null)
+            {
+                key.SetValue(nameof(UserName), UserName);
+                key.SetValue(nameof(Password), Password);
+                key.SetValue(nameof(ServerAddress), ServerAddress);
+                key.SetValue(nameof(ShowTraceWindow), ShowTraceWindow.ToString());
+                key.Close();
+            }
+        }
+
     }
 }

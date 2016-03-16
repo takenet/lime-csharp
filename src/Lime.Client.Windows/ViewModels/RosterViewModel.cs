@@ -180,7 +180,8 @@ namespace Lime.Client.Windows.ViewModels
                 Presence = new Presence
                 {
                     Status = value,
-                    Message = PresenceMessage
+                    Message = PresenceMessage,
+                    RoutingRule = RoutingRule.Identity
                 };
             }
         }
@@ -196,7 +197,8 @@ namespace Lime.Client.Windows.ViewModels
                 Presence = new Presence
                 {
                     Status = PresenceStatus,
-                    Message = value
+                    Message = value,
+                    RoutingRule = RoutingRule.Identity
                 };
             }
         }
