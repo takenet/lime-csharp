@@ -461,17 +461,8 @@ namespace Lime.Protocol.Network
 
         private async Task ConsumeEnvelopeAsync<T>(T envelope, BufferBlock<T> buffer, IEnumerable<IChannelModule<T>> modules, CancellationToken cancellationToken) where T : Envelope, new()
         {
-            try
-            {
-                envelope = await OnReceivingAsync(envelope, modules, cancellationToken);
-                await ConsumeEnvelopeAsync(envelope, buffer, cancellationToken);
-                await OnConsumingAsync(envelope, modules, cancellationToken);
-            }
-            catch
-            {
-                await OnFailingAsync(envelope, modules, cancellationToken);
-                throw;
-            }
+            envelope = await OnReceivingAsync(envelope, modules, cancellationToken);
+            await ConsumeEnvelopeAsync(envelope, buffer, cancellationToken);
         }
 
         private async Task<T> OnReceivingAsync<T>(T envelope, IEnumerable<IChannelModule<T>> modules, CancellationToken cancellationToken) where T : Envelope, new()
@@ -482,32 +473,6 @@ namespace Lime.Protocol.Network
 
                 if (envelope == null) break;
                 envelope = await module.OnReceivingAsync(envelope, cancellationToken);
-            }
-
-            return envelope;
-        }
-
-        private async Task<T> OnConsumingAsync<T>(T envelope, IEnumerable<IChannelModule<T>> modules, CancellationToken cancellationToken) where T : Envelope, new()
-        {
-            foreach (var module in modules.ToList())
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-
-                if (envelope == null) break;
-                envelope = await module.OnConsumingAsync(envelope, cancellationToken);
-            }
-
-            return envelope;
-        }
-
-        private async Task<T> OnFailingAsync<T>(T envelope, IEnumerable<IChannelModule<T>> modules, CancellationToken cancellationToken) where T : Envelope, new()
-        {
-            foreach (var module in modules.ToList())
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-
-                if (envelope == null) break;
-                envelope = await module.OnFailingAsync(envelope, cancellationToken);
             }
 
             return envelope;

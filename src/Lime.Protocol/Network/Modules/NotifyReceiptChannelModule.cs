@@ -14,41 +14,14 @@ namespace Lime.Protocol.Network.Modules
     public sealed class NotifyReceiptChannelModule : ChannelModuleBase<Message>
     {
         private readonly INotificationChannel _notificationChannel;
-        private readonly bool _notifyReceiptWhenMessageReceived;
-        private readonly bool _notifyReceiptWhenMessageConsumed;
-        private readonly bool _notifyReceiptWhenMessageFailed;
 
-        public NotifyReceiptChannelModule(INotificationChannel notificationChannel, bool notifyReceiptWhenMessageReceived = false, bool notifyReceiptWhenMessageConsumed = false, bool notifyReceiptWhenMessageFailed = false)
+        public NotifyReceiptChannelModule(INotificationChannel notificationChannel)
         {
             if (notificationChannel == null) throw new ArgumentNullException(nameof(notificationChannel));
             _notificationChannel = notificationChannel;
-            _notifyReceiptWhenMessageReceived = notifyReceiptWhenMessageReceived;
-            _notifyReceiptWhenMessageConsumed = notifyReceiptWhenMessageConsumed;
-            _notifyReceiptWhenMessageFailed = notifyReceiptWhenMessageFailed;
         }
 
         public override async Task<Message> OnReceivingAsync(Message envelope, CancellationToken cancellationToken)
-        {
-            if (_notifyReceiptWhenMessageReceived)
-                return await SendNotificationAsync(envelope, cancellationToken, Event.Received);
-            return envelope;
-        }
-
-        public override async Task<Message> OnConsumingAsync(Message envelope, CancellationToken cancellationToken)
-        {
-            if (_notifyReceiptWhenMessageConsumed)
-                return await SendNotificationAsync(envelope, cancellationToken, Event.Consumed);
-            return envelope;
-        }
-
-        public override async Task<Message> OnFailingAsync(Message envelope, CancellationToken cancellationToken)
-        {
-            if (_notifyReceiptWhenMessageFailed)
-                return await SendNotificationAsync(envelope, cancellationToken, Event.Failed);
-            return envelope;
-        }
-
-        private async Task<Message> SendNotificationAsync(Message envelope, CancellationToken cancellationToken, Event @event)
         {
             if (envelope.Id != Guid.Empty &&
                 envelope.From != null)
@@ -57,13 +30,13 @@ namespace Lime.Protocol.Network.Modules
                 {
                     Id = envelope.Id,
                     To = envelope.GetSender(),
-                    Event = @event
+                    Event = Event.Received
                 };
 
                 await _notificationChannel.SendNotificationAsync(notification, cancellationToken);
             }
+
             return envelope;
         }
-
     }
 }
