@@ -251,7 +251,7 @@ namespace Lime.Protocol.Client
             State = session.State;
 
             if (session.State == SessionState.Established &&
-                !string.IsNullOrWhiteSpace(session.Id))
+                !session.Id.IsNullOrEmpty())
             {
                 LocalNode = session.To;
                 RemoteNode = session.From;

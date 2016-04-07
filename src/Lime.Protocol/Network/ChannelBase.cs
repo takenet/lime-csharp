@@ -210,7 +210,7 @@ namespace Lime.Protocol.Network
                 throw new ArgumentException("Invalid command method", nameof(requestCommand));
             }
 
-            if (string.IsNullOrWhiteSpace(requestCommand.Id))
+            if (requestCommand.Id.IsNullOrEmpty())
             {
                 throw new ArgumentException("Invalid command id", nameof(requestCommand));
             }
@@ -432,7 +432,7 @@ namespace Lime.Protocol.Network
             if (command != null)
             {
                 TaskCompletionSource<Command> pendingCommand;
-                if (!string.IsNullOrWhiteSpace(command.Id) && 
+                if (!command.Id.IsNullOrEmpty() && 
                     command.Status != CommandStatus.Pending &&
                     command.Method != CommandMethod.Observe &&
                     _pendingCommandsDictionary.TryRemove(command.Id, out pendingCommand))

@@ -43,7 +43,7 @@ namespace Lime.Transport.Http.Processors
             Identity owner;
             var id = match.BoundVariables.Get("id");
 
-            if (!id.IsNullOrWhiteSpace() &&
+            if (!id.IsNullOrEmpty() &&
                 Identity.TryParse(request.User.Identity.Name, out owner))
             {
                 var envelope = await _envelopeStorage.GetEnvelopeAsync(owner, id).ConfigureAwait(false);

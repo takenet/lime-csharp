@@ -42,7 +42,7 @@ namespace Lime.Transport.Http.Processors
                         
             var id = match.BoundVariables.Get("id");
             Identity owner;
-            if (!id.IsNullOrWhiteSpace() &&
+            if (!id.IsNullOrEmpty() &&
                 Identity.TryParse(request.User.Identity.Name, out owner))
             {
                 if (await _envelopeStorage.DeleteEnvelopeAsync(owner, id).ConfigureAwait(false))

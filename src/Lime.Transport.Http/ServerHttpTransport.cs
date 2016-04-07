@@ -92,7 +92,7 @@ namespace Lime.Transport.Http
         public async Task<Notification> ProcessMessageAsync(Message message, Event waitUntilEvent, CancellationToken cancellationToken)
         {
             if (message == null) throw new ArgumentNullException(nameof(message));            
-            if (string.IsNullOrWhiteSpace(message.Id))
+            if (message.Id.IsNullOrEmpty())
             {
                 throw new ArgumentException("Invalid message id");
             }
@@ -138,7 +138,7 @@ namespace Lime.Transport.Http
                 throw new ArgumentNullException(nameof(command));
             }
 
-            if (command.Id.IsNullOrWhiteSpace())
+            if (command.Id.IsNullOrEmpty())
             {
                 throw new ArgumentException("Invalid command id", nameof(command));
             }

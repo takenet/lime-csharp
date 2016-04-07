@@ -44,7 +44,7 @@ namespace Lime.Protocol.UnitTests.Server
 
         private ServerChannel GetTarget(SessionState state = SessionState.New, Node remoteNode = null, string sessionId = null, Node serverNode = null, TimeSpan? remotePingInterval = null, TimeSpan? remoteIdleTimeout = null)
         {
-            if (sessionId.IsNullOrWhiteSpace())
+            if (sessionId.IsNullOrEmpty())
             {
                 sessionId = Guid.NewGuid().ToString();
             }

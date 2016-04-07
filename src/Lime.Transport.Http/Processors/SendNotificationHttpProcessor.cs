@@ -22,7 +22,7 @@ namespace Lime.Transport.Http.Processors
 
         protected override async Task FillEnvelopeAsync(Notification envelope, HttpRequest request)
         {
-            if (envelope.Id.IsNullOrWhiteSpace())
+            if (envelope.Id.IsNullOrEmpty())
             {
                 throw new LimeException(ReasonCodes.VALIDATION_ERROR, "Invalid notification id");
             }
