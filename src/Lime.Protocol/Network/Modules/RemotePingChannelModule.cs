@@ -61,6 +61,16 @@ namespace Lime.Protocol.Network.Modules
             return ReceiveEnvelope(envelope);
         }
 
+        public Task<Message> OnConsumingAsync(Message envelope, CancellationToken cancellationToken)
+        {
+            return envelope.AsCompletedTask();
+        }
+
+        public Task<Message> OnFailingAsync(Message envelope, CancellationToken cancellationToken)
+        {
+            return envelope.AsCompletedTask();
+        }
+
         public Task<Message> OnSendingAsync(Message envelope, CancellationToken cancellationToken)
         {
             return envelope.AsCompletedTask();
@@ -71,6 +81,16 @@ namespace Lime.Protocol.Network.Modules
             return ReceiveEnvelope(envelope);
         }
 
+        public Task<Notification> OnConsumingAsync(Notification envelope, CancellationToken cancellationToken)
+        {
+            return envelope.AsCompletedTask();
+        }
+
+        public Task<Notification> OnFailingAsync(Notification envelope, CancellationToken cancellationToken)
+        {
+            return envelope.AsCompletedTask();
+        }
+
         public Task<Notification> OnSendingAsync(Notification envelope, CancellationToken cancellationToken)
         {
             return envelope.AsCompletedTask();
@@ -79,6 +99,16 @@ namespace Lime.Protocol.Network.Modules
         public Task<Command> OnReceivingAsync(Command envelope, CancellationToken cancellationToken)
         {
             return ReceiveEnvelope(envelope);
+        }
+
+        public Task<Command> OnConsumingAsync(Command envelope, CancellationToken cancellationToken)
+        {
+            return envelope.AsCompletedTask();
+        }
+
+        public Task<Command> OnFailingAsync(Command envelope, CancellationToken cancellationToken)
+        {
+            return envelope.AsCompletedTask();
         }
 
         public Task<Command> OnSendingAsync(Command envelope, CancellationToken cancellationToken)

@@ -22,16 +22,20 @@ namespace Lime.Protocol.Client
         /// <param name="sendTimeout">The channel send timeout.</param>
         /// <param name="fillEnvelopeRecipients"></param>
         /// <param name="autoReplyPings">Indicates if the channel should reply automatically to ping request commands. In this case, the ping command are not returned by the ReceiveCommandAsync method.</param>
-        /// <param name="autoNotifyReceipt">Indicates if the client should automatically send 'received' notifications for messages.</param>
+        /// <param name="autoNotifyReceiptWhenMessageReceived">Indicates if the client should automatically send 'received' notifications for messages.</param>
+        /// <param name="autoNotifyReceiptWhenMessageConsumed">Indicates if the client should automatically send 'consumed' notifications for messages.</param>
+        /// <param name="autoNotifyReceiptWhenMessageFailed">Indicates if the client should automatically send 'failed' notifications for messages.</param>
         /// <param name="remotePingInterval">The interval to ping the remote party.</param>
         /// <param name="remoteIdleTimeout">The timeout to close the channel due to inactivity.</param>
         /// <param name="buffersLimit"></param>
-        public ClientChannel(ITransport transport, TimeSpan sendTimeout, int buffersLimit = 5, bool fillEnvelopeRecipients = false, bool autoReplyPings = true, bool autoNotifyReceipt = false, TimeSpan? remotePingInterval = null, TimeSpan? remoteIdleTimeout = null)
+        public ClientChannel(ITransport transport, TimeSpan sendTimeout, int buffersLimit = 5, bool fillEnvelopeRecipients = false, bool autoReplyPings = true, bool autoNotifyReceiptWhenMessageReceived = false, bool autoNotifyReceiptWhenMessageConsumed = false, bool autoNotifyReceiptWhenMessageFailed = false, TimeSpan? remotePingInterval = null, TimeSpan? remoteIdleTimeout = null)
             : base(transport, sendTimeout, buffersLimit, fillEnvelopeRecipients, autoReplyPings, remotePingInterval, remoteIdleTimeout)
         {
-            if (autoNotifyReceipt)
+            if (autoNotifyReceiptWhenMessageReceived || autoNotifyReceiptWhenMessageConsumed ||
+                autoNotifyReceiptWhenMessageFailed)
             {
-                MessageModules.Add(new NotifyReceiptChannelModule(this));
+                MessageModules.Add(new NotifyReceiptChannelModule(this, autoNotifyReceiptWhenMessageReceived,
+                    autoNotifyReceiptWhenMessageConsumed, autoNotifyReceiptWhenMessageReceived));
             }
         }
 

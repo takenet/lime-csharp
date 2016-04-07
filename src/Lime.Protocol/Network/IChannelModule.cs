@@ -27,6 +27,22 @@ namespace Lime.Protocol.Network
         Task<T> OnReceivingAsync(T envelope, CancellationToken cancellationToken);
 
         /// <summary>
+        /// Called when an envelope is being consumed by the channel.
+        /// </summary>
+        /// <param name="envelope">The envelope.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>The consumed envelope. If the value is null, the consumed envelope will be ignored.</returns>
+        Task<T> OnConsumingAsync(T envelope, CancellationToken cancellationToken);
+
+        /// <summary>
+        /// Called when an envelope consuming fails.
+        /// </summary>
+        /// <param name="envelope">The envelope.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>The failed envelope. If the value is null, the failed envelope will be ignored.</returns>
+        Task<T> OnFailingAsync(T envelope, CancellationToken cancellationToken);
+        
+        /// <summary>
         /// Called when an envelope is being sent by the channel.
         /// </summary>
         /// <param name="envelope">The envelope.</param>

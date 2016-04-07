@@ -175,7 +175,7 @@ namespace Lime.Client.Windows.ViewModels
                     _sendTimeout,
                     fillEnvelopeRecipients: true,
                     autoReplyPings: true,
-                    autoNotifyReceipt: true);
+                    autoNotifyReceiptWhenMessageReceived: true);
 
                 if (RegisterUser)
                 {
@@ -215,7 +215,7 @@ namespace Lime.Client.Windows.ViewModels
                             _sendTimeout,
                             fillEnvelopeRecipients: true,
                             autoReplyPings: true,
-                            autoNotifyReceipt: true);
+                            autoNotifyReceiptWhenMessageReceived: true);
 
                     }
                     else if (guestSessionResult.Reason != null)
