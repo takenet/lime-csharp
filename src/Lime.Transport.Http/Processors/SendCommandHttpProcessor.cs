@@ -74,9 +74,9 @@ namespace Lime.Transport.Http.Processors
                 var limeUriFragment = request.Uri.Segments.Except(_exceptUriSegments).Aggregate((s1, s2) => s1 + s2);
                 if (!string.IsNullOrWhiteSpace(limeUriFragment))
                 {                    
-                    if (envelope.Id == Guid.Empty)
+                    if (envelope.Id.IsNullOrWhiteSpace())
                     {
-                        envelope.Id = Guid.NewGuid();
+                        envelope.Id = Guid.NewGuid().ToString();
 
                     }
                     envelope.Method = method;

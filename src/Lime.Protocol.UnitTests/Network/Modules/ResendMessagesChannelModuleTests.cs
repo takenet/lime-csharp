@@ -75,7 +75,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
         {
             // Arrange
             var message = Dummy.CreateMessage(Dummy.CreateTextContent());
-            message.Id = Guid.NewGuid();
+            message.Id = Guid.NewGuid().ToString();
             _resendMessageTryCount = 1;
             var target = GetTarget();
 
@@ -96,7 +96,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
             for (int i = 0; i < Dummy.CreateRandomInt(100) + 1; i++)
             {
                 var message = Dummy.CreateMessage(Dummy.CreateTextContent());
-                message.Id = Guid.NewGuid();
+                message.Id = Guid.NewGuid().ToString();
                 messages.Add(message);
             }
             _resendMessageTryCount = 1;
@@ -124,7 +124,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
         {
             // Arrange
             var message = Dummy.CreateMessage(Dummy.CreateTextContent());
-            message.Id = Guid.NewGuid();
+            message.Id = Guid.NewGuid().ToString();
             var target = GetTarget();
 
             // Act
@@ -145,7 +145,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
             for (int i = 0; i < Dummy.CreateRandomInt(100) + 1; i++)
             {
                 var message = Dummy.CreateMessage(Dummy.CreateTextContent());
-                message.Id = Guid.NewGuid();
+                message.Id = Guid.NewGuid().ToString();
                 messages.Add(message);
             }
             var target = GetTarget();
@@ -172,7 +172,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
         {
             // Arrange
             var message = Dummy.CreateMessage(Dummy.CreateTextContent());
-            message.Id = Guid.NewGuid();
+            message.Id = Guid.NewGuid().ToString();
             var notification = Dummy.CreateNotification(Event.Received);
             notification.Id = message.Id;
             notification.From = message.To;
@@ -194,7 +194,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
         {
             // Arrange
             var message = Dummy.CreateMessage(Dummy.CreateTextContent());
-            message.Id = Guid.NewGuid();
+            message.Id = Guid.NewGuid().ToString();
             var notification = Dummy.CreateNotification(Event.Received);
             notification.Id = message.Id;
             notification.From = message.To;            
@@ -217,7 +217,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
         {
             // Arrange
             var message = Dummy.CreateMessage(Dummy.CreateTextContent());
-            message.Id = Guid.NewGuid();
+            message.Id = Guid.NewGuid().ToString();
             var notification = Dummy.CreateNotification(Event.Received);
             notification.Id = message.Id;
             notification.From = Dummy.CreateNode(); // Other sender
@@ -241,7 +241,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
         {
             // Arrange
             var message = Dummy.CreateMessage(Dummy.CreateTextContent());
-            message.Id = Guid.NewGuid();
+            message.Id = Guid.NewGuid().ToString();
             var notification = Dummy.CreateNotification(Event.Received);
             notification.Id = message.Id;
             notification.From = message.To;
@@ -264,7 +264,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
         {
             // Arrange
             var message = Dummy.CreateMessage(Dummy.CreateTextContent());
-            message.Id = Guid.NewGuid();
+            message.Id = Guid.NewGuid().ToString();
             var target = GetTarget();
 
             // Act
@@ -283,7 +283,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
         {
             // Arrange
             var message = Dummy.CreateMessage(Dummy.CreateTextContent());
-            message.Id = Guid.NewGuid();           
+            message.Id = Guid.NewGuid().ToString();           
             var target = GetTarget();
 
             // Act
@@ -302,7 +302,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
         {
             // Arrange
             var message = Dummy.CreateMessage(Dummy.CreateTextContent());
-            message.Id = Guid.NewGuid();
+            message.Id = Guid.NewGuid().ToString();
             var target = GetTarget();
 
             // Act
@@ -320,7 +320,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
         {
             // Arrange
             var message = Dummy.CreateMessage(Dummy.CreateTextContent());
-            message.Id = Guid.NewGuid();
+            message.Id = Guid.NewGuid().ToString();
             var target = GetTarget();
 
             // Act
@@ -362,7 +362,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
         {
             // Arrange
             var message = Dummy.CreateMessage(Dummy.CreateTextContent());
-            message.Id = Guid.NewGuid();
+            message.Id = Guid.NewGuid().ToString();
             var target = GetTarget();
 
             // Act
@@ -384,7 +384,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
             for (int i = 0; i < Dummy.CreateRandomInt(100) + 1; i++)
             {
                 var message = Dummy.CreateMessage(Dummy.CreateTextContent());
-                message.Id = Guid.NewGuid();
+                message.Id = Guid.NewGuid().ToString();
                 messages.Add(message);
             }
             _resendMessageTryCount = 1;
@@ -413,7 +413,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
         {
             // Arrange
             var message = Dummy.CreateMessage(Dummy.CreateTextContent());
-            message.Id = Guid.NewGuid();
+            message.Id = Guid.NewGuid().ToString();
             var target = GetTarget();
             var channel2Mock = CreateChannel();
 
@@ -437,7 +437,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
             for (int i = 0; i < Dummy.CreateRandomInt(100) + 1; i++)
             {
                 var message = Dummy.CreateMessage(Dummy.CreateTextContent());
-                message.Id = Guid.NewGuid();
+                message.Id = Guid.NewGuid().ToString();
                 messages.Add(message);
             }
             var target = GetTarget();

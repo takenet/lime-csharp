@@ -23,6 +23,11 @@ namespace Lime.Protocol
         {
         }
 
+        public Command(string id)
+            : base(id)
+        {
+        }
+
         public Command(Guid id)
             : base(id)
         {

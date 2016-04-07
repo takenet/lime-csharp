@@ -17,7 +17,7 @@ namespace Lime.Protocol.Network
         /// <param name="exception">The exception.</param>
         /// <param name="localNode"></param>
         /// <param name="remoteNode"></param>
-        public FailedChannelInformation(Guid sessionId, SessionState state, Node localNode, Node remoteNode, bool isConnected, Exception exception) 
+        public FailedChannelInformation(string sessionId, SessionState state, Node localNode, Node remoteNode, bool isConnected, Exception exception) 
             : base(sessionId, state, localNode, remoteNode)
         {                        
             IsConnected = isConnected;

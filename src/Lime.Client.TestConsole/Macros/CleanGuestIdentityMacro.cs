@@ -15,20 +15,13 @@ namespace Lime.Client.TestConsole.Macros
 
         public Task ProcessAsync(EnvelopeViewModel envelopeViewModel, SessionViewModel sessionViewModel)
         {
-            if (envelopeViewModel == null)
-            {
-                throw new ArgumentNullException("envelopeViewModel");
-            }
-
-            if (sessionViewModel == null)
-            {
-                throw new ArgumentNullException("sessionViewModel");
-            }
-
+            if (envelopeViewModel == null) throw new ArgumentNullException(nameof(envelopeViewModel));                   
+            if (sessionViewModel == null) throw new ArgumentNullException(nameof(sessionViewModel));
+            
             var session = envelopeViewModel.Envelope as Session;
 
             if (session != null &&
-                session.Id != Guid.Empty &&
+                !session.Id.IsNullOrEmpty() &&
                 session.State == SessionState.Established)
             {
                 var sessionIdVariableViewModel = sessionViewModel

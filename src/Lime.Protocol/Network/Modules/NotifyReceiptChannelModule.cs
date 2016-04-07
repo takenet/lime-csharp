@@ -23,7 +23,7 @@ namespace Lime.Protocol.Network.Modules
 
         public override async Task<Message> OnReceivingAsync(Message envelope, CancellationToken cancellationToken)
         {
-            if (envelope.Id != Guid.Empty &&
+            if (!string.IsNullOrWhiteSpace(envelope.Id) &&
                 envelope.From != null)
             {
                 var notification = new Notification

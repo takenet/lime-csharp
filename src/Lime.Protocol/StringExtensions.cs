@@ -1,42 +1,12 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
-using System.Linq.Expressions;
-using System.Reflection;
 using System.Text;
-using System.Threading.Tasks;
 
-namespace Lime.Protocol.Serialization
+namespace Lime.Protocol
 {
-    public static class SerializationExtensions
+    public static class StringExtensions
     {
-        /// <summary>
-        /// Gets the default value of a Type        
-        /// </summary>
-        /// <a href="http://stackoverflow.com/questions/325426/programmatic-equivalent-of-defaulttype"/>
-        /// <param name="type"></param>
-        /// <returns></returns>
-        public static object GetDefaultValue(this Type type)
-        {
-            // Validate parameters.
-            if (type == null) throw new ArgumentNullException(nameof(type));
-
-            // We want an Func<object> which returns the default.
-            // Create that expression here.
-            var e = Expression.Lambda<Func<object>>(
-                // Have to convert to object.
-                Expression.Convert(
-                // The default value, always get what the *code* tells us.
-                    Expression.Default(type), typeof(object)
-                )
-            );
-
-            // Compile and return the value.
-            return e.Compile()();
-        }
-
         public static string RemoveCrLf(this string value)
         {
             if (value == null) throw new ArgumentNullException(nameof(value));
@@ -216,5 +186,10 @@ namespace Lime.Protocol.Serialization
             if (value == null) throw new ArgumentNullException(nameof(value));
             return value.Replace("\\", "\\\\").Replace("\"", "\\\"");
         }
+
+        public static bool IsNullOrWhiteSpace(this string value) => string.IsNullOrWhiteSpace(value);
+
+        public static bool IsNullOrEmpty(this string value) => string.IsNullOrEmpty(value);
+
     }
 }

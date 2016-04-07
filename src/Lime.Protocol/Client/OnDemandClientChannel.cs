@@ -329,7 +329,7 @@ namespace Lime.Protocol.Client
                 catch (Exception ex) when (!(ex is OperationCanceledException && cancellationToken.IsCancellationRequested))
                 {
                     var failedChannelInformation = new FailedChannelInformation(
-                        Guid.Empty, SessionState.New, null, null, false, ex);
+                        null, SessionState.New, null, null, false, ex);
 
                     var handlers = ChannelCreationFailedHandlers.ToList();
                     if (!await InvokeHandlers(handlers, failedChannelInformation, cancellationToken).ConfigureAwait(false)) throw;

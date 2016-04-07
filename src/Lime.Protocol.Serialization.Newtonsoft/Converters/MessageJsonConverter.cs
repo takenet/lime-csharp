@@ -32,7 +32,7 @@ namespace Lime.Protocol.Serialization.Newtonsoft.Converters
                 JObject jObject = JObject.Load(reader);
                 if (jObject[Message.CONTENT_KEY] != null && jObject[Message.TYPE_KEY] != null)
                 {
-                    var message = new Message(Guid.Empty);
+                    var message = new Message(null);
                     serializer.Populate(jObject.CreateReader(), message);
                     var contentMediaType = jObject[Message.TYPE_KEY].ToObject<MediaType>();
                     Type documentType;

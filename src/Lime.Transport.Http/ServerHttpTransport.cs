@@ -17,71 +17,39 @@ namespace Lime.Transport.Http
     /// </summary>
     internal class ServerHttpTransport : TransportBase, ITransportSession
     {
-        #region Private Fields
-
         private readonly Identity _identity;
         private Authentication _authentication;        
         private readonly IEnvelopeStorage<Message> _messageStorage;
         private readonly IEnvelopeStorage<Notification> _notificationStorage;
         private readonly TimeSpan _expirationInactivityInternal;
-
         private readonly TaskCompletionSource<Session> _authenticationTaskCompletionSource;
         private readonly TaskCompletionSource<Session> _closingTaskCompletionSource;
         private readonly BufferBlock<Envelope> _inputBufferBlock;
-        private readonly ConcurrentDictionary<Guid, Tuple<Event, TaskCompletionSource<Notification>>> _pendingNotificationsDictionary;
-        private readonly ConcurrentDictionary<Guid, TaskCompletionSource<Command>> _pendingCommandsDictionary;
-
-        #endregion
-
-        #region Constructor
+        private readonly ConcurrentDictionary<string, Tuple<Event, TaskCompletionSource<Notification>>> _pendingNotificationsDictionary;
+        private readonly ConcurrentDictionary<string, TaskCompletionSource<Command>> _pendingCommandsDictionary;
 
         internal ServerHttpTransport(Identity identity, Authentication authentication, bool useHttps, IEnvelopeStorage<Message> messageStorage, IEnvelopeStorage<Notification> notificationStorage, TimeSpan expirationInactivityInternal = default(TimeSpan))
         {
-            if (identity == null)
-            {
-                throw new ArgumentNullException("identity");
-            }
-            _identity = identity;
+            if (identity == null) throw new ArgumentNullException(nameof(identity));
+            if (authentication == null) throw new ArgumentNullException(nameof(authentication));
+            if (messageStorage == null) throw new ArgumentNullException(nameof(messageStorage));
+            if (notificationStorage == null) throw new ArgumentNullException(nameof(notificationStorage));
 
-            if (authentication == null)
-            {
-                throw new ArgumentNullException("authentication");
-            }
+            _identity = identity;                        
             _authentication = authentication;
             Compression = SessionCompression.None;
-            Encryption = useHttps ? SessionEncryption.TLS : SessionEncryption.None;
-
-            if (messageStorage == null)
-            {
-                throw new ArgumentNullException("messageStorage");
-            }
-            _messageStorage = messageStorage;
-
-            if (notificationStorage == null)
-            {
-                throw new ArgumentNullException("notificationStorage");
-            }
+            Encryption = useHttps ? SessionEncryption.TLS : SessionEncryption.None;                        
+            _messageStorage = messageStorage;                        
             _notificationStorage = notificationStorage;
-
-            if (expirationInactivityInternal.Equals(default(TimeSpan)))
-            {
-                _expirationInactivityInternal = TimeSpan.FromSeconds(60);
-            }
-            else
-            {
-                _expirationInactivityInternal = expirationInactivityInternal;
-            }
-
+            _expirationInactivityInternal = expirationInactivityInternal.Equals(default(TimeSpan)) ? TimeSpan.FromSeconds(60) : expirationInactivityInternal;
             Expiration = DateTimeOffset.UtcNow.Add(_expirationInactivityInternal);
 
             _authenticationTaskCompletionSource = new TaskCompletionSource<Session>();
             _closingTaskCompletionSource = new TaskCompletionSource<Session>();
             _inputBufferBlock = new BufferBlock<Envelope>();
-            _pendingNotificationsDictionary = new ConcurrentDictionary<Guid, Tuple<Event, TaskCompletionSource<Notification>>>();
-            _pendingCommandsDictionary = new ConcurrentDictionary<Guid, TaskCompletionSource<Command>>();
+            _pendingNotificationsDictionary = new ConcurrentDictionary<string, Tuple<Event, TaskCompletionSource<Notification>>>();
+            _pendingCommandsDictionary = new ConcurrentDictionary<string, TaskCompletionSource<Command>>();
         }
-
-        #endregion
 
         #region IEmulatedTransport Members
 
@@ -99,11 +67,7 @@ namespace Lime.Transport.Http
         /// <exception cref="System.InvalidOperationException">The input buffer is complete</exception>
         public async Task SubmitAsync(Envelope envelope, CancellationToken cancellationToken)
         {
-            if (envelope == null)
-            {
-                throw new ArgumentNullException("envelope");
-            }
-
+            if (envelope == null) throw new ArgumentNullException(nameof(envelope));            
             if (!await _inputBufferBlock.SendAsync(envelope, cancellationToken).ConfigureAwait(false))
             {
                 throw new InvalidOperationException("The input buffer is complete");
@@ -127,12 +91,8 @@ namespace Lime.Transport.Http
         /// {D255958A-8513-4226-94B9-080D98F904A1}The input buffer is complete</exception>
         public async Task<Notification> ProcessMessageAsync(Message message, Event waitUntilEvent, CancellationToken cancellationToken)
         {
-            if (message == null)
-            {
-                throw new ArgumentNullException("message");
-            }
-
-            if (message.Id.Equals(Guid.Empty))
+            if (message == null) throw new ArgumentNullException(nameof(message));            
+            if (string.IsNullOrWhiteSpace(message.Id))
             {
                 throw new ArgumentException("Invalid message id");
             }
@@ -178,7 +138,7 @@ namespace Lime.Transport.Http
                 throw new ArgumentNullException(nameof(command));
             }
 
-            if (command.Id.Equals(Guid.Empty))
+            if (command.Id.IsNullOrWhiteSpace())
             {
                 throw new ArgumentException("Invalid command id", nameof(command));
             }
@@ -227,7 +187,7 @@ namespace Lime.Transport.Http
             var currentSession = await GetSessionAsync(cancellationToken).ConfigureAwait(false);
             if (currentSession.State == SessionState.Established)
             {
-                var finishingSession = new Session()
+                var finishingSession = new Session
                 {
                     Id = currentSession.Id,
                     State = SessionState.Finishing
@@ -242,10 +202,7 @@ namespace Lime.Transport.Http
                     {
                         throw new LimeException(finishedSession.Reason.Code, finishedSession.Reason.Description);
                     }
-                    else
-                    {
-                        throw new LimeException(ReasonCodes.SESSION_ERROR, "The session has failed");
-                    }                    
+                    throw new LimeException(ReasonCodes.SESSION_ERROR, "The session has failed");
                 }
             }
             else
@@ -318,7 +275,7 @@ namespace Lime.Transport.Http
         /// <returns></returns>
         protected override Task PerformOpenAsync(Uri uri, CancellationToken cancellationToken)
         {
-            var session = new Session()
+            var session = new Session
             {
                 State = SessionState.New
             };
@@ -378,12 +335,12 @@ namespace Lime.Transport.Http
                 if (session.CompressionOptions != null &&
                     session.EncryptionOptions != null)
                 {
-                    var responseSession = new Session()
+                    var responseSession = new Session
                     {
                         Id = session.Id,
                         State = SessionState.Negotiating,
-                        Compression = this.Compression,
-                        Encryption = this.Encryption
+                        Compression = Compression,
+                        Encryption = Encryption
                     };
 
                     await SubmitAsync(responseSession, cancellationToken).ConfigureAwait(false);
@@ -391,7 +348,7 @@ namespace Lime.Transport.Http
             }
             else if (session.State == SessionState.Authenticating)
             {
-                var responseSession = new Session()
+                var responseSession = new Session
                 {
                     Id = session.Id
                 };
@@ -401,7 +358,7 @@ namespace Lime.Transport.Http
                 {
                     
                     responseSession.State = SessionState.Authenticating;
-                    responseSession.From = new Node()
+                    responseSession.From = new Node
                     {
                         Name = _identity.Name,
                         Domain = _identity.Domain
@@ -493,7 +450,7 @@ namespace Lime.Transport.Http
             }
             else if (command.IsPingRequest())
             {
-                var commandResponse = new Command()
+                var commandResponse = new Command
                 {
                     Id = command.Id,
                     To = command.From,
@@ -504,12 +461,12 @@ namespace Lime.Transport.Http
             }
             else if (command.Status == CommandStatus.Pending)
             {
-                var commandResponse = new Command()
+                var commandResponse = new Command
                 {
                     Id = command.Id,
                     To = command.From,
                     Status = CommandStatus.Failure,
-                    Reason = new Reason()
+                    Reason = new Reason
                     {
                         Code = ReasonCodes.COMMAND_RESOURCE_NOT_SUPPORTED
                     }

@@ -68,7 +68,7 @@ namespace Lime.Transport.Http.UnitTests
 
         public TimeSpan SendTimeout { get; private set; }
 
-        public Guid SessionId { get; private set; }
+        public string SessionId { get; private set; }
 
         public Node ClientNode { get; private set; }
 
@@ -93,7 +93,7 @@ namespace Lime.Transport.Http.UnitTests
             Password = Dummy.CreateRandomString(20);
             MessagesUrl = "http://" + Host + ":" + Port + "/messages";
 
-            SessionId = Guid.NewGuid();
+            SessionId = Guid.NewGuid().ToString().ToString();
             ServerNode = Dummy.CreateNode();
             SendTimeout = TimeSpan.FromSeconds(5);
             Reason = Dummy.CreateReason();
@@ -235,7 +235,7 @@ namespace Lime.Transport.Http.UnitTests
             // Arrange            
             var session = new Session()
             {
-                Id = Guid.NewGuid(),
+                Id = Guid.NewGuid().ToString().ToString(),
                 State = SessionState.Established
             };
 
@@ -271,7 +271,7 @@ namespace Lime.Transport.Http.UnitTests
             // Arrange
             var session = new Session()
             {
-                Id = Guid.NewGuid(),
+                Id = Guid.NewGuid().ToString().ToString(),
                 State = SessionState.Failed,
                 Reason = new Reason()
                 {
@@ -300,7 +300,7 @@ namespace Lime.Transport.Http.UnitTests
             // Arrange
             var session = new Session()
             {
-                Id = Guid.NewGuid(),
+                Id = Guid.NewGuid().ToString(),
                 State = SessionState.Failed
             };
 
@@ -358,7 +358,7 @@ namespace Lime.Transport.Http.UnitTests
             // Arrange            
             var session = new Session()
             {
-                Id = Guid.NewGuid(),
+                Id = Guid.NewGuid().ToString(),
                 State = SessionState.Established
             };
 
@@ -396,7 +396,7 @@ namespace Lime.Transport.Http.UnitTests
             // Arrange            
             var session = new Session()
             {
-                Id = Guid.NewGuid(),
+                Id = Guid.NewGuid().ToString(),
                 State = SessionState.Established
             };
 

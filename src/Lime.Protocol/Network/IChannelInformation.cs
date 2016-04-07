@@ -10,7 +10,7 @@ namespace Lime.Protocol.Network
         /// <summary>
         /// Gets the channel session identifier.
         /// </summary>
-        Guid SessionId { get; }
+        string SessionId { get; }
 
         /// <summary>
         /// Gets the channel state.

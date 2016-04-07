@@ -219,7 +219,7 @@ namespace Lime.Transport.Http.UnitTests
         public async Task ProcessMessageAsync_FireAndForgetMessage_ThrowsArgumentException()
         {
             // Arrange
-            TextMessage.Id = Guid.Empty;
+            TextMessage.Id = null;
 
             // Act
             await Target.Value.ProcessMessageAsync(TextMessage, WaitUntilEvent, CancellationToken).ShouldThrowAsync<ArgumentException>();
@@ -279,7 +279,7 @@ namespace Lime.Transport.Http.UnitTests
         public async Task ProcessCommandAsync_EmptyIdCommand_ThrowsArgumentException()
         {
             // Arrange
-            PresenceRequestCommand.Id = Guid.Empty;
+            PresenceRequestCommand.Id = null;
 
             // Act
             await Target.Value.ProcessCommandAsync(PresenceRequestCommand, CancellationToken).ShouldThrowAsync<ArgumentException>();
@@ -825,7 +825,7 @@ namespace Lime.Transport.Http.UnitTests
             // Assert
             var envelope = await Target.Value.ReceiveAsync(CancellationToken);
             var session = envelope.ShouldBeOfType<Session>();
-            session.Id.ShouldBe(Guid.Empty);
+            session.Id.ShouldBe(null);
             session.State.ShouldBe(SessionState.New);
         }
 

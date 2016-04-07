@@ -67,7 +67,7 @@ namespace Lime.Protocol.Client
         /// <param name="to">The notification destination.</param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>        
-        Task SendReceivedNotificationAsync(Guid messageId, Node to, CancellationToken cancellationToken);
+        Task SendReceivedNotificationAsync(string messageId, Node to, CancellationToken cancellationToken);
 
         /// <summary>
         /// Sends a finishing session 
