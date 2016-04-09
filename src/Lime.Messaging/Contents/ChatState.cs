@@ -1,16 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.Serialization;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Runtime.Serialization;
 using Lime.Protocol;
 
 namespace Lime.Messaging.Contents
 {
     /// <summary>
-    /// Allows the chat clients to exchange 
-    /// information about conversation events.
+    /// Allows the chat clients to exchange information about conversation events.
     /// </summary>
     [DataContract(Namespace = "http://limeprotocol.org/2014")]
     public class ChatState : Document
@@ -28,6 +22,12 @@ namespace Lime.Messaging.Contents
         {
         }
 
+        /// <summary>
+        /// Gets or sets the chat state.
+        /// </summary>
+        /// <value>
+        /// The state.
+        /// </value>
         [DataMember(Name = STATE_KEY)]
         public ChatStateEvent State { get; set; }
 
@@ -37,10 +37,7 @@ namespace Lime.Messaging.Contents
         /// <returns>
         /// A <see cref="System.String" /> that represents this instance.
         /// </returns>
-        public override string ToString()
-        {
-            return this.State.ToString();
-        }
+        public override string ToString() => State.ToString();
     }
 
     /// <summary>

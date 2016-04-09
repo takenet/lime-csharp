@@ -1,7 +1,7 @@
 ﻿using System;
-using System.IO;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.IO;
 using System.Runtime.Serialization;
 using Lime.Protocol;
 
@@ -31,21 +31,19 @@ namespace Lime.Messaging.Contents
         public Bitmap Image { get; set; }
 
         /// <summary>
-        /// Gets a Base64 string representation 
-        /// of the bitmap
+        /// Returns a <see cref="System.String" /> that represents this instance.
+        /// </summary>
+        /// <returns>
+        /// A <see cref="System.String" /> that represents this instance.
         /// </returns>
         public override string ToString()
         {
-            if (this.Image != null)
+            if (Image == null) return string.Empty;
+            using (var stream = new MemoryStream())
             {
-                using (var stream = new MemoryStream())
-                {
-                    this.Image.Save(stream, ImageFormat.Bmp);
-                    return Convert.ToBase64String(stream.ToArray());
-                }
+                Image.Save(stream, ImageFormat.Bmp);
+                return Convert.ToBase64String(stream.ToArray());
             }
-
-            return null;            
         }
 
         /// <summary>
@@ -65,7 +63,7 @@ namespace Lime.Messaging.Contents
                 image = new Bitmap(stream);
             }
 
-            return new BitmapImage()
+            return new BitmapImage
             {
                 Image = image
             };

@@ -37,10 +37,7 @@ namespace Lime.Messaging.Contents
         /// <returns>
         /// A <see cref="System.String" /> that represents this instance.
         /// </returns>
-        public override string ToString()
-        {
-            return this.Text;
-        }
+        public override string ToString() => Text;
 
         /// <summary>
         /// Parses the string to a 
@@ -48,10 +45,6 @@ namespace Lime.Messaging.Contents
         /// </summary>
         /// <param name="value"></param>
         /// <returns></returns>
-        public static PlainText Parse(string value)
-        {
-            return new PlainText() { Text = value };
-        }
-
+        public static PlainText Parse(string value) => new PlainText() { Text = value };
     }
 }

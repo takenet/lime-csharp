@@ -53,16 +53,8 @@ namespace Lime.Protocol
 
         public void SetMediaType(MediaType mediaType)
         {
-            if (mediaType == null)
-            {
-                throw new ArgumentNullException("mediaType");
-            }
-
-            if (!mediaType.IsJson)
-            {
-                throw new ArgumentException("The media type is not a valid json type");
-            }
-
+            if (mediaType == null) throw new ArgumentNullException(nameof(mediaType));            
+            if (!mediaType.IsJson) throw new ArgumentException("The media type is not a valid json type");            
             _mediaType = mediaType;
         }
 

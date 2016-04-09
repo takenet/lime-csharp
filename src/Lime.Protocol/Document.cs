@@ -15,11 +15,7 @@ namespace Lime.Protocol
 
         protected Document(MediaType mediaType)
         {
-            if (mediaType == null)
-            {
-                throw new ArgumentNullException("mediaType");
-            }
-
+            if (mediaType == null) throw new ArgumentNullException(nameof(mediaType));            
             _mediaType = mediaType;
         }
 
