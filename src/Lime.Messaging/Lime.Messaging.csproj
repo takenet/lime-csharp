@@ -49,6 +49,7 @@
     <Compile Include="Contents\Location.cs" />
     <Compile Include="Contents\MediaLink.cs" />
     <Compile Include="Contents\PlainText.cs" />
+    <Compile Include="Contents\Select.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Resources\Account.cs" />
     <Compile Include="Resources\Capability.cs" />

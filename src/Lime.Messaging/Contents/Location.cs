@@ -7,6 +7,7 @@ namespace Lime.Messaging.Contents
     /// Represents a geographic location information.
     /// </summary>
     /// <seealso cref="Lime.Protocol.Document" />
+    [DataContract(Namespace = "http://limeprotocol.org/2014")]
     public class Location : Document    
     {
         public const string MIME_TYPE = "application/vnd.lime.location+json";
