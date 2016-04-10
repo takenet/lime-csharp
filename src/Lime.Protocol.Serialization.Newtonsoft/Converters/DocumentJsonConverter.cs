@@ -5,7 +5,14 @@ namespace Lime.Protocol.Serialization.Newtonsoft.Converters
 {
     class DocumentJsonConverter : JsonConverter
     {
-        public override bool CanWrite => false;        
+        private readonly global::Newtonsoft.Json.JsonSerializer _alternativeSerializer;
+
+        public DocumentJsonConverter(JsonSerializerSettings settings)
+        {
+            _alternativeSerializer = global::Newtonsoft.Json.JsonSerializer.Create(settings);
+        }
+
+        public override bool CanWrite => true;        
 
         public override bool CanRead => true;
 
@@ -30,7 +37,22 @@ namespace Lime.Protocol.Serialization.Newtonsoft.Converters
 
         public override void WriteJson(JsonWriter writer, object value, global::Newtonsoft.Json.JsonSerializer serializer)
         {
-            throw new NotImplementedException();
+            var document = value as Document;
+            if (document != null)
+            {
+                if (document.GetMediaType().IsJson)
+                {
+                    _alternativeSerializer.Serialize(writer, document);
+                }
+                else
+                {
+                    writer.WriteValue(document.ToString());
+                }
+            }
+            else
+            {
+                writer.WriteNull();
+            }
         }
     }
 }

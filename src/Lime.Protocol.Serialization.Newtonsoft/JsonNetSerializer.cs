@@ -15,6 +15,8 @@ namespace Lime.Protocol.Serialization.Newtonsoft
     /// <seealso cref="Lime.Protocol.Serialization.IEnvelopeSerializer" />
     public class JsonNetSerializer : IEnvelopeSerializer
     {
+        private static object _syncRoot = new object();
+
         static JsonNetSerializer()
         {
             JsonConvert.DefaultSettings = () => Settings;
@@ -30,41 +32,44 @@ namespace Lime.Protocol.Serialization.Newtonsoft
             {
                 if (_settings == null)
                 {
-                    var converters = new List<JsonConverter>()
+                    lock (_syncRoot)
                     {
-                        new StringEnumConverter {CamelCaseText = false},
-                        new IdentityJsonConverter(),
-                        new NodeJsonConverter(),
-                        new LimeUriJsonConverter(),
-                        new MediaTypeJsonConverter(),
-                        new UriJsonConverter(),
-                        new SessionJsonConverter(),
-                        new AuthenticationJsonConverter(),
-                        new DocumentCollectionJsonConverter(),
-                        new DocumentJsonConverter(),
-                        new IsoDateTimeConverter
+                        if (_settings == null)
                         {
-                            DateTimeFormat = "yyyy-MM-ddTHH:mm:ss.fffZ",
-                            DateTimeStyles = DateTimeStyles.AdjustToUniversal
-                        }
-                    };
-                    converters.Add(
-                        new DocumentContainerJsonConverter(
-                            new JsonSerializerSettings()
-                            { 
+                            var converters = new List<JsonConverter>()
+                            {
+                                new StringEnumConverter {CamelCaseText = false},
+                                new IdentityJsonConverter(),
+                                new NodeJsonConverter(),
+                                new LimeUriJsonConverter(),
+                                new MediaTypeJsonConverter(),
+                                new UriJsonConverter(),
+                                new SessionJsonConverter(),
+                                new AuthenticationJsonConverter(),
+                                new DocumentContainerJsonConverter(),
+                                new DocumentCollectionJsonConverter(),
+                                new IsoDateTimeConverter
+                                {
+                                    DateTimeFormat = "yyyy-MM-ddTHH:mm:ss.fffZ",
+                                    DateTimeStyles = DateTimeStyles.AdjustToUniversal
+                                }
+                            };
+                            converters.Add(new DocumentJsonConverter(
+                                new JsonSerializerSettings()
+                                {
+                                    NullValueHandling = NullValueHandling.Ignore,
+                                    ReferenceLoopHandling = ReferenceLoopHandling.Serialize,
+                                    Converters = converters.ToList()
+                                }));
+
+                            _settings = new JsonSerializerSettings
+                            {
                                 NullValueHandling = NullValueHandling.Ignore,
                                 ReferenceLoopHandling = ReferenceLoopHandling.Serialize,
-                                Converters = converters.ToList()
-                            }));
-
-                    _settings = new JsonSerializerSettings
-                    {
-                        NullValueHandling = NullValueHandling.Ignore,
-                        ReferenceLoopHandling = ReferenceLoopHandling.Serialize,
-                        Converters = converters                        
-                    };
-
-                    _settings.Converters = converters;
+                                Converters = converters
+                            };
+                        }
+                    }
                 }
 
                 return _settings;

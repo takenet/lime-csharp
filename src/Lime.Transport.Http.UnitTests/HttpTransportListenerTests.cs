@@ -100,6 +100,7 @@ namespace Lime.Transport.Http.UnitTests
 
             SentMessage = new Message()
             {
+                Id = Guid.NewGuid(),
                 To = Dummy.CreateNode(),
                 Content = Dummy.CreateTextContent()
             };

@@ -189,6 +189,7 @@ namespace Lime.Protocol.UnitTests
         {
             return new Message()
             {
+                Id = Guid.NewGuid(),
                 From = CreateNode(),
                 To = CreateNode(),
                 Content = content

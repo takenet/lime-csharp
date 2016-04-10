@@ -1233,33 +1233,30 @@ namespace Lime.Protocol.UnitTests.Serialization
 			Assert.AreEqual(content[propertyName1], propertyValue1);
 			Assert.IsTrue(content.ContainsKey(propertyName2));
 			Assert.AreEqual(content[propertyName2], propertyValue2);
-
 		}
 
 		[Test]
 		[Category("Deserialize")]
 		public void Deserialize_FireAndForgetTextMessage_ReturnsValidInstance()
 		{
+            // Arrange
 			var target = GetTarget();
-
 			var from = Dummy.CreateNode();
 			var to = Dummy.CreateNode();
-
 			var text = Dummy.CreateRandomStringExtended(50);
-
 			string json =
 			    $"{{\"type\":\"text/plain\",\"content\":\"{text.Escape()}\",\"from\":\"{@from}\",\"to\":\"{to}\"}}";
 
+            // Act
 			var envelope = target.Deserialize(json);
 
+            // Assert
             var message = envelope.ShouldBeOfType<Message>();
             Assert.AreEqual(from, message.From);
 			Assert.AreEqual(to, message.To);
-
-			Assert.AreEqual(message.Id, Guid.Empty);
+			Assert.AreEqual(Guid.Empty, message.Id);
 			Assert.IsNull(message.Pp);
-			Assert.IsNull(message.Metadata);
-			
+			Assert.IsNull(message.Metadata);			
 			var textContent = message.Content.ShouldBeOfType<PlainText>();
 			Assert.AreEqual(text, textContent.Text);
 		}
@@ -1268,26 +1265,24 @@ namespace Lime.Protocol.UnitTests.Serialization
 		[Category("Deserialize")]
 		public void Deserialize_FireAndForgetChatStateMessage_ReturnsValidInstance()
 		{
+            // Arrange
 			var target = GetTarget();
-
 			var from = Dummy.CreateNode();
 			var to = Dummy.CreateNode();
-
 			var state = ChatStateEvent.Composing;
-
 			string json =
 			    $"{{\"type\":\"application/vnd.lime.chatstate+json\",\"content\":{{\"state\":\"{state.ToString().ToCamelCase()}\"}},\"from\":\"{@from}\",\"to\":\"{to}\"}}";
 
+            // Act
 			var envelope = target.Deserialize(json);
 
+            // Assert
 		    var message = envelope.ShouldBeOfType<Message>();
 			Assert.AreEqual(from, message.From);
 			Assert.AreEqual(to, message.To);
-
-			Assert.AreEqual(message.Id, Guid.Empty);
+			Assert.AreEqual(Guid.Empty, message.Id);
 			Assert.IsNull(message.Pp);
 			Assert.IsNull(message.Metadata);			
-
             var textContent = message.Content.ShouldBeOfType<ChatState>();
 			Assert.AreEqual(state, textContent.State);            
 		}

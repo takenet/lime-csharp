@@ -20,7 +20,7 @@ namespace Lime.Protocol
         #region Constructor
 
         protected Envelope()
-            : this(Guid.NewGuid())
+            : this(default(Guid))
         {
         }
 
