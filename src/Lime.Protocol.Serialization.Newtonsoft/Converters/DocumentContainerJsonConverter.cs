@@ -4,18 +4,49 @@ using System.Linq;
 using System.Reflection;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Serialization;
 
 namespace Lime.Protocol.Serialization.Newtonsoft.Converters
 {
     public class DocumentContainerJsonConverter : JsonConverter
     {
-        public const string TYPE_KEY = "type";
+        private readonly global::Newtonsoft.Json.JsonSerializer _alternativeSerializer;
 
-        public override bool CanWrite => false;
+        public DocumentContainerJsonConverter(JsonSerializerSettings settings)
+        {
+            settings.ContractResolver = new IgnoreDocumentContractResolver();
+            _alternativeSerializer = global::Newtonsoft.Json.JsonSerializer.Create(settings);            
+        }
+
+        public const string TYPE_KEY = "type";        
 
         public override void WriteJson(JsonWriter writer, object value, global::Newtonsoft.Json.JsonSerializer serializer)
         {
-            throw new NotSupportedException();
+            var documentProperty =
+                value
+                    .GetType()
+                    .GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                    .First(p => p.PropertyType == typeof(Document));
+
+            JObject.FromObject(value, _alternativeSerializer);            
+
+            var document = documentProperty.GetValue(value) as Document;
+            _alternativeSerializer.Serialize(writer, value);            
+                        
+            // Now handle the document property accordingly
+            if (document != null)
+            {
+                var mediaType = document.GetMediaType();
+                writer.WritePropertyName(documentProperty.Name.ToCamelCase());
+                if (mediaType.IsJson)
+                {
+                    serializer.Serialize(writer, document);
+                }
+                else
+                {
+                    writer.WriteValue(document.ToString());
+                }
+            }            
         }
 
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue,
@@ -27,7 +58,7 @@ namespace Lime.Protocol.Serialization.Newtonsoft.Converters
                 // Initialize and populate the initial object
                 target = Activator.CreateInstance(objectType);
                 var jObject = JObject.Load(reader);
-                serializer.Populate(jObject.CreateReader(), target);
+                _alternativeSerializer.Populate(jObject.CreateReader(), target);
                 
                 // Check if the 'type' property is present to the JSON
                 JToken mediaTypeJToken;
@@ -53,14 +84,14 @@ namespace Lime.Protocol.Serialization.Newtonsoft.Converters
                             document = (Document) Activator.CreateInstance(documentType);
                             if (jObject[documentPropertyName] != null)
                             {
-                                var resourceReader = jObject[Command.RESOURCE_KEY].CreateReader();
-                                document = (Document) serializer.Deserialize(resourceReader, documentType);
+                                var resourceReader = jObject[documentPropertyName].CreateReader();
+                                document = (Document)_alternativeSerializer.Deserialize(resourceReader, documentType);
                             }
                         }
                         else if (jObject[documentPropertyName] != null)
                         {
                             var parseFunc = TypeUtil.GetParseFuncForType(documentType);
-                            document = (Document) parseFunc(jObject[Command.RESOURCE_KEY].ToString());
+                            document = (Document) parseFunc(jObject[documentPropertyName].ToString());
                         }
                         else
                         {
@@ -103,7 +134,7 @@ namespace Lime.Protocol.Serialization.Newtonsoft.Converters
             var properties = objectType.GetProperties(BindingFlags.Public | BindingFlags.Instance);
             return 
                 properties.Any(p => p.PropertyType == typeof (Document)) &&
-                properties.Any(p => p.Name.Equals(TYPE_KEY) && p.PropertyType == typeof(MediaType));
+                properties.Any(p => p.Name.Equals(TYPE_KEY, StringComparison.OrdinalIgnoreCase) && p.PropertyType == typeof(MediaType));
         }
 
 
@@ -130,6 +161,16 @@ namespace Lime.Protocol.Serialization.Newtonsoft.Converters
             }
 
             throw new ArgumentException("Unknown token type");
+        }
+
+        private class IgnoreDocumentContractResolver : DefaultContractResolver
+        {
+            protected override IList<JsonProperty> CreateProperties(Type type, MemberSerialization memberSerialization)
+            {
+                return base.CreateProperties(type, memberSerialization)
+                    .Where(p => !typeof(Document).IsAssignableFrom(p.PropertyType))
+                    .ToList();
+            }
         }
     }
 }

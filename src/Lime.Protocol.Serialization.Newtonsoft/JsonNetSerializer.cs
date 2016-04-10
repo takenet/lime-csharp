@@ -3,7 +3,9 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
 using System;
+using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 
 namespace Lime.Protocol.Serialization.Newtonsoft
 {
@@ -28,28 +30,41 @@ namespace Lime.Protocol.Serialization.Newtonsoft
             {
                 if (_settings == null)
                 {
+                    var converters = new List<JsonConverter>()
+                    {
+                        new StringEnumConverter {CamelCaseText = false},
+                        new IdentityJsonConverter(),
+                        new NodeJsonConverter(),
+                        new LimeUriJsonConverter(),
+                        new MediaTypeJsonConverter(),
+                        new UriJsonConverter(),
+                        new SessionJsonConverter(),
+                        new AuthenticationJsonConverter(),
+                        new DocumentCollectionJsonConverter(),
+                        new DocumentJsonConverter(),
+                        new IsoDateTimeConverter
+                        {
+                            DateTimeFormat = "yyyy-MM-ddTHH:mm:ss.fffZ",
+                            DateTimeStyles = DateTimeStyles.AdjustToUniversal
+                        }
+                    };
+                    converters.Add(
+                        new DocumentContainerJsonConverter(
+                            new JsonSerializerSettings()
+                            { 
+                                NullValueHandling = NullValueHandling.Ignore,
+                                ReferenceLoopHandling = ReferenceLoopHandling.Serialize,
+                                Converters = converters.ToList()
+                            }));
+
                     _settings = new JsonSerializerSettings
                     {
                         NullValueHandling = NullValueHandling.Ignore,
-                        ReferenceLoopHandling = ReferenceLoopHandling.Serialize
+                        ReferenceLoopHandling = ReferenceLoopHandling.Serialize,
+                        Converters = converters                        
                     };
-                    _settings.Converters.Add(new StringEnumConverter { CamelCaseText = false });
-                    _settings.Converters.Add(new IdentityJsonConverter());
-                    _settings.Converters.Add(new NodeJsonConverter());
-                    _settings.Converters.Add(new LimeUriJsonConverter());
-                    _settings.Converters.Add(new MediaTypeJsonConverter());
-                    _settings.Converters.Add(new UriJsonConverter());
-                    _settings.Converters.Add(new SessionJsonConverter());
-                    _settings.Converters.Add(new AuthenticationJsonConverter());
-                    _settings.Converters.Add(new MessageJsonConverter());
-                    _settings.Converters.Add(new CommandJsonConverter());
-                    _settings.Converters.Add(new DocumentCollectionJsonConverter());
-                    _settings.Converters.Add(new IsoDateTimeConverter
-                    {
-                        DateTimeFormat = "yyyy-MM-ddTHH:mm:ss.fffZ",
-                        DateTimeStyles = DateTimeStyles.AdjustToUniversal
-                    });
-                    _settings.Converters.Add(new DocumentJsonConverter());
+
+                    _settings.Converters = converters;
                 }
 
                 return _settings;
