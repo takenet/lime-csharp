@@ -1,9 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.Serialization;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Lime.Protocol
 {
@@ -53,14 +48,8 @@ namespace Lime.Protocol
         /// <summary>
         /// Indicates if the MIME represents a JSON type.
         /// </summary>
-        public bool IsJson
-        {
-            get
-            {
-                return (Suffix != null && Suffix.Equals(SubTypes.JSON, StringComparison.OrdinalIgnoreCase)) ||
-                       (Subtype != null && Subtype.Equals(SubTypes.JSON, StringComparison.OrdinalIgnoreCase));
-            }
-        }
+        public bool IsJson => (Suffix != null && Suffix.Equals(SubTypes.JSON, StringComparison.OrdinalIgnoreCase)) ||
+                              (Subtype != null && Subtype.Equals(SubTypes.JSON, StringComparison.OrdinalIgnoreCase));
 
         #endregion
 
@@ -74,15 +63,13 @@ namespace Lime.Protocol
         /// </returns>
         public override string ToString()
         {
-            if (string.IsNullOrWhiteSpace(this.Suffix))
+            if (string.IsNullOrWhiteSpace(Suffix))
             {
-                return string.Format("{0}/{1}", this.Type, this.Subtype);
+                return $"{Type}/{Subtype}";
             }
-            else
-            {
-                return string.Format("{0}/{1}+{2}", this.Type, this.Subtype, this.Suffix);
-            }
+            return $"{Type}/{Subtype}+{Suffix}";
         }
+
         /// <summary>
         /// Returns a hash code for this instance.
         /// </summary>
@@ -91,7 +78,7 @@ namespace Lime.Protocol
         /// </returns>
         public override int GetHashCode()
         {
-            return this.ToString().GetHashCode();
+            return ToString().GetHashCode();
         }
 
         /// <summary>
@@ -110,9 +97,9 @@ namespace Lime.Protocol
                 return false;
             }
 
-            return this.Type.Equals(mediaType.Type, StringComparison.CurrentCultureIgnoreCase) &&
-                   this.Subtype.Equals(mediaType.Subtype, StringComparison.CurrentCultureIgnoreCase) &&
-                   (this.Suffix == null && mediaType.Suffix == null || (this.Suffix != null && mediaType.Suffix != null && this.Suffix.Equals(mediaType.Suffix, StringComparison.CurrentCultureIgnoreCase)));
+            return Type.Equals(mediaType.Type, StringComparison.CurrentCultureIgnoreCase) &&
+                   Subtype.Equals(mediaType.Subtype, StringComparison.CurrentCultureIgnoreCase) &&
+                   (Suffix == null && mediaType.Suffix == null || (Suffix != null && mediaType.Suffix != null && Suffix.Equals(mediaType.Suffix, StringComparison.CurrentCultureIgnoreCase)));
         }
 
         /// <summary> 
@@ -126,7 +113,7 @@ namespace Lime.Protocol
         {
             if (string.IsNullOrWhiteSpace(s))
             {
-                throw new ArgumentNullException("s");
+                throw new ArgumentNullException(nameof(s));
             }
 
             var splittedMediaType = s.Split(';')[0].Split('/');
@@ -158,7 +145,7 @@ namespace Lime.Protocol
         {
             try
             {
-                mediaType = MediaType.Parse(s);
+                mediaType = Parse(s);
                 return true;
             }
             catch

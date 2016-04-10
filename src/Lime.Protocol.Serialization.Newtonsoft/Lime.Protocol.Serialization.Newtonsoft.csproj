@@ -55,6 +55,7 @@
     <Compile Include="Converters\AuthenticationJsonConverter.cs" />
     <Compile Include="Converters\CommandJsonConverter.cs" />
     <Compile Include="Converters\DocumentCollectionJsonConverter.cs" />
+    <Compile Include="Converters\DocumentContainerJsonConverter.cs" />
     <Compile Include="Converters\IdentityJsonConverter.cs" />
     <Compile Include="Converters\DocumentJsonConverter.cs" />
     <Compile Include="Converters\StringBasedTypeJsonConverter.cs" />

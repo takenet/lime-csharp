@@ -30,18 +30,7 @@ namespace Lime.Protocol
         ///  MIME declaration of the content type of the message.
         /// </summary>
         [DataMember(Name = TYPE_KEY, IsRequired = true)]
-        public MediaType Type
-        {
-            get 
-            {
-                if (Content != null)
-                {
-                    return Content.GetMediaType();
-                }
-
-                return null;
-            }
-        }
+        public MediaType Type => Content?.GetMediaType();
 
         /// <summary>
         /// Message body content

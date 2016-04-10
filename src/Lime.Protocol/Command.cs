@@ -41,18 +41,7 @@ namespace Lime.Protocol
         ///  MIME declaration of the resource type of the command.
         /// </summary>
         [DataMember(Name = TYPE_KEY)]
-        public MediaType Type
-        {
-            get
-            {
-                if (Resource != null)
-                {
-                    return Resource.GetMediaType();
-                }
-
-                return null;
-            }
-        }
+        public MediaType Type => Resource?.GetMediaType();
 
         /// <summary>
         /// Server resource that are subject

@@ -1,18 +1,11 @@
 ﻿using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using System;
 
 namespace Lime.Protocol.Serialization.Newtonsoft.Converters
 {
     class DocumentJsonConverter : JsonConverter
     {
-        public override bool CanWrite
-        {
-            get
-            {
-                return false;
-            }
-        }
+        public override bool CanWrite => false;
 
         public override bool CanConvert(Type objectType)
         {
@@ -27,12 +20,10 @@ namespace Lime.Protocol.Serialization.Newtonsoft.Converters
                 // container class (Message or Command)
                 return null;
             }
-            else
-            {
-                var instance = Activator.CreateInstance(objectType);
-                serializer.Populate(reader, instance);
-                return instance;
-            }
+
+            var instance = Activator.CreateInstance(objectType);
+            serializer.Populate(reader, instance);
+            return instance;
         }
 
         public override void WriteJson(JsonWriter writer, object value, global::Newtonsoft.Json.JsonSerializer serializer)
