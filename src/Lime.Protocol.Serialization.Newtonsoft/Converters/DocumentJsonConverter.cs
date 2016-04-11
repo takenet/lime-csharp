@@ -1,5 +1,8 @@
 ﻿using Newtonsoft.Json;
 using System;
+using System.Linq;
+using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Serialization;
 
 namespace Lime.Protocol.Serialization.Newtonsoft.Converters
 {
@@ -12,10 +15,10 @@ namespace Lime.Protocol.Serialization.Newtonsoft.Converters
             _alternativeSerializer = global::Newtonsoft.Json.JsonSerializer.Create(settings);
         }
 
-        public override bool CanWrite => true;        
-
         public override bool CanRead => true;
 
+        public override bool CanWrite => true;        
+        
         public override bool CanConvert(Type objectType)
         {
             return typeof(Document).IsAssignableFrom(objectType) && !typeof(DocumentCollection).IsAssignableFrom(objectType);
@@ -39,10 +42,11 @@ namespace Lime.Protocol.Serialization.Newtonsoft.Converters
         {
             var document = value as Document;
             if (document != null)
-            {
+            {                                                                
                 if (document.GetMediaType().IsJson)
                 {
-                    _alternativeSerializer.Serialize(writer, document);
+                    // TODO: Any document inside the value will not be correct handled.
+                    _alternativeSerializer.Serialize(writer, document);                    
                 }
                 else
                 {

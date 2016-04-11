@@ -4,7 +4,6 @@ using System.Linq;
 using System.Reflection;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using Newtonsoft.Json.Serialization;
 
 namespace Lime.Protocol.Serialization.Newtonsoft.Converters
 {
@@ -21,9 +20,11 @@ namespace Lime.Protocol.Serialization.Newtonsoft.Converters
             if (objectType.IsAbstract) return false;
 
             var properties = objectType.GetProperties(BindingFlags.Public | BindingFlags.Instance);
-            return
+            var canConvert = 
                 properties.Any(p => p.PropertyType == typeof(Document)) &&
                 properties.Any(p => p.Name.Equals(TYPE_KEY, StringComparison.OrdinalIgnoreCase) && p.PropertyType == typeof(MediaType));
+
+            return canConvert;
         }
 
         public override void WriteJson(JsonWriter writer, object value, global::Newtonsoft.Json.JsonSerializer serializer)
@@ -31,8 +32,7 @@ namespace Lime.Protocol.Serialization.Newtonsoft.Converters
             throw new NotSupportedException();         
         }
 
-        public override object ReadJson(JsonReader reader, Type objectType, object existingValue,
-            global::Newtonsoft.Json.JsonSerializer serializer)
+        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, global::Newtonsoft.Json.JsonSerializer serializer)
         {
             object target = null;
             if (reader.TokenType != JsonToken.Null)
@@ -109,8 +109,6 @@ namespace Lime.Protocol.Serialization.Newtonsoft.Converters
             return target;
         }
 
-
-
         private object GetTokenValue(JToken token)
         {
             var jValue = token as JValue;
@@ -135,6 +133,5 @@ namespace Lime.Protocol.Serialization.Newtonsoft.Converters
 
             throw new ArgumentException("Unknown token type");
         }
-
     }
 }

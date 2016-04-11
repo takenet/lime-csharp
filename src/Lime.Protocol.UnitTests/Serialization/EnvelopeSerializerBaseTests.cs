@@ -626,6 +626,41 @@ namespace Lime.Protocol.UnitTests.Serialization
             Assert.IsTrue(resultString.ContainsJsonProperty(ChatState.STATE_KEY, chatState.State));
         }
 
+        [Test]
+        [Category("Serialize")]        
+        [Ignore("JSON.net doesn't support custom JSON convert call to itself (raises StackOverflowException). See DocumentJsonConverter class.")]
+        public void Serialize_SelectMessage_ReturnsValidJsonString()
+        {
+            // Arrange
+            var select = Dummy.CreateSelect();
+            var message = Dummy.CreateMessage(select);
+            var target = GetTarget();
+
+            // Act
+            var resultString = target.Serialize(message);
+
+            // Assert
+            Assert.IsTrue(resultString.HasValidJsonStackedBrackets());
+            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.ID_KEY, message.Id));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.FROM_KEY, message.From));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.TO_KEY, message.To));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Select.DESTINATION_KEY, select.Destination));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Select.TEXT_KEY, select.Text));
+            Assert.IsTrue(resultString.ContainsJsonKey(Select.OPTIONS_KEY));
+            foreach (var option in select.Options)
+            {
+                Assert.IsTrue(resultString.ContainsJsonProperty(Option.TEXT_KEY, option.Text));
+                Assert.IsTrue(resultString.ContainsJsonProperty(Option.TYPE_KEY, option.Type));
+                if (option.Type.IsJson)
+                {
+                    
+                }
+                else
+                {
+                    Assert.IsTrue(resultString.ContainsJsonProperty(Option.VALUE_KEY , option.Value.ToString()));
+                }
+            }
+        }
 
         #endregion
 

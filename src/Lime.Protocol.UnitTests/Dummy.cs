@@ -428,5 +428,29 @@ namespace Lime.Protocol.UnitTests
                 State = ChatStateEvent.Composing
             };
         }
+
+        public static Select CreateSelect()
+        {
+            return new Select()
+            {
+                Destination = CreateNode(),
+                Text = CreateRandomStringExtended(100),
+                Options = new[]
+                {
+                    CreateOption(CreateTextContent()),
+                    CreateOption(CreateJsonDocument())
+                },
+                DefaultOption = CreateOption(CreateTextContent())
+            };
+        }
+
+        public static Option CreateOption(Document value)
+        {
+            return new Option()
+            {
+                Text = CreateRandomStringExtended(10),
+                Value = value
+            };
+        }
     }
 }

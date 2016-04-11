@@ -9,7 +9,7 @@ using Lime.Protocol;
 namespace Lime.Messaging.Contents
 {
     /// <summary>
-    /// 
+    /// Aggregates a list of <see cref="Option"/> for selection.
     /// </summary>
     /// <seealso cref="Lime.Protocol.Document" />
     [DataContract(Namespace = "http://limeprotocol.org/2014")]
@@ -58,8 +58,15 @@ namespace Lime.Messaging.Contents
         /// </value>
         [DataMember(Name = OPTIONS_KEY)]
         public Option[] Options { get; set; }
+
+        [DataMember(Name = "defaultOption")]
+        public Option DefaultOption { get; set; }
+
     }
 
+    /// <summary>
+    /// Defines a option to be selected by the destination.
+    /// </summary>
     [DataContract(Namespace = "http://limeprotocol.org/2014")]
     public class Option
     {
