@@ -3,7 +3,7 @@ using System;
 
 namespace Lime.Protocol.Serialization.Newtonsoft.Converters
 {
-    class MediaTypeJsonConverter : StringBasedTypeJsonConverter<MediaType>
+    public class MediaTypeJsonConverter : StringBasedTypeJsonConverter<MediaType>
     {
         protected override MediaType CreateInstance(string tokenValue)
         {

@@ -1,11 +1,11 @@
-﻿using Lime.Protocol.Serialization.Newtonsoft.Converters;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
-using Newtonsoft.Json.Linq;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using Lime.Protocol.Serialization.Newtonsoft.Converters;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+using Newtonsoft.Json.Linq;
 
 namespace Lime.Protocol.Serialization.Newtonsoft
 {
@@ -36,7 +36,7 @@ namespace Lime.Protocol.Serialization.Newtonsoft
                     {
                         if (_settings == null)
                         {
-                            var converters = new List<JsonConverter>()
+                            var converters = new List<JsonConverter>
                             {
                                 new StringEnumConverter {CamelCaseText = false},
                                 new IdentityJsonConverter(),
@@ -55,7 +55,7 @@ namespace Lime.Protocol.Serialization.Newtonsoft
                                 }
                             };
                             converters.Add(new DocumentJsonConverter(
-                                new JsonSerializerSettings()
+                                new JsonSerializerSettings
                                 {
                                     NullValueHandling = NullValueHandling.Ignore,
                                     ReferenceLoopHandling = ReferenceLoopHandling.Serialize,
@@ -79,8 +79,7 @@ namespace Lime.Protocol.Serialization.Newtonsoft
         #region IEnvelopeSerializer Members
 
         /// <summary>
-        /// Serialize an envelope
-        /// to a string
+        /// Serialize an envelope to a string.
         /// </summary>
         /// <param name = "envelope"></param>
         /// <returns></returns>
@@ -90,8 +89,7 @@ namespace Lime.Protocol.Serialization.Newtonsoft
         }
 
         /// <summary>
-        /// Deserialize an envelope
-        /// from a string
+        /// Deserialize an envelope from a string.
         /// </summary>
         /// <param name = "envelopeString"></param>
         /// <returns></returns>
@@ -104,22 +102,19 @@ namespace Lime.Protocol.Serialization.Newtonsoft
             {
                 return jObject.ToObject<Message>(_serializer);
             }
-            else if (jObject.Property("event") != null)
+            if (jObject.Property("event") != null)
             {
                 return jObject.ToObject<Notification>(_serializer);
             }
-            else if (jObject.Property("method") != null)
+            if (jObject.Property("method") != null)
             {
                 return jObject.ToObject<Command>(_serializer);
             }
-            else if (jObject.Property("state") != null)
+            if (jObject.Property("state") != null)
             {
                 return jObject.ToObject<Session>(_serializer);
             }
-            else
-            {
-                throw new ArgumentException("JSON string is not a valid envelope");
-            }
+            throw new ArgumentException("JSON string is not a valid envelope");
         }
 
         #endregion

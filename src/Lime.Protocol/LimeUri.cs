@@ -1,20 +1,24 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Lime.Protocol
 {
     /// <summary>
-    /// Represents a URI
-    /// from the lime scheme.
+    /// Represents an URI of the lime scheme.
     /// </summary>
     public sealed class LimeUri
     {
-        private Uri _absoluteUri;
         public const string LIME_URI_SCHEME = "lime";
 
-        #region Constructor
+        private readonly Uri _absoluteUri;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="LimeUri"/> class.
+        /// </summary>
+        /// <param name="uriPath">The URI path.</param>
+        /// <exception cref="System.ArgumentNullException"></exception>
+        /// <exception cref="System.ArgumentException">
+        /// Invalid URI format
+        /// </exception>
         public LimeUri(string uriPath)
         {
             if (string.IsNullOrWhiteSpace(uriPath)) throw new ArgumentNullException(nameof(uriPath));
@@ -22,19 +26,6 @@ namespace Lime.Protocol
 			if (Uri.IsWellFormedUriString(uriPath, UriKind.Absolute))
             {
                 _absoluteUri = new Uri(uriPath);
-
-				#if MONO
-				// In Linux, a path like '/presence' is considered
-				// a valid absolute file uri
-
-				if (_absoluteUri.Scheme.Equals(Uri.UriSchemeFile))
-				{
-					_absoluteUri = null;
-				}
-				else
-
-				#endif
-
                 if (!_absoluteUri.Scheme.Equals(LIME_URI_SCHEME))
                 {
                     throw new ArgumentException($"Invalid URI scheme. Expected is '{LIME_URI_SCHEME}'");
@@ -45,25 +36,20 @@ namespace Lime.Protocol
                 throw new ArgumentException("Invalid URI format");
             }
 
-            this.Path = uriPath.TrimEnd('/');            
+            Path = uriPath.TrimEnd('/');            
         }
 
-        #endregion
-       
         /// <summary>
         /// Fragment or complete
         /// URI path.
         /// </summary>
-        public string Path { get; private set; }
+        public string Path { get; }
 
         /// <summary>
         /// Indicates if the path 
         /// is relative.
         /// </summary>
-        public bool IsRelative
-        {
-            get { return _absoluteUri == null; }
-        }
+        public bool IsRelative => _absoluteUri == null;
 
         #region Public Methods
 
@@ -99,34 +85,50 @@ namespace Lime.Protocol
 
             if (authority == null)
             {
-                throw new ArgumentNullException("authority");
+                throw new ArgumentNullException(nameof(authority));
             }
 
             var baseUri = GetBaseUri(authority);
             return new Uri(baseUri, Path);
         }
 
+        /// <summary>
+        /// Returns a hash code for this instance.
+        /// </summary>
+        /// <returns>
+        /// A hash code for this instance, suitable for use in hashing algorithms and data structures like a hash table. 
+        /// </returns>
         public override int GetHashCode()
         {
-            return this.ToString().ToLowerInvariant().GetHashCode();
+            return ToString().ToLowerInvariant().GetHashCode();
         }
 
+        /// <summary>
+        /// Determines whether the specified <see cref="System.Object" />, is equal to this instance.
+        /// </summary>
+        /// <param name="obj">The <see cref="System.Object" /> to compare with this instance.</param>
+        /// <returns>
+        ///   <c>true</c> if the specified <see cref="System.Object" /> is equal to this instance; otherwise, <c>false</c>.
+        /// </returns>
         public override bool Equals(object obj)
         {
             var limeUri = obj as LimeUri;
-            if (limeUri == null)
-            {
-                return false;
-            }
-
-            return this.Path.Equals(limeUri.Path, StringComparison.OrdinalIgnoreCase);
+            return limeUri != null && Path.Equals(limeUri.Path, StringComparison.OrdinalIgnoreCase);
         }
 
-        public override string ToString()
-        {
-            return this.Path;
-        } 
+        /// <summary>
+        /// Returns a <see cref="System.String" /> that represents this instance.
+        /// </summary>
+        /// <returns>
+        /// A <see cref="System.String" /> that represents this instance.
+        /// </returns>
+        public override string ToString() => Path;
 
+        /// <summary>
+        /// Parses the specified value.
+        /// </summary>
+        /// <param name="value">The value.</param>
+        /// <returns></returns>
         public static LimeUri Parse(string value)
         {
             return new LimeUri(value);
@@ -134,7 +136,7 @@ namespace Lime.Protocol
 
         public static Uri GetBaseUri(Identity authority)
         {
-            return new Uri(string.Format("{0}://{1}/", LIME_URI_SCHEME, authority));
+            return new Uri($"{LIME_URI_SCHEME}://{authority}/");
         }
 
         #endregion

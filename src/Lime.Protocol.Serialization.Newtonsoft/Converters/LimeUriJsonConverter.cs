@@ -3,7 +3,7 @@ using System;
 
 namespace Lime.Protocol.Serialization.Newtonsoft.Converters
 {
-    class LimeUriJsonConverter : StringBasedTypeJsonConverter<LimeUri>
+    public class LimeUriJsonConverter : StringBasedTypeJsonConverter<LimeUri>
     {
         protected override LimeUri CreateInstance(string tokenValue)
         {

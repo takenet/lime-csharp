@@ -4,15 +4,9 @@ using System;
 
 namespace Lime.Protocol.Serialization.Newtonsoft.Converters
 {
-    class AuthenticationJsonConverter : JsonConverter
+    public class AuthenticationJsonConverter : JsonConverter
     {
-        public override bool CanWrite
-        {
-            get
-            {
-                return false;
-            }
-        }
+        public override bool CanWrite => false;
 
         public override bool CanConvert(Type objectType)
         {
@@ -21,6 +15,7 @@ namespace Lime.Protocol.Serialization.Newtonsoft.Converters
 
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, global::Newtonsoft.Json.JsonSerializer serializer)
         {
+            // The serialization is handled by the container class
             return null;
         }
 

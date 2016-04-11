@@ -3,7 +3,7 @@ using System;
 
 namespace Lime.Protocol.Serialization.Newtonsoft.Converters
 {
-    class DocumentJsonConverter : JsonConverter
+    public class DocumentJsonConverter : JsonConverter
     {
         private readonly global::Newtonsoft.Json.JsonSerializer _alternativeSerializer;
 

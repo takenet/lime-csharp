@@ -2,7 +2,7 @@
 
 namespace Lime.Protocol.Serialization.Newtonsoft.Converters
 {
-    class UriJsonConverter : StringBasedTypeJsonConverter<Uri>
+    public class UriJsonConverter : StringBasedTypeJsonConverter<Uri>
     {
         protected override Uri CreateInstance(string tokenValue)
         {
