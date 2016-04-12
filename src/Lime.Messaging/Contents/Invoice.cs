@@ -13,9 +13,8 @@ namespace Lime.Messaging.Contents
     {
         public const string MIME_TYPE = "application/vnd.lime.invoice+json";
         public const string NUMBER_KEY = "number";
-        public const string TERMS_KEY = "terms";
-        public const string ACCOUNT_KEY = "account";
         public const string CREATED_KEY = "created";
+        public const string METHODS_KEY = "methods";
         public const string DUE_TO_KEY = "dueTo";
         public const string CURRENCY_KEY = "currency";
         public const string TAXES_KEY = "taxes";
@@ -45,7 +44,7 @@ namespace Lime.Messaging.Contents
         /// Gets or sets the invoice creation date.
         /// </summary>
         /// <value>
-        /// The creation.
+        /// The creation date.
         /// </value>
         [DataMember(Name = CREATED_KEY)]
         public DateTimeOffset? Created { get; set; }
@@ -54,28 +53,19 @@ namespace Lime.Messaging.Contents
         /// Gets or sets the invoice expiration.
         /// </summary>
         /// <value>
-        /// The expiration.
+        /// The expiration date.
         /// </value>
         [DataMember(Name = DUE_TO_KEY)]
         public DateTimeOffset? DueTo { get; set; }
 
         /// <summary>
-        /// Gets or sets the invoice payment terms description.
+        /// Gets or sets the seller supported methods for payment of the invoice.
         /// </summary>
         /// <value>
-        /// The terms.
+        /// The payment methods.
         /// </value>
-        [DataMember(Name = TERMS_KEY)]
-        public string Terms { get; set; }
-
-        /// <summary>
-        /// Gets or sets the account information for the payment of the invoice.
-        /// </summary>
-        /// <value>
-        /// The terms.
-        /// </value>
-        [DataMember(Name = ACCOUNT_KEY)]
-        public string Account { get; set; }
+        [DataMember(Name = METHODS_KEY)]
+        public PaymentMethod[] Methods { get; set; }
 
         /// <summary>
         /// Gets or sets the invoice currency code related to the values.
@@ -180,5 +170,33 @@ namespace Lime.Messaging.Contents
         /// </value>
         [DataMember(Name = TOTAL_KEY)]
         public decimal Total { get; set; }
+    }
+
+    /// <summary>
+    /// Defines a payment method.
+    /// </summary>
+    [DataContract(Namespace = "http://limeprotocol.org/2014")]
+    public class PaymentMethod
+    {
+        public const string NAME_KEY = "name";
+        public const string ACCOUNT_KEY = "account";
+
+        /// <summary>
+        /// Gets or sets the payment method name.
+        /// </summary>
+        /// <value>
+        /// The name.
+        /// </value>
+        [DataMember(Name = NAME_KEY)]
+        public string Name { get; set; }
+
+        /// <summary>
+        /// Gets or sets the payment method account information of the seller.
+        /// </summary>
+        /// <value>
+        /// The account.
+        /// </value>
+        [DataMember(Name = ACCOUNT_KEY)]
+        public string Account { get; set; }
     }
 }
