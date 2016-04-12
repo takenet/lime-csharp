@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Reflection;
 
 namespace Lime.Protocol.UnitTests.Serialization
 {
@@ -652,7 +653,23 @@ namespace Lime.Protocol.UnitTests.Serialization
                 Assert.IsTrue(resultString.ContainsJsonProperty(SelectOption.TYPE_KEY, option.Type));
                 if (option.Type.IsJson)
                 {
-                    
+                    var properties = option.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public);
+                    foreach (var property in properties)
+                    {
+                        var propertyValue = property.GetValue(option);
+                        if (propertyValue == null || propertyValue.Equals(property.PropertyType.GetDefaultValue()))
+                            continue;                        
+                        try
+                        {
+                            Assert.IsTrue(resultString.ContainsJsonProperty(property.Name.ToCamelCase(),
+                                propertyValue));
+                        }
+                        catch (NotSupportedException)
+                        {
+                            continue;
+                        }
+                        
+                    }
                 }
                 else
                 {

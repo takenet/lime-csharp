@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using Lime.Protocol.Serialization;
 using System.Globalization;
+using System.Linq;
 
 namespace Lime.Protocol.UnitTests.Serialization
 {
@@ -60,46 +61,46 @@ namespace Lime.Protocol.UnitTests.Serialization
             if (value is int || value is long || value is bool)
             {
                 return json.Contains(
-                    string.Format("\"{0}\":{1}",
-                        key,
-                        value.ToString().ToLower()));
+                    $"\"{key}\":{value.ToString().ToLower()}");
             }
 
             if (value is double)
             {
                 return json.Contains(
-                    string.Format("\"{0}\":{1}",
-                        key,
-                        ((double)value).ToString(CultureInfo.InvariantCulture)));
+                    $"\"{key}\":{((double) value).ToString(CultureInfo.InvariantCulture)}");
             }
 
             if (value is DateTime)
             {
                 return json.Contains(
-                    string.Format("\"{0}\":\"{1}\"",
-                        key,
-                        ((DateTime)value).ToUniversalTime().ToString(TextJsonWriter.DATE_FORMAT, CultureInfo.InvariantCulture)));
+                    $"\"{key}\":\"{((DateTime) value).ToUniversalTime().ToString(TextJsonWriter.DATE_FORMAT, CultureInfo.InvariantCulture)}\"");
             }
 
             if (value is DateTimeOffset)
             {
                 return json.Contains(
-                    string.Format("\"{0}\":\"{1}\"",
-                        key,
-                        ((DateTimeOffset)value).ToUniversalTime().ToString(TextJsonWriter.DATE_FORMAT, CultureInfo.InvariantCulture)));
+                    $"\"{key}\":\"{((DateTimeOffset) value).ToUniversalTime().ToString(TextJsonWriter.DATE_FORMAT, CultureInfo.InvariantCulture)}\"");
             }
 
             if (value.GetType().IsEnum)
             {
                 return json.Contains(
-                    string.Format("\"{0}\":\"{1}\"",
-                        key,
-                        value.ToString().ToCamelCase()));
+                    $"\"{key}\":\"{value.ToString().ToCamelCase()}\"");
             }
 
             if (value is IDictionary<string, object>)
             {
-                throw new NotSupportedException("Cannot check for dictionary properties");
+                var dictionary = (IDictionary<string, object>)value;
+                if (!json.ContainsJsonKey(key))
+                {
+                    return false;
+                }
+
+                if (dictionary.Where(p => !p.Value.GetType().IsArray).Any(kv => !json.ContainsJsonProperty(kv.Key, kv.Value)))
+                {
+                    return false;
+                }
+                return true;
             }
 
             if (value.GetType().IsArray)
@@ -108,7 +109,7 @@ namespace Lime.Protocol.UnitTests.Serialization
                 stringBuilder.AppendFormat("\"{0}\":[", key);
 
                 foreach (var v in (Array)value)
-                {
+                {                    
                     if (v is int || v is long || v is bool)
                     {
                         stringBuilder.AppendFormat("{0},", v);
