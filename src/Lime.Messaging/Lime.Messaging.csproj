@@ -46,8 +46,10 @@
   <ItemGroup>
     <Compile Include="Contents\BitmapImage.cs" />
     <Compile Include="Contents\ChatState.cs" />
+    <Compile Include="Contents\Invoice.cs" />
     <Compile Include="Contents\Location.cs" />
     <Compile Include="Contents\MediaLink.cs" />
+    <Compile Include="Contents\PaymentReceipt.cs" />
     <Compile Include="Contents\PlainText.cs" />
     <Compile Include="Contents\Select.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
