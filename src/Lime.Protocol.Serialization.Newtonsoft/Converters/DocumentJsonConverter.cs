@@ -28,8 +28,7 @@ namespace Lime.Protocol.Serialization.Newtonsoft.Converters
         {
             if (objectType.IsAbstract)
             {
-                // The serialization is made by the
-                // container class (Message or Command)
+                // The serialization is made by the container class (Message or Command)
                 return null;
             }
 

@@ -1,37 +1,36 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Serialization;
 
 namespace Lime.Protocol.Serialization.Newtonsoft.Converters
 {
     public class DocumentContainerJsonConverter : JsonConverter
     {
-        public const string TYPE_KEY = "type";
-
-        public override bool CanWrite => false;
+        // TODO: Implement a cache
+        private static readonly ConcurrentDictionary<Type, bool> CanConvertDictionary = new ConcurrentDictionary<Type, bool>();
 
         public override bool CanRead => true;
 
+        public override bool CanWrite => true;        
+
         public override bool CanConvert(Type objectType)
         {
+            // This implementation works with all classes that have a 'type' property among a typeof(Document) property, not only the DocumentContainer class.
             if (objectType.IsAbstract) return false;
 
             var properties = objectType.GetProperties(BindingFlags.Public | BindingFlags.Instance);
             var canConvert = 
                 properties.Any(p => p.PropertyType == typeof(Document)) &&
-                properties.Any(p => p.Name.Equals(TYPE_KEY, StringComparison.OrdinalIgnoreCase) && p.PropertyType == typeof(MediaType));
+                properties.Any(p => p.Name.Equals(DocumentContainer.TYPE_KEY, StringComparison.OrdinalIgnoreCase) && p.PropertyType == typeof(MediaType));
 
             return canConvert;
         }
-
-        public override void WriteJson(JsonWriter writer, object value, global::Newtonsoft.Json.JsonSerializer serializer)
-        {
-            throw new NotSupportedException();         
-        }
-
+        
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, global::Newtonsoft.Json.JsonSerializer serializer)
         {
             object target = null;
@@ -44,7 +43,7 @@ namespace Lime.Protocol.Serialization.Newtonsoft.Converters
                 
                 // Check if the 'type' property is present to the JSON
                 JToken mediaTypeJToken;
-                if (jObject.TryGetValue(TYPE_KEY, out mediaTypeJToken))
+                if (jObject.TryGetValue(DocumentContainer.TYPE_KEY, out mediaTypeJToken))
                 {
                     // Find the document property
                     var documentProperty =
@@ -103,10 +102,45 @@ namespace Lime.Protocol.Serialization.Newtonsoft.Converters
 
                     documentProperty.SetValue(target, document);
                 }
-
             }
 
             return target;
+        }
+
+        public override void WriteJson(JsonWriter writer, object value, global::Newtonsoft.Json.JsonSerializer serializer)
+        {
+            // The container should be always a JSON
+            var contract = serializer.ContractResolver.ResolveContract(value.GetType()) as JsonObjectContract;
+            if (contract == null) return;
+            
+            var shouldStartObject = writer.WriteState == WriteState.Start || writer.WriteState == WriteState.Array;
+            if (shouldStartObject) writer.WriteStartObject();
+            
+            foreach (var property in contract.Properties.Where(p => p.ShouldSerialize == null || p.ShouldSerialize(value)))
+            {                
+                var propertyValue = property.ValueProvider.GetValue(value);
+                if (propertyValue == null) continue;
+
+                if (property.DefaultValueHandling == DefaultValueHandling.Ignore &&
+                    propertyValue.Equals(property.DefaultValue ?? property.PropertyType.GetDefaultValue()))
+                {                    
+                    continue;
+                }
+
+                writer.WritePropertyName(property.PropertyName);                
+
+                var document = propertyValue as Document;
+                if (document != null && !document.GetMediaType().IsJson)
+                {
+                    writer.WriteValue(document.ToString());
+                }
+                else
+                {
+                    serializer.Serialize(writer, propertyValue);
+                }                
+            }
+
+            if (shouldStartObject) writer.WriteEndObject();
         }
 
         private object GetTokenValue(JToken token)

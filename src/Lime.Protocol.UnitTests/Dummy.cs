@@ -439,14 +439,13 @@ namespace Lime.Protocol.UnitTests
                 {
                     CreateOption(CreateTextContent()),
                     CreateOption(CreateJsonDocument())
-                },
-                DefaultOption = CreateOption(CreateTextContent())
+                }
             };
         }
 
-        public static Option CreateOption(Document value)
+        public static SelectOption CreateOption(Document value)
         {
-            return new Option()
+            return new SelectOption()
             {
                 Text = CreateRandomStringExtended(10),
                 Value = value

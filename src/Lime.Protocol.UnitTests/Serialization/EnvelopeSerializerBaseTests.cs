@@ -628,7 +628,6 @@ namespace Lime.Protocol.UnitTests.Serialization
 
         [Test]
         [Category("Serialize")]        
-        [Ignore("JSON.net doesn't support custom JSON convert call to itself (raises StackOverflowException). See DocumentJsonConverter class.")]
         public void Serialize_SelectMessage_ReturnsValidJsonString()
         {
             // Arrange
@@ -649,15 +648,15 @@ namespace Lime.Protocol.UnitTests.Serialization
             Assert.IsTrue(resultString.ContainsJsonKey(Select.OPTIONS_KEY));
             foreach (var option in select.Options)
             {
-                Assert.IsTrue(resultString.ContainsJsonProperty(Option.TEXT_KEY, option.Text));
-                Assert.IsTrue(resultString.ContainsJsonProperty(Option.TYPE_KEY, option.Type));
+                Assert.IsTrue(resultString.ContainsJsonProperty(SelectOption.TEXT_KEY, option.Text));
+                Assert.IsTrue(resultString.ContainsJsonProperty(SelectOption.TYPE_KEY, option.Type));
                 if (option.Type.IsJson)
                 {
                     
                 }
                 else
                 {
-                    Assert.IsTrue(resultString.ContainsJsonProperty(Option.VALUE_KEY , option.Value.ToString()));
+                    Assert.IsTrue(resultString.ContainsJsonProperty(SelectOption.VALUE_KEY , option.Value.ToString()));
                 }
             }
         }
