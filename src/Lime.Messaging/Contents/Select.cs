@@ -57,34 +57,40 @@ namespace Lime.Messaging.Contents
         /// The options.
         /// </value>
         [DataMember(Name = OPTIONS_KEY)]
-        public Option[] Options { get; set; }
-
-        [DataMember(Name = "defaultOption")]
-        public Option DefaultOption { get; set; }
-
+        public SelectOption[] Options { get; set; }
     }
 
     /// <summary>
     /// Defines a option to be selected by the destination.
     /// </summary>
     [DataContract(Namespace = "http://limeprotocol.org/2014")]
-    public class Option
+    public class SelectOption
     {
+        public const string ORDER_KEY = "order";
         public const string TEXT_KEY = "text";
         public const string TYPE_KEY = "type";
         public const string VALUE_KEY = "value";
-        
+
+        /// <summary>
+        /// Gets or sets the option order number.
+        /// </summary>
+        /// <value>
+        /// The order.
+        /// </value>
+        [DataMember(Name = ORDER_KEY)]
+        public int? Order { get; set; }
+
         /// <summary>
         /// Gets or sets the option label text.
         /// </summary>
         /// <value>
         /// The text.
         /// </value>
-        [DataMember(Name = TEXT_KEY)]
+        [DataMember(Name = TEXT_KEY, IsRequired = true)]
         public string Text { get; set; }
 
         /// <summary>
-        /// Gets or sets media type of the option <see cref="Value"/>.
+        /// Gets the media type of the option <see cref="Value"/>.
         /// </summary>
         /// <value>
         /// The type.
@@ -94,7 +100,7 @@ namespace Lime.Messaging.Contents
 
         /// <summary>
         /// Gets or sets the option value to be returned to the caller.
-        /// If not defined, the value of <see cref="Text"/> should be returned.
+        /// If not defined, the value of <see cref="Order"/> (if defined) or <see cref="Text"/> should be returned.
         /// </summary>
         /// <value>
         /// The value.

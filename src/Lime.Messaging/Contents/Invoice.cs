@@ -121,9 +121,9 @@ namespace Lime.Messaging.Contents
     public class InvoiceItem
     {
         public const string QUANTITY_KEY = "quantity";
-        public const string DESCRIPTION_KEY = "description";
-        public const string CURRENCY_KEY = "currency";
         public const string UNIT_KEY = "unit";
+        public const string DESCRIPTION_KEY = "description";
+        public const string CURRENCY_KEY = "currency";        
         public const string TAXES_KEY = "taxes";
         public const string TOTAL_KEY = "total";
 

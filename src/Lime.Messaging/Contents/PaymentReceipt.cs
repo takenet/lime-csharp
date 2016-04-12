@@ -11,7 +11,7 @@ namespace Lime.Messaging.Contents
     [DataContract(Namespace = "http://limeprotocol.org/2014")]
     public class PaymentReceipt : Document
     {
-        public const string MIME_TYPE = "application/vnd.lime.paymentreceipt+json";
+        public const string MIME_TYPE = "application/vnd.lime.payment-receipt+json";
 
         public const string INVOICE_KEY = "invoice";
         public const string PROCESSOR_KEY = "processor";        
@@ -20,7 +20,6 @@ namespace Lime.Messaging.Contents
         public const string CURRENCY_KEY = "currency";
         public const string TAXES_KEY = "taxes";
         public const string TOTAL_KEY = "total";
-        public const string ITEMS_KEY = "items";
 
         public static readonly MediaType MediaType = MediaType.Parse(MIME_TYPE);
 
@@ -62,7 +61,7 @@ namespace Lime.Messaging.Contents
         public string Transaction { get; set; }
 
         /// <summary>
-        /// Gets or sets the invoice creation date.
+        /// Gets or sets the payment date.
         /// </summary>
         /// <value>
         /// The creation.
@@ -71,7 +70,7 @@ namespace Lime.Messaging.Contents
         public DateTimeOffset? PaidOn { get; set; }
 
         /// <summary>
-        /// Gets or sets the invoice currency code related to the values.
+        /// Gets or sets the receipt currency code related to the values.
         /// </summary>
         /// <value>
         /// The currency.
@@ -80,7 +79,7 @@ namespace Lime.Messaging.Contents
         public string Currency { get; set; }
 
         /// <summary>
-        /// Gets or sets the invoice total taxes value.
+        /// Gets or sets the receipt total taxes value.
         /// </summary>
         /// <value>
         /// The taxes.
@@ -89,7 +88,7 @@ namespace Lime.Messaging.Contents
         public decimal? Taxes { get; set; }
 
         /// <summary>
-        /// Gets or sets the invoice total value, including taxes.
+        /// Gets or sets the receipt total value, including taxes.
         /// </summary>
         /// <value>
         /// The total.
