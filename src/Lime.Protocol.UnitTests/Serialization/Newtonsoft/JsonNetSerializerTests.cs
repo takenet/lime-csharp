@@ -1,10 +1,10 @@
-﻿using Lime.Protocol.UnitTests.Serialization;
-using Newtonsoft.Json;
+﻿using Lime.Protocol.Serialization;
+using Lime.Protocol.Serialization.Newtonsoft;
 using Newtonsoft.Json.Linq;
 using NUnit.Framework;
 using Shouldly;
 
-namespace Lime.Protocol.Serialization.Newtonsoft.UnitTests
+namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 {
     [TestFixture]
     public class JsonNetSerializerTests : EnvelopeSerializerBaseTests
