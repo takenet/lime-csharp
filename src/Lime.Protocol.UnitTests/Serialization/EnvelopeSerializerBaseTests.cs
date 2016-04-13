@@ -415,19 +415,12 @@ namespace Lime.Protocol.UnitTests.Serialization
 			
 			foreach (var keyValuePair in content)
 			{
-				if (keyValuePair.Value.GetType().IsArray)
-				{
-					// TODO: Verify for array properties
-				}
-				else if (keyValuePair.Value is IDictionary<string, object>)
-				{
-					// TODO: Verify for dictionary properties
-				}
-				else
+                // TODO: Verify for array properties
+                if (!keyValuePair.Value.GetType().IsArray)
 				{
 					Assert.IsTrue(resultString.ContainsJsonProperty(keyValuePair.Key, keyValuePair.Value));
-				}				
-			}            
+				}
+			}
 			
 			Assert.IsTrue(resultString.ContainsJsonProperty(metadataKey1, metadataValue1));
 			Assert.IsTrue(resultString.ContainsJsonProperty(metadataKey2, metadataValue2));
@@ -677,6 +670,46 @@ namespace Lime.Protocol.UnitTests.Serialization
                 }
             }
         }
+
+	    [Test]
+	    [Category("Serialize")]
+	    public void Serialize_DocumentContainerDocumentCollectionMessage_ReturnsValidJsonString()
+	    {
+	        // Arrange
+	        var document1 = Dummy.CreateTextContent();
+            var document2 = Dummy.CreatePresence();
+            var document3 = Dummy.CreateJsonDocument();
+            var document4 = Dummy.CreatePlainDocument();
+	        var container1 = Dummy.CreateDocumentContainer(document1);
+            var container2 = Dummy.CreateDocumentContainer(document2);
+            var container3 = Dummy.CreateDocumentContainer(document3);
+            var container4 = Dummy.CreateDocumentContainer(document4);
+            var collection = Dummy.CreateDocumentCollection(container1, container2, container3, container4);
+	        var message = Dummy.CreateMessage(collection);
+	        var target = GetTarget();
+
+	        // Act
+	        var resultString = target.Serialize(message);
+
+            // Assert
+            Assert.IsTrue(resultString.HasValidJsonStackedBrackets());
+            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.ID_KEY, message.Id));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.FROM_KEY, message.From));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.TO_KEY, message.To));
+            Assert.IsTrue(resultString.ContainsJsonProperty(DocumentContainer.VALUE_KEY, document1.Text));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Presence.MESSAGE_KEY, document2.Message));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Presence.LAST_SEEN_KEY, document2.LastSeen));
+            foreach (var keyValuePair in document3)
+            {
+                // TODO: Verify for array properties
+                if (!keyValuePair.Value.GetType().IsArray)
+                {
+                    Assert.IsTrue(resultString.ContainsJsonProperty(keyValuePair.Key, keyValuePair.Value));
+                }
+            }
+            Assert.IsTrue(resultString.ContainsJsonProperty(DocumentContainer.VALUE_KEY, container4.Value));
+        }
+
 
         #endregion
 
@@ -1525,16 +1558,17 @@ namespace Lime.Protocol.UnitTests.Serialization
 		[Category("Deserialize")]
 		public void Deserialize_RandomResourceRequestCommand_ReturnsValidInstance()
 		{
+            // Arrange
 			var target = GetTarget();
-
 			var method = CommandMethod.Set;
 			var id = Guid.NewGuid();
-
 			string json =
 			    $"{{\"type\":\"application/vnd.takenet.testdocument+json\",\"resource\":{{\"double\":10.1, \"NullableDouble\": 10.2}},\"method\":\"{method.ToString().ToCamelCase()}\",\"id\":\"{id}\"}}";
 
+            // Act
 			var envelope = target.Deserialize(json);
 
+            // Assert
 			var command = envelope.ShouldBeOfType<Command>();
 			command.Type.ToString().ShouldBe(TestDocument.MIME_TYPE);
 			command.Resource.ShouldNotBe(null);
@@ -1543,6 +1577,39 @@ namespace Lime.Protocol.UnitTests.Serialization
 			document.NullableDouble.ShouldBe(10.2d);
 		}
 
-		#endregion
-	}
+	    [Test]
+	    [Category("Deserialize")]
+	    public void Deserialize_DocumentContainerDocumentCollectionMessage_ReturnsValidInstance()
+	    {
+            // Arrange
+	        var id = Guid.NewGuid();
+	        var json =
+                $"{{\"type\":\"application/vnd.lime.collection+json\",\"content\":{{\"total\":4,\"itemType\":\"application/vnd.lime.container+json\",\"items\":[{{\"type\":\"text/plain\",\"value\":\"text1\"}},{{\"type\":\"application/vnd.lime.account+json\",\"value\":{{\"fullName\":\"v8q8r8gjrkymq59nkv9e\",\"photoUri\":\"http://iis87pe7nl.com:1549/\"}}}},{{\"type\":\"application/q9gn1nsz6y+json\",\"value\":{{\"o4s9txn80q\":\"}}2['\u00F23 /bdkc]\u00FA2,\u00BA &%f0j\u00F9u#\u00F2\u00FA9;\u00EC\\\"t}}#\u00F3(\u00E9a_94\u00E00q5m==\\\\\",\"ynpinmi0oq\":20,\"dkker2borf\":\"2016-04-13T16:24:49.729Z\",\"e98cyp215l\":{{\"ljwbthakfx\":\"\\\\@(m1g=q.-jql[)5#n,\u00E09\u00BA\u00A8kg~]t(x:<u\u00E1z'8?.-^_cvqkk\u00EC@n\",\"z4uih47pct\":19,\"nxp3n8km78\":\"2016-04-13T16:24:49.729Z\"}},\"sinvm70xls\":[{{\"ypdd57j78y\":\"<>5_\u00ECnb'!,b.ps8\u00EC=9\\\\o\\\\_*qc6#k0\u00E8]$j\u00E1=-u\u00E1\u00FAq\u00EC{{\u00E0r\u00F2\u00BAt\u00ED[\u00EC\",\"l3d24gigtt\":34,\"5ltasvmv3y\":\"2016-04-13T16:24:49.729Z\"}},{{\"1twigyljcf\":\"=!6-\u00F360 94fy2\u00A8e23q72\u00E0v\u00E9t(u!&[%\u00FA\u00E8#4f7\u00E0\u00ECkjv2n9=@pjp~\",\"ke4zjmvfbw\":46,\"2l7rf39qwq\":\"2016-04-13T16:24:49.729Z\"}},{{\"pckdtdowdc\":\"11\u00E9q>e:j,^;\u00F3\u00A8o@cs\u00F9@'r}}(3\u00EDe(=,uq*\u00F9(+!!..hd\u00E9;~.*(j=\u00A8\",\"5pfq4y1rmz\":24,\"foqvh78vau\":\"2016-04-13T16:24:49.729Z\"}}]}}}},{{\"type\":\"vxhfxfm3tz/hhnzgm4kmh\",\"value\":\"9nav5pkhswvsw7mh24r1b3agbgic43piylveh1z6xtfz77nibt\"}}]}},\"id\":\"{id}\",\"from\":\"9afudsyl@je29bkh1bs.com/yq1oh\",\"to\":\"9zpfpsuc@d63uusxbfq.com/btp7i\"}}";
+            var target = GetTarget();
+
+            // Act
+            var envelope = target.Deserialize(json);
+
+            // Assert
+            envelope.ShouldNotBeNull();
+            envelope.Id.ShouldBe(id);
+	        var message = envelope.ShouldBeOfType<Message>();
+	        var documentCollection = message.Content.ShouldBeOfType<DocumentCollection>();
+            documentCollection.Total.ShouldBe(4);
+            documentCollection.ItemType.ShouldBe(DocumentContainer.MediaType);
+	        documentCollection.Items.ShouldNotBeNull();
+            documentCollection.Items.Length.ShouldBe(4);
+	        var container1 = documentCollection.Items[0].ShouldBeOfType<DocumentContainer>();
+            container1.Type.ShouldBe(PlainText.MediaType);
+	        var document1 = container1.Value.ShouldBeOfType<PlainText>();
+            document1.Text.ShouldBe("text1");
+
+
+
+
+
+        }
+
+        #endregion
+    }
 }

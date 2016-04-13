@@ -290,6 +290,14 @@ namespace Lime.Protocol.UnitTests
             };
         }
 
+        public static DocumentContainer CreateDocumentContainer(Document document)    
+        {            
+            return new DocumentContainer()
+            {
+                Value = document
+            };
+        }
+
 
         public static Presence CreatePresence()
         {

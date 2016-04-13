@@ -68,52 +68,8 @@ namespace Lime.Protocol.Serialization.Newtonsoft.Converters
                     var documentPropertyName = documentProperty.Name.ToCamelCase();
                     var mediaType = mediaTypeJToken.ToObject<MediaType>();
 
-                    // Create the document instance
-                    Document document;
-
-                    Type documentType;
-                    if (TypeUtil.TryGetTypeForMediaType(mediaType, out documentType))
-                    {
-                        if (mediaType.IsJson)
-                        {
-                            document = (Document) Activator.CreateInstance(documentType);
-                            if (jObject[documentPropertyName] != null)
-                            {
-                                var resourceReader = jObject[documentPropertyName].CreateReader();
-                                document = (Document)serializer.Deserialize(resourceReader, documentType);
-                            }
-                        }
-                        else if (jObject[documentPropertyName] != null)
-                        {
-                            var parseFunc = TypeUtil.GetParseFuncForType(documentType);
-                            document = (Document) parseFunc(jObject[documentPropertyName].ToString());
-                        }
-                        else
-                        {
-                            document = (Document) Activator.CreateInstance(documentType);
-                        }
-                    }
-                    else
-                    {
-                        if (mediaType.IsJson)
-                        {
-                            var contentJsonObject = jObject[documentPropertyName] as IDictionary<string, JToken>;
-                            if (contentJsonObject != null)
-                            {
-                                var contentDictionary = contentJsonObject.ToDictionary(k => k.Key, v => GetTokenValue(v.Value));
-                                document = new JsonDocument(contentDictionary, mediaType);
-                            }
-                            else
-                            {
-                                throw new ArgumentException("The property is not a JSON");
-                            }
-                        }
-                        else
-                        {
-                            document = new PlainDocument(jObject[documentPropertyName].ToString(), mediaType);
-                        }
-                    }
-
+                    // Create the document instance                    
+                    var document = jObject[documentPropertyName].ToDocument(mediaType, serializer);                    
                     documentProperty.SetValue(target, document);
                 }
             }
@@ -155,31 +111,6 @@ namespace Lime.Protocol.Serialization.Newtonsoft.Converters
             }
 
             if (shouldStartObject) writer.WriteEndObject();
-        }
-
-        private object GetTokenValue(JToken token)
-        {
-            var jValue = token as JValue;
-            if (jValue != null)
-            {
-                return jValue.Value;
-            }
-
-            var jArray = token as JArray;
-            if (jArray != null)
-            {
-                return jArray
-                            .Select(GetTokenValue)
-                            .ToArray();
-            }
-
-            var dictionary = token as IDictionary<string, JToken>;
-            if (dictionary != null)
-            {
-                return dictionary.ToDictionary(k => k.Key, v => GetTokenValue(v.Value));
-            }
-
-            throw new ArgumentException("Unknown token type");
         }
     }
 }
