@@ -11,8 +11,8 @@ namespace Lime.Protocol.Serialization.Newtonsoft.Converters
 {
     public class DocumentContainerJsonConverter : JsonConverter
     {
-        // TODO: Implement a cache
-        private static readonly ConcurrentDictionary<Type, bool> CanConvertDictionary = new ConcurrentDictionary<Type, bool>();
+        private static readonly Dictionary<Type, bool> CanConvertDictionary = new Dictionary<Type, bool>();
+        private static readonly object SyncRoot = new object();
 
         public override bool CanRead => true;
 
@@ -20,14 +20,28 @@ namespace Lime.Protocol.Serialization.Newtonsoft.Converters
 
         public override bool CanConvert(Type objectType)
         {
-            // This implementation works with all classes that have a 'type' property among a typeof(Document) property, not only the DocumentContainer class.
-            if (objectType.IsAbstract) return false;
+            bool canConvert;
+            if (!CanConvertDictionary.TryGetValue(objectType, out canConvert))
+            {
+                lock (SyncRoot)
+                {
+                    if (!CanConvertDictionary.TryGetValue(objectType, out canConvert))
+                    {
+                        // This implementation works with all classes that have a 'type' property among a typeof(Document) property, not only the DocumentContainer class.
+                        if (objectType.IsAbstract) return false;
 
-            var properties = objectType.GetProperties(BindingFlags.Public | BindingFlags.Instance);
-            var canConvert = 
-                properties.Any(p => p.PropertyType == typeof(Document)) &&
-                properties.Any(p => p.Name.Equals(DocumentContainer.TYPE_KEY, StringComparison.OrdinalIgnoreCase) && p.PropertyType == typeof(MediaType));
+                        var properties = objectType.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+                        canConvert =
+                            properties.Any(p => p.PropertyType == typeof (Document)) &&
+                            properties.Any(
+                                p =>
+                                    p.Name.Equals(DocumentContainer.TYPE_KEY, StringComparison.OrdinalIgnoreCase) &&
+                                    p.PropertyType == typeof (MediaType));
 
+                        CanConvertDictionary.Add(objectType, canConvert);
+                    }
+                }
+            }
             return canConvert;
         }
         

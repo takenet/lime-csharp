@@ -1543,7 +1543,6 @@ namespace Lime.Protocol.UnitTests.Serialization
 			document.NullableDouble.ShouldBe(10.2d);
 		}
 
-
 		#endregion
 	}
 }
