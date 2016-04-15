@@ -17,7 +17,6 @@ namespace Lime.Messaging.Contents
     {
         public const string MIME_TYPE = "application/vnd.lime.select+json";
         public const string TEXT_KEY = "text";
-        public const string DESTINATION_KEY = "destination";
         public const string OPTIONS_KEY = "options";
 
         public static readonly MediaType MediaType = MediaType.Parse(MIME_TYPE);
@@ -39,16 +38,6 @@ namespace Lime.Messaging.Contents
         /// </value>
         [DataMember(Name = TEXT_KEY)]
         public string Text { get; set; }
-
-        /// <summary>
-        /// Gets or sets the destination which the selected option should be sent to.
-        /// If not defined, the selected option should be sent to the caller.
-        /// </summary>
-        /// <value>
-        /// The destination.
-        /// </value>
-        [DataMember(Name = DESTINATION_KEY)]
-        public Node Destination { get; set; }
 
         /// <summary>
         /// Gets or sets the available select options.

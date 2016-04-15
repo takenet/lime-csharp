@@ -441,7 +441,6 @@ namespace Lime.Protocol.UnitTests
         {
             return new Select()
             {
-                Destination = CreateNode(),
                 Text = CreateRandomStringExtended(100),
                 Options = new[]
                 {
