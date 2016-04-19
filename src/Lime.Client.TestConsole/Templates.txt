@@ -11,7 +11,7 @@ Text message with pp	Message	{"id":"%messageId","from":"%delegateIdentity","to":
 Chat state message	Message	{"to":"%to","type":"application/vnd.lime.chatstate+json","content":{"state":"%chatState"}}
 Fire-and-forget text message	Message	{"to":"%to","type":"text/plain","content":"%text"}
 MediaLink message	Message	{"id":"%messageId","to":"%to","type":"application/vnd.lime.media-link+json","content":{"type":"%mediaLinkType","uri":"%mediaLinkUri","text":"%mediaLinkText","size":%mediaLinkSize,"previewUri":"%mediaLinkPreviewUri","previewType":"%mediaLinkPreviewType"}}
-Select message	Message	{"id":"%messageId","to":"%to","type":"application/vnd.lime.select+json","content":{"destination":"%selectDestination","text":"%selectText","options":[{"order":1,"text":"%option1Text"},{"order":2,"text":"%option2Text"},{"order":3,"text":"%option3Text","type":"application/json","value":{"key1":"value1","key2":"value2"}}]}}
+Select message	Message	{"id":"%messageId","to":"%to","type":"application/vnd.lime.select+json","content":{"text":"%selectText","options":[{"order":1,"text":"%option1Text"},{"order":2,"text":"%option2Text"},{"order":3,"text":"%option3Text","type":"application/json","value":{"key1":"value1","key2":"value2"}}]}}
 Location message	Message	{"id":"%messageId","to":"%to","type":"application/vnd.lime.location+json","content":{"latitude":%locationLatitude,"longitude":%locationLongitude,"altitude":%locationAltitude,"course":%locationCourse,"speed":%locationSpeed,"accuracy":%locationAccuracy}}
 Received notification	Notification	{"id":"%messageId","from":"%from","to":"%to","event":"received"}
 Consumed notification	Notification	{"id":"%messageId","from":"%from","to":"%to","event":"consumed"}
