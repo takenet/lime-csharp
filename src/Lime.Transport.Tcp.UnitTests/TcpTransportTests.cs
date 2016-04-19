@@ -3,17 +3,21 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net.Security;
+using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Lime.Protocol;
 using Lime.Protocol.Network;
+using Lime.Protocol.Security;
 using Lime.Protocol.Serialization;
 using Lime.Protocol.UnitTests;
 using Lime.Transport.Tcp;
 using NUnit.Framework;
 using Moq;
+using Pluralsight.Crypto;
 using Shouldly;
 
 namespace Lime.Transport.Tcp.UnitTests
@@ -680,6 +684,184 @@ namespace Lime.Transport.Tcp.UnitTests
             Assert.IsTrue(actual.Contains(SessionEncryption.None));
             Assert.IsTrue(actual.Contains(SessionEncryption.TLS));
 
+        }
+
+        #endregion
+
+        #region AuthenticateAsync
+
+        [Test]
+        [Category("AuthenticateAsync")]
+        public async Task AuthenticateAsync_ValidClientMemberCertificate_ReturnsMember()
+        {
+            // Arrange
+            var cancellationToken = TimeSpan.FromSeconds(10).ToCancellationToken();
+            var serverUri = new Uri($"net.tcp://localhost:{Dummy.CreateRandomInt(20000) + 10000}");
+            var serverIdentity = Identity.Parse("server@fakedomain.local");
+            var serverCertificate = CertificateUtil.CreateSelfSignedCertificate(serverIdentity.Domain);            
+            var tcpListener = new TcpTransportListener(
+                serverUri, 
+                serverCertificate, 
+                _envelopeSerializer.Object, 
+                clientCertificateValidationCallback:
+                    (object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors) =>
+                    {
+                        return true;
+                    });
+            await tcpListener.StartAsync();
+            var clientIdentity = Identity.Parse("client@fakedomain.local");            
+            var clientCertificate = CertificateUtil.CreateSelfSignedCertificate(clientIdentity.ToString());
+            var clientTransport = new TcpTransport(
+                _envelopeSerializer.Object, 
+                clientCertificate,
+                serverCertificateValidationCallback:
+                    (object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors) =>
+                    {
+                        return true;
+                    });
+            await clientTransport.OpenAsync(serverUri, cancellationToken);
+            var serverTransport = await tcpListener.AcceptTransportAsync(cancellationToken);
+            await serverTransport.OpenAsync(serverUri, cancellationToken);
+            await Task.WhenAll(
+                serverTransport.SetEncryptionAsync(SessionEncryption.TLS, cancellationToken),
+                clientTransport.SetEncryptionAsync(SessionEncryption.TLS, cancellationToken));
+
+            // Act
+            var actual = await ((IAuthenticatableTransport) serverTransport).AuthenticateAsync(clientIdentity);
+
+            // Assert
+            actual.ShouldBe(DomainRole.Member);
+        }
+
+        [Test]
+        [Category("AuthenticateAsync")]
+        public async Task AuthenticateAsync_InvalidClientMemberCertificate_ReturnsUnknown()
+        {
+            // Arrange
+            var cancellationToken = TimeSpan.FromSeconds(10).ToCancellationToken();
+            var serverUri = new Uri($"net.tcp://localhost:{Dummy.CreateRandomInt(20000) + 10000}");
+            var serverIdentity = Identity.Parse("server@fakedomain.local");
+            var serverCertificate = CertificateUtil.CreateSelfSignedCertificate(serverIdentity.Domain);
+            var tcpListener = new TcpTransportListener(
+                serverUri,
+                serverCertificate,
+                _envelopeSerializer.Object,
+                clientCertificateValidationCallback:
+                    (object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors) =>
+                    {
+                        return true;
+                    });
+            await tcpListener.StartAsync();
+            var clientIdentity = Identity.Parse("client@fakedomain.local");
+            var clientCertificate = CertificateUtil.CreateSelfSignedCertificate(clientIdentity.ToString());
+            var clientTransport = new TcpTransport(
+                _envelopeSerializer.Object,
+                clientCertificate,
+                serverCertificateValidationCallback:
+                    (object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors) =>
+                    {
+                        return true;
+                    });
+            await clientTransport.OpenAsync(serverUri, cancellationToken);
+            var serverTransport = await tcpListener.AcceptTransportAsync(cancellationToken);
+            await serverTransport.OpenAsync(serverUri, cancellationToken);
+            await Task.WhenAll(
+                serverTransport.SetEncryptionAsync(SessionEncryption.TLS, cancellationToken),
+                clientTransport.SetEncryptionAsync(SessionEncryption.TLS, cancellationToken));
+
+            var otherClientIdentity = Identity.Parse("other@fakedomain.local");
+
+            // Act
+            var actual = await ((IAuthenticatableTransport)serverTransport).AuthenticateAsync(otherClientIdentity);
+
+            // Assert
+            actual.ShouldBe(DomainRole.Unknown);
+        }
+
+        [Test]
+        [Category("AuthenticateAsync")]
+        public async Task AuthenticateAsync_ValidClientAuthorityCertificate_ReturnsAuthority()
+        {
+            // Arrange
+            var cancellationToken = TimeSpan.FromSeconds(10).ToCancellationToken();
+            var serverUri = new Uri($"net.tcp://localhost:{Dummy.CreateRandomInt(20000) + 10000}");
+            var serverIdentity = Identity.Parse("server@fakedomain.local");
+            var serverCertificate = CertificateUtil.CreateSelfSignedCertificate(serverIdentity.Domain);
+            var tcpListener = new TcpTransportListener(
+                serverUri,
+                serverCertificate,
+                _envelopeSerializer.Object,
+                clientCertificateValidationCallback:
+                    (object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors) =>
+                    {
+                        return true;
+                    });
+            await tcpListener.StartAsync();
+            var clientIdentity = Identity.Parse("client@fakedomain.local");
+            var clientCertificate = CertificateUtil.CreateSelfSignedCertificate(clientIdentity.Domain);
+            var clientTransport = new TcpTransport(
+                _envelopeSerializer.Object,
+                clientCertificate,
+                serverCertificateValidationCallback:
+                    (object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors) =>
+                    {
+                        return true;
+                    });
+            await clientTransport.OpenAsync(serverUri, cancellationToken);
+            var serverTransport = await tcpListener.AcceptTransportAsync(cancellationToken);
+            await serverTransport.OpenAsync(serverUri, cancellationToken);
+            await Task.WhenAll(
+                serverTransport.SetEncryptionAsync(SessionEncryption.TLS, cancellationToken),
+                clientTransport.SetEncryptionAsync(SessionEncryption.TLS, cancellationToken));
+
+            // Act
+            var actual = await ((IAuthenticatableTransport)serverTransport).AuthenticateAsync(clientIdentity);
+
+            // Assert
+            actual.ShouldBe(DomainRole.Authority);
+        }
+
+        [Test]
+        [Category("AuthenticateAsync")]
+        public async Task AuthenticateAsync_ValidClientRootAuthorityCertificate_ReturnsRootAuthority()
+        {
+            // Arrange
+            var cancellationToken = TimeSpan.FromSeconds(10).ToCancellationToken();
+            var serverUri = new Uri($"net.tcp://localhost:{Dummy.CreateRandomInt(20000) + 10000}");
+            var serverIdentity = Identity.Parse("server@fakedomain.local");
+            var serverCertificate = CertificateUtil.CreateSelfSignedCertificate(serverIdentity.Domain);
+            var tcpListener = new TcpTransportListener(
+                serverUri,
+                serverCertificate,
+                _envelopeSerializer.Object,
+                clientCertificateValidationCallback:
+                    (object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors) =>
+                    {
+                        return true;
+                    });
+            await tcpListener.StartAsync();
+            var clientIdentity = Identity.Parse("client@fakedomain.local");
+            var clientCertificate = CertificateUtil.CreateSelfSignedCertificate($"*.{clientIdentity.Domain}", clientIdentity.Domain);
+            var clientTransport = new TcpTransport(
+                _envelopeSerializer.Object,
+                clientCertificate,
+                serverCertificateValidationCallback:
+                    (object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors) =>
+                    {
+                        return true;
+                    });
+            await clientTransport.OpenAsync(serverUri, cancellationToken);
+            var serverTransport = await tcpListener.AcceptTransportAsync(cancellationToken);
+            await serverTransport.OpenAsync(serverUri, cancellationToken);
+            await Task.WhenAll(
+                serverTransport.SetEncryptionAsync(SessionEncryption.TLS, cancellationToken),
+                clientTransport.SetEncryptionAsync(SessionEncryption.TLS, cancellationToken));
+
+            // Act
+            var actual = await ((IAuthenticatableTransport)serverTransport).AuthenticateAsync(clientIdentity);
+
+            // Assert
+            actual.ShouldBe(DomainRole.RootAuthority);
         }
 
         #endregion
