@@ -57,6 +57,7 @@
     <Compile Include="Listeners\DataflowChannelListener.cs" />
     <Compile Include="Listeners\EventChannelListener.cs" />
     <Compile Include="Listeners\IChannelListener.cs" />
+    <Compile Include="IdentityDocument.cs" />
     <Compile Include="Util\ProducerConsumer.cs" />
     <Compile Include="Client\ClientChannel.cs" />
     <Compile Include="Client\ClientChannelBuilder.cs" />
