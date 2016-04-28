@@ -47,3 +47,8 @@ Set location	Command	{"id":  "%commandId","to":"postmaster@location.take.io","me
 Get location	Command	{"id":  "%commandId","to":"postmaster@location.take.io","method":"get","type":"application/vnd.lime.location+json","uri":"/location"}
 Set delegation	Command	{"id":"%commandId","method":"set","type":"application/vnd.lime.delegation+json","uri":"/delegations","resource":{"target":"%targetIdentity"}}
 Delete delegation	Command	{"id":"%commandId","method":"delete","type":"application/vnd.lime.delegation+json","uri":"/delegations/%targetIdentity"}
+Set distribution list	Command	{"id": "%commandId","to":"postmaster@broadcast.limeprotocol.org","method":"set","type":"application/vnd.lime.distribution-list+json","uri":"/lists","resource":{"identity": "%distributionListIdentity"}} 
+Set distribution list recipient	Command	{"id": "%commandId","to":"postmaster@broadcast.limeprotocol.org","method":"set","type":"application/vnd.lime.identity","uri":"/lists/%distributionListIdentity/recipients","resource": "%recipientIdentity"} 
+Set distribution list recipients	Command	{"id": "%commandId","to":"postmaster@broadcast.limeprotocol.org","method":"set","type":"application/vnd.lime.collection+json","uri":"/lists/%distributionListIdentity/recipients","resource": {"itemType": "application/vnd.lime.identity", "items": ["%recipientIdentity1","%recipientIdentity2"]}} 
+Get distribution list recipients	Command	{"id": "%commandId","to":"postmaster@broadcast.limeprotocol.org","method":"get","uri":"/lists/%distributionListIdentity/recipients?$take=20"}
+Delete distribution list recipient	Command	{"id": "%commandId","to":"postmaster@broadcast.limeprotocol.org","method":"delete","uri":"/lists/%distributionListIdentity/recipients/%recipientIdentity"}
