@@ -57,7 +57,7 @@ namespace Lime.Transport.Tcp.UnitTests
             _cancellationToken = TimeSpan.FromSeconds(10).ToCancellationToken();
             _serverUri = new Uri($"net.tcp://localhost:{Dummy.CreateRandomInt(20000) + 10000}");
             _serverIdentity = Identity.Parse("server@fakedomain.local");
-            _serverCertificate = CertificateUtil.CreateSelfSignedCertificate(_serverIdentity.Domain);
+            _serverCertificate = GetDomainCertificate(_serverIdentity);
             _tcpListener = new TcpTransportListener(
                 _serverUri,
                 _serverCertificate,
@@ -724,8 +724,8 @@ namespace Lime.Transport.Tcp.UnitTests
         public async Task AuthenticateAsync_ValidClientMemberCertificate_ReturnsMember()
         {
             // Arrange
-            var clientIdentity = Identity.Parse("client@fakedomain.local");            
-            var clientCertificate = CertificateUtil.CreateSelfSignedCertificate(clientIdentity.ToString());
+            var clientIdentity = GetClientIdentity();
+            var clientCertificate = GetClientCertificate(clientIdentity);
             var clientTransport = new TcpTransport(
                 _envelopeSerializer.Object, 
                 clientCertificate,
@@ -753,8 +753,8 @@ namespace Lime.Transport.Tcp.UnitTests
         public async Task AuthenticateAsync_InvalidClientMemberCertificate_ReturnsUnknown()
         {
             // Arrange
-            var clientIdentity = Identity.Parse("client@fakedomain.local");
-            var clientCertificate = CertificateUtil.CreateSelfSignedCertificate(clientIdentity.ToString());
+            var clientIdentity = GetClientIdentity();
+            var clientCertificate = GetClientCertificate(clientIdentity);
             var clientTransport = new TcpTransport(
                 _envelopeSerializer.Object,
                 clientCertificate,
@@ -784,8 +784,8 @@ namespace Lime.Transport.Tcp.UnitTests
         public async Task AuthenticateAsync_ValidClientAuthorityCertificate_ReturnsAuthority()
         {
             // Arrange
-            var clientIdentity = Identity.Parse("client@fakedomain.local");
-            var clientCertificate = CertificateUtil.CreateSelfSignedCertificate(clientIdentity.Domain);
+            var clientIdentity = GetClientIdentity();
+            var clientCertificate = GetDomainCertificate(clientIdentity);
             var clientTransport = new TcpTransport(
                 _envelopeSerializer.Object,
                 clientCertificate,
@@ -813,8 +813,8 @@ namespace Lime.Transport.Tcp.UnitTests
         public async Task AuthenticateAsync_ValidClientRootAuthorityCertificate_ReturnsRootAuthority()
         {
             // Arrange
-            var clientIdentity = Identity.Parse("client@fakedomain.local");
-            var clientCertificate = CertificateUtil.CreateSelfSignedCertificate($"*.{clientIdentity.Domain}", clientIdentity.Domain);
+            var clientIdentity = GetClientIdentity();
+            var clientCertificate = GetWildcardDomainCertificate(clientIdentity);
             var clientTransport = new TcpTransport(
                 _envelopeSerializer.Object,
                 clientCertificate,
@@ -835,6 +835,35 @@ namespace Lime.Transport.Tcp.UnitTests
 
             // Assert
             actual.ShouldBe(DomainRole.RootAuthority);
+        }
+
+        private static Identity GetClientIdentity()
+        {
+            return Identity.Parse("client@fakedomain.local");
+        }
+
+        /// <summary>
+        /// Use certificate on disk to optimize test execution time, since 
+        /// certificate creation takes some time...
+        /// </summary>
+        /// <returns></returns>
+        private static X509Certificate2 GetClientCertificate(Identity identity)
+        {
+            return GetCertificateOnCurrentDirectory("client_fakedomain.local.pfx");
+        }
+        private X509Certificate2 GetWildcardDomainCertificate(Identity identity)
+        {
+            return GetCertificateOnCurrentDirectory("root.fakedomain.local.pfx");
+        }
+
+        private X509Certificate2 GetDomainCertificate(Identity identity)
+        {
+            return GetCertificateOnCurrentDirectory("fakedomain.local.pfx");
+        }
+
+        private static X509Certificate2 GetCertificateOnCurrentDirectory(string filename)
+        {
+            return CertificateUtil.ReadFromFile(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, filename));
         }
 
         #endregion
