@@ -621,7 +621,7 @@ namespace Lime.Protocol.UnitTests.Serialization
 		}
 
 		[Test]
-		[Category("Serialize")]        
+		[Category("Serialize")]
 		public void Serialize_SelectMessage_ReturnsValidJsonString()
 		{
 			// Arrange
@@ -650,7 +650,7 @@ namespace Lime.Protocol.UnitTests.Serialization
 					{
 						var propertyValue = property.GetValue(option);
 						if (propertyValue == null || propertyValue.Equals(property.PropertyType.GetDefaultValue()))
-							continue;                        
+							continue;
 						try
 						{
 							Assert.IsTrue(resultString.ContainsJsonProperty(property.Name.ToCamelCase(),
@@ -660,14 +660,36 @@ namespace Lime.Protocol.UnitTests.Serialization
 						{
 							continue;
 						}
-						
+
 					}
 				}
 				else
 				{
-					Assert.IsTrue(resultString.ContainsJsonProperty(SelectOption.VALUE_KEY , option.Value.ToString()));
+					Assert.IsTrue(resultString.ContainsJsonProperty(SelectOption.VALUE_KEY, option.Value.ToString()));
 				}
 			}
+		}
+
+		[Test]
+		[Category("Serialize")]
+		public void Serialize_IdentityDocumentMessage_ReturnsValidJsonString()
+		{
+			// Arrange
+			var identityDocument = Dummy.CreateIdentityDocument();
+			var message = Dummy.CreateMessage(identityDocument);
+			var target = GetTarget();
+
+			// Act
+			var resultString = target.Serialize(message);
+
+			// Assert
+			Assert.IsTrue(resultString.HasValidJsonStackedBrackets());
+			Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.ID_KEY, message.Id));
+			Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.FROM_KEY, message.From));
+			Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.TO_KEY, message.To));
+			Assert.IsTrue(resultString.ContainsJsonProperty(Message.TYPE_KEY, message.Content.GetMediaType()));
+			Assert.IsTrue(resultString.ContainsJsonKey(Message.CONTENT_KEY));
+			Assert.IsTrue(resultString.ContainsJsonProperty(Message.CONTENT_KEY, identityDocument.Value));
 		}
 
 		[Test]
@@ -1158,6 +1180,38 @@ namespace Lime.Protocol.UnitTests.Serialization
 			Assert.AreEqual(text, content.Value);
 
 		}
+
+		[Test]
+		[Category("Deserialize")]
+		public void Deserialize_IdentityDocumentMessage_ReturnsValidInstance()
+		{
+			var target = GetTarget();
+
+			var id = Guid.NewGuid();
+			var from = Dummy.CreateNode();
+			var to = Dummy.CreateNode();
+
+			var identityDocument = Dummy.CreateIdentityDocument();
+			var type = identityDocument.GetMediaType();
+
+			string json =
+				$"{{\"type\":\"{type}\",\"content\":\"{identityDocument}\",\"id\":\"{id}\",\"from\":\"{@from}\",\"to\":\"{to}\"}}";
+
+			var envelope = target.Deserialize(json);
+
+			var message = envelope.ShouldBeOfType<Message>();
+			Assert.AreEqual(id, message.Id);
+			Assert.AreEqual(from, message.From);
+			Assert.AreEqual(to, message.To);
+
+			Assert.IsNotNull(message.Type);
+			Assert.AreEqual(message.Type, type);
+
+			var content = message.Content.ShouldBeOfType<IdentityDocument>();
+			Assert.AreEqual(identityDocument.Value, content.Value);
+
+		}
+
 
 		[Test]
 		[Category("Deserialize")]

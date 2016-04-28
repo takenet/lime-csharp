@@ -17,18 +17,20 @@ namespace Lime.Protocol
         public IdentityDocument()
             : base(MediaType)
         {
-
         }
 
         public IdentityDocument(string identity)
             : this()
         {
-            if (!string.IsNullOrWhiteSpace(identity))
+            Identity validIdentity = null;
+            if (Identity.TryParse(identity, out validIdentity))
+            {
+                Value = validIdentity;
+            }
+            else
             {
                 throw new ArgumentException("Invalid identity.");
             }
-
-            this.Value = Identity.Parse(identity);
         }
 
         #endregion

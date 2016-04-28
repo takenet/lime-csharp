@@ -437,6 +437,14 @@ namespace Lime.Protocol.UnitTests
             };
         }
 
+        public static IdentityDocument CreateIdentityDocument()
+        {
+            return new IdentityDocument
+            {
+                Value = CreateIdentity()
+            };
+        }
+
         public static Select CreateSelect()
         {
             return new Select()
