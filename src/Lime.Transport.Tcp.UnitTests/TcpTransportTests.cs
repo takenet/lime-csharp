@@ -19,6 +19,7 @@ using NUnit.Framework;
 using Moq;
 using Pluralsight.Crypto;
 using Shouldly;
+using System.Reflection;
 
 namespace Lime.Transport.Tcp.UnitTests
 {
@@ -863,7 +864,10 @@ namespace Lime.Transport.Tcp.UnitTests
 
         private static X509Certificate2 GetCertificateOnCurrentDirectory(string filename)
         {
-            return CertificateUtil.ReadFromFile(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, filename));
+            return CertificateUtil.ReadFromFile(Path.Combine(
+                Path.GetDirectoryName(
+                    new Uri(Assembly.GetExecutingAssembly().CodeBase).AbsolutePath), 
+                filename));
         }
 
         #endregion
