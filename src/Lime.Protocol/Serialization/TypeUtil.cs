@@ -37,7 +37,7 @@ namespace Lime.Protocol.Serialization
         {
             AppDomain.CurrentDomain.UnhandledException += (s, e) =>
             {
-                Trace.WriteLine($"LIME - Unhandled exception at {typeof(TypeUtil).FullName}: {e.ExceptionObject}");
+                Trace.WriteLine($"LIME - Unhandled exception: {e.ExceptionObject}");
             };
 
             _documentMediaTypeDictionary = new Dictionary<MediaType, Type>();
