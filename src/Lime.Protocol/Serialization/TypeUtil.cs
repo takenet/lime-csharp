@@ -35,6 +35,11 @@ namespace Lime.Protocol.Serialization
 
         static TypeUtil()
         {
+            AppDomain.CurrentDomain.UnhandledException += (s, e) =>
+            {
+                Trace.WriteLine($"LIME - Unhandled exception: {e.ExceptionObject}");
+            };
+
             _documentMediaTypeDictionary = new Dictionary<MediaType, Type>();
             _authenticationSchemeDictionary = new Dictionary<AuthenticationScheme, Type>();
             _enumTypeValueDictionary = new Dictionary<Type, IDictionary<string, object>>();
@@ -45,7 +50,7 @@ namespace Lime.Protocol.Serialization
             foreach (var type in GetAllLoadedTypes().Where(t => t.GetCustomAttribute<DataContractAttribute>() != null))
             {
                 AddDataContractType(type);
-            }          
+            }
         }
 
         #endregion
@@ -477,12 +482,14 @@ namespace Lime.Protocol.Serialization
                         {
                             try
                             {
-                                LoadAssemblyAndReferences(Assembly.GetExecutingAssembly().GetName(), IgnoreSystemAndMicrosoftAssembliesFilter, ignoreExceptionLoadingReferencedAssembly);
+                                LoadAssemblyAndReferences(
+                                    Assembly.GetExecutingAssembly().GetName(), 
+                                    IgnoreSystemAndMicrosoftAssembliesFilter, 
+                                    ignoreExceptionLoadingReferencedAssembly);
                             }
                             catch (Exception ex)
                             {
-                                Trace.TraceError("LIME - An error occurred while loading the referenced assemblies: {0}",
-                                    ex.ToString());
+                                Trace.TraceError("LIME - An error occurred while loading the referenced assemblies: {0}", ex);
                             }
                             finally
                             {
@@ -492,11 +499,20 @@ namespace Lime.Protocol.Serialization
                     }
                 }
             }
-            return AppDomain
+
+            try
+            {
+                return AppDomain
                     .CurrentDomain
                     .GetAssemblies()
                     .Where(a => IgnoreSystemAndMicrosoftAssembliesFilter(a.GetName()))
                     .SelectMany(a => a.GetTypes());
+            }
+            catch (Exception ex)
+            {
+                Trace.TraceError("LIME - An error occurred while loading all types: {0}", ex);
+                throw;
+            }
         }
 
         /// <summary>
