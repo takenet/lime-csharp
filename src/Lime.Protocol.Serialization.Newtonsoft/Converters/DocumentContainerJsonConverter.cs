@@ -83,7 +83,7 @@ namespace Lime.Protocol.Serialization.Newtonsoft.Converters
             var contract = serializer.ContractResolver.ResolveContract(value.GetType()) as JsonObjectContract;
             if (contract == null) return;
             
-            var shouldStartObject = writer.WriteState == WriteState.Start || writer.WriteState == WriteState.Array;
+            var shouldStartObject = writer.WriteState == WriteState.Start || writer.WriteState == WriteState.Array || writer.WriteState == WriteState.Property;
             if (shouldStartObject) writer.WriteStartObject();
             
             foreach (var property in contract.Properties.Where(p => p.ShouldSerialize == null || p.ShouldSerialize(value)))

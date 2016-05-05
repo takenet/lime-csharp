@@ -90,6 +90,7 @@
     <Compile Include="Serialization\EnvelopeSerializerBaseTests.cs" />
     <Compile Include="Serialization\EnvelopeSerializerTests.cs" />
     <Compile Include="Serialization\JsonSerializerTests.cs" />
+    <Compile Include="Serialization\Models\Schedule.cs" />
     <Compile Include="Serialization\Newtonsoft\JsonNetSerializerTests.cs" />
     <Compile Include="Serialization\StringJsonExtensions.cs" />
     <Compile Include="Serialization\TestDocument.cs" />
