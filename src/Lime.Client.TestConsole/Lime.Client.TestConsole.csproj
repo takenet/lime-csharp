@@ -158,6 +158,7 @@
     <Compile Include="Macros\SendNegotiatingNoneTlsMacro.cs" />
     <Compile Include="Macros\SendNegotiatingNoneNoneMacro.cs" />
     <Compile Include="Macros\SendTemplateMacroBase.cs" />
+    <Compile Include="Macros\SetDomainMacro.cs" />
     <Compile Include="Macros\SetGuestIdentityMacro.cs" />
     <Compile Include="Macros\SetLocalNodeMacro.cs" />
     <Compile Include="Macros\SetNotificationEvent.cs" />

@@ -894,7 +894,8 @@ namespace Lime.Client.TestConsole.ViewModels
         private string ParseInput(string input, IEnumerable<VariableViewModel> variables)
         {
             var variableValues = variables.ToDictionary(t => t.Name, t => t.Value);
-            variableValues.Add("newGuid", Guid.NewGuid().ToString());
+            variableValues["newGuid"] = Guid.NewGuid().ToString();
+            
             try
             {
                 return input.ReplaceVariables(variableValues);
