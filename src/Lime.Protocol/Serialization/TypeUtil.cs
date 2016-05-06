@@ -37,11 +37,7 @@ namespace Lime.Protocol.Serialization
         {
             AppDomain.CurrentDomain.UnhandledException += (s, e) =>
             {
-                Trace.WriteLine($"Unhandled exception at {typeof(TypeUtil).FullName}: {e}");
-            };
-            AppDomain.CurrentDomain.FirstChanceException += (s, e) => 
-            {
-                Debug.WriteLine($"First chance exception at {typeof(TypeUtil).FullName}: {e}");
+                Trace.WriteLine($"LIME - Unhandled exception: {e.ExceptionObject}");
             };
 
             _documentMediaTypeDictionary = new Dictionary<MediaType, Type>();
