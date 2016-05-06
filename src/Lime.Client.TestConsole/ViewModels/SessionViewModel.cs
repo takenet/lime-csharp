@@ -911,7 +911,8 @@ namespace Lime.Client.TestConsole.ViewModels
             var macroTypes = Assembly
                 .GetExecutingAssembly()
                 .GetTypes()
-                .Where(t => typeof(IMacro).IsAssignableFrom(t) && t.IsClass && !t.IsAbstract);
+                .Where(t => typeof(IMacro).IsAssignableFrom(t) && t.IsClass && !t.IsAbstract && t.GetCustomAttribute<MacroAttribute>() != null)
+                .OrderBy(t => t.GetCustomAttribute<MacroAttribute>().Order);
 
             foreach (var type in macroTypes)
             {
