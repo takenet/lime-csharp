@@ -2,6 +2,8 @@
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Tracing;
+using System.Linq;
 using System.Text;
 
 namespace Lime.Protocol.Serialization.Newtonsoft.Converters
@@ -24,20 +26,14 @@ namespace Lime.Protocol.Serialization.Newtonsoft.Converters
 
             if (jObject[DocumentCollection.ITEMS_KEY] != null && instance.ItemType != null)
             {
-                Type itemType;
-                if (TypeUtil.TryGetTypeForMediaType(instance.ItemType, out itemType))
+                var items = jObject[DocumentCollection.ITEMS_KEY];
+                if (items.Type == JTokenType.Array)
                 {
-                    var items = jObject[DocumentCollection.ITEMS_KEY];
-                    if (items.Type == JTokenType.Array)
-                    {
-                        var itemsArray = (JArray)items;
-                        instance.Items = new Document[itemsArray.Count];
-                        for (int i = 0; i < itemsArray.Count; i++)
-                        {
-                            var item = itemsArray[i];
-                            instance.Items[i] = (Document)Activator.CreateInstance(itemType);
-                            serializer.Populate(item.CreateReader(), instance.Items[i]);
-                        }
+                    var itemsArray = (JArray)items;
+                    instance.Items = new Document[itemsArray.Count];
+                    for (var i = 0; i < itemsArray.Count; i++)
+                    {                                                                       
+                        instance.Items[i] = itemsArray[i].ToDocument(instance.ItemType, serializer);
                     }
                 }
             }

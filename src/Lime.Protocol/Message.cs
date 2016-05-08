@@ -13,10 +13,12 @@ namespace Lime.Protocol
         public const string TYPE_KEY = "type";
         public const string CONTENT_KEY = "content";
 
-        #region Constructor
-
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Message"/> class.
+        /// </summary>
         public Message()
         {
+
         }
 
         public Message(string id)
@@ -24,12 +26,15 @@ namespace Lime.Protocol
         {
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Message"/> class.
+        /// </summary>
+        /// <param name="id">The identifier.</param>
         public Message(Guid id)
             : base(id)
         {
-        }
 
-        #endregion
+        }
 
         /// <summary>
         ///  MIME declaration of the content type of the message.

@@ -1,12 +1,24 @@
 ﻿using Newtonsoft.Json;
 using System;
+using System.Linq;
+using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Serialization;
 
 namespace Lime.Protocol.Serialization.Newtonsoft.Converters
 {
-    class DocumentJsonConverter : JsonConverter
+    public class DocumentJsonConverter : JsonConverter
     {
-        public override bool CanWrite => false;
+        private readonly global::Newtonsoft.Json.JsonSerializer _alternativeSerializer;
 
+        public DocumentJsonConverter(JsonSerializerSettings settings)
+        {
+            _alternativeSerializer = global::Newtonsoft.Json.JsonSerializer.Create(settings);
+        }
+
+        public override bool CanRead => true;
+
+        public override bool CanWrite => true;        
+        
         public override bool CanConvert(Type objectType)
         {
             return typeof(Document).IsAssignableFrom(objectType) && !typeof(DocumentCollection).IsAssignableFrom(objectType);
@@ -16,8 +28,7 @@ namespace Lime.Protocol.Serialization.Newtonsoft.Converters
         {
             if (objectType.IsAbstract)
             {
-                // The serialization is made by the
-                // container class (Message or Command)
+                // The serialization is made by the container class (Message or Command)
                 return null;
             }
 
@@ -28,7 +39,23 @@ namespace Lime.Protocol.Serialization.Newtonsoft.Converters
 
         public override void WriteJson(JsonWriter writer, object value, global::Newtonsoft.Json.JsonSerializer serializer)
         {
-            throw new NotImplementedException();
+            var document = value as Document;
+            if (document != null)
+            {                                                                
+                if (document.GetMediaType().IsJson)
+                {
+                    // TODO: Any document inside the value will not be correct handled.
+                    _alternativeSerializer.Serialize(writer, document);                    
+                }
+                else
+                {
+                    writer.WriteValue(document.ToString());
+                }
+            }
+            else
+            {
+                writer.WriteNull();
+            }
         }
     }
 }

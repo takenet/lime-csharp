@@ -4,8 +4,9 @@ using System.Runtime.Serialization;
 namespace Lime.Protocol
 {
     /// <summary>
-    /// Represents a document with a Media Type
+    /// Defines a entity with a <see cref="MediaType"/>.
     /// </summary>
+    /// <seealso cref="Lime.Protocol.IDocument" />
     [DataContract(Namespace = "http://limeprotocol.org/2014")]
     public abstract class Document : IDocument
     {

@@ -1,9 +1,11 @@
-﻿using Lime.Protocol.Serialization.Newtonsoft.Converters;
+﻿using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
+using Lime.Protocol.Serialization.Newtonsoft.Converters;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
-using System;
-using System.Globalization;
 
 namespace Lime.Protocol.Serialization.Newtonsoft
 {
@@ -13,6 +15,8 @@ namespace Lime.Protocol.Serialization.Newtonsoft
     /// <seealso cref="Lime.Protocol.Serialization.IEnvelopeSerializer" />
     public class JsonNetSerializer : IEnvelopeSerializer
     {
+        private static object _syncRoot = new object();
+
         static JsonNetSerializer()
         {
             JsonConvert.DefaultSettings = () => Settings;
@@ -28,28 +32,44 @@ namespace Lime.Protocol.Serialization.Newtonsoft
             {
                 if (_settings == null)
                 {
-                    _settings = new JsonSerializerSettings
+                    lock (_syncRoot)
                     {
-                        NullValueHandling = NullValueHandling.Ignore,
-                        ReferenceLoopHandling = ReferenceLoopHandling.Serialize
-                    };
-                    _settings.Converters.Add(new StringEnumConverter { CamelCaseText = false });
-                    _settings.Converters.Add(new IdentityJsonConverter());
-                    _settings.Converters.Add(new NodeJsonConverter());
-                    _settings.Converters.Add(new LimeUriJsonConverter());
-                    _settings.Converters.Add(new MediaTypeJsonConverter());
-                    _settings.Converters.Add(new UriJsonConverter());
-                    _settings.Converters.Add(new SessionJsonConverter());
-                    _settings.Converters.Add(new AuthenticationJsonConverter());
-                    _settings.Converters.Add(new MessageJsonConverter());
-                    _settings.Converters.Add(new CommandJsonConverter());
-                    _settings.Converters.Add(new DocumentCollectionJsonConverter());
-                    _settings.Converters.Add(new IsoDateTimeConverter
-                    {
-                        DateTimeFormat = "yyyy-MM-ddTHH:mm:ss.fffZ",
-                        DateTimeStyles = DateTimeStyles.AdjustToUniversal
-                    });
-                    _settings.Converters.Add(new DocumentJsonConverter());
+                        if (_settings == null)
+                        {
+                            var converters = new List<JsonConverter>
+                            {
+                                new StringEnumConverter {CamelCaseText = false},
+                                new IdentityJsonConverter(),
+                                new NodeJsonConverter(),
+                                new LimeUriJsonConverter(),
+                                new MediaTypeJsonConverter(),
+                                new UriJsonConverter(),
+                                new SessionJsonConverter(),
+                                new AuthenticationJsonConverter(),
+                                new DocumentContainerJsonConverter(),
+                                new DocumentCollectionJsonConverter(),
+                                new IsoDateTimeConverter
+                                {
+                                    DateTimeFormat = "yyyy-MM-ddTHH:mm:ss.fffZ",
+                                    DateTimeStyles = DateTimeStyles.AdjustToUniversal
+                                }
+                            };
+                            converters.Add(new DocumentJsonConverter(
+                                new JsonSerializerSettings
+                                {
+                                    NullValueHandling = NullValueHandling.Ignore,
+                                    ReferenceLoopHandling = ReferenceLoopHandling.Serialize,                                    
+                                    Converters = converters.ToList()
+                                }));
+
+                            _settings = new JsonSerializerSettings
+                            {
+                                NullValueHandling = NullValueHandling.Ignore,
+                                ReferenceLoopHandling = ReferenceLoopHandling.Serialize,
+                                Converters = converters
+                            };
+                        }
+                    }
                 }
 
                 return _settings;
@@ -59,8 +79,7 @@ namespace Lime.Protocol.Serialization.Newtonsoft
         #region IEnvelopeSerializer Members
 
         /// <summary>
-        /// Serialize an envelope
-        /// to a string
+        /// Serialize an envelope to a string.
         /// </summary>
         /// <param name = "envelope"></param>
         /// <returns></returns>
@@ -70,8 +89,7 @@ namespace Lime.Protocol.Serialization.Newtonsoft
         }
 
         /// <summary>
-        /// Deserialize an envelope
-        /// from a string
+        /// Deserialize an envelope from a string.
         /// </summary>
         /// <param name = "envelopeString"></param>
         /// <returns></returns>
@@ -84,22 +102,19 @@ namespace Lime.Protocol.Serialization.Newtonsoft
             {
                 return jObject.ToObject<Message>(_serializer);
             }
-            else if (jObject.Property("event") != null)
+            if (jObject.Property("event") != null)
             {
                 return jObject.ToObject<Notification>(_serializer);
             }
-            else if (jObject.Property("method") != null)
+            if (jObject.Property("method") != null)
             {
                 return jObject.ToObject<Command>(_serializer);
             }
-            else if (jObject.Property("state") != null)
+            if (jObject.Property("state") != null)
             {
                 return jObject.ToObject<Session>(_serializer);
             }
-            else
-            {
-                throw new ArgumentException("JSON string is not a valid envelope");
-            }
+            throw new ArgumentException("JSON string is not a valid envelope");
         }
 
         #endregion

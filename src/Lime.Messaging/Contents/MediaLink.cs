@@ -11,7 +11,7 @@ namespace Lime.Messaging.Contents
     [DataContract(Namespace = "http://limeprotocol.org/2014")]
     public class MediaLink : Document
     {
-        public const string MIME_TYPE = "application/vnd.lime.medialink+json";       
+        public const string MIME_TYPE = "application/vnd.lime.media-link+json";       
         public const string TYPE_KEY = "type";
         public const string URI_KEY = "uri";
         public const string SIZE_KEY = "size";

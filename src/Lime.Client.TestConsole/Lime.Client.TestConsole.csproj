@@ -17,6 +17,7 @@
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
     <RestorePackages>true</RestorePackages>
     <IsWebBootstrapper>false</IsWebBootstrapper>
+    <TargetFrameworkProfile />
     <PublishUrl>\\smc2.takenet.com.br\Departamentos\Tecnologia\Binarios\Plataformas\Iris\Lime.Client.TestConsole\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Unc</InstallFrom>
@@ -34,12 +35,11 @@
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
     <OpenBrowserOnPublish>false</OpenBrowserOnPublish>
-    <ApplicationRevision>20</ApplicationRevision>
+    <ApplicationRevision>26</ApplicationRevision>
     <ApplicationVersion>0.1.7.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
-    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -146,9 +146,19 @@
     <Compile Include="FileUtil.cs" />
     <Compile Include="Macros\ApplyTransportOptionsMacro.cs" />
     <Compile Include="Macros\CleanGuestIdentityMacro.cs" />
+    <Compile Include="Macros\MacroAttribute.cs" />
     <Compile Include="Macros\NotifyMessageConsumedMacro.cs" />
     <Compile Include="Macros\ReplyPingMacro.cs" />
     <Compile Include="Macros\NotifyMessageReceivedMacro.cs" />
+    <Compile Include="Macros\SendAuthenticatingKeyMacro.cs" />
+    <Compile Include="Macros\SendAuthenticatingMacroBase.cs" />
+    <Compile Include="Macros\SendAuthenticatingGuestMacro.cs" />
+    <Compile Include="Macros\SendAuthenticatingPlainMacro.cs" />
+    <Compile Include="Macros\SendAuthenticatingTransportMacro.cs" />
+    <Compile Include="Macros\SendNegotiatingNoneTlsMacro.cs" />
+    <Compile Include="Macros\SendNegotiatingNoneNoneMacro.cs" />
+    <Compile Include="Macros\SendTemplateMacroBase.cs" />
+    <Compile Include="Macros\SetDomainMacro.cs" />
     <Compile Include="Macros\SetGuestIdentityMacro.cs" />
     <Compile Include="Macros\SetLocalNodeMacro.cs" />
     <Compile Include="Macros\SetNotificationEvent.cs" />

@@ -189,6 +189,7 @@ namespace Lime.Protocol.UnitTests
         {
             return new Message()
             {
+                Id = Guid.NewGuid().ToString(),
                 From = CreateNode(),
                 To = CreateNode(),
                 Content = content
@@ -286,6 +287,14 @@ namespace Lime.Protocol.UnitTests
                 ItemType = mediaType,
                 Total = documents.Length,
                 Items = documents
+            };
+        }
+
+        public static DocumentContainer CreateDocumentContainer(Document document)    
+        {            
+            return new DocumentContainer()
+            {
+                Value = document
             };
         }
 
@@ -425,6 +434,36 @@ namespace Lime.Protocol.UnitTests
             return new ChatState()
             {
                 State = ChatStateEvent.Composing
+            };
+        }
+
+        public static IdentityDocument CreateIdentityDocument()
+        {
+            return new IdentityDocument
+            {
+                Value = CreateIdentity()
+            };
+        }
+
+        public static Select CreateSelect()
+        {
+            return new Select()
+            {
+                Text = CreateRandomStringExtended(100),
+                Options = new[]
+                {
+                    CreateOption(CreateTextContent()),
+                    CreateOption(CreateJsonDocument())
+                }
+            };
+        }
+
+        public static SelectOption CreateOption(Document value)
+        {
+            return new SelectOption()
+            {
+                Text = CreateRandomStringExtended(10),
+                Value = value
             };
         }
     }

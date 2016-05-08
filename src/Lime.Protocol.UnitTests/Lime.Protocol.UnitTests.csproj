@@ -47,6 +47,10 @@
       <HintPath>..\packages\Moq.4.2.1409.1722\lib\net40\Moq.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="Newtonsoft.Json, Version=8.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.8.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="nunit.framework, Version=3.0.5813.39031, Culture=neutral, PublicKeyToken=2638cd05610744eb, processorArchitecture=MSIL">
       <HintPath>..\packages\NUnit.3.0.1\lib\net45\nunit.framework.dll</HintPath>
       <Private>True</Private>
@@ -86,6 +90,8 @@
     <Compile Include="Serialization\EnvelopeSerializerBaseTests.cs" />
     <Compile Include="Serialization\EnvelopeSerializerTests.cs" />
     <Compile Include="Serialization\JsonSerializerTests.cs" />
+    <Compile Include="Serialization\Models\Schedule.cs" />
+    <Compile Include="Serialization\Newtonsoft\JsonNetSerializerTests.cs" />
     <Compile Include="Serialization\StringJsonExtensions.cs" />
     <Compile Include="Serialization\TestDocument.cs" />
     <Compile Include="Server\ServerChannelTests.cs" />
@@ -94,12 +100,18 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Lime.Protocol.UnitTests.snk" />
-    <None Include="packages.config" />
+    <None Include="packages.config">
+      <SubType>Designer</SubType>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Lime.Messaging\Lime.Messaging.csproj">
       <Project>{796a57b4-1fe0-4fe9-940f-e99083dc233a}</Project>
       <Name>Lime.Messaging</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Lime.Protocol.Serialization.Newtonsoft\Lime.Protocol.Serialization.Newtonsoft.csproj">
+      <Project>{07EF6707-B284-4068-9B2F-48998782BC9F}</Project>
+      <Name>Lime.Protocol.Serialization.Newtonsoft</Name>
     </ProjectReference>
     <ProjectReference Include="..\Lime.Protocol\Lime.Protocol.csproj">
       <Project>{0cfee3a4-f914-4c45-be13-a344c9cfa134}</Project>

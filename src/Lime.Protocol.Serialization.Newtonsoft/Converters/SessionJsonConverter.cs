@@ -5,15 +5,9 @@ using System;
 
 namespace Lime.Protocol.Serialization.Newtonsoft.Converters
 {
-    class SessionJsonConverter : JsonConverter
+    public class SessionJsonConverter : JsonConverter
     {
-        public override bool CanWrite
-        {
-            get
-            {
-                return false;
-            }
-        }
+        public override bool CanWrite => false;
 
         public override bool CanConvert(Type objectType)
         {

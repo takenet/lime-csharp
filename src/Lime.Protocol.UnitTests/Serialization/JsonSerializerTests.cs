@@ -2,12 +2,43 @@
 using NUnit.Framework;
 using Shouldly;
 using System;
+using Lime.Protocol.UnitTests.Serialization.Models;
+using Lime.Messaging.Contents;
+using Lime.Protocol.Serialization.Newtonsoft;
 
 namespace Lime.Protocol.UnitTests.Serialization
 {
     [TestFixture]
     public class JsonSerializerTests
     {
+        [Test]
+        public void Serialize_Deserialize_DocumentWithEnvelope()
+        {
+            var schedule = new Schedule();
+            schedule.When = DateTimeOffset.Now.AddDays(1);
+            schedule.Message = new Message()
+            {
+                Id = Guid.NewGuid().ToString(),
+                Content = new PlainText() { Text = "Teste 5" },
+                From = new Node("limeUser", "limeprotocol.org", null),
+                To = new Node("limeUser", "limeprotocol.org", null)
+            };
+
+            var command = new Command()
+            {
+                Resource = schedule,
+                Id = Guid.NewGuid().ToString(),
+                From = new Node("limeUser", "limeprotocol.org", null),
+                To = new Node("limeUser", "limeprotocol.org", null),
+                Method = CommandMethod.Set,
+                Uri = new LimeUri("/scheduler")
+            };
+            
+            var serializer = new JsonNetSerializer();
+            var json = serializer.Serialize(command);
+            var deserializedCommand = (Command)serializer.Deserialize(json);
+        }
+
         [Test]
         public void Serialize_RandomObject_ReturnsValidJson()
         {

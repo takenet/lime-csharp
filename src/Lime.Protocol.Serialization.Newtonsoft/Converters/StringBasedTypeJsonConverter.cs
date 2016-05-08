@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Lime.Protocol.Serialization.Newtonsoft.Converters
 {
-    abstract class StringBasedTypeJsonConverter<T> : JsonConverter
+    public abstract class StringBasedTypeJsonConverter<T> : JsonConverter
     {
         public override bool CanConvert(Type objectType)
         {

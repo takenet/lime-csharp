@@ -20,6 +20,7 @@ namespace Lime.Protocol
         #region Constructor
 
         public Command()
+            : this(Guid.NewGuid())
         {
         }
 

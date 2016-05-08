@@ -23,6 +23,18 @@ namespace Lime.Protocol
 
         }
 
+        public Notification(Guid id)
+            : this(id.ToString())
+        {
+
+        }
+
+        public Notification(string id)
+            : base(id)
+        {
+
+        }
+
         /// <summary>
         /// Related event to the notification
         /// </summary>

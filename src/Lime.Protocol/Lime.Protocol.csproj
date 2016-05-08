@@ -50,12 +50,14 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DocumentContainer.cs" />
     <Compile Include="Network\ChannelInformation.cs" />
     <Compile Include="Network\FailedChannelInformation.cs" />
     <Compile Include="Listeners\ChannelListener.cs" />
     <Compile Include="Listeners\DataflowChannelListener.cs" />
     <Compile Include="Listeners\EventChannelListener.cs" />
     <Compile Include="Listeners\IChannelListener.cs" />
+    <Compile Include="IdentityDocument.cs" />
     <Compile Include="TypeExtensions.cs" />
     <Compile Include="Util\ProducerConsumer.cs" />
     <Compile Include="Client\ClientChannel.cs" />

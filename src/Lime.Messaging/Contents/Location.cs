@@ -30,7 +30,7 @@ namespace Lime.Messaging.Contents
 
         /// <summary>
         /// Gets or sets the latitude, in degrees.
-        /// Latitude can range from -90.0 to 90.0.Latitude is measured in degrees north or south from the equator. Positive values are north of the equator and negative values are south of the equator.        
+        /// Latitude can range from -90.0 to 90.0. Latitude is measured in degrees north or south from the equator. Positive values are north of the equator and negative values are south of the equator.        
         /// </summary>
         /// <value>
         /// The latitude.
@@ -42,7 +42,7 @@ namespace Lime.Messaging.Contents
 
         /// <summary>
         /// Gets or sets the longitude, in degrees.
-        /// The longitude can range from -180.0 to 180.0.Longitude is measured in degrees east or west of the prime meridian. Negative values are west of the prime meridian, and positive values are east of the prime meridian.
+        /// The longitude can range from -180.0 to 180.0. Longitude is measured in degrees east or west of the prime meridian. Negative values are west of the prime meridian, and positive values are east of the prime meridian.
         /// </summary>
         /// <value>
         /// The longitude.

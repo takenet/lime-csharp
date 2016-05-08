@@ -24,7 +24,8 @@ namespace Lime.Protocol.Network.Modules
         private readonly CancellationTokenSource _cancellationTokenSource;
         private readonly object _syncRoot = new object();
        
-        private Task _pingRemoteTask;        
+        private Task _pingRemoteTask;
+        private Guid _lastPingCommandRequestId;
 
         private RemotePingChannelModule(IChannel channel, TimeSpan remotePingInterval, TimeSpan? remoteIdleTimeout = null, TimeSpan? finishChannelTimeout = null)
         {
@@ -78,7 +79,14 @@ namespace Lime.Protocol.Network.Modules
 
         public Task<Command> OnReceivingAsync(Command envelope, CancellationToken cancellationToken)
         {
-            return ReceiveEnvelope(envelope);
+            var receivedEnvelopeTask = ReceiveEnvelope(envelope);
+            if (envelope.Status == CommandStatus.Success && 
+                envelope.Method == CommandMethod.Get &&                
+                envelope.Id.Equals(_lastPingCommandRequestId))
+            {
+                return Task.FromResult<Command>(null);
+            }
+            return receivedEnvelopeTask;
         }
 
         public Task<Command> OnSendingAsync(Command envelope, CancellationToken cancellationToken)
@@ -140,8 +148,9 @@ namespace Lime.Protocol.Network.Modules
                     }
                     else if (idleTime >= _remotePingInterval)
                     {
+                        _lastPingCommandRequestId = Guid.NewGuid();
                         // Send a ping command to the remote party
-                        var pingCommandRequest = new Command(Guid.NewGuid())
+                        var pingCommandRequest = new Command(_lastPingCommandRequestId)
                         {
                             Method = CommandMethod.Get,
                             Uri = new LimeUri(PING_URI)

@@ -35,6 +35,11 @@ namespace Lime.Protocol.Serialization
 
         static TypeUtil()
         {
+            AppDomain.CurrentDomain.UnhandledException += (s, e) =>
+            {
+                Trace.WriteLine($"LIME - Unhandled exception: {e.ExceptionObject}");
+            };
+
             _documentMediaTypeDictionary = new Dictionary<MediaType, Type>();
             _authenticationSchemeDictionary = new Dictionary<AuthenticationScheme, Type>();
             _enumTypeValueDictionary = new Dictionary<Type, IDictionary<string, object>>();
@@ -45,7 +50,7 @@ namespace Lime.Protocol.Serialization
             foreach (var type in GetAllLoadedTypes().Where(t => t.GetCustomAttribute<DataContractAttribute>() != null))
             {
                 AddDataContractType(type);
-            }          
+            }
         }
 
         #endregion
@@ -463,8 +468,9 @@ namespace Lime.Protocol.Serialization
         /// Gets all loaded types in the current <see cref="AppDomain"/>, except the ones in the <c>System</c> and <c>Microsoft</c> namespaces.
         /// </summary>
         /// <param name="loadReferences">Load all referenced assemblies before retrieving the types.</param>
+        /// <param name="ignoreExceptionLoadingReferencedAssembly">Ignore exceptions when loading a referenced assembly</param>
         /// <returns></returns>
-        public static IEnumerable<Type> GetAllLoadedTypes(bool loadReferences = true)
+        public static IEnumerable<Type> GetAllLoadedTypes(bool loadReferences = true, bool ignoreExceptionLoadingReferencedAssembly = false)
         {
             if (loadReferences)
             {
@@ -476,12 +482,14 @@ namespace Lime.Protocol.Serialization
                         {
                             try
                             {
-                                LoadAssemblyAndReferences(Assembly.GetExecutingAssembly().GetName(), IgnoreSystemAndMicrosoftAssembliesFilter);
+                                LoadAssemblyAndReferences(
+                                    Assembly.GetExecutingAssembly().GetName(), 
+                                    IgnoreSystemAndMicrosoftAssembliesFilter, 
+                                    ignoreExceptionLoadingReferencedAssembly);
                             }
                             catch (Exception ex)
                             {
-                                Trace.TraceError("LIME - An error occurred while loading the referenced assemblies: {0}",
-                                    ex.ToString());
+                                Trace.TraceError("LIME - An error occurred while loading the referenced assemblies: {0}", ex);
                             }
                             finally
                             {
@@ -491,11 +499,20 @@ namespace Lime.Protocol.Serialization
                     }
                 }
             }
-            return AppDomain
+
+            try
+            {
+                return AppDomain
                     .CurrentDomain
                     .GetAssemblies()
                     .Where(a => IgnoreSystemAndMicrosoftAssembliesFilter(a.GetName()))
                     .SelectMany(a => a.GetTypes());
+            }
+            catch (Exception ex)
+            {
+                Trace.TraceError("LIME - An error occurred while loading all types: {0}", ex);
+                throw;
+            }
         }
 
         /// <summary>
@@ -504,16 +521,17 @@ namespace Lime.Protocol.Serialization
         /// <param name="path">The path to look for assemblies.</param>
         /// <param name="searchPattern">The search pattern.</param>
         /// <param name="assemblyFilter">The assembly filter.</param>
+        /// <param name="ignoreExceptionLoadingReferencedAssembly">Ignore exceptions when loading a referenced assembly</param>
         /// <exception cref="System.ArgumentNullException">
         /// </exception>
-        public static void LoadAssembliesAndReferences(string path, string searchPattern = "*.dll", Func<AssemblyName, bool> assemblyFilter = null)
+        public static void LoadAssembliesAndReferences(string path, string searchPattern = "*.dll", Func<AssemblyName, bool> assemblyFilter = null, bool ignoreExceptionLoadingReferencedAssembly = false)
         {
             if (path == null) throw new ArgumentNullException(nameof(path));
             if (searchPattern == null) throw new ArgumentNullException(nameof(searchPattern));            
 
             foreach (var filePath in Directory.GetFiles(path, searchPattern))
             {
-                LoadAssemblyAndReferences(AssemblyName.GetAssemblyName(filePath), assemblyFilter);
+                LoadAssemblyAndReferences(AssemblyName.GetAssemblyName(filePath), assemblyFilter, ignoreExceptionLoadingReferencedAssembly);
             }
         }
 
@@ -523,8 +541,9 @@ namespace Lime.Protocol.Serialization
         /// </summary>
         /// <param name="assemblyName">Name of the assembly.</param>
         /// <param name="assemblyFilter">The assembly filter.</param>
+        /// <param name="ignoreExceptionLoadingReferencedAssembly">Ignore exceptions when loading a referenced assembly</param>
         /// <exception cref="System.ArgumentNullException"></exception>
-        public static void LoadAssemblyAndReferences(AssemblyName assemblyName, Func<AssemblyName, bool> assemblyFilter = null)
+        public static void LoadAssemblyAndReferences(AssemblyName assemblyName, Func<AssemblyName, bool> assemblyFilter = null, bool ignoreExceptionLoadingReferencedAssembly = false)
         {
             if (assemblyName == null) throw new ArgumentNullException(nameof(assemblyName));
             var loadedAssemblieNames =
@@ -534,10 +553,10 @@ namespace Lime.Protocol.Serialization
                         .GetAssemblies()
                         .Select(a => a.GetName().FullName));
             
-            LoadAssemblyAndReferences(assemblyName, assemblyFilter, loadedAssemblieNames);
+            LoadAssemblyAndReferences(assemblyName, assemblyFilter, loadedAssemblieNames, ignoreExceptionLoadingReferencedAssembly);
         }
 
-        private static void LoadAssemblyAndReferences(AssemblyName assemblyName, Func<AssemblyName, bool> assemblyFilter, ISet<string> loadedAssembliesNames)
+        private static void LoadAssemblyAndReferences(AssemblyName assemblyName, Func<AssemblyName, bool> assemblyFilter, ISet<string> loadedAssembliesNames, bool ignoreExceptionLoadingReferencedAssembly)
         {
             Assembly assembly;
             try
@@ -561,11 +580,14 @@ namespace Lime.Protocol.Serialization
             {
                 try
                 {
-                    LoadAssemblyAndReferences(referencedAssemblyName, assemblyFilter, loadedAssembliesNames);
+                    LoadAssemblyAndReferences(referencedAssemblyName, assemblyFilter, loadedAssembliesNames, ignoreExceptionLoadingReferencedAssembly);
                 }
                 catch (Exception ex)
                 {
-                    throw new TypeLoadException($"Could not load the referenced assembly '{referencedAssemblyName.FullName}' of assembly '{assemblyName.FullName}'", ex);
+                    if (ignoreExceptionLoadingReferencedAssembly)
+                        Trace.WriteLine($"Could not load the referenced assembly '{referencedAssemblyName.FullName}' of assembly '{assemblyName.FullName}'");
+                    else
+                        throw new TypeLoadException($"Could not load the referenced assembly '{referencedAssemblyName.FullName}' of assembly '{assemblyName.FullName}'", ex);
                 }                
             }
         }

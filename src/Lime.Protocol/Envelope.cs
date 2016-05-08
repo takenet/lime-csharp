@@ -18,7 +18,7 @@ namespace Lime.Protocol
         public const string METADATA_KEY = "metadata";
 
         protected Envelope()
-            : this(Guid.NewGuid())
+            : this(default(Guid))
         {
 
         }

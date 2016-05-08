@@ -32,15 +32,12 @@ namespace Lime.Transport.Tcp
 
         public TcpTransportListener(Uri listenerUri, X509Certificate2 sslCertificate, IEnvelopeSerializer envelopeSerializer, ITraceWriter traceWriter = null, RemoteCertificateValidationCallback clientCertificateValidationCallback = null)
         {
-            if (listenerUri == null)
-            {
-                throw new ArgumentNullException("listenerUri");
-            }
-
+            if (listenerUri == null) throw new ArgumentNullException(nameof(listenerUri));            
             if (listenerUri.Scheme != Uri.UriSchemeNetTcp)
             {
-                throw new ArgumentException("Invalid URI scheme. The expected value is 'net.tcp'.");
+                throw new ArgumentException($"Invalid URI scheme. The expected value is '{Uri.UriSchemeNetTcp}'.");
             }
+            if (envelopeSerializer == null) throw new ArgumentNullException(nameof(envelopeSerializer));
 
             ListenerUris = new[] { listenerUri };
 
@@ -60,12 +57,7 @@ namespace Lime.Transport.Tcp
                 {
                     throw new SecurityException("The current user doesn't have access to the certificate private key. Use WinHttpCertCfg.exe to assign the necessary permissions.", ex);
                 }
-            }
-
-            if (envelopeSerializer == null)
-            {
-                throw new ArgumentNullException("envelopeSerializer");
-            }
+            }                        
 
             _sslCertificate = sslCertificate;
             _envelopeSerializer = envelopeSerializer;

@@ -42,29 +42,15 @@ namespace Lime.Client.Windows.ViewModels
         public RosterViewModel(IClientChannel clientChannel, LoginViewModel loginViewModel)
             : this()
         {
-            if (clientChannel == null)
-            {
-                throw new ArgumentNullException("clientChannel");
-            }
-
-            if (clientChannel.State != SessionState.Established)
-            {
-                throw new ArgumentException("The session is in an invalid state");
-            }
-
+            if (clientChannel == null) throw new ArgumentNullException(nameof(clientChannel));
+            if (clientChannel.State != SessionState.Established) throw new ArgumentException("The session is in an invalid state");
+            if (loginViewModel == null) throw new ArgumentNullException(nameof(loginViewModel));
+                       
             _clientChannel = clientChannel;
-            Identity = _clientChannel.LocalNode.ToIdentity();
-            
-            if (loginViewModel == null)
-            {
-                throw new ArgumentNullException("loginViewModel");
-            }
-
+            Identity = _clientChannel.LocalNode.ToIdentity();                                    
             _loginViewModel = loginViewModel;
-
             _cancellationTokenSource = new CancellationTokenSource();
-            _listenerTask = ListenAsync();
-
+            _listenerTask = ListenAsync();            
         }
 
         /// <summary>

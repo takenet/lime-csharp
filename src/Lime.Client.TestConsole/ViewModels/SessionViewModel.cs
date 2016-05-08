@@ -894,7 +894,8 @@ namespace Lime.Client.TestConsole.ViewModels
         private string ParseInput(string input, IEnumerable<VariableViewModel> variables)
         {
             var variableValues = variables.ToDictionary(t => t.Name, t => t.Value);
-            variableValues.Add("newGuid", Guid.NewGuid().ToString());
+            variableValues["newGuid"] = Guid.NewGuid().ToString();
+            
             try
             {
                 return input.ReplaceVariables(variableValues);
@@ -911,7 +912,8 @@ namespace Lime.Client.TestConsole.ViewModels
             var macroTypes = Assembly
                 .GetExecutingAssembly()
                 .GetTypes()
-                .Where(t => typeof(IMacro).IsAssignableFrom(t) && t.IsClass && !t.IsAbstract);
+                .Where(t => typeof(IMacro).IsAssignableFrom(t) && t.IsClass && !t.IsAbstract && t.GetCustomAttribute<MacroAttribute>() != null)
+                .OrderBy(t => t.GetCustomAttribute<MacroAttribute>().Order);
 
             foreach (var type in macroTypes)
             {
