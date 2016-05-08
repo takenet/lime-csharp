@@ -177,7 +177,7 @@ namespace Lime.Protocol.Client
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">to</exception>
-        public Task SendReceivedNotificationAsync(Guid messageId, Node to, CancellationToken cancellationToken)
+        public Task SendReceivedNotificationAsync(string messageId, Node to, CancellationToken cancellationToken)
         {
             if (to == null) throw new ArgumentNullException(nameof(to));
 
@@ -251,7 +251,7 @@ namespace Lime.Protocol.Client
             State = session.State;
 
             if (session.State == SessionState.Established &&
-                session.Id != Guid.Empty)
+                !session.Id.IsNullOrEmpty())
             {
                 LocalNode = session.To;
                 RemoteNode = session.From;

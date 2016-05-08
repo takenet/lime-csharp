@@ -121,7 +121,7 @@ namespace Lime.Protocol.UnitTests
         {
             return new Session()
             {
-                Id = Guid.NewGuid(),
+                Id = Guid.NewGuid().ToString(),
                 From = CreateNode(),
                 To = CreateNode(),
                 State = state

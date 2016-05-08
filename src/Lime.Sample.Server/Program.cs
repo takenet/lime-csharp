@@ -112,7 +112,7 @@ namespace Lime.Sample.Server
                     var sendTimeout = TimeSpan.FromSeconds(60);
 
                     var serverChannel = new ServerChannel(
-                        sessionId,
+                        sessionId.ToString(),
                         _serverNode,
                         transport,
                         sendTimeout);

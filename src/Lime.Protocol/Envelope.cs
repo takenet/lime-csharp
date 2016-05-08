@@ -17,25 +17,28 @@ namespace Lime.Protocol
         public const string TO_KEY = "to";
         public const string METADATA_KEY = "metadata";
 
-        #region Constructor
-
         protected Envelope()
             : this(Guid.NewGuid())
         {
+
         }
 
         protected Envelope(Guid id)
+            : this(id.ToString())
+        {
+                        
+        }
+
+        protected Envelope(string id)
         {
             Id = id;
         }
 
-        #endregion
-
         /// <summary>
         /// Unique identifier of the envelope
         /// </summary>
-        [DataMember(Name = ID_KEY, EmitDefaultValue = false)]
-        public Guid Id { get; set; }
+        [DataMember(Name = ID_KEY)]
+        public string Id { get; set; }
 
         /// <summary>
         /// Sender of the envelope

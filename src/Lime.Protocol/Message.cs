@@ -19,6 +19,11 @@ namespace Lime.Protocol
         {
         }
 
+        public Message(string id)
+            : base(id)
+        {
+        }
+
         public Message(Guid id)
             : base(id)
         {

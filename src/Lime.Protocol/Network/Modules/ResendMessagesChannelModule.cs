@@ -104,7 +104,7 @@ namespace Lime.Protocol.Network.Modules
 
         async Task<Message> IChannelModule<Message>.OnSendingAsync(Message envelope, CancellationToken cancellationToken)
         {
-            if (envelope.Id != Guid.Empty)
+            if (!string.IsNullOrWhiteSpace(envelope.Id))
             {
                 var key = CreateKey(envelope);
                 SentMessage sentMessage;
@@ -257,10 +257,10 @@ namespace Lime.Protocol.Network.Modules
 
         protected sealed class MessageIdDestination
         {
-            private readonly Guid _messageId;
+            private readonly string _messageId;
             private readonly Identity _destination;
 
-            public MessageIdDestination(Guid messageId, Identity destination = null)
+            public MessageIdDestination(string messageId, Identity destination = null)
             {
                 _messageId = messageId;
                 _destination = destination;
@@ -279,7 +279,7 @@ namespace Lime.Protocol.Network.Modules
             public override string ToString()
             {
                 return _destination == null ?
-                    _messageId.ToString() :
+                    _messageId :
                     $"{_messageId}:{_destination}";
             }
         }

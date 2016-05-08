@@ -42,11 +42,11 @@ namespace Lime.Protocol.UnitTests.Server
 
         #endregion
 
-        private ServerChannel GetTarget(SessionState state = SessionState.New, Node remoteNode = null, Guid sessionId = default(Guid), Node serverNode = null, TimeSpan? remotePingInterval = null, TimeSpan? remoteIdleTimeout = null)
+        private ServerChannel GetTarget(SessionState state = SessionState.New, Node remoteNode = null, string sessionId = null, Node serverNode = null, TimeSpan? remotePingInterval = null, TimeSpan? remoteIdleTimeout = null)
         {
-            if (sessionId == Guid.Empty)
+            if (sessionId.IsNullOrEmpty())
             {
-                sessionId = Guid.NewGuid();
+                sessionId = Guid.NewGuid().ToString();
             }
 
             if (serverNode == null)
@@ -661,7 +661,7 @@ namespace Lime.Protocol.UnitTests.Server
 
         private class TestServerChannel : ServerChannel
         {
-            public TestServerChannel(SessionState state, Guid sessionId, Node serverNode, ITransport transport, TimeSpan sendTimeout, Node remoteNode, TimeSpan? remotePingInterval = null, TimeSpan? remoteIdleTimeout = null)
+            public TestServerChannel(SessionState state, string sessionId, Node serverNode, ITransport transport, TimeSpan sendTimeout, Node remoteNode, TimeSpan? remotePingInterval = null, TimeSpan? remoteIdleTimeout = null)
                 : base(sessionId, serverNode, transport, sendTimeout, remotePingInterval: remotePingInterval, remoteIdleTimeout: remoteIdleTimeout)
             {                
                 base.State = state;

@@ -24,7 +24,7 @@ namespace Lime.Protocol.UnitTests.Client
         private Uri _serverUri;
         private Node _localNode;
         private Node _remoteNode;
-        private Guid _sessionId;
+        private string _sessionId;
         private Session _negotiatingSession;
         private Session _negotiatedSession;
         private Session _authenticatingSession;
@@ -48,7 +48,7 @@ namespace Lime.Protocol.UnitTests.Client
                 .Returns(_serverUri);
             _localNode = Dummy.CreateNode();
             _remoteNode = Dummy.CreateNode();
-            _sessionId = Guid.NewGuid();
+            _sessionId = Guid.NewGuid().ToString();
             _negotiatingSession = Dummy.CreateSession(SessionState.Negotiating);
             _negotiatingSession.CompressionOptions = new[]
             {

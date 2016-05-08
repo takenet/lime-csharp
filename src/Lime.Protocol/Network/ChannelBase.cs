@@ -21,7 +21,7 @@ namespace Lime.Protocol.Network
         private readonly BufferBlock<Command> _commandBuffer;
         private readonly BufferBlock<Notification> _notificationBuffer;
         private readonly BufferBlock<Session> _sessionBuffer;
-        private readonly ConcurrentDictionary<Guid, TaskCompletionSource<Command>> _pendingCommandsDictionary;
+        private readonly ConcurrentDictionary<string, TaskCompletionSource<Command>> _pendingCommandsDictionary;
 
         private readonly CancellationTokenSource _consumerCts;
         private readonly object _syncRoot;
@@ -54,7 +54,7 @@ namespace Lime.Protocol.Network
             _commandBuffer = new BufferBlock<Command>(options);
             _notificationBuffer = new BufferBlock<Notification>(options);
             _sessionBuffer = new BufferBlock<Session>(new DataflowBlockOptions() { BoundedCapacity = 1 });
-            _pendingCommandsDictionary = new ConcurrentDictionary<Guid, TaskCompletionSource<Command>>();
+            _pendingCommandsDictionary = new ConcurrentDictionary<string, TaskCompletionSource<Command>>();
             MessageModules = new List<IChannelModule<Message>>();
             NotificationModules = new List<IChannelModule<Notification>>();
             CommandModules = new List<IChannelModule<Command>>();
@@ -100,7 +100,7 @@ namespace Lime.Protocol.Network
         /// <summary>
         /// The session Id
         /// </summary>
-        public Guid SessionId { get; protected set; }        
+        public string SessionId { get; protected set; }        
 
         /// <summary>
         /// Current session state
@@ -210,7 +210,7 @@ namespace Lime.Protocol.Network
                 throw new ArgumentException("Invalid command method", nameof(requestCommand));
             }
 
-            if (requestCommand.Id == Guid.Empty)
+            if (requestCommand.Id.IsNullOrEmpty())
             {
                 throw new ArgumentException("Invalid command id", nameof(requestCommand));
             }
@@ -432,7 +432,7 @@ namespace Lime.Protocol.Network
             if (command != null)
             {
                 TaskCompletionSource<Command> pendingCommand;
-                if (command.Id != Guid.Empty && 
+                if (!command.Id.IsNullOrEmpty() && 
                     command.Status != CommandStatus.Pending &&
                     command.Method != CommandMethod.Observe &&
                     _pendingCommandsDictionary.TryRemove(command.Id, out pendingCommand))

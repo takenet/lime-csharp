@@ -63,7 +63,7 @@ namespace Lime.Transport.Http.Processors
             Node pp;
             Node.TryParse(request.GetValue(Constants.ENVELOPE_PP_HEADER, Constants.ENVELOPE_PP_QUERY), out pp);
 
-            envelope.Id = request.CorrelatorId;
+            envelope.Id = request.CorrelatorId.ToString();
             envelope.From = from;
             envelope.To = to;
             envelope.Pp = pp;

@@ -31,42 +31,28 @@ namespace Lime.Transport.Http.Processors
 
         #region IHttpProcessor Members
 
-        public HashSet<string> Methods { get; private set; }
+        public HashSet<string> Methods { get; }
 
-        public UriTemplate Template { get; private set; }
+        public UriTemplate Template { get; }
 
         public async Task<HttpResponse> ProcessAsync(HttpRequest request, UriTemplateMatch match, ITransportSession transport, CancellationToken cancellationToken)
         {            
-            if (request == null)
-            {
-                throw new ArgumentNullException("request");
-            }
-
-            if (match == null)
-            {
-                throw new ArgumentNullException("match");
-            }
-
+            if (request == null) throw new ArgumentNullException(nameof(request));            
+            if (match == null) throw new ArgumentNullException(nameof(match));
+                        
+            var id = match.BoundVariables.Get("id");
             Identity owner;
-            Guid id;
-
-            if (Identity.TryParse(request.User.Identity.Name, out owner) &&
-                Guid.TryParse(match.BoundVariables.Get("id"), out id))
+            if (!id.IsNullOrEmpty() &&
+                Identity.TryParse(request.User.Identity.Name, out owner))
             {
                 if (await _envelopeStorage.DeleteEnvelopeAsync(owner, id).ConfigureAwait(false))
                 {
                     return new HttpResponse(request.CorrelatorId, HttpStatusCode.OK);
 
                 }
-                else
-                {
-                    return new HttpResponse(request.CorrelatorId, HttpStatusCode.NotFound);
-                }
+                return new HttpResponse(request.CorrelatorId, HttpStatusCode.NotFound);
             }
-            else
-            {
-                return new HttpResponse(request.CorrelatorId, HttpStatusCode.BadRequest);
-            }
+            return new HttpResponse(request.CorrelatorId, HttpStatusCode.BadRequest);
         }
 
         #endregion

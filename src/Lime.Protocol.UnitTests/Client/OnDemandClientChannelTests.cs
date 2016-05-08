@@ -17,7 +17,7 @@ namespace Lime.Protocol.UnitTests.Client
     {
         private TimeSpan _sendTimeout;
         private CancellationToken _cancellationToken;
-        private Guid _sessionId;
+        private string _sessionId;
         private Mock<IClientChannelBuilder> _clientChannelBuilder;
         private Mock<IEstablishedClientChannelBuilder> _establishedClientChannelBuilder;
         private Mock<IClientChannel> _clientChannel;
@@ -29,7 +29,7 @@ namespace Lime.Protocol.UnitTests.Client
         {
             _sendTimeout = TimeSpan.FromSeconds(5);
             _cancellationToken = _sendTimeout.ToCancellationToken();
-            _sessionId = Guid.NewGuid();            
+            _sessionId = Guid.NewGuid().ToString();            
             _transport = new Mock<ITransport>();
             _transport
                 .SetupGet(t => t.IsConnected)
@@ -338,7 +338,7 @@ namespace Lime.Protocol.UnitTests.Client
             var message = Dummy.CreateMessage(Dummy.CreatePlainDocument());
             var target = GetTarget();
             var exception = Dummy.CreateException();
-            var sessionId = Guid.NewGuid();
+            var sessionId = Guid.NewGuid().ToString();
             var clientChannel2 = new Mock<IClientChannel>();
 
             FailedChannelInformation failedChannelInformation = null;
@@ -865,7 +865,7 @@ namespace Lime.Protocol.UnitTests.Client
             var notification = Dummy.CreateNotification(Event.Received);
             var target = GetTarget();
             var exception = Dummy.CreateException();
-            var sessionId = Guid.NewGuid();
+            var sessionId = Guid.NewGuid().ToString();
             var clientChannel2 = new Mock<IClientChannel>();
 
             FailedChannelInformation failedChannelInformation = null;
@@ -1392,7 +1392,7 @@ namespace Lime.Protocol.UnitTests.Client
             var command = Dummy.CreateCommand(Dummy.CreatePlainDocument());
             var target = GetTarget();
             var exception = Dummy.CreateException();
-            var sessionId = Guid.NewGuid();
+            var sessionId = Guid.NewGuid().ToString();
             var clientChannel2 = new Mock<IClientChannel>();
 
             FailedChannelInformation failedChannelInformation = null;
@@ -1836,7 +1836,7 @@ namespace Lime.Protocol.UnitTests.Client
             // Arrange
             var requestCommand = Dummy.CreateCommand();
             var responseCommand = Dummy.CreateCommand(Dummy.CreatePing(), status: CommandStatus.Success);
-            var sessionId = Guid.NewGuid();
+            var sessionId = Guid.NewGuid().ToString();
             responseCommand.Id = requestCommand.Id;
             var target = GetTarget();
             var exception = Dummy.CreateException();

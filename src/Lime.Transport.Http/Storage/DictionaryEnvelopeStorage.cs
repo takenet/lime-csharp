@@ -8,64 +8,42 @@ namespace Lime.Transport.Http.Storage
 {
     public sealed class DictionaryEnvelopeStorage<T> : IEnvelopeStorage<T> where T : Envelope
     {
-        private ConcurrentDictionary<Identity, ConcurrentDictionary<Guid, T>> _identityEnvelopeDictionary;
+        private readonly ConcurrentDictionary<Identity, ConcurrentDictionary<string, T>> _identityEnvelopeDictionary;
 
         public DictionaryEnvelopeStorage()
         {
-            _identityEnvelopeDictionary = new ConcurrentDictionary<Identity, ConcurrentDictionary<Guid, T>>();
+            _identityEnvelopeDictionary = new ConcurrentDictionary<Identity, ConcurrentDictionary<string, T>>();
         }
 
         #region IEnvelopeStorage<T> Members
 
         public Task<bool> StoreEnvelopeAsync(Identity owner, T envelope)
         {
-            if (owner == null)
-            {
-                throw new ArgumentNullException("owner");
-            }
-
-            if (envelope == null)
-            {
-                throw new ArgumentNullException("envelope");
-            }
-
+            if (owner == null) throw new ArgumentNullException(nameof(owner));            
+            if (envelope == null) throw new ArgumentNullException(nameof(envelope));            
             var envelopeDictionary = _identityEnvelopeDictionary.GetOrAdd(
                 owner,
-                (i) => new ConcurrentDictionary<Guid, T>());
+                (i) => new ConcurrentDictionary<string, T>());
 
             return Task.FromResult(envelopeDictionary.TryAdd(envelope.Id, envelope));
         }
 
-        public Task<Guid[]> GetEnvelopesAsync(Identity owner)
+        public Task<string[]> GetEnvelopesAsync(Identity owner)
         {
-            if (owner == null)
-            {
-                throw new ArgumentNullException("owner");
-            }
-
-            Guid[] envelopeIds;
-            ConcurrentDictionary<Guid, T> envelopeDictionary;
-
-            if (_identityEnvelopeDictionary.TryGetValue(owner, out envelopeDictionary))
-            {
-                envelopeIds = envelopeDictionary.Keys.ToArray();
-            }
-            else
-            {
-                envelopeIds = new Guid[0];
-            }
+            if (owner == null) throw new ArgumentNullException(nameof(owner));
+            ConcurrentDictionary<string, T> envelopeDictionary;
+            var envelopeIds = 
+                _identityEnvelopeDictionary.TryGetValue(owner, out envelopeDictionary) ? 
+                envelopeDictionary.Keys.ToArray() : new string[0];
 
             return Task.FromResult(envelopeIds);
         }
 
-        public Task<T> GetEnvelopeAsync(Identity owner, Guid id)
+        public Task<T> GetEnvelopeAsync(Identity owner, string id)
         {
-            if (owner == null)
-            {
-                throw new ArgumentNullException("owner");
-            }
-
-            ConcurrentDictionary<Guid, T> envelopeDictionary;
+            if (owner == null) throw new ArgumentNullException(nameof(owner));
+            
+            ConcurrentDictionary<string, T> envelopeDictionary;
             T envelope;            
 
             if (!(_identityEnvelopeDictionary.TryGetValue(owner, out envelopeDictionary) && envelopeDictionary.TryGetValue(id, out envelope)))
@@ -76,16 +54,11 @@ namespace Lime.Transport.Http.Storage
             return Task.FromResult(envelope);
         }
 
-        public Task<bool> DeleteEnvelopeAsync(Identity owner, Guid id)
+        public Task<bool> DeleteEnvelopeAsync(Identity owner, string id)
         {
-            if (owner == null)
-            {
-                throw new ArgumentNullException("owner");
-            }
-
+            if (owner == null) throw new ArgumentNullException(nameof(owner));            
             var deleted = false;
-
-            ConcurrentDictionary<Guid, T> envelopeDictionary;
+            ConcurrentDictionary<string, T> envelopeDictionary;
 
             if (_identityEnvelopeDictionary.TryGetValue(owner, out envelopeDictionary))
             {

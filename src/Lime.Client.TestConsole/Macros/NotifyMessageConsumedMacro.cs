@@ -17,18 +17,18 @@ namespace Lime.Client.TestConsole.Macros
         {
             if (envelopeViewModel == null)
             {
-                throw new ArgumentNullException("envelopeViewModel");
+                throw new ArgumentNullException(nameof(envelopeViewModel));
             }
 
             if (sessionViewModel == null)
             {
-                throw new ArgumentNullException("sessionViewModel");
+                throw new ArgumentNullException(nameof(sessionViewModel));
             }
 
             var message = envelopeViewModel.Envelope as Message;
 
             if (message != null &&
-                message.Id != Guid.Empty)
+                !message.Id.IsNullOrEmpty())
             {
                 var notification = new Notification()
                 {

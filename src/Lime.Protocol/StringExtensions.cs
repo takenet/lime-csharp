@@ -1,42 +1,12 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
-using System.Linq.Expressions;
-using System.Reflection;
 using System.Text;
-using System.Threading.Tasks;
 
-namespace Lime.Protocol.Serialization
+namespace Lime.Protocol
 {
-    public static class SerializationExtensions
+    public static class StringExtensions
     {
-        /// <summary>
-        /// Gets the default value of a Type        
-        /// </summary>
-        /// <a href="http://stackoverflow.com/questions/325426/programmatic-equivalent-of-defaulttype"/>
-        /// <param name="type"></param>
-        /// <returns></returns>
-        public static object GetDefaultValue(this Type type)
-        {
-            // Validate parameters.
-            if (type == null) throw new ArgumentNullException(nameof(type));
-
-            // We want an Func<object> which returns the default.
-            // Create that expression here.
-            var e = Expression.Lambda<Func<object>>(
-                // Have to convert to object.
-                Expression.Convert(
-                // The default value, always get what the *code* tells us.
-                    Expression.Default(type), typeof(object)
-                )
-            );
-
-            // Compile and return the value.
-            return e.Compile()();
-        }
-
         public static string RemoveCrLf(this string value)
         {
             if (value == null) throw new ArgumentNullException(nameof(value));
@@ -216,5 +186,25 @@ namespace Lime.Protocol.Serialization
             if (value == null) throw new ArgumentNullException(nameof(value));
             return value.Replace("\\", "\\\\").Replace("\"", "\\\"");
         }
+
+        /// <summary>
+        /// Indicates whether a specified string is null, empty, or consists only of white-space characters.
+        /// </summary>
+        /// 
+        /// <returns>
+        /// true if the <paramref name="value"/> parameter is null or <see cref="F:System.String.Empty"/>, or if <paramref name="value"/> consists exclusively of white-space characters.
+        /// </returns>
+        /// <param name="value">The string to test.</param>
+        public static bool IsNullOrWhiteSpace(this string value) => string.IsNullOrWhiteSpace(value);
+
+        /// <summary>
+        /// Indicates whether the specified string is null or an <see cref="F:System.String.Empty"/> string.
+        /// </summary>
+        /// 
+        /// <returns>
+        /// true if the <paramref name="value"/> parameter is null or an empty string (""); otherwise, false.
+        /// </returns>
+        /// <param name="value">The string to test. </param><filterpriority>1</filterpriority>
+        public static bool IsNullOrEmpty(this string value) => string.IsNullOrEmpty(value);
     }
 }
