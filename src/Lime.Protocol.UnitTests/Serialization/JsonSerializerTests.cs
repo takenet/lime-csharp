@@ -18,7 +18,7 @@ namespace Lime.Protocol.UnitTests.Serialization
             schedule.When = DateTimeOffset.Now.AddDays(1);
             schedule.Message = new Message()
             {
-                Id = Guid.NewGuid().ToString(),
+                Id = EnvelopeId.NewId(),
                 Content = new PlainText() { Text = "Teste 5" },
                 From = new Node("limeUser", "limeprotocol.org", null),
                 To = new Node("limeUser", "limeprotocol.org", null)
@@ -27,7 +27,7 @@ namespace Lime.Protocol.UnitTests.Serialization
             var command = new Command()
             {
                 Resource = schedule,
-                Id = Guid.NewGuid().ToString(),
+                Id = EnvelopeId.NewId(),
                 From = new Node("limeUser", "limeprotocol.org", null),
                 To = new Node("limeUser", "limeprotocol.org", null),
                 Method = CommandMethod.Set,

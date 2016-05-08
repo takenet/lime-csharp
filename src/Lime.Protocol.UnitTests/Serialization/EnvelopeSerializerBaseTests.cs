@@ -490,7 +490,7 @@ namespace Lime.Protocol.UnitTests.Serialization
 			var target = GetTarget();
 
 			var notification = Dummy.CreateNotification(Event.Received);
-			notification.Id = Guid.NewGuid().ToString();
+			notification.Id = EnvelopeId.NewId();
 			notification.Pp = Dummy.CreateNode();
 
 			var metadataKey1 = "randomString1";
@@ -522,7 +522,7 @@ namespace Lime.Protocol.UnitTests.Serialization
 			var target = GetTarget();
 
 			var notification = Dummy.CreateNotification(Event.Failed);
-			notification.Id = Guid.NewGuid().ToString();
+			notification.Id = EnvelopeId.NewId();
 			notification.Reason = Dummy.CreateReason();
 
 			var resultString = target.Serialize(notification);
@@ -752,7 +752,7 @@ namespace Lime.Protocol.UnitTests.Serialization
 
 			var method = CommandMethod.Get;
 
-			var id = Guid.NewGuid().ToString();
+			var id = EnvelopeId.NewId();
 
 			var from = Dummy.CreateNode();
 			var pp = Dummy.CreateNode();
@@ -802,7 +802,7 @@ namespace Lime.Protocol.UnitTests.Serialization
 		{
 			var target = GetTarget();
 			var method = CommandMethod.Get;
-			var id = Guid.NewGuid().ToString();
+			var id = EnvelopeId.NewId();
 			var from = Dummy.CreateNode();
 			var to = Dummy.CreateNode();
 			var resourceUri = new LimeUri("/account");
@@ -833,7 +833,7 @@ namespace Lime.Protocol.UnitTests.Serialization
 			var target = GetTarget();
 
 			var method = CommandMethod.Get;
-			var id = Guid.NewGuid().ToString();
+			var id = EnvelopeId.NewId();
 			var from = Dummy.CreateNode();
 			var to = Dummy.CreateNode();
 			var resourceUri = new LimeUri("/presence");
@@ -881,7 +881,7 @@ namespace Lime.Protocol.UnitTests.Serialization
 
 			var method = CommandMethod.Get;
 
-			var id = Guid.NewGuid().ToString();
+			var id = EnvelopeId.NewId();
 
 			var from = Dummy.CreateNode();
 			var pp = Dummy.CreateNode();
@@ -926,7 +926,7 @@ namespace Lime.Protocol.UnitTests.Serialization
 			var target = GetTarget();
 
 			var method = CommandMethod.Set;
-			var id = Guid.NewGuid().ToString();
+			var id = EnvelopeId.NewId();
 
 			string json =
 			    $"{{\"type\":\"application/vnd.lime.receipt+json\",\"resource\":{{\"events\":[\"dispatched\",\"received\"]}},\"method\":\"{method.ToString().ToCamelCase()}\",\"id\":\"{id}\"}}";
@@ -961,7 +961,7 @@ namespace Lime.Protocol.UnitTests.Serialization
 
 			var method = CommandMethod.Get;
 
-			var id = Guid.NewGuid().ToString();
+			var id = EnvelopeId.NewId();
 
 			var from = Dummy.CreateNode();
 			var pp = Dummy.CreateNode();
@@ -1029,7 +1029,7 @@ namespace Lime.Protocol.UnitTests.Serialization
 			var method = CommandMethod.Get;
 			var status = CommandStatus.Failure;
 			var reason = Dummy.CreateReason();
-			var id = Guid.NewGuid().ToString();
+			var id = EnvelopeId.NewId();
 			var from = Dummy.CreateNode();
 			var to = Dummy.CreateNode();
 
@@ -1060,7 +1060,7 @@ namespace Lime.Protocol.UnitTests.Serialization
 		{
 			var target = GetTarget();
 
-			var id = Guid.NewGuid().ToString();
+			var id = EnvelopeId.NewId();
 			var from = Dummy.CreateNode();
 			var pp = Dummy.CreateNode();
 			var to = Dummy.CreateNode();
@@ -1100,7 +1100,7 @@ namespace Lime.Protocol.UnitTests.Serialization
 		{
 			var target = GetTarget();
 
-			var id = Guid.NewGuid().ToString();
+			var id = EnvelopeId.NewId();
 			var from = Dummy.CreateNode();
 			var pp = Dummy.CreateNode();
 			var to = Dummy.CreateNode();
@@ -1140,7 +1140,7 @@ namespace Lime.Protocol.UnitTests.Serialization
 		{
 			var target = GetTarget();
 
-			var id = Guid.NewGuid().ToString();
+			var id = EnvelopeId.NewId();
 			var from = Dummy.CreateNode();
 			var pp = Dummy.CreateNode();
 			var to = Dummy.CreateNode();
@@ -1183,7 +1183,7 @@ namespace Lime.Protocol.UnitTests.Serialization
 		{
 			var target = GetTarget();
 
-			var id = Guid.NewGuid();
+			var id = EnvelopeId.NewId();
 			var from = Dummy.CreateNode();
 			var to = Dummy.CreateNode();
 
@@ -1215,7 +1215,7 @@ namespace Lime.Protocol.UnitTests.Serialization
 		{
 			var target = GetTarget();
 
-			var id = Guid.NewGuid().ToString();
+			var id = EnvelopeId.NewId();
 			var from = Dummy.CreateNode();
 			var pp = Dummy.CreateNode();
 			var to = Dummy.CreateNode();
@@ -1323,7 +1323,7 @@ namespace Lime.Protocol.UnitTests.Serialization
 		{
 			var target = GetTarget();
 
-			var id = Guid.NewGuid().ToString();
+			var id = EnvelopeId.NewId();
 			var from = Dummy.CreateNode();
 			var pp = Dummy.CreateNode();
 			var to = Dummy.CreateNode();
@@ -1428,7 +1428,7 @@ namespace Lime.Protocol.UnitTests.Serialization
 		{
 			var target = GetTarget();
 
-			var id = Guid.NewGuid().ToString();
+			var id = EnvelopeId.NewId();
 			var from = Dummy.CreateNode();
 			var pp = Dummy.CreateNode();
 			var to = Dummy.CreateNode();
@@ -1471,7 +1471,7 @@ namespace Lime.Protocol.UnitTests.Serialization
 			var reasonCode = Dummy.CreateRandomInt(100);
 			var reasonDescription = Dummy.CreateRandomStringExtended(100);
 
-			var id = Guid.NewGuid().ToString();
+			var id = EnvelopeId.NewId();
 			var from = Dummy.CreateNode();
 			var to = Dummy.CreateNode();
 
@@ -1501,7 +1501,7 @@ namespace Lime.Protocol.UnitTests.Serialization
 		{
 			var target = GetTarget();
 
-			var id = Guid.NewGuid().ToString();
+			var id = EnvelopeId.NewId();
 			var from = Dummy.CreateNode();
 			var pp = Dummy.CreateNode();
 			var to = Dummy.CreateNode();
@@ -1542,7 +1542,7 @@ namespace Lime.Protocol.UnitTests.Serialization
 		{
 			var target = GetTarget();
 
-			var id = Guid.NewGuid().ToString();
+			var id = EnvelopeId.NewId();
 			var from = Dummy.CreateNode();
 			var to = Dummy.CreateNode();        
 			var state = SessionState.Authenticating;
@@ -1612,7 +1612,7 @@ namespace Lime.Protocol.UnitTests.Serialization
 			// Arrange
 			var target = GetTarget();
 			var method = CommandMethod.Set;
-			var id = Guid.NewGuid().ToString();
+			var id = EnvelopeId.NewId();
 
 			string json =
 			    $"{{\"type\":\"application/vnd.takenet.testdocument+json\",\"resource\":{{\"double\":10.1, \"NullableDouble\": 10.2}},\"method\":\"{method.ToString().ToCamelCase()}\",\"id\":\"{id}\"}}";
@@ -1634,7 +1634,7 @@ namespace Lime.Protocol.UnitTests.Serialization
 		public void Deserialize_DocumentContainerDocumentCollectionMessage_ReturnsValidInstance()
 		{
 			// Arrange
-			var id = Guid.NewGuid().ToString();
+			var id = EnvelopeId.NewId();
 			var json =
 				$"{{\"type\":\"application/vnd.lime.collection+json\",\"content\":{{\"total\":4,\"itemType\":\"application/vnd.lime.container+json\",\"items\":[{{\"type\":\"text/plain\",\"value\":\"text1\"}},{{\"type\":\"application/vnd.lime.account+json\",\"value\":{{\"fullName\":\"My Name\",\"photoUri\":\"http://url.com/resource\"}}}},{{\"type\":\"application/q9gn1nsz6y+json\",\"value\":{{\"o4s9txn80q\":\"}}2['\u00F23 /bdkc]\u00FA2,\u00BA &%f0j\u00F9u#\u00F2\u00FA9;\u00EC\\\"t}}#\u00F3(\u00E9a_94\u00E00q5m==\\\\\",\"ynpinmi0oq\":20,\"dkker2borf\":\"2016-04-13T16:24:49.729Z\",\"e98cyp215l\":{{\"ljwbthakfx\":\"\\\\@(m1g=q.-jql[)5#n,\u00E09\u00BA\u00A8kg~]t(x:<u\u00E1z'8?.-^_cvqkk\u00EC@n\",\"z4uih47pct\":19,\"nxp3n8km78\":\"2016-04-13T16:24:49.729Z\"}},\"sinvm70xls\":[{{\"ypdd57j78y\":\"<>5_\u00ECnb'!,b.ps8\u00EC=9\\\\o\\\\_*qc6#k0\u00E8]$j\u00E1=-u\u00E1\u00FAq\u00EC{{\u00E0r\u00F2\u00BAt\u00ED[\u00EC\",\"l3d24gigtt\":34,\"5ltasvmv3y\":\"2016-04-13T16:24:49.729Z\"}},{{\"1twigyljcf\":\"=!6-\u00F360 94fy2\u00A8e23q72\u00E0v\u00E9t(u!&[%\u00FA\u00E8#4f7\u00E0\u00ECkjv2n9=@pjp~\",\"ke4zjmvfbw\":46,\"2l7rf39qwq\":\"2016-04-13T16:24:49.729Z\"}},{{\"pckdtdowdc\":\"11\u00E9q>e:j,^;\u00F3\u00A8o@cs\u00F9@'r}}(3\u00EDe(=,uq*\u00F9(+!!..hd\u00E9;~.*(j=\u00A8\",\"5pfq4y1rmz\":24,\"foqvh78vau\":\"2016-04-13T16:24:49.729Z\"}}]}}}},{{\"type\":\"vxhfxfm3tz/hhnzgm4kmh\",\"value\":\"9nav5pkhswvsw7mh24r1b3agbgic43piylveh1z6xtfz77nibt\"}}]}},\"id\":\"{id}\",\"from\":\"9afudsyl@je29bkh1bs.com/yq1oh\",\"to\":\"9zpfpsuc@d63uusxbfq.com/btp7i\"}}";
 			var target = GetTarget();

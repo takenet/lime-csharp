@@ -93,14 +93,14 @@ namespace Lime.Transport.Http.UnitTests
             Password = Dummy.CreateRandomString(20);
             MessagesUrl = "http://" + Host + ":" + Port + "/messages";
 
-            SessionId = Guid.NewGuid().ToString().ToString();
+            SessionId = EnvelopeId.NewId().ToString();
             ServerNode = Dummy.CreateNode();
             SendTimeout = TimeSpan.FromSeconds(5);
             Reason = Dummy.CreateReason();
 
             SentMessage = new Message()
             {
-                Id = Guid.NewGuid().ToString(),
+                Id = EnvelopeId.NewId(),
                 To = Dummy.CreateNode(),
                 Content = Dummy.CreateTextContent()
             };
@@ -236,7 +236,7 @@ namespace Lime.Transport.Http.UnitTests
             // Arrange            
             var session = new Session()
             {
-                Id = Guid.NewGuid().ToString().ToString(),
+                Id = EnvelopeId.NewId().ToString(),
                 State = SessionState.Established
             };
 
@@ -272,7 +272,7 @@ namespace Lime.Transport.Http.UnitTests
             // Arrange
             var session = new Session()
             {
-                Id = Guid.NewGuid().ToString().ToString(),
+                Id = EnvelopeId.NewId().ToString(),
                 State = SessionState.Failed,
                 Reason = new Reason()
                 {
@@ -301,7 +301,7 @@ namespace Lime.Transport.Http.UnitTests
             // Arrange
             var session = new Session()
             {
-                Id = Guid.NewGuid().ToString(),
+                Id = EnvelopeId.NewId(),
                 State = SessionState.Failed
             };
 
@@ -359,7 +359,7 @@ namespace Lime.Transport.Http.UnitTests
             // Arrange            
             var session = new Session()
             {
-                Id = Guid.NewGuid().ToString(),
+                Id = EnvelopeId.NewId(),
                 State = SessionState.Established
             };
 
@@ -397,7 +397,7 @@ namespace Lime.Transport.Http.UnitTests
             // Arrange            
             var session = new Session()
             {
-                Id = Guid.NewGuid().ToString(),
+                Id = EnvelopeId.NewId(),
                 State = SessionState.Established
             };
 

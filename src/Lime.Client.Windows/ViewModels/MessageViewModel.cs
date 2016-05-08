@@ -32,7 +32,7 @@ namespace Lime.Client.Windows.ViewModels
         public MessageViewModel()
         {
             Timestamp = DateTime.Now;
-            Id = Guid.NewGuid().ToString();
+            Id = EnvelopeId.NewId();
         }
 
         #endregion

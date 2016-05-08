@@ -76,7 +76,7 @@ namespace Lime.Transport.Http.Processors
                 {                    
                     if (envelope.Id.IsNullOrEmpty())
                     {
-                        envelope.Id = Guid.NewGuid().ToString();
+                        envelope.Id = EnvelopeId.NewId();
 
                     }
                     envelope.Method = method;

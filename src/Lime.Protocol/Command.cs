@@ -17,24 +17,24 @@ namespace Lime.Protocol
         public const string STATUS_KEY = "status";
         public const string REASON_KEY = "reason";
 
-        #region Constructor
-
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Command"/> class.
+        /// </summary>
         public Command()
-            : this(Guid.NewGuid())
+            : this(EnvelopeId.NewId())
         {
+
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Command"/> class.
+        /// </summary>
+        /// <param name="id">The command identifier.</param>
         public Command(string id)
             : base(id)
         {
-        }
 
-        public Command(Guid id)
-            : base(id)
-        {
         }
-
-        #endregion
 
         /// <summary>
         /// The universal identifier

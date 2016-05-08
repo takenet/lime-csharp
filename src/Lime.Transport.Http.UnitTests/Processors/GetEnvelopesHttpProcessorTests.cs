@@ -55,9 +55,9 @@ namespace Lime.Transport.Http.UnitTests.Processors
             GetMessagesUriTemplateMatch = new UriTemplateMatch();
             EnvelopeIds = new[]
             {
-                Guid.NewGuid().ToString(),
-                Guid.NewGuid().ToString(),
-                Guid.NewGuid().ToString()
+                EnvelopeId.NewId(),
+                EnvelopeId.NewId(),
+                EnvelopeId.NewId()
             };
 
             Target = new GetEnvelopesHttpProcessor<Envelope>(EnvelopeStorage.Object, Constants.MESSAGES_PATH);

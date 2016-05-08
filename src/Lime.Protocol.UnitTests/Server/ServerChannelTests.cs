@@ -46,7 +46,7 @@ namespace Lime.Protocol.UnitTests.Server
         {
             if (sessionId.IsNullOrEmpty())
             {
-                sessionId = Guid.NewGuid().ToString();
+                sessionId = EnvelopeId.NewId();
             }
 
             if (serverNode == null)

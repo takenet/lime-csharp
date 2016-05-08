@@ -156,7 +156,7 @@ namespace Lime.Sample.Server
                         new AuthenticationResult(null,
                             new Node()
                             {
-                                Name = Guid.NewGuid().ToString(),
+                                Name = EnvelopeId.NewId(),
                                 Domain = "limeprotocol.org",
                                 Instance = Environment.MachineName
                             }),

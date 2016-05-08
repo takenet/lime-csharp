@@ -41,7 +41,7 @@ namespace Lime.Client.TestConsole.Macros
                 var guestNode = new Node
                 {
                     Domain = session.From.Domain,
-                    Name = Guid.NewGuid().ToString()
+                    Name = EnvelopeId.NewId()
                 };
 
                 sessionIdVariableViewModel.Value = guestNode.ToString();

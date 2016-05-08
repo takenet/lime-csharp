@@ -4,8 +4,7 @@ using System.Runtime.Serialization;
 namespace Lime.Protocol
 {
     /// <summary>
-    /// Provides the transport of a content 
-    /// between nodes in a network.
+    /// Provides the transport of a content between nodes in a network.
     /// </summary>
     [DataContract(Namespace = "http://limeprotocol.org/2014")]
     public class Message : Envelope
@@ -21,20 +20,15 @@ namespace Lime.Protocol
 
         }
 
-        public Message(string id)
-            : base(id)
-        {
-        }
-
         /// <summary>
         /// Initializes a new instance of the <see cref="Message"/> class.
         /// </summary>
         /// <param name="id">The identifier.</param>
-        public Message(Guid id)
+        public Message(string id)
             : base(id)
         {
 
-        }
+        }       
 
         /// <summary>
         ///  MIME declaration of the content type of the message.

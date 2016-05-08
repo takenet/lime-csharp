@@ -121,7 +121,7 @@ namespace Lime.Protocol.UnitTests
         {
             return new Session()
             {
-                Id = Guid.NewGuid().ToString(),
+                Id = EnvelopeId.NewId(),
                 From = CreateNode(),
                 To = CreateNode(),
                 State = state
@@ -189,7 +189,7 @@ namespace Lime.Protocol.UnitTests
         {
             return new Message()
             {
-                Id = Guid.NewGuid().ToString(),
+                Id = EnvelopeId.NewId(),
                 From = CreateNode(),
                 To = CreateNode(),
                 Content = content

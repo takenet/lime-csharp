@@ -107,7 +107,7 @@ namespace Lime.Protocol.UnitTests.Client
         [Category("NegotiateSessionAsync")]
         public async Task NegotiateSessionAsync_NegotiatingState_CallsTransportAndReadsFromBuffer()
         {
-            var target = GetTarget(Guid.NewGuid().ToString(), state: SessionState.Negotiating);
+            var target = GetTarget(EnvelopeId.NewId(), state: SessionState.Negotiating);
 
             var cancellationToken = Dummy.CreateCancellationToken();
             var compression = SessionCompression.GZip;
@@ -156,7 +156,7 @@ namespace Lime.Protocol.UnitTests.Client
         [Category("AuthenticateSessionAsync")]
         public async Task AuthenticateSessionAsync_AuthenticatingState_CallsTransportAndReadsFromTransport()
         {
-            var target = GetTarget(sessionId: Guid.NewGuid().ToString(), state: SessionState.Authenticating);
+            var target = GetTarget(sessionId: EnvelopeId.NewId(), state: SessionState.Authenticating);
 
             var cancellationToken = Dummy.CreateCancellationToken();
             var localIdentity = Dummy.CreateIdentity();
@@ -201,7 +201,7 @@ namespace Lime.Protocol.UnitTests.Client
             var localIdentity = Dummy.CreateIdentity();
             var localInstance = Dummy.CreateInstanceName();
             var authentication = Dummy.CreateAuthentication(Security.AuthenticationScheme.Plain);
-            var target = GetTarget(sessionId: Guid.NewGuid().ToString(), state: SessionState.Established);
+            var target = GetTarget(sessionId: EnvelopeId.NewId(), state: SessionState.Established);
             
             // Act            
             var actualSession = await target
@@ -214,7 +214,7 @@ namespace Lime.Protocol.UnitTests.Client
         public async Task AuthenticateSessionAsync_NullIdentity_ThrowsArgumentNullException()
         {
             // Arrange
-            var target = GetTarget(sessionId: Guid.NewGuid().ToString(), state: SessionState.Authenticating);
+            var target = GetTarget(sessionId: EnvelopeId.NewId(), state: SessionState.Authenticating);
             var cancellationToken = Dummy.CreateCancellationToken();
             Identity localIdentity = null;
             var localInstance = Dummy.CreateInstanceName();
@@ -231,7 +231,7 @@ namespace Lime.Protocol.UnitTests.Client
         public async Task AuthenticateSessionAsync_NullAuthentication_ThrowsArgumentNullException()
         {
             // Arrange
-            var target = GetTarget(sessionId: Guid.NewGuid().ToString(), state: SessionState.Authenticating);
+            var target = GetTarget(sessionId: EnvelopeId.NewId(), state: SessionState.Authenticating);
             var cancellationToken = Dummy.CreateCancellationToken();
             var localIdentity = Dummy.CreateIdentity();
             var localInstance = Dummy.CreateInstanceName();

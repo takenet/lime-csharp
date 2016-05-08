@@ -87,7 +87,7 @@ await tcpTransportListener.StartAsync();
 var transport = await tcpTransportListener.AcceptTransportAsync(CancellationToken.None);
 
 // Creates a new server channel, setting the session parameters
-var sessionId = Guid.NewGuid();
+var sessionId = EnvelopeId.NewId();
 var serverNode = Node.Parse("server@domain.com/default");
 var sendTimeout = TimeSpan.FromSeconds(60);
 

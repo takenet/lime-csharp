@@ -51,6 +51,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DocumentContainer.cs" />
+    <Compile Include="EnvelopeId.cs" />
     <Compile Include="Network\ChannelInformation.cs" />
     <Compile Include="Network\FailedChannelInformation.cs" />
     <Compile Include="Listeners\ChannelListener.cs" />
