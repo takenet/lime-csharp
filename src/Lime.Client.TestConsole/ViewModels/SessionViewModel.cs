@@ -894,7 +894,6 @@ namespace Lime.Client.TestConsole.ViewModels
         private string ParseInput(string input, IEnumerable<VariableViewModel> variables)
         {
             var variableValues = variables.ToDictionary(t => t.Name, t => t.Value);
-            variableValues["newGuid"] = Guid.NewGuid().ToString();
             
             try
             {
@@ -997,6 +996,9 @@ namespace Lime.Client.TestConsole.ViewModels
     {
         private static Regex _variablesRegex = new Regex(@"(?<=%)(\w+)", RegexOptions.Compiled);
         private static string _variablePatternFormat = @"\B%{0}\b";
+        private static string _guidVariableName = "newGuid";
+        private static Regex _guidRegex = new Regex(string.Format(_variablePatternFormat, _guidVariableName));
+        
 
         public static IEnumerable<string> GetVariables(this string input)
         {
@@ -1023,12 +1025,13 @@ namespace Lime.Client.TestConsole.ViewModels
                 throw new ArgumentNullException("variableValues");
             }
 
+            input = _guidRegex.Replace(input, m => Guid.NewGuid().ToString());
             var variableNames = input.GetVariables();
-
+            
             foreach (var variableName in variableNames)
             {
                 string variableValue;
-
+                
                 if (!variableValues.TryGetValue(variableName, out variableValue))
                 {
                     throw new ArgumentException(string.Format("The variable '{0}' is not present", variableName));
@@ -1044,6 +1047,12 @@ namespace Lime.Client.TestConsole.ViewModels
                 while (variableValue.StartsWith("%"))
                 {
                     var innerVariableName = variableValue.TrimStart('%');
+
+                    if (string.Equals(innerVariableName, _guidVariableName))
+                    {
+                        variableValue = Guid.NewGuid().ToString();
+                        break;
+                    }
 
                     if (!variableValues.TryGetValue(innerVariableName, out variableValue))
                     {
