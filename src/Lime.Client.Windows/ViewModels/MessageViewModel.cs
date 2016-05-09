@@ -14,11 +14,7 @@ namespace Lime.Client.Windows.ViewModels
 
         public MessageViewModel(Message message, MessageDirection direction, bool isUnreaded)            
         {
-            if (message == null)
-            {
-                throw new ArgumentNullException("message");
-            }
-
+            if (message == null) throw new ArgumentNullException(nameof(message));           
             Id = message.Id;
             Direction = direction;
             IsUnreaded = isUnreaded;
@@ -36,14 +32,14 @@ namespace Lime.Client.Windows.ViewModels
         public MessageViewModel()
         {
             Timestamp = DateTime.Now;
-            Id = Guid.NewGuid();
+            Id = EnvelopeId.NewId();
         }
 
         #endregion
 
 
-        private Guid _id;
-        public Guid Id
+        private string _id;
+        public string Id
         {
             get { return _id; }
             set

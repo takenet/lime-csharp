@@ -30,7 +30,7 @@ namespace Lime.Transport.Http.UnitTests.Processors
 
         public Envelope Envelope { get; set; }
 
-        public Guid EnvelopeId { get; set; }
+        public string EnvelopeId { get; set; }
         
         public Uri GetMessageUri { get; set; }
 

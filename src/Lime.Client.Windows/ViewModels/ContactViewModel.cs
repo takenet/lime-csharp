@@ -256,7 +256,6 @@ namespace Lime.Client.Windows.ViewModels
             {
                 var message = new Message()
                 {
-                    Id = Guid.Empty, // Fire and Forget mode
                     To = new Node()
                     {
                         Name = Contact.Identity.Name,

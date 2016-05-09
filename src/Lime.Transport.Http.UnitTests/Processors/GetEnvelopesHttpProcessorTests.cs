@@ -34,7 +34,7 @@ namespace Lime.Transport.Http.UnitTests.Processors
 
         public UriTemplateMatch GetMessagesUriTemplateMatch { get; set; }
 
-        public Guid[] EnvelopeIds { get; private set; }
+        public string[] EnvelopeIds { get; private set; }
 
         public CancellationToken CancellationToken { get; private set; }
 
@@ -53,11 +53,11 @@ namespace Lime.Transport.Http.UnitTests.Processors
             GetMessagesUri = new Uri("http://" + Constants.MESSAGES_PATH + ":" + Dummy.CreateRandomInt(50000) + "/" + Constants.MESSAGES_PATH);
             GetMessagesHttpRequest = new HttpRequest("DELETE", GetMessagesUri, Principal.Object, Guid.NewGuid());
             GetMessagesUriTemplateMatch = new UriTemplateMatch();
-            EnvelopeIds = new Guid[]
+            EnvelopeIds = new[]
             {
-                Guid.NewGuid(),
-                Guid.NewGuid(),
-                Guid.NewGuid()
+                EnvelopeId.NewId(),
+                EnvelopeId.NewId(),
+                EnvelopeId.NewId()
             };
 
             Target = new GetEnvelopesHttpProcessor<Envelope>(EnvelopeStorage.Object, Constants.MESSAGES_PATH);
@@ -94,7 +94,7 @@ namespace Lime.Transport.Http.UnitTests.Processors
             // Arrange
             EnvelopeStorage
                 .Setup(m => m.GetEnvelopesAsync(Identity))
-                .ReturnsAsync(new Guid[0])
+                .ReturnsAsync(new string[0])
                 .Verifiable();
 
             // Act

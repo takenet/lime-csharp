@@ -28,7 +28,7 @@ namespace Lime.Client.TestConsole.Macros
             var session = envelopeViewModel.Envelope as Session;
 
             if (session != null &&
-                session.Id != Guid.Empty &&
+                session.Id != null &&
                 session.State == SessionState.Established)
             {
                 var sessionIdVariableViewModel = sessionViewModel

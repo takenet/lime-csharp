@@ -8,9 +8,8 @@ using System.Threading.Tasks;
 namespace Lime.Protocol
 {
     /// <summary>
-    /// Transports information about events associated to a message 
-    /// sent in a session. Can be originated by a server 
-    /// or by the message destination node.
+    /// Transports information about events associated to a message in a session. 
+    /// Can be originated by a server or by the message destination node.
     /// </summary>
     [DataContract(Namespace = "http://limeprotocol.org/2014")]
     public class Notification : Envelope
@@ -19,11 +18,18 @@ namespace Lime.Protocol
         public const string REASON_KEY = "reason";
 
         public Notification()
+            : base(null)
         {
 
         }
 
         public Notification(Guid id)
+            : this(id.ToString())
+        {
+
+        }
+
+        public Notification(string id)
             : base(id)
         {
 

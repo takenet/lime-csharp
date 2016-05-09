@@ -14,7 +14,7 @@ namespace Lime.Protocol.Network
         /// <param name="state">The state.</param>
         /// <param name="localNode">The channel local node.</param>
         /// <param name="remoteNode">The channel remote node.</param>
-        public ChannelInformation(Guid sessionId, SessionState state, Node localNode, Node remoteNode)
+        public ChannelInformation(string sessionId, SessionState state, Node localNode, Node remoteNode)
         {
             SessionId = sessionId;
             State = state;
@@ -25,7 +25,7 @@ namespace Lime.Protocol.Network
         /// <summary>
         /// Gets the associated channel session identifier.
         /// </summary>
-        public Guid SessionId { get; }
+        public string SessionId { get; }
 
         /// <summary>
         /// Gets the channel state.

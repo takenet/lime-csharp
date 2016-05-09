@@ -167,7 +167,7 @@ namespace Lime.Transport.WebSocket.UnitTests
                 .Select(i =>
                 {
                     var notification = Dummy.CreateNotification(Event.Dispatched);
-                    notification.Id = Guid.NewGuid();
+                    notification.Id = EnvelopeId.NewId();
                     return notification;
                 })
                 .ToList();

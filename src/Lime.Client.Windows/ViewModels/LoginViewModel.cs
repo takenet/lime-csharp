@@ -182,7 +182,7 @@ namespace Lime.Client.Windows.ViewModels
                     var guestSessionResult = await client.EstablishSessionAsync(
                         compressionOptions => compressionOptions.First(),
                         encryptionOptions => SessionEncryption.TLS,
-                        new Identity() { Name = Guid.NewGuid().ToString(), Domain = _userNameNode.Domain },
+                        new Identity() { Name = EnvelopeId.NewId(), Domain = _userNameNode.Domain },
                         (schemeOptions, roundtrip) => new GuestAuthentication(),
                         null,
                         cancellationToken

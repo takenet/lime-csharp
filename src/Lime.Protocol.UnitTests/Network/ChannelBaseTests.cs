@@ -813,7 +813,7 @@ namespace Lime.Protocol.UnitTests.Network
             // Arrange            
             var count = Dummy.CreateRandomInt(100) + 1;
             var requestCommands = new List<Command>();
-            var responseCommands = new Dictionary<Guid, Command>();
+            var responseCommands = new Dictionary<string, Command>();
 
             for (int i = 0; i < count; i++)
             {

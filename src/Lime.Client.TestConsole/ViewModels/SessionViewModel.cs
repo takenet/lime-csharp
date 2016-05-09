@@ -998,7 +998,7 @@ namespace Lime.Client.TestConsole.ViewModels
         private static string _variablePatternFormat = @"\B%{0}\b";
         private static string _guidVariableName = "newGuid";
         private static Regex _guidRegex = new Regex(string.Format(_variablePatternFormat, _guidVariableName));
-        
+
 
         public static IEnumerable<string> GetVariables(this string input)
         {
@@ -1027,11 +1027,11 @@ namespace Lime.Client.TestConsole.ViewModels
 
             input = _guidRegex.Replace(input, m => Guid.NewGuid().ToString());
             var variableNames = input.GetVariables();
-            
+
             foreach (var variableName in variableNames)
             {
                 string variableValue;
-                
+
                 if (!variableValues.TryGetValue(variableName, out variableValue))
                 {
                     throw new ArgumentException(string.Format("The variable '{0}' is not present", variableName));

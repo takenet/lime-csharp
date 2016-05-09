@@ -34,7 +34,7 @@ namespace Lime.Protocol.Client
             _encryptionSelector = options => options.First();
             _authenticator = (options, roundtrip) => new GuestAuthentication();
             EstablishmentTimeout = TimeSpan.FromSeconds(30);
-            Identity = new Identity(Guid.NewGuid().ToString(), clientChannelBuilder.ServerUri.Host);
+            Identity = new Identity(EnvelopeId.NewId(), clientChannelBuilder.ServerUri.Host);
             Instance = Environment.MachineName;
         }
 

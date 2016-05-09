@@ -34,17 +34,17 @@ namespace Lime.Transport.Http.Processors
 
         #region IHttpProcessor Members
 
-        public HashSet<string> Methods { get; private set; }
+        public HashSet<string> Methods { get; }
 
-        public UriTemplate Template { get; private set; }
+        public UriTemplate Template { get; }
 
         public async Task<HttpResponse> ProcessAsync(HttpRequest request, UriTemplateMatch match, ITransportSession transport, CancellationToken cancellationToken)
         {
             Identity owner;
-            Guid id;
+            var id = match.BoundVariables.Get("id");
 
-            if (Identity.TryParse(request.User.Identity.Name, out owner) &&
-                Guid.TryParse(match.BoundVariables.Get("id"), out id))
+            if (!id.IsNullOrEmpty() &&
+                Identity.TryParse(request.User.Identity.Name, out owner))
             {
                 var envelope = await _envelopeStorage.GetEnvelopeAsync(owner, id).ConfigureAwait(false);
                 if (envelope != null)
@@ -67,15 +67,9 @@ namespace Lime.Transport.Http.Processors
                     
                     return response;
                 }
-                else
-                {
-                    return new HttpResponse(request.CorrelatorId, HttpStatusCode.NotFound);
-                }
+                return new HttpResponse(request.CorrelatorId, HttpStatusCode.NotFound);
             }
-            else
-            {
-                return new HttpResponse(request.CorrelatorId, HttpStatusCode.BadRequest);
-            }
+            return new HttpResponse(request.CorrelatorId, HttpStatusCode.BadRequest);
         }
 
         #endregion

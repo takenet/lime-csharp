@@ -415,12 +415,12 @@ namespace Lime.Protocol.UnitTests.Serialization
 			
 			foreach (var keyValuePair in content)
 			{
-				// TODO: Verify for array properties
+					// TODO: Verify for array properties
 				if (!keyValuePair.Value.GetType().IsArray)
 				{
 					Assert.IsTrue(resultString.ContainsJsonProperty(keyValuePair.Key, keyValuePair.Value));
-				}
-			}
+				}				
+			}            
 			
 			Assert.IsTrue(resultString.ContainsJsonProperty(metadataKey1, metadataValue1));
 			Assert.IsTrue(resultString.ContainsJsonProperty(metadataKey2, metadataValue2));
@@ -466,7 +466,7 @@ namespace Lime.Protocol.UnitTests.Serialization
 
 			var content = Dummy.CreateTextContent();
 			var message = Dummy.CreateMessage(content);
-			message.Id = Guid.Empty;
+			message.Id = null;
 
 			var resultString = target.Serialize(message);
 
@@ -490,7 +490,7 @@ namespace Lime.Protocol.UnitTests.Serialization
 			var target = GetTarget();
 
 			var notification = Dummy.CreateNotification(Event.Received);
-			notification.Id = Guid.NewGuid();
+			notification.Id = EnvelopeId.NewId();
 			notification.Pp = Dummy.CreateNode();
 
 			var metadataKey1 = "randomString1";
@@ -522,7 +522,7 @@ namespace Lime.Protocol.UnitTests.Serialization
 			var target = GetTarget();
 
 			var notification = Dummy.CreateNotification(Event.Failed);
-			notification.Id = Guid.NewGuid();
+			notification.Id = EnvelopeId.NewId();
 			notification.Reason = Dummy.CreateReason();
 
 			var resultString = target.Serialize(notification);
@@ -600,25 +600,25 @@ namespace Lime.Protocol.UnitTests.Serialization
 			Assert.IsFalse(resultString.ContainsJsonKey(Session.AUTHENTICATION_KEY));
 		}
 
-		[Test]
-		[Category("Serialize")]
-		public void Serialize_ChatStateMessage_ReturnsValidJsonString()
-		{            
-			// Arrange
-			var chatState =  Dummy.CreateChatState();
-			var message = Dummy.CreateMessage(chatState);
-			var target = GetTarget();
+        [Test]
+        [Category("Serialize")]
+        public void Serialize_ChatStateMessage_ReturnsValidJsonString()
+        {            
+            // Arrange
+            var chatState =  Dummy.CreateChatState();
+            var message = Dummy.CreateMessage(chatState);
+            var target = GetTarget();
 
-			// Act
-			var resultString = target.Serialize(message);
+            // Act
+            var resultString = target.Serialize(message);
 
-			// Assert
-			Assert.IsTrue(resultString.HasValidJsonStackedBrackets());
-			Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.ID_KEY, message.Id));
-			Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.FROM_KEY, message.From));
-			Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.TO_KEY, message.To));
-			Assert.IsTrue(resultString.ContainsJsonProperty(ChatState.STATE_KEY, chatState.State));
-		}
+            // Assert
+            Assert.IsTrue(resultString.HasValidJsonStackedBrackets());
+            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.ID_KEY, message.Id));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.FROM_KEY, message.From));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.TO_KEY, message.To));
+            Assert.IsTrue(resultString.ContainsJsonProperty(ChatState.STATE_KEY, chatState.State));
+        }
 
 		[Test]
 		[Category("Serialize")]
@@ -732,11 +732,11 @@ namespace Lime.Protocol.UnitTests.Serialization
 		}
 
 
-		#endregion
+        #endregion
 
-		#region Deserialize
+        #region Deserialize
 
-		[Test]
+        [Test]
 		[Category("Deserialize")]
 		public void Deserialize_CapabilityRequestCommand_ReturnsValidInstance()
 		{
@@ -752,7 +752,7 @@ namespace Lime.Protocol.UnitTests.Serialization
 
 			var method = CommandMethod.Get;
 
-			var id = Guid.NewGuid();
+			var id = EnvelopeId.NewId();
 
 			var from = Dummy.CreateNode();
 			var pp = Dummy.CreateNode();
@@ -766,12 +766,12 @@ namespace Lime.Protocol.UnitTests.Serialization
 			var resourceUri = new LimeUri("/capability");
 
 			string json =
-				$"{{\"uri\":\"{resourceUri}\",\"type\":\"application/vnd.lime.capability+json\",\"resource\":{{\"contentTypes\":[\"{contentType1}\",\"{contentType2}\",\"{contentType3}\"],\"resourceTypes\":[\"{resourceType1}\",\"{resourceType2}\",\"{resourceType3}\"]}},\"method\":\"{method.ToString().ToCamelCase()}\",\"id\":\"{id}\",\"from\":\"{@from}\",\"pp\":\"{pp}\",\"to\":\"{to}\",\"metadata\":{{\"{randomKey1}\":\"{randomString1.Escape()}\",\"{randomKey2}\":\"{randomString2.Escape()}\"}}}}";
+			    $"{{\"uri\":\"{resourceUri}\",\"type\":\"application/vnd.lime.capability+json\",\"resource\":{{\"contentTypes\":[\"{contentType1}\",\"{contentType2}\",\"{contentType3}\"],\"resourceTypes\":[\"{resourceType1}\",\"{resourceType2}\",\"{resourceType3}\"]}},\"method\":\"{method.ToString().ToCamelCase()}\",\"id\":\"{id}\",\"from\":\"{@from}\",\"pp\":\"{pp}\",\"to\":\"{to}\",\"metadata\":{{\"{randomKey1}\":\"{randomString1.Escape()}\",\"{randomKey2}\":\"{randomString2.Escape()}\"}}}}";
 
 			var envelope = target.Deserialize(json);
 
-			var command = envelope.ShouldBeOfType<Command>();
-			Assert.AreEqual(id, command.Id);
+            var command = envelope.ShouldBeOfType<Command>();
+            Assert.AreEqual(id, command.Id);
 			Assert.AreEqual(from, command.From);
 			Assert.AreEqual(pp, command.Pp);
 			Assert.AreEqual(to, command.To);
@@ -783,7 +783,7 @@ namespace Lime.Protocol.UnitTests.Serialization
 			Assert.IsTrue(command.Metadata.ContainsKey(randomKey2));
 			Assert.AreEqual(command.Metadata[randomKey2], randomString2);
 			
-			var capability = command.Resource.ShouldBeOfType<Capability>();
+		    var capability = command.Resource.ShouldBeOfType<Capability>();
 			Assert.IsTrue(capability.ContentTypes.Any(c => c.Equals(contentType1)));
 			Assert.IsTrue(capability.ContentTypes.Any(c => c.Equals(contentType2)));
 			Assert.IsTrue(capability.ContentTypes.Any(c => c.Equals(contentType3)));
@@ -801,17 +801,15 @@ namespace Lime.Protocol.UnitTests.Serialization
 		public void Deserialize_AccountRequestCommand_ReturnsValidInstance()
 		{
 			var target = GetTarget();
-
 			var method = CommandMethod.Get;
-			var id = Guid.NewGuid();
+			var id = EnvelopeId.NewId();
 			var from = Dummy.CreateNode();
 			var to = Dummy.CreateNode();
 			var resourceUri = new LimeUri("/account");
 			var fullName = Dummy.CreateRandomStringExtended(25);
 			var photoUri = Dummy.CreateUri();
-
 			string json =
-				$"{{\"uri\":\"{resourceUri}\",\"type\":\"application/vnd.lime.account+json\",\"resource\":{{\"fullName\": \"{fullName.Escape()}\", \"photoUri\": \"{photoUri}\"}},\"method\":\"{method.ToString().ToCamelCase()}\",\"id\":\"{id}\",\"from\":\"{@from}\",\"to\":\"{to}\"}}";
+			    $"{{\"uri\":\"{resourceUri}\",\"type\":\"application/vnd.lime.account+json\",\"resource\":{{\"fullName\": \"{fullName.Escape()}\", \"photoUri\": \"{photoUri}\"}},\"method\":\"{method.ToString().ToCamelCase()}\",\"id\":\"{id}\",\"from\":\"{@from}\",\"to\":\"{to}\"}}";
 
 			var envelope = target.Deserialize(json);
 
@@ -821,10 +819,8 @@ namespace Lime.Protocol.UnitTests.Serialization
 			command.To.ShouldBe(to);
 			command.Pp.ShouldBe(null);
 			command.Metadata.ShouldBe(null);
-
 			command.Method.ShouldBe(method);
 			command.Uri.ShouldBe(resourceUri);
-
 			var account = command.Resource.ShouldBeOfType<Account>();
 			account.PhotoUri.ShouldBe(photoUri);
 		}
@@ -837,7 +833,7 @@ namespace Lime.Protocol.UnitTests.Serialization
 			var target = GetTarget();
 
 			var method = CommandMethod.Get;
-			var id = Guid.NewGuid();
+			var id = EnvelopeId.NewId();
 			var from = Dummy.CreateNode();
 			var to = Dummy.CreateNode();
 			var resourceUri = new LimeUri("/presence");
@@ -848,7 +844,7 @@ namespace Lime.Protocol.UnitTests.Serialization
 			var priority = Dummy.CreateRandomInt(100);
 			
 			string json =
-				$"{{\"uri\":\"{resourceUri}\",\"type\":\"application/vnd.lime.presence+json\",\"resource\":{{\"status\": \"{status.ToString().ToCamelCase()}\",\"message\":\"{message.Escape()}\",\"routingRule\":\"{routingRule.ToString().ToCamelCase()}\",\"lastSeen\":\"{lastSeen.ToUniversalTime().ToString(TextJsonWriter.DATE_FORMAT, CultureInfo.InvariantCulture)}\",\"priority\":{priority}}},\"method\":\"{method.ToString().ToCamelCase()}\",\"id\":\"{id}\",\"from\":\"{@from}\",\"to\":\"{to}\"}}";
+			    $"{{\"uri\":\"{resourceUri}\",\"type\":\"application/vnd.lime.presence+json\",\"resource\":{{\"status\": \"{status.ToString().ToCamelCase()}\",\"message\":\"{message.Escape()}\",\"routingRule\":\"{routingRule.ToString().ToCamelCase()}\",\"lastSeen\":\"{lastSeen.ToUniversalTime().ToString(TextJsonWriter.DATE_FORMAT, CultureInfo.InvariantCulture)}\",\"priority\":{priority}}},\"method\":\"{method.ToString().ToCamelCase()}\",\"id\":\"{id}\",\"from\":\"{@from}\",\"to\":\"{to}\"}}";
 
 			var envelope = target.Deserialize(json);
 
@@ -885,7 +881,7 @@ namespace Lime.Protocol.UnitTests.Serialization
 
 			var method = CommandMethod.Get;
 
-			var id = Guid.NewGuid();
+			var id = EnvelopeId.NewId();
 
 			var from = Dummy.CreateNode();
 			var pp = Dummy.CreateNode();
@@ -899,12 +895,12 @@ namespace Lime.Protocol.UnitTests.Serialization
 			var resourceUri = Dummy.CreateAbsoluteLimeUri();
 
 			string json =
-				$"{{\"uri\":\"{resourceUri}\",\"method\":\"get\",\"id\":\"{id}\",\"from\":\"{@from}\",\"pp\":\"{pp}\",\"to\":\"{to}\",\"metadata\":{{\"{randomKey1}\":\"{randomString1.Escape()}\",\"{randomKey2}\":\"{randomString2.Escape()}\"}}}}";
+			    $"{{\"uri\":\"{resourceUri}\",\"method\":\"get\",\"id\":\"{id}\",\"from\":\"{@from}\",\"pp\":\"{pp}\",\"to\":\"{to}\",\"metadata\":{{\"{randomKey1}\":\"{randomString1.Escape()}\",\"{randomKey2}\":\"{randomString2.Escape()}\"}}}}";
 
 			var envelope = target.Deserialize(json);
 
-			var command = envelope.ShouldBeOfType<Command>();
-			Assert.AreEqual(id, command.Id);
+            var command = envelope.ShouldBeOfType<Command>();
+            Assert.AreEqual(id, command.Id);
 			Assert.AreEqual(from, command.From);
 			Assert.AreEqual(pp, command.Pp);
 			Assert.AreEqual(to, command.To);
@@ -930,15 +926,15 @@ namespace Lime.Protocol.UnitTests.Serialization
 			var target = GetTarget();
 
 			var method = CommandMethod.Set;
-			var id = Guid.NewGuid();
+			var id = EnvelopeId.NewId();
 
 			string json =
-				$"{{\"type\":\"application/vnd.lime.receipt+json\",\"resource\":{{\"events\":[\"dispatched\",\"received\"]}},\"method\":\"{method.ToString().ToCamelCase()}\",\"id\":\"{id}\"}}";
+			    $"{{\"type\":\"application/vnd.lime.receipt+json\",\"resource\":{{\"events\":[\"dispatched\",\"received\"]}},\"method\":\"{method.ToString().ToCamelCase()}\",\"id\":\"{id}\"}}";
 
 			var envelope = target.Deserialize(json);
 
-			var command = envelope.ShouldBeOfType<Command>();
-			Assert.AreEqual(id, command.Id);
+            var command = envelope.ShouldBeOfType<Command>();
+            Assert.AreEqual(id, command.Id);
 			Assert.IsNull(command.From);
 			Assert.IsNull(command.Pp);
 			Assert.IsNull(command.To);
@@ -947,7 +943,7 @@ namespace Lime.Protocol.UnitTests.Serialization
 			Assert.IsNull(command.Metadata);
 			Assert.AreEqual(command.Type.ToString(), Receipt.MIME_TYPE);
 			Assert.IsNotNull(command.Resource);
-			command.Resource.ShouldBeOfType<Receipt>();
+            command.Resource.ShouldBeOfType<Receipt>();
 		}
 
 		[Test]
@@ -965,7 +961,7 @@ namespace Lime.Protocol.UnitTests.Serialization
 
 			var method = CommandMethod.Get;
 
-			var id = Guid.NewGuid();
+			var id = EnvelopeId.NewId();
 
 			var from = Dummy.CreateNode();
 			var pp = Dummy.CreateNode();
@@ -977,12 +973,12 @@ namespace Lime.Protocol.UnitTests.Serialization
 			string randomString2 = Dummy.CreateRandomStringExtended(50);
 
 			string json =
-				$"{{\"type\":\"application/vnd.lime.collection+json\",\"resource\":{{\"itemType\":\"application/vnd.lime.contact+json\",\"total\":3,\"items\":[{{\"identity\":\"{identity1}\",\"name\":\"{name1.Escape()}\",\"isPending\":true,\"shareAccountInfo\":false}},{{\"identity\":\"{identity2}\",\"name\":\"{name2.Escape()}\",\"sharePresence\":false}},{{\"identity\":\"{identity3}\",\"name\":\"{name3.Escape()}\",\"isPending\":true,\"sharePresence\":false}}]}},\"method\":\"get\",\"status\":\"success\",\"id\":\"{id}\",\"from\":\"{@from}\",\"pp\":\"{pp}\",\"to\":\"{to}\",\"metadata\":{{\"{randomKey1}\":\"{randomString1.Escape()}\",\"{randomKey2}\":\"{randomString2.Escape()}\"}}}}";
+			    $"{{\"type\":\"application/vnd.lime.collection+json\",\"resource\":{{\"itemType\":\"application/vnd.lime.contact+json\",\"total\":3,\"items\":[{{\"identity\":\"{identity1}\",\"name\":\"{name1.Escape()}\",\"isPending\":true,\"shareAccountInfo\":false}},{{\"identity\":\"{identity2}\",\"name\":\"{name2.Escape()}\",\"sharePresence\":false}},{{\"identity\":\"{identity3}\",\"name\":\"{name3.Escape()}\",\"isPending\":true,\"sharePresence\":false}}]}},\"method\":\"get\",\"status\":\"success\",\"id\":\"{id}\",\"from\":\"{@from}\",\"pp\":\"{pp}\",\"to\":\"{to}\",\"metadata\":{{\"{randomKey1}\":\"{randomString1.Escape()}\",\"{randomKey2}\":\"{randomString2.Escape()}\"}}}}";
 
 			var envelope = target.Deserialize(json);
 
-			var command = envelope.ShouldBeOfType<Command>();
-			Assert.AreEqual(id, command.Id);
+            var command = envelope.ShouldBeOfType<Command>();
+            Assert.AreEqual(id, command.Id);
 			Assert.AreEqual(from, command.From);
 			Assert.AreEqual(pp, command.Pp);
 			Assert.AreEqual(to, command.To);
@@ -993,12 +989,12 @@ namespace Lime.Protocol.UnitTests.Serialization
 			Assert.AreEqual(command.Metadata[randomKey1], randomString1);
 			Assert.IsTrue(command.Metadata.ContainsKey(randomKey2));
 			Assert.AreEqual(command.Metadata[randomKey2], randomString2);
-			
+            
 			var documents = command.Resource.ShouldBeOfType<DocumentCollection>();
 			Assert.IsNotNull(documents.Items, "Items is null");
 			Assert.AreEqual(documents.Items.Length, 3);		    
 
-			var contacts = documents.Cast<Contact>().ToArray();
+            var contacts = documents.Cast<Contact>().ToArray();
 
 			Assert.IsTrue(contacts[0].Identity.Equals(identity1));
 			Assert.IsTrue(contacts[0].Name.Equals(name1));
@@ -1033,16 +1029,16 @@ namespace Lime.Protocol.UnitTests.Serialization
 			var method = CommandMethod.Get;
 			var status = CommandStatus.Failure;
 			var reason = Dummy.CreateReason();
-			var id = Guid.NewGuid();
+			var id = EnvelopeId.NewId();
 			var from = Dummy.CreateNode();
 			var to = Dummy.CreateNode();
 
 			string json =
-				$"{{\"method\":\"{method.ToString().ToCamelCase()}\",\"id\":\"{id}\",\"from\":\"{@from}\",\"to\":\"{to}\",\"status\":\"{status}\",\"reason\":{{\"code\":{reason.Code},\"description\":\"{reason.Description}\"}}}}";
+			    $"{{\"method\":\"{method.ToString().ToCamelCase()}\",\"id\":\"{id}\",\"from\":\"{@from}\",\"to\":\"{to}\",\"status\":\"{status}\",\"reason\":{{\"code\":{reason.Code},\"description\":\"{reason.Description}\"}}}}";
 
 			var envelope = target.Deserialize(json);			
-			var command = envelope.ShouldBeOfType<Command>();
-			Assert.AreEqual(id, command.Id);
+            var command = envelope.ShouldBeOfType<Command>();
+            Assert.AreEqual(id, command.Id);
 			Assert.AreEqual(from, command.From);
 			Assert.AreEqual(to, command.To);
 			Assert.AreEqual(method, command.Method);
@@ -1064,7 +1060,7 @@ namespace Lime.Protocol.UnitTests.Serialization
 		{
 			var target = GetTarget();
 
-			var id = Guid.NewGuid();
+			var id = EnvelopeId.NewId();
 			var from = Dummy.CreateNode();
 			var pp = Dummy.CreateNode();
 			var to = Dummy.CreateNode();
@@ -1077,12 +1073,12 @@ namespace Lime.Protocol.UnitTests.Serialization
 			var text = Dummy.CreateRandomStringExtended(50);
 
 			string json =
-				$"{{\"type\":\"text/plain\",\"content\":\"{text.Escape()}\",\"id\":\"{id}\",\"from\":\"{@from}\",\"pp\":\"{pp}\",\"to\":\"{to}\",\"metadata\":{{\"{randomKey1}\":\"{randomString1.Escape()}\",\"{randomKey2}\":\"{randomString2.Escape()}\"}}}}";
+			    $"{{\"type\":\"text/plain\",\"content\":\"{text.Escape()}\",\"id\":\"{id}\",\"from\":\"{@from}\",\"pp\":\"{pp}\",\"to\":\"{to}\",\"metadata\":{{\"{randomKey1}\":\"{randomString1.Escape()}\",\"{randomKey2}\":\"{randomString2.Escape()}\"}}}}";
 
 			var envelope = target.Deserialize(json);
 
-			var message = envelope.ShouldBeOfType<Message>();
-			Assert.AreEqual(id, message.Id);
+            var message = envelope.ShouldBeOfType<Message>();
+            Assert.AreEqual(id, message.Id);
 			Assert.AreEqual(from, message.From);
 			Assert.AreEqual(pp, message.Pp);
 			Assert.AreEqual(to, message.To);
@@ -1104,7 +1100,7 @@ namespace Lime.Protocol.UnitTests.Serialization
 		{
 			var target = GetTarget();
 
-			var id = Guid.NewGuid();
+			var id = EnvelopeId.NewId();
 			var from = Dummy.CreateNode();
 			var pp = Dummy.CreateNode();
 			var to = Dummy.CreateNode();
@@ -1117,12 +1113,12 @@ namespace Lime.Protocol.UnitTests.Serialization
 			var state = ChatStateEvent.Deleting;
 
 			string json =
-				$"{{\"type\":\"application/vnd.lime.chatstate+json\",\"content\":{{\"state\":\"{state.ToString().ToLowerInvariant()}\"}},\"id\":\"{id}\",\"from\":\"{@from}\",\"pp\":\"{pp}\",\"to\":\"{to}\",\"metadata\":{{\"{randomKey1}\":\"{randomString1.Escape()}\",\"{randomKey2}\":\"{randomString2.Escape()}\"}}}}";
+			    $"{{\"type\":\"application/vnd.lime.chatstate+json\",\"content\":{{\"state\":\"{state.ToString().ToLowerInvariant()}\"}},\"id\":\"{id}\",\"from\":\"{@from}\",\"pp\":\"{pp}\",\"to\":\"{to}\",\"metadata\":{{\"{randomKey1}\":\"{randomString1.Escape()}\",\"{randomKey2}\":\"{randomString2.Escape()}\"}}}}";
 
 			var envelope = target.Deserialize(json);
 
-			var message = envelope.ShouldBeOfType<Message>();
-			Assert.AreEqual(id, message.Id);
+            var message = envelope.ShouldBeOfType<Message>();
+            Assert.AreEqual(id, message.Id);
 			Assert.AreEqual(from, message.From);
 			Assert.AreEqual(pp, message.Pp);
 			Assert.AreEqual(to, message.To);
@@ -1144,7 +1140,7 @@ namespace Lime.Protocol.UnitTests.Serialization
 		{
 			var target = GetTarget();
 
-			var id = Guid.NewGuid();
+			var id = EnvelopeId.NewId();
 			var from = Dummy.CreateNode();
 			var pp = Dummy.CreateNode();
 			var to = Dummy.CreateNode();
@@ -1158,12 +1154,12 @@ namespace Lime.Protocol.UnitTests.Serialization
 			var text = Dummy.CreateRandomString(50);
 
 			string json =
-				$"{{\"type\":\"{type}\",\"content\":\"{text}\",\"id\":\"{id}\",\"from\":\"{@from}\",\"pp\":\"{pp}\",\"to\":\"{to}\",\"metadata\":{{\"{randomKey1}\":\"{randomString1.Escape()}\",\"{randomKey2}\":\"{randomString2.Escape()}\"}}}}";
+			    $"{{\"type\":\"{type}\",\"content\":\"{text}\",\"id\":\"{id}\",\"from\":\"{@from}\",\"pp\":\"{pp}\",\"to\":\"{to}\",\"metadata\":{{\"{randomKey1}\":\"{randomString1.Escape()}\",\"{randomKey2}\":\"{randomString2.Escape()}\"}}}}";
 
 			var envelope = target.Deserialize(json);
 
-			var message = envelope.ShouldBeOfType<Message>();
-			Assert.AreEqual(id, message.Id);
+            var message = envelope.ShouldBeOfType<Message>();
+            Assert.AreEqual(id, message.Id);
 			Assert.AreEqual(from, message.From);
 			Assert.AreEqual(pp, message.Pp);
 			Assert.AreEqual(to, message.To);
@@ -1177,7 +1173,7 @@ namespace Lime.Protocol.UnitTests.Serialization
 			Assert.AreEqual(message.Type, type);
 			
 			var content = message.Content.ShouldBeOfType<PlainDocument>();
-			Assert.AreEqual(text, content.Value);
+            Assert.AreEqual(text, content.Value);
 
 		}
 
@@ -1187,7 +1183,7 @@ namespace Lime.Protocol.UnitTests.Serialization
 		{
 			var target = GetTarget();
 
-			var id = Guid.NewGuid();
+			var id = EnvelopeId.NewId();
 			var from = Dummy.CreateNode();
 			var to = Dummy.CreateNode();
 
@@ -1219,7 +1215,7 @@ namespace Lime.Protocol.UnitTests.Serialization
 		{
 			var target = GetTarget();
 
-			var id = Guid.NewGuid();
+			var id = EnvelopeId.NewId();
 			var from = Dummy.CreateNode();
 			var pp = Dummy.CreateNode();
 			var to = Dummy.CreateNode();
@@ -1252,12 +1248,12 @@ namespace Lime.Protocol.UnitTests.Serialization
 
 
 			string json =
-				$"{{\"type\":\"{type}\",\"content\":{{\"{propertyName1.Escape()}\":\"{propertyValue1.Escape()}\",\"{propertyName2.Escape()}\":{propertyValue2},\"{propertyName3.Escape()}\":[{{\"{arrayPropertyName1.Escape()}\":\"{arrayPropertyValue1}\",\"{arrayPropertyName2.Escape()}\":{arrayPropertyValue2}}},{{\"{arrayPropertyName3.Escape()}\":\"{arrayPropertyValue3.Escape()}\",\"{arrayPropertyName4.Escape()}\":{arrayPropertyValue4.ToString().ToLower()}}}],\"{propertyName4.Escape()}\":\"{propertyValue4.ToUniversalTime().ToString(TextJsonWriter.DATE_FORMAT, CultureInfo.InvariantCulture)}\"}},\"id\":\"{id}\",\"from\":\"{@from}\",\"pp\":\"{pp}\",\"to\":\"{to}\",\"metadata\":{{\"{randomKey1}\":\"{randomString1.Escape()}\",\"{randomKey2}\":\"{randomString2.Escape()}\"}}}}";
+			    $"{{\"type\":\"{type}\",\"content\":{{\"{propertyName1.Escape()}\":\"{propertyValue1.Escape()}\",\"{propertyName2.Escape()}\":{propertyValue2},\"{propertyName3.Escape()}\":[{{\"{arrayPropertyName1.Escape()}\":\"{arrayPropertyValue1}\",\"{arrayPropertyName2.Escape()}\":{arrayPropertyValue2}}},{{\"{arrayPropertyName3.Escape()}\":\"{arrayPropertyValue3.Escape()}\",\"{arrayPropertyName4.Escape()}\":{arrayPropertyValue4.ToString().ToLower()}}}],\"{propertyName4.Escape()}\":\"{propertyValue4.ToUniversalTime().ToString(TextJsonWriter.DATE_FORMAT, CultureInfo.InvariantCulture)}\"}},\"id\":\"{id}\",\"from\":\"{@from}\",\"pp\":\"{pp}\",\"to\":\"{to}\",\"metadata\":{{\"{randomKey1}\":\"{randomString1.Escape()}\",\"{randomKey2}\":\"{randomString2.Escape()}\"}}}}";
 
 			var envelope = target.Deserialize(json);
 
-			var message = envelope.ShouldBeOfType<Message>();
-			Assert.AreEqual(id, message.Id);
+            var message = envelope.ShouldBeOfType<Message>();
+            Assert.AreEqual(id, message.Id);
 			Assert.AreEqual(from, message.From);
 			Assert.AreEqual(pp, message.Pp);
 			Assert.AreEqual(to, message.To);
@@ -1272,7 +1268,7 @@ namespace Lime.Protocol.UnitTests.Serialization
 			
 			var content = message.Content.ShouldBeOfType<JsonDocument>();
 
-			Assert.IsTrue(content.ContainsKey(propertyName1));
+            Assert.IsTrue(content.ContainsKey(propertyName1));
 			Assert.AreEqual(content[propertyName1], propertyValue1);
 			Assert.IsTrue(content.ContainsKey(propertyName2));            
 			Assert.AreEqual(content[propertyName2], propertyValue2);            
@@ -1308,7 +1304,7 @@ namespace Lime.Protocol.UnitTests.Serialization
 			{
 				dateTime = (DateTime)content[propertyName4];
 			}
-			else
+            else
 			{
 				DateTime.TryParse((string)content[propertyName4], null, DateTimeStyles.AdjustToUniversal, out dateTime).ShouldBe(true);
 			}
@@ -1327,7 +1323,7 @@ namespace Lime.Protocol.UnitTests.Serialization
 		{
 			var target = GetTarget();
 
-			var id = Guid.NewGuid();
+			var id = EnvelopeId.NewId();
 			var from = Dummy.CreateNode();
 			var pp = Dummy.CreateNode();
 			var to = Dummy.CreateNode();
@@ -1346,12 +1342,12 @@ namespace Lime.Protocol.UnitTests.Serialization
 
 
 			string json =
-				$"{{\"type\":\"{type}\",\"content\":{{\"{propertyName1.Escape()}\":\"{propertyValue1.Escape()}\",\"{propertyName2.Escape()}\":{propertyValue2}}},\"id\":\"{id}\",\"from\":\"{@from}\",\"pp\":\"{pp}\",\"to\":\"{to}\",\"metadata\":{{\"{randomKey1}\":\"{randomString1.Escape()}\",\"{randomKey2}\":\"{randomString2.Escape()}\"}}}}";
+			    $"{{\"type\":\"{type}\",\"content\":{{\"{propertyName1.Escape()}\":\"{propertyValue1.Escape()}\",\"{propertyName2.Escape()}\":{propertyValue2}}},\"id\":\"{id}\",\"from\":\"{@from}\",\"pp\":\"{pp}\",\"to\":\"{to}\",\"metadata\":{{\"{randomKey1}\":\"{randomString1.Escape()}\",\"{randomKey2}\":\"{randomString2.Escape()}\"}}}}";
 
 			var envelope = target.Deserialize(json);
 
-			var message = envelope.ShouldBeOfType<Message>();
-			Assert.AreEqual(id, message.Id);
+            var message = envelope.ShouldBeOfType<Message>();
+            Assert.AreEqual(id, message.Id);
 			Assert.AreEqual(from, message.From);
 			Assert.AreEqual(pp, message.Pp);
 			Assert.AreEqual(to, message.To);
@@ -1366,7 +1362,7 @@ namespace Lime.Protocol.UnitTests.Serialization
 			
 			var content = message.Content.ShouldBeOfType<JsonDocument>();
 
-			Assert.IsTrue(content.ContainsKey(propertyName1));
+            Assert.IsTrue(content.ContainsKey(propertyName1));
 			Assert.AreEqual(content[propertyName1], propertyValue1);
 			Assert.IsTrue(content.ContainsKey(propertyName2));
 			Assert.AreEqual(content[propertyName2], propertyValue2);
@@ -1382,18 +1378,19 @@ namespace Lime.Protocol.UnitTests.Serialization
 			var to = Dummy.CreateNode();
 			var text = Dummy.CreateRandomStringExtended(50);
 			string json =
-				$"{{\"type\":\"text/plain\",\"content\":\"{text.Escape()}\",\"from\":\"{@from}\",\"to\":\"{to}\"}}";
+			    $"{{\"type\":\"text/plain\",\"content\":\"{text.Escape()}\",\"from\":\"{@from}\",\"to\":\"{to}\"}}";
 
 			// Act
 			var envelope = target.Deserialize(json);
 
 			// Assert
-			var message = envelope.ShouldBeOfType<Message>();
-			Assert.AreEqual(from, message.From);
+            var message = envelope.ShouldBeOfType<Message>();
+            Assert.AreEqual(from, message.From);
 			Assert.AreEqual(to, message.To);
-			Assert.AreEqual(Guid.Empty, message.Id);
+
+			Assert.IsNull(message.Id);
 			Assert.IsNull(message.Pp);
-			Assert.IsNull(message.Metadata);			
+			Assert.IsNull(message.Metadata);
 			var textContent = message.Content.ShouldBeOfType<PlainText>();
 			Assert.AreEqual(text, textContent.Text);
 		}
@@ -1408,19 +1405,20 @@ namespace Lime.Protocol.UnitTests.Serialization
 			var to = Dummy.CreateNode();
 			var state = ChatStateEvent.Composing;
 			string json =
-				$"{{\"type\":\"application/vnd.lime.chatstate+json\",\"content\":{{\"state\":\"{state.ToString().ToCamelCase()}\"}},\"from\":\"{@from}\",\"to\":\"{to}\"}}";
+			    $"{{\"type\":\"application/vnd.lime.chatstate+json\",\"content\":{{\"state\":\"{state.ToString().ToCamelCase()}\"}},\"from\":\"{@from}\",\"to\":\"{to}\"}}";
 
 			// Act
 			var envelope = target.Deserialize(json);
 
 			// Assert
-			var message = envelope.ShouldBeOfType<Message>();
+		    var message = envelope.ShouldBeOfType<Message>();
 			Assert.AreEqual(from, message.From);
 			Assert.AreEqual(to, message.To);
-			Assert.AreEqual(Guid.Empty, message.Id);
+
+			Assert.IsNull(message.Id);
 			Assert.IsNull(message.Pp);
 			Assert.IsNull(message.Metadata);			
-			var textContent = message.Content.ShouldBeOfType<ChatState>();
+            var textContent = message.Content.ShouldBeOfType<ChatState>();
 			Assert.AreEqual(state, textContent.State);            
 		}
 
@@ -1430,7 +1428,7 @@ namespace Lime.Protocol.UnitTests.Serialization
 		{
 			var target = GetTarget();
 
-			var id = Guid.NewGuid();
+			var id = EnvelopeId.NewId();
 			var from = Dummy.CreateNode();
 			var pp = Dummy.CreateNode();
 			var to = Dummy.CreateNode();
@@ -1443,7 +1441,7 @@ namespace Lime.Protocol.UnitTests.Serialization
 			var @event = Event.Received;
 
 			string json =
-				$"{{\"type\":\"application/vnd.lime.text+json\",\"event\":\"{@event.ToString().ToCamelCase()}\",\"id\":\"{id}\",\"from\":\"{@from}\",\"pp\":\"{pp}\",\"to\":\"{to}\",\"metadata\":{{\"{randomKey1}\":\"{randomString1.Escape()}\",\"{randomKey2}\":\"{randomString2.Escape()}\"}}}}";
+			    $"{{\"type\":\"application/vnd.lime.text+json\",\"event\":\"{@event.ToString().ToCamelCase()}\",\"id\":\"{id}\",\"from\":\"{@from}\",\"pp\":\"{pp}\",\"to\":\"{to}\",\"metadata\":{{\"{randomKey1}\":\"{randomString1.Escape()}\",\"{randomKey2}\":\"{randomString2.Escape()}\"}}}}";
 
 			var envelope = target.Deserialize(json);
 			var notification = envelope.ShouldBeOfType<Notification>();
@@ -1473,17 +1471,17 @@ namespace Lime.Protocol.UnitTests.Serialization
 			var reasonCode = Dummy.CreateRandomInt(100);
 			var reasonDescription = Dummy.CreateRandomStringExtended(100);
 
-			var id = Guid.NewGuid();
+			var id = EnvelopeId.NewId();
 			var from = Dummy.CreateNode();
 			var to = Dummy.CreateNode();
 
 			string json =
-				$"{{\"event\":\"{@event.ToString().ToCamelCase()}\",\"id\":\"{id}\",\"from\":\"{@from}\",\"to\":\"{to}\",\"reason\":{{\"code\":{reasonCode},\"description\":\"{reasonDescription.Escape()}\"}}}}";
+			    $"{{\"event\":\"{@event.ToString().ToCamelCase()}\",\"id\":\"{id}\",\"from\":\"{@from}\",\"to\":\"{to}\",\"reason\":{{\"code\":{reasonCode},\"description\":\"{reasonDescription.Escape()}\"}}}}";
 
 			var envelope = target.Deserialize(json);
 
-			var notification = envelope.ShouldBeOfType<Notification>();
-			Assert.AreEqual(id, notification.Id);
+            var notification = envelope.ShouldBeOfType<Notification>();
+            Assert.AreEqual(id, notification.Id);
 			Assert.AreEqual(from, notification.From);
 			Assert.AreEqual(to, notification.To);
 			Assert.AreEqual(@event, notification.Event);
@@ -1503,7 +1501,7 @@ namespace Lime.Protocol.UnitTests.Serialization
 		{
 			var target = GetTarget();
 
-			var id = Guid.NewGuid();
+			var id = EnvelopeId.NewId();
 			var from = Dummy.CreateNode();
 			var pp = Dummy.CreateNode();
 			var to = Dummy.CreateNode();
@@ -1518,10 +1516,10 @@ namespace Lime.Protocol.UnitTests.Serialization
 			var state = SessionState.Authenticating;
 
 			string json =
-				$"{{\"state\":\"{state.ToString().ToCamelCase()}\",\"scheme\":\"plain\",\"authentication\":{{\"password\":\"{password}\"}},\"id\":\"{id}\",\"from\":\"{@from}\",\"to\":\"{to}\",\"metadata\":{{\"{randomKey1}\":\"{randomString1.Escape()}\",\"{randomKey2}\":\"{randomString2.Escape()}\"}}}}";
+			    $"{{\"state\":\"{state.ToString().ToCamelCase()}\",\"scheme\":\"plain\",\"authentication\":{{\"password\":\"{password}\"}},\"id\":\"{id}\",\"from\":\"{@from}\",\"to\":\"{to}\",\"metadata\":{{\"{randomKey1}\":\"{randomString1.Escape()}\",\"{randomKey2}\":\"{randomString2.Escape()}\"}}}}";
 
 			var envelope = target.Deserialize(json);
-			
+            
 			var session = envelope.ShouldBeOfType<Session>();
 			Assert.AreEqual(id, session.Id);
 			Assert.AreEqual(from, session.From);
@@ -1544,7 +1542,7 @@ namespace Lime.Protocol.UnitTests.Serialization
 		{
 			var target = GetTarget();
 
-			var id = Guid.NewGuid();
+			var id = EnvelopeId.NewId();
 			var from = Dummy.CreateNode();
 			var to = Dummy.CreateNode();        
 			var state = SessionState.Authenticating;
@@ -1553,12 +1551,12 @@ namespace Lime.Protocol.UnitTests.Serialization
 			var reasonDescription = Dummy.CreateRandomStringExtended(100);
 
 			string json =
-				$"{{\"state\":\"{state.ToString().ToCamelCase()}\",\"id\":\"{id}\",\"from\":\"{@from}\",\"to\":\"{to}\",\"reason\":{{\"code\":{reasonCode},\"description\":\"{reasonDescription.Escape()}\"}},\"encryptionOptions\":null,\"compressionOptions\":null,\"compression\":null,\"encryption\":null}}";
+			    $"{{\"state\":\"{state.ToString().ToCamelCase()}\",\"id\":\"{id}\",\"from\":\"{@from}\",\"to\":\"{to}\",\"reason\":{{\"code\":{reasonCode},\"description\":\"{reasonDescription.Escape()}\"}},\"encryptionOptions\":null,\"compressionOptions\":null,\"compression\":null,\"encryption\":null}}";
 
 			var envelope = target.Deserialize(json);
 
-			var session = envelope.ShouldBeOfType<Session>();
-			Assert.AreEqual(id, session.Id);
+            var session = envelope.ShouldBeOfType<Session>();
+            Assert.AreEqual(id, session.Id);
 			Assert.AreEqual(from, session.From);
 			Assert.AreEqual(to, session.To);
 
@@ -1614,9 +1612,10 @@ namespace Lime.Protocol.UnitTests.Serialization
 			// Arrange
 			var target = GetTarget();
 			var method = CommandMethod.Set;
-			var id = Guid.NewGuid();
+			var id = EnvelopeId.NewId();
+
 			string json =
-				$"{{\"type\":\"application/vnd.takenet.testdocument+json\",\"resource\":{{\"double\":10.1, \"NullableDouble\": 10.2}},\"method\":\"{method.ToString().ToCamelCase()}\",\"id\":\"{id}\"}}";
+			    $"{{\"type\":\"application/vnd.takenet.testdocument+json\",\"resource\":{{\"double\":10.1, \"NullableDouble\": 10.2}},\"method\":\"{method.ToString().ToCamelCase()}\",\"id\":\"{id}\"}}";
 
 			// Act
 			var envelope = target.Deserialize(json);
@@ -1635,7 +1634,7 @@ namespace Lime.Protocol.UnitTests.Serialization
 		public void Deserialize_DocumentContainerDocumentCollectionMessage_ReturnsValidInstance()
 		{
 			// Arrange
-			var id = Guid.NewGuid();
+			var id = EnvelopeId.NewId();
 			var json =
 				$"{{\"type\":\"application/vnd.lime.collection+json\",\"content\":{{\"total\":4,\"itemType\":\"application/vnd.lime.container+json\",\"items\":[{{\"type\":\"text/plain\",\"value\":\"text1\"}},{{\"type\":\"application/vnd.lime.account+json\",\"value\":{{\"fullName\":\"My Name\",\"photoUri\":\"http://url.com/resource\"}}}},{{\"type\":\"application/q9gn1nsz6y+json\",\"value\":{{\"o4s9txn80q\":\"}}2['\u00F23 /bdkc]\u00FA2,\u00BA &%f0j\u00F9u#\u00F2\u00FA9;\u00EC\\\"t}}#\u00F3(\u00E9a_94\u00E00q5m==\\\\\",\"ynpinmi0oq\":20,\"dkker2borf\":\"2016-04-13T16:24:49.729Z\",\"e98cyp215l\":{{\"ljwbthakfx\":\"\\\\@(m1g=q.-jql[)5#n,\u00E09\u00BA\u00A8kg~]t(x:<u\u00E1z'8?.-^_cvqkk\u00EC@n\",\"z4uih47pct\":19,\"nxp3n8km78\":\"2016-04-13T16:24:49.729Z\"}},\"sinvm70xls\":[{{\"ypdd57j78y\":\"<>5_\u00ECnb'!,b.ps8\u00EC=9\\\\o\\\\_*qc6#k0\u00E8]$j\u00E1=-u\u00E1\u00FAq\u00EC{{\u00E0r\u00F2\u00BAt\u00ED[\u00EC\",\"l3d24gigtt\":34,\"5ltasvmv3y\":\"2016-04-13T16:24:49.729Z\"}},{{\"1twigyljcf\":\"=!6-\u00F360 94fy2\u00A8e23q72\u00E0v\u00E9t(u!&[%\u00FA\u00E8#4f7\u00E0\u00ECkjv2n9=@pjp~\",\"ke4zjmvfbw\":46,\"2l7rf39qwq\":\"2016-04-13T16:24:49.729Z\"}},{{\"pckdtdowdc\":\"11\u00E9q>e:j,^;\u00F3\u00A8o@cs\u00F9@'r}}(3\u00EDe(=,uq*\u00F9(+!!..hd\u00E9;~.*(j=\u00A8\",\"5pfq4y1rmz\":24,\"foqvh78vau\":\"2016-04-13T16:24:49.729Z\"}}]}}}},{{\"type\":\"vxhfxfm3tz/hhnzgm4kmh\",\"value\":\"9nav5pkhswvsw7mh24r1b3agbgic43piylveh1z6xtfz77nibt\"}}]}},\"id\":\"{id}\",\"from\":\"9afudsyl@je29bkh1bs.com/yq1oh\",\"to\":\"9zpfpsuc@d63uusxbfq.com/btp7i\"}}";
 			var target = GetTarget();

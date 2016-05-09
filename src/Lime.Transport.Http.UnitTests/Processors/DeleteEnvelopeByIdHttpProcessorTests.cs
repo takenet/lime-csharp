@@ -28,7 +28,7 @@ namespace Lime.Transport.Http.UnitTests.Processors
 
         public Mock<System.Security.Principal.IIdentity> PrincipalIdentity { get; set; }
         
-        public Guid MessageId { get; set; }
+        public string MessageId { get; set; }
 
         public Uri DeleteMessageUri { get; set; }
         
@@ -48,7 +48,7 @@ namespace Lime.Transport.Http.UnitTests.Processors
             Identity = Dummy.CreateIdentity();
             PrincipalIdentityName = Identity.ToString();
             PrincipalIdentity.SetupGet(p => p.Name).Returns(() => PrincipalIdentityName);                        
-            MessageId = Guid.NewGuid();
+            MessageId = EnvelopeId.NewId();
             DeleteMessageUri = new Uri("http://" + Constants.MESSAGES_PATH + ":" + Dummy.CreateRandomInt(50000) + "/" + MessageId);
             DeleteMessageHttpRequest = new HttpRequest("DELETE", DeleteMessageUri, Principal.Object, Guid.NewGuid());
             DeleteMessageUriTemplateMatch = new UriTemplateMatch();

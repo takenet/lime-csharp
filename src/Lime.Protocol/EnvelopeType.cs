@@ -1,5 +1,4 @@
-﻿using System;
-using System.Runtime.Serialization;
+﻿using System.Runtime.Serialization;
 
 namespace Lime.Protocol
 {
@@ -33,17 +32,5 @@ namespace Lime.Protocol
         /// </summary>
         [EnumMember(Value = "session")]
         Session
-    }
-
-    public static class TypeExtensions
-    {
-        public static EnvelopeType GetEnvelopeType(this Type type)
-        {                    
-            if (type == typeof(Notification)) return EnvelopeType.Notification; 
-            if (type == typeof(Message)) return EnvelopeType.Message;
-            if (type == typeof(Command)) return EnvelopeType.Command;
-            if (type == typeof(Session)) return EnvelopeType.Session;
-            throw new ArgumentException("Invalid envelope type");                    
-        }
     }
 }

@@ -8,10 +8,10 @@ namespace Lime.Transport.Http.Storage
     {
         Task<bool> StoreEnvelopeAsync(Identity owner, T envelope);
 
-        Task<Guid[]> GetEnvelopesAsync(Identity owner);
+        Task<string[]> GetEnvelopesAsync(Identity owner);
 
-        Task<T> GetEnvelopeAsync(Identity owner, Guid id);
+        Task<T> GetEnvelopeAsync(Identity owner, string id);
 
-        Task<bool> DeleteEnvelopeAsync(Identity owner, Guid id);
+        Task<bool> DeleteEnvelopeAsync(Identity owner, string id);
     }
 }
