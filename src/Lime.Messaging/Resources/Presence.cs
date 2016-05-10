@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Runtime.Serialization;
 using Lime.Protocol;
+using Lime.Protocol.Security;
 
 namespace Lime.Messaging.Resources
 {
@@ -98,47 +99,43 @@ namespace Lime.Messaging.Resources
         [EnumMember(Value = "instance")]
         Instance,
         /// <summary>
-        /// Deliver envelopes addressed to the current session instance 
-        /// (name@domain/instance) and envelopes addressed to the 
-        /// identity (name@domain)
+        /// Deliver envelopes addressed to the current session instance (name@domain/instance) and to the identity (name@domain).
         /// </summary>
         [EnumMember(Value = "identity")]
         Identity,
         /// <summary>
-        /// Deliver envelopes addressed to the current session 
-        /// instance (name@domain/instance) and envelopes addressed 
-        /// to the identity (name@domain) if the distance from the 
-        /// originator is the smallest among the available 
-        /// nodes of the identity with this setting.
+        /// Deliver envelopes addressed to the current session instance (name@domain/instance) and to the identity (name@domain) 
+        /// if the distance from the originator is the smallest among the available nodes of the identity with this setting.
         /// </summary>
         [Obsolete("Use presence's 'FilterByDistance' property instead")]
         [EnumMember(Value = "identityByDistance")]
         IdentityByDistance,
         /// <summary>
-        /// Deliver any envelopes addressed to the identity name@domain, 
-        /// including the envelopes addressed to any specific instance.
+        /// Deliver any envelopes addressed to the identity name@domain, including the envelopes addressed to any specific instance.
         /// </summary>
         [EnumMember(Value = "promiscuous")]
         Promiscuous,
         /// <summary>
-        ///  Deliver envelopes addressed to the current session 
-        /// instance (name@domain/instance) and envelopes addresses to the node domain.
-        /// This rule is intended to be used only for external domain authorities
-        /// (gateways) and sub-domain authorities (applications).
+        /// Deliver envelopes addressed to the current session instance (name@domain/instance) and to the node domain.
+        /// This rule is intended to be used only by sessions authenticated as <see cref="DomainRole.Authority"/>.
         /// </summary>
         [EnumMember(Value = "domain")]
         Domain,
         /// <summary>
-        /// Deliver envelopes addressed to the current session 
-        /// instance (name@domain/instance) and envelopes addresses to the node domain
-        /// if the distance from the originator is the smallest among the available 
-        /// nodes of the domain with this setting.
-        /// This rule is intended to be used only for external domain authorities
-        /// (gateways) and sub-domain authorities (applications)
+        /// Deliver envelopes addressed to the current session  instance (name@domain/instance) and to the node domain
+        /// if the distance from the originator is the smallest among the available  nodes of the domain with this setting.
+        /// This rule is intended to be used only by sessions authenticated as <see cref="DomainRole.Authority"/>.
         /// </summary>
         [Obsolete("Use presence's 'FilterByDistance' property instead")]
         [EnumMember(Value = "domainByDistance")]
-        DomainByDistance
+        DomainByDistance,
+
+        /// <summary>
+        /// Deliver envelopes addressed to the current session instance (name@domain/instance), to the node domain and all its sub domains.
+        /// This rule is intended to be used only by sessions authenticated as <see cref="DomainRole.RootAuthority"/>.
+        /// </summary>
+        [EnumMember(Value = "rootDomain")]
+        RootDomain
     }
 
     /// <summary>

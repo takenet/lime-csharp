@@ -1,15 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace Lime.Protocol.Network
 {
     /// <summary>
-    /// Defines a network 
-    /// connection with a node
+    /// Defines a network connection with a node.
     /// </summary>
     public interface ITransport
     {
@@ -57,6 +53,7 @@ namespace Lime.Protocol.Network
         /// Defines the compression mode for the transport.
         /// </summary>
         /// <param name="compression">The compression mode</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns></returns>
         Task SetCompressionAsync(SessionCompression compression, CancellationToken cancellationToken);
 
@@ -73,7 +70,8 @@ namespace Lime.Protocol.Network
         /// <summary>
         /// Defines the encryption mode for the transport.
         /// </summary>
-        /// <param name="compression">The compression mode</param>
+        /// <param name="encryption">The encryption mode</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns></returns>
         Task SetEncryptionAsync(SessionEncryption encryption, CancellationToken cancellationToken);
 
