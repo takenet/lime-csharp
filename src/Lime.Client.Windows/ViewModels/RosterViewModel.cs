@@ -22,18 +22,12 @@ namespace Lime.Client.Windows.ViewModels
 {
     public class RosterViewModel : PageViewModelBase
     {
-        #region Private Fields
-
         private readonly LoginViewModel _loginViewModel;
         private readonly IClientChannel _clientChannel;
         private bool _loaded;
         private static TimeSpan _receiveTimeout = TimeSpan.FromSeconds(30);
         private readonly CancellationTokenSource _cancellationTokenSource;
         private Task _listenerTask;
-
-        #endregion
-
-        #region Constructor
 
         /// <summary>
         /// Initializes a new instance of the <see cref="RosterViewModel"/> class.
@@ -75,9 +69,16 @@ namespace Lime.Client.Windows.ViewModels
             RejectPendingContactCommand = new AsyncCommand(RejectPendingContactAsync, () => CanRejectPendingContact);
         }
 
-        #endregion
-
-        #region Public properties
+        private MainViewModel _owner;
+        public MainViewModel Owner
+        {
+            get { return _owner; }
+            set
+            {
+                _owner = value;
+                RaisePropertyChanged(() => Owner);
+            }
+        }
 
         private Identity _identity;
         
@@ -292,8 +293,6 @@ namespace Lime.Client.Windows.ViewModels
                 ContactsView.Refresh();
             }
         }
-
-        #endregion
 
         #region Commands
 
@@ -660,13 +659,30 @@ namespace Lime.Client.Windows.ViewModels
         {
             try
             {
+                var listenSessionTask = ListenSessionAsync();
                 var listenMessagesTask = ListenMessagesAsync();
                 var listenNotificationsTask = ListenNotificationsAsync();
-                var listenCommandsTask = ListenCommandsAsync();
-
-                await Task.WhenAll(listenMessagesTask, listenNotificationsTask, listenCommandsTask);
+                var listenCommandsTask = ListenCommandsAsync();                
+                var completedTask = await Task.WhenAny(listenSessionTask, listenMessagesTask, listenNotificationsTask, listenCommandsTask);
+                if (completedTask != listenSessionTask)
+                {
+                    await _clientChannel.SendFinishingSessionAsync(CancellationToken.None);
+                    await listenSessionTask;
+                }
             }
-            catch (OperationCanceledException) { }
+            catch (OperationCanceledException) when (_cancellationTokenSource.IsCancellationRequested) { }
+            catch (Exception ex)
+            {
+                ErrorMessage = ex.Message;
+            }
+
+            _clientChannel.DisposeIfDisposable();            
+            Owner.ContentViewModel = _loginViewModel;
+        }
+
+        private async Task ListenSessionAsync()
+        {
+            await _clientChannel.ReceiveFinishedSessionAsync(_cancellationTokenSource.Token);
         }
 
         private async Task ListenMessagesAsync()
@@ -864,7 +880,6 @@ namespace Lime.Client.Windows.ViewModels
                 if (_clientChannel.State == SessionState.Established)
                 {
                     await _clientChannel.SendFinishingSessionAsync(CancellationToken.None);
-                    var session = await _clientChannel.ReceiveFinishedSessionAsync(_receiveTimeout.ToCancellationToken());
                 }
 
                 _clientChannel.DisposeIfDisposable();

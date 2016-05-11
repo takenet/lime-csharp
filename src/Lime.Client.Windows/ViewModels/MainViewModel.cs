@@ -1,31 +1,20 @@
-﻿using GalaSoft.MvvmLight;
-using Lime.Client.Windows.Mvvm;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
+﻿using System;
 using System.Threading.Tasks;
-using System.Windows.Threading;
+using GalaSoft.MvvmLight;
+using Lime.Client.Windows.Mvvm;
 
 namespace Lime.Client.Windows.ViewModels
 {
     public class MainViewModel : ViewModelBase
     {
-        #region Constructor
-
         public MainViewModel()
         {
-            this.ContentViewModel = new LoginViewModel();
-            this.TraceViewModel = new TraceViewModel();
+            ContentViewModel = new LoginViewModel();
+            TraceViewModel = new TraceViewModel();
 
-            this.ClosingCommand = new AsyncCommand(p => ClosingAsync());
-            this.ClosedCommand = new AsyncCommand(p => ClosedAsync());
+            ClosingCommand = new AsyncCommand(p => ClosingAsync());
+            ClosedCommand = new AsyncCommand(p => ClosedAsync());
         }
-
-        #endregion
-
-        #region Public Properties
 
         private PageViewModelBase _contentViewModel;
         public PageViewModelBase ContentViewModel
@@ -40,18 +29,7 @@ namespace Lime.Client.Windows.ViewModels
             }
         }
 
-        public Uri ContentSource
-        {
-            get
-            {
-                if (_contentViewModel != null)
-                {
-                    return _contentViewModel.PageUri;
-                }
-
-                return null;
-            }
-        }
+        public Uri ContentSource => _contentViewModel?.PageUri;
 
         private TraceViewModel _traceViewModel;
         public TraceViewModel TraceViewModel
@@ -63,10 +41,6 @@ namespace Lime.Client.Windows.ViewModels
                 RaisePropertyChanged(() => TraceViewModel);
             }
         }
-
-        #endregion
-
-        #region Commands
 
         public AsyncCommand ClosingCommand { get; private set; }
 
@@ -87,8 +61,5 @@ namespace Lime.Client.Windows.ViewModels
                 await ContentViewModel.OnWindowClosedAsync();
             }
         }
-
-        #endregion
-
     }
 }

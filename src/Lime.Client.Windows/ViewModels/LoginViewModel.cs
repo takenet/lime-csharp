@@ -1,17 +1,15 @@
-﻿using Lime.Client.Windows.Mvvm;
-using Lime.Protocol;
-using Lime.Protocol.Client;
-using Lime.Protocol.Network;
-using Lime.Messaging.Resources;
-using Lime.Protocol.Security;
-using Lime.Protocol.Serialization;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
-using System.Net;
-using System.Threading;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Lime.Client.Windows.Mvvm;
+using Lime.Messaging.Resources;
+using Lime.Protocol;
+using Lime.Protocol.Client;
+using Lime.Protocol.Network;
+using Lime.Protocol.Security;
 using Lime.Protocol.Serialization.Newtonsoft;
 using Lime.Transport.Tcp;
 using Microsoft.Win32;
@@ -25,11 +23,11 @@ namespace Lime.Client.Windows.ViewModels
         private static TimeSpan _loginTimeout = TimeSpan.FromSeconds(30);
         private static TimeSpan _sendTimeout = TimeSpan.FromSeconds(30);
 
-        private static Dictionary<string, string> _knownDomainServers = new Dictionary<string, string>()
+        private static Dictionary<string, string> _knownDomainServers = new Dictionary<string, string>
         {
             {"0mn.io", "iris.0mn.io"},
             {"limeprotocol.org", "iris.limeprotocol.org"},
-            {"mobchat.com.br", "iris.mobchat.com.br"},
+            {"mobchat.com.br", "iris.mobchat.com.br"}
         };
 
 
@@ -152,8 +150,8 @@ namespace Lime.Client.Windows.ViewModels
             {
                 traceWriter = Owner.TraceViewModel;
 
-                base.MessengerInstance.Send<OpenWindowMessage>(
-                    new OpenWindowMessage()
+                MessengerInstance.Send(
+                    new OpenWindowMessage
                     {
                         WindowName = "Trace",
                         DataContext = Owner.TraceViewModel
@@ -161,7 +159,7 @@ namespace Lime.Client.Windows.ViewModels
             }
 
             IsBusy = true;
-            this.ErrorMessage = string.Empty;
+            ErrorMessage = string.Empty;
 
             try
             {
@@ -182,7 +180,7 @@ namespace Lime.Client.Windows.ViewModels
                     var guestSessionResult = await client.EstablishSessionAsync(
                         compressionOptions => compressionOptions.First(),
                         encryptionOptions => SessionEncryption.TLS,
-                        new Identity() { Name = EnvelopeId.NewId(), Domain = _userNameNode.Domain },
+                        new Identity { Name = EnvelopeId.NewId(), Domain = _userNameNode.Domain },
                         (schemeOptions, roundtrip) => new GuestAuthentication(),
                         null,
                         cancellationToken
@@ -191,13 +189,13 @@ namespace Lime.Client.Windows.ViewModels
                     if (guestSessionResult.State == SessionState.Established)
                     {
                         // Creates the account
-                        var account = new Account()
+                        var account = new Account
                         {
                             FullName = _userNameNode.Name,
-                            Password = this.Password.ToBase64()                            
+                            Password = Password.ToBase64()                            
                         };
 
-                        await client.SetResourceAsync<Account>(
+                        await client.SetResourceAsync(
                             LimeUri.Parse(UriTemplates.ACCOUNT),
                             account, 
                             _userNameNode, 
@@ -220,21 +218,21 @@ namespace Lime.Client.Windows.ViewModels
                     }
                     else if (guestSessionResult.Reason != null)
                     {
-                        this.ErrorMessage = guestSessionResult.Reason.Description;
+                        ErrorMessage = guestSessionResult.Reason.Description;
                     }
                     else
                     {
-                        this.ErrorMessage = "Could not establish a guest session with the server";
+                        ErrorMessage = "Could not establish a guest session with the server";
                     }
                 }
 
                 var authentication = new PlainAuthentication();
-                authentication.SetToBase64Password(this.Password);
+                authentication.SetToBase64Password(Password);
 
                 var sessionResult = await client.EstablishSessionAsync(
                     compressionOptions => compressionOptions.First(),
                     encryptionOptions => SessionEncryption.TLS,
-                    new Identity() { Name = _userNameNode.Name, Domain = _userNameNode.Domain },
+                    new Identity { Name = _userNameNode.Name, Domain = _userNameNode.Domain },
                     (schemeOptions, roundtrip) => authentication,
                     _userNameNode.Instance,
                     cancellationToken);
@@ -243,16 +241,19 @@ namespace Lime.Client.Windows.ViewModels
                 {
                     SavePreferences();
 
-                    var rosterViewModel = new RosterViewModel(client, this);
-                    base.Owner.ContentViewModel = rosterViewModel;
+                    var rosterViewModel = new RosterViewModel(client, this)
+                    {
+                        Owner = Owner
+                    };
+                    Owner.ContentViewModel = rosterViewModel;
                 }
                 else if (sessionResult.Reason != null)
                 {
-                    this.ErrorMessage = sessionResult.Reason.Description;
+                    ErrorMessage = sessionResult.Reason.Description;
                 }
                 else
                 {
-                    this.ErrorMessage = "Could not connect to the server";
+                    ErrorMessage = "Could not connect to the server";
                 }
             }
             catch (Exception ex)
@@ -290,7 +291,7 @@ namespace Lime.Client.Windows.ViewModels
                 if (columnName == "UserName")
                 {
                     if (!string.IsNullOrWhiteSpace(_userName) &&
-                        !System.Text.RegularExpressions.Regex.IsMatch(_userName, @"\A(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)\Z"))
+                        !Regex.IsMatch(_userName, @"\A(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)\Z"))
                     {
                         return "Formato inválido";
                     }

@@ -32,7 +32,7 @@ namespace Lime.Client.Windows
         {
             if (message == null)
             {
-                throw new ArgumentNullException("message");
+                throw new ArgumentNullException(nameof(message));
             }
 
             if (message.DataContext == base.DataContext)
@@ -44,15 +44,11 @@ namespace Lime.Client.Windows
 
     internal class FlashWindowMessage
     {
-        #region Constructor
-
         public FlashWindowMessage(object dataContext, FlashMode mode)
         {
-            this.DataContext = dataContext;
+            DataContext = dataContext;
             this.Mode = mode;
         }
-
-        #endregion
 
         public object DataContext { get; private set; }
 

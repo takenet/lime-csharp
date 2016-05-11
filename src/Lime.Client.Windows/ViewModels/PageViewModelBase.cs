@@ -1,9 +1,5 @@
-﻿using FirstFloor.ModernUI.Windows.Navigation;
-using GalaSoft.MvvmLight;
+﻿using GalaSoft.MvvmLight;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Threading;
@@ -12,20 +8,14 @@ namespace Lime.Client.Windows.ViewModels
 {
     public class PageViewModelBase : ViewModelBase
     {
-        private SemaphoreSlim _executeSemaphore;
+        private readonly SemaphoreSlim _executeSemaphore;
         private DispatcherTimer _errorMessageTimer;
-
-        #region Constructor
 
         public PageViewModelBase(Uri pageUri)
         {
             PageUri = pageUri;
             _executeSemaphore = new SemaphoreSlim(1);
         }
-
-        #endregion
-
-        #region Public Properties
 
         private Uri _pageUri;
         public Uri PageUri
@@ -62,10 +52,7 @@ namespace Lime.Client.Windows.ViewModels
             }
         }
 
-        public virtual bool IsIdle
-        {
-            get { return !_isBusy; }
-        }
+        public virtual bool IsIdle => !_isBusy;
 
         private string _errorMessage;
         public virtual string ErrorMessage
@@ -90,11 +77,7 @@ namespace Lime.Client.Windows.ViewModels
                     _errorMessageTimer = null;
                 }
             }
-        } 
-
-        #endregion
-
-        #region Public Methods
+        }
 
         public virtual Task OnActivatedAsync()
         {
@@ -116,14 +99,8 @@ namespace Lime.Client.Windows.ViewModels
             return Task.FromResult<object>(null);
         }
 
-        #endregion
-
-        
-
         /// <summary>
-        /// Executes the specified func,
-        /// synchronizing the access and 
-        /// setting the window as busy.
+        /// Executes the specified func, synchronizing the access and setting the window as busy.
         /// </summary>
         /// <param name="func"></param>
         /// <returns></returns>
@@ -131,7 +108,7 @@ namespace Lime.Client.Windows.ViewModels
         {
             if (func == null)
             {
-                throw new ArgumentNullException("func");
+                throw new ArgumentNullException(nameof(func));
             }
 
             await _executeSemaphore.WaitAsync();

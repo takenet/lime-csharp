@@ -7,8 +7,6 @@ namespace Lime.Protocol
     /// </summary>
     public class Identity : IIdentity
     {
-        #region Constructor
-
         public Identity()
         {
 
@@ -18,9 +16,7 @@ namespace Lime.Protocol
         {
             Name = name;
             Domain = domain;
-        } 
-
-        #endregion
+        }
 
         /// <summary>
         /// Identity unique name on his domain.
@@ -44,7 +40,7 @@ namespace Lime.Protocol
             {
                 return Name;
             }
-            return string.Format("{0}@{1}", Name, Domain);
+            return $"{Name}@{Domain}";
         }
 
         /// <summary>
