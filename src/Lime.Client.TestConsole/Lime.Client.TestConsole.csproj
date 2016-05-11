@@ -35,8 +35,8 @@
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
     <OpenBrowserOnPublish>false</OpenBrowserOnPublish>
-    <ApplicationRevision>26</ApplicationRevision>
-    <ApplicationVersion>0.1.7.%2a</ApplicationVersion>
+    <ApplicationRevision>1</ApplicationRevision>
+    <ApplicationVersion>0.5.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -162,6 +162,8 @@
     <Compile Include="Macros\SetGuestIdentityMacro.cs" />
     <Compile Include="Macros\SetLocalNodeMacro.cs" />
     <Compile Include="Macros\SetNotificationEvent.cs" />
+    <Compile Include="Macros\SendSetPresenceAvailableIdentityMacro.cs" />
+    <Compile Include="Macros\SendSetPresenceAvailableMacro.cs" />
     <Compile Include="Macros\SetSessionDataMacro.cs" />
     <Compile Include="Macros\SetSessionIdMacro.cs" />
     <Compile Include="Macros\CloseTransportMacro.cs" />

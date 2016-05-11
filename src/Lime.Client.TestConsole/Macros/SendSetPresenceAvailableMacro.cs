@@ -1,19 +1,16 @@
-using System.Linq;
 using Lime.Client.TestConsole.ViewModels;
 using Lime.Protocol;
-using Lime.Protocol.Security;
 
 namespace Lime.Client.TestConsole.Macros
 {
-    public abstract class SendAuthenticatingMacroBase : SendTemplateMacroBase
+    [Macro(Name = "Send set presence available", Category = "Command", IsActiveByDefault = false)]
+    public class SendSetPresenceAvailableMacro : SendTemplateMacroBase
     {
         protected override bool ShouldSendTemplate(EnvelopeViewModel envelopeViewModel)
         {
             var session = envelopeViewModel.Envelope as Session;
             if (session != null &&
-                session.State == SessionState.Authenticating &&
-                session.SchemeOptions != null &&
-                session.SchemeOptions.Contains(Scheme))
+                session.State == SessionState.Established)
             {
                 return true;
             }
@@ -21,6 +18,6 @@ namespace Lime.Client.TestConsole.Macros
             return false;
         }
 
-        protected abstract AuthenticationScheme Scheme { get; }
+        protected override string TemplateName => "Set presence available";
     }
 }

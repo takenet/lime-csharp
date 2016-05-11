@@ -869,7 +869,7 @@ namespace Lime.Client.TestConsole.ViewModels
 
         private void LoadVariables()
         {
-            foreach (var lineValues in FileUtil.GetFileLines(VARIABLES_FILE_NAME, VARIABLES_FILE_SEPARATOR))
+            foreach (var lineValues in FileUtil.GetFileLines(VARIABLES_FILE_NAME, VARIABLES_FILE_SEPARATOR, true))
             {
                 if (lineValues.Length >= 2)
                 {
@@ -887,7 +887,7 @@ namespace Lime.Client.TestConsole.ViewModels
         private void SaveVariables()
         {
             var lineValues = Variables.Select(v => new [] {v.Name, v.Value});
-            FileUtil.SaveFile(lineValues, VARIABLES_FILE_NAME, VARIABLES_FILE_SEPARATOR);            
+            FileUtil.SaveFile(lineValues, VARIABLES_FILE_NAME, VARIABLES_FILE_SEPARATOR, true);            
 
         }
 

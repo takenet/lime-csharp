@@ -1,11 +1,7 @@
-﻿using GalaSoft.MvvmLight;
-using Lime.Client.TestConsole.Macros;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System;
 using System.Reflection;
+using GalaSoft.MvvmLight;
+using Lime.Client.TestConsole.Macros;
 
 namespace Lime.Client.TestConsole.ViewModels
 {
@@ -63,21 +59,21 @@ namespace Lime.Client.TestConsole.ViewModels
 
                     if (macro != null)
                     {
-                        this.Macro = macro;
+                        Macro = macro;
 
                         var macroAttribute = _type.GetCustomAttribute<MacroAttribute>();
 
                         if (macroAttribute != null)
                         {
-                            this.Name = macroAttribute.Name;
-                            this.Category = macroAttribute.Category;
-                            this.IsActive = macroAttribute.IsActiveByDefault;
+                            Name = macroAttribute.Name;
+                            Category = macroAttribute.Category;
+                            IsActive = macroAttribute.IsActiveByDefault;
                         }
                         else
                         {
-                            this.Name = _type.Name;
-                            this.Category = "Undefined";
-                            this.IsActive = false;
+                            Name = _type.Name;
+                            Category = "Undefined";
+                            IsActive = false;
                         }
                     }
                 }
