@@ -18,11 +18,11 @@ namespace Lime.Protocol.Serialization
     /// </summary>
     public static class TypeUtil
     {
-        private static IDictionary<MediaType, Type> _documentMediaTypeDictionary;
-        private static IDictionary<AuthenticationScheme, Type> _authenticationSchemeDictionary;
-        private static IDictionary<Type, IDictionary<string, object>> _enumTypeValueDictionary;
-        private static ConcurrentDictionary<Type, Func<string, object>> _typeParseFuncDictionary;
-        private static HashSet<Type> _dataContractTypes;
+        private static readonly IDictionary<MediaType, Type> _documentMediaTypeDictionary;
+        private static readonly IDictionary<AuthenticationScheme, Type> _authenticationSchemeDictionary;
+        private static readonly IDictionary<Type, IDictionary<string, object>> _enumTypeValueDictionary;
+        private static readonly ConcurrentDictionary<Type, Func<string, object>> _typeParseFuncDictionary;
+        private static readonly HashSet<Type> _dataContractTypes;
 
         public static readonly Func<AssemblyName, bool> IgnoreSystemAndMicrosoftAssembliesFilter =
             a => !a.FullName.StartsWith("System.", StringComparison.OrdinalIgnoreCase) &&
@@ -30,8 +30,6 @@ namespace Lime.Protocol.Serialization
 
         private static readonly object _loadAssembliesSyncRoot = new object();
         private static bool _referencedAssembliesLoaded;
-
-        #region Constructor
 
         static TypeUtil()
         {
@@ -49,11 +47,9 @@ namespace Lime.Protocol.Serialization
             // Caches the known type (types decorated with DataContract in all loaded assemblies)
             foreach (var type in GetAllLoadedTypes().Where(t => t.GetCustomAttribute<DataContractAttribute>() != null))
             {
-                AddDataContractType(type);
+                RegisterType(type);
             }
         }
-
-        #endregion
 
         /// <summary>
         /// Gets the Parse static 
@@ -71,7 +67,7 @@ namespace Lime.Protocol.Serialization
 
             if (parseMethod == null)
             {
-                throw new ArgumentException(string.Format("The type '{0}' doesn't contains a static 'Parse' method", type));
+                throw new ArgumentException($"The type '{type}' doesn't contains a static 'Parse' method");
             }
 
             if (parseMethod.ReturnType != type)
@@ -327,24 +323,13 @@ namespace Lime.Protocol.Serialization
         }
 
         /// <summary>
-        /// CreateAndRegister a document type for serialization support.
+        /// Create and register a document type for serialization support.
         /// </summary>
         /// <typeparam name="TDocument"></typeparam>
         public static void RegisterDocument<TDocument>() 
             where TDocument : Document, new()
         {
-            var documentType = typeof(TDocument);
-
-            if (documentType.GetCustomAttribute<DataContractAttribute>() != null)
-            {
-                AddDataContractType(documentType);
-            }
-            else
-            {
-                var document = (Document)CreateInstance(documentType);
-                _documentMediaTypeDictionary.Add(document.GetMediaType(), documentType);
-
-            }
+            RegisterType(typeof(TDocument));
         }
 
         /// <summary>
@@ -592,9 +577,12 @@ namespace Lime.Protocol.Serialization
             }
         }
 
-        private static void AddDataContractType(Type type)
+        private static void RegisterType(Type type)
         {
-            _dataContractTypes.Add(type);
+            if (type.GetCustomAttribute<DataContractAttribute>() != null)
+            {
+                _dataContractTypes.Add(type);
+            }
 
             if (!type.IsAbstract)
             {
@@ -604,7 +592,7 @@ namespace Lime.Protocol.Serialization
                     var document = Activator.CreateInstance(type) as Document;
                     if (document != null)
                     {
-                        _documentMediaTypeDictionary.Add(document.GetMediaType(), type);
+                        _documentMediaTypeDictionary.RemoveAndAdd(document.GetMediaType(), type);
                     }
                 }
 
@@ -614,7 +602,7 @@ namespace Lime.Protocol.Serialization
                     var authentication = Activator.CreateInstance(type) as Authentication;
                     if (authentication != null)
                     {
-                        _authenticationSchemeDictionary.Add(authentication.GetAuthenticationScheme(), type);
+                        _authenticationSchemeDictionary.RemoveAndAdd(authentication.GetAuthenticationScheme(), type);
                     }
                 }
             }
@@ -627,9 +615,9 @@ namespace Lime.Protocol.Serialization
 
                 foreach (var enumName in enumNames)
                 {
-                    memberValueDictionary.Add(enumName.ToLowerInvariant(), Enum.Parse(type, enumName));
+                    memberValueDictionary.RemoveAndAdd(enumName.ToLowerInvariant(), Enum.Parse(type, enumName));
                 }
-                _enumTypeValueDictionary.Add(type, memberValueDictionary);
+                _enumTypeValueDictionary.RemoveAndAdd(type, memberValueDictionary);
             }
         }
     }
