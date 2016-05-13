@@ -164,6 +164,9 @@
     <Compile Include="Pages\Roster.xaml.cs">
       <DependentUpon>Roster.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Pages\RosterConversation.xaml.cs">
+      <DependentUpon>RosterConversation.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Pages\Trace.xaml.cs">
       <DependentUpon>Trace.xaml</DependentUpon>
     </Compile>
@@ -191,6 +194,7 @@
     <Compile Include="ViewModels\MainViewModel.cs" />
     <Compile Include="ViewModels\MessageViewModel.cs" />
     <Compile Include="ViewModels\PageViewModelBase.cs" />
+    <Compile Include="ViewModels\RosterConversationViewModel.cs" />
     <Compile Include="ViewModels\RosterViewModel.cs" />
     <Compile Include="ViewModels\TraceViewModel.cs" />
     <Page Include="ConversationWindow.xaml">
@@ -250,6 +254,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Pages\Roster.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Pages\RosterConversation.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

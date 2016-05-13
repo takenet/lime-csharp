@@ -21,9 +21,9 @@ namespace Lime.Client.Windows.ViewModels
         #region Private Fields
 
         private static TimeSpan _loginTimeout = TimeSpan.FromSeconds(30);
-        private static TimeSpan _sendTimeout = TimeSpan.FromSeconds(30);
+        private static readonly TimeSpan _sendTimeout = TimeSpan.FromSeconds(30);
 
-        private static Dictionary<string, string> _knownDomainServers = new Dictionary<string, string>
+        private static readonly Dictionary<string, string> _knownDomainServers = new Dictionary<string, string>
         {
             {"0mn.io", "iris.0mn.io"},
             {"limeprotocol.org", "iris.limeprotocol.org"},
@@ -68,7 +68,7 @@ namespace Lime.Client.Windows.ViewModels
                         domain = _knownDomainServers[domain];
                     }
 
-                    ServerAddress = string.Format("net.tcp://{0}:55321", domain); 
+                    ServerAddress = $"net.tcp://{domain}:55321"; 
                 }
             }
         }
@@ -241,11 +241,12 @@ namespace Lime.Client.Windows.ViewModels
                 {
                     SavePreferences();
 
-                    var rosterViewModel = new RosterViewModel(client, this)
-                    {
-                        Owner = Owner
-                    };
-                    Owner.ContentViewModel = rosterViewModel;
+                    var rosterConversation = new RosterConversationViewModel(
+                        new RosterViewModel(client, this)
+                        {
+                            Owner = Owner
+                        });                    
+                    Owner.ContentViewModel = rosterConversation;
                 }
                 else if (sessionResult.Reason != null)
                 {

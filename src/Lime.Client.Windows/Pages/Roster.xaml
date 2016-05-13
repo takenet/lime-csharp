@@ -10,9 +10,9 @@
         xmlns:p="clr-namespace:Lime.Client.Windows.Properties"
         DataContext="{Binding ContentViewModel}"
         mc:Ignorable="d" 
-        d:DataContext="{d:DesignData /DesignData/RosterDesignData.xaml }"
-        Height="600" 
-        Width="300">
+        d:DataContext="{d:DesignData /DesignData/RosterDesignData.xaml }"             
+        MinHeight="600" 
+        MinWidth="300">
     <i:Interaction.Triggers>
         <i:EventTrigger EventName="Loaded">
             <i:InvokeCommandAction Command="{Binding LoadedCommand}" />
