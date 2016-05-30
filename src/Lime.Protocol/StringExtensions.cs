@@ -206,5 +206,18 @@ namespace Lime.Protocol
         /// </returns>
         /// <param name="value">The string to test. </param><filterpriority>1</filterpriority>
         public static bool IsNullOrEmpty(this string value) => string.IsNullOrEmpty(value);
+
+        /// <summary>
+        /// Strip the first label of a domain address.
+        /// </summary>
+        /// <param name="domain"></param>
+        /// <returns></returns>
+        public static string TrimFirstDomainLabel(this string domain)
+        {
+            if (domain == null) throw new ArgumentNullException(nameof(domain));
+            var indexOfPoint = domain.IndexOf('.');
+            if (indexOfPoint < 0) return domain;
+            return domain.Substring(domain.IndexOf('.') + 1, domain.Length - domain.IndexOf('.') - 1);
+        }
     }
 }

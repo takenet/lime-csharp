@@ -492,7 +492,11 @@ namespace Lime.Transport.Tcp
                     {
                         role = DomainRole.RootAuthority;
                     }
-                    else if (commonNames.Any(c => c.Subject.Equals(identity.Domain, StringComparison.OrdinalIgnoreCase)))
+                    else if (
+                        commonNames.Any(
+                            c =>
+                                c.Subject.Equals(identity.Domain, StringComparison.OrdinalIgnoreCase) ||
+                                c.Subject.TrimStart('*', '.').Equals(identity.Domain.TrimFirstDomainLabel(), StringComparison.OrdinalIgnoreCase)))
                     {
                         role = DomainRole.Authority;
                     }

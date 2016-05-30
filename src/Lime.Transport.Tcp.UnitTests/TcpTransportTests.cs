@@ -838,6 +838,35 @@ namespace Lime.Transport.Tcp.UnitTests
             actual.ShouldBe(DomainRole.RootAuthority);
         }
 
+        [Test]
+        [Category("AuthenticateAsync")]
+        public async Task AuthenticateAsync_ValidClientRootAuthorityCertificateWithSubdomain_ReturnsAuthority()
+        {
+            // Arrange
+            var clientIdentity = Identity.Parse("client@subdomain.fakedomain.local");
+            var clientCertificate = GetWildcardDomainCertificate(clientIdentity);
+            var clientTransport = new TcpTransport(
+                _envelopeSerializer.Object,
+                clientCertificate,
+                serverCertificateValidationCallback:
+                    (object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors) =>
+                    {
+                        return true;
+                    });
+            await clientTransport.OpenAsync(_serverUri, _cancellationToken);
+            var serverTransport = await _tcpListener.AcceptTransportAsync(_cancellationToken);
+            await serverTransport.OpenAsync(_serverUri, _cancellationToken);
+            await Task.WhenAll(
+                serverTransport.SetEncryptionAsync(SessionEncryption.TLS, _cancellationToken),
+                clientTransport.SetEncryptionAsync(SessionEncryption.TLS, _cancellationToken));
+
+            // Act
+            var actual = await ((IAuthenticatableTransport)serverTransport).AuthenticateAsync(clientIdentity);
+
+            // Assert
+            actual.ShouldBe(DomainRole.Authority);
+        }
+
         private static Identity GetClientIdentity()
         {
             return Identity.Parse("client@fakedomain.local");
