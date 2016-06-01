@@ -22,12 +22,10 @@ namespace Lime.Transport.Tcp
 	public class TcpTransport : TransportBase, ITransport, IAuthenticatableTransport
     {
         public const int DEFAULT_BUFFER_SIZE = 8192;
+
         public static readonly TimeSpan ReadTimeout = TimeSpan.FromSeconds(5);
         public static readonly TimeSpan CloseTimeout = TimeSpan.FromSeconds(30);
-
-        #region Fields
-
-        private Stream _stream;
+        
         private readonly SemaphoreSlim _receiveSemaphore;
         private readonly SemaphoreSlim _sendSemaphore;
         private readonly ITcpClient _tcpClient;
@@ -36,14 +34,11 @@ namespace Lime.Transport.Tcp
         private readonly RemoteCertificateValidationCallback _serverCertificateValidationCallback;
         private readonly RemoteCertificateValidationCallback _clientCertificateValidationCallback;
         private readonly X509Certificate2 _serverCertificate;
-        private readonly X509Certificate2 _clientCertificate;
-        private string _hostName;
-
+        private readonly X509Certificate2 _clientCertificate;        
         private readonly JsonBuffer _jsonBuffer;
 
-        #endregion
-
-        #region Constructor
+        private Stream _stream;
+        private string _hostName;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TcpTransport"/> class.
@@ -141,40 +136,6 @@ namespace Lime.Transport.Tcp
             _clientCertificateValidationCallback = clientCertificateValidationCallback ?? ValidateClientCertificate;
         }
 
-        #endregion
-
-        #region TransportBase Members
-
-        /// <summary>
-        /// Opens the transport connection with the specified Uri and begins to read from the stream.
-        /// </summary>
-        /// <param name="uri"></param>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        /// <exception cref="System.NotImplementedException"></exception>
-        protected override async Task PerformOpenAsync(Uri uri, CancellationToken cancellationToken)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-
-            if (!_tcpClient.Connected)
-            {
-                if (uri == null) throw new ArgumentNullException(nameof(uri), "The uri is mandatory for a not connected TCP client");
-                if (uri.Scheme != Uri.UriSchemeNetTcp)
-                {
-                    throw new ArgumentException($"Invalid URI scheme. Expected is '{Uri.UriSchemeNetTcp}'.", nameof(uri));
-                }
-
-                if (string.IsNullOrWhiteSpace(_hostName))
-                {
-                    _hostName = uri.Host;
-                }
-
-                await _tcpClient.ConnectAsync(uri.Host, uri.Port).ConfigureAwait(false);
-            }
-
-            _stream = _tcpClient.GetStream();
-        }
-
         /// <summary>
         /// Sends an envelope to the connected node.
         /// </summary>
@@ -205,7 +166,7 @@ namespace Lime.Transport.Tcp
             }
             catch (IOException)
             {
-                await CloseWithTimeout().ConfigureAwait(false);
+                await CloseWithTimeoutAsync().ConfigureAwait(false);
                 throw;
             }
             finally
@@ -213,7 +174,6 @@ namespace Lime.Transport.Tcp
                 _sendSemaphore.Release();
             }
         }
-
 
         /// <summary>
         /// Reads one envelope from the stream.
@@ -272,7 +232,7 @@ namespace Lime.Transport.Tcp
                         // If is not possible to read, closes the transport and returns
                         if (!readTask.IsCompleted)
                         {
-                            await CloseWithTimeout().ConfigureAwait(false);
+                            await CloseWithTimeoutAsync().ConfigureAwait(false);
                             break;
                         }
 
@@ -281,7 +241,7 @@ namespace Lime.Transport.Tcp
                         // https://msdn.microsoft.com/en-us/library/hh193669(v=vs.110).aspx
                         if (read == 0)
                         {
-                            await CloseWithTimeout().ConfigureAwait(false);
+                            await CloseWithTimeoutAsync().ConfigureAwait(false);
                             break;
                         }
 
@@ -289,7 +249,7 @@ namespace Lime.Transport.Tcp
 
                         if (_jsonBuffer.BufferCurPos >= _jsonBuffer.Buffer.Length)
                         {
-                            await CloseWithTimeout().ConfigureAwait(false);
+                            await CloseWithTimeoutAsync().ConfigureAwait(false);
                             throw new BufferOverflowException("Maximum buffer size reached");
                         }
                     }
@@ -301,22 +261,6 @@ namespace Lime.Transport.Tcp
             {
                 _receiveSemaphore.Release();
             }
-        }
-
-
-
-        /// <summary>
-        /// Closes the transport.
-        /// </summary>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        /// <exception cref="System.NotImplementedException"></exception>
-        protected override Task PerformCloseAsync(CancellationToken cancellationToken)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-            _stream?.Close();
-            _tcpClient.Close();
-            return Task.FromResult<object>(null);
         }
 
         /// <summary>
@@ -450,10 +394,6 @@ namespace Lime.Transport.Tcp
 
         public override bool IsConnected => _tcpClient.Connected;
 
-        #endregion
-
-        #region IAuthenticatableTransport Members
-
         /// <summary>
         /// Authenticate the identity in the transport layer.
         /// </summary>
@@ -514,9 +454,49 @@ namespace Lime.Transport.Tcp
             return Task.FromResult(role);
         }
 
-        #endregion
+        /// <summary>
+        /// Opens the transport connection with the specified Uri and begins to read from the stream.
+        /// </summary>
+        /// <param name="uri"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        /// <exception cref="System.NotImplementedException"></exception>
+        protected override async Task PerformOpenAsync(Uri uri, CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
 
-        #region Private methods
+            if (!_tcpClient.Connected)
+            {
+                if (uri == null) throw new ArgumentNullException(nameof(uri), "The uri is mandatory for a not connected TCP client");
+                if (uri.Scheme != Uri.UriSchemeNetTcp)
+                {
+                    throw new ArgumentException($"Invalid URI scheme. Expected is '{Uri.UriSchemeNetTcp}'.", nameof(uri));
+                }
+
+                if (string.IsNullOrWhiteSpace(_hostName))
+                {
+                    _hostName = uri.Host;
+                }
+
+                await _tcpClient.ConnectAsync(uri.Host, uri.Port).ConfigureAwait(false);
+            }
+
+            _stream = _tcpClient.GetStream();
+        }
+
+        /// <summary>
+        /// Closes the transport.
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        /// <exception cref="System.NotImplementedException"></exception>
+        protected override Task PerformCloseAsync(CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            _stream?.Close();
+            _tcpClient.Close();
+            return Task.FromResult<object>(null);
+        }
 
         private bool ValidateServerCertificate(
             object sender,
@@ -558,14 +538,12 @@ namespace Lime.Transport.Tcp
 
         private bool CanRead => _stream.CanRead && _tcpClient.Connected;
 
-        private Task CloseWithTimeout()
+        private Task CloseWithTimeoutAsync()
         {
             using (var cts = new CancellationTokenSource(CloseTimeout))
             {
                 return CloseAsync(cts.Token);
             }
         }
-
-        #endregion
     }
 }
