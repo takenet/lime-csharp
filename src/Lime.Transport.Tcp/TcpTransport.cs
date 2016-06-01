@@ -47,7 +47,11 @@ namespace Lime.Transport.Tcp
         /// <param name="bufferSize">Size of the buffer.</param>
         /// <param name="traceWriter">The trace writer.</param>
         /// <param name="serverCertificateValidationCallback">A callback to validate the server certificate in the TLS authentication process.</param>
-        public TcpTransport(X509Certificate2 clientCertificate = null, int bufferSize = DEFAULT_BUFFER_SIZE, ITraceWriter traceWriter = null, RemoteCertificateValidationCallback serverCertificateValidationCallback = null)
+        public TcpTransport(
+            X509Certificate2 clientCertificate = null, 
+            int bufferSize = DEFAULT_BUFFER_SIZE, 
+            ITraceWriter traceWriter = null, 
+            RemoteCertificateValidationCallback serverCertificateValidationCallback = null)
             : this(new JsonNetSerializer(), clientCertificate, bufferSize, traceWriter, serverCertificateValidationCallback)
         {
         }
@@ -60,7 +64,12 @@ namespace Lime.Transport.Tcp
 	    /// <param name="bufferSize">Size of the buffer.</param>
 	    /// <param name="traceWriter">The trace writer.</param>
         /// <param name="serverCertificateValidationCallback">A callback to validate the server certificate in the TLS authentication process.</param>
-	    public TcpTransport(IEnvelopeSerializer envelopeSerializer, X509Certificate2 clientCertificate = null, int bufferSize = DEFAULT_BUFFER_SIZE, ITraceWriter traceWriter = null, RemoteCertificateValidationCallback serverCertificateValidationCallback = null)
+	    public TcpTransport(
+            IEnvelopeSerializer envelopeSerializer, 
+            X509Certificate2 clientCertificate = null, 
+            int bufferSize = DEFAULT_BUFFER_SIZE, 
+            ITraceWriter traceWriter = null, 
+            RemoteCertificateValidationCallback serverCertificateValidationCallback = null)
             : this(new TcpClientAdapter(new TcpClient()), envelopeSerializer, null, clientCertificate, null, bufferSize, traceWriter, serverCertificateValidationCallback, null)
         {
         }
@@ -75,7 +84,14 @@ namespace Lime.Transport.Tcp
 	    /// <param name="bufferSize">Size of the buffer.</param>
 	    /// <param name="traceWriter">The trace writer.</param>
         /// <param name="serverCertificateValidationCallback">A callback to validate the server certificate in the TLS authentication process.</param>
-	    public TcpTransport(ITcpClient tcpClient, IEnvelopeSerializer envelopeSerializer, string hostName, X509Certificate2 clientCertificate = null, int bufferSize = DEFAULT_BUFFER_SIZE, ITraceWriter traceWriter = null, RemoteCertificateValidationCallback serverCertificateValidationCallback = null)
+	    public TcpTransport(
+            ITcpClient tcpClient, 
+            IEnvelopeSerializer envelopeSerializer, 
+            string hostName, 
+            X509Certificate2 clientCertificate = null, 
+            int bufferSize = DEFAULT_BUFFER_SIZE, 
+            ITraceWriter traceWriter = null, 
+            RemoteCertificateValidationCallback serverCertificateValidationCallback = null)
             : this(tcpClient, envelopeSerializer, null, clientCertificate, hostName, bufferSize, traceWriter, serverCertificateValidationCallback, null)
 
         {
@@ -91,7 +107,13 @@ namespace Lime.Transport.Tcp
 	    /// <param name="bufferSize">Size of the buffer.</param>
 	    /// <param name="traceWriter">The trace writer.</param>
         /// <param name="clientCertificateValidationCallback">A callback to validate the client certificate in the TLS authentication process.</param>
-	    internal TcpTransport(ITcpClient tcpClient, IEnvelopeSerializer envelopeSerializer, X509Certificate2 serverCertificate, int bufferSize = DEFAULT_BUFFER_SIZE, ITraceWriter traceWriter = null, RemoteCertificateValidationCallback clientCertificateValidationCallback = null)
+	    internal TcpTransport(
+            ITcpClient tcpClient, 
+            IEnvelopeSerializer envelopeSerializer, 
+            X509Certificate2 serverCertificate, 
+            int bufferSize = DEFAULT_BUFFER_SIZE, 
+            ITraceWriter traceWriter = null, 
+            RemoteCertificateValidationCallback clientCertificateValidationCallback = null)
             : this(tcpClient, envelopeSerializer, serverCertificate, null, null, bufferSize, traceWriter, null, clientCertificateValidationCallback)
         {
         }
@@ -113,25 +135,29 @@ namespace Lime.Transport.Tcp
         /// or
         /// envelopeSerializer
         /// </exception>
-		private TcpTransport(ITcpClient tcpClient, IEnvelopeSerializer envelopeSerializer, X509Certificate2 serverCertificate, X509Certificate2 clientCertificate, string hostName, int bufferSize, ITraceWriter traceWriter, RemoteCertificateValidationCallback serverCertificateValidationCallback, RemoteCertificateValidationCallback clientCertificateValidationCallback)
+		private TcpTransport(
+            ITcpClient tcpClient, 
+            IEnvelopeSerializer envelopeSerializer, 
+            X509Certificate2 serverCertificate, 
+            X509Certificate2 clientCertificate, 
+            string hostName, 
+            int bufferSize, 
+            ITraceWriter traceWriter, 
+            RemoteCertificateValidationCallback serverCertificateValidationCallback, 
+            RemoteCertificateValidationCallback clientCertificateValidationCallback)
         {
             if (tcpClient == null) throw new ArgumentNullException(nameof(tcpClient));
             if (envelopeSerializer == null) throw new ArgumentNullException(nameof(envelopeSerializer));
 
-
             _tcpClient = tcpClient;
             _jsonBuffer = new JsonBuffer(bufferSize);
             _envelopeSerializer = envelopeSerializer;
-
             _hostName = hostName;
             _traceWriter = traceWriter;
-
             _receiveSemaphore = new SemaphoreSlim(1);
             _sendSemaphore = new SemaphoreSlim(1);
-
             _serverCertificate = serverCertificate;
             _clientCertificate = clientCertificate;
-
             _serverCertificateValidationCallback = serverCertificateValidationCallback ?? ValidateServerCertificate;
             _clientCertificateValidationCallback = clientCertificateValidationCallback ?? ValidateClientCertificate;
         }
