@@ -60,6 +60,7 @@
     <Compile Include="Converters\JTokenExtensions.cs" />
     <Compile Include="Converters\StringBasedTypeJsonConverter.cs" />
     <Compile Include="Converters\UriJsonConverter.cs" />
+    <Compile Include="EnvelopeExtensions.cs" />
     <Compile Include="JsonNetSerializer.cs" />
     <Compile Include="Converters\LimeUriJsonConverter.cs" />
     <Compile Include="Converters\MediaTypeJsonConverter.cs" />
