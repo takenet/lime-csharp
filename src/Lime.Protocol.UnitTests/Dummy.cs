@@ -466,5 +466,29 @@ namespace Lime.Protocol.UnitTests
                 Value = value
             };
         }
+
+        public static WebLink CreateWebLink()
+        {
+            return new WebLink
+            {
+                Uri = CreateUri(),
+                PreviewType = CreatePlainMediaType(),
+                PreviewUri = CreateUri(),
+                Text = CreateRandomString(50)
+            };
+        }
+
+        public static MediaLink CreateMediaLink()
+        {
+            return new MediaLink
+            {
+                Uri = CreateUri(),
+                PreviewType = CreatePlainMediaType(),
+                PreviewUri = CreateUri(),
+                Text = CreateRandomString(50),
+                Size = CreateRandomInt(100),
+                Type = CreatePlainMediaType()
+            };
+        }
     }
 }

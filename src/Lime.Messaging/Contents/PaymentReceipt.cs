@@ -13,7 +13,6 @@ namespace Lime.Messaging.Contents
     {
         public const string MIME_TYPE = "application/vnd.lime.payment-receipt+json";
 
-        public const string INVOICE_NUMBER_KEY = "invoiceNumber";
         public const string METHOD_KEY = "method";        
         public const string TRANSACTION_KEY = "transaction";
         public const string PAID_ON_DATE_KEY = "paidOn";
@@ -30,15 +29,6 @@ namespace Lime.Messaging.Contents
             : base(MediaType)
         {
         }
-
-        /// <summary>
-        /// Gets or sets the original invoice number.
-        /// </summary>
-        /// <value>
-        /// The number.
-        /// </value>
-        [DataMember(Name = INVOICE_NUMBER_KEY)]
-        public string InvoiceNumber { get; set; }
 
         /// <summary>
         /// Gets or sets the payment method used in the payment.
