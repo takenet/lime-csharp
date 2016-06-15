@@ -37,7 +37,7 @@ namespace Lime.Messaging.Contents
         /// The status.
         /// </value>
         [DataMember(Name = STATUS_KEY)]
-        public InvoiceStatusList Status { get; set; }
+        public InvoiceStatusStatus Status { get; set; }
 
         /// <summary>
         /// Gets or sets the status date.
@@ -62,7 +62,7 @@ namespace Lime.Messaging.Contents
     /// Defines the possible invoice payment status values.
     /// </summary>
     [DataContract]
-    public enum InvoiceStatusList
+    public enum InvoiceStatusStatus
     {
         /// <summary>
         /// Indicates that the payment operation was complete.
