@@ -113,5 +113,15 @@ namespace Lime.Transport.WebSocket
         }
 
         public override bool IsConnected => _clientWebSocket.State == WebSocketState.Open;
+
+        public override IReadOnlyDictionary<string, object> Options => new Dictionary<string, object>()
+        {
+            {nameof(ClientWebSocket.SubProtocol), _clientWebSocket.SubProtocol},
+            {nameof(ClientWebSocket.CloseStatusDescription), _clientWebSocket.CloseStatusDescription},
+            {nameof(ClientWebSocket.CloseStatus), _clientWebSocket.CloseStatus},
+            {nameof(System.Net.WebSockets.WebSocket.DefaultKeepAliveInterval), System.Net.WebSockets.WebSocket.DefaultKeepAliveInterval},
+            {nameof(ClientWebSocketOptions.KeepAliveInterval), _clientWebSocket.Options?.KeepAliveInterval},
+
+        };
     }
 }

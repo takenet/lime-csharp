@@ -1,4 +1,6 @@
 ﻿using System.IO;
+using System.Net;
+using System.Net.Sockets;
 using System.Threading.Tasks;
 
 namespace Lime.Transport.Tcp
@@ -18,7 +20,7 @@ namespace Lime.Transport.Tcp
         /// <summary>
         /// Connects the client to the specified port on the specified host.
         /// </summary>
-        /// <param name="address">The DNS name of the remote host to which you intend to connect.</param>
+        /// <param name="host">The DNS name of the remote host to which you intend to connect.</param>
         /// <param name="port">The portThe port number of the remote host to which you intend to connect.</param>
         /// <returns></returns>
         Task ConnectAsync(string host, int port);
@@ -37,5 +39,13 @@ namespace Lime.Transport.Tcp
         /// underlying TCP connection be closed.
         /// </summary>
         void Close();
+
+        /// <summary>
+        /// Gets the client.
+        /// </summary>
+        /// <value>
+        /// The client.
+        /// </value>
+        Socket Client { get; }
     }
 }

@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Net;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -97,6 +99,11 @@ namespace Lime.Transport.WebSocket
         }
 
         public override bool IsConnected => _webSocket.IsConnected;
+
+        public override EndPoint LocalEndPoint => _webSocket.LocalEndpoint;
+
+        public override EndPoint RemoteEndPoint => _webSocket.RemoteEndpoint;
+
 
         private async Task TraceDataIfEnabledAsync(string envelopeJson, DataOperation dataOperation)
         {

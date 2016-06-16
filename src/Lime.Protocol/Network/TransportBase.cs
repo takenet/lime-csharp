@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Net;
 using System.Threading.Tasks;
 using System.Threading;
 
@@ -9,14 +11,8 @@ namespace Lime.Protocol.Network
     /// </summary>
     public abstract class TransportBase : ITransport
     {
-        #region Private fields
-
         private bool _closingInvoked;
         private bool _closedInvoked;
-
-        #endregion
-
-        #region ITransport Members
 
         /// <summary>
         /// Sends an envelope to the connected node.
@@ -111,6 +107,21 @@ namespace Lime.Protocol.Network
         public abstract bool IsConnected { get; }
 
         /// <summary>
+        /// Gets the local endpoint address.
+        /// </summary>
+        public virtual EndPoint LocalEndPoint => null;
+
+        /// <summary>
+        /// Gets the remote endpoint address.
+        /// </summary>
+        public virtual EndPoint RemoteEndPoint => null;
+
+        /// <summary>
+        /// Gets specific transport metadata information.
+        /// </summary>
+        public virtual IReadOnlyDictionary<string, object> Options => null;
+
+        /// <summary>
         /// Defines the encryption mode for the transport.
         /// </summary>
         /// <param name="encryption"></param>
@@ -125,6 +136,18 @@ namespace Lime.Protocol.Network
             }
 
             return Task.FromResult<object>(null);
+        }
+
+        /// <summary>
+        /// Sets a transport option value.
+        /// </summary>
+        /// <param name="name">Name of the option.</param>
+        /// <param name="value">The value.</param>
+        /// <returns></returns>
+        /// <exception cref="System.NotSupportedException"></exception>
+        public virtual Task SetOptionAsync(string name, object value)
+        {
+            throw new NotSupportedException();
         }
 
         /// <summary>
@@ -151,8 +174,6 @@ namespace Lime.Protocol.Network
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
         protected abstract Task PerformOpenAsync(Uri uri, CancellationToken cancellationToken);
-
-        #endregion
 
         /// <summary>
         /// Raises the Closing event with a deferral to wait the event handlers to complete the execution.

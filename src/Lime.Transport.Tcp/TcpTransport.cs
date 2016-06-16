@@ -1,8 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Security;
 using System.Net.Sockets;
+using System.Reflection;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
@@ -25,7 +28,7 @@ namespace Lime.Transport.Tcp
 
         public static readonly TimeSpan ReadTimeout = TimeSpan.FromSeconds(5);
         public static readonly TimeSpan CloseTimeout = TimeSpan.FromSeconds(30);
-        
+
         private readonly SemaphoreSlim _receiveSemaphore;
         private readonly SemaphoreSlim _sendSemaphore;
         private readonly ITcpClient _tcpClient;
@@ -35,7 +38,7 @@ namespace Lime.Transport.Tcp
         private readonly RemoteCertificateValidationCallback _serverCertificateValidationCallback;
         private readonly RemoteCertificateValidationCallback _clientCertificateValidationCallback;
         private readonly X509Certificate2 _serverCertificate;
-        private readonly X509Certificate2 _clientCertificate;        
+        private readonly X509Certificate2 _clientCertificate;
         private readonly JsonBuffer _jsonBuffer;
 
         private Stream _stream;
@@ -50,9 +53,9 @@ namespace Lime.Transport.Tcp
         /// <param name="serverCertificateValidationCallback">A callback to validate the server certificate in the TLS authentication process.</param>
         /// <param name="ignoreDeserializationErrors">if set to <c>true</c> the deserialization on received envelopes will be ignored; otherwise, any deserialization error will be throw to the caller.</param>
         public TcpTransport(
-            X509Certificate2 clientCertificate = null, 
-            int bufferSize = DEFAULT_BUFFER_SIZE, 
-            ITraceWriter traceWriter = null, 
+            X509Certificate2 clientCertificate = null,
+            int bufferSize = DEFAULT_BUFFER_SIZE,
+            ITraceWriter traceWriter = null,
             RemoteCertificateValidationCallback serverCertificateValidationCallback = null,
             bool ignoreDeserializationErrors = false)
             : this(new JsonNetSerializer(), clientCertificate, bufferSize, traceWriter, serverCertificateValidationCallback, ignoreDeserializationErrors)
@@ -69,10 +72,10 @@ namespace Lime.Transport.Tcp
         /// <param name="serverCertificateValidationCallback">A callback to validate the server certificate in the TLS authentication process.</param>
         /// <param name="ignoreDeserializationErrors">if set to <c>true</c> the deserialization on received envelopes will be ignored; otherwise, any deserialization error will be throw to the caller.</param>
         public TcpTransport(
-            IEnvelopeSerializer envelopeSerializer, 
-            X509Certificate2 clientCertificate = null, 
-            int bufferSize = DEFAULT_BUFFER_SIZE, 
-            ITraceWriter traceWriter = null, 
+            IEnvelopeSerializer envelopeSerializer,
+            X509Certificate2 clientCertificate = null,
+            int bufferSize = DEFAULT_BUFFER_SIZE,
+            ITraceWriter traceWriter = null,
             RemoteCertificateValidationCallback serverCertificateValidationCallback = null,
             bool ignoreDeserializationErrors = false)
             : this(new TcpClientAdapter(new TcpClient()), envelopeSerializer, null, clientCertificate, null, bufferSize, traceWriter, serverCertificateValidationCallback, null, ignoreDeserializationErrors)
@@ -91,12 +94,12 @@ namespace Lime.Transport.Tcp
         /// <param name="serverCertificateValidationCallback">A callback to validate the server certificate in the TLS authentication process.</param>
         /// <param name="ignoreDeserializationErrors">if set to <c>true</c> the deserialization on received envelopes will be ignored; otherwise, any deserialization error will be throw to the caller.</param>
         public TcpTransport(
-            ITcpClient tcpClient, 
-            IEnvelopeSerializer envelopeSerializer, 
-            string hostName, 
-            X509Certificate2 clientCertificate = null, 
-            int bufferSize = DEFAULT_BUFFER_SIZE, 
-            ITraceWriter traceWriter = null, 
+            ITcpClient tcpClient,
+            IEnvelopeSerializer envelopeSerializer,
+            string hostName,
+            X509Certificate2 clientCertificate = null,
+            int bufferSize = DEFAULT_BUFFER_SIZE,
+            ITraceWriter traceWriter = null,
             RemoteCertificateValidationCallback serverCertificateValidationCallback = null,
             bool ignoreDeserializationErrors = false)
             : this(tcpClient, envelopeSerializer, null, clientCertificate, hostName, bufferSize, traceWriter, serverCertificateValidationCallback, null, ignoreDeserializationErrors)
@@ -116,11 +119,11 @@ namespace Lime.Transport.Tcp
         /// <param name="clientCertificateValidationCallback">A callback to validate the client certificate in the TLS authentication process.</param>
         /// <param name="ignoreDeserializationErrors">if set to <c>true</c> the deserialization on received envelopes will be ignored; otherwise, any deserialization error will be throw to the caller.</param>
         internal TcpTransport(
-            ITcpClient tcpClient, 
-            IEnvelopeSerializer envelopeSerializer, 
-            X509Certificate2 serverCertificate, 
-            int bufferSize = DEFAULT_BUFFER_SIZE, 
-            ITraceWriter traceWriter = null, 
+            ITcpClient tcpClient,
+            IEnvelopeSerializer envelopeSerializer,
+            X509Certificate2 serverCertificate,
+            int bufferSize = DEFAULT_BUFFER_SIZE,
+            ITraceWriter traceWriter = null,
             RemoteCertificateValidationCallback clientCertificateValidationCallback = null,
             bool ignoreDeserializationErrors = false)
             : this(tcpClient, envelopeSerializer, serverCertificate, null, null, bufferSize, traceWriter, null, clientCertificateValidationCallback, ignoreDeserializationErrors)
@@ -146,14 +149,14 @@ namespace Lime.Transport.Tcp
         /// envelopeSerializer
         /// </exception>
         private TcpTransport(
-            ITcpClient tcpClient, 
-            IEnvelopeSerializer envelopeSerializer, 
-            X509Certificate2 serverCertificate, 
-            X509Certificate2 clientCertificate, 
-            string hostName, 
-            int bufferSize, 
-            ITraceWriter traceWriter, 
-            RemoteCertificateValidationCallback serverCertificateValidationCallback, 
+            ITcpClient tcpClient,
+            IEnvelopeSerializer envelopeSerializer,
+            X509Certificate2 serverCertificate,
+            X509Certificate2 clientCertificate,
+            string hostName,
+            int bufferSize,
+            ITraceWriter traceWriter,
+            RemoteCertificateValidationCallback serverCertificateValidationCallback,
             RemoteCertificateValidationCallback clientCertificateValidationCallback,
             bool ignoreDeserializationErrors)
         {
@@ -241,9 +244,9 @@ namespace Lime.Transport.Tcp
                         // http://referencesource.microsoft.com/#mscorlib/system/io/stream.cs,421
                         var readTask = _stream
                             .ReadAsync(
-                                _jsonBuffer.Buffer, 
-                                _jsonBuffer.BufferCurPos, 
-                                _jsonBuffer.Buffer.Length - _jsonBuffer.BufferCurPos, 
+                                _jsonBuffer.Buffer,
+                                _jsonBuffer.BufferCurPos,
+                                _jsonBuffer.Buffer.Length - _jsonBuffer.BufferCurPos,
                                 cancellationToken);
 
                         while (!readTask.IsCompleted && CanRead)
@@ -420,7 +423,83 @@ namespace Lime.Transport.Tcp
             }
         }
 
+        /// <summary>
+        /// Indicates if the transport is connected.
+        /// </summary>
         public override bool IsConnected => _tcpClient.Connected;
+
+        /// <summary>
+        /// Gets the local endpoint address.
+        /// </summary>
+        public override EndPoint LocalEndPoint => _tcpClient.Client?.LocalEndPoint;
+
+        /// <summary>
+        /// Gets the remote endpoint address.
+        /// </summary>
+        public override EndPoint RemoteEndPoint => _tcpClient.Client?.RemoteEndPoint;
+
+        /// <summary>
+        /// Gets specific transport metadata information.
+        /// </summary>
+        public override IReadOnlyDictionary<string, object> Options
+        {
+            get
+            {
+                if (_tcpClient.Client == null) return null;
+                return new Dictionary<string, object>()
+                {
+                    {nameof(Socket.AddressFamily), _tcpClient.Client.AddressFamily},
+                    {nameof(Socket.Blocking), _tcpClient.Client.Blocking},
+                    {nameof(Socket.DontFragment), _tcpClient.Client.DontFragment},
+                    {nameof(Socket.ExclusiveAddressUse), _tcpClient.Client.ExclusiveAddressUse},
+                    {$"{nameof(Socket.LingerState)}.{nameof(LingerOption.Enabled)}", _tcpClient.Client.LingerState?.Enabled},
+                    {$"{nameof(Socket.LingerState)}.{nameof(LingerOption.LingerTime)}", _tcpClient.Client.LingerState?.LingerTime},
+                    {nameof(Socket.NoDelay), _tcpClient.Client.NoDelay},
+                    {nameof(Socket.ProtocolType), _tcpClient.Client.ProtocolType},
+                    {nameof(Socket.ReceiveBufferSize), _tcpClient.Client.ReceiveBufferSize},
+                    {nameof(Socket.ReceiveTimeout), _tcpClient.Client.ReceiveTimeout},
+                    {nameof(Socket.SendBufferSize), _tcpClient.Client.SendBufferSize},
+                    {nameof(Socket.SendTimeout), _tcpClient.Client.SendTimeout},
+                    {nameof(Socket.SocketType), _tcpClient.Client.SocketType},
+                    {nameof(Socket.Ttl), _tcpClient.Client.Ttl}
+                };
+            }
+        }
+
+        /// <summary>
+        /// Sets a transport option value.
+        /// </summary>
+        /// <param name="name">Name of the option.</param>
+        /// <param name="value">The value.</param>
+        /// <returns></returns>
+        public override Task SetOptionAsync(string name, object value)
+        {
+            if (name == null) throw new ArgumentNullException(nameof(name));
+            if (_tcpClient.Client == null) throw new InvalidOperationException("The client state is invalid");
+
+            var names = name.Split('.');
+            
+            object obj;
+
+            if (names.Length == 1)
+            {
+                obj = _tcpClient.Client;                
+            }
+            else if (names.Equals(nameof(Socket.LingerState)) &&
+                     names.Length == 2)
+            {
+                obj = _tcpClient.Client.LingerState;
+                name = names[1];
+            }
+            else
+            {
+                throw new ArgumentException("Invalid option name", nameof(name));
+            }
+
+            var propertyInfo = obj.GetType().GetProperty(name);
+            propertyInfo.SetValue(obj, value);
+            return Task.CompletedTask;
+        }
 
         /// <summary>
         /// Authenticate the identity in the transport layer.
@@ -606,7 +685,7 @@ namespace Lime.Transport.Tcp
 #endif
         }
 
-        private bool CanRead => _stream.CanRead && _tcpClient.Connected;
+        private bool CanRead => _stream != null && _stream.CanRead && _tcpClient.Connected;
 
         private Task CloseWithTimeoutAsync()
         {

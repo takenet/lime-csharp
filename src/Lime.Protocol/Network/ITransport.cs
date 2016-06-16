@@ -7,7 +7,7 @@ namespace Lime.Protocol.Network
     /// <summary>
     /// Defines a network connection with a node.
     /// </summary>
-    public interface ITransport
+    public interface ITransport : ITransportInformation
     {
         /// <summary>
         /// Sends an envelope to the remote node.
@@ -45,11 +45,6 @@ namespace Lime.Protocol.Network
         SessionCompression[] GetSupportedCompression();
 
         /// <summary>
-        /// Gets the current transport compression option.
-        /// </summary>
-        SessionCompression Compression { get; }
-
-        /// <summary>
         /// Defines the compression mode for the transport.
         /// </summary>
         /// <param name="compression">The compression mode</param>
@@ -63,17 +58,20 @@ namespace Lime.Protocol.Network
         SessionEncryption[] GetSupportedEncryption();
 
         /// <summary>
-        /// Gets the current transport encryption option.
-        /// </summary>
-        SessionEncryption Encryption { get; }
-
-        /// <summary>
         /// Defines the encryption mode for the transport.
         /// </summary>
         /// <param name="encryption">The encryption mode</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns></returns>
         Task SetEncryptionAsync(SessionEncryption encryption, CancellationToken cancellationToken);
+
+        /// <summary>
+        /// Sets a transport option value.
+        /// </summary>
+        /// <param name="name">Name of the option.</param>
+        /// <param name="value">The value.</param>
+        /// <returns></returns>
+        Task SetOptionAsync(string name, object value);
 
         /// <summary>
         /// Occurs when the transport is about to be closed.
@@ -84,10 +82,5 @@ namespace Lime.Protocol.Network
         /// Occurs after the transport was closed.
         /// </summary>
         event EventHandler Closed;
-
-        /// <summary>
-        /// Indicates if the transport is connected.
-        /// </summary>
-        bool IsConnected { get; }
     }
 }

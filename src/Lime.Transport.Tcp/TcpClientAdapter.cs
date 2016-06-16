@@ -1,8 +1,10 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
+using System.Security.Policy;
 using System.Threading.Tasks;
 
 namespace Lime.Transport.Tcp
@@ -16,8 +18,6 @@ namespace Lime.Transport.Tcp
             if (tcpClient == null) throw new ArgumentNullException(nameof(tcpClient));            
             _tcpClient = tcpClient;
         }
-
-        #region ITcpClient Members
 
         /// <summary>
         /// Returns the System.Net.Sockets.NetworkStream used to send and receive data.
@@ -40,10 +40,20 @@ namespace Lime.Transport.Tcp
         /// <value>
         ///   <c>true</c> if connected; otherwise, <c>false</c>.
         /// </value>
-        public bool Connected => _tcpClient.Connected; 
+        public bool Connected => _tcpClient.Connected;
 
+        /// <summary>
+        /// Disposes this System.Net.Sockets.TcpClient instance and requests that the
+        /// underlying TCP connection be closed.
+        /// </summary>
         public void Close() => _tcpClient.Close();
 
-        #endregion
+        /// <summary>
+        /// Used by the class to provide the underlying network socket. 
+        /// </summary>
+        /// <value>
+        /// The client.
+        /// </value>
+        public Socket Client => _tcpClient.Client;
     }
 }
