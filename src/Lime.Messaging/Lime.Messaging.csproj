@@ -47,9 +47,12 @@
     <Compile Include="Contents\BitmapImage.cs" />
     <Compile Include="Contents\ChatState.cs" />
     <Compile Include="Contents\Invoice.cs" />
+    <Compile Include="Contents\InvoiceItem.cs" />
     <Compile Include="Contents\InvoiceStatus.cs" />
+    <Compile Include="Contents\Item.cs" />
     <Compile Include="Contents\Link.cs" />
     <Compile Include="Contents\Location.cs" />
+    <Compile Include="Contents\PaymentMethod.cs" />
     <Compile Include="Contents\WebLink.cs" />
     <Compile Include="Contents\MediaLink.cs" />
     <Compile Include="Contents\PaymentReceipt.cs" />

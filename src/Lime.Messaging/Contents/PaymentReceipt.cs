@@ -19,6 +19,7 @@ namespace Lime.Messaging.Contents
         public const string CURRENCY_KEY = "currency";
         public const string TAXES_KEY = "taxes";
         public const string TOTAL_KEY = "total";
+        public const string ITEMS_KEY = "items";
 
         public static readonly MediaType MediaType = MediaType.Parse(MIME_TYPE);
 
@@ -85,5 +86,14 @@ namespace Lime.Messaging.Contents
         /// </value>
         [DataMember(Name = TOTAL_KEY)]
         public decimal Total { get; set; }
+
+        /// <summary>
+        /// Gets or sets the invoice items.
+        /// </summary>
+        /// <value>
+        /// The items.
+        /// </value>
+        [DataMember(Name = ITEMS_KEY)]
+        public InvoiceItem[] Items { get; set; }
     }
 }
