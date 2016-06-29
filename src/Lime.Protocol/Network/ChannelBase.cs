@@ -215,7 +215,7 @@ namespace Lime.Protocol.Network
                 throw new ArgumentException("Invalid command id", nameof(requestCommand));
             }
 
-            var tcs = new TaskCompletionSource<Command>();
+            var tcs = new TaskCompletionSource<Command>(TaskCreationOptions.RunContinuationsAsynchronously);
             if (!_pendingCommandsDictionary.TryAdd(requestCommand.Id, tcs))
             {
                 throw new InvalidOperationException("Could not register the pending command request. The command id is already in use.");
@@ -432,15 +432,11 @@ namespace Lime.Protocol.Network
             if (command != null)
             {
                 TaskCompletionSource<Command> pendingCommand;
-                if (!command.Id.IsNullOrEmpty() && 
-                    command.Status != CommandStatus.Pending &&
-                    command.Method != CommandMethod.Observe &&
-                    _pendingCommandsDictionary.TryRemove(command.Id, out pendingCommand))
-                {
-                    // Asychronously set the result
-                    Task.Run(() => pendingCommand.TrySetResult(command), cancellationToken);
-                }
-                else
+                if (command.Id.IsNullOrEmpty() ||
+                    command.Status == CommandStatus.Pending ||
+                    command.Method == CommandMethod.Observe ||
+                    !_pendingCommandsDictionary.TryRemove(command.Id, out pendingCommand) ||
+                    !pendingCommand.TrySetResult(command))
                 {
                     await ConsumeEnvelopeAsync(command, _commandBuffer, cancellationToken).ConfigureAwait(false);
                 }
@@ -613,6 +609,8 @@ namespace Lime.Protocol.Network
                 }
 
                 _consumerCts.Dispose();
+                _pendingCommandsDictionary.Values.ForEach(tcs => tcs.SetCanceled());
+                _pendingCommandsDictionary.Clear();
                 Transport.DisposeIfDisposable();
             }
         }
