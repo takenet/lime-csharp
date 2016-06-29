@@ -80,8 +80,6 @@ namespace Lime.Protocol.Network
             Dispose(false);
         }
 
-        #region IChannel Members
-
         /// <summary>
         /// The current session transport
         /// </summary>
@@ -144,10 +142,6 @@ namespace Lime.Protocol.Network
         /// </summary>
         public ICollection<IChannelModule<Command>> CommandModules { get; }
 
-        #endregion
-
-        #region IMessageChannel Members
-
         /// <summary>
         /// Sends a message to the remote node.
         /// </summary>
@@ -158,7 +152,6 @@ namespace Lime.Protocol.Network
         /// <exception cref="System.InvalidOperationException"></exception>
         public virtual Task SendMessageAsync(Message message, CancellationToken cancellationToken) => SendAsync(message, cancellationToken, MessageModules);
         
-
         /// <summary>
         /// Receives a message from the remote node.
         /// </summary>
@@ -166,10 +159,6 @@ namespace Lime.Protocol.Network
         /// <returns></returns>
         public virtual Task<Message> ReceiveMessageAsync(CancellationToken cancellationToken)
             => ReceiveEnvelopeFromBufferAsync(_messageBuffer, cancellationToken);
-
-        #endregion
-
-        #region ICommandChannel Members
 
         /// <summary>
         /// Sends a command envelope to the remote node.
@@ -236,10 +225,6 @@ namespace Lime.Protocol.Network
             }                        
         }
 
-        #endregion
-
-        #region INotificationChannel Members
-
         /// <summary>
         /// Sends a notification to the remote node.
         /// </summary>
@@ -258,11 +243,6 @@ namespace Lime.Protocol.Network
         /// <exception cref="System.NotImplementedException"></exception>
         public virtual Task<Notification> ReceiveNotificationAsync(CancellationToken cancellationToken) 
             => ReceiveEnvelopeFromBufferAsync(_notificationBuffer, cancellationToken);
-
-
-        #endregion
-
-        #region ISessionChannel Members
 
         /// <summary>
         /// Sends a session change message to the remote node. 
@@ -307,10 +287,6 @@ namespace Lime.Protocol.Network
             throw new InvalidOperationException("An empty or unexpected envelope was received from the transport");
         }
 
-        #endregion
-
-        #region Protected Methods  
-
         protected async Task CloseTransportAsync()
         {
             if (Transport.IsConnected)
@@ -321,10 +297,6 @@ namespace Lime.Protocol.Network
                 }
             }
         }
-
-        #endregion
-
-        #region Private Methods       
 
         private async Task ConsumeTransportAsync()
         {
@@ -366,11 +338,13 @@ namespace Lime.Protocol.Network
             _notificationBuffer.Complete();
             _commandBuffer.Complete();
             _sessionBuffer.Complete();
-
             if (!_consumerCts.IsCancellationRequested)
             {
                 _consumerCts.Cancel();
             }
+
+            _pendingCommandsDictionary.Values.ToList().ForEach(tcs => tcs.TrySetCanceled());
+            _pendingCommandsDictionary.Clear();
         }
 
         private bool IsChannelEstablished()
@@ -580,10 +554,6 @@ namespace Lime.Protocol.Network
             }
         }
 
-        #endregion
-
-        #region IDisposable Members
-
         /// <summary>
         /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
         /// </summary>
@@ -609,12 +579,8 @@ namespace Lime.Protocol.Network
                 }
 
                 _consumerCts.Dispose();
-                _pendingCommandsDictionary.Values.ToList().ForEach(tcs => tcs.TrySetCanceled());
-                _pendingCommandsDictionary.Clear();
                 Transport.DisposeIfDisposable();
             }
         }
-
-        #endregion
     }
 }
