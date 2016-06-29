@@ -609,7 +609,7 @@ namespace Lime.Protocol.Network
                 }
 
                 _consumerCts.Dispose();
-                _pendingCommandsDictionary.Values.ForEach(tcs => tcs.SetCanceled());
+                _pendingCommandsDictionary.Values.ToList().ForEach(tcs => tcs.TrySetCanceled());
                 _pendingCommandsDictionary.Clear();
                 Transport.DisposeIfDisposable();
             }
