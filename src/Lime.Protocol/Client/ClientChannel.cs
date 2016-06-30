@@ -12,9 +12,6 @@ namespace Lime.Protocol.Client
     /// </summary>
     public class ClientChannel : ChannelBase, IClientChannel
     {
-
-        #region Constructor
-
         /// <summary>
         /// Initializes a new instance of the <see cref="ClientChannel"/> class.
         /// </summary>
@@ -25,8 +22,16 @@ namespace Lime.Protocol.Client
         /// <param name="autoNotifyReceipt">Indicates if the client should automatically send 'received' notifications for messages.</param>
         /// <param name="remotePingInterval">The interval to ping the remote party.</param>
         /// <param name="remoteIdleTimeout">The timeout to close the channel due to inactivity.</param>
-        /// <param name="buffersLimit"></param>
-        public ClientChannel(ITransport transport, TimeSpan sendTimeout, int buffersLimit = 5, bool fillEnvelopeRecipients = false, bool autoReplyPings = true, bool autoNotifyReceipt = false, TimeSpan? remotePingInterval = null, TimeSpan? remoteIdleTimeout = null)
+        /// <param name="buffersLimit">The number of envelopes to be buffered internally by the channel in the receive operations. If this limit is reached, the channel will not consume the transport until the buffer is consumed by the receive operations.</param>
+        public ClientChannel(
+            ITransport transport, 
+            TimeSpan sendTimeout, 
+            int buffersLimit = 5, 
+            bool fillEnvelopeRecipients = false, 
+            bool autoReplyPings = true, 
+            bool autoNotifyReceipt = false, 
+            TimeSpan? remotePingInterval = null, 
+            TimeSpan? remoteIdleTimeout = null)
             : base(transport, sendTimeout, buffersLimit, fillEnvelopeRecipients, autoReplyPings, remotePingInterval, remoteIdleTimeout)
         {
             if (autoNotifyReceipt)
@@ -42,10 +47,6 @@ namespace Lime.Protocol.Client
         {
             Dispose(false);
         }
-
-        #endregion
-
-        #region IClientChannel Members
 
         /// <summary>
         /// Sends a new session envelope
@@ -233,10 +234,6 @@ namespace Lime.Protocol.Client
             return ReceiveSessionAsync(cancellationToken);
         }
 
-        #endregion
-
-        #region ChannelBase Members
-
         /// <summary>
         /// Receives a session from the remote node.
         /// Avoid to use this method directly. Instead, use the Server or Client channel methods.
@@ -264,7 +261,5 @@ namespace Lime.Protocol.Client
 
             return session;
         }
-
-        #endregion
     }
 }
