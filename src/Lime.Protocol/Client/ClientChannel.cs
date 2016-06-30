@@ -8,7 +8,7 @@ using Lime.Protocol.Security;
 namespace Lime.Protocol.Client
 {
     /// <summary>
-    /// Defines the communication channel between a node and a server.
+    /// Defines a communication channel between a node and a server.
     /// </summary>
     public class ClientChannel : ChannelBase, IClientChannel
     {
@@ -38,14 +38,6 @@ namespace Lime.Protocol.Client
             {
                 MessageModules.Add(new NotifyReceiptChannelModule(this));
             }
-        }
-
-        /// <summary>
-        /// Finalizes an instance of the <see cref="ClientChannel"/> class.
-        /// </summary>
-        ~ClientChannel()
-        {
-            Dispose(false);
         }
 
         /// <summary>
