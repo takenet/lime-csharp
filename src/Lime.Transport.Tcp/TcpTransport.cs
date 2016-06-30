@@ -192,11 +192,7 @@ namespace Lime.Transport.Tcp
 
             var envelopeJson = _envelopeSerializer.Serialize(envelope);
 
-            if (_traceWriter != null &&
-                _traceWriter.IsEnabled)
-            {
-                await _traceWriter.TraceAsync(envelopeJson, DataOperation.Send).ConfigureAwait(false);
-            }
+            await TraceAsync(envelopeJson, DataOperation.Send).ConfigureAwait(false);
 
             var jsonBytes = Encoding.UTF8.GetBytes(envelopeJson);
             await _sendSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
@@ -235,7 +231,7 @@ namespace Lime.Transport.Tcp
                 while (envelope == null)
                 {
                     cancellationToken.ThrowIfCancellationRequested();
-                    envelope = await GetEnvelopeFromBufferAsync();
+                    envelope = await GetEnvelopeFromBufferAsync().ConfigureAwait(false);
 
                     if (envelope == null && CanRead)
                     {
@@ -278,9 +274,11 @@ namespace Lime.Transport.Tcp
 
                         _jsonBuffer.BufferCurPos += read;
 
-                        if (_jsonBuffer.BufferCurPos >= _jsonBuffer.Buffer.Length)
+                        if (_jsonBuffer.BufferCurPos > _jsonBuffer.Buffer.Length)
                         {
                             await CloseWithTimeoutAsync().ConfigureAwait(false);
+                            await TraceAsync($"{nameof(RemoteEndPoint)}: {RemoteEndPoint} - BufferOverflow: {Encoding.UTF8.GetString(_jsonBuffer.Buffer)}", DataOperation.Error).ConfigureAwait(false);
+
                             throw new BufferOverflowException("Maximum buffer size reached");
                         }
                     }
@@ -325,18 +323,6 @@ namespace Lime.Transport.Tcp
         /// <exception cref="System.NotSupportedException"></exception>        
         public override async Task SetEncryptionAsync(SessionEncryption encryption, CancellationToken cancellationToken)
         {
-#if DEBUG
-            if (_sendSemaphore.CurrentCount == 0)
-            {
-                Console.WriteLine("Send semaphore being used");
-            }
-
-            if (_receiveSemaphore.CurrentCount == 0)
-            {
-                Console.WriteLine("Receive semaphore being used");
-            }
-#endif
-
             await _sendSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
             try
             {
@@ -623,11 +609,7 @@ namespace Lime.Transport.Tcp
             {
                 var envelopeJson = Encoding.UTF8.GetString(jsonBytes);
 
-                if (_traceWriter != null &&
-                    _traceWriter.IsEnabled)
-                {
-                    await _traceWriter.TraceAsync(envelopeJson, DataOperation.Receive).ConfigureAwait(false);
-                }
+                await TraceAsync(envelopeJson, DataOperation.Receive).ConfigureAwait(false);                
 
                 try
                 {
@@ -653,12 +635,8 @@ namespace Lime.Transport.Tcp
             X509Chain chain,
             SslPolicyErrors sslPolicyErrors)
         {
-#if DEBUG
-            return true;
-#else
 			return sslPolicyErrors == SslPolicyErrors.None || 
 				   sslPolicyErrors == SslPolicyErrors.RemoteCertificateNameMismatch;
-#endif
         }
 
         private bool ValidateClientCertificate(
@@ -667,22 +645,14 @@ namespace Lime.Transport.Tcp
             X509Chain chain,
             SslPolicyErrors sslPolicyErrors)
         {
-#if DEBUG
-            return true;
-#else
-			// TODO: Check key usage
-
+            // TODO: Check key usage
 			// The client certificate can be null 
 			// but if present, must be valid
 			if (certificate == null)
 			{
 				return true;
 			}
-			else
-			{
-				return sslPolicyErrors == SslPolicyErrors.None;
-			}
-#endif
+            return sslPolicyErrors == SslPolicyErrors.None;
         }
 
         private bool CanRead => _stream != null && _stream.CanRead && _tcpClient.Connected;
@@ -693,6 +663,12 @@ namespace Lime.Transport.Tcp
             {
                 return CloseAsync(cts.Token);
             }
+        }
+
+        private Task TraceAsync(string data, DataOperation operation)
+        {
+            if (_traceWriter == null || !_traceWriter.IsEnabled) return Task.CompletedTask;
+            return _traceWriter.TraceAsync(data, operation);
         }
     }
 }

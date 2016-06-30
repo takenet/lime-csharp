@@ -28,8 +28,7 @@ namespace Lime.Protocol.Network
     }
 
     /// <summary>
-    /// Represents the transport
-    /// data operations
+    /// Represents the transport operations.
     /// </summary>
     public enum DataOperation
     {
@@ -38,8 +37,16 @@ namespace Lime.Protocol.Network
         /// </summary>
         Send,
         /// <summary>
-        /// A tranport receive operation
+        /// A transport receive operation
         /// </summary>
-        Receive
+        Receive,
+        /// <summary>
+        /// A transport failure
+        /// </summary>
+        Error,
+        /// <summary>
+        /// A transport information
+        /// </summary>
+        Information
     }
 }
