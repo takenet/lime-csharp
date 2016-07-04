@@ -1924,5 +1924,169 @@ namespace Lime.Protocol.UnitTests.Client
             _clientChannel.Verify(c => c.ReceiveFinishedSessionAsync(_cancellationToken), Times.Never);
             _disposableClientChannel.Verify(c => c.Dispose(), Times.Once);
         }
+
+
+        [Test]
+        public async Task Send_Receive_MessageAsync_ChannelOperationFailed_RecreateChannelOnceAndProcess()
+        {
+            // Arrange
+            var message = Dummy.CreateMessage(Dummy.CreatePlainDocument());
+            var receivedMessage = Dummy.CreateMessage(Dummy.CreatePlainDocument());
+            var target = GetTarget();
+            var exception = Dummy.CreateException();
+            var sessionId = EnvelopeId.NewId();
+            var clientChannel2 = new Mock<IClientChannel>();
+
+            FailedChannelInformation failedChannelInformation = null;
+            target.ChannelOperationFailedHandlers.Add((f) =>
+            {
+                failedChannelInformation = f;
+                return TaskUtil.TrueCompletedTask;
+            });
+            var createdChannelInformations = new List<ChannelInformation>();
+            target.ChannelCreatedHandlers.Add((c) =>
+            {
+                createdChannelInformations.Add(c);
+                return TaskUtil.CompletedTask;
+            });
+
+            ChannelInformation discardedChannelInformation = null;
+            target.ChannelDiscardedHandlers.Add((c) =>
+            {
+                discardedChannelInformation = c;
+                return TaskUtil.CompletedTask;
+            });
+            _clientChannel
+                .Setup(c => c.SendMessageAsync(message, It.IsAny<CancellationToken>()))
+                .Throws(exception);
+            _clientChannel
+                .Setup(c => c.ReceiveMessageAsync(It.IsAny<CancellationToken>()))
+                .Throws(exception);
+            _establishedClientChannelBuilder
+                .SetupSequence(b => b.BuildAndEstablishAsync(It.IsAny<CancellationToken>()))
+                .Returns(Task.FromResult(_clientChannel.Object))
+                .Returns(Task.FromResult(clientChannel2.Object));
+            clientChannel2
+                .SetupGet(c => c.SessionId)
+                .Returns(sessionId);
+            clientChannel2
+                .SetupGet(c => c.Transport)
+                .Returns(_transport.Object);
+            clientChannel2
+                .SetupGet(c => c.State)
+                .Returns(SessionState.Established);            
+            clientChannel2
+                .Setup(c => c.ReceiveMessageAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(receivedMessage);
+
+            // Act
+            var sendTask = Task.Run(() => target.SendMessageAsync(message, _cancellationToken));
+            var receiveTask = Task.Run(() => target.ReceiveMessageAsync(_cancellationToken));
+            await Task.WhenAll(sendTask, receiveTask);
+            var actualReceived = await receiveTask;
+
+            // Assert
+            _establishedClientChannelBuilder.Verify(c => c.BuildAndEstablishAsync(It.IsAny<CancellationToken>()),
+                Times.Exactly(2));
+            _clientChannel.Verify(c => c.SendMessageAsync(message, _cancellationToken), Times.Once());
+            _clientChannel.Verify(c => c.ReceiveMessageAsync(_cancellationToken), Times.Once());
+            clientChannel2.Verify(c => c.SendMessageAsync(message, _cancellationToken), Times.Once());
+            clientChannel2.Verify(c => c.ReceiveMessageAsync(_cancellationToken), Times.Once());
+            failedChannelInformation.Exception.ShouldBe(exception);
+            createdChannelInformations.Count.ShouldBe(2);
+            createdChannelInformations[0].SessionId.ShouldBe(_sessionId);
+            createdChannelInformations[1].SessionId.ShouldBe(sessionId);
+            discardedChannelInformation.ShouldNotBeNull();
+            discardedChannelInformation.SessionId.ShouldBe(_sessionId);
+            actualReceived.ShouldBe(receivedMessage);        
+        }
+
+        [Test]
+        public async Task Send_Receive_Process_CommandAsync_ChannelOperationFailed_RecreateChannelOnceAndProcess()
+        {
+            // Arrange            
+            var command = Dummy.CreateCommand(Dummy.CreatePlainDocument());
+            var receivedCommand = Dummy.CreateCommand(Dummy.CreatePlainDocument());
+            var requestCommand = Dummy.CreateCommand();
+            var responseCommand = Dummy.CreateCommand(Dummy.CreatePing(), status: CommandStatus.Success);
+            var target = GetTarget();
+            var exception = Dummy.CreateException();
+            var sessionId = EnvelopeId.NewId();
+            var clientChannel2 = new Mock<IClientChannel>();
+
+            FailedChannelInformation failedChannelInformation = null;
+            target.ChannelOperationFailedHandlers.Add((f) =>
+            {
+                failedChannelInformation = f;
+                return TaskUtil.TrueCompletedTask;
+            });
+            var createdChannelInformations = new List<ChannelInformation>();
+            target.ChannelCreatedHandlers.Add((c) =>
+            {
+                createdChannelInformations.Add(c);
+                return TaskUtil.CompletedTask;
+            });
+
+            ChannelInformation discardedChannelInformation = null;
+            target.ChannelDiscardedHandlers.Add((c) =>
+            {
+                discardedChannelInformation = c;
+                return TaskUtil.CompletedTask;
+            });
+            _clientChannel
+                .Setup(c => c.SendCommandAsync(command, It.IsAny<CancellationToken>()))
+                .Throws(exception);
+            _clientChannel
+                .Setup(c => c.ReceiveCommandAsync(It.IsAny<CancellationToken>()))
+                .Throws(exception);
+            _clientChannel
+                .Setup(c => c.ProcessCommandAsync(It.IsAny<Command>(), It.IsAny<CancellationToken>()))
+                .ThrowsAsync(exception);
+            _establishedClientChannelBuilder
+                .SetupSequence(b => b.BuildAndEstablishAsync(It.IsAny<CancellationToken>()))
+                .Returns(Task.FromResult(_clientChannel.Object))
+                .Returns(Task.FromResult(clientChannel2.Object));
+            clientChannel2
+                .SetupGet(c => c.SessionId)
+                .Returns(sessionId);
+            clientChannel2
+                .SetupGet(c => c.Transport)
+                .Returns(_transport.Object);
+            clientChannel2
+                .SetupGet(c => c.State)
+                .Returns(SessionState.Established);
+            clientChannel2
+                .Setup(c => c.ReceiveCommandAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(receivedCommand);
+            clientChannel2
+                .Setup(c => c.ProcessCommandAsync(It.IsAny<Command>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(responseCommand);
+
+            // Act
+            var sendTask = Task.Run(() => target.SendCommandAsync(command, _cancellationToken));
+            var receiveTask = Task.Run(() => target.ReceiveCommandAsync(_cancellationToken));
+            var processTask = Task.Run(() =>target.ProcessCommandAsync(requestCommand, _cancellationToken));
+            await Task.WhenAll(sendTask, receiveTask, processTask);
+            var actualReceived = await receiveTask;
+            var actualProcessed = await processTask;
+
+            // Assert
+            _establishedClientChannelBuilder.Verify(c => c.BuildAndEstablishAsync(It.IsAny<CancellationToken>()),
+                Times.Exactly(2));
+            _clientChannel.Verify(c => c.SendCommandAsync(command, _cancellationToken), Times.Once());
+            _clientChannel.Verify(c => c.ReceiveCommandAsync(_cancellationToken), Times.Once());
+            _clientChannel.Verify(c => c.ProcessCommandAsync(requestCommand, _cancellationToken), Times.Once());
+            clientChannel2.Verify(c => c.SendCommandAsync(command, _cancellationToken), Times.Once());
+            clientChannel2.Verify(c => c.ReceiveCommandAsync(_cancellationToken), Times.Once());                        
+            clientChannel2.Verify(c => c.ProcessCommandAsync(requestCommand, _cancellationToken), Times.Once());
+            failedChannelInformation.Exception.ShouldBe(exception);
+            createdChannelInformations.Count.ShouldBe(2);
+            createdChannelInformations[0].SessionId.ShouldBe(_sessionId);
+            createdChannelInformations[1].SessionId.ShouldBe(sessionId);
+            discardedChannelInformation.ShouldNotBeNull();
+            discardedChannelInformation.SessionId.ShouldBe(_sessionId);
+            actualReceived.ShouldBe(receivedCommand);
+            actualProcessed.ShouldBe(responseCommand);
+        }
     }
 }
