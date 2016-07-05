@@ -17,11 +17,20 @@ namespace Lime.Protocol.Network
         /// <param name="exception">The exception.</param>
         /// <param name="localNode"></param>
         /// <param name="remoteNode"></param>
-        public FailedChannelInformation(string sessionId, SessionState state, Node localNode, Node remoteNode, bool isConnected, Exception exception) 
+        /// <param name="operationName"></param>
+        public FailedChannelInformation(
+            string sessionId, 
+            SessionState state, 
+            Node localNode, 
+            Node remoteNode, 
+            bool isConnected,             
+            Exception exception,
+            string operationName) 
             : base(sessionId, state, localNode, remoteNode)
         {                        
-            IsConnected = isConnected;
+            IsConnected = isConnected;            
             Exception = exception;
+            OperationName = operationName;
         }
 
         /// <summary>
@@ -33,5 +42,10 @@ namespace Lime.Protocol.Network
         /// Gets the exception that caused the channel to fail.
         /// </summary>
         public Exception Exception { get; }
+
+        /// <summary>
+        /// Gets the name of the operation that failed.
+        /// </summary>       
+        public string OperationName { get; }
     }
 }

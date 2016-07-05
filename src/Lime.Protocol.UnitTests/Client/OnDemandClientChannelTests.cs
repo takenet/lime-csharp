@@ -21,6 +21,7 @@ namespace Lime.Protocol.UnitTests.Client
         private Mock<IClientChannelBuilder> _clientChannelBuilder;
         private Mock<IEstablishedClientChannelBuilder> _establishedClientChannelBuilder;
         private Mock<IClientChannel> _clientChannel;
+        private Mock<IDisposable> _clientChannelDisposable;
         private Mock<IDisposable> _disposableClientChannel;
         private Mock<ITransport> _transport;
 
@@ -35,6 +36,7 @@ namespace Lime.Protocol.UnitTests.Client
                 .SetupGet(t => t.IsConnected)
                 .Returns(true);
             _clientChannel = new Mock<IClientChannel>();
+            _clientChannelDisposable = _clientChannel.As<IDisposable>();
             _clientChannel
                 .SetupGet(c => c.SessionId)
                 .Returns(_sessionId);
@@ -386,6 +388,7 @@ namespace Lime.Protocol.UnitTests.Client
             _clientChannel.Verify(c => c.SendMessageAsync(message, CancellationToken.None), Times.Once());
             clientChannel2.Verify(c => c.SendMessageAsync(message, CancellationToken.None), Times.Once());
             failedChannelInformation.Exception.ShouldBe(exception);
+            failedChannelInformation.OperationName.ShouldBe(nameof(IOnDemandClientChannel.SendMessageAsync));
             createdChannelInformations.Count.ShouldBe(2);
             createdChannelInformations[0].SessionId.ShouldBe(_sessionId);
             createdChannelInformations[1].SessionId.ShouldBe(sessionId);
@@ -597,6 +600,7 @@ namespace Lime.Protocol.UnitTests.Client
             _disposableClientChannel.Verify(c => c.Dispose(), Times.Once);
             clientChannel2.Verify(c => c.ReceiveMessageAsync(_cancellationToken), Times.Once());            
             failedChannelInformation.Exception.ShouldBe(exception);
+            failedChannelInformation.OperationName.ShouldBe(nameof(IOnDemandClientChannel.ReceiveMessageAsync));
         }
         
         [Test]
@@ -913,6 +917,7 @@ namespace Lime.Protocol.UnitTests.Client
             _clientChannel.Verify(c => c.SendNotificationAsync(notification, CancellationToken.None), Times.Once());
             clientChannel2.Verify(c => c.SendNotificationAsync(notification, CancellationToken.None), Times.Once());
             failedChannelInformation.Exception.ShouldBe(exception);
+            failedChannelInformation.OperationName.ShouldBe(nameof(IOnDemandClientChannel.SendNotificationAsync));
             createdChannelInformations.Count.ShouldBe(2);
             createdChannelInformations[0].SessionId.ShouldBe(_sessionId);
             createdChannelInformations[1].SessionId.ShouldBe(sessionId);
@@ -1124,6 +1129,7 @@ namespace Lime.Protocol.UnitTests.Client
             _disposableClientChannel.Verify(c => c.Dispose(), Times.Once);
             clientChannel2.Verify(c => c.ReceiveNotificationAsync(_cancellationToken), Times.Once());
             failedChannelInformation.Exception.ShouldBe(exception);
+            failedChannelInformation.OperationName.ShouldBe(nameof(IOnDemandClientChannel.ReceiveNotificationAsync));
         }
         
         [Test]
@@ -1439,7 +1445,9 @@ namespace Lime.Protocol.UnitTests.Client
                 Times.Exactly(2));
             _clientChannel.Verify(c => c.SendCommandAsync(command, CancellationToken.None), Times.Once());
             clientChannel2.Verify(c => c.SendCommandAsync(command, CancellationToken.None), Times.Once());
+            failedChannelInformation.OperationName.ShouldBe(nameof(IOnDemandClientChannel.SendCommandAsync));
             failedChannelInformation.Exception.ShouldBe(exception);
+            failedChannelInformation.OperationName.ShouldBe(nameof(IOnDemandClientChannel.SendCommandAsync));
             createdChannelInformations.Count.ShouldBe(2);
             createdChannelInformations[0].SessionId.ShouldBe(_sessionId);
             createdChannelInformations[1].SessionId.ShouldBe(sessionId);
@@ -1651,6 +1659,7 @@ namespace Lime.Protocol.UnitTests.Client
             _disposableClientChannel.Verify(c => c.Dispose(), Times.Once);
             clientChannel2.Verify(c => c.ReceiveCommandAsync(_cancellationToken), Times.Once());
             failedChannelInformation.Exception.ShouldBe(exception);
+            failedChannelInformation.OperationName.ShouldBe(nameof(IOnDemandClientChannel.ReceiveCommandAsync));
         }
 
         
@@ -1878,7 +1887,8 @@ namespace Lime.Protocol.UnitTests.Client
             _clientChannel.Verify(c => c.ProcessCommandAsync(requestCommand, _cancellationToken), Times.Once());
             _disposableClientChannel.Verify(c => c.Dispose(), Times.Once);
             clientChannel2.Verify(c => c.ProcessCommandAsync(requestCommand, _cancellationToken), Times.Once());
-            failedChannelInformation.Exception.ShouldBe(exception);          
+            failedChannelInformation.Exception.ShouldBe(exception);
+            failedChannelInformation.OperationName.ShouldBe(nameof(IOnDemandClientChannel.ProcessCommandAsync));
         }
 
         [Test]
@@ -1924,36 +1934,43 @@ namespace Lime.Protocol.UnitTests.Client
             _clientChannel.Verify(c => c.ReceiveFinishedSessionAsync(_cancellationToken), Times.Never);
             _disposableClientChannel.Verify(c => c.Dispose(), Times.Once);
         }
-
-
+        
         [Test]
-        public async Task Send_Receive_MessageAsync_ChannelOperationFailed_RecreateChannelOnceAndProcess()
+        public async Task Send_Receive_Process_Message_Command_Notification_Async_ChannelOperationFailed_RecreateChannelOnceAndSend()
         {
             // Arrange
             var message = Dummy.CreateMessage(Dummy.CreatePlainDocument());
-            var receivedMessage = Dummy.CreateMessage(Dummy.CreatePlainDocument());
+            var receivedMessage = Dummy.CreateMessage(Dummy.CreateJsonDocument());
+            var notification = Dummy.CreateNotification(Event.Received);
+            var receivedNotification = Dummy.CreateNotification(Event.Accepted);
+            var command = Dummy.CreateCommand(Dummy.CreatePing());
+            var receivedCommand = Dummy.CreateCommand(Dummy.CreatePlainDocument());
+            var requestCommand = Dummy.CreateCommand();
+            var responseCommand = Dummy.CreateCommand(Dummy.CreatePing(), status: CommandStatus.Success);
+
             var target = GetTarget();
             var exception = Dummy.CreateException();
             var sessionId = EnvelopeId.NewId();
             var clientChannel2 = new Mock<IClientChannel>();
+            var clientChannel2Disposable = clientChannel2.As<IDisposable>();
 
-            FailedChannelInformation failedChannelInformation = null;
+            var operationFailedChannelInformations = new List<FailedChannelInformation>();
             target.ChannelOperationFailedHandlers.Add((f) =>
             {
-                failedChannelInformation = f;
+                operationFailedChannelInformations.Add(f);
                 return TaskUtil.TrueCompletedTask;
             });
-            var createdChannelInformations = new List<ChannelInformation>();
+            var createdChannelInformations = new List<ChannelInformation>();            
             target.ChannelCreatedHandlers.Add((c) =>
-            {
+            {            
                 createdChannelInformations.Add(c);
                 return TaskUtil.CompletedTask;
             });
 
-            ChannelInformation discardedChannelInformation = null;
+            var discardedChannelInformations = new List<ChannelInformation>();
             target.ChannelDiscardedHandlers.Add((c) =>
             {
-                discardedChannelInformation = c;
+                discardedChannelInformations.Add(c);
                 return TaskUtil.CompletedTask;
             });
             _clientChannel
@@ -1962,77 +1979,12 @@ namespace Lime.Protocol.UnitTests.Client
             _clientChannel
                 .Setup(c => c.ReceiveMessageAsync(It.IsAny<CancellationToken>()))
                 .Throws(exception);
-            _establishedClientChannelBuilder
-                .SetupSequence(b => b.BuildAndEstablishAsync(It.IsAny<CancellationToken>()))
-                .Returns(Task.FromResult(_clientChannel.Object))
-                .Returns(Task.FromResult(clientChannel2.Object));
-            clientChannel2
-                .SetupGet(c => c.SessionId)
-                .Returns(sessionId);
-            clientChannel2
-                .SetupGet(c => c.Transport)
-                .Returns(_transport.Object);
-            clientChannel2
-                .SetupGet(c => c.State)
-                .Returns(SessionState.Established);            
-            clientChannel2
-                .Setup(c => c.ReceiveMessageAsync(It.IsAny<CancellationToken>()))
-                .ReturnsAsync(receivedMessage);
-
-            // Act
-            var sendTask = Task.Run(() => target.SendMessageAsync(message, _cancellationToken));
-            var receiveTask = Task.Run(() => target.ReceiveMessageAsync(_cancellationToken));
-            await Task.WhenAll(sendTask, receiveTask);
-            var actualReceived = await receiveTask;
-
-            // Assert
-            _establishedClientChannelBuilder.Verify(c => c.BuildAndEstablishAsync(It.IsAny<CancellationToken>()),
-                Times.Exactly(2));
-            _clientChannel.Verify(c => c.SendMessageAsync(message, _cancellationToken), Times.Once());
-            _clientChannel.Verify(c => c.ReceiveMessageAsync(_cancellationToken), Times.Once());
-            clientChannel2.Verify(c => c.SendMessageAsync(message, _cancellationToken), Times.Once());
-            clientChannel2.Verify(c => c.ReceiveMessageAsync(_cancellationToken), Times.Once());
-            failedChannelInformation.Exception.ShouldBe(exception);
-            createdChannelInformations.Count.ShouldBe(2);
-            createdChannelInformations[0].SessionId.ShouldBe(_sessionId);
-            createdChannelInformations[1].SessionId.ShouldBe(sessionId);
-            discardedChannelInformation.ShouldNotBeNull();
-            discardedChannelInformation.SessionId.ShouldBe(_sessionId);
-            actualReceived.ShouldBe(receivedMessage);        
-        }
-
-        [Test]
-        public async Task Send_Receive_Process_CommandAsync_ChannelOperationFailed_RecreateChannelOnceAndProcess()
-        {
-            // Arrange            
-            var command = Dummy.CreateCommand(Dummy.CreatePlainDocument());
-            var receivedCommand = Dummy.CreateCommand(Dummy.CreatePlainDocument());
-            var requestCommand = Dummy.CreateCommand();
-            var responseCommand = Dummy.CreateCommand(Dummy.CreatePing(), status: CommandStatus.Success);
-            var target = GetTarget();
-            var exception = Dummy.CreateException();
-            var sessionId = EnvelopeId.NewId();
-            var clientChannel2 = new Mock<IClientChannel>();
-
-            FailedChannelInformation failedChannelInformation = null;
-            target.ChannelOperationFailedHandlers.Add((f) =>
-            {
-                failedChannelInformation = f;
-                return TaskUtil.TrueCompletedTask;
-            });
-            var createdChannelInformations = new List<ChannelInformation>();
-            target.ChannelCreatedHandlers.Add((c) =>
-            {
-                createdChannelInformations.Add(c);
-                return TaskUtil.CompletedTask;
-            });
-
-            ChannelInformation discardedChannelInformation = null;
-            target.ChannelDiscardedHandlers.Add((c) =>
-            {
-                discardedChannelInformation = c;
-                return TaskUtil.CompletedTask;
-            });
+            _clientChannel
+                .Setup(c => c.SendNotificationAsync(notification, It.IsAny<CancellationToken>()))
+                .Throws(exception);
+            _clientChannel
+                .Setup(c => c.ReceiveNotificationAsync(It.IsAny<CancellationToken>()))
+                .Throws(exception);
             _clientChannel
                 .Setup(c => c.SendCommandAsync(command, It.IsAny<CancellationToken>()))
                 .Throws(exception);
@@ -2056,6 +2008,12 @@ namespace Lime.Protocol.UnitTests.Client
                 .SetupGet(c => c.State)
                 .Returns(SessionState.Established);
             clientChannel2
+                .Setup(c => c.ReceiveMessageAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(receivedMessage);
+            clientChannel2
+                .Setup(c => c.ReceiveNotificationAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(receivedNotification);
+            clientChannel2
                 .Setup(c => c.ReceiveCommandAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(receivedCommand);
             clientChannel2
@@ -2063,29 +2021,41 @@ namespace Lime.Protocol.UnitTests.Client
                 .ReturnsAsync(responseCommand);
 
             // Act
-            var sendTask = Task.Run(() => target.SendCommandAsync(command, _cancellationToken));
-            var receiveTask = Task.Run(() => target.ReceiveCommandAsync(_cancellationToken));
-            var processTask = Task.Run(() =>target.ProcessCommandAsync(requestCommand, _cancellationToken));
-            await Task.WhenAll(sendTask, receiveTask, processTask);
-            var actualReceived = await receiveTask;
+            var sendMessageTask = Task.Run(() => target.SendMessageAsync(message, _cancellationToken));
+            var sendNotificationTask = Task.Run(() => target.SendNotificationAsync(notification, _cancellationToken));
+            var sendCommandTask = Task.Run(() => target.SendCommandAsync(command, _cancellationToken));
+            var receiveMessageTask = Task.Run(() => target.ReceiveMessageAsync(_cancellationToken));
+            var receiveNotificationTask = Task.Run(() => target.ReceiveNotificationAsync(_cancellationToken));
+            var receiveCommandTask = Task.Run(() => target.ReceiveCommandAsync(_cancellationToken));
+            var processTask = Task.Run(() => target.ProcessCommandAsync(requestCommand, _cancellationToken));
+            await Task.WhenAll(sendMessageTask, sendNotificationTask, sendCommandTask, receiveMessageTask, receiveNotificationTask, receiveCommandTask, processTask);
+            var actualReceivedMessage = await receiveMessageTask;
+            var actualReceivedNotification = await receiveNotificationTask;
+            var actualReceivedCommand = await receiveCommandTask;
             var actualProcessed = await processTask;
 
             // Assert
             _establishedClientChannelBuilder.Verify(c => c.BuildAndEstablishAsync(It.IsAny<CancellationToken>()),
                 Times.Exactly(2));
-            _clientChannel.Verify(c => c.SendCommandAsync(command, _cancellationToken), Times.Once());
-            _clientChannel.Verify(c => c.ReceiveCommandAsync(_cancellationToken), Times.Once());
-            _clientChannel.Verify(c => c.ProcessCommandAsync(requestCommand, _cancellationToken), Times.Once());
+            _clientChannelDisposable.Verify(c => c.Dispose(), Times.Once());
+            clientChannel2.Verify(c => c.SendMessageAsync(message, _cancellationToken), Times.Once());
+            clientChannel2.Verify(c => c.ReceiveMessageAsync(_cancellationToken), Times.Once());
+            clientChannel2.Verify(c => c.SendNotificationAsync(notification, _cancellationToken), Times.Once());
+            clientChannel2.Verify(c => c.ReceiveNotificationAsync(_cancellationToken), Times.Once());
             clientChannel2.Verify(c => c.SendCommandAsync(command, _cancellationToken), Times.Once());
-            clientChannel2.Verify(c => c.ReceiveCommandAsync(_cancellationToken), Times.Once());                        
+            clientChannel2.Verify(c => c.ReceiveCommandAsync(_cancellationToken), Times.Once());
             clientChannel2.Verify(c => c.ProcessCommandAsync(requestCommand, _cancellationToken), Times.Once());
-            failedChannelInformation.Exception.ShouldBe(exception);
+            clientChannel2Disposable.Verify(c => c.Dispose(), Times.Never());
+            operationFailedChannelInformations.Count.ShouldBeGreaterThan(1);
+            operationFailedChannelInformations.ShouldAllBe(e => e.Exception == exception);            
             createdChannelInformations.Count.ShouldBe(2);
             createdChannelInformations[0].SessionId.ShouldBe(_sessionId);
             createdChannelInformations[1].SessionId.ShouldBe(sessionId);
-            discardedChannelInformation.ShouldNotBeNull();
-            discardedChannelInformation.SessionId.ShouldBe(_sessionId);
-            actualReceived.ShouldBe(receivedCommand);
+            discardedChannelInformations.Count.ShouldBe(1);
+            discardedChannelInformations[0].SessionId.ShouldBe(_sessionId);            
+            actualReceivedMessage.ShouldBe(receivedMessage);
+            actualReceivedNotification.ShouldBe(receivedNotification);
+            actualReceivedCommand.ShouldBe(receivedCommand);
             actualProcessed.ShouldBe(responseCommand);
         }
     }

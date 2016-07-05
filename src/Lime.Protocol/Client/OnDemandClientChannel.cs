@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -78,14 +79,14 @@ namespace Lime.Protocol.Client
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                var channel = await GetChannelAsync(cancellationToken, true).ConfigureAwait(false);
+                var channel = await GetChannelAsync(cancellationToken, true, nameof(ProcessCommandAsync)).ConfigureAwait(false);
                 try
                 {
                     return await channel.ProcessCommandAsync(requestCommand, cancellationToken).ConfigureAwait(false);
                 }
                 catch (Exception ex) when (!(ex is OperationCanceledException && cancellationToken.IsCancellationRequested))
                 {
-                    if (!await HandleChannelOperationExceptionAsync(ex, channel, cancellationToken)) throw;
+                    if (!await HandleChannelOperationExceptionAsync(ex, nameof(ProcessCommandAsync), channel, cancellationToken)) throw;
                 }
             }
 
@@ -163,7 +164,6 @@ namespace Lime.Protocol.Client
         /// </summary>
         public ICollection<Func<FailedChannelInformation, Task<bool>>> ChannelOperationFailedHandlers { get; }
 
-
         /// <summary>
         /// Finishes the associated client channel, if established.
         /// </summary>
@@ -192,13 +192,13 @@ namespace Lime.Protocol.Client
             }
         }
 
-        private async Task SendAsync<T>(T envelope, CancellationToken cancellationToken, Func<IClientChannel, T, Task> sendFunc) where T : Envelope, new()
+        private async Task SendAsync<T>(T envelope, CancellationToken cancellationToken, Func<IClientChannel, T, Task> sendFunc, [CallerMemberName]string operationName = null) where T : Envelope, new()
         {
             while (!_disposed)
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                var channel = await GetChannelAsync(cancellationToken, true).ConfigureAwait(false);
+                var channel = await GetChannelAsync(cancellationToken, true, operationName).ConfigureAwait(false);
                 try
                 {
                     await sendFunc(channel, envelope).ConfigureAwait(false);
@@ -206,40 +206,40 @@ namespace Lime.Protocol.Client
                 }
                 catch (Exception ex) when (!(ex is OperationCanceledException && cancellationToken.IsCancellationRequested))
                 {
-                    if (!await HandleChannelOperationExceptionAsync(ex, channel, cancellationToken)) throw;
+                    if (!await HandleChannelOperationExceptionAsync(ex, operationName, channel, cancellationToken)) throw;
                 }
             }
 
             throw new ObjectDisposedException(nameof(OnDemandClientChannel));
         }
 
-        private async Task<T> ReceiveAsync<T>(CancellationToken cancellationToken, Func<IClientChannel, CancellationToken, Task<T>> receiveFunc) where T : Envelope, new()
+        private async Task<T> ReceiveAsync<T>(CancellationToken cancellationToken, Func<IClientChannel, CancellationToken, Task<T>> receiveFunc, [CallerMemberName]string operationName = null) where T : Envelope, new()
         {
             while (!_disposed)
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
                 // For receiving, we should not check if the channel is established, since that can exists received envelopes in the buffer.
-                var channel = await GetChannelAsync(cancellationToken, false).ConfigureAwait(false);
+                var channel = await GetChannelAsync(cancellationToken, false, operationName).ConfigureAwait(false);
                 try
                 {
                     return await receiveFunc(channel, cancellationToken).ConfigureAwait(false);
                 }
                 catch (Exception ex) when (!(ex is OperationCanceledException && cancellationToken.IsCancellationRequested))
                 {
-                    if (!await HandleChannelOperationExceptionAsync(ex, channel, cancellationToken)) throw;
+                    if (!await HandleChannelOperationExceptionAsync(ex, operationName, channel, cancellationToken)) throw;
                 }
             }
 
             throw new ObjectDisposedException(nameof(OnDemandClientChannel));
         }
 
-        private async Task<bool> HandleChannelOperationExceptionAsync(Exception ex, IChannel channel, CancellationToken cancellationToken)
+        private async Task<bool> HandleChannelOperationExceptionAsync(Exception ex, string operationName, IChannel channel, CancellationToken cancellationToken)
         {
             try
             {
                 var failedChannelInformation = new FailedChannelInformation(
-                    channel.SessionId, channel.State, channel.LocalNode, channel.RemoteNode, channel.Transport.IsConnected, ex);
+                    channel.SessionId, channel.State, channel.LocalNode, channel.RemoteNode, channel.Transport.IsConnected, ex, operationName);
 
                 // Make a copy of the handlers
                 var handlers = ChannelOperationFailedHandlers.ToList();
@@ -299,7 +299,7 @@ namespace Lime.Protocol.Client
             throw new AggregateException(exceptions);
         }
 
-        private async Task<IClientChannel> GetChannelAsync(CancellationToken cancellationToken, bool checkIfEstablished)
+        private async Task<IClientChannel> GetChannelAsync(CancellationToken cancellationToken, bool checkIfEstablished, string operationName)
         {
             var channelCreated = false;
             var clientChannel = _clientChannel;
@@ -313,23 +313,23 @@ namespace Lime.Protocol.Client
                     clientChannel = _clientChannel;
                     if (ShouldCreateChannel(clientChannel, checkIfEstablished))
                     {
+                        _cts?.Cancel();
+                        _cts?.Dispose();
+
                         clientChannel = _clientChannel = await _builder
                             .BuildAndEstablishAsync(cancellationToken)
                             .ConfigureAwait(false);
-
-                        _cts?.Cancel();
-                        _cts?.Dispose();
+                        
                         _cts = new CancellationTokenSource();
                         _finishedSessionTask = clientChannel.ReceiveFinishedSessionAsync(_cts.Token);
 
                         channelCreated = true;
-
                     }
                 }
                 catch (Exception ex) when (!(ex is OperationCanceledException && cancellationToken.IsCancellationRequested))
                 {
                     var failedChannelInformation = new FailedChannelInformation(
-                        null, SessionState.New, null, null, false, ex);
+                        null, SessionState.New, null, null, false, ex, operationName);
 
                     var handlers = ChannelCreationFailedHandlers.ToList();
                     if (!await InvokeHandlersAsync(handlers, failedChannelInformation, cancellationToken).ConfigureAwait(false)) throw;
@@ -373,16 +373,15 @@ namespace Lime.Protocol.Client
         }
 
         private async Task DiscardChannelUnsynchronizedAsync(IChannel clientChannel, CancellationToken cancellationToken)
-        {
-            clientChannel.DisposeIfDisposable();
+        {            
             if (ReferenceEquals(clientChannel, _clientChannel))
-            {
+            {                
                 _clientChannel = null;
+                clientChannel.DisposeIfDisposable();
+                var channelInformation = new ChannelInformation(clientChannel.SessionId, clientChannel.State, clientChannel.LocalNode, clientChannel.RemoteNode);
+                var handlers = ChannelDiscardedHandlers.ToList();
+                await InvokeHandlersAsync(handlers, channelInformation, cancellationToken).ConfigureAwait(false);                
             }
-
-            var channelInformation = new ChannelInformation(clientChannel.SessionId, clientChannel.State, clientChannel.LocalNode, clientChannel.RemoteNode);
-            var handlers = ChannelDiscardedHandlers.ToList();
-            await InvokeHandlersAsync(handlers, channelInformation, cancellationToken).ConfigureAwait(false);
         }
 
         public void Dispose()
