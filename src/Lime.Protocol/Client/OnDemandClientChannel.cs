@@ -79,12 +79,16 @@ namespace Lime.Protocol.Client
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                var channel = await GetChannelAsync(cancellationToken, true, nameof(ProcessCommandAsync)).ConfigureAwait(false);
+                var channel = await GetChannelAsync(cancellationToken, nameof(ProcessCommandAsync)).ConfigureAwait(false);
                 try
                 {
                     return await channel.ProcessCommandAsync(requestCommand, cancellationToken).ConfigureAwait(false);
                 }
-                catch (Exception ex) when (!(ex is OperationCanceledException && cancellationToken.IsCancellationRequested))
+                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+                {
+                    throw;
+                }
+                catch (Exception ex)
                 {
                     if (!await HandleChannelOperationExceptionAsync(ex, nameof(ProcessCommandAsync), channel, cancellationToken)) throw;
                 }
@@ -198,13 +202,17 @@ namespace Lime.Protocol.Client
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                var channel = await GetChannelAsync(cancellationToken, true, operationName).ConfigureAwait(false);
+                var channel = await GetChannelAsync(cancellationToken, operationName).ConfigureAwait(false);
                 try
                 {
                     await sendFunc(channel, envelope).ConfigureAwait(false);
                     return;
                 }
-                catch (Exception ex) when (!(ex is OperationCanceledException && cancellationToken.IsCancellationRequested))
+                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+                {
+                    throw;
+                }
+                catch (Exception ex)
                 {
                     if (!await HandleChannelOperationExceptionAsync(ex, operationName, channel, cancellationToken)) throw;
                 }
@@ -220,12 +228,16 @@ namespace Lime.Protocol.Client
                 cancellationToken.ThrowIfCancellationRequested();
 
                 // For receiving, we should not check if the channel is established, since that can exists received envelopes in the buffer.
-                var channel = await GetChannelAsync(cancellationToken, false, operationName).ConfigureAwait(false);
+                var channel = await GetChannelAsync(cancellationToken, operationName).ConfigureAwait(false);
                 try
                 {
                     return await receiveFunc(channel, cancellationToken).ConfigureAwait(false);
                 }
-                catch (Exception ex) when (!(ex is OperationCanceledException && cancellationToken.IsCancellationRequested))
+                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+                {
+                    throw;
+                }
+                catch (Exception ex)
                 {
                     if (!await HandleChannelOperationExceptionAsync(ex, operationName, channel, cancellationToken)) throw;
                 }
@@ -299,11 +311,11 @@ namespace Lime.Protocol.Client
             throw new AggregateException(exceptions);
         }
 
-        private async Task<IClientChannel> GetChannelAsync(CancellationToken cancellationToken, bool checkIfEstablished, string operationName)
+        private async Task<IClientChannel> GetChannelAsync(CancellationToken cancellationToken, string operationName)
         {
             var channelCreated = false;
             var clientChannel = _clientChannel;
-            while (ShouldCreateChannel(clientChannel, checkIfEstablished))
+            while (ShouldCreateChannel(clientChannel))
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
@@ -311,7 +323,7 @@ namespace Lime.Protocol.Client
                 try
                 {
                     clientChannel = _clientChannel;
-                    if (ShouldCreateChannel(clientChannel, checkIfEstablished))
+                    if (ShouldCreateChannel(clientChannel))
                     {
                         _cts?.Cancel();
                         _cts?.Dispose();
@@ -319,14 +331,18 @@ namespace Lime.Protocol.Client
                         clientChannel = _clientChannel = await _builder
                             .BuildAndEstablishAsync(cancellationToken)
                             .ConfigureAwait(false);
-                        
+
                         _cts = new CancellationTokenSource();
                         _finishedSessionTask = clientChannel.ReceiveFinishedSessionAsync(_cts.Token);
-
                         channelCreated = true;
+                        break;
                     }
                 }
-                catch (Exception ex) when (!(ex is OperationCanceledException && cancellationToken.IsCancellationRequested))
+                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+                {
+                    throw;
+                }
+                catch (Exception ex)
                 {
                     var failedChannelInformation = new FailedChannelInformation(
                         null, SessionState.New, null, null, false, ex, operationName);
@@ -350,9 +366,9 @@ namespace Lime.Protocol.Client
             return clientChannel;
         }
 
-        private static bool ShouldCreateChannel(IChannel channel, bool checkIfEstablished)
+        private static bool ShouldCreateChannel(IChannel channel)
         {
-            return channel == null || (checkIfEstablished && !ChannelIsEstablished(channel));
+            return channel == null || !ChannelIsEstablished(channel);
         }
 
         private static bool ChannelIsEstablished(IChannel channel) => channel != null &&
@@ -375,7 +391,7 @@ namespace Lime.Protocol.Client
         private async Task DiscardChannelUnsynchronizedAsync(IChannel clientChannel, CancellationToken cancellationToken)
         {            
             if (ReferenceEquals(clientChannel, _clientChannel))
-            {                
+            {
                 _clientChannel = null;
                 clientChannel.DisposeIfDisposable();
                 var channelInformation = new ChannelInformation(clientChannel.SessionId, clientChannel.State, clientChannel.LocalNode, clientChannel.RemoteNode);

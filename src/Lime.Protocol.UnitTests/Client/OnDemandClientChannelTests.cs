@@ -28,7 +28,7 @@ namespace Lime.Protocol.UnitTests.Client
         [SetUp]
         public void Setup()
         {
-            _sendTimeout = TimeSpan.FromSeconds(5);
+            _sendTimeout = TimeSpan.FromSeconds(15);
             _cancellationToken = _sendTimeout.ToCancellationToken();
             _sessionId = EnvelopeId.NewId();            
             _transport = new Mock<ITransport>();
@@ -47,6 +47,10 @@ namespace Lime.Protocol.UnitTests.Client
                 .SetupGet(c => c.State)
                 .Returns(SessionState.Established);
             _disposableClientChannel = _clientChannel.As<IDisposable>();
+            _disposableClientChannel
+                .Setup(d => d.Dispose())
+                .Callback(() => _transport.SetupGet(t => t.IsConnected).Returns(false));
+
             _clientChannelBuilder = new Mock<IClientChannelBuilder>();
             _establishedClientChannelBuilder = new Mock<IEstablishedClientChannelBuilder>();
             _establishedClientChannelBuilder
@@ -1421,7 +1425,7 @@ namespace Lime.Protocol.UnitTests.Client
                 return TaskUtil.CompletedTask;
             });
             _clientChannel
-                .Setup(c => c.SendCommandAsync(command, CancellationToken.None))
+                .Setup(c => c.SendCommandAsync(command, _cancellationToken))
                 .Throws(exception);
             _establishedClientChannelBuilder
                 .SetupSequence(b => b.BuildAndEstablishAsync(It.IsAny<CancellationToken>()))
@@ -1438,13 +1442,13 @@ namespace Lime.Protocol.UnitTests.Client
                 .Returns(SessionState.Established);
 
             // Act
-            await target.SendCommandAsync(command, CancellationToken.None);
+            await target.SendCommandAsync(command, _cancellationToken);
 
             // Assert
             _establishedClientChannelBuilder.Verify(c => c.BuildAndEstablishAsync(It.IsAny<CancellationToken>()),
                 Times.Exactly(2));
-            _clientChannel.Verify(c => c.SendCommandAsync(command, CancellationToken.None), Times.Once());
-            clientChannel2.Verify(c => c.SendCommandAsync(command, CancellationToken.None), Times.Once());
+            _clientChannel.Verify(c => c.SendCommandAsync(command, _cancellationToken), Times.Once());
+            clientChannel2.Verify(c => c.SendCommandAsync(command, _cancellationToken), Times.Once());
             failedChannelInformation.OperationName.ShouldBe(nameof(IOnDemandClientChannel.SendCommandAsync));
             failedChannelInformation.Exception.ShouldBe(exception);
             failedChannelInformation.OperationName.ShouldBe(nameof(IOnDemandClientChannel.SendCommandAsync));
@@ -1953,6 +1957,10 @@ namespace Lime.Protocol.UnitTests.Client
             var sessionId = EnvelopeId.NewId();
             var clientChannel2 = new Mock<IClientChannel>();
             var clientChannel2Disposable = clientChannel2.As<IDisposable>();
+            var transport2 = new Mock<ITransport>();
+            transport2
+                .SetupGet(t => t.IsConnected)
+                .Returns(true);
 
             var operationFailedChannelInformations = new List<FailedChannelInformation>();
             target.ChannelOperationFailedHandlers.Add((f) =>
@@ -2003,7 +2011,7 @@ namespace Lime.Protocol.UnitTests.Client
                 .Returns(sessionId);
             clientChannel2
                 .SetupGet(c => c.Transport)
-                .Returns(_transport.Object);
+                .Returns(transport2.Object);
             clientChannel2
                 .SetupGet(c => c.State)
                 .Returns(SessionState.Established);
