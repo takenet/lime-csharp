@@ -34,12 +34,19 @@ namespace Lime.Protocol.Network
         /// </summary>
         /// <param name="transport"></param>
         /// <param name="sendTimeout"></param>
-        /// <param name="buffersLimit"></param>
+        /// <param name="envelopeBufferSize"></param>
         /// <param name="fillEnvelopeRecipients">Indicates if the from and to properties of sent and received envelopes should be filled with the session information if not defined.</param>
         /// <param name="autoReplyPings">Indicates if the channel should reply automatically to ping request commands. In this case, the ping command are not returned by the ReceiveCommandAsync method.</param>
         /// <param name="remotePingInterval">The interval to ping the remote party.</param>
         /// <param name="remoteIdleTimeout">The timeout to close the channel due to inactivity.</param>
-        protected ChannelBase(ITransport transport, TimeSpan sendTimeout, int buffersLimit, bool fillEnvelopeRecipients, bool autoReplyPings, TimeSpan? remotePingInterval, TimeSpan? remoteIdleTimeout)
+        protected ChannelBase(
+            ITransport transport, 
+            TimeSpan sendTimeout, 
+            int envelopeBufferSize, 
+            bool fillEnvelopeRecipients, 
+            bool autoReplyPings, 
+            TimeSpan? remotePingInterval, 
+            TimeSpan? remoteIdleTimeout)
         {
             if (transport == null) throw new ArgumentNullException(nameof(transport));
             Transport = transport;
@@ -49,7 +56,7 @@ namespace Lime.Protocol.Network
             _consumerCts = new CancellationTokenSource();
             _syncRoot = new object();
 
-            var options = new DataflowBlockOptions() { BoundedCapacity = buffersLimit };
+            var options = new DataflowBlockOptions() { BoundedCapacity = envelopeBufferSize };
             _messageBuffer = new BufferBlock<Message>(options);
             _commandBuffer = new BufferBlock<Command>(options);
             _notificationBuffer = new BufferBlock<Notification>(options);

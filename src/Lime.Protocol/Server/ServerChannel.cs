@@ -18,7 +18,7 @@ namespace Lime.Protocol.Server
         /// <param name="serverNode"></param>
         /// <param name="transport"></param>
         /// <param name="sendTimeout"></param>
-        /// <param name="buffersLimit">The number of envelopes to be buffered internally by the channel in the receive operations. If this limit is reached, the channel will not consume the transport until the buffer is consumed by the receive operations.</param>
+        /// <param name="envelopeBufferSize">The number of envelopes to be buffered internally by the channel in the receive operations. If this limit is reached, the channel will not consume the transport until the buffer is consumed by the receive operations.</param>
         /// <param name="fillEnvelopeRecipients"></param>
         /// <param name="autoReplyPings">Indicates if the channel should reply automatically to ping request commands. In this case, the ping command are not returned by the ReceiveCommandAsync method.</param>
         /// <param name="remotePingInterval">The interval to ping the remote party.</param>
@@ -28,12 +28,12 @@ namespace Lime.Protocol.Server
             Node serverNode, 
             ITransport transport, 
             TimeSpan sendTimeout, 
-            int buffersLimit = 5, 
+            int envelopeBufferSize = 1, 
             bool fillEnvelopeRecipients = false, 
             bool autoReplyPings = false, 
             TimeSpan? remotePingInterval = null, 
             TimeSpan? remoteIdleTimeout = null)
-            : base(transport, sendTimeout, buffersLimit, fillEnvelopeRecipients, autoReplyPings, remotePingInterval, remoteIdleTimeout)
+            : base(transport, sendTimeout, envelopeBufferSize, fillEnvelopeRecipients, autoReplyPings, remotePingInterval, remoteIdleTimeout)
         {
             LocalNode = serverNode;
             SessionId = sessionId;

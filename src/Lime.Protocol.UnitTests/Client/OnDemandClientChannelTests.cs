@@ -2054,7 +2054,7 @@ namespace Lime.Protocol.UnitTests.Client
             clientChannel2.Verify(c => c.ReceiveCommandAsync(_cancellationToken), Times.Once());
             clientChannel2.Verify(c => c.ProcessCommandAsync(requestCommand, _cancellationToken), Times.Once());
             clientChannel2Disposable.Verify(c => c.Dispose(), Times.Never());
-            operationFailedChannelInformations.Count.ShouldBeGreaterThan(1);
+            operationFailedChannelInformations.Count.ShouldBeGreaterThanOrEqualTo(1);
             operationFailedChannelInformations.ShouldAllBe(e => e.Exception == exception);            
             createdChannelInformations.Count.ShouldBe(2);
             createdChannelInformations[0].SessionId.ShouldBe(_sessionId);
