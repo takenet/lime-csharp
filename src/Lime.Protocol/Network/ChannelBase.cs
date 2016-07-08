@@ -15,6 +15,7 @@ namespace Lime.Protocol.Network
     public abstract class ChannelBase : IChannel, IDisposable
     {
         private readonly TimeSpan _sendTimeout;
+        private readonly TimeSpan _consumeTimeout;
         private readonly TimeSpan _closeTimeout;
 
         private readonly BufferBlock<Message> _messageBuffer;
@@ -32,16 +33,21 @@ namespace Lime.Protocol.Network
         /// <summary>
         /// Creates a new instance of ChannelBase
         /// </summary>
-        /// <param name="transport"></param>
-        /// <param name="sendTimeout"></param>
-        /// <param name="envelopeBufferSize"></param>
+        /// <param name="transport">The transport.</param>
+        /// <param name="sendTimeout">The channel send timeout.</param>
+        /// <param name="consumeTimeout">The channel consume timeout. Each envelope received from the transport must be consumed in the specified timeout or it will cause the channel to be closed.</param>
+        /// <param name="closeTimeout">The channel close timeout.</param>
+        /// <param name="envelopeBufferSize">Size of the envelope buffer.</param>
         /// <param name="fillEnvelopeRecipients">Indicates if the from and to properties of sent and received envelopes should be filled with the session information if not defined.</param>
         /// <param name="autoReplyPings">Indicates if the channel should reply automatically to ping request commands. In this case, the ping command are not returned by the ReceiveCommandAsync method.</param>
         /// <param name="remotePingInterval">The interval to ping the remote party.</param>
         /// <param name="remoteIdleTimeout">The timeout to close the channel due to inactivity.</param>
+        /// <exception cref="System.ArgumentNullException"></exception>
         protected ChannelBase(
             ITransport transport, 
-            TimeSpan sendTimeout, 
+            TimeSpan sendTimeout,
+            TimeSpan consumeTimeout,
+            TimeSpan closeTimeout,
             int envelopeBufferSize, 
             bool fillEnvelopeRecipients, 
             bool autoReplyPings, 
@@ -52,7 +58,9 @@ namespace Lime.Protocol.Network
             Transport = transport;
             Transport.Closing += Transport_Closing;
 
-            _sendTimeout = _closeTimeout = sendTimeout;     
+            _sendTimeout = sendTimeout;
+            _consumeTimeout = consumeTimeout;
+            _closeTimeout = closeTimeout;
             _consumerCts = new CancellationTokenSource();
             _syncRoot = new object();
 
@@ -310,7 +318,7 @@ namespace Lime.Protocol.Network
             try
             {
                 while (IsChannelEstablished())
-                {
+                {                    
                     try
                     {
                         var envelope = await ReceiveEnvelopeFromTransportAsync(_consumerCts.Token).ConfigureAwait(false);
@@ -330,7 +338,7 @@ namespace Lime.Protocol.Network
                     {
                         await CloseTransportAsync().ConfigureAwait(false);
                         throw;
-                    }   
+                    }
                 }
             }
             finally
@@ -382,25 +390,37 @@ namespace Lime.Protocol.Network
         {
             if (envelope == null) throw new ArgumentNullException(nameof(envelope));
             
-            if (envelope is Notification)
+            using (var cts = _consumeTimeout == TimeSpan.Zero ? new CancellationTokenSource() : new CancellationTokenSource(_consumeTimeout))
+            using (var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cts.Token, cancellationToken))
             {
-                await ConsumeNotificationAsync((Notification)envelope, cancellationToken).ConfigureAwait(false);
-            }
-            else if (envelope is Message)
-            {
-                await ConsumeMessageAsync((Message)envelope, cancellationToken).ConfigureAwait(false);
-            }
-            else if (envelope is Command)
-            {
-                await ConsumeCommandAsync((Command)envelope, cancellationToken).ConfigureAwait(false);
-            }
-            else if (envelope is Session)
-            {
-                await ConsumeSessionAsync((Session)envelope, cancellationToken).ConfigureAwait(false);
-            }
-            else
-            {
-                throw new InvalidOperationException("Invalid or unknown envelope received by the transport.");
+                try
+                {
+                    if (envelope is Notification)
+                    {
+                        await
+                            ConsumeNotificationAsync((Notification) envelope, linkedCts.Token).ConfigureAwait(false);
+                    }
+                    else if (envelope is Message)
+                    {
+                        await ConsumeMessageAsync((Message) envelope, linkedCts.Token).ConfigureAwait(false);
+                    }
+                    else if (envelope is Command)
+                    {
+                        await ConsumeCommandAsync((Command) envelope, linkedCts.Token).ConfigureAwait(false);
+                    }
+                    else if (envelope is Session)
+                    {
+                        await ConsumeSessionAsync((Session) envelope, linkedCts.Token).ConfigureAwait(false);
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException("Invalid or unknown envelope received by the transport.");
+                    }
+                }
+                catch (OperationCanceledException ex) when (cts.IsCancellationRequested)
+                {
+                    throw new OperationCanceledException("The channel consume envelope operation timed out", ex);
+                }
             }
         }
 
@@ -428,6 +448,7 @@ namespace Lime.Protocol.Network
 
         private Task ConsumeSessionAsync(Session session, CancellationToken cancellationToken)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             if (!_sessionBuffer.Post(session))
             {
                 throw new InvalidOperationException("Session buffer limit reached");
@@ -508,13 +529,11 @@ namespace Lime.Protocol.Network
             }
 
             using (var timeoutCancellationTokenSource = new CancellationTokenSource(_sendTimeout))
+            using (var linkedCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(
+                cancellationToken, timeoutCancellationTokenSource.Token))
             {
-                using (var linkedCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(
-                    cancellationToken, timeoutCancellationTokenSource.Token))
-                {
-                    await Transport.SendAsync(envelope, linkedCancellationTokenSource.Token).ConfigureAwait(false);
-                }
-            }            
+                await Transport.SendAsync(envelope, linkedCancellationTokenSource.Token).ConfigureAwait(false);
+            }
         }
 
         /// <summary>

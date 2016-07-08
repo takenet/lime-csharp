@@ -13,26 +13,30 @@ namespace Lime.Protocol.Client
     public class ClientChannel : ChannelBase, IClientChannel
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="ClientChannel"/> class.
+        /// Initializes a new instance of the <see cref="ClientChannel" /> class.
         /// </summary>
         /// <param name="transport">The transport to be used by the channel.</param>
-        /// <param name="sendTimeout">The channel send timeout.</param>
-        /// <param name="fillEnvelopeRecipients"></param>
+        /// <param name="sendTimeout">The channel send timeout. Each send operation must be completed in the specified timeout or it will be canceled.</param>
+        /// <param name="envelopeBufferSize">The number of envelopes to be buffered internally by the channel in the receive operations. If this limit is reached, the channel will not consume the transport until the buffer is consumed by the receive operations.</param>
+        /// <param name="fillEnvelopeRecipients">if set to <c>true</c> [fill envelope recipients].</param>
         /// <param name="autoReplyPings">Indicates if the channel should reply automatically to ping request commands. In this case, the ping command are not returned by the ReceiveCommandAsync method.</param>
         /// <param name="autoNotifyReceipt">Indicates if the client should automatically send 'received' notifications for messages.</param>
         /// <param name="remotePingInterval">The interval to ping the remote party.</param>
         /// <param name="remoteIdleTimeout">The timeout to close the channel due to inactivity.</param>
-        /// <param name="envelopeBufferSize">The number of envelopes to be buffered internally by the channel in the receive operations. If this limit is reached, the channel will not consume the transport until the buffer is consumed by the receive operations.</param>
+        /// <param name="consumeTimeout">The channel consume timeout. Each envelope received from the transport must be consumed in the specified interval or it will cause the channel to be closed.</param>
+        /// <param name="closeTimeout">The channel close timeout.</param>
         public ClientChannel(
-            ITransport transport, 
-            TimeSpan sendTimeout, 
-            int envelopeBufferSize = 1, 
-            bool fillEnvelopeRecipients = false, 
-            bool autoReplyPings = true, 
-            bool autoNotifyReceipt = false, 
-            TimeSpan? remotePingInterval = null, 
-            TimeSpan? remoteIdleTimeout = null)
-            : base(transport, sendTimeout, envelopeBufferSize, fillEnvelopeRecipients, autoReplyPings, remotePingInterval, remoteIdleTimeout)
+            ITransport transport,
+            TimeSpan sendTimeout,
+            int envelopeBufferSize = 1,
+            bool fillEnvelopeRecipients = false,
+            bool autoReplyPings = true,
+            bool autoNotifyReceipt = false,
+            TimeSpan? remotePingInterval = null,
+            TimeSpan? remoteIdleTimeout = null,
+            TimeSpan? consumeTimeout = null,
+            TimeSpan? closeTimeout = null)
+            : base(transport, sendTimeout, consumeTimeout ?? TimeSpan.Zero, closeTimeout ?? sendTimeout, envelopeBufferSize, fillEnvelopeRecipients, autoReplyPings, remotePingInterval, remoteIdleTimeout)
         {
             if (autoNotifyReceipt)
             {
@@ -245,7 +249,7 @@ namespace Lime.Protocol.Client
                 LocalNode = session.To;
                 RemoteNode = session.From;
             }
-            else if (session.State == SessionState.Finished || 
+            else if (session.State == SessionState.Finished ||
                      session.State == SessionState.Failed)
             {
                 await CloseTransportAsync().ConfigureAwait(false);
