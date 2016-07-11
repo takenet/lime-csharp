@@ -12,9 +12,19 @@ namespace Lime.Protocol.Client
         Uri ServerUri { get; }
 
         /// <summary>
-        /// Gets the send timeout.
+        /// Gets the channel send timeout.
         /// </summary>        
         TimeSpan SendTimeout { get; }
+
+        /// <summary>
+        /// Gets the channel consume timeout.
+        /// </summary>        
+        TimeSpan ConsumeTimeout { get; }
+
+        /// <summary>
+        /// Gets the channel close timeout.
+        /// </summary>        
+        TimeSpan CloseTimeout { get; }
 
         /// <summary>
         /// Gets the buffers limit.
