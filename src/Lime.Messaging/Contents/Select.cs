@@ -33,7 +33,7 @@ namespace Lime.Messaging.Contents
 
         /// <summary>
         /// Gets or sets the scope which the select options is valid.
-        /// This hints to the destination of the select when the sender is able to receive and understand a select option reply.
+        /// This property hints to the destination of the select when the sender is able to receive and understand a select option reply.
         /// </summary>
         /// <value>
         /// The scope.
