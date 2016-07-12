@@ -16,6 +16,7 @@ namespace Lime.Messaging.Contents
     public class Select : Document
     {
         public const string MIME_TYPE = "application/vnd.lime.select+json";
+        public const string SCOPE_KEY = "scope";
         public const string TEXT_KEY = "text";
         public const string OPTIONS_KEY = "options";
 
@@ -29,6 +30,16 @@ namespace Lime.Messaging.Contents
         {
 
         }
+
+        /// <summary>
+        /// Gets or sets the scope which the select options is valid.
+        /// This hints to the destination of the select when the sender is able to receive and understand a select option reply.
+        /// </summary>
+        /// <value>
+        /// The scope.
+        /// </value>
+        [DataMember(Name = SCOPE_KEY)]
+        public SelectScope? Scope { get; set; }
 
         /// <summary>
         /// Gets or sets the select question text.
@@ -47,6 +58,30 @@ namespace Lime.Messaging.Contents
         /// </value>
         [DataMember(Name = OPTIONS_KEY)]
         public SelectOption[] Options { get; set; }
+    }
+
+    /// <summary>
+    /// Defines the scope which a select is valid.
+    /// </summary>
+    [DataContract(Namespace = "http://limeprotocol.org/2014")]
+    public enum SelectScope
+    {
+        /// <summary>
+        /// The select is transient and its valid during a temporary conversation scope.
+        /// This is the default scope.
+        /// </summary>
+        [EnumMember(Value = "transient")]
+        Transient,
+        /// <summary>
+        /// The select is persistent and its valid in any time for the specific sender.
+        /// </summary>
+        [EnumMember(Value = "persistent")]
+        Persistent,
+        /// <summary>
+        /// The select is valid only valid for the current scope.
+        /// </summary>
+        [EnumMember(Value = "immediate")]
+        Immediate
     }
 
     /// <summary>
