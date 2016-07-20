@@ -15,7 +15,7 @@ namespace Lime.Protocol.Network
     public abstract class ChannelBase : IChannel, IDisposable
     {
         private readonly TimeSpan _sendTimeout;
-        private readonly TimeSpan _consumeTimeout;
+        private readonly TimeSpan? _consumeTimeout;
         private readonly TimeSpan _closeTimeout;
 
         private readonly BufferBlock<Message> _messageBuffer;
@@ -46,7 +46,7 @@ namespace Lime.Protocol.Network
         protected ChannelBase(
             ITransport transport, 
             TimeSpan sendTimeout,
-            TimeSpan consumeTimeout,
+            TimeSpan? consumeTimeout,
             TimeSpan closeTimeout,
             int envelopeBufferSize, 
             bool fillEnvelopeRecipients, 
@@ -55,6 +55,11 @@ namespace Lime.Protocol.Network
             TimeSpan? remoteIdleTimeout)
         {
             if (transport == null) throw new ArgumentNullException(nameof(transport));
+            if (sendTimeout == default(TimeSpan)) throw new ArgumentException("Invalid send timeout", nameof(sendTimeout));
+            if (consumeTimeout != null && consumeTimeout.Value == default(TimeSpan)) throw new ArgumentException("Invalid consume timeout", nameof(consumeTimeout));
+            if (closeTimeout == default(TimeSpan)) throw new ArgumentException("Invalid close timeout", nameof(closeTimeout));
+            if (envelopeBufferSize <= 0) throw new ArgumentOutOfRangeException(nameof(envelopeBufferSize));
+
             Transport = transport;
             Transport.Closing += Transport_Closing;
 
@@ -390,7 +395,7 @@ namespace Lime.Protocol.Network
         {
             if (envelope == null) throw new ArgumentNullException(nameof(envelope));
             
-            using (var cts = _consumeTimeout == TimeSpan.Zero ? new CancellationTokenSource() : new CancellationTokenSource(_consumeTimeout))
+            using (var cts = _consumeTimeout == null ? new CancellationTokenSource() : new CancellationTokenSource(_consumeTimeout.Value))
             using (var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cts.Token, cancellationToken))
             {
                 try

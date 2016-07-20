@@ -52,12 +52,12 @@ namespace Lime.Protocol.Client
         /// <summary>
         /// Gets the channel consume timeout.
         /// </summary>
-        public TimeSpan ConsumeTimeout { get; private set; }
+        public TimeSpan? ConsumeTimeout { get; private set; }
 
         /// <summary>
         /// Gets the channel close timeout.
         /// </summary>
-        public TimeSpan CloseTimeout { get; private set; }
+        public TimeSpan? CloseTimeout { get; private set; }
 
         /// <summary>
         /// Gets the buffers limit.
@@ -117,7 +117,7 @@ namespace Lime.Protocol.Client
         /// </summary>
         /// <param name="consumeTimeout">The consume timeout.</param>
         /// <returns></returns>
-        public ClientChannelBuilder WithConsumeTimeout(TimeSpan consumeTimeout)
+        public ClientChannelBuilder WithConsumeTimeout(TimeSpan? consumeTimeout)
         {
             ConsumeTimeout = consumeTimeout;
             return this;
@@ -128,7 +128,7 @@ namespace Lime.Protocol.Client
         /// </summary>
         /// <param name="closeTimeout">The close timeout.</param>
         /// <returns></returns>
-        public ClientChannelBuilder WithCloseTimeout(TimeSpan closeTimeout)
+        public ClientChannelBuilder WithCloseTimeout(TimeSpan? closeTimeout)
         {
             CloseTimeout = closeTimeout;
             return this;

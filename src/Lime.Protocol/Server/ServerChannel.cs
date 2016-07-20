@@ -37,7 +37,7 @@ namespace Lime.Protocol.Server
             TimeSpan? remoteIdleTimeout = null,
             TimeSpan? consumeTimeout = null,
             TimeSpan? closeTimeout = null)
-            : base(transport, sendTimeout, consumeTimeout ?? TimeSpan.Zero, closeTimeout ?? sendTimeout, envelopeBufferSize, fillEnvelopeRecipients, autoReplyPings, remotePingInterval, remoteIdleTimeout)
+            : base(transport, sendTimeout, consumeTimeout, closeTimeout ?? sendTimeout, envelopeBufferSize, fillEnvelopeRecipients, autoReplyPings, remotePingInterval, remoteIdleTimeout)
         {
             LocalNode = serverNode;
             SessionId = sessionId;

@@ -36,7 +36,7 @@ namespace Lime.Protocol.Client
             TimeSpan? remoteIdleTimeout = null,
             TimeSpan? consumeTimeout = null,
             TimeSpan? closeTimeout = null)
-            : base(transport, sendTimeout, consumeTimeout ?? TimeSpan.Zero, closeTimeout ?? sendTimeout, envelopeBufferSize, fillEnvelopeRecipients, autoReplyPings, remotePingInterval, remoteIdleTimeout)
+            : base(transport, sendTimeout, consumeTimeout, closeTimeout ?? sendTimeout, envelopeBufferSize, fillEnvelopeRecipients, autoReplyPings, remotePingInterval, remoteIdleTimeout)
         {
             if (autoNotifyReceipt)
             {

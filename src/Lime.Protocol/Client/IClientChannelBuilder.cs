@@ -19,12 +19,12 @@ namespace Lime.Protocol.Client
         /// <summary>
         /// Gets the channel consume timeout.
         /// </summary>        
-        TimeSpan ConsumeTimeout { get; }
+        TimeSpan? ConsumeTimeout { get; }
 
         /// <summary>
         /// Gets the channel close timeout.
         /// </summary>        
-        TimeSpan CloseTimeout { get; }
+        TimeSpan? CloseTimeout { get; }
 
         /// <summary>
         /// Gets the buffers limit.
