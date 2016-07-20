@@ -2066,5 +2066,82 @@ namespace Lime.Protocol.UnitTests.Client
             actualReceivedCommand.ShouldBe(receivedCommand);
             actualProcessed.ShouldBe(responseCommand);
         }
+
+        [Test]
+        public async Task EstablishAsync_NotEstablishedChannel_BuildChannel()
+        {
+            // Arrange            
+            var target = GetTarget();
+            ChannelInformation channelInformation = null;
+            target.ChannelCreatedHandlers.Add((c) =>
+            {
+                channelInformation = c;
+                return TaskUtil.CompletedTask;
+            });
+
+            // Act
+            await target.EstablishAsync(_cancellationToken);
+
+            // Assert
+            _establishedClientChannelBuilder.Verify(c => c.BuildAndEstablishAsync(It.IsAny<CancellationToken>()),
+                Times.Once());            
+            channelInformation.ShouldNotBeNull();
+            channelInformation.SessionId.ShouldBe(_sessionId);
+            channelInformation.State.ShouldBe(SessionState.Established);
+        }
+
+        [Test]
+        public async Task EstablishAsync_EstablishedChannel_KeepsExistingChannel()
+        {
+            // Arrange
+            var target = GetTarget();
+            await target.EstablishAsync(_cancellationToken);
+            _establishedClientChannelBuilder.ResetCalls();
+            _clientChannel.ResetCalls();
+
+            // Act
+            await target.EstablishAsync(_cancellationToken);
+
+            // Assert
+            _establishedClientChannelBuilder.Verify(c => c.BuildAndEstablishAsync(It.IsAny<CancellationToken>()),
+                Times.Never());
+        }
+
+        [Test]
+        public async Task EstablishAsync_ChannelCreationFailed_RecreateChannel()
+        {
+            // Arrange
+            var target = GetTarget();
+            var exception = Dummy.CreateException();
+
+            FailedChannelInformation failedChannelInformation = null;
+            target.ChannelCreationFailedHandlers.Add((f) =>
+            {
+                failedChannelInformation = f;
+                return TaskUtil.TrueCompletedTask;
+            });
+            ChannelInformation createdChannelInformation = null;
+            target.ChannelCreatedHandlers.Add((c) =>
+            {
+                createdChannelInformation = c;
+                return TaskUtil.CompletedTask;
+            });
+
+            _establishedClientChannelBuilder
+                .SetupSequence(b => b.BuildAndEstablishAsync(It.IsAny<CancellationToken>()))
+                .Throws(exception)
+                .Returns(Task.FromResult(_clientChannel.Object));
+
+            // Act
+            await target.EstablishAsync(_cancellationToken);
+
+            // Assert
+            _establishedClientChannelBuilder.Verify(c => c.BuildAndEstablishAsync(It.IsAny<CancellationToken>()),
+                Times.Exactly(2));            
+            failedChannelInformation.Exception.ShouldBe(exception);
+            failedChannelInformation.IsConnected.ShouldBeFalse();
+            createdChannelInformation.ShouldNotBeNull();
+            createdChannelInformation.SessionId.ShouldBe(_sessionId);
+        }
     }
 }

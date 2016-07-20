@@ -145,6 +145,14 @@ namespace Lime.Protocol.Client
         public bool IsEstablished => ChannelIsEstablished(_clientChannel);
 
         /// <summary>
+        /// Force the creation of an established client channel, if not established.
+        /// </summary>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns></returns>
+        public Task EstablishAsync(CancellationToken cancellationToken) => 
+            GetChannelAsync(cancellationToken, nameof(EstablishAsync));
+
+        /// <summary>
         /// Gets the channel created handlers, which are called when a channel is created.
         /// </summary>
         public ICollection<Func<ChannelInformation, Task>> ChannelCreatedHandlers { get; }
