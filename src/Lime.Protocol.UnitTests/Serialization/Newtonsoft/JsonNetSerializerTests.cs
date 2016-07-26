@@ -9,6 +9,7 @@ using Lime.Protocol.Security;
 using Lime.Protocol.Serialization;
 using Lime.Protocol.Serialization.Newtonsoft;
 using Lime.Protocol.UnitTests.Serialization.Models;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NUnit.Framework;
 using Shouldly;
@@ -678,7 +679,33 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 			}
 		}
 
-		[Test]
+        [Test]
+        [Category("Serialize")]
+        public void Serialize_DocumentSelectMessage_ReturnsValidJsonString()
+        {
+            // Arrange
+            var select = Dummy.CreateDocumentSelect();
+            var message = Dummy.CreateMessage(select);
+            var target = GetTarget();
+
+            // Act
+            var resultString = target.Serialize(message);
+
+            // Assert
+            var dictionary = JsonConvert.DeserializeObject<Dictionary<string, object>>(resultString, JsonNetSerializer.Settings);
+            var selectJson = dictionary[Message.CONTENT_KEY].ShouldBeAssignableTo<JObject>();            
+            Assert.IsTrue(resultString.HasValidJsonStackedBrackets());
+            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.ID_KEY, message.Id));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.FROM_KEY, message.From));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.TO_KEY, message.To));
+            Assert.IsTrue(resultString.ContainsJsonKey(DocumentSelect.HEADER_KEY));
+            var headerJson = selectJson[DocumentSelect.HEADER_KEY].ShouldBeAssignableTo<JObject>();
+            Assert.IsTrue(resultString.ContainsJsonKey(DocumentSelect.OPTIONS_KEY));
+            var optionsJson = selectJson[DocumentSelect.OPTIONS_KEY].ShouldBeAssignableTo<JArray>();
+            optionsJson.Count.ShouldBe(select.Options.Length);
+        }
+
+        [Test]
 		[Category("Serialize")]
 		public void Serialize_IdentityDocumentMessage_ReturnsValidJsonString()
 		{

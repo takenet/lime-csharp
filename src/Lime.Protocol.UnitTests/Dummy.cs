@@ -452,18 +452,40 @@ namespace Lime.Protocol.UnitTests
                 Text = CreateRandomStringExtended(100),
                 Options = new[]
                 {
-                    CreateOption(CreateTextContent()),
-                    CreateOption(CreateJsonDocument())
+                    CreateSelectOption(CreateTextContent()),
+                    CreateSelectOption(CreateJsonDocument())
                 }
             };
         }
 
-        public static SelectOption CreateOption(Document value)
+        public static SelectOption CreateSelectOption(Document value)
         {
             return new SelectOption()
             {
                 Text = CreateRandomStringExtended(10),
                 Value = value
+            };
+        }
+
+        public static DocumentSelect CreateDocumentSelect()
+        {
+            return new DocumentSelect()
+            {
+                Header = CreateDocumentContainer(CreateTextContent()),
+                Options = new[]
+                {
+                    CreateDocumentSelectOption(CreateTextContent(), null),
+                    CreateDocumentSelectOption(CreateJsonDocument(), CreateJsonDocument())
+                }
+            };
+        }
+
+        public static DocumentSelectOption CreateDocumentSelectOption(Document label, Document value)
+        {
+            return new DocumentSelectOption()
+            {
+                Label = CreateDocumentContainer(label),
+                Value = value != null ? CreateDocumentContainer(value): null
             };
         }
 

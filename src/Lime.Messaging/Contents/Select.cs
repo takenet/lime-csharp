@@ -9,7 +9,7 @@ using Lime.Protocol;
 namespace Lime.Messaging.Contents
 {
     /// <summary>
-    /// Aggregates a list of <see cref="Option"/> for selection.
+    /// Aggregates a list of <see cref="SelectOption"/> for selection.
     /// </summary>
     /// <seealso cref="Lime.Protocol.Document" />
     [DataContract(Namespace = "http://limeprotocol.org/2014")]
