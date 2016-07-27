@@ -13,6 +13,7 @@ namespace Lime.Messaging.Contents
         public const string URI_KEY = "uri";
         public const string PREVIEW_URI_KEY = "previewUri";
         public const string PREVIEW_TYPE_KEY = "previewType";
+        public const string TITLE_KEY = "title";
         public const string TEXT_KEY = "text";
 
         /// <summary>
@@ -51,6 +52,15 @@ namespace Lime.Messaging.Contents
         /// </value>
         [DataMember(Name = PREVIEW_TYPE_KEY)]
         public MediaType PreviewType { get; set; }
+
+        /// <summary>
+        /// Gets or sets the link title text.
+        /// </summary>
+        /// <value>
+        /// The text.
+        /// </value>
+        [DataMember(Name = TITLE_KEY)]
+        public string Title { get; set; }
 
         /// <summary>
         /// Gets or sets the link description text.

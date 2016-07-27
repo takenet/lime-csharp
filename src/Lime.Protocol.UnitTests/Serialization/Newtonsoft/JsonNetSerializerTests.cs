@@ -1758,7 +1758,42 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 			var document4 = container4.Value.ShouldBeOfType<PlainDocument>();
 			document4.Value.ShouldBe("9nav5pkhswvsw7mh24r1b3agbgic43piylveh1z6xtfz77nibt");
 		}
-        
+
+        [Test]
+        [Category("Deserialize")]
+        public void Deserialize_DocumentSelectMessage_ReturnsValidInstance()
+        {
+            // Arrange            
+            var json = "{\"id\":\"message-id\",\"from\":\"andreb@msging.net\",\"type\":\"application/vnd.lime.document-select+json\",\"content\":{\"header\":{\"type\":\"application/vnd.lime.media-link+json\",\"value\":{\"title\":\"Welcome to Peter\'s Hats\",\"text\":\"We\'ve got the right hat for everyone.\",\"type\":\"image/jpeg\",\"uri\":\"http://petersapparel.parseapp.com/img/item100-thumb.png\"}},\"options\":[{\"label\":{\"type\":\"application/vnd.lime.web-link+json\",\"value\":{\"text\":\"View Website\",\"uri\":\"https://petersapparel.parseapp.com/view_item?item_id=100\"}}},{\"label\":{\"type\":\"text/plain\",\"value\":\"Start Chatting\"},\"value\":{\"type\":\"application/json\",\"value\":{\"key\":\"key1\",\"value\":1}}}]}}";
+            var target = GetTarget();
+
+            // Act
+            var envelope = target.Deserialize(json);
+
+            // Assert
+            envelope.ShouldNotBeNull();
+            envelope.Id.ShouldBe("message-id");
+            var message = envelope.ShouldBeOfType<Message>();
+            var documentSelect = message.Content.ShouldBeOfType<DocumentSelect>();
+            documentSelect.Header.ShouldNotBeNull();
+            var header = documentSelect.Header.Value.ShouldBeOfType<MediaLink>();
+            header.Title.ShouldBe("Welcome to Peter's Hats");
+            header.Text.ShouldBe("We've got the right hat for everyone.");
+            header.Type.ToString().ShouldBe("image/jpeg");
+            header.Uri.ToString().ShouldBe("http://petersapparel.parseapp.com/img/item100-thumb.png");
+            documentSelect.Options.ShouldNotBeNull();
+            documentSelect.Options.Length.ShouldBe(2);
+            var option1Label = documentSelect.Options[0].Label.Value.ShouldBeOfType<WebLink>();
+            option1Label.Text.ShouldBe("View Website");
+            option1Label.Uri.ToString().ShouldBe("https://petersapparel.parseapp.com/view_item?item_id=100");
+            documentSelect.Options[0].Value.ShouldBeNull();
+            var option2Label = documentSelect.Options[1].Label.Value.ShouldBeOfType<PlainText>();
+            option2Label.Text.ShouldBe("Start Chatting");
+            var option2Value = documentSelect.Options[1].Value.Value.ShouldBeOfType<JsonDocument>();
+            option2Value.ShouldContainKeyAndValue("key", "key1");
+            option2Value.ShouldContainKeyAndValue("value", (long)1);
+        }
+
         [Test]
         [Category("Deserialize")]
         public void Deserialize_CommandWithMessage_ReturnsValidInstance()

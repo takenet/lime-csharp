@@ -62,8 +62,18 @@ namespace Lime.Messaging.Contents
     [DataContract(Namespace = "http://limeprotocol.org/2014")]
     public class DocumentSelectOption
     {
+        public const string ORDER_KEY = "order";
         public const string LABEL_KEY = "label";
         public const string VALUE_KEY = "value";
+
+        /// <summary>
+        /// Gets or sets the option order number.
+        /// </summary>
+        /// <value>
+        /// The order.
+        /// </value>
+        [DataMember(Name = ORDER_KEY)]
+        public int? Order { get; set; }
 
         /// <summary>
         /// Gets or sets the option label document.
