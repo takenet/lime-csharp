@@ -1773,6 +1773,9 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             // Assert
             envelope.ShouldNotBeNull();
             envelope.Id.ShouldBe("message-id");
+            envelope.From.ShouldNotBeNull();
+            envelope.From.ToString().ShouldBe("andreb@msging.net");
+            envelope.To.ShouldBeNull();
             var message = envelope.ShouldBeOfType<Message>();
             var documentSelect = message.Content.ShouldBeOfType<DocumentSelect>();
             documentSelect.Header.ShouldNotBeNull();

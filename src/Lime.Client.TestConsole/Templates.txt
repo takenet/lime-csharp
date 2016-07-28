@@ -12,9 +12,11 @@ Chat state message	Message	{"to":"%to","type":"application/vnd.lime.chatstate+js
 Fire-and-forget text message	Message	{"to":"%to","type":"text/plain","content":"%text"}
 MediaLink message	Message	{"id":"%messageId","to":"%to","type":"application/vnd.lime.media-link+json","content":{"type":"%mediaLinkType","uri":"%mediaLinkUri","text":"%mediaLinkText","size":%mediaLinkSize,"previewUri":"%mediaLinkPreviewUri","previewType":"%mediaLinkPreviewType"}}
 Select message	Message	{"id":"%messageId","to":"%to","type":"application/vnd.lime.select+json","content":{"text":"%selectText","options":[{"order":1,"text":"%option1Text"},{"order":2,"text":"%option2Text"},{"order":3,"text":"%option3Text","type":"application/json","value":{"key1":"value1","key2":"value2"}}]}}
+Document select message	Message	{"id":"%messageId","to":"%to","type":"application/vnd.lime.document-select+json","content":{"header":{"type":"text/plain","value":"%selectText"},"options":[{"label":{"type":"text/plain","value":"%option1Text"}},{"label":{"type":"text/plain","value":"%option2Text"}},{"label":{"type":"text/plain","value":"%option3Text"},"value":{"type":"application/json","value":{"key1":"value1","key2":"value2"}}}]}}
+Text collection message	Message	{"id":"%messageId","to":"%to","type":"application/vnd.lime.collection+json","content":{"itemType":"text/plain","items":["%collectionItem1Text","%collectionItem2Text"]}}
 Location message	Message	{"id":"%messageId","to":"%to","type":"application/vnd.lime.location+json","content":{"latitude":%locationLatitude,"longitude":%locationLongitude,"altitude":%locationAltitude,"course":%locationCourse,"speed":%locationSpeed,"accuracy":%locationAccuracy}}
-Received notification	Notification	{"id":"%messageId","from":"%from","to":"%to","event":"received"}
-Consumed notification	Notification	{"id":"%messageId","from":"%from","to":"%to","event":"consumed"}
+Received notification	Notification	{"id":"%messageId","to":"%to","event":"received"}
+Consumed notification	Notification	{"id":"%messageId","to":"%to","event":"consumed"}
 Failed notification	Notification	{"id":"%messageId","from":"%from","to":"%to","event":"failed","reason":{"code":%reasonCode,"description":"%reasonDescription"}}
 Set presence available	Command	{"id":"%commandId","method":"set","type":"application/vnd.lime.presence+json","uri":"/presence","resource":{"status":"available"}}
 Set presence available identity	Command	{"id":"%commandId","method":"set","type":"application/vnd.lime.presence+json","uri":"/presence","resource":{"status":"available","routingRule":"identity"}}
@@ -22,10 +24,10 @@ Set presence available promiscuous	Command	{"id":"%commandId","method":"set","ty
 Set presence invisible	Command	{"id":"%commandId","method":"set","type":"application/vnd.lime.presence+json","uri":"/presence","resource":{"status":"invisible"}}
 Set presence unavailable	Command	{"id":"%commandId","method":"set","type":"application/vnd.lime.presence+json","uri":"/presence","resource":{"status":"unavailable"}}
 Get own presence	Command	{"id":"%commandId","method":"get","uri":"/presence"}
-Get presence	Command	{"id":"%commandId","from":"%from","method":"get","uri":"/presence"}
+Get presence	Command	{"id":"%commandId","from":"%from","pp":"%localNode","method":"get","uri":"/presence"}
 Subscribe own presence	Command	{"id":"%commandId","method":"subscribe","uri":"/presence"}
 Subscribe presence	Command	{"id":"%commandId","method":"subscribe","uri":"lime://%presenceIdentity/presence"}
-Get account	Command	{"id":"%commandId","from":"%from","method":"get","uri":"/account"}
+Get account	Command	{"id":"%commandId","from":"%from","pp":"%localNode","method":"get","uri":"/account"}
 Get own account	Command	{"id":"%commandId","method":"get","uri":"/account"}
 Set account	Command	{"id":"%commandId","from":"%accountIdentity","pp":"%localNode","method":"set","type":"application/vnd.lime.account+json","uri":"/account","resource":{"fullName":"%fullName","phoneNumber":"%phoneNumber","city":"%city","password":"%newPassword"}}
 Set account password	Command	{"id":"%commandId","method":"set","type":"application/vnd.lime.account+json","uri":"/account","resource":{"password":"%newPassword","oldPassword":"%oldPassword"}}
