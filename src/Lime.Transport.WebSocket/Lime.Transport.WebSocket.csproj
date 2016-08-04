@@ -50,16 +50,16 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml" />
-    <Reference Include="vtortola.WebSockets, Version=2.1.7.0, Culture=neutral, PublicKeyToken=7f78616efb4a208d, processorArchitecture=MSIL">
-      <HintPath>..\packages\vtortola.WebSocketListener.2.1.7.0\lib\net45\vtortola.WebSockets.dll</HintPath>
+    <Reference Include="vtortola.WebSockets, Version=2.2.0.3, Culture=neutral, PublicKeyToken=7f78616efb4a208d, processorArchitecture=MSIL">
+      <HintPath>..\packages\vtortola.WebSocketListener.2.2.0.3\lib\net45\vtortola.WebSockets.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="vtortola.WebSockets.Deflate, Version=2.1.7.0, Culture=neutral, PublicKeyToken=7f78616efb4a208d, processorArchitecture=MSIL">
-      <HintPath>..\packages\vtortola.WebSocketListener.2.1.7.0\lib\net45\vtortola.WebSockets.Deflate.dll</HintPath>
+    <Reference Include="vtortola.WebSockets.Deflate, Version=2.2.0.3, Culture=neutral, PublicKeyToken=7f78616efb4a208d, processorArchitecture=MSIL">
+      <HintPath>..\packages\vtortola.WebSocketListener.2.2.0.3\lib\net45\vtortola.WebSockets.Deflate.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="vtortola.WebSockets.Rfc6455, Version=2.1.7.0, Culture=neutral, PublicKeyToken=7f78616efb4a208d, processorArchitecture=MSIL">
-      <HintPath>..\packages\vtortola.WebSocketListener.2.1.7.0\lib\net45\vtortola.WebSockets.Rfc6455.dll</HintPath>
+    <Reference Include="vtortola.WebSockets.Rfc6455, Version=2.2.0.3, Culture=neutral, PublicKeyToken=7f78616efb4a208d, processorArchitecture=MSIL">
+      <HintPath>..\packages\vtortola.WebSocketListener.2.2.0.3\lib\net45\vtortola.WebSockets.Rfc6455.dll</HintPath>
       <Private>True</Private>
     </Reference>
   </ItemGroup>
@@ -81,13 +81,6 @@
   <ItemGroup>
     <None Include="Lime.Transport.WebSocket.nuspec" />
     <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="index.html" />
-    <Content Include="lime.js" />
-    <Content Include="site.js" />
-    <TypeScriptCompile Include="lime.ts" />
-    <TypeScriptCompile Include="site.ts" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
