@@ -333,8 +333,16 @@ namespace Lime.Protocol.Client
                     clientChannel = _clientChannel;
                     if (ShouldCreateChannel(clientChannel))
                     {
-                        _cts?.Cancel();
-                        _cts?.Dispose();
+                        try
+                        {
+                            _cts?.Cancel();
+                            _cts?.Dispose();                            
+                        }
+                        catch { }
+                        finally
+                        {
+                            _cts = null;
+                        }                        
 
                         clientChannel = _clientChannel = await _builder
                             .BuildAndEstablishAsync(cancellationToken)
