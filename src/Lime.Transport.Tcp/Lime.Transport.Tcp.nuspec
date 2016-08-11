@@ -14,7 +14,6 @@
     <tags>lime</tags>
     <dependencies>
       <dependency id="Lime.Protocol" version="$version$" />
-      <dependency id="Lime.Protocol.Serialization.Newtonsoft" version="$version$" />
     </dependencies>
   </metadata>
   <files>
