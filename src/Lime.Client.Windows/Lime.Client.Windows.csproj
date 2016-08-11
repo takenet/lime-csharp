@@ -320,10 +320,6 @@
       <Project>{796a57b4-1fe0-4fe9-940f-e99083dc233a}</Project>
       <Name>Lime.Messaging</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Lime.Protocol.Serialization.Newtonsoft\Lime.Protocol.Serialization.Newtonsoft.csproj">
-      <Project>{07EF6707-B284-4068-9B2F-48998782BC9F}</Project>
-      <Name>Lime.Protocol.Serialization.Newtonsoft</Name>
-    </ProjectReference>
     <ProjectReference Include="..\Lime.Transport.Tcp\Lime.Transport.Tcp.csproj">
       <Project>{d24b4ef4-9b8c-4f89-bfc6-f76007936382}</Project>
       <Name>Lime.Transport.Tcp</Name>

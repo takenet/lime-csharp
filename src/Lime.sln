@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
-VisualStudioVersion = 14.0.24720.0
+VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution items", "Solution items", "{B5C3B9C9-FDAD-4CF1-87F0-133A31090FE9}"
 	ProjectSection(SolutionItems) = preProject
@@ -47,8 +47,6 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lime.Sample.Client", "Lime.Sample.Client\Lime.Sample.Client.csproj", "{5EBDDCFE-BA33-44A9-835E-122390030754}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lime.Transport.WebSocket", "Lime.Transport.WebSocket\Lime.Transport.WebSocket.csproj", "{A0A1C843-C74C-4204-A19E-2C1E9693BC55}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lime.Protocol.Serialization.Newtonsoft", "Lime.Protocol.Serialization.Newtonsoft\Lime.Protocol.Serialization.Newtonsoft.csproj", "{07EF6707-B284-4068-9B2F-48998782BC9F}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lime.Transport.WebSocket.UnitTests", "Lime.Transport.WebSocket.UnitTests\Lime.Transport.WebSocket.UnitTests.csproj", "{FB2EA586-5B55-442D-BD88-67AB219E7325}"
 EndProject
@@ -212,22 +210,6 @@ Global
 		{A0A1C843-C74C-4204-A19E-2C1E9693BC55}.Release|Any CPU.Build.0 = Release|Any CPU
 		{A0A1C843-C74C-4204-A19E-2C1E9693BC55}.Release|x86.ActiveCfg = Release|Any CPU
 		{A0A1C843-C74C-4204-A19E-2C1E9693BC55}.Release|x86.Build.0 = Release|Any CPU
-		{07EF6707-B284-4068-9B2F-48998782BC9F}.Ad-Hoc|Any CPU.ActiveCfg = Release|Any CPU
-		{07EF6707-B284-4068-9B2F-48998782BC9F}.Ad-Hoc|Any CPU.Build.0 = Release|Any CPU
-		{07EF6707-B284-4068-9B2F-48998782BC9F}.Ad-Hoc|x86.ActiveCfg = Release|Any CPU
-		{07EF6707-B284-4068-9B2F-48998782BC9F}.Ad-Hoc|x86.Build.0 = Release|Any CPU
-		{07EF6707-B284-4068-9B2F-48998782BC9F}.AppStore|Any CPU.ActiveCfg = Release|Any CPU
-		{07EF6707-B284-4068-9B2F-48998782BC9F}.AppStore|Any CPU.Build.0 = Release|Any CPU
-		{07EF6707-B284-4068-9B2F-48998782BC9F}.AppStore|x86.ActiveCfg = Release|Any CPU
-		{07EF6707-B284-4068-9B2F-48998782BC9F}.AppStore|x86.Build.0 = Release|Any CPU
-		{07EF6707-B284-4068-9B2F-48998782BC9F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{07EF6707-B284-4068-9B2F-48998782BC9F}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{07EF6707-B284-4068-9B2F-48998782BC9F}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{07EF6707-B284-4068-9B2F-48998782BC9F}.Debug|x86.Build.0 = Debug|Any CPU
-		{07EF6707-B284-4068-9B2F-48998782BC9F}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{07EF6707-B284-4068-9B2F-48998782BC9F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{07EF6707-B284-4068-9B2F-48998782BC9F}.Release|x86.ActiveCfg = Release|Any CPU
-		{07EF6707-B284-4068-9B2F-48998782BC9F}.Release|x86.Build.0 = Release|Any CPU
 		{FB2EA586-5B55-442D-BD88-67AB219E7325}.Ad-Hoc|Any CPU.ActiveCfg = Release|Any CPU
 		{FB2EA586-5B55-442D-BD88-67AB219E7325}.Ad-Hoc|Any CPU.Build.0 = Release|Any CPU
 		{FB2EA586-5B55-442D-BD88-67AB219E7325}.Ad-Hoc|x86.ActiveCfg = Release|Any CPU
