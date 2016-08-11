@@ -33,6 +33,9 @@ namespace Lime.Messaging.Resources
         public const string ACCESS_KEY_KEY = "accessKey";
         public const string ALTERNATIVE_ACCOUNT_KEY = "alternativeAccount";
         public const string PUBLISH_TO_DIRECTORY_KEY = "publishToDirectory";
+        public const string GENDER_KEY = "gender";
+        public const string TIMEZONE_KEY = "timezone";
+        public const string CULTURE_KEY = "culture";
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Account"/> class.
@@ -198,5 +201,42 @@ namespace Lime.Messaging.Resources
         /// </summary>
         [DataMember(Name = PUBLISH_TO_DIRECTORY_KEY)]
         public bool? PublishToDirectory { get; set; }
+
+        /// <summary>
+        /// Represents the person account gender.
+        /// </summary>
+        [DataMember(Name = GENDER_KEY)]
+        public Gender? Gender { get; set; }
+
+        /// <summary>
+        /// Represents the account timezone relative to GMT.
+        /// </summary>
+        [DataMember(Name = TIMEZONE_KEY)]
+        public int? Timezone { get; set; }
+
+        /// <summary>
+        /// Represents the person account culture info, in the IETF language tag format.
+        /// <a href="https://en.wikipedia.org/wiki/IETF_language_tag"/>.
+        /// </summary>
+        [DataMember(Name = CULTURE_KEY)]
+        public string Culture { get; set; }
+    }
+
+    /// <summary>
+    /// Represents the account person gender
+    /// </summary>
+    [DataContract(Namespace = "http://limeprotocol.org/2014")]
+    public enum Gender
+    {
+        /// <summary>
+        /// The male gender
+        /// </summary>
+        [EnumMember(Value = "male")]
+        Male,
+        /// <summary>
+        /// The female gender
+        /// </summary>
+        [EnumMember(Value = "female")]
+        Female
     }
 }
