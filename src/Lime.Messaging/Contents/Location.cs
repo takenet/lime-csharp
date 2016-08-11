@@ -17,6 +17,7 @@ namespace Lime.Messaging.Contents
         public const string COURSE_KEY = "course";
         public const string SPEED_KEY = "speed";
         public const string ACCURACY_KEY = "accuracy";
+        public const string TEXT_KEY = "text";
 
         public static readonly MediaType MediaType = MediaType.Parse(MIME_TYPE);
 
@@ -88,5 +89,14 @@ namespace Lime.Messaging.Contents
         /// </value>
         [DataMember(Name = ACCURACY_KEY)]
         public double? Accuracy { get; set; }
+
+        /// <summary>
+        /// Gets or sets the location description text.
+        /// </summary>
+        /// <value>
+        /// The text.
+        /// </value>
+        [DataMember(Name = TEXT_KEY)]
+        public string Text { get; set; }
     }
 }
