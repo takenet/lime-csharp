@@ -14,7 +14,7 @@
     <tags>lime</tags>
     <dependencies>
       <dependency id="Microsoft.Tpl.DataFlow" version="4.5.24" />
-      <dependency id="Newtonsoft.Json" version="8.0.3" />
+      <dependency id="Newtonsoft.Json" version="9.0.1" />
     </dependencies>
   </metadata>
   <files>
