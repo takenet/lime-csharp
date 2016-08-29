@@ -13,22 +13,21 @@ namespace Lime.Transport.Http
     /// </summary>
     public sealed class HttpRequest
     {
-        #region Constructor
-        
-        public HttpRequest(string method, Uri uri, IPrincipal user = null, Guid correlatorId = default(Guid), WebHeaderCollection headers = null, NameValueCollection queryString = null, MediaType contentType = null, Stream bodyStream = null)
+        public HttpRequest(
+            string method, 
+            Uri uri, 
+            IPrincipal user = null, 
+            Guid correlatorId = default(Guid),
+            WebHeaderCollection headers = null, 
+            NameValueCollection queryString = null, 
+            MediaType contentType = null, 
+            Stream bodyStream = null)
         {
-            if (string.IsNullOrWhiteSpace(method))
-            {
-                throw new ArgumentNullException("method");
-            }
-            Method = method;
-
-            if (uri == null)
-            {
-                throw new ArgumentNullException("uri");
-            }
+            if (string.IsNullOrWhiteSpace(method)) throw new ArgumentNullException(nameof(method));
+            if (uri == null) throw new ArgumentNullException(nameof(uri));
+            
             Uri = uri;
-
+            Method = method;
             User = user;
             CorrelatorId = correlatorId.Equals(default(Guid)) ? Guid.NewGuid() : correlatorId;
             Headers = headers ?? new WebHeaderCollection();
@@ -38,14 +37,22 @@ namespace Lime.Transport.Http
             {
                 BodyStream = bodyStream;
                 ContentType = contentType ?? MediaType.Parse(Constants.TEXT_PLAIN_HEADER_VALUE);
-                Headers.Remove(HttpRequestHeader.ContentType);
-                Headers.Add(HttpRequestHeader.ContentType, ContentType.ToString());                                
+
+                var contentTypeValue = Headers[HttpRequestHeader.ContentType];
+                if (contentTypeValue != null)
+                {
+                    if (!MediaType.Parse(contentTypeValue.Split(';')[0]).Equals(ContentType))
+                    {
+                        Headers.Remove(HttpRequestHeader.ContentType);
+                        Headers.Add(HttpRequestHeader.ContentType, ContentType.ToString());
+                    }
+                }
+                else
+                {
+                    Headers.Add(HttpRequestHeader.ContentType, ContentType.ToString());
+                }
             }
         }
-
-        #endregion
-
-        #region Public Properties
 
         public Guid CorrelatorId { get; private set; }
 
@@ -62,7 +69,5 @@ namespace Lime.Transport.Http
         public MediaType ContentType { get; private set; }
 
         public Stream BodyStream { get; private set; }
-
-        #endregion
     }
 }
