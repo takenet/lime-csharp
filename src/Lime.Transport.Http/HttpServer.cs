@@ -20,6 +20,14 @@ namespace Lime.Transport.Http
         private readonly MemoryCache _memoryCache;
         private readonly CacheItemPolicy _cacheItemPolicy;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="HttpServer"/> class.
+        /// </summary>
+        /// <param name="prefixes">The prefixes.</param>
+        /// <param name="authenticationSchemes">The authentication schemes.</param>
+        /// <param name="requestTimeout">The request timeout.</param>
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="NotSupportedException">Windows XP SP2 or Server 2003 is required to use the HttpListener class.</exception>
         public HttpServer(
             string[] prefixes, 
             AuthenticationSchemes authenticationSchemes, 
