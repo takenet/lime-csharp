@@ -109,7 +109,7 @@ namespace Lime.Transport.Http.UnitTests
             HttpResponseFactory = r => new HttpResponse(r.CorrelatorId, HttpStatusCode.OK, Dummy.CreateRandomString(50), HttpResponseHeaders, ResponseBodyMediaType, ResponseBodyStream);
             
             CancellationToken = TimeSpan.FromSeconds(5).ToCancellationToken();
-            Target = new Lazy<HttpServer>(() => new HttpServer(Prefixes, AuthenticationSchemes));
+            Target = new Lazy<HttpServer>(() => new HttpServer(Prefixes, AuthenticationSchemes, TimeSpan.FromSeconds(60)));
         }
 
         [Test]

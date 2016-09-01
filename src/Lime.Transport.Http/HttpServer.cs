@@ -47,10 +47,12 @@ namespace Lime.Transport.Http
             _httpListener.AuthenticationSchemes = authenticationSchemes;
             _requestTimeout = requestTimeout;
             _memoryCache = new MemoryCache(nameof(HttpRequest));
-            _cacheItemPolicy = new CacheItemPolicy();
+            _cacheItemPolicy = new CacheItemPolicy()
+            {
+                RemovedCallback = OnRemoved
+            };
             if (_requestTimeout != null)
             {
-                _cacheItemPolicy.RemovedCallback = OnContextTimeout;
                 _cacheItemPolicy.SlidingExpiration = _requestTimeout.Value;
             }
         }
@@ -147,12 +149,21 @@ namespace Lime.Transport.Http
             _httpListener.DisposeIfDisposable();
         }
 
-        private void OnContextTimeout(CacheEntryRemovedArguments arguments)
+        private void OnRemoved(CacheEntryRemovedArguments arguments)
         {
             if (arguments.RemovedReason != CacheEntryRemovedReason.Removed)
             {
                 var context = (HttpListenerContext) arguments.CacheItem.Value;
-                context.Response.StatusCode = (int) HttpStatusCode.GatewayTimeout;
+                switch (arguments.RemovedReason)
+                {
+                    case CacheEntryRemovedReason.Expired:
+                    case CacheEntryRemovedReason.Evicted:
+                        context.Response.StatusCode = (int)HttpStatusCode.GatewayTimeout;
+                        break;
+                    default:
+                        context.Response.StatusCode = (int)HttpStatusCode.ServiceUnavailable;
+                        break;
+                }
                 context.Response.Close();
             }
         }
