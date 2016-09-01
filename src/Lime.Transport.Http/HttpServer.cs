@@ -1,25 +1,31 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Net;
+using System.Runtime.Caching;
 using System.Threading;
 using System.Threading.Tasks;
 using Lime.Protocol;
 
 namespace Lime.Transport.Http
 {
+    /// <summary>
+    /// Wrapper around the <see cref="HttpListener"/> class.
+    /// </summary>
+    /// <seealso cref="Lime.Transport.Http.IHttpServer" />
+    /// <seealso cref="System.IDisposable" />
     public sealed class HttpServer : IHttpServer, IDisposable
     {
-        #region Private Fields
-
+        private readonly TimeSpan? _requestTimeout;
         private readonly HttpListener _httpListener;
-        private readonly ConcurrentDictionary<Guid, HttpListenerContext> _pendingContextsDictionary;
+        private readonly MemoryCache _memoryCache;
+        private readonly CacheItemPolicy _cacheItemPolicy;
 
-        #endregion
-
-        #region Constructor
-
-        public HttpServer(string[] prefixes, AuthenticationSchemes authenticationSchemes)
-        {
+        public HttpServer(
+            string[] prefixes, 
+            AuthenticationSchemes authenticationSchemes, 
+            TimeSpan? requestTimeout = null)
+        {            
+            if (prefixes == null) throw new ArgumentNullException(nameof(prefixes));
             if (!HttpListener.IsSupported)
             {
                 throw new NotSupportedException("Windows XP SP2 or Server 2003 is required to use the HttpListener class.");
@@ -31,12 +37,15 @@ namespace Lime.Transport.Http
                 _httpListener.Prefixes.Add(prefix);
             }
             _httpListener.AuthenticationSchemes = authenticationSchemes;
-            _pendingContextsDictionary = new ConcurrentDictionary<Guid, HttpListenerContext>();
+            _requestTimeout = requestTimeout;
+            _memoryCache = new MemoryCache(nameof(HttpRequest));
+            _cacheItemPolicy = new CacheItemPolicy();
+            if (_requestTimeout != null)
+            {
+                _cacheItemPolicy.RemovedCallback = OnContextTimeout;
+                _cacheItemPolicy.SlidingExpiration = _requestTimeout.Value;
+            }
         }
-
-        #endregion
-
-        #region IHttpServer Members
 
         public void Start()
         {
@@ -66,19 +75,12 @@ namespace Lime.Transport.Http
                     .ConfigureAwait(false);
 
                 Guid correlatorId;
-                if (!Guid.TryParse(context.Request.GetValue(Constants.ENVELOPE_ID_HEADER, Constants.ENVELOPE_ID_QUERY), out correlatorId) ||
-                    correlatorId == Guid.Empty)
+                do
                 {
                     correlatorId = Guid.NewGuid();
-                }
-
-                while (!_pendingContextsDictionary.TryAdd(correlatorId, context))
-                {
-                    correlatorId = Guid.NewGuid();
-                }
+                } while (!_memoryCache.Add(correlatorId.ToString(), context, _cacheItemPolicy));
 
                 MediaType contentType = null;
-
                 if (!string.IsNullOrEmpty(context.Request.ContentType))
                 {
                     contentType = MediaType.Parse(context.Request.ContentType);
@@ -109,10 +111,10 @@ namespace Lime.Transport.Http
 
         public async Task SubmitResponseAsync(HttpResponse response)
         {
-            HttpListenerContext context;
-            if (!_pendingContextsDictionary.TryRemove(response.CorrelatorId, out context))
+            var context = _memoryCache.Remove(response.CorrelatorId.ToString()) as HttpListenerContext;
+            if (context == null)
             {
-                throw new ArgumentException("Invalid response CorrelatorId", "response");
+                throw new ArgumentException("Invalid response CorrelatorId", nameof(response));
             }
 
             context.Response.StatusCode = (int)response.StatusCode;
@@ -125,21 +127,25 @@ namespace Lime.Transport.Http
 
             if (response.BodyStream != null)
             {
-                await response.BodyStream.CopyToAsync(context.Response.OutputStream);                
+                await response.BodyStream.CopyToAsync(context.Response.OutputStream).ConfigureAwait(false);                
             }
             
             context.Response.Close();
         }
-
-        #endregion
-
-        #region IDisposable Members
 
         public void Dispose()
         {
             _httpListener.DisposeIfDisposable();
         }
 
-        #endregion
+        private void OnContextTimeout(CacheEntryRemovedArguments arguments)
+        {
+            if (arguments.RemovedReason != CacheEntryRemovedReason.Removed)
+            {
+                var context = (HttpListenerContext) arguments.CacheItem.Value;
+                context.Response.StatusCode = (int) HttpStatusCode.GatewayTimeout;
+                context.Response.Close();
+            }
+        }
     }
 }
