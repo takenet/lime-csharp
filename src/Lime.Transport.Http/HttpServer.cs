@@ -135,6 +135,7 @@ namespace Lime.Transport.Http
 
         public void Dispose()
         {
+            _memoryCache.Dispose();
             _httpListener.DisposeIfDisposable();
         }
 
