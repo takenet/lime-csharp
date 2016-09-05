@@ -55,14 +55,15 @@ namespace Lime.Protocol.LoadTests.Tcp
         public async Task Send1000EnvelopesAsync()
         {
             // Arrange
-            var count = 1000;
+            var count = 10000;
             var envelopes = Enumerable
                 .Range(0, count)
                 .Select(i => Dummy.CreateMessage(Dummy.CreateTextContent()));
 
             var receivedEnvelopes = Enumerable
                 .Range(0, count)
-                .Select(i => _serverTcpTransport.ReceiveAsync(_cancellationToken));
+                .Select(i => _serverTcpTransport.ReceiveAsync(_cancellationToken))
+                .ToArray();
 
             // Act
             var sw = Stopwatch.StartNew();
