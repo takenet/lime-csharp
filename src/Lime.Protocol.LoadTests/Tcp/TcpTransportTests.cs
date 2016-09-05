@@ -33,14 +33,11 @@ namespace Lime.Protocol.LoadTests.Tcp
             _envelopeSerializer = new FakeEnvelopeSerializer(10);
             _tcpTransportListener = new TcpTransportListener(_uri, null, _envelopeSerializer);
             await _tcpTransportListener.StartAsync();
-
             var serverTcpTransportTask = _tcpTransportListener.AcceptTransportAsync(_cancellationToken);
-
             _clientTcpTransport = new TcpTransport(_envelopeSerializer);
             await _clientTcpTransport.OpenAsync(_uri, _cancellationToken);
             _serverTcpTransport = (TcpTransport)await serverTcpTransportTask;
             await _serverTcpTransport.OpenAsync(_uri, _cancellationToken);
-
         }
 
         [TearDown]
@@ -52,7 +49,7 @@ namespace Lime.Protocol.LoadTests.Tcp
         }
 
         [Test]
-        public async Task Send1000EnvelopesAsync()
+        public async Task Send10000EnvelopesAsync()
         {
             // Arrange
             var count = 10000;
@@ -78,7 +75,6 @@ namespace Lime.Protocol.LoadTests.Tcp
             // Assert
             sw.ElapsedMilliseconds.ShouldBeLessThan(count * 2);
         }
-
     }
 
     public sealed class FakeEnvelopeSerializer : IEnvelopeSerializer
