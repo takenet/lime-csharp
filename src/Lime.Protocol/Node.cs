@@ -7,20 +7,26 @@ namespace Lime.Protocol
     /// </summary>
     public class Node : Identity
     {
-        #region Constructor
-
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Node"/> class.
+        /// </summary>
         public Node()
         {
 
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Node"/> class.
+        /// </summary>
+        /// <param name="name">The name.</param>
+        /// <param name="domain">The domain.</param>
+        /// <param name="instance">The instance.</param>
         public Node(string name, string domain, string instance)
             : base(name, domain)            
         {
             Instance = instance;
         }
 
-        #endregion
 
         /// <summary>
         /// The name of the instance used by the node to connect to the network.
@@ -35,8 +41,10 @@ namespace Lime.Protocol
         /// </returns>
         public override string ToString()
         {
-            return string.Format("{0}/{1}", base.ToString(), Instance).TrimEnd('/');
+            return $"{base.ToString()}/{Instance}".TrimEnd('/');
         }
+
+
 
         /// <summary>
         /// Determines whether the specified <see cref="object" }, is equal to this instance.
@@ -59,6 +67,16 @@ namespace Lime.Protocol
                    ((Instance == null && node.Instance == null) || (Instance != null && Instance.Equals(node.Instance, StringComparison.CurrentCultureIgnoreCase)));
         }
 
+        public static bool operator ==(Node left, Node right)
+        {
+            return Equals(left, right);
+        }
+
+        public static bool operator !=(Node left, Node right)
+        {
+            return !Equals(left, right);
+        }
+
         /// <summary>
         /// Returns a hash code for this instance.
         /// </summary>
@@ -77,21 +95,21 @@ namespace Lime.Protocol
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">s</exception>
         /// <exception cref="System.FormatException">Invalid Peer format</exception>
-        public static new Node Parse(string s)
+        public new static Node Parse(string s)
         {
             if (string.IsNullOrWhiteSpace(s))
             {
-                throw new ArgumentNullException("s");
+                throw new ArgumentNullException(nameof(s));
             }
 
             var identity = Identity.Parse(s);
 
-            var splittedDomain = identity.Domain != null ? identity.Domain.Split('/') : null;
+            var splittedDomain = identity.Domain?.Split('/');
 
             return new Node
             {
                 Name = identity.Name,
-                Domain = splittedDomain != null ? splittedDomain[0] : null,
+                Domain = splittedDomain?[0],
                 Instance = splittedDomain != null && splittedDomain.Length > 1 ? splittedDomain[1] : null
             };
         }
@@ -133,18 +151,9 @@ namespace Lime.Protocol
         /// Indicates if the node is a complete representation, 
         /// with name, domain and instance.
         /// </summary>
-        public bool IsComplete
-        {
-            get
-            {
-                return
-                    !string.IsNullOrEmpty(Name) &&
-                    !string.IsNullOrEmpty(Domain) &&
-                    !string.IsNullOrEmpty(Instance);
-            }
-        }
-
-        #region ICloneable Members
+        public bool IsComplete => !string.IsNullOrEmpty(Name) &&
+                                  !string.IsNullOrEmpty(Domain) &&
+                                  !string.IsNullOrEmpty(Instance);
 
         /// <summary>
         /// Creates a new object that is a copy of the current instance.
@@ -161,7 +170,5 @@ namespace Lime.Protocol
                 Instance = Instance
             };
         }
-
-        #endregion
     }
 }

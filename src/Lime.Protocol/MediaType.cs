@@ -102,6 +102,16 @@ namespace Lime.Protocol
                    (Suffix == null && mediaType.Suffix == null || (Suffix != null && mediaType.Suffix != null && Suffix.Equals(mediaType.Suffix, StringComparison.CurrentCultureIgnoreCase)));
         }
 
+        public static bool operator ==(MediaType left, MediaType right)
+        {
+            return Equals(left, right);
+        }
+
+        public static bool operator !=(MediaType left, MediaType right)
+        {
+            return !Equals(left, right);
+        }
+
         /// <summary> 
         /// Parses the string to a MediaType object.
         /// </summary>
