@@ -47,6 +47,7 @@
     <Compile Include="Contents\BitmapImage.cs" />
     <Compile Include="Contents\ChatState.cs" />
     <Compile Include="Contents\DocumentSelect.cs" />
+    <Compile Include="Contents\Input.cs" />
     <Compile Include="Contents\Invoice.cs" />
     <Compile Include="Contents\InvoiceItem.cs" />
     <Compile Include="Contents\InvoiceStatus.cs" />
