@@ -28,7 +28,7 @@ namespace Lime.Messaging.Contents
         /// <summary>
         /// Gets or sets the input label that should be shown to the user.
         /// </summary>
-        [DataMember(Name = LABEL_KEY)]
+        [DataMember(Name = LABEL_KEY, IsRequired = true)]
         public DocumentContainer Label { get; set; }
 
         /// <summary>
@@ -36,6 +36,17 @@ namespace Lime.Messaging.Contents
         /// </summary>
         [DataMember(Name = LABEL_KEY)]
         public InputValidation Validation { get; set; }
+
+        /// <summary>
+        /// Returns a <see cref="System.String" /> that represents this instance.
+        /// </summary>
+        /// <returns>
+        /// A <see cref="System.String" /> that represents this instance.
+        /// </returns>
+        public override string ToString()
+        {
+            return Label?.ToString() ?? "";
+        }
     }
 
     /// <summary>
