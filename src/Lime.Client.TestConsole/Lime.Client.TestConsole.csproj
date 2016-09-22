@@ -292,6 +292,10 @@
       <Project>{d24b4ef4-9b8c-4f89-bfc6-f76007936382}</Project>
       <Name>Lime.Transport.Tcp</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Lime.Transport.WebSocket\Lime.Transport.WebSocket.csproj">
+      <Project>{a0a1c843-c74c-4204-a19e-2c1e9693bc55}</Project>
+      <Name>Lime.Transport.WebSocket</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
