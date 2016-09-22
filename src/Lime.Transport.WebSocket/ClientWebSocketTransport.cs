@@ -109,7 +109,7 @@ namespace Lime.Transport.WebSocket
 
         protected override Task PerformCloseAsync(CancellationToken cancellationToken)
         {
-            return _clientWebSocket.CloseAsync(WebSocketCloseStatus.Empty, "", cancellationToken);
+            return _clientWebSocket.CloseAsync(WebSocketCloseStatus.Empty, null, cancellationToken);
         }
 
         public override bool IsConnected => _clientWebSocket.State == WebSocketState.Open;

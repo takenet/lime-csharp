@@ -12,6 +12,7 @@ using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Security;
 using System.Net.Sockets;
 using System.Reflection;
 using System.Security.Cryptography.X509Certificates;
@@ -19,6 +20,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Data;
 using System.Windows.Threading;
 using Lime.Transport.Tcp;
@@ -66,9 +68,14 @@ namespace Lime.Client.TestConsole.ViewModels
                 LoadTemplates();
                 LoadMacros();
             }
-
+            
             ServicePointManager.ServerCertificateValidationCallback = (sender, certificate, chain, errors) =>
             {
+                if (errors != SslPolicyErrors.None)
+                {
+                    Application.Current.Dispatcher.Invoke(() => 
+                    AddStatusMessage($"TLS server certificate validation errors: {errors}", true));
+                }
                 return true;
             };
         }
