@@ -305,9 +305,10 @@ namespace Lime.Protocol.UnitTests
             {
                 Message = CreateRandomStringExtended(50),
                 Priority = 1,
-                RoutingRule = RoutingRule.IdentityByDistance,
+                RoutingRule = RoutingRule.Identity,
                 Status = PresenceStatus.Available,
-                LastSeen = DateTimeOffset.UtcNow
+                LastSeen = DateTimeOffset.UtcNow,
+                FilterByDistance = true
             };
         }
 
