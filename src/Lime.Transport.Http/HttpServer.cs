@@ -4,6 +4,7 @@ using System.Net;
 using System.Runtime.Caching;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Web;
 using Lime.Protocol;
 
 namespace Lime.Transport.Http
@@ -102,7 +103,7 @@ namespace Lime.Transport.Http
                     context.User,
                     correlatorId,
                     (WebHeaderCollection)context.Request.Headers,
-                    context.Request.QueryString,
+                    HttpUtility.ParseQueryString(context.Request.Url.Query),
                     contentType,
                     context.Request.InputStream);
             }
