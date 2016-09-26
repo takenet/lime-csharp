@@ -464,20 +464,22 @@ namespace Lime.Protocol.UnitTests.Client
         [Category("ReceiveMessageAsync")]
         public async Task ReceiveMessageAsync_MessageReceivedAndAutoNotifyReceiptTrue_SendsNotificationToTransport()
         {
+            // Arrange
             var content = Dummy.CreateTextContent();
             var message = Dummy.CreateMessage(content);
-
             var cts = new TaskCompletionSource<Envelope>();
             _transport
                 .SetupSequence(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
                 .Returns(Task.FromResult<Envelope>(message))
                 .Returns(cts.Task);
-
-            var target = GetTarget(state: SessionState.Established, autoNotifyReceipt: true);
+            var target = GetTarget(state: SessionState.Established, localNode: message.To, autoNotifyReceipt: true);
 
             var cancellationToken = Dummy.CreateCancellationToken();
+
+            // Act
             var actual = await target.ReceiveMessageAsync(cancellationToken);
 
+            // Assert
             _transport.Verify(
                 t => t.SendAsync(It.Is<Notification>(
                         n => n.Id == message.Id &&
@@ -489,13 +491,101 @@ namespace Lime.Protocol.UnitTests.Client
 
         [Test]
         [Category("ReceiveMessageAsync")]
+        public async Task ReceiveMessageAsync_MessageReceivedToIdentityAndAutoNotifyReceiptTrue_SendsNotificationToTransport()
+        {
+            // Arrange
+            var content = Dummy.CreateTextContent();
+            var message = Dummy.CreateMessage(content);
+            var destination = Dummy.CreateNode();
+            message.To = destination.ToIdentity().ToNode();
+            var cts = new TaskCompletionSource<Envelope>();
+            _transport
+                .SetupSequence(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(Task.FromResult<Envelope>(message))
+                .Returns(cts.Task);
+            var target = GetTarget(state: SessionState.Established, localNode: destination, autoNotifyReceipt: true);
+            var cancellationToken = Dummy.CreateCancellationToken();
+            
+            // Act
+            var actual = await target.ReceiveMessageAsync(cancellationToken);
+
+            // Assert
+            _transport.Verify(
+                t => t.SendAsync(It.Is<Notification>(
+                        n => n.Id == message.Id &&
+                             n.To.Equals(message.From) &&
+                             n.Event == Event.Received),
+                    It.IsAny<CancellationToken>()),
+                    Times.Once());
+        }
+
+
+        [Test]
+        [Category("ReceiveMessageAsync")]
+        public async Task ReceiveMessageAsync_MessageReceivedToNullDestinationAndAutoNotifyReceiptTrue_SendsNotificationToTransport()
+        {
+            // Arrange
+            var content = Dummy.CreateTextContent();
+            var message = Dummy.CreateMessage(content);
+            var destination = Dummy.CreateNode();
+            message.To = null;
+            var cts = new TaskCompletionSource<Envelope>();
+            _transport
+                .SetupSequence(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(Task.FromResult<Envelope>(message))
+                .Returns(cts.Task);
+            var target = GetTarget(state: SessionState.Established, localNode: destination, autoNotifyReceipt: true);
+            var cancellationToken = Dummy.CreateCancellationToken();
+
+            // Act
+            var actual = await target.ReceiveMessageAsync(cancellationToken);
+
+            // Assert
+            _transport.Verify(
+                t => t.SendAsync(It.Is<Notification>(
+                        n => n.Id == message.Id &&
+                             n.To.Equals(message.From) &&
+                             n.Event == Event.Received),
+                    It.IsAny<CancellationToken>()),
+                    Times.Once());
+        }
+
+        [Test]
+        [Category("ReceiveMessageAsync")]
+        public async Task ReceiveMessageAsync_MessageReceivedToOtherDestinationAndAutoNotifyReceiptTrue_DoNotSendsNotificationToTransport()
+        {
+            // Arrange
+            var content = Dummy.CreateTextContent();
+            var message = Dummy.CreateMessage(content);
+            var destination = Dummy.CreateNode();            
+            var cts = new TaskCompletionSource<Envelope>();
+            _transport
+                .SetupSequence(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(Task.FromResult<Envelope>(message))
+                .Returns(cts.Task);
+            var target = GetTarget(state: SessionState.Established, localNode: destination, autoNotifyReceipt: true);
+            var cancellationToken = Dummy.CreateCancellationToken();
+
+            // Act
+            var actual = await target.ReceiveMessageAsync(cancellationToken);
+
+            // Assert
+            _transport.Verify(
+                t => t.SendAsync(It.Is<Notification>(
+                        n => n.Id == message.Id &&
+                             n.To.Equals(message.From) &&
+                             n.Event == Event.Received),
+                    It.IsAny<CancellationToken>()),
+                    Times.Never());
+        }
+
+        [Test]
+        [Category("ReceiveMessageAsync")]
         public async Task ReceiveMessageAsync_MessageReceivedAndAutoNotifyReceiptFalse_DoNotSendsNotificationToTransport()
         {            
             var content = Dummy.CreateTextContent();
             var message = Dummy.CreateMessage(content);
-
             var cancellationToken = Dummy.CreateCancellationToken();
-
             var tcs = new TaskCompletionSource<Envelope>();
 
             _transport
