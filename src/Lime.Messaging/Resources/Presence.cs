@@ -82,7 +82,7 @@ namespace Lime.Messaging.Resources
         public bool? RoundRobin { get; set; }
 
         /// <summary>
-        /// If true, indicates that the current session should receive the messages sent by its own identity.
+        /// If true, indicates that the current session should receive the messages sent by itself.
         /// </summary>
         [DataMember(Name = ECHO_KEY, EmitDefaultValue = false)]
         public bool? Echo { get; set; }
