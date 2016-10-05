@@ -66,6 +66,7 @@
     <Compile Include="Resources\Contact.cs" />
     <Compile Include="Resources\Delegation.cs" />
     <Compile Include="Resources\Group.cs" />
+    <Compile Include="Resources\ContactDocument.cs" />
     <Compile Include="Resources\Ping.cs" />
     <Compile Include="Resources\Presence.cs" />
     <Compile Include="Resources\Quota.cs" />

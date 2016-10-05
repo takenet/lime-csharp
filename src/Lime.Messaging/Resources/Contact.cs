@@ -8,7 +8,7 @@ namespace Lime.Messaging.Resources
     /// Represents a contact information.
     /// </summary>
     [DataContract(Namespace = "http://limeprotocol.org/2014")]
-    public class Contact : Document, IIdentity
+    public class Contact : ContactDocument, IIdentity
     {
         public const string MIME_TYPE = "application/vnd.lime.contact+json";
         public static readonly MediaType MediaType = MediaType.Parse(MIME_TYPE);
@@ -44,28 +44,23 @@ namespace Lime.Messaging.Resources
         public string Name { get; set; }
 
         /// <summary>
-        /// Determines if the contact is pending for 
-        /// acceptance by the roster owner. 
+        /// Determines if the contact is pending for acceptance by the roster owner. 
         /// The default value is false.
         /// </summary>
         [DataMember(Name = IS_PENDING_KEY, EmitDefaultValue = false)]
         public bool? IsPending { get; set; }
 
         /// <summary>
-        /// Indicates if the roster owner wants to share 
-        /// presence information with the contact. If true, 
-        /// the server provides a get delegation permission 
-        /// to the contact identity into the roster owner 
-        /// presence resource. The default value is true.
+        /// Indicates if the roster owner wants to share presence information with the contact. 
+        /// If true, the server provides a get delegation permission to the contact identity into the roster owner presence resource. 
+        /// The default value is true.
         /// </summary>
         [DataMember(Name = SHARE_PRESENCE_KEY, EmitDefaultValue = false)]
         public bool? SharePresence { get; set; }
 
         /// <summary>
-        /// Indicates if the roster owner wants to share account 
-        /// information with the contact. If true, the server provides 
-        /// a get delegation permission to the contact identity 
-        /// into the roster owner account resource. 
+        /// Indicates if the roster owner wants to share account information with the contact. 
+        /// If true, the server provides a get delegation permission to the contact identity into the roster owner account resource. 
         /// The default value is true.
         /// </summary>
         [DataMember(Name = SHARE_ACCOUNT_INFO_KEY, EmitDefaultValue = false)]
@@ -80,22 +75,11 @@ namespace Lime.Messaging.Resources
         [DataMember(Name = PRIORITY_KEY, EmitDefaultValue = false)]
         public int? Priority { get; set; }
 
-        #region IIdentity Members
+        [IgnoreDataMember]
+        string IIdentity.Name => Identity?.Name;
 
         [IgnoreDataMember]
-        string IIdentity.Name
-        {
-            get { return Identity != null ? Identity.Name : null; }
-        }
-        [IgnoreDataMember]
-        string IIdentity.Domain
-        {
-            get { return Identity != null ? Identity.Domain : null; }
-        }
-
-        #endregion
-
-        #region Object Members
+        string IIdentity.Domain => Identity?.Domain;
 
         /// <summary>
         /// Returns a <see cref="System.String" /> that represents this instance.
@@ -103,10 +87,7 @@ namespace Lime.Messaging.Resources
         /// <returns>
         /// A <see cref="System.String" /> that represents this instance.
         /// </returns>
-        public override string ToString()
-        {
-            return this.Identity != null ? this.Identity.ToString() : string.Empty;
-        }
+        public override string ToString() => Identity?.ToString() ?? string.Empty;
 
         /// <summary>
         /// Determines whether the specified <see cref="System.Object" }, is equal to this instance.
@@ -122,7 +103,7 @@ namespace Lime.Messaging.Resources
                 return false;
             }
 
-            return this.ToString().Equals(obj.ToString(), StringComparison.CurrentCultureIgnoreCase);
+            return ToString().Equals(obj.ToString(), StringComparison.CurrentCultureIgnoreCase);
         }
 
         /// <summary>
@@ -133,10 +114,7 @@ namespace Lime.Messaging.Resources
         /// </returns>
         public override int GetHashCode()
         {
-            return this.Identity != null ? this.Identity.GetHashCode() : 0;
+            return Identity?.GetHashCode() ?? 0;
         }
-
-        #endregion
-
     }
 }
