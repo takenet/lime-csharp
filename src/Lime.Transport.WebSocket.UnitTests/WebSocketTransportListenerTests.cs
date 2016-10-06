@@ -77,14 +77,6 @@ namespace Lime.Transport.WebSocket.UnitTests
         }
 
         [Test]
-        public async Task StartAsync_CallTwice_ThrowsInvalidOperationException()
-        {
-            // Act
-            await Target.StartAsync();
-            await Target.StartAsync().ShouldThrowAsync<InvalidOperationException>();
-        }
-
-        [Test]
         public async Task AcceptTransportAsync_NewConnection_RetunsTransport()
         {
             // Arrange
