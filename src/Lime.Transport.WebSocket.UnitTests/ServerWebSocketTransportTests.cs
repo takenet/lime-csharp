@@ -37,7 +37,7 @@ namespace Lime.Transport.WebSocket.UnitTests
 
         public WebSocketTransportListener Listener { get; private set; }
 
-        public X509Certificate2 SslCertificate { get; private set; }
+        public X509CertificateInfo SslCertificate { get; private set; }
 
         public IEnvelopeSerializer EnvelopeSerializer { get; private set; }
 
