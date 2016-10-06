@@ -29,7 +29,19 @@ namespace Lime.Transport.WebSocket
             return clientWebSocket.ConnectAsync(uri, cancellationToken);
         }
 
-        protected override Task PerformCloseAsync(CancellationToken cancellationToken) 
-            => WebSocket.CloseAsync(CloseStatus, CloseStatusDescription, cancellationToken);
+        protected override async Task PerformCloseAsync(CancellationToken cancellationToken)
+        {
+            if (WebSocket.State == WebSocketState.Open)
+            {
+                // Initiate the close handshake
+                await
+                    WebSocket.CloseAsync(CloseStatus, CloseStatusDescription, cancellationToken)
+                        .ConfigureAwait(false);
+            }
+            else if (WebSocket.State != WebSocketState.CloseSent)
+            {
+                await WebSocket.CloseOutputAsync(CloseStatus, CloseStatusDescription, cancellationToken).ConfigureAwait(false);
+            }
+        }
     }
 }

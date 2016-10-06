@@ -54,7 +54,7 @@ namespace Lime.Transport.WebSocket.UnitTests
             EnvelopeSerializer = new JsonNetSerializer();
             TraceWriter = new Mock<ITraceWriter>();
             Listener = new WebSocketTransportListener(ListenerUri, SslCertificate, EnvelopeSerializer, TraceWriter.Object);
-            CancellationToken = TimeSpan.FromSeconds(30).ToCancellationToken();
+            CancellationToken = TimeSpan.FromSeconds(15).ToCancellationToken();
             Client = new ClientWebSocketTransport(EnvelopeSerializer);
         }
 
@@ -295,10 +295,13 @@ namespace Lime.Transport.WebSocket.UnitTests
             var target = await GetTargetAsync();
             var session = Dummy.CreateSession(SessionState.Negotiating);
             await target.SendAsync(session, CancellationToken); // Send something to assert is connected
+            var received = await Client.ReceiveAsync(CancellationToken);
 
             // Act
-            await target.CloseAsync(CancellationToken);
-
+            await Task.WhenAll(
+                Client.CloseAsync(CancellationToken),
+                target.CloseAsync(CancellationToken));
+            
             // Assert
             try
             {

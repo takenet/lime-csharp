@@ -12,6 +12,8 @@ namespace Lime.Transport.WebSocket
     {
         private readonly HttpListenerWebSocketContext _context;
 
+        private static readonly TimeSpan CloseTimeout = TimeSpan.FromSeconds(5);
+
         internal ServerWebSocketTransport(
             HttpListenerWebSocketContext context, 
             IEnvelopeSerializer envelopeSerializer, 
@@ -25,8 +27,33 @@ namespace Lime.Transport.WebSocket
         protected override Task PerformOpenAsync(Uri uri, CancellationToken cancellationToken) 
             => Task.CompletedTask;
 
-        protected override Task PerformCloseAsync(CancellationToken cancellationToken) 
-            => WebSocket.CloseOutputAsync(CloseStatus, CloseStatusDescription, cancellationToken);
+        protected override async Task PerformCloseAsync(CancellationToken cancellationToken)
+        {
+            if (WebSocket.State == WebSocketState.Open)
+            {
+                using (var cts = new CancellationTokenSource(CloseTimeout))
+                using (var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, cts.Token))
+                {
+                    try
+                    {
+                        // Awaits for the close handshake message
+                        await ReceiveAsync(linkedCts.Token).ConfigureAwait(false);
+                    }
+                    catch (OperationCanceledException) when (cts.IsCancellationRequested)
+                    {
+                        await WebSocket.CloseOutputAsync(CloseStatus, CloseStatusDescription, cancellationToken).ConfigureAwait(false);
+                    }
+                }
+            }
+            else if (WebSocket.State == WebSocketState.CloseReceived)
+            {
+                await WebSocket.CloseAsync(CloseStatus, CloseStatusDescription, cancellationToken).ConfigureAwait(false);
+            }
+            else
+            {
+                await WebSocket.CloseOutputAsync(CloseStatus, CloseStatusDescription, cancellationToken).ConfigureAwait(false);
+            }
+        }
 
         public override IReadOnlyDictionary<string, object> Options
         {

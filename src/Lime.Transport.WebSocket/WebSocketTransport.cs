@@ -14,10 +14,11 @@ namespace Lime.Transport.WebSocket
     public abstract class WebSocketTransport : TransportBase, IDisposable
     {
         private readonly IEnvelopeSerializer _envelopeSerializer;
-        private readonly ITraceWriter _traceWriter;
+        private readonly ITraceWriter _traceWriter;        
+        private readonly JsonBuffer _jsonBuffer;
         private readonly SemaphoreSlim _receiveSemaphore;
         private readonly SemaphoreSlim _sendSemaphore;
-        private readonly JsonBuffer _jsonBuffer;
+
         protected WebSocketCloseStatus CloseStatus;
         protected string CloseStatusDescription;
 
@@ -29,16 +30,15 @@ namespace Lime.Transport.WebSocket
         {            
             WebSocket = webSocket;
             _envelopeSerializer = envelopeSerializer;
-            _traceWriter = traceWriter;
+            _traceWriter = traceWriter;            
+            _jsonBuffer = new JsonBuffer(bufferSize);
             _receiveSemaphore = new SemaphoreSlim(1);
             _sendSemaphore = new SemaphoreSlim(1);
-            _jsonBuffer = new JsonBuffer(bufferSize);
-            CloseStatus = WebSocketCloseStatus.NormalClosure;
+            CloseStatus = WebSocketCloseStatus.Empty;
             CloseStatusDescription = string.Empty;
         }
 
         protected System.Net.WebSockets.WebSocket WebSocket { get; }
-
 
         public override async Task SendAsync(Envelope envelope, CancellationToken cancellationToken)
         {
@@ -86,19 +86,7 @@ namespace Lime.Transport.WebSocket
                     var receiveResult = await WebSocket.ReceiveAsync(buffer, cancellationToken).ConfigureAwait(false);
                     if (receiveResult.MessageType == WebSocketMessageType.Close)
                     {
-                        if (_traceWriter.IsEnabled &&
-                            receiveResult.CloseStatus != null &&
-                            receiveResult.CloseStatus.Value != WebSocketCloseStatus.Empty &&
-                            receiveResult.CloseStatus.Value != WebSocketCloseStatus.NormalClosure)
-                        {
-                            await
-                                _traceWriter.TraceAsync(
-                                    $"{receiveResult.CloseStatus.Value}: {receiveResult.CloseStatusDescription}",
-                                    DataOperation.Error);
-                        }
-
-                        CloseStatus = WebSocketCloseStatus.NormalClosure;
-                        await CloseAsync(cancellationToken).ConfigureAwait(false);
+                        await HandleCloseMessageAsync(receiveResult, cancellationToken);
                         break;
                     }
 
@@ -135,7 +123,6 @@ namespace Lime.Transport.WebSocket
             return null;
         }
 
-
         public override bool IsConnected => WebSocket.State == WebSocketState.Open;
 
         public override IReadOnlyDictionary<string, object> Options => new Dictionary<string, object>()
@@ -160,6 +147,23 @@ namespace Lime.Transport.WebSocket
                 _sendSemaphore.Dispose();
                 _receiveSemaphore.Dispose();
             }
+        }
+
+        private async Task HandleCloseMessageAsync(WebSocketReceiveResult receiveResult, CancellationToken cancellationToken)
+        {
+            if (_traceWriter.IsEnabled &&
+                receiveResult.CloseStatus != null &&
+                receiveResult.CloseStatus.Value != WebSocketCloseStatus.Empty &&
+                receiveResult.CloseStatus.Value != WebSocketCloseStatus.NormalClosure)
+            {
+                await
+                    _traceWriter.TraceAsync(
+                        $"{receiveResult.CloseStatus.Value}: {receiveResult.CloseStatusDescription}",
+                        DataOperation.Error);
+            }
+
+            CloseStatus = WebSocketCloseStatus.NormalClosure;
+            await CloseAsync(cancellationToken).ConfigureAwait(false);
         }
     }
 }
