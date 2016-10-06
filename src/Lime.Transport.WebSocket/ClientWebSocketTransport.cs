@@ -12,7 +12,10 @@ using Lime.Protocol.Serialization;
 namespace Lime.Transport.WebSocket
 {
     public class ClientWebSocketTransport : WebSocketTransport, ITransport
-    {                        
+    {
+        private static readonly TimeSpan CloseTimeout = TimeSpan.FromSeconds(5);
+
+
         public ClientWebSocketTransport(
             IEnvelopeSerializer envelopeSerializer, 
             ITraceWriter traceWriter = null, 
@@ -31,16 +34,24 @@ namespace Lime.Transport.WebSocket
 
         protected override async Task PerformCloseAsync(CancellationToken cancellationToken)
         {
-            if (WebSocket.State == WebSocketState.Open)
+            if (WebSocket.State == WebSocketState.Open || 
+                WebSocket.State == WebSocketState.CloseReceived)
             {
-                // Initiate the close handshake
-                await
-                    WebSocket.CloseAsync(CloseStatus, CloseStatusDescription, cancellationToken)
-                        .ConfigureAwait(false);
-            }
-            else if (WebSocket.State != WebSocketState.CloseSent)
-            {
-                await WebSocket.CloseOutputAsync(CloseStatus, CloseStatusDescription, cancellationToken).ConfigureAwait(false);
+                using (var cts = new CancellationTokenSource(CloseTimeout))
+                using (var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, cts.Token))
+                {
+                    try
+                    {
+                        // Initiate the close handshake
+                        await
+                            WebSocket.CloseAsync(CloseStatus, CloseStatusDescription, linkedCts.Token)
+                                .ConfigureAwait(false);
+                    }
+                    catch (OperationCanceledException) when (cts.IsCancellationRequested)
+                    {
+                        await CloseWebSocketOutputAsync(cancellationToken).ConfigureAwait(false);
+                    }
+                }
             }
         }
     }

@@ -41,17 +41,13 @@ namespace Lime.Transport.WebSocket
                     }
                     catch (OperationCanceledException) when (cts.IsCancellationRequested)
                     {
-                        await WebSocket.CloseOutputAsync(CloseStatus, CloseStatusDescription, cancellationToken).ConfigureAwait(false);
+                        await CloseWebSocketOutputAsync(cancellationToken).ConfigureAwait(false);
                     }
                 }
             }
             else if (WebSocket.State == WebSocketState.CloseReceived)
             {
                 await WebSocket.CloseAsync(CloseStatus, CloseStatusDescription, cancellationToken).ConfigureAwait(false);
-            }
-            else
-            {
-                await WebSocket.CloseOutputAsync(CloseStatus, CloseStatusDescription, cancellationToken).ConfigureAwait(false);
             }
         }
 

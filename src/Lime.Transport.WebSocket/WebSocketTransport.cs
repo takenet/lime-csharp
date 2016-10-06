@@ -34,7 +34,7 @@ namespace Lime.Transport.WebSocket
             _jsonBuffer = new JsonBuffer(bufferSize);
             _receiveSemaphore = new SemaphoreSlim(1);
             _sendSemaphore = new SemaphoreSlim(1);
-            CloseStatus = WebSocketCloseStatus.Empty;
+            CloseStatus = WebSocketCloseStatus.NormalClosure;
             CloseStatusDescription = string.Empty;
         }
 
@@ -133,19 +133,14 @@ namespace Lime.Transport.WebSocket
             {nameof(System.Net.WebSockets.WebSocket.DefaultKeepAliveInterval), System.Net.WebSockets.WebSocket.DefaultKeepAliveInterval}
         };
 
-        public void Dispose()
+        protected async Task CloseWebSocketOutputAsync(CancellationToken cancellationToken)
         {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (disposing)
+            if (WebSocket.State == WebSocketState.Open ||
+                WebSocket.State == WebSocketState.CloseReceived)
             {
-                WebSocket.Dispose();
-                _sendSemaphore.Dispose();
-                _receiveSemaphore.Dispose();
+                await
+                    WebSocket.CloseOutputAsync(CloseStatus, CloseStatusDescription, cancellationToken)
+                        .ConfigureAwait(false);
             }
         }
 
@@ -164,6 +159,22 @@ namespace Lime.Transport.WebSocket
 
             CloseStatus = WebSocketCloseStatus.NormalClosure;
             await CloseAsync(cancellationToken).ConfigureAwait(false);
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                WebSocket.Dispose();
+                _sendSemaphore.Dispose();
+                _receiveSemaphore.Dispose();
+            }
         }
     }
 }
