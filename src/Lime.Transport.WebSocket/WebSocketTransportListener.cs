@@ -30,8 +30,7 @@ namespace Lime.Transport.WebSocket
 
         private WebSocketListener _webSocketListener;
 
-        public WebSocketTransportListener(Uri listenerUri, X509Certificate2 sslCertificate,
-            IEnvelopeSerializer envelopeSerializer, ITraceWriter traceWriter = null)
+        public WebSocketTransportListener(Uri listenerUri, X509Certificate2 sslCertificate, IEnvelopeSerializer envelopeSerializer, ITraceWriter traceWriter = null)
         {
             if (listenerUri == null) throw new ArgumentNullException(nameof(listenerUri));
             

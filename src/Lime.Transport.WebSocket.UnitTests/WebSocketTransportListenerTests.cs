@@ -20,7 +20,7 @@ namespace Lime.Transport.WebSocket.UnitTests
     public class WebSocketTransportListenerTests
     {
 
-        public WebSocketTransportListener Target { get; private set; }
+        public WebSocketTransportListener2 Target { get; private set; }
 
         public Uri ListenerUri { get; private set; }
 
@@ -38,7 +38,7 @@ namespace Lime.Transport.WebSocket.UnitTests
             ListenerUri = new Uri("ws://localhost:8081");
             EnvelopeSerializer = new JsonNetSerializer();
             TraceWriter = new Mock<ITraceWriter>();
-            Target = new WebSocketTransportListener(ListenerUri, SslCertificate, EnvelopeSerializer, TraceWriter.Object);
+            Target = new WebSocketTransportListener2(ListenerUri, SslCertificate, EnvelopeSerializer, TraceWriter.Object);
 
             CancellationToken = TimeSpan.FromSeconds(5).ToCancellationToken();
         }
