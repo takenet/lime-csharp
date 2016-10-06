@@ -38,6 +38,10 @@
     <DocumentationFile>bin\Release\Lime.Transport.WebSocket.XML</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="SslCertBinding.Net, Version=1.0.2.0, Culture=neutral, PublicKeyToken=46398e4c25dead31, processorArchitecture=MSIL">
+      <HintPath>..\packages\SslCertBinding.Net.1.0.2\lib\net20\SslCertBinding.Net.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Threading.Tasks.Dataflow, Version=4.5.24.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
@@ -60,6 +64,7 @@
     <Compile Include="ServerWebSocketTransport.cs" />
     <Compile Include="WebSocketTransport.cs" />
     <Compile Include="WebSocketTransportListener.cs" />
+    <Compile Include="X509CertificateInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Lime.Protocol\Lime.Protocol.csproj">

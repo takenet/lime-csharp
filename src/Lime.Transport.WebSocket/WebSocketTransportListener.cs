@@ -1,39 +1,53 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net;
-using System.Security;
-using System.Security.Cryptography;
-using System.Security.Cryptography.X509Certificates;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Lime.Protocol;
 using Lime.Protocol.Network;
 using Lime.Protocol.Serialization;
 using Lime.Protocol.Server;
+using SslCertBinding.Net;
 
 namespace Lime.Transport.WebSocket
 {
+    /// <summary>
+    /// Defines a websocket transport listener service.
+    /// </summary>
+    /// <seealso cref="Lime.Protocol.Server.ITransportListener" />
     public class WebSocketTransportListener : ITransportListener
     {
         public static readonly string UriSchemeWebSocket = "ws";
         public static readonly string UriSchemeWebSocketSecure = "wss";
+        public static readonly Guid ApplicationId = Guid.Parse("46754fc2-d8e2-4b41-a3f0-ed1878c77e59");
 
-        private readonly X509Certificate2 _sslCertificate;
+        private readonly X509CertificateInfo _tlsCertificate; 
         private readonly IEnvelopeSerializer _envelopeSerializer;
         private readonly ITraceWriter _traceWriter;
         private readonly int _bufferSize;
+        private readonly bool _bindCertificateToPort;
         private readonly TimeSpan _keepAliveInterval;
         private readonly HttpListener _httpListener;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="WebSocketTransportListener"/> class.
+        /// </summary>
+        /// <param name="listenerUri">The listener URI.</param>
+        /// <param name="tlsCertificate">The SSL/TLS certificate information to be used in case of using the 'wss' scheme.</param>
+        /// <param name="envelopeSerializer">The envelope serializer.</param>
+        /// <param name="traceWriter">The trace writer.</param>
+        /// <param name="bufferSize">Size of the buffer.</param>
+        /// <param name="keepAliveInterval">The keep alive interval.</param>
+        /// <param name="bindCertificateToPort">if set to <c>true</c> indicates that the provided certificate should be bound to the listener IP address.</param>
+        /// <exception cref="ArgumentNullException">
+        /// </exception>
         public WebSocketTransportListener(
-            Uri listenerUri, 
-            X509Certificate2 sslCertificate,
+            Uri listenerUri,
+            X509CertificateInfo tlsCertificate,
             IEnvelopeSerializer envelopeSerializer, 
             ITraceWriter traceWriter = null,
             int bufferSize = 16384,
-            TimeSpan? keepAliveInterval = null)
+            TimeSpan? keepAliveInterval = null,
+            bool bindCertificateToPort = true)
         {
             if (listenerUri == null) throw new ArgumentNullException(nameof(listenerUri));
 
@@ -43,52 +57,52 @@ namespace Lime.Transport.WebSocket
                 throw new ArgumentException($"Invalid URI scheme. The expected value is '{UriSchemeWebSocket}' or '{UriSchemeWebSocketSecure}'.");
             }
 
-            if (sslCertificate == null &&
+            if (tlsCertificate == null &&
                 listenerUri.Scheme == UriSchemeWebSocketSecure)
             {
-                throw new ArgumentNullException(nameof(sslCertificate));
+                throw new ArgumentNullException(nameof(tlsCertificate));
             }
 
             ListenerUris = new[] { listenerUri };
-
-            if (sslCertificate != null)
-            {
-                if (!sslCertificate.HasPrivateKey) throw new ArgumentException("The certificate must have a private key", nameof(sslCertificate));
-
-                try
-                {
-                    // Checks if the private key is available for the current user
-                    var key = sslCertificate.PrivateKey;
-                }
-                catch (CryptographicException ex)
-                {
-                    throw new SecurityException("The current user doesn't have access to the certificate private key. Use WinHttpCertCfg.exe to assign the necessary permissions.", ex);
-                }
-            }
-
             if (envelopeSerializer == null)
             {
                 throw new ArgumentNullException(nameof(envelopeSerializer));
             }
-            _sslCertificate = sslCertificate;
+            _tlsCertificate = tlsCertificate;
             _envelopeSerializer = envelopeSerializer;
             _traceWriter = traceWriter;
             _bufferSize = bufferSize;
+            _bindCertificateToPort = bindCertificateToPort;
             _keepAliveInterval = keepAliveInterval ?? System.Net.WebSockets.WebSocket.DefaultKeepAliveInterval;
             _httpListener = new HttpListener();
         }
 
         public Uri[] ListenerUris { get; }
-        public async Task StartAsync()
+
+        public Task StartAsync()
         {
             if (_httpListener.IsListening) throw new InvalidOperationException("The listener is already active");
-            var prefix = ListenerUris[0].ToString();
+            var listenerUri = ListenerUris[0];
+            var prefix = listenerUri.ToString();
             prefix = prefix
                 .Replace($"{UriSchemeWebSocket}:", $"{Uri.UriSchemeHttp}:")
                 .Replace($"{UriSchemeWebSocketSecure}:", $"{Uri.UriSchemeHttps}:")
                 .Replace("://localhost", "://*");
             _httpListener.Prefixes.Add(prefix);
+
+            if (_bindCertificateToPort &&
+                _tlsCertificate != null &&
+                listenerUri.Scheme.Equals(UriSchemeWebSocketSecure))
+            {
+                var ipPort = new IPEndPoint(IPAddress.Parse("0.0.0.0"), listenerUri.Port);
+                var config = new CertificateBindingConfiguration();
+                config.Bind(
+                    new CertificateBinding(
+                        _tlsCertificate.Thumbprint, _tlsCertificate.Store, ipPort, ApplicationId));
+            }
+
             _httpListener.Start();
+            return Task.CompletedTask;
         }
 
         public async Task<ITransport> AcceptTransportAsync(CancellationToken cancellationToken)

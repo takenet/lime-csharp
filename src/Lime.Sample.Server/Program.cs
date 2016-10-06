@@ -69,13 +69,13 @@ namespace Lime.Sample.Server
         }
 
         static ITransportListener GetTransportListenerForUri(Uri uri)
-        {
-            X509Certificate2 serverCertificate = null;  // You should provide a certificate for TLS
+        {            
             var serializer = new JsonNetSerializer(); 
 
             switch (uri.Scheme)
             {
                 case "net.tcp":
+                    X509Certificate2 serverCertificate = null;  // You should provide a certificate for TLS
                     return new TcpTransportListener(
                         uri,
                         serverCertificate,
@@ -84,7 +84,7 @@ namespace Lime.Sample.Server
                 case "wss":
                     return new WebSocketTransportListener(
                         uri,
-                        serverCertificate,
+                        new X509CertificateInfo("263d0ce222ea752f0a8ea850c5c8abffa0d785e2", StoreName.My), 
                         serializer);                    
 
                 default:
