@@ -84,7 +84,7 @@ namespace Lime.Sample.Server
                 case "wss":
                     return new WebSocketTransportListener(
                         uri,
-                        new X509CertificateInfo("263d0ce222ea752f0a8ea850c5c8abffa0d785e2", StoreName.My), 
+                        null, 
                         serializer);                    
 
                 default:
