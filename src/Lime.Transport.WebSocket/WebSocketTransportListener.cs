@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using System.Net.Sockets;
 using System.Security;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
@@ -13,8 +12,6 @@ using Lime.Protocol;
 using Lime.Protocol.Network;
 using Lime.Protocol.Serialization;
 using Lime.Protocol.Server;
-using Lime.Protocol.Util;
-using vtortola.WebSockets;
 
 namespace Lime.Transport.WebSocket
 {
@@ -26,14 +23,20 @@ namespace Lime.Transport.WebSocket
         private readonly X509Certificate2 _sslCertificate;
         private readonly IEnvelopeSerializer _envelopeSerializer;
         private readonly ITraceWriter _traceWriter;
-        private readonly SemaphoreSlim _semaphore;
+        private readonly int _bufferSize;
+        private readonly TimeSpan _keepAliveInterval;
+        private readonly HttpListener _httpListener;
 
-        private WebSocketListener _webSocketListener;
-
-        public WebSocketTransportListener(Uri listenerUri, X509Certificate2 sslCertificate, IEnvelopeSerializer envelopeSerializer, ITraceWriter traceWriter = null)
+        public WebSocketTransportListener(
+            Uri listenerUri, 
+            X509Certificate2 sslCertificate,
+            IEnvelopeSerializer envelopeSerializer, 
+            ITraceWriter traceWriter = null,
+            int bufferSize = 16384,
+            TimeSpan? keepAliveInterval = null)
         {
             if (listenerUri == null) throw new ArgumentNullException(nameof(listenerUri));
-            
+
             if (listenerUri.Scheme != UriSchemeWebSocket &&
                 listenerUri.Scheme != UriSchemeWebSocketSecure)
             {
@@ -51,7 +54,7 @@ namespace Lime.Transport.WebSocket
             if (sslCertificate != null)
             {
                 if (!sslCertificate.HasPrivateKey) throw new ArgumentException("The certificate must have a private key", nameof(sslCertificate));
-                
+
                 try
                 {
                     // Checks if the private key is available for the current user
@@ -70,112 +73,66 @@ namespace Lime.Transport.WebSocket
             _sslCertificate = sslCertificate;
             _envelopeSerializer = envelopeSerializer;
             _traceWriter = traceWriter;
-            _semaphore = new SemaphoreSlim(1);
+            _bufferSize = bufferSize;
+            _keepAliveInterval = keepAliveInterval ?? System.Net.WebSockets.WebSocket.DefaultKeepAliveInterval;
+            _httpListener = new HttpListener();
         }
 
-        #region ITransportListener Members
-
         public Uri[] ListenerUris { get; }
-
         public async Task StartAsync()
         {
-            await _semaphore.WaitAsync();
-            try
-            {
-                if (_webSocketListener != null)
-                {
-                    throw new InvalidOperationException("The listener is already active");
-                }
-
-                var listenerUri = ListenerUris[0];
-
-                IPEndPoint listenerEndPoint;
-                if (listenerUri.IsLoopback)
-                {
-                    listenerEndPoint = new IPEndPoint(IPAddress.Any, listenerUri.Port);
-                }
-                else switch (listenerUri.HostNameType)
-                {
-                    case UriHostNameType.Dns:
-                        var dnsEntry = await Dns.GetHostEntryAsync(listenerUri.Host).ConfigureAwait(false);
-                        if (dnsEntry.AddressList.Any(a => a.AddressFamily == AddressFamily.InterNetwork))
-                        {
-                            listenerEndPoint =
-                                new IPEndPoint(
-                                    dnsEntry.AddressList.First(a => a.AddressFamily == AddressFamily.InterNetwork),
-                                    listenerUri.Port);
-                        }
-                        else
-                        {
-                            throw new ArgumentException(
-                                $"Could not resolve the IPAddress for the host '{listenerUri.Host}'");
-                        }
-                        break;
-                    case UriHostNameType.IPv4:
-                    case UriHostNameType.IPv6:
-                        listenerEndPoint = new IPEndPoint(IPAddress.Parse(listenerUri.Host), listenerUri.Port);
-                        break;
-                    default:
-                        throw new ArgumentException($"The host name type for '{listenerUri.Host}' is not supported");
-                }
-
-                _webSocketListener = new WebSocketListener(
-                    listenerEndPoint, 
-                    new WebSocketListenerOptions()
-                    {
-                        SubProtocols = new[] { LimeUri.LIME_URI_SCHEME }
-                    });
-                var rfc6455 = new vtortola.WebSockets.Rfc6455.WebSocketFactoryRfc6455(_webSocketListener);
-                _webSocketListener.Standards.RegisterStandard(rfc6455);
-                if (_sslCertificate != null)
-                {
-                    _webSocketListener.ConnectionExtensions.RegisterExtension(
-                        new WebSocketSecureConnectionExtension(_sslCertificate));
-                }
-
-                _webSocketListener.Start();
-            }
-            finally
-            {
-                _semaphore.Release();
-            }            
+            if (_httpListener.IsListening) throw new InvalidOperationException("The listener is already active");
+            var prefix = ListenerUris[0].ToString();
+            prefix = prefix
+                .Replace($"{UriSchemeWebSocket}:", $"{Uri.UriSchemeHttp}:")
+                .Replace($"{UriSchemeWebSocketSecure}:", $"{Uri.UriSchemeHttps}:")
+                .Replace("://localhost", "://*");
+            _httpListener.Prefixes.Add(prefix);
+            _httpListener.Start();
         }
 
         public async Task<ITransport> AcceptTransportAsync(CancellationToken cancellationToken)
         {
-            if (_webSocketListener == null)
+            while (!cancellationToken.IsCancellationRequested)
             {
-                throw new InvalidOperationException("The listener is not active. Call StartAsync first.");
-            }
-            
-            var webSocket = await _webSocketListener
-                .AcceptWebSocketAsync(cancellationToken)
-                .ConfigureAwait(false);
-
-            cancellationToken.ThrowIfCancellationRequested();
-            
-            return new ServerWebSocketTransport(webSocket, _envelopeSerializer, _traceWriter);
-        }
-
-        public async Task StopAsync()
-        {
-            await _semaphore.WaitAsync().ConfigureAwait(false);
-            try
-            {
-                if (_webSocketListener == null)
+                try
                 {
-                    throw new InvalidOperationException("The listener is not active");
-                }
+                    var httpContext = await _httpListener
+                        .GetContextAsync()
+                        .WithCancellation(cancellationToken)
+                        .ConfigureAwait(false);
 
-                _webSocketListener.Stop();
-                _webSocketListener = null;
+                    if (httpContext.Request.IsWebSocketRequest)
+                    {
+                        var context = await httpContext.AcceptWebSocketAsync(
+                            LimeUri.LIME_URI_SCHEME, _bufferSize, _keepAliveInterval)
+                            .WithCancellation(cancellationToken)
+                            .ConfigureAwait(false);
+                        return new ServerWebSocketTransport(context, _envelopeSerializer, _traceWriter, _bufferSize);
+                    }
+                    httpContext.Response.StatusCode = 400;
+                    httpContext.Response.Close();
+                }
+                catch (HttpListenerException ex)
+                {
+                    if (ex.ErrorCode == 995)
+                    {
+                        // Workarround since the GetContextAsync method doesn't supports cancellation
+                        // "The I/O operation has been aborted because of either a thread exit or an application request"
+                        throw new OperationCanceledException("The listener was canceled", ex);
+                    }
+
+                    throw;
+                }
             }
-            finally
-            {
-                _semaphore.Release();
-            }
+
+            throw new OperationCanceledException();
         }
 
-        #endregion
+        public Task StopAsync()
+        {
+            _httpListener.Stop();
+            return Task.CompletedTask;
+        }
     }
 }

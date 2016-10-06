@@ -19,8 +19,7 @@ namespace Lime.Transport.WebSocket.UnitTests
     [TestFixture]
     public class WebSocketTransportListenerTests
     {
-
-        public WebSocketTransportListener2 Target { get; private set; }
+        public WebSocketTransportListener Target { get; private set; }
 
         public Uri ListenerUri { get; private set; }
 
@@ -38,7 +37,7 @@ namespace Lime.Transport.WebSocket.UnitTests
             ListenerUri = new Uri("ws://localhost:8081");
             EnvelopeSerializer = new JsonNetSerializer();
             TraceWriter = new Mock<ITraceWriter>();
-            Target = new WebSocketTransportListener2(ListenerUri, SslCertificate, EnvelopeSerializer, TraceWriter.Object);
+            Target = new WebSocketTransportListener(ListenerUri, SslCertificate, EnvelopeSerializer, TraceWriter.Object);
 
             CancellationToken = TimeSpan.FromSeconds(5).ToCancellationToken();
         }
@@ -72,6 +71,7 @@ namespace Lime.Transport.WebSocket.UnitTests
             await Target.StartAsync();
 
             // Assert
+            var acceptTransportTask = Target.AcceptTransportAsync(CancellationToken);
             var clientTransport = new ClientWebSocketTransport(EnvelopeSerializer);
             await clientTransport.OpenAsync(ListenerUri, CancellationToken);
         }
@@ -90,10 +90,12 @@ namespace Lime.Transport.WebSocket.UnitTests
             // Arrange
             await Target.StartAsync();
             var clientTransport = new ClientWebSocketTransport(EnvelopeSerializer);
-            await clientTransport.OpenAsync(ListenerUri, CancellationToken);
+
 
             // Act
-            var transport = await Target.AcceptTransportAsync(CancellationToken);
+            var acceptTransportTask = Target.AcceptTransportAsync(CancellationToken);
+            await clientTransport.OpenAsync(ListenerUri, CancellationToken);
+            var transport = await acceptTransportTask;
 
             // Assert
             transport.ShouldNotBeNull();
@@ -157,13 +159,6 @@ namespace Lime.Transport.WebSocket.UnitTests
             {
                 ex.NativeErrorCode.ShouldBe(10061);
             }
-        }
-
-        [Test]
-        public async Task StopAsync_ListenerNotStarted_ThrowsInvalidOperationException()
-        {
-            // Act
-            await Target.StopAsync().ShouldThrowAsync<InvalidOperationException>();
         }
 
     }
