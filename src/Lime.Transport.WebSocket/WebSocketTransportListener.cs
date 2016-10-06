@@ -18,13 +18,14 @@ namespace Lime.Transport.WebSocket
     {
         public static readonly string UriSchemeWebSocket = "ws";
         public static readonly string UriSchemeWebSocketSecure = "wss";
-        public static readonly Guid ApplicationId = Guid.Parse("46754fc2-d8e2-4b41-a3f0-ed1878c77e59");
+        public static readonly Guid DefaultApplicationId = Guid.Parse("46754fc2-d8e2-4b41-a3f0-ed1878c77e59");
 
         private readonly X509CertificateInfo _tlsCertificate; 
         private readonly IEnvelopeSerializer _envelopeSerializer;
         private readonly ITraceWriter _traceWriter;
         private readonly int _bufferSize;
         private readonly bool _bindCertificateToPort;
+        private readonly Guid _applicationId;
         private readonly TimeSpan _keepAliveInterval;
         private readonly HttpListener _httpListener;
 
@@ -38,6 +39,7 @@ namespace Lime.Transport.WebSocket
         /// <param name="bufferSize">Size of the buffer.</param>
         /// <param name="keepAliveInterval">The keep alive interval.</param>
         /// <param name="bindCertificateToPort">if set to <c>true</c> indicates that the provided certificate should be bound to the listener IP address.</param>
+        /// <param name="applicationId">The application id for binding the certificate to the listene port.</param>
         /// <exception cref="ArgumentNullException">
         /// </exception>
         public WebSocketTransportListener(
@@ -47,7 +49,8 @@ namespace Lime.Transport.WebSocket
             ITraceWriter traceWriter = null,
             int bufferSize = 16384,
             TimeSpan? keepAliveInterval = null,
-            bool bindCertificateToPort = true)
+            bool bindCertificateToPort = true,
+            Guid? applicationId = null)
         {
             if (listenerUri == null) throw new ArgumentNullException(nameof(listenerUri));
 
@@ -73,6 +76,7 @@ namespace Lime.Transport.WebSocket
             _traceWriter = traceWriter;
             _bufferSize = bufferSize;
             _bindCertificateToPort = bindCertificateToPort;
+            _applicationId = applicationId ?? DefaultApplicationId;
             _keepAliveInterval = keepAliveInterval ?? System.Net.WebSockets.WebSocket.DefaultKeepAliveInterval;
             _httpListener = new HttpListener();
         }
@@ -98,7 +102,7 @@ namespace Lime.Transport.WebSocket
                 var config = new CertificateBindingConfiguration();
                 config.Bind(
                     new CertificateBinding(
-                        _tlsCertificate.Thumbprint, _tlsCertificate.Store, ipPort, ApplicationId));
+                        _tlsCertificate.Thumbprint, _tlsCertificate.Store, ipPort, _applicationId));
             }
 
             _httpListener.Start();
