@@ -19,10 +19,9 @@ namespace Lime.Transport.WebSocket
         private readonly IEnvelopeSerializer _envelopeSerializer;
         private readonly ITraceWriter _traceWriter;        
         private readonly JsonBuffer _jsonBuffer;
-        private readonly SemaphoreSlim _receiveSemaphore;
         private readonly SemaphoreSlim _sendSemaphore;
+        private readonly BufferBlock<Envelope> _receivedEnvelopeBufferBlock;
 
-        private readonly BufferBlock<Envelope> _receivedEnvelopeBufferBlock;        
         private CancellationTokenSource _listenerCts;
         private Task _listenerTask;
         private TaskCompletionSource<WebSocketReceiveResult> _closeFrameTcs;
@@ -41,7 +40,6 @@ namespace Lime.Transport.WebSocket
             _envelopeSerializer = envelopeSerializer;
             _traceWriter = traceWriter;            
             _jsonBuffer = new JsonBuffer(bufferSize);
-            _receiveSemaphore = new SemaphoreSlim(1);
             _sendSemaphore = new SemaphoreSlim(1);
             CloseStatus = WebSocketCloseStatus.NormalClosure;
             CloseStatusDescription = string.Empty;
@@ -251,7 +249,6 @@ namespace Lime.Transport.WebSocket
             {
                 WebSocket.Dispose();
                 _sendSemaphore.Dispose();
-                _receiveSemaphore.Dispose();
                 _listenerCts?.Dispose();
             }
         }
