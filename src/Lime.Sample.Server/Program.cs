@@ -148,7 +148,7 @@ namespace Lime.Sample.Server
                 await serverChannel.EstablishSessionAsync(
                     serverChannel.Transport.GetSupportedCompression(),
                     serverChannel.Transport.GetSupportedEncryption(),
-                    new[] { AuthenticationScheme.Guest },
+                    new[] {AuthenticationScheme.Guest},
                     (identity, authentication) =>
                         new AuthenticationResult(null,
                             new Node()
@@ -196,12 +196,16 @@ namespace Lime.Sample.Server
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {
-                
-            }
 
-            if (serverChannel.RemoteNode != null)
+            }
+            finally
             {
-                _nodeChannelsDictionary.Remove(serverChannel.RemoteNode);
+                if (serverChannel.RemoteNode != null)
+                {
+                    _nodeChannelsDictionary.Remove(serverChannel.RemoteNode);
+                }
+
+                serverChannel.DisposeIfDisposable();
             }
         }
 

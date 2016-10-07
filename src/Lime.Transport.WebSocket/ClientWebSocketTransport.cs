@@ -31,7 +31,7 @@ namespace Lime.Transport.WebSocket
         {
             try
             {
-                await WebSocket.CloseAsync(CloseStatus, CloseStatusDescription, cancellationToken).ConfigureAwait(false);
+                await CloseWebSocketAsync(cancellationToken).ConfigureAwait(false);
             }
             finally
             {
