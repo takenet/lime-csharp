@@ -26,6 +26,7 @@ namespace Lime.Transport.WebSocket.UnitTests
             var listenerTask = Listener.AcceptTransportAsync(CancellationToken);
             await Client.OpenAsync(ListenerUri, CancellationToken);
             var webSocketTransport = (ServerWebSocketTransport)await listenerTask;
+            await webSocketTransport.OpenAsync(ListenerUri, CancellationToken);
             return webSocketTransport;
         }
 
@@ -54,7 +55,7 @@ namespace Lime.Transport.WebSocket.UnitTests
             EnvelopeSerializer = new JsonNetSerializer();
             TraceWriter = new Mock<ITraceWriter>();
             Listener = new WebSocketTransportListener(ListenerUri, SslCertificate, EnvelopeSerializer, TraceWriter.Object);
-            CancellationToken = TimeSpan.FromSeconds(15).ToCancellationToken();
+            CancellationToken = TimeSpan.FromSeconds(30).ToCancellationToken();
             Client = new ClientWebSocketTransport(EnvelopeSerializer);
         }
 

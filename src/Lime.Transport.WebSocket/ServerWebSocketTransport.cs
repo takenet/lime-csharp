@@ -22,11 +22,6 @@ namespace Lime.Transport.WebSocket
             _context = context;
         }
 
-        protected override Task PerformOpenAsync(Uri uri, CancellationToken cancellationToken) 
-            => Task.CompletedTask;
-
-
-
         public override IReadOnlyDictionary<string, object> Options
         {
             get

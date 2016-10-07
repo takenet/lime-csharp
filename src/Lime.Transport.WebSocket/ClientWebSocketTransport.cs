@@ -19,11 +19,24 @@ namespace Lime.Transport.WebSocket
 
         }
 
-        protected override Task PerformOpenAsync(Uri uri, CancellationToken cancellationToken)
+        protected override async Task PerformOpenAsync(Uri uri, CancellationToken cancellationToken)
         {
             var clientWebSocket = ((ClientWebSocket) WebSocket);
             clientWebSocket.Options.AddSubProtocol(LimeUri.LIME_URI_SCHEME);
-            return clientWebSocket.ConnectAsync(uri, cancellationToken);
-        }        
+            await clientWebSocket.ConnectAsync(uri, cancellationToken).ConfigureAwait(false);
+            await base.PerformOpenAsync(uri, cancellationToken);
+        }
+
+        protected override async Task PerformCloseAsync(CancellationToken cancellationToken)
+        {
+            try
+            {
+                await WebSocket.CloseAsync(CloseStatus, CloseStatusDescription, cancellationToken).ConfigureAwait(false);
+            }
+            finally
+            {
+                StopListenerTask();
+            }
+        }
     }
 }
