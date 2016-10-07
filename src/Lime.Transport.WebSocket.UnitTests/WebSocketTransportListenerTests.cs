@@ -99,7 +99,7 @@ namespace Lime.Transport.WebSocket.UnitTests
             // Arrange
             await Target.StartAsync();
 
-            var count = Dummy.CreateRandomInt(10) + 1;
+            var count = Dummy.CreateRandomInt(100) + 1;
             var clientTransports = Enumerable.Range(0, count)
                 .Select(async i =>
                 {

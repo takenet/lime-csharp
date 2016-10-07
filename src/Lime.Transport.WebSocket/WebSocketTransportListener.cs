@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Net;
+using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Threading.Tasks.Dataflow;
 using Lime.Protocol;
 using Lime.Protocol.Network;
 using Lime.Protocol.Serialization;
@@ -19,6 +21,7 @@ namespace Lime.Transport.WebSocket
         public static readonly string UriSchemeWebSocket = "ws";
         public static readonly string UriSchemeWebSocketSecure = "wss";
         public static readonly Guid DefaultApplicationId = Guid.Parse("46754fc2-d8e2-4b41-a3f0-ed1878c77e59");
+        public static readonly TimeSpan StopTimeout = TimeSpan.FromSeconds(30);
 
         private readonly X509CertificateInfo _tlsCertificate; 
         private readonly IEnvelopeSerializer _envelopeSerializer;
@@ -28,6 +31,12 @@ namespace Lime.Transport.WebSocket
         private readonly Guid _applicationId;
         private readonly TimeSpan _keepAliveInterval;
         private readonly HttpListener _httpListener;
+        private readonly BufferBlock<HttpListenerContext> _httpListenerContextBufferBlock;
+        private readonly TransformBlock<HttpListenerContext, ITransport> _httpListenerWebSocketContextTransformBlock;
+        private readonly BufferBlock<ITransport> _transportBufferBufferBlock;
+        private readonly ITargetBlock<ITransport> _nullTargetBlock;
+        private CancellationTokenSource _acceptTransportCts;
+        private Task _acceptTransportTask;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="WebSocketTransportListener"/> class.
@@ -40,6 +49,7 @@ namespace Lime.Transport.WebSocket
         /// <param name="keepAliveInterval">The keep alive interval.</param>
         /// <param name="bindCertificateToPort">if set to <c>true</c> indicates that the provided certificate should be bound to the listener IP address.</param>
         /// <param name="applicationId">The application id for binding the certificate to the listene port.</param>
+        /// <param name="acceptTransportBoundedCapacity">The number of concurrent transport connections that can be accepted in parallel.</param>
         /// <exception cref="ArgumentNullException">
         /// </exception>
         public WebSocketTransportListener(
@@ -50,7 +60,8 @@ namespace Lime.Transport.WebSocket
             int bufferSize = 16384,
             TimeSpan? keepAliveInterval = null,
             bool bindCertificateToPort = true,
-            Guid? applicationId = null)
+            Guid? applicationId = null,
+            int acceptTransportBoundedCapacity = 10)
         {
             if (listenerUri == null) throw new ArgumentNullException(nameof(listenerUri));
 
@@ -79,6 +90,19 @@ namespace Lime.Transport.WebSocket
             _applicationId = applicationId ?? DefaultApplicationId;
             _keepAliveInterval = keepAliveInterval ?? System.Net.WebSockets.WebSocket.DefaultKeepAliveInterval;
             _httpListener = new HttpListener();
+            var boundedCapacity = new ExecutionDataflowBlockOptions()
+            {
+                BoundedCapacity = acceptTransportBoundedCapacity
+            };
+            _httpListenerContextBufferBlock = new BufferBlock<HttpListenerContext>(
+                boundedCapacity);
+            _httpListenerWebSocketContextTransformBlock = new TransformBlock<HttpListenerContext, ITransport>(
+                async c => await AcceptWebSocketAsync(c), boundedCapacity);
+            _transportBufferBufferBlock = new BufferBlock<ITransport>(boundedCapacity);
+            _nullTargetBlock = DataflowBlock.NullTarget<ITransport>();
+            _httpListenerContextBufferBlock.LinkTo(_httpListenerWebSocketContextTransformBlock);            
+            _httpListenerWebSocketContextTransformBlock.LinkTo(_transportBufferBufferBlock, t => t != null);
+            _httpListenerWebSocketContextTransformBlock.LinkTo(_nullTargetBlock, t => t == null);
         }
 
         public Uri[] ListenerUris { get; }
@@ -105,31 +129,62 @@ namespace Lime.Transport.WebSocket
                         _tlsCertificate.Thumbprint, _tlsCertificate.Store, ipPort, _applicationId));
             }
 
-            _httpListener.Start();
+            _httpListener.Start();            
+            _acceptTransportCts?.Dispose();
+            _acceptTransportCts = new CancellationTokenSource();
+            _acceptTransportTask = Task.Run(AcceptTransportsAsync);
             return Task.CompletedTask;
-        }
+        }        
 
         public async Task<ITransport> AcceptTransportAsync(CancellationToken cancellationToken)
         {
-            while (!cancellationToken.IsCancellationRequested)
+            if (_acceptTransportTask == null) throw new InvalidOperationException("The listener is not active");
+            if (_acceptTransportTask.IsCompleted) await _acceptTransportTask.ConfigureAwait(false);                
+            return await _transportBufferBufferBlock.ReceiveAsync(cancellationToken).ConfigureAwait(false);
+        }
+
+        public async Task StopAsync()
+        {
+            if (_acceptTransportTask == null) throw new InvalidOperationException("The listener is not active");
+            _acceptTransportCts.Cancel();
+            using (var cts = new CancellationTokenSource(StopTimeout))
+            {
+                ITransport pendingTransport;
+                while (_transportBufferBufferBlock.TryReceive(out pendingTransport))
+                {
+                    try
+                    {
+                        await pendingTransport.CloseAsync(cts.Token).ConfigureAwait(false);
+                    }
+                    catch { }
+                    finally
+                    {
+                        pendingTransport.DisposeIfDisposable();
+                    }
+                }
+            }
+            _httpListener.Stop();
+            await _acceptTransportTask.ConfigureAwait(false);
+        }
+       
+        private async Task AcceptTransportsAsync()
+        {
+            while (!_acceptTransportCts.IsCancellationRequested)
             {
                 try
                 {
                     var httpContext = await _httpListener
                         .GetContextAsync()
-                        .WithCancellation(cancellationToken)
+                        .WithCancellation(_acceptTransportCts.Token)
                         .ConfigureAwait(false);
 
-                    if (httpContext.Request.IsWebSocketRequest)
-                    {
-                        var context = await httpContext.AcceptWebSocketAsync(
-                            LimeUri.LIME_URI_SCHEME, _bufferSize, _keepAliveInterval)
-                            .WithCancellation(cancellationToken)
-                            .ConfigureAwait(false);
-                        return new ServerWebSocketTransport(context, _envelopeSerializer, _traceWriter, _bufferSize);
-                    }
-                    httpContext.Response.StatusCode = 400;
-                    httpContext.Response.Close();
+                    await _httpListenerContextBufferBlock
+                        .SendAsync(httpContext, _acceptTransportCts.Token)
+                        .ConfigureAwait(false);
+                }
+                catch (OperationCanceledException) when (_acceptTransportCts.IsCancellationRequested)
+                {
+                    break;                    
                 }
                 catch (HttpListenerException ex)
                 {
@@ -143,14 +198,23 @@ namespace Lime.Transport.WebSocket
                     throw;
                 }
             }
-
-            throw new OperationCanceledException();
         }
 
-        public Task StopAsync()
+        private async Task<ITransport> AcceptWebSocketAsync(HttpListenerContext httpListenerContext)
         {
-            _httpListener.Stop();
-            return Task.CompletedTask;
+            if (!httpListenerContext.Request.IsWebSocketRequest)
+            {
+                httpListenerContext.Response.StatusCode = 400;
+                httpListenerContext.Response.Close();
+                return null;
+            }
+
+            var context = await httpListenerContext.AcceptWebSocketAsync(
+                LimeUri.LIME_URI_SCHEME, _bufferSize, _keepAliveInterval)
+                .WithCancellation(_acceptTransportCts.Token)
+                .ConfigureAwait(false);
+
+            return new ServerWebSocketTransport(context, _envelopeSerializer, _traceWriter, _bufferSize);
         }
     }
 }
