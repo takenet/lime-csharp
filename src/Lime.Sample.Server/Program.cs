@@ -1,16 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.InteropServices;
 using System.Security.Cryptography.X509Certificates;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Lime.Protocol;
-using Lime.Protocol.Serialization;
 using Lime.Protocol.Server;
 using Lime.Transport.Tcp;
-using Lime.Protocol.Network;
 using Lime.Protocol.Security;
 using Lime.Protocol.Serialization.Newtonsoft;
 using Lime.Transport.WebSocket;
@@ -64,13 +59,12 @@ namespace Lime.Sample.Server
                 Console.WriteLine($"Server failed with message '{ex.Message}'. Press any key to exit.");
             }
 
-            
             Console.Read();
         }
 
         static ITransportListener GetTransportListenerForUri(Uri uri)
-        {            
-            var serializer = new JsonNetSerializer(); 
+        {
+            var serializer = new JsonNetSerializer();
 
             switch (uri.Scheme)
             {
@@ -84,8 +78,8 @@ namespace Lime.Sample.Server
                 case "wss":
                     return new WebSocketTransportListener(
                         uri,
-                        null, 
-                        serializer);                    
+                        null,
+                        serializer);
 
                 default:
                     throw new NotSupportedException($"Unsupported URI scheme '{uri.Scheme}'");
@@ -98,9 +92,10 @@ namespace Lime.Sample.Server
             // List of all active consumer tasks
             var consumerTasks = new List<Task>();
 
-            try
+
+            while (!cancellationToken.IsCancellationRequested)
             {
-                while (!cancellationToken.IsCancellationRequested)
+                try
                 {
                     // Awaits for a new transport connection 
                     var transport = await transportListener.AcceptTransportAsync(cancellationToken);
@@ -117,14 +112,15 @@ namespace Lime.Sample.Server
                         transport,
                         sendTimeout);
 
-                    var consumerTask = Task.Run(async() => await ConsumeAsync(serverChannel, cancellationToken), cancellationToken);
+                    var consumerTask = Task.Run(async () => await ConsumeAsync(serverChannel, cancellationToken),
+                        cancellationToken);
 
                     var continuation = consumerTask
                         .ContinueWith(t =>
                         {
                             if (t.Exception != null)
                             {
-                                Console.WriteLine("Consumer task failed: {0}", t.Exception.InnerException.Message);                                
+                                Console.WriteLine("Consumer task failed: {0}", t.Exception.InnerException.Message);
                             }
 
                             consumerTasks.Remove(consumerTask);
@@ -132,12 +128,13 @@ namespace Lime.Sample.Server
 
                     consumerTasks.Add(consumerTask);
                 }
-            }
-            catch (OperationCanceledException ex)
-            {
-                if (ex.CancellationToken != cancellationToken)
+                catch (OperationCanceledException ex) when (cancellationToken.IsCancellationRequested)
                 {
-                    throw;
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("The listener failed with an error: {0}", ex);
                 }
             }
 
@@ -151,7 +148,7 @@ namespace Lime.Sample.Server
                 await serverChannel.EstablishSessionAsync(
                     serverChannel.Transport.GetSupportedCompression(),
                     serverChannel.Transport.GetSupportedEncryption(),
-                    new[] {AuthenticationScheme.Guest},
+                    new[] { AuthenticationScheme.Guest },
                     (identity, authentication) =>
                         new AuthenticationResult(null,
                             new Node()
@@ -197,19 +194,15 @@ namespace Lime.Sample.Server
                     }, CancellationToken.None);
                 }
             }
-            catch (OperationCanceledException ex)
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {
-                if (ex.CancellationToken != cancellationToken)
-                {
-                    throw;
-                }
+                
             }
 
             if (serverChannel.RemoteNode != null)
             {
-                _nodeChannelsDictionary.Remove(serverChannel.RemoteNode);    
-            }            
-
+                _nodeChannelsDictionary.Remove(serverChannel.RemoteNode);
+            }
         }
 
         static async Task ConsumeMessagesAsync(IServerChannel serverChannel, CancellationToken cancellationToken)
@@ -353,7 +346,7 @@ namespace Lime.Sample.Server
     {
         public static Task WithPassiveCancellation(this Task task)
         {
-            return task.ContinueWith(t => t, TaskContinuationOptions.OnlyOnCanceled);            
+            return task.ContinueWith(t => t, TaskContinuationOptions.OnlyOnCanceled);
         }
     }
 }

@@ -13,11 +13,14 @@ namespace Lime.Transport.WebSocket
 {
     public abstract class WebSocketTransport : TransportBase, IDisposable
     {
+        private static readonly TimeSpan CloseTimeout = TimeSpan.FromSeconds(5);
+
         private readonly IEnvelopeSerializer _envelopeSerializer;
         private readonly ITraceWriter _traceWriter;        
         private readonly JsonBuffer _jsonBuffer;
         private readonly SemaphoreSlim _receiveSemaphore;
         private readonly SemaphoreSlim _sendSemaphore;
+        private readonly SemaphoreSlim _closeSemaphore;
 
         protected WebSocketCloseStatus CloseStatus;
         protected string CloseStatusDescription;
@@ -34,6 +37,7 @@ namespace Lime.Transport.WebSocket
             _jsonBuffer = new JsonBuffer(bufferSize);
             _receiveSemaphore = new SemaphoreSlim(1);
             _sendSemaphore = new SemaphoreSlim(1);
+            _closeSemaphore = new SemaphoreSlim(1);
             CloseStatus = WebSocketCloseStatus.NormalClosure;
             CloseStatusDescription = string.Empty;
         }
@@ -86,7 +90,7 @@ namespace Lime.Transport.WebSocket
                     var receiveResult = await WebSocket.ReceiveAsync(buffer, cancellationToken).ConfigureAwait(false);
                     if (receiveResult.MessageType == WebSocketMessageType.Close)
                     {
-                        await HandleCloseMessageAsync(receiveResult, cancellationToken);
+                        await HandleCloseMessageAsync(receiveResult);
                         break;
                     }
 
@@ -122,16 +126,50 @@ namespace Lime.Transport.WebSocket
 
             return null;
         }
+        private bool _closeInvoked;
 
-        public override bool IsConnected => WebSocket.State == WebSocketState.Open;
-
-        public override IReadOnlyDictionary<string, object> Options => new Dictionary<string, object>()
+        protected override async Task PerformCloseAsync(CancellationToken cancellationToken)
         {
-            {nameof(System.Net.WebSockets.WebSocket.SubProtocol), WebSocket.SubProtocol},
-            {nameof(System.Net.WebSockets.WebSocket.CloseStatusDescription), WebSocket.CloseStatusDescription},
-            {nameof(System.Net.WebSockets.WebSocket.CloseStatus), WebSocket.CloseStatus},
-            {nameof(System.Net.WebSockets.WebSocket.DefaultKeepAliveInterval), System.Net.WebSockets.WebSocket.DefaultKeepAliveInterval}
-        };
+            if (_closeInvoked) return;
+            await _closeSemaphore.WaitAsync(cancellationToken);
+            try
+            {
+                if (_closeInvoked) return;
+                _closeInvoked = true;
+
+                await SynchronizedPerformCloseAsync(cancellationToken);
+            }
+            finally
+            {
+                _closeSemaphore.Release();
+            }
+        }
+
+        protected virtual async Task SynchronizedPerformCloseAsync(CancellationToken cancellationToken)
+        {
+            if (WebSocket.State == WebSocketState.Open)
+            {
+                using (var cts = new CancellationTokenSource(CloseTimeout))
+                using (var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, cts.Token))
+                {
+                    try
+                    {
+                        // Initiate the close handshake
+                        await
+                            WebSocket.CloseAsync(CloseStatus, CloseStatusDescription, linkedCts.Token)
+                                .ConfigureAwait(false);
+                    }
+                    catch (OperationCanceledException) when (cts.IsCancellationRequested)
+                    {
+                        await CloseWebSocketOutputAsync(cancellationToken).ConfigureAwait(false);
+                    }
+                }
+            }
+            else
+            {
+                await CloseWebSocketOutputAsync(cancellationToken).ConfigureAwait(false);
+            }
+        }
 
         protected async Task CloseWebSocketOutputAsync(CancellationToken cancellationToken)
         {
@@ -144,9 +182,21 @@ namespace Lime.Transport.WebSocket
             }
         }
 
-        private async Task HandleCloseMessageAsync(WebSocketReceiveResult receiveResult, CancellationToken cancellationToken)
+        public override bool IsConnected => WebSocket.State == WebSocketState.Open;
+
+        public override IReadOnlyDictionary<string, object> Options => new Dictionary<string, object>()
         {
-            if (_traceWriter.IsEnabled &&
+            {nameof(System.Net.WebSockets.WebSocket.SubProtocol), WebSocket.SubProtocol},
+            {nameof(System.Net.WebSockets.WebSocket.CloseStatusDescription), WebSocket.CloseStatusDescription},
+            {nameof(System.Net.WebSockets.WebSocket.CloseStatus), WebSocket.CloseStatus},
+            {nameof(System.Net.WebSockets.WebSocket.DefaultKeepAliveInterval), System.Net.WebSockets.WebSocket.DefaultKeepAliveInterval}
+        };
+
+
+        private async Task HandleCloseMessageAsync(WebSocketReceiveResult receiveResult)
+        {
+            if (_traceWriter != null &&
+                _traceWriter.IsEnabled &&
                 receiveResult.CloseStatus != null &&
                 receiveResult.CloseStatus.Value != WebSocketCloseStatus.Empty &&
                 receiveResult.CloseStatus.Value != WebSocketCloseStatus.NormalClosure)
@@ -158,7 +208,10 @@ namespace Lime.Transport.WebSocket
             }
 
             CloseStatus = WebSocketCloseStatus.NormalClosure;
-            await CloseAsync(cancellationToken).ConfigureAwait(false);
+            using (var cts = new CancellationTokenSource(CloseTimeout))
+            {
+                await CloseAsync(cts.Token).ConfigureAwait(false);
+            }
         }
 
         public void Dispose()
