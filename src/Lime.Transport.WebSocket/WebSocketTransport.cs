@@ -92,10 +92,15 @@ namespace Lime.Transport.WebSocket
             {
                 // Awaits the listener task to throw any exception to the caller
                 await _listenerTask.WithCancellation(cancellationToken).ConfigureAwait(false);
-                throw new InvalidOperationException("The listener task is finished");
+                throw new InvalidOperationException("The listener task is completed");
             }
 
-            return await _receivedEnvelopeBufferBlock.ReceiveAsync(cancellationToken).ConfigureAwait(false);
+            using (
+                var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken,
+                    _listenerCts.Token))
+            {
+                return await _receivedEnvelopeBufferBlock.ReceiveAsync(linkedCts.Token).ConfigureAwait(false);
+            }
         }
 
         private async Task ListenAsync(CancellationToken cancellationToken)

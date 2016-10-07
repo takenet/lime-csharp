@@ -139,8 +139,18 @@ namespace Lime.Transport.WebSocket
         public async Task<ITransport> AcceptTransportAsync(CancellationToken cancellationToken)
         {
             if (_acceptTransportTask == null) throw new InvalidOperationException("The listener is not active");
-            if (_acceptTransportTask.IsCompleted) await _acceptTransportTask.ConfigureAwait(false);                
-            return await _transportBufferBufferBlock.ReceiveAsync(cancellationToken).ConfigureAwait(false);
+            if (_acceptTransportTask.IsCompleted)
+            {
+                await _acceptTransportTask.WithCancellation(cancellationToken).ConfigureAwait(false);
+                throw new InvalidOperationException("The listener task is completed");
+            }
+
+            using (
+                var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken,
+                    _acceptTransportCts.Token))
+            {
+                return await _transportBufferBufferBlock.ReceiveAsync(linkedCts.Token).ConfigureAwait(false);
+            }
         }
 
         public async Task StopAsync()
