@@ -76,7 +76,61 @@ namespace Lime.Protocol.UnitTests
             Assert.True(node1 != node2);
             Assert.True(node2 != node1);
         }
-        
+
         #endregion
+
+        #region Parse
+
+        [Test]
+        [Category("Parse")]
+        public void Parse_CompleteString_ReturnsValidNode()
+        {
+            var name = Dummy.CreateRandomString(10);
+            var domain = Dummy.CreateRandomString(10);
+            var instance = Dummy.CreateRandomString(10);
+
+            var nodeString = string.Format("{0}@{1}/{2}", name, domain, instance);
+
+            var node = Node.Parse(nodeString);
+
+            Assert.AreEqual(name, node.Name);
+            Assert.AreEqual(domain, node.Domain);
+            Assert.AreEqual(instance, node.Instance);
+        }
+
+        [Test]
+        [Category("Parse")]
+        public void Parse_WithoutInstance_ReturnsValidNode()
+        {
+            var name = Dummy.CreateRandomString(10);
+            var domain = Dummy.CreateRandomString(10);
+
+            var nodeString = string.Format("{0}@{1}", name, domain);
+
+            var node = Node.Parse(nodeString);
+
+            Assert.AreEqual(name, node.Name);
+            Assert.AreEqual(domain, node.Domain);
+            Assert.IsNull(node.Instance);
+        }
+
+        [Test]
+        [Category("Parse")]
+        public void Parse_WithEmptyInstance_ReturnsValidNode()
+        {
+            var name = Dummy.CreateRandomString(10);
+            var domain = Dummy.CreateRandomString(10);
+
+            var nodeString = string.Format("{0}@{1}/", name, domain);
+
+            var node = Node.Parse(nodeString);
+
+            Assert.AreEqual(name, node.Name);
+            Assert.AreEqual(domain, node.Domain);
+            Assert.AreEqual(string.Empty, node.Instance);
+        }
+
+        #endregion Parse
+
     }
 }
