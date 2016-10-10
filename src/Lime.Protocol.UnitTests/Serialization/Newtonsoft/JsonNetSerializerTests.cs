@@ -927,7 +927,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 			var resourceUri = new LimeUri("/presence");
 			var status = PresenceStatus.Available;
 			var message = Dummy.CreateRandomStringExtended(100);
-			var routingRule = RoutingRule.IdentityByDistance;
+			var routingRule = RoutingRule.Identity;
 			var lastSeen = DateTimeOffset.UtcNow;
 			var priority = Dummy.CreateRandomInt(100);
 			

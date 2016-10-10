@@ -12,7 +12,9 @@ using Lime.Protocol.Network;
 using Lime.Protocol.Network.Modules;
 using Lime.Transport.Tcp;
 using Lime.Protocol.Security;
+using Lime.Protocol.Serialization.Newtonsoft;
 using Lime.Protocol.Util;
+using Lime.Transport.WebSocket;
 
 namespace Lime.Sample.Client
 {
@@ -24,21 +26,13 @@ namespace Lime.Sample.Client
         }
 
         static async Task MainAsync(string[] args)
-        {
-            Console.Write("Host name (ENTER for default): ");
+        {            
+            Console.Write("Server URI (ENTER for default): ");
 
-            var hostName = Console.ReadLine();
-            if (string.IsNullOrWhiteSpace(hostName))
+            var serverUriValue = Console.ReadLine();
+            if (string.IsNullOrWhiteSpace(serverUriValue))
             {
-                hostName = Dns.GetHostName();
-            }
-
-            Console.Write("Port number (ENTER for default): ");
-
-            int portNumber;
-            if (!int.TryParse(Console.ReadLine(), out portNumber))
-            {
-                portNumber = 55321;
+                serverUriValue = $"net.tcp://{Dns.GetHostName()}:{55321}";
             }
 
             Console.Write("Identity (name@domain - ENTER for none): ");
@@ -56,10 +50,26 @@ namespace Lime.Sample.Client
                 Console.Write("Password: ");
                 password = Console.ReadLine();                
             }
+
+            var setPresence = false;
+            var setReceipts = false;
             
             // Creates a new transport and connect to the server
-            var serverUri = new Uri($"net.tcp://{hostName}:{portNumber}"); 
-            var transport = new TcpTransport(traceWriter: new DebugTraceWriter());
+            var serverUri = new Uri(serverUriValue);
+            ITransport transport;
+            switch (serverUri.Scheme)
+            {
+                case "net.tcp":
+                    transport = new TcpTransport(traceWriter: new DebugTraceWriter());
+                    break;
+                case "ws":
+                case "wss":
+                    transport = new ClientWebSocketTransport(new JsonNetSerializer(), new DebugTraceWriter());
+                    break;
+                default:
+                    Console.WriteLine("Unsupported URI scheme '{0}'", serverUri.Scheme);
+                    return;
+            }
 
             // Creates a new client channel
             var builder = ClientChannelBuilder
@@ -71,21 +81,31 @@ namespace Lime.Sample.Client
                 })
                 .CreateEstablishedClientChannelBuilder()
                 .AddEstablishedHandler(async (c, t) =>
-                    await c.SetResourceAsync(
-                        new LimeUri(UriTemplates.PRESENCE),
-                        new Presence()
-                        {
-                            Status = PresenceStatus.Available
-                        },
-                        t))
+                {
+                    if (setPresence)
+                    {
+                        await c.SetResourceAsync(
+                            new LimeUri(UriTemplates.PRESENCE),
+                            new Presence()
+                            {
+                                Status = PresenceStatus.Available
+                            },
+                            t);
+                    }
+                })
                 .AddEstablishedHandler(async (c, t) =>
-                    await c.SetResourceAsync(
-                        new LimeUri(UriTemplates.RECEIPT),
-                        new Receipt()
-                        {
-                            Events = new[] { Event.Received, Event.Dispatched  }
-                        },
-                        t));
+                {
+                    if (setReceipts)
+                    {
+                        await c.SetResourceAsync(
+                            new LimeUri(UriTemplates.RECEIPT),
+                            new Receipt()
+                            {
+                                Events = new[] {Event.Received, Event.Dispatched}
+                            },
+                            t);
+                    }
+                });
 
             if (identity == null)
             {

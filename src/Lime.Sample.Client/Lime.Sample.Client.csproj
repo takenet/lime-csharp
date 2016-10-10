@@ -63,6 +63,10 @@
       <Project>{d24b4ef4-9b8c-4f89-bfc6-f76007936382}</Project>
       <Name>Lime.Transport.Tcp</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Lime.Transport.WebSocket\Lime.Transport.WebSocket.csproj">
+      <Project>{A0A1C843-C74C-4204-A19E-2C1E9693BC55}</Project>
+      <Name>Lime.Transport.WebSocket</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

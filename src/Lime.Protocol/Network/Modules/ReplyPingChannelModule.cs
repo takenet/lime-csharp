@@ -29,7 +29,7 @@ namespace Lime.Protocol.Network.Modules
             var pingCommandResponse = new Command
             {
                 Id = envelope.Id,
-                To = envelope.From,
+                To = envelope.GetSender(),
                 Status = CommandStatus.Success,
                 Method = CommandMethod.Get,
                 Resource = PingDocument

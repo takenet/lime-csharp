@@ -11,13 +11,14 @@ using Lime.Protocol.Util;
 namespace Lime.Protocol.Network.Modules
 {
     /// <summary>
-    /// Defines a module that resend messages that doesn't have <see cref="Event.Received"/> receipts from the destination.
+    /// Defines a module that resend messages that doesn't have an expected receipt from the destination.
     /// </summary>
     public class ResendMessagesChannelModule : IChannelModule<Message>, IChannelModule<Notification>
     {
         private readonly int _resendMessageTryCount;
         private readonly TimeSpan _resendMessageInterval;
         private readonly bool _filterByDestination;
+        private readonly Event _expectedEvent;
         private readonly ConcurrentDictionary<MessageIdDestination, SentMessage> _sentMessageDictionary;
         private readonly BufferBlock<SentMessage> _inputBlock;
         private readonly TransformBlock<SentMessage, SentMessage> _waitForRetryBlock;
@@ -35,13 +36,17 @@ namespace Lime.Protocol.Network.Modules
         /// <param name="resendMessageTryCount">The resend message try count.</param>
         /// <param name="resendMessageInterval">The resend message interval.</param>
         /// <param name="filterByDestination">if set to <c>true</c> [filter by destination].</param>
+        /// <param name="expectedEvent">The event expected to abort resending the messages</param>
         /// <exception cref="System.ArgumentOutOfRangeException"></exception>
-        public ResendMessagesChannelModule(int resendMessageTryCount, TimeSpan resendMessageInterval, bool filterByDestination = false)
+        public ResendMessagesChannelModule(int resendMessageTryCount, TimeSpan resendMessageInterval, bool filterByDestination = false, Event expectedEvent = Event.Received)
         {
             if (resendMessageTryCount <= 0) throw new ArgumentOutOfRangeException(nameof(resendMessageTryCount));
+            if (expectedEvent == Event.Failed) throw new ArgumentException("Invalid expected event", nameof(expectedEvent));
+
             _resendMessageTryCount = resendMessageTryCount;
             _resendMessageInterval = resendMessageInterval;
             _filterByDestination = filterByDestination;
+            _expectedEvent = expectedEvent;
             _sentMessageDictionary = new ConcurrentDictionary<MessageIdDestination, SentMessage>();
             _inputBlock = new BufferBlock<SentMessage>();
             _waitForRetryBlock = new TransformBlock<SentMessage, SentMessage>(
@@ -75,21 +80,20 @@ namespace Lime.Protocol.Network.Modules
             }
         }
 
-
-
-        Task<Notification> IChannelModule<Notification>.OnReceivingAsync(Notification envelope, CancellationToken cancellationToken)
+        async Task<Notification> IChannelModule<Notification>.OnReceivingAsync(Notification envelope, CancellationToken cancellationToken)
         {
-            if (envelope.Event == Event.Received || envelope.Event == Event.Failed)
+            if (envelope.Event == _expectedEvent || envelope.Event == Event.Failed)
             {
                 var key = CreateKey(envelope);
                 SentMessage sentMessage;
                 if (_sentMessageDictionary.TryRemove(key, out sentMessage))
                 {
+                    await OnExpectedNotificationReceivedAsync(sentMessage, envelope, cancellationToken);
                     sentMessage.Dispose();
                 }
             }
 
-            return envelope.AsCompletedTask();
+            return envelope;
         }
 
         Task<Notification> IChannelModule<Notification>.OnSendingAsync(Notification envelope, CancellationToken cancellationToken)
@@ -120,10 +124,12 @@ namespace Lime.Protocol.Network.Modules
 
                 if (sentMessage.ResentCount <= _resendMessageTryCount)
                 {
+                    await OnResendSchedulingAsync(sentMessage, cancellationToken);
                     await _inputBlock.SendAsync(sentMessage, cancellationToken);
                 }
                 else if (_sentMessageDictionary.TryRemove(key, out sentMessage))
                 {
+                    await OnResendLimitReachedAsync(sentMessage, cancellationToken).ConfigureAwait(false);
                     sentMessage.Dispose();
                 }
             }
@@ -158,6 +164,12 @@ namespace Lime.Protocol.Network.Modules
                 _bindSemaphore.Release();
             }
         }
+
+        protected virtual Task OnExpectedNotificationReceivedAsync(SentMessage sentMessage, Notification notification, CancellationToken cancellationToken) => Task.CompletedTask;
+
+        protected virtual Task OnResendSchedulingAsync(SentMessage sentMessage, CancellationToken cancellationToken) => Task.CompletedTask;
+
+        protected virtual Task OnResendLimitReachedAsync(SentMessage sentMessage, CancellationToken cancellationToken) => Task.CompletedTask;
 
         protected void OnStateChangedImpl(SessionState state)
         {
@@ -284,13 +296,12 @@ namespace Lime.Protocol.Network.Modules
             }
         }
 
-        private sealed class SentMessage : IDisposable
+        protected sealed class SentMessage : IDisposable
         {
             const string RESENT_COUNT_KEY = "#resentCount";
 
             private readonly Message _message;
             private readonly CancellationTokenSource _cts;
-
 
             public SentMessage(Message message)
                 : this(message, 1)

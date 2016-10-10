@@ -25,6 +25,7 @@ namespace Lime.Messaging.Resources
         public const string PRIORITY_KEY = "priority";
         public const string FILTER_BY_DISTANCE_KEY = "filterByDistance";
         public const string ROUND_ROBIN_KEY = "roundRobin";
+        public const string ECHO_KEY = "echo";
         public const string INSTANCES_KEY = "instances";
 
         /// <summary>
@@ -81,6 +82,12 @@ namespace Lime.Messaging.Resources
         public bool? RoundRobin { get; set; }
 
         /// <summary>
+        /// If true, indicates that the current session should receive the messages sent by itself.
+        /// </summary>
+        [DataMember(Name = ECHO_KEY, EmitDefaultValue = false)]
+        public bool? Echo { get; set; }
+
+        /// <summary>
         /// Present instances for a identity.
         /// </summary>
         [DataMember(Name = INSTANCES_KEY)]
@@ -104,13 +111,6 @@ namespace Lime.Messaging.Resources
         [EnumMember(Value = "identity")]
         Identity,
         /// <summary>
-        /// Deliver envelopes addressed to the current session instance (name@domain/instance) and to the identity (name@domain) 
-        /// if the distance from the originator is the smallest among the available nodes of the identity with this setting.
-        /// </summary>
-        [Obsolete("Use presence's 'FilterByDistance' property instead")]
-        [EnumMember(Value = "identityByDistance")]
-        IdentityByDistance,
-        /// <summary>
         /// Deliver any envelopes addressed to the identity name@domain, including the envelopes addressed to any specific instance.
         /// </summary>
         [EnumMember(Value = "promiscuous")]
@@ -121,15 +121,6 @@ namespace Lime.Messaging.Resources
         /// </summary>
         [EnumMember(Value = "domain")]
         Domain,
-        /// <summary>
-        /// Deliver envelopes addressed to the current session  instance (name@domain/instance) and to the node domain
-        /// if the distance from the originator is the smallest among the available  nodes of the domain with this setting.
-        /// This rule is intended to be used only by sessions authenticated as <see cref="DomainRole.Authority"/>.
-        /// </summary>
-        [Obsolete("Use presence's 'FilterByDistance' property instead")]
-        [EnumMember(Value = "domainByDistance")]
-        DomainByDistance,
-
         /// <summary>
         /// Deliver envelopes addressed to the current session instance (name@domain/instance), to the node domain and all its sub domains.
         /// This rule is intended to be used only by sessions authenticated as <see cref="DomainRole.RootAuthority"/>.

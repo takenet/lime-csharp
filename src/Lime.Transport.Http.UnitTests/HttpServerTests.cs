@@ -63,7 +63,7 @@ namespace Lime.Transport.Http.UnitTests
 
         public Stream ResponseBodyStream { get; set; }
 
-        public HttpResponse HttpResponse { get; set; }
+        public Func<HttpRequest, HttpResponse> HttpResponseFactory { get; set; }
 
         public CancellationToken CancellationToken { get; set; }
 
@@ -106,10 +106,10 @@ namespace Lime.Transport.Http.UnitTests
             ResponseBodyMediaType = Dummy.CreateJsonMediaType();
             ResponseBody = Dummy.CreateMessageJson();
             ResponseBodyStream = new MemoryStream(Encoding.UTF8.GetBytes(ResponseBody));
-            HttpResponse = new HttpResponse(EnvelopeId, HttpStatusCode.OK, Dummy.CreateRandomString(50), HttpResponseHeaders, ResponseBodyMediaType, ResponseBodyStream);
-
+            HttpResponseFactory = r => new HttpResponse(r.CorrelatorId, HttpStatusCode.OK, Dummy.CreateRandomString(50), HttpResponseHeaders, ResponseBodyMediaType, ResponseBodyStream);
+            
             CancellationToken = TimeSpan.FromSeconds(5).ToCancellationToken();
-            Target = new Lazy<HttpServer>(() => new HttpServer(Prefixes, AuthenticationSchemes));
+            Target = new Lazy<HttpServer>(() => new HttpServer(Prefixes, AuthenticationSchemes, TimeSpan.FromSeconds(60)));
         }
 
         [Test]
@@ -160,7 +160,7 @@ namespace Lime.Transport.Http.UnitTests
             httpListenerBasicIdentity.Name.ShouldBe(Identity.ToString());
             httpListenerBasicIdentity.Password.ShouldBe(Password);
             actual.Uri.ShouldBe(RequestUri);
-            actual.CorrelatorId.ShouldBe(EnvelopeId);
+            actual.CorrelatorId.ShouldNotBe(Guid.Empty);
             actual.QueryString.ShouldNotBe(null);
             actual.QueryString.Get("value1").ShouldBe(QueryStringValue1);
             actual.QueryString.Get("value2").ShouldBe(QueryStringValue2.ToString());
@@ -211,14 +211,15 @@ namespace Lime.Transport.Http.UnitTests
             var acceptRequestTask = Target.Value.AcceptRequestAsync(CancellationToken);
             var httpRequestTask = HttpClient.SendAsync(GetHttpRequestMessage, CancellationToken);
             var httpRequest = await acceptRequestTask;
-            
+            var httpResponse = HttpResponseFactory(httpRequest);
+
             // Act
-            await Target.Value.SubmitResponseAsync(HttpResponse);
+            await Target.Value.SubmitResponseAsync(httpResponse);
             var httpResponseMessage = await httpRequestTask;
             
             // Assert
-            httpResponseMessage.StatusCode.ShouldBe(HttpResponse.StatusCode);
-            httpResponseMessage.ReasonPhrase.ShouldBe(HttpResponse.StatusDescription);
+            httpResponseMessage.StatusCode.ShouldBe(httpResponse.StatusCode);
+            httpResponseMessage.ReasonPhrase.ShouldBe(httpResponse.StatusDescription);
             foreach (var headerName in HttpResponseHeaders.AllKeys)
             {
                 var headerValue = HttpResponseHeaders.Get(headerName);
@@ -242,7 +243,8 @@ namespace Lime.Transport.Http.UnitTests
         public async Task SubmitResponseAsync_InvalidCorrelationId_ThrowsArgumentException()
         {
             // Act
-            await Target.Value.SubmitResponseAsync(HttpResponse).ShouldThrowAsync<ArgumentException>();
+            var httpResponse = HttpResponseFactory(new HttpRequest("POST", new Uri("http://localhost"), correlatorId: Guid.Empty));
+            await Target.Value.SubmitResponseAsync(httpResponse).ShouldThrowAsync<ArgumentException>();
         }
     }
 }

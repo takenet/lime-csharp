@@ -23,15 +23,22 @@ namespace Lime.Transport.WebSocket.UnitTests
         public async Task<ServerWebSocketTransport> GetTargetAsync()
         {
             await Listener.StartAsync();
+            var listenerTask = Listener.AcceptTransportAsync(CancellationToken);
             await Client.OpenAsync(ListenerUri, CancellationToken);
-            return (ServerWebSocketTransport)await Listener.AcceptTransportAsync(CancellationToken);
+            var webSocketTransport = (ServerWebSocketTransport)await listenerTask;
+            await webSocketTransport.OpenAsync(ListenerUri, CancellationToken);
+            return webSocketTransport;
         }
+
+        public Task ServerListenerTask { get; private set; }
+
+        public Task ClientListenerTask { get; private set; }
 
         public Uri ListenerUri { get; private set; }
 
         public WebSocketTransportListener Listener { get; private set; }
 
-        public X509Certificate2 SslCertificate { get; private set; }
+        public X509CertificateInfo SslCertificate { get; private set; }
 
         public IEnvelopeSerializer EnvelopeSerializer { get; private set; }
 
@@ -48,7 +55,7 @@ namespace Lime.Transport.WebSocket.UnitTests
             EnvelopeSerializer = new JsonNetSerializer();
             TraceWriter = new Mock<ITraceWriter>();
             Listener = new WebSocketTransportListener(ListenerUri, SslCertificate, EnvelopeSerializer, TraceWriter.Object);
-            CancellationToken = TimeSpan.FromSeconds(5).ToCancellationToken();
+            CancellationToken = TimeSpan.FromSeconds(30).ToCancellationToken();
             Client = new ClientWebSocketTransport(EnvelopeSerializer);
         }
 
@@ -289,10 +296,13 @@ namespace Lime.Transport.WebSocket.UnitTests
             var target = await GetTargetAsync();
             var session = Dummy.CreateSession(SessionState.Negotiating);
             await target.SendAsync(session, CancellationToken); // Send something to assert is connected
+            var received = await Client.ReceiveAsync(CancellationToken);
 
             // Act
-            await target.CloseAsync(CancellationToken);
-
+            await Task.WhenAll(
+                Client.CloseAsync(CancellationToken),
+                target.CloseAsync(CancellationToken));
+            
             // Assert
             try
             {

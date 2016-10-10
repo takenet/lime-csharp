@@ -20,8 +20,6 @@ namespace Lime.Transport.Http
     /// </summary>
     public sealed class HttpTransportListener : ITransportListener, IDisposable
     {
-        #region Private Fields
-
         private readonly bool _useHttps;
         private readonly TimeSpan _requestTimeout;
         private readonly bool _writeExceptionsToOutput;
@@ -41,10 +39,6 @@ namespace Lime.Transport.Http
         
         private CancellationTokenSource _listenerCancellationTokenSource;
         private Task _httpServerListenerTask;
-
-        #endregion
-
-        #region Constructor
 
         /// <summary>
         /// Creates a new instance of the HttpTransportListener class.
@@ -116,10 +110,6 @@ namespace Lime.Transport.Http
             _uriTemplateTable.MakeReadOnly(true);            
         }
 
-        #endregion
-
-        #region ITransportListener Members
-
         public Uri[] ListenerUris { get; private set; }
 
 
@@ -173,19 +163,12 @@ namespace Lime.Transport.Http
             _httpServerListenerTask = null;
         }
 
-        #endregion
-
-        #region IDisposable Members
-
         public void Dispose()
         {
             _httpServer.DisposeIfDisposable();
             _listenerCancellationTokenSource.DisposeIfDisposable();
         }
 
-        #endregion
-
-        #region Private Methods
         /// <summary>
         /// Consumes the requests
         /// from the HTTP server.
@@ -386,7 +369,5 @@ namespace Lime.Transport.Http
                     new DeleteNotificationByIdHttpProcessor(_notificationStorage)
                 };      
         }
-
-        #endregion
     }
 }

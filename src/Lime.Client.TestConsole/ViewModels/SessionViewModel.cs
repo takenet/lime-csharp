@@ -8,10 +8,11 @@ using Lime.Protocol.Network;
 using Lime.Protocol.Serialization;
 using System;
 using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.Security;
 using System.Net.Sockets;
 using System.Reflection;
 using System.Security.Cryptography.X509Certificates;
@@ -23,20 +24,14 @@ using System.Windows;
 using System.Windows.Data;
 using System.Windows.Threading;
 using Lime.Transport.Tcp;
-using System.Windows.Controls;
 using Lime.Protocol.Serialization.Newtonsoft;
+using Lime.Transport.WebSocket;
 
 namespace Lime.Client.TestConsole.ViewModels
 {
     public class SessionViewModel : ViewModelBase, ITraceWriter
     {
-        #region Private Fields
-
         private readonly TimeSpan _operationTimeout;
-
-        #endregion
-
-        #region Constructor
 
         public SessionViewModel()
         {
@@ -73,12 +68,17 @@ namespace Lime.Client.TestConsole.ViewModels
                 LoadTemplates();
                 LoadMacros();
             }
+            
+            ServicePointManager.ServerCertificateValidationCallback = (sender, certificate, chain, errors) =>
+            {
+                if (errors != SslPolicyErrors.None)
+                {
+                    Application.Current.Dispatcher.Invoke(() => 
+                    AddStatusMessage($"TLS server certificate validation errors: {errors}", true));
+                }
+                return true;
+            };
         }
-
-
-        #endregion
-
-        #region Data Properties
 
         private ITcpClient _tcpClient;
 
@@ -460,10 +460,6 @@ namespace Lime.Client.TestConsole.ViewModels
             }
         }
 
-        #endregion
-
-        #region Commands
-
         public AsyncCommand OpenTransportCommand { get; private set; }
 
         private async Task OpenTransportAsync()
@@ -524,14 +520,23 @@ namespace Lime.Client.TestConsole.ViewModels
                         }                        
                     }
 
-                    TcpClient = new TcpClientAdapter(new TcpClient());
-
-                    Transport = new TcpTransport(
-                        TcpClient,
-                        new JsonNetSerializer(), 
-                        _hostUri.Host,
-                        clientCertificate: clientCertificate,
-                        traceWriter: this);
+                    if (_hostUri.Scheme == WebSocketTransportListener.UriSchemeWebSocket ||
+                        _hostUri.Scheme == WebSocketTransportListener.UriSchemeWebSocketSecure)
+                    {
+                        Transport = new ClientWebSocketTransport(
+                            new JsonNetSerializer(),
+                            this);
+                    }
+                    else
+                    {
+                        TcpClient = new TcpClientAdapter(new TcpClient());
+                        Transport = new TcpTransport(
+                            TcpClient,
+                            new JsonNetSerializer(),
+                            _hostUri.Host,
+                            clientCertificate,
+                            traceWriter: this);
+                    }
 
                     await Transport.OpenAsync(_hostUri, timeoutCancellationToken);
 
@@ -763,10 +768,6 @@ namespace Lime.Client.TestConsole.ViewModels
             return SelectedTemplate != null;
         }
 
-        #endregion
-
-        #region Private Methods
-
         private void Execute(Action action)
         {
             IsBusy = true;
@@ -957,10 +958,6 @@ namespace Lime.Client.TestConsole.ViewModels
 
             StatusMessages.Add(statusMessageViewModel);
         }
-      
-        #endregion
-
-        #region ITraceWriter Members
 
         public async Task TraceAsync(string data, DataOperation operation)
         {
@@ -978,8 +975,6 @@ namespace Lime.Client.TestConsole.ViewModels
         {
             get { return ShowRawValues; }
         }
-
-        #endregion
 
         public void SavePreferences()
         {

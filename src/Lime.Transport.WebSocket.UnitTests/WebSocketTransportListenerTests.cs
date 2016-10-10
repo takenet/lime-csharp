@@ -19,12 +19,11 @@ namespace Lime.Transport.WebSocket.UnitTests
     [TestFixture]
     public class WebSocketTransportListenerTests
     {
-
         public WebSocketTransportListener Target { get; private set; }
 
         public Uri ListenerUri { get; private set; }
 
-        public X509Certificate2 SslCertificate { get; private set; }
+        public X509CertificateInfo SslCertificate { get; private set; }
 
         public IEnvelopeSerializer EnvelopeSerializer { get; private set; }
 
@@ -72,16 +71,9 @@ namespace Lime.Transport.WebSocket.UnitTests
             await Target.StartAsync();
 
             // Assert
+            var acceptTransportTask = Target.AcceptTransportAsync(CancellationToken);
             var clientTransport = new ClientWebSocketTransport(EnvelopeSerializer);
             await clientTransport.OpenAsync(ListenerUri, CancellationToken);
-        }
-
-        [Test]
-        public async Task StartAsync_CallTwice_ThrowsInvalidOperationException()
-        {
-            // Act
-            await Target.StartAsync();
-            await Target.StartAsync().ShouldThrowAsync<InvalidOperationException>();
         }
 
         [Test]
@@ -90,10 +82,12 @@ namespace Lime.Transport.WebSocket.UnitTests
             // Arrange
             await Target.StartAsync();
             var clientTransport = new ClientWebSocketTransport(EnvelopeSerializer);
-            await clientTransport.OpenAsync(ListenerUri, CancellationToken);
+
 
             // Act
-            var transport = await Target.AcceptTransportAsync(CancellationToken);
+            var acceptTransportTask = Target.AcceptTransportAsync(CancellationToken);
+            await clientTransport.OpenAsync(ListenerUri, CancellationToken);
+            var transport = await acceptTransportTask;
 
             // Assert
             transport.ShouldNotBeNull();
@@ -105,7 +99,7 @@ namespace Lime.Transport.WebSocket.UnitTests
             // Arrange
             await Target.StartAsync();
 
-            var count = Dummy.CreateRandomInt(10) + 1;
+            var count = Dummy.CreateRandomInt(100) + 1;
             var clientTransports = Enumerable.Range(0, count)
                 .Select(async i =>
                 {
@@ -157,13 +151,6 @@ namespace Lime.Transport.WebSocket.UnitTests
             {
                 ex.NativeErrorCode.ShouldBe(10061);
             }
-        }
-
-        [Test]
-        public async Task StopAsync_ListenerNotStarted_ThrowsInvalidOperationException()
-        {
-            // Act
-            await Target.StopAsync().ShouldThrowAsync<InvalidOperationException>();
         }
 
     }

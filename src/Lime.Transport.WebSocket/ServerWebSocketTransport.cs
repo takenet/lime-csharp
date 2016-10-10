@@ -1,131 +1,40 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Net;
-using System.Text;
+using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
-using Lime.Protocol;
 using Lime.Protocol.Network;
 using Lime.Protocol.Serialization;
-using Lime.Protocol.Util;
-using vtortola.WebSockets;
-using vtortola.WebSockets.Rfc6455;
 
 namespace Lime.Transport.WebSocket
 {
-    public sealed class ServerWebSocketTransport : TransportBase, IDisposable
+    public class ServerWebSocketTransport : WebSocketTransport
     {
-        private readonly vtortola.WebSockets.WebSocket _webSocket;
-        private readonly IEnvelopeSerializer _envelopeSerializer;
-        private readonly ITraceWriter _traceWriter;
-        private readonly SemaphoreSlim _receiveSemaphore;
-        private readonly SemaphoreSlim _sendSemaphore;
+        private readonly HttpListenerWebSocketContext _context;
 
-        internal ServerWebSocketTransport(vtortola.WebSockets.WebSocket webSocket, IEnvelopeSerializer envelopeSerializer, ITraceWriter traceWriter = null)
+        internal ServerWebSocketTransport(
+            HttpListenerWebSocketContext context, 
+            IEnvelopeSerializer envelopeSerializer, 
+            ITraceWriter traceWriter = null, 
+            int bufferSize = 8192)
+            : base(context.WebSocket, envelopeSerializer, traceWriter, bufferSize)
         {
-            if (webSocket == null) throw new ArgumentNullException(nameof(webSocket));
-            _webSocket = webSocket;
-            _envelopeSerializer = envelopeSerializer;
-            _traceWriter = traceWriter;
-            _receiveSemaphore = new SemaphoreSlim(1);
-            _sendSemaphore = new SemaphoreSlim(1);
+            _context = context;
         }
 
-        public override async Task SendAsync(Envelope envelope, CancellationToken cancellationToken)
+        public override IReadOnlyDictionary<string, object> Options
         {
-            EnsureIsConnected();
-
-            await _sendSemaphore.WaitAsync(cancellationToken);
-            try
+            get
             {
-                using (var stream = _webSocket.CreateMessageWriter(WebSocketMessageType.Text))
-                {
-                    using (var writer = new StreamWriter(stream, Encoding.UTF8))
-                    {
-                        var envelopeJson = _envelopeSerializer.Serialize(envelope);
-                        await TraceDataIfEnabledAsync(envelopeJson, DataOperation.Send).ConfigureAwait(false);
-                        await writer.WriteAsync(envelopeJson).ConfigureAwait(false);
-                    }
-                }
-            }
-            finally
-            {
-                _sendSemaphore.Release();
+                var options = (Dictionary<string, object>)base.Options;
+                options.Add(nameof(HttpListenerWebSocketContext.IsAuthenticated), _context.IsAuthenticated);
+                options.Add(nameof(HttpListenerWebSocketContext.IsLocal), _context.IsLocal);
+                options.Add(nameof(HttpListenerWebSocketContext.IsSecureConnection), _context.IsSecureConnection);
+                options.Add(nameof(HttpListenerWebSocketContext.Origin), _context.Origin);
+                options.Add(nameof(HttpListenerWebSocketContext.SecWebSocketKey), _context.SecWebSocketKey);
+                options.Add(nameof(HttpListenerWebSocketContext.SecWebSocketVersion), _context.SecWebSocketVersion);
+                return options;                
             }
         }
-
-        public override async Task<Envelope> ReceiveAsync(CancellationToken cancellationToken)
-        {
-            EnsureIsConnected();
-
-            await _receiveSemaphore.WaitAsync(cancellationToken);
-            try
-            {
-                using (var stream = await _webSocket.ReadMessageAsync(cancellationToken).ConfigureAwait(false))
-                {
-                    cancellationToken.ThrowIfCancellationRequested();
-                    if (stream == null) return null;
-                    if (stream.MessageType != WebSocketMessageType.Text)
-                    {
-                        throw new NotSupportedException("An unsupported message type was received");
-                    }
-
-                    using (var reader = new StreamReader(stream, Encoding.UTF8))
-                    {
-                        var envelopeJson = await reader.ReadToEndAsync().ConfigureAwait(false);
-                        await TraceDataIfEnabledAsync(envelopeJson, DataOperation.Receive).ConfigureAwait(false);
-                        return _envelopeSerializer.Deserialize(envelopeJson);
-                    }
-                }
-            }
-            finally
-            {
-                _receiveSemaphore.Release();
-            }
-        }
-
-        protected override Task PerformOpenAsync(Uri uri, CancellationToken cancellationToken)
-        {
-            EnsureIsConnected();
-            return TaskUtil.CompletedTask;
-        }
-
-
-        protected override Task PerformCloseAsync(CancellationToken cancellationToken)
-        {
-            _webSocket.Close();
-            return TaskUtil.CompletedTask;
-        }
-
-        public override bool IsConnected => _webSocket.IsConnected;
-
-        public override EndPoint LocalEndPoint => _webSocket.LocalEndpoint;
-
-        public override EndPoint RemoteEndPoint => _webSocket.RemoteEndpoint;
-
-
-        private async Task TraceDataIfEnabledAsync(string envelopeJson, DataOperation dataOperation)
-        {
-            if (_traceWriter != null &&
-                _traceWriter.IsEnabled)
-            {
-                await _traceWriter.TraceAsync(envelopeJson, dataOperation).ConfigureAwait(false);
-            }
-        }
-
-        public void Dispose()
-        {
-            _webSocket.Dispose();
-        }
-
-        private void EnsureIsConnected()
-        {
-            if (!_webSocket.IsConnected)
-            {
-                throw new InvalidOperationException("The WebSocket is not connected. Call 'OpenAsync' first.");
-            }
-        }
-
     }
 }

@@ -1309,26 +1309,6 @@ namespace Lime.Protocol.UnitTests.Network
             var actual = await target.ReceiveSessionAsync(cancellationToken).ShouldThrowAsync<InvalidOperationException>();
         }
 
-        [Test]
-        [Category("ReceiveSessionAsync")]
-        public async Task ReceiveSessionAsync_LimitedBuffers_ThrowsInvalidOperationException()
-        {
-            // Arrange
-            var session = Dummy.CreateSession(SessionState.Finished);
-            var cancellationToken = Dummy.CreateCancellationToken();            
-            _transport
-                .SetupSequence(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
-                .Returns(Task.FromResult<Envelope>(session))
-                .Returns(Task.FromResult<Envelope>(session));
-
-            var target = (ISessionChannel)GetTarget(SessionState.Established, 1);
-            await Task.Delay(100);
-
-            // Act
-            await target.ReceiveSessionAsync(cancellationToken);
-            target.ReceiveSessionAsync(cancellationToken).ShouldThrow<InvalidOperationException>();
-        }
-
         #endregion
 
         #region EnvelopeAsyncBuffer_PromiseAdded

@@ -7,11 +7,19 @@ namespace Lime.Protocol
     /// </summary>
     public class Identity : IIdentity
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Identity"/> class.
+        /// </summary>
         public Identity()
         {
 
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Identity"/> class.
+        /// </summary>
+        /// <param name="name">The name.</param>
+        /// <param name="domain">The domain.</param>
         public Identity(string name, string domain)
         {
             Name = name;
@@ -72,6 +80,16 @@ namespace Lime.Protocol
 
             return ((Name == null && identity.Name == null) || (Name != null && Name.Equals(identity.Name, StringComparison.CurrentCultureIgnoreCase))) &&
                    ((Domain == null && identity.Domain == null) || (Domain != null && Domain.Equals(identity.Domain, StringComparison.CurrentCultureIgnoreCase)));
+        }
+
+        public static bool operator ==(Identity left, Identity right)
+        {
+            return Equals(left, right);
+        }
+
+        public static bool operator !=(Identity left, Identity right)
+        {
+            return !Equals(left, right);
         }
 
         /// <summary>
