@@ -33,7 +33,7 @@ namespace Lime.Protocol.Network.Modules
         /// <param name="remoteIdleTimeout">The remote idle timeout.</param>
         /// <param name="finishChannelTimeout">The finish channel timeout.</param>
         /// <exception cref="ArgumentNullException"></exception>
-        private RemotePingChannelModule(
+        protected RemotePingChannelModule(
             IChannel channel, 
             TimeSpan remotePingInterval, 
             TimeSpan? remoteIdleTimeout = null, 
@@ -48,7 +48,6 @@ namespace Lime.Protocol.Network.Modules
         }
 
         public DateTimeOffset LastReceivedEnvelope { get; private set; }
-
 
         public void OnStateChanged(SessionState state)
         {
@@ -67,25 +66,13 @@ namespace Lime.Protocol.Network.Modules
             }
         }
 
-        public Task<Message> OnReceivingAsync(Message envelope, CancellationToken cancellationToken)
-        {
-            return ReceiveEnvelope(envelope);
-        }
+        public Task<Message> OnReceivingAsync(Message envelope, CancellationToken cancellationToken) => ReceiveEnvelope(envelope);
 
-        public Task<Message> OnSendingAsync(Message envelope, CancellationToken cancellationToken)
-        {
-            return envelope.AsCompletedTask();
-        }
+        public Task<Message> OnSendingAsync(Message envelope, CancellationToken cancellationToken) => envelope.AsCompletedTask();
 
-        public Task<Notification> OnReceivingAsync(Notification envelope, CancellationToken cancellationToken)
-        {
-            return ReceiveEnvelope(envelope);
-        }
+        public Task<Notification> OnReceivingAsync(Notification envelope, CancellationToken cancellationToken) => ReceiveEnvelope(envelope);
 
-        public Task<Notification> OnSendingAsync(Notification envelope, CancellationToken cancellationToken)
-        {
-            return envelope.AsCompletedTask();
-        }
+        public Task<Notification> OnSendingAsync(Notification envelope, CancellationToken cancellationToken) => envelope.AsCompletedTask();
 
         public Task<Command> OnReceivingAsync(Command envelope, CancellationToken cancellationToken)
         {
@@ -102,10 +89,7 @@ namespace Lime.Protocol.Network.Modules
             return receivedEnvelopeTask;
         }
 
-        public Task<Command> OnSendingAsync(Command envelope, CancellationToken cancellationToken)
-        {
-            return envelope.AsCompletedTask();
-        }
+        public Task<Command> OnSendingAsync(Command envelope, CancellationToken cancellationToken) => envelope.AsCompletedTask();
 
         /// <summary>
         /// Creates a new instance of <see cref="RemotePingChannelModule"/> class and register it to the specified channel.
