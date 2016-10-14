@@ -103,52 +103,58 @@ namespace Lime.Transport.WebSocket
 
         private async Task ListenAsync(CancellationToken cancellationToken)
         {
-            while (!cancellationToken.IsCancellationRequested && WebSocket.State == WebSocketState.Open)
+            try
             {
-                try
+                while (!cancellationToken.IsCancellationRequested && WebSocket.State == WebSocketState.Open)
                 {
-                    var buffer = new ArraySegment<byte>(_jsonBuffer.Buffer);
-                    while (true)
+                    try
                     {
-                        var receiveResult = await WebSocket.ReceiveAsync(buffer, cancellationToken).ConfigureAwait(false);
-                        if (receiveResult.MessageType == WebSocketMessageType.Close)
+                        var buffer = new ArraySegment<byte>(_jsonBuffer.Buffer);
+                        while (true)
                         {
-                            await HandleCloseMessageAsync(receiveResult);                            
-                            break;
+                            var receiveResult =
+                                await WebSocket.ReceiveAsync(buffer, cancellationToken).ConfigureAwait(false);
+                            if (receiveResult.MessageType == WebSocketMessageType.Close)
+                            {
+                                await HandleCloseMessageAsync(receiveResult);
+                                break;
+                            }
+
+                            if (receiveResult.MessageType != WebSocketMessageType.Text)
+                            {
+                                CloseStatus = WebSocketCloseStatus.InvalidMessageType;
+                                CloseStatusDescription = "An unsupported message type was received";
+                                throw new InvalidOperationException(CloseStatusDescription);
+                            }
+
+                            _jsonBuffer.BufferCurPos += receiveResult.Count;
+                            if (receiveResult.EndOfMessage) break;
                         }
 
-                        if (receiveResult.MessageType != WebSocketMessageType.Text)
+                        byte[] jsonBytes;
+                        if (_jsonBuffer.TryExtractJsonFromBuffer(out jsonBytes))
                         {
-                            CloseStatus = WebSocketCloseStatus.InvalidMessageType;
-                            CloseStatusDescription = "An unsupported message type was received";
-                            throw new InvalidOperationException(CloseStatusDescription);
-                        }
+                            var envelopeJson = Encoding.UTF8.GetString(jsonBytes);
 
-                        _jsonBuffer.BufferCurPos += receiveResult.Count;
-                        if (receiveResult.EndOfMessage) break;
+                            if (_traceWriter != null &&
+                                _traceWriter.IsEnabled)
+                            {
+                                await _traceWriter.TraceAsync(envelopeJson, DataOperation.Receive).ConfigureAwait(false);
+                            }
+                            var envelope = _envelopeSerializer.Deserialize(envelopeJson);
+                            await _receivedEnvelopeBufferBlock.SendAsync(envelope, cancellationToken);
+                        }
                     }
-
-                    byte[] jsonBytes;
-                    if (_jsonBuffer.TryExtractJsonFromBuffer(out jsonBytes))
+                    catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
                     {
-                        var envelopeJson = Encoding.UTF8.GetString(jsonBytes);
-
-                        if (_traceWriter != null &&
-                            _traceWriter.IsEnabled)
-                        {
-                            await _traceWriter.TraceAsync(envelopeJson, DataOperation.Receive).ConfigureAwait(false);
-                        }
-                        var envelope = _envelopeSerializer.Deserialize(envelopeJson);
-                        await _receivedEnvelopeBufferBlock.SendAsync(envelope, cancellationToken);
+                        break;
                     }
-                }
-                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-                {
-                    break;
                 }
             }
-
-            StopListenerTask();
+            finally
+            {
+                StopListenerTask();
+            }
         }
 
         protected override Task PerformOpenAsync(Uri uri, CancellationToken cancellationToken)
