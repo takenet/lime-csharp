@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Lime.Protocol.Client;
@@ -12,9 +9,10 @@ namespace Lime.Protocol.Network.Modules
     /// <summary>
     /// Defines a module that pings the remote party after a period of inactivity.
     /// </summary>
-    public sealed class RemotePingChannelModule : IChannelModule<Message>, IChannelModule<Notification>, IChannelModule<Command>, IDisposable
+    public class RemotePingChannelModule : IChannelModule<Message>, IChannelModule<Notification>, IChannelModule<Command>, IDisposable
     {
         public const string PING_URI = "/ping";
+
         private static readonly TimeSpan DefaultFinishChannelTimeout = TimeSpan.FromSeconds(30);
 
         private readonly IChannel _channel;
@@ -27,7 +25,19 @@ namespace Lime.Protocol.Network.Modules
         private Task _pingRemoteTask;
         private string _lastPingCommandRequestId;
 
-        private RemotePingChannelModule(IChannel channel, TimeSpan remotePingInterval, TimeSpan? remoteIdleTimeout = null, TimeSpan? finishChannelTimeout = null)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="RemotePingChannelModule"/> class.
+        /// </summary>
+        /// <param name="channel">The channel.</param>
+        /// <param name="remotePingInterval">The remote ping interval.</param>
+        /// <param name="remoteIdleTimeout">The remote idle timeout.</param>
+        /// <param name="finishChannelTimeout">The finish channel timeout.</param>
+        /// <exception cref="ArgumentNullException"></exception>
+        private RemotePingChannelModule(
+            IChannel channel, 
+            TimeSpan remotePingInterval, 
+            TimeSpan? remoteIdleTimeout = null, 
+            TimeSpan? finishChannelTimeout = null)
         {
             if (channel == null) throw new ArgumentNullException(nameof(channel));
             _channel = channel;
@@ -86,6 +96,7 @@ namespace Lime.Protocol.Network.Modules
                 envelope.Id != null &&
                 envelope.Id.Equals(_lastPingCommandRequestId))
             {
+                // Suppress the receiving of a ping response command
                 return Task.FromResult<Command>(null);
             }
             return receivedEnvelopeTask;
@@ -140,7 +151,6 @@ namespace Lime.Protocol.Network.Modules
                             if (_channel is IClientChannel)
                             {
                                 await FinishAsync((IClientChannel)_channel, cts.Token).ConfigureAwait(false);
-
                             }
                             else if (_channel is IServerChannel)
                             {
@@ -173,14 +183,14 @@ namespace Lime.Protocol.Network.Modules
             }
         }
 
-        private static async Task FinishAsync(IClientChannel clientChannel, CancellationToken cancellationToken)
+        protected virtual async Task FinishAsync(IClientChannel clientChannel, CancellationToken cancellationToken)
         {
             var receivedFinishedSessionTask = clientChannel.ReceiveFinishedSessionAsync(cancellationToken);
             await clientChannel.SendFinishingSessionAsync(cancellationToken).ConfigureAwait(false);
             await receivedFinishedSessionTask.ConfigureAwait(false);
         }
 
-        private static Task FinishAsync(IServerChannel serverChannel, CancellationToken cancellationToken)
+        protected virtual Task FinishAsync(IServerChannel serverChannel, CancellationToken cancellationToken)
         {
             return serverChannel.SendFinishedSessionAsync(cancellationToken);
         }
