@@ -123,7 +123,7 @@ namespace Lime.Protocol
             return new Identity
             {
                 Name = !string.IsNullOrWhiteSpace(splittedIdentity[0]) ? splittedIdentity[0] : null,
-                Domain = splittedIdentity.Length > 1 ? splittedIdentity[1] : null
+                Domain = splittedIdentity.Length > 1 ? splittedIdentity[1].Split('/')[0] : null
             };
         }
 

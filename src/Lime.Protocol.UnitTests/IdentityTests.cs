@@ -322,6 +322,22 @@ namespace Lime.Protocol.UnitTests
 
         [Test]
         [Category("Parse")]
+        public void Parse_CompleteWithInstanceString_ReturnsValidIdentity()
+        {
+            var name = Dummy.CreateRandomString(10);
+            var domain = Dummy.CreateRandomString(10);
+
+            var identityString = string.Format("{0}@{1}/{2}", name, domain, "instance");
+
+
+            var identity = Identity.Parse(identityString);
+
+            Assert.AreEqual(name, identity.Name);
+            Assert.AreEqual(domain, identity.Domain);
+        }
+
+        [Test]
+        [Category("Parse")]
         public void Parse_OnlyNameString_ReturnsValidIdentity()
         {
             var name = Dummy.CreateRandomString(10);

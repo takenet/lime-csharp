@@ -103,14 +103,13 @@ namespace Lime.Protocol
             }
 
             var identity = Identity.Parse(s);
-
-            var splittedDomain = identity.Domain?.Split('/');
+            var identityString = identity.ToString();
 
             return new Node
             {
                 Name = identity.Name,
-                Domain = splittedDomain?[0],
-                Instance = splittedDomain != null && splittedDomain.Length > 1 ? splittedDomain[1] : null
+                Domain = identity.Domain,
+                Instance = s.Length > identityString.Length ? s.Remove(0, identityString.Length + 1) : null
             };
         }
 
