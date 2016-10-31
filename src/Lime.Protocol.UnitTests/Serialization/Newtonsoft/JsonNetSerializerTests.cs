@@ -771,7 +771,8 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
         public void Serialize_WebLinkMessage_ReturnsValidJsonString()
         {
             // Arrange
-            var webLink = Dummy.CreateWebLink();
+            var uri = new Uri("http://fake.domain.com:5678/file name.jpg");
+            var webLink = Dummy.CreateWebLink(uri);
             var message = Dummy.CreateMessage(webLink);
             var target = GetTarget();
 
@@ -785,7 +786,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.TO_KEY, message.To));
             Assert.IsTrue(resultString.ContainsJsonProperty(Message.TYPE_KEY, message.Content.GetMediaType()));
             Assert.IsTrue(resultString.ContainsJsonKey(Message.CONTENT_KEY));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Link.URI_KEY, webLink.Uri));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Link.URI_KEY, Uri.EscapeUriString(uri.ToString())));
             Assert.IsTrue(resultString.ContainsJsonProperty(Link.PREVIEW_TYPE_KEY, webLink.PreviewType));
             Assert.IsTrue(resultString.ContainsJsonProperty(Link.PREVIEW_URI_KEY, webLink.PreviewUri));
         }

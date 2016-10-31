@@ -1,4 +1,5 @@
 ﻿using System;
+using Newtonsoft.Json;
 
 namespace Lime.Protocol.Serialization.Newtonsoft.Converters
 {
@@ -7,6 +8,19 @@ namespace Lime.Protocol.Serialization.Newtonsoft.Converters
         protected override Uri CreateInstance(string tokenValue)
         {
             return new Uri(tokenValue);
+        }
+
+        public override void WriteJson(JsonWriter writer, object value, global::Newtonsoft.Json.JsonSerializer serializer)
+        {
+            var uri = value as Uri;
+            if (uri != null)
+            {
+                writer.WriteValue(Uri.EscapeUriString(uri.ToString()));
+            }
+            else
+            {
+                writer.WriteNull();
+            }
         }
     }
 }

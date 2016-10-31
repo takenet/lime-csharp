@@ -490,11 +490,11 @@ namespace Lime.Protocol.UnitTests
             };
         }
 
-        public static WebLink CreateWebLink()
+        public static WebLink CreateWebLink(Uri uri = null)
         {
             return new WebLink
             {
-                Uri = CreateUri(),
+                Uri = uri ?? CreateUri(),
                 PreviewType = CreatePlainMediaType(),
                 PreviewUri = CreateUri(),
                 Text = CreateRandomString(50)
