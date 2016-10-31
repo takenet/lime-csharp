@@ -18,9 +18,9 @@ namespace Lime.Protocol.Serialization
     /// </summary>
     public static class TypeUtil
     {
-        private static readonly IDictionary<MediaType, Type> _documentMediaTypeDictionary;
-        private static readonly IDictionary<AuthenticationScheme, Type> _authenticationSchemeDictionary;
-        private static readonly IDictionary<Type, IDictionary<string, object>> _enumTypeValueDictionary;
+        private static readonly ConcurrentDictionary<MediaType, Type> _documentMediaTypeDictionary;
+        private static readonly ConcurrentDictionary<AuthenticationScheme, Type> _authenticationSchemeDictionary;
+        private static readonly ConcurrentDictionary<Type, IDictionary<string, object>> _enumTypeValueDictionary;
         private static readonly ConcurrentDictionary<Type, Func<string, object>> _typeParseFuncDictionary;
         private static readonly HashSet<Type> _dataContractTypes;
 
@@ -38,9 +38,9 @@ namespace Lime.Protocol.Serialization
                 Trace.WriteLine($"LIME - Unhandled exception: {e.ExceptionObject}");
             };
 
-            _documentMediaTypeDictionary = new Dictionary<MediaType, Type>();
-            _authenticationSchemeDictionary = new Dictionary<AuthenticationScheme, Type>();
-            _enumTypeValueDictionary = new Dictionary<Type, IDictionary<string, object>>();
+            _documentMediaTypeDictionary = new ConcurrentDictionary<MediaType, Type>();
+            _authenticationSchemeDictionary = new ConcurrentDictionary<AuthenticationScheme, Type>();
+            _enumTypeValueDictionary = new ConcurrentDictionary<Type, IDictionary<string, object>>();
             _typeParseFuncDictionary = new ConcurrentDictionary<Type, Func<string, object>>();
             _dataContractTypes = new HashSet<Type>();
 
@@ -592,7 +592,7 @@ namespace Lime.Protocol.Serialization
                     var document = Activator.CreateInstance(type) as Document;
                     if (document != null)
                     {
-                        _documentMediaTypeDictionary.RemoveAndAdd(document.GetMediaType(), type);
+                        _documentMediaTypeDictionary[document.GetMediaType()] = type;
                     }
                 }
 
@@ -602,7 +602,7 @@ namespace Lime.Protocol.Serialization
                     var authentication = Activator.CreateInstance(type) as Authentication;
                     if (authentication != null)
                     {
-                        _authenticationSchemeDictionary.RemoveAndAdd(authentication.GetAuthenticationScheme(), type);
+                        _authenticationSchemeDictionary[authentication.GetAuthenticationScheme()] = type;
                     }
                 }
             }
@@ -615,9 +615,9 @@ namespace Lime.Protocol.Serialization
 
                 foreach (var enumName in enumNames)
                 {
-                    memberValueDictionary.RemoveAndAdd(enumName.ToLowerInvariant(), Enum.Parse(type, enumName));
+                    memberValueDictionary[enumName.ToLowerInvariant()] = Enum.Parse(type, enumName);
                 }
-                _enumTypeValueDictionary.RemoveAndAdd(type, memberValueDictionary);
+                _enumTypeValueDictionary[type] = memberValueDictionary;
             }
         }
     }

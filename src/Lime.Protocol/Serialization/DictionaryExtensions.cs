@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace Lime.Protocol.Serialization
@@ -13,6 +14,7 @@ namespace Lime.Protocol.Serialization
         /// <param name="dictionary">The dictionary.</param>
         /// <param name="key">The key.</param>
         /// <param name="value">The value.</param>
+        [Obsolete("Do not use this. Use the dictionary direct key access.")]
         public static void RemoveAndAdd<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TKey key, TValue value)
         {
             dictionary.Remove(key);
