@@ -24,7 +24,7 @@ namespace Lime.Transport.Tcp
 	/// </summary>
 	public class TcpTransport : TransportBase, ITransport, IAuthenticatableTransport
     {
-        public const int DEFAULT_BUFFER_SIZE = 8192;
+        public const int DEFAULT_BUFFER_SIZE = 8192 * 8;
 
         public static readonly TimeSpan ReadTimeout = TimeSpan.FromSeconds(5);
         public static readonly TimeSpan CloseTimeout = TimeSpan.FromSeconds(30);
