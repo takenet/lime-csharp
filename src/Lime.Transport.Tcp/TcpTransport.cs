@@ -188,7 +188,7 @@ namespace Lime.Transport.Tcp
         {
             if (envelope == null) throw new ArgumentNullException(nameof(envelope));
             if (_stream == null) throw new InvalidOperationException("The stream was not initialized. Call OpenAsync first.");
-            if (!_stream.CanWrite) throw new InvalidOperationException("Invalid stream state");
+            if (!_stream.CanWrite) throw new InvalidOperationException("Invalid stream state");            
 
             var envelopeJson = _envelopeSerializer.Serialize(envelope);
 
@@ -199,7 +199,7 @@ namespace Lime.Transport.Tcp
 
             try
             {
-                await _stream.WriteAsync(jsonBytes, 0, jsonBytes.Length, cancellationToken).ConfigureAwait(false);
+                await _stream.WriteAsync(jsonBytes, 0, jsonBytes.Length, cancellationToken).ConfigureAwait(false);                
             }
             catch (IOException)
             {
