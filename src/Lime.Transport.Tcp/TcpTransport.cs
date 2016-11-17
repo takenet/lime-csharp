@@ -24,7 +24,7 @@ namespace Lime.Transport.Tcp
 	/// </summary>
 	public class TcpTransport : TransportBase, ITransport, IAuthenticatableTransport
     {
-        public const int DEFAULT_BUFFER_SIZE = 8192;
+        public const int DEFAULT_BUFFER_SIZE = 8192 * 8;
 
         public static readonly TimeSpan ReadTimeout = TimeSpan.FromSeconds(5);
         public static readonly TimeSpan CloseTimeout = TimeSpan.FromSeconds(30);
@@ -195,7 +195,6 @@ namespace Lime.Transport.Tcp
             await TraceAsync(envelopeJson, DataOperation.Send).ConfigureAwait(false);
 
             var jsonBytes = Encoding.UTF8.GetBytes(envelopeJson);
-            await _sendSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
 
             try
             {
@@ -205,10 +204,6 @@ namespace Lime.Transport.Tcp
             {
                 await CloseWithTimeoutAsync().ConfigureAwait(false);
                 throw;
-            }
-            finally
-            {
-                _sendSemaphore.Release();
             }
         }
 
@@ -464,12 +459,12 @@ namespace Lime.Transport.Tcp
             if (_tcpClient.Client == null) throw new InvalidOperationException("The client state is invalid");
 
             var names = name.Split('.');
-            
+
             object obj;
 
             if (names.Length == 1)
             {
-                obj = _tcpClient.Client;                
+                obj = _tcpClient.Client;
             }
             else if (names.Equals(nameof(Socket.LingerState)) &&
                      names.Length == 2)
@@ -609,7 +604,7 @@ namespace Lime.Transport.Tcp
             {
                 var envelopeJson = Encoding.UTF8.GetString(jsonBytes);
 
-                await TraceAsync(envelopeJson, DataOperation.Receive).ConfigureAwait(false);                
+                await TraceAsync(envelopeJson, DataOperation.Receive).ConfigureAwait(false);
 
                 try
                 {
@@ -635,8 +630,8 @@ namespace Lime.Transport.Tcp
             X509Chain chain,
             SslPolicyErrors sslPolicyErrors)
         {
-			return sslPolicyErrors == SslPolicyErrors.None || 
-				   sslPolicyErrors == SslPolicyErrors.RemoteCertificateNameMismatch;
+            return sslPolicyErrors == SslPolicyErrors.None ||
+                   sslPolicyErrors == SslPolicyErrors.RemoteCertificateNameMismatch;
         }
 
         private bool ValidateClientCertificate(
@@ -646,12 +641,12 @@ namespace Lime.Transport.Tcp
             SslPolicyErrors sslPolicyErrors)
         {
             // TODO: Check key usage
-			// The client certificate can be null 
-			// but if present, must be valid
-			if (certificate == null)
-			{
-				return true;
-			}
+            // The client certificate can be null 
+            // but if present, must be valid
+            if (certificate == null)
+            {
+                return true;
+            }
             return sslPolicyErrors == SslPolicyErrors.None;
         }
 
