@@ -43,6 +43,7 @@ namespace Lime.Transport.Tcp
 
         private Stream _stream;
         private string _hostName;
+        private SslStream _sslStream;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TcpTransport"/> class.
@@ -382,8 +383,8 @@ namespace Lime.Transport.Tcp
                                     .WithCancellation(cancellationToken)
                                     .ConfigureAwait(false);
                             }
-
-                            _stream = sslStream;
+                            _sslStream = sslStream;
+                            _stream = Stream.Synchronized(sslStream);
                             break;
 
                         default:
@@ -495,7 +496,7 @@ namespace Lime.Transport.Tcp
 
             var role = DomainRole.Unknown;
 
-            var sslStream = _stream as SslStream;
+            var sslStream = _sslStream as SslStream;
             if (sslStream != null &&
                 sslStream.IsAuthenticated &&
                 sslStream.RemoteCertificate != null)
