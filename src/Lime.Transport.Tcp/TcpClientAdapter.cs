@@ -23,7 +23,7 @@ namespace Lime.Transport.Tcp
         /// Returns the System.Net.Sockets.NetworkStream used to send and receive data.
         /// </summary>
         /// <returns></returns>
-        public Stream GetStream() => Stream.Synchronized(_tcpClient.GetStream());
+        public Stream GetStream() => _tcpClient.GetStream();
 
         /// <summary>
         /// Connects the client to the specified port on the specified host.
