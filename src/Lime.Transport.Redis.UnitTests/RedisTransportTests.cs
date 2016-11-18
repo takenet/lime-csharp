@@ -7,6 +7,8 @@ using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Lime.Messaging.Contents;
+using Lime.Messaging.Resources;
 using Lime.Protocol;
 using Lime.Protocol.Network;
 using Lime.Protocol.Serialization;
@@ -154,16 +156,72 @@ namespace Lime.Transport.Redis.UnitTests
 
             // Assert
             var receivedEnvelope = await ServerTransport.ReceiveAsync(CancellationToken);
-            var receivedSession = receivedEnvelope.ShouldBeOfType<Session>();
-            receivedSession.State.ShouldBe(SessionState.Finishing);
+            var actualSession = receivedEnvelope.ShouldBeOfType<Session>();
+            actualSession.State.ShouldBe(SessionState.Finishing);
         }
 
         [Test]
         public async Task SendAsync_MessageEnvelope_ServerShouldReceive()
         {
             // Arrange
-            var message = Dummy.CreateMessage(Dummy.CreateTextContent());
+            var content = Dummy.CreateTextContent();
+            var message = Dummy.CreateMessage(content);
+            var target = await GetTargetAndEstablish();
 
+            // Act
+            await target.SendAsync(message, CancellationToken);
+
+            // Assert
+            var receivedEnvelope = await ServerTransport.ReceiveAsync(CancellationToken);
+            var actual = receivedEnvelope.ShouldBeOfType<Message>();
+            actual.Id.ShouldBe(message.Id);
+            actual.From.ShouldBe(message.From);
+            actual.To.ShouldBe(message.To);
+            var actualContent = actual.Content.ShouldBeOfType<PlainText>();
+            actualContent.Text.ShouldBe(content.Text);
+        }
+
+        [Test]
+        public async Task SendAsync_NotificationEnvelope_ServerShouldReceive()
+        {
+            // Arrange            
+            var notification = Dummy.CreateNotification(Event.Received);
+            var target = await GetTargetAndEstablish();
+
+            // Act
+            await target.SendAsync(notification, CancellationToken);
+
+            // Assert
+            var receivedEnvelope = await ServerTransport.ReceiveAsync(CancellationToken);
+            var actual = receivedEnvelope.ShouldBeOfType<Notification>();
+            actual.Id.ShouldBe(notification.Id);
+            actual.From.ShouldBe(notification.From);
+            actual.To.ShouldBe(notification.To);
+            actual.Event.ShouldBe(notification.Event);
+        }
+
+        [Test]
+        public async Task SendAsync_CommandEnvelope_ServerShouldReceive()
+        {
+            // Arrange
+            var presence = Dummy.CreatePresence();
+            var command = Dummy.CreateCommand(presence);
+            var target = await GetTargetAndEstablish();
+
+            // Act
+            await target.SendAsync(command, CancellationToken);
+
+            // Assert
+            var receivedEnvelope = await ServerTransport.ReceiveAsync(CancellationToken);
+            var actual = receivedEnvelope.ShouldBeOfType<Command>();
+            actual.Id.ShouldBe(command.Id);
+            actual.From.ShouldBe(command.From);
+            actual.To.ShouldBe(command.To);
+            var actualResource = actual.Resource.ShouldBeOfType<Presence>();
+            actualResource.Status.ShouldBe(presence.Status);
+            actualResource.Message.ShouldBe(presence.Message);
+            actualResource.RoutingRule.ShouldBe(presence.RoutingRule);
+            actualResource.Priority.ShouldBe(presence.Priority);
         }
     }
 }

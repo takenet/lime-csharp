@@ -6,7 +6,9 @@ using Lime.Protocol;
 using Lime.Protocol.Network;
 using Lime.Protocol.Security;
 using Lime.Protocol.Serialization;
+using Lime.Protocol.Serialization.Newtonsoft;
 using StackExchange.Redis;
+using static Lime.Transport.Redis.RedisTransportListener;
 
 namespace Lime.Transport.Redis
 {
@@ -32,23 +34,22 @@ namespace Lime.Transport.Redis
 
         public RedisTransport(
             Uri uri,
-            IEnvelopeSerializer envelopeSerializer,
+            IEnvelopeSerializer envelopeSerializer = null,
             ITraceWriter traceWriter = null,
             IConnectionMultiplexerFactory connectionMultiplexerFactory = null,
             string channelNamespace = null)
             : this(ConfigurationOptions.Parse(uri?.DnsSafeHost), envelopeSerializer, traceWriter,connectionMultiplexerFactory, channelNamespace)
         {
             if (uri == null) throw new ArgumentNullException(nameof(uri));
-            if (!uri.Scheme.Equals(RedisTransportListener.RedisScheme, StringComparison.OrdinalIgnoreCase))
+            if (!uri.Scheme.Equals(RedisScheme, StringComparison.OrdinalIgnoreCase))
             {
-                throw new ArgumentException($"Invalid URI scheme. Expected is '{RedisTransportListener.RedisScheme}'.",
-                    nameof(uri));
+                throw new ArgumentException($"Invalid URI scheme. Expected is '{RedisScheme}'.", nameof(uri));
             }
         }
 
         public RedisTransport(
             ConfigurationOptions redisConfiguration,
-            IEnvelopeSerializer envelopeSerializer,
+            IEnvelopeSerializer envelopeSerializer = null,
             ITraceWriter traceWriter = null,
             IConnectionMultiplexerFactory connectionMultiplexerFactory = null,
             string channelNamespace = null)
@@ -83,7 +84,7 @@ namespace Lime.Transport.Redis
             _channelNamespace = channelNamespace ?? DefaultChannelNamespace;
             _sendChannelPrefix = sendChannelPrefix;
             _receiveChannelPrefix = receiveChannelPrefix;
-            _envelopeSerializer = envelopeSerializer;
+            _envelopeSerializer = envelopeSerializer ?? new JsonNetSerializer();
             ReceivedEnvelopesBufferBlock = new BufferBlock<Envelope>(
                 new DataflowBlockOptions() {BoundedCapacity = DataflowBlockOptions.Unbounded});
             _semaphore = new SemaphoreSlim(1, 1);
@@ -105,7 +106,7 @@ namespace Lime.Transport.Redis
             // Send to the channel or to the server prefix
             await _connectionMultiplexer
                 .GetSubscriber()
-                .PublishAsync(_sendChannelName ?? RedisTransportListener.GetListenerChannelName(_channelNamespace, ServerChannelPrefix), envelopeJson)
+                .PublishAsync(_sendChannelName ?? GetListenerChannelName(_channelNamespace, ServerChannelPrefix), envelopeJson)
                 .WithCancellation(cancellationToken)
                 .ConfigureAwait(false);
         }

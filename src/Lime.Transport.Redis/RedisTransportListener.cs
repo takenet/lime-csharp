@@ -6,6 +6,7 @@ using System.Threading.Tasks.Dataflow;
 using Lime.Protocol;
 using Lime.Protocol.Network;
 using Lime.Protocol.Serialization;
+using Lime.Protocol.Serialization.Newtonsoft;
 using Lime.Protocol.Server;
 using StackExchange.Redis;
 
@@ -27,19 +28,23 @@ namespace Lime.Transport.Redis
 
         public RedisTransportListener(
             Uri uri,
-            IEnvelopeSerializer envelopeSerializer,
+            IEnvelopeSerializer envelopeSerializer = null,
             ITraceWriter traceWriter = null,
             int acceptTransportBoundedCapacity = 10,
             IConnectionMultiplexerFactory connectionMultiplexerFactory = null,
             string channelNamespace = null)
             : this(ConfigurationOptions.Parse(uri?.DnsSafeHost), envelopeSerializer, traceWriter, acceptTransportBoundedCapacity, connectionMultiplexerFactory, channelNamespace)
         {
-
+            if (uri == null) throw new ArgumentNullException(nameof(uri));
+            if (!uri.Scheme.Equals(RedisScheme, StringComparison.OrdinalIgnoreCase))
+            {
+                throw new ArgumentException($"Invalid URI scheme. Expected is '{RedisScheme}'.", nameof(uri));
+            }
         }
 
         public RedisTransportListener(
             ConfigurationOptions redisConfiguration,
-            IEnvelopeSerializer envelopeSerializer,
+            IEnvelopeSerializer envelopeSerializer = null,
             ITraceWriter traceWriter = null,
             int acceptTransportBoundedCapacity = 10,
             IConnectionMultiplexerFactory connectionMultiplexerFactory = null,
@@ -47,7 +52,7 @@ namespace Lime.Transport.Redis
         {
             if (redisConfiguration == null) throw new ArgumentNullException(nameof(redisConfiguration));
             _redisConfiguration = redisConfiguration;
-            _envelopeSerializer = envelopeSerializer;
+            _envelopeSerializer = envelopeSerializer ?? new JsonNetSerializer();
             _traceWriter = traceWriter;
             _channelNamespace = channelNamespace ?? RedisTransport.DefaultChannelNamespace;
             _connectionMultiplexerFactory = connectionMultiplexerFactory ?? new ConnectionMultiplexerFactory();
