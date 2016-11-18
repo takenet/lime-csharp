@@ -43,7 +43,6 @@ namespace Lime.Transport.Tcp
 
         private Stream _stream;
         private string _hostName;
-        private SslStream _sslStream;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TcpTransport"/> class.
@@ -192,10 +191,10 @@ namespace Lime.Transport.Tcp
             if (!_stream.CanWrite) throw new InvalidOperationException("Invalid stream state");            
 
             var envelopeJson = _envelopeSerializer.Serialize(envelope);
-
             await TraceAsync(envelopeJson, DataOperation.Send).ConfigureAwait(false);
-
             var jsonBytes = Encoding.UTF8.GetBytes(envelopeJson);
+
+            await _sendSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
 
             try
             {
@@ -205,6 +204,10 @@ namespace Lime.Transport.Tcp
             {
                 await CloseWithTimeoutAsync().ConfigureAwait(false);
                 throw;
+            }
+            finally
+            {
+                _sendSemaphore.Release();
             }
         }
 
@@ -332,7 +335,7 @@ namespace Lime.Transport.Tcp
                             break;
                         case SessionEncryption.TLS:
                             SslStream sslStream;
-
+                            
                             if (_serverCertificate != null)
                             {
                                 if (_stream == null) throw new InvalidOperationException("The stream was not initialized. Call OpenAsync first.");
@@ -383,8 +386,7 @@ namespace Lime.Transport.Tcp
                                     .WithCancellation(cancellationToken)
                                     .ConfigureAwait(false);
                             }
-                            _sslStream = sslStream;
-                            _stream = Stream.Synchronized(sslStream);
+                            _stream = sslStream;
                             break;
 
                         default:
@@ -496,7 +498,7 @@ namespace Lime.Transport.Tcp
 
             var role = DomainRole.Unknown;
 
-            var sslStream = _sslStream as SslStream;
+            var sslStream = _stream as SslStream;
             if (sslStream != null &&
                 sslStream.IsAuthenticated &&
                 sslStream.RemoteCertificate != null)
