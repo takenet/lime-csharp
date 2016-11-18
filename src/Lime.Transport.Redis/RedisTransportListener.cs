@@ -17,6 +17,7 @@ namespace Lime.Transport.Redis
 
         private readonly IEnvelopeSerializer _envelopeSerializer;
         private readonly ITraceWriter _traceWriter;
+        private readonly string _channelNamespace;
         private readonly IConnectionMultiplexerFactory _connectionMultiplexerFactory;
         private readonly BufferBlock<ITransport> _transportBufferBlock;
         private readonly ConfigurationOptions _redisConfiguration;
@@ -29,8 +30,9 @@ namespace Lime.Transport.Redis
             IEnvelopeSerializer envelopeSerializer,
             ITraceWriter traceWriter = null,
             int acceptTransportBoundedCapacity = 10,
-            IConnectionMultiplexerFactory connectionMultiplexerFactory = null)
-            : this(ConfigurationOptions.Parse(uri?.DnsSafeHost), envelopeSerializer, traceWriter, acceptTransportBoundedCapacity, connectionMultiplexerFactory)
+            IConnectionMultiplexerFactory connectionMultiplexerFactory = null,
+            string channelNamespace = null)
+            : this(ConfigurationOptions.Parse(uri?.DnsSafeHost), envelopeSerializer, traceWriter, acceptTransportBoundedCapacity, connectionMultiplexerFactory, channelNamespace)
         {
 
         }
@@ -40,12 +42,14 @@ namespace Lime.Transport.Redis
             IEnvelopeSerializer envelopeSerializer,
             ITraceWriter traceWriter = null,
             int acceptTransportBoundedCapacity = 10,
-            IConnectionMultiplexerFactory connectionMultiplexerFactory = null)
+            IConnectionMultiplexerFactory connectionMultiplexerFactory = null,
+            string channelNamespace = null)
         {
             if (redisConfiguration == null) throw new ArgumentNullException(nameof(redisConfiguration));
             _redisConfiguration = redisConfiguration;
             _envelopeSerializer = envelopeSerializer;
             _traceWriter = traceWriter;
+            _channelNamespace = channelNamespace ?? RedisTransport.DefaultChannelNamespace;
             _connectionMultiplexerFactory = connectionMultiplexerFactory ?? new ConnectionMultiplexerFactory();
             _transportBufferBlock = new BufferBlock<ITransport>(
                 new DataflowBlockOptions()
@@ -75,7 +79,7 @@ namespace Lime.Transport.Redis
 
                 await _connectionMultiplexer
                     .GetSubscriber()
-                    .SubscribeAsync(RedisTransport.ServerChannelPrefix, HandleReceivedData)
+                    .SubscribeAsync(GetListenerChannelName(_channelNamespace, RedisTransport.ServerChannelPrefix), HandleReceivedData)
                     .ConfigureAwait(false);
             }
             finally
@@ -115,6 +119,8 @@ namespace Lime.Transport.Redis
             }
         }
 
+        internal static string GetListenerChannelName(string channelNamespace, string sendChannelPrefix) => $"{channelNamespace}:{sendChannelPrefix}";
+
         private void HandleReceivedData(RedisChannel channel, RedisValue value)
         {
             var envelopeJson = (string)value;
@@ -129,8 +135,14 @@ namespace Lime.Transport.Redis
             }
             else
             {
-                var transport = new RedisTransport(_connectionMultiplexer, _envelopeSerializer,
-                    _traceWriter, RedisTransport.ClientChannelPrefix, RedisTransport.ServerChannelPrefix);
+                var transport = new RedisTransport(
+                    _connectionMultiplexer, 
+                    _envelopeSerializer,
+                    _traceWriter, 
+                    _channelNamespace, 
+                    RedisTransport.ClientChannelPrefix, 
+                    RedisTransport.ServerChannelPrefix);
+
                 _transportBufferBlock.SendAsync(transport).Wait();
                 transport.ReceivedEnvelopesBufferBlock.SendAsync(envelope).Wait();
             }

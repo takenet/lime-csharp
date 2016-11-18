@@ -14,9 +14,11 @@ namespace Lime.Transport.Redis
     {
         internal static readonly string ClientChannelPrefix = "client";
         internal static readonly string ServerChannelPrefix = "server";
+        internal static readonly string DefaultChannelNamespace = "global";
 
         private readonly IEnvelopeSerializer _envelopeSerializer;
         private readonly ITraceWriter _traceWriter;
+        private readonly string _channelNamespace;
         private readonly string _sendChannelPrefix;
         private readonly string _receiveChannelPrefix;
         private readonly ConfigurationOptions _redisConfiguration;
@@ -32,10 +34,9 @@ namespace Lime.Transport.Redis
             Uri uri,
             IEnvelopeSerializer envelopeSerializer,
             ITraceWriter traceWriter = null,
-            IConnectionMultiplexerFactory connectionMultiplexerFactory = null)
-            : this(
-                ConfigurationOptions.Parse(uri?.DnsSafeHost), envelopeSerializer, traceWriter,
-                connectionMultiplexerFactory)
+            IConnectionMultiplexerFactory connectionMultiplexerFactory = null,
+            string channelNamespace = null)
+            : this(ConfigurationOptions.Parse(uri?.DnsSafeHost), envelopeSerializer, traceWriter,connectionMultiplexerFactory, channelNamespace)
         {
             if (uri == null) throw new ArgumentNullException(nameof(uri));
             if (!uri.Scheme.Equals(RedisTransportListener.RedisScheme, StringComparison.OrdinalIgnoreCase))
@@ -49,8 +50,9 @@ namespace Lime.Transport.Redis
             ConfigurationOptions redisConfiguration,
             IEnvelopeSerializer envelopeSerializer,
             ITraceWriter traceWriter = null,
-            IConnectionMultiplexerFactory connectionMultiplexerFactory = null)
-            : this(envelopeSerializer, traceWriter, ServerChannelPrefix, ClientChannelPrefix)
+            IConnectionMultiplexerFactory connectionMultiplexerFactory = null,
+            string channelNamespace = null)
+            : this(envelopeSerializer, traceWriter, channelNamespace, ServerChannelPrefix, ClientChannelPrefix)
         {
             if (redisConfiguration == null) throw new ArgumentNullException(nameof(redisConfiguration));
             _redisConfiguration = redisConfiguration;
@@ -61,9 +63,10 @@ namespace Lime.Transport.Redis
             IConnectionMultiplexer connectionMultiplexer,
             IEnvelopeSerializer envelopeSerializer,
             ITraceWriter traceWriter,
+            string channelNamespace,
             string sendChannelPrefix,
             string receiveChannelPrefix)
-            : this(envelopeSerializer, traceWriter, sendChannelPrefix, receiveChannelPrefix)
+            : this(envelopeSerializer, traceWriter, channelNamespace, sendChannelPrefix, receiveChannelPrefix)
         {
             if (connectionMultiplexer == null) throw new ArgumentNullException(nameof(connectionMultiplexer));
             _connectionMultiplexer = connectionMultiplexer;
@@ -72,10 +75,12 @@ namespace Lime.Transport.Redis
         private RedisTransport(
             IEnvelopeSerializer envelopeSerializer,
             ITraceWriter traceWriter,
+            string channelNamespace,
             string sendChannelPrefix,
             string receiveChannelPrefix)
         {
             _traceWriter = traceWriter;
+            _channelNamespace = channelNamespace ?? DefaultChannelNamespace;
             _sendChannelPrefix = sendChannelPrefix;
             _receiveChannelPrefix = receiveChannelPrefix;
             _envelopeSerializer = envelopeSerializer;
@@ -100,13 +105,11 @@ namespace Lime.Transport.Redis
             // Send to the channel or to the server prefix
             await _connectionMultiplexer
                 .GetSubscriber()
-                .PublishAsync(_sendChannelName ?? ServerChannelPrefix, envelopeJson)
+                .PublishAsync(_sendChannelName ?? RedisTransportListener.GetListenerChannelName(_channelNamespace, ServerChannelPrefix), envelopeJson)
                 .WithCancellation(cancellationToken)
                 .ConfigureAwait(false);
         }
-
        
-
         public override async Task<Envelope> ReceiveAsync(CancellationToken cancellationToken)
         {
             var envelope = await ReceivedEnvelopesBufferBlock.ReceiveAsync(cancellationToken).ConfigureAwait(false);
@@ -248,9 +251,9 @@ namespace Lime.Transport.Redis
             }
         }
         
-        private string GetReceiveChannelName(string id) => $"{_receiveChannelPrefix}:{id}";
+        private string GetReceiveChannelName(string id) => $"{_channelNamespace}:{_receiveChannelPrefix}:{id}";
 
-        private string GetSendChannelName(string id) => $"{_sendChannelPrefix}:{id}";
+        private string GetSendChannelName(string id) => $"{_channelNamespace}:{_sendChannelPrefix}:{id}";
 
         public Task<DomainRole> AuthenticateAsync(Identity identity)
         {
