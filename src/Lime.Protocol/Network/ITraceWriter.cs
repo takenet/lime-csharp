@@ -21,8 +21,7 @@ namespace Lime.Protocol.Network
         Task TraceAsync(string data, DataOperation operation);
 
         /// <summary>
-        /// Indicates if the tracer
-        /// is enabled
+        /// Indicates if the tracer is enabled.
         /// </summary>
         bool IsEnabled { get; }
     }
@@ -48,5 +47,14 @@ namespace Lime.Protocol.Network
         /// A transport information
         /// </summary>
         Information
+    }
+
+    public static class TraceWriterExtensions
+    {
+        public static Task TraceIfEnabledAsync(this ITraceWriter traceWriter, string data, DataOperation operation)
+        {
+            if (traceWriter == null || !traceWriter.IsEnabled) return Task.CompletedTask;
+            return traceWriter.TraceAsync(data, operation);
+        }
     }
 }
