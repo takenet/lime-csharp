@@ -41,9 +41,13 @@ namespace Lime.Transport.Redis.UnitTests
 
         public Mock<ITraceWriter> TraceWriter { get; private set; }
 
-        public CancellationToken CancellationToken { get; private set; }
+        public CancellationToken CancellationToken { get; private set; }        
+
+        public ITransport ServerTransport { get; private set; }
 
         public Process RedisProccess { get; private set; }
+
+        public Session EstablishedSession { get; private set; }
 
         public RedisTransport GetTarget()
         {
@@ -52,10 +56,22 @@ namespace Lime.Transport.Redis.UnitTests
                 new JsonNetSerializer());
         }
 
-        public async Task<RedisTransport> GetTargetAndOpen()
+        public async Task<RedisTransport> GetTargetAndOpenAsync()
         {
             var transport = GetTarget();
             await transport.OpenAsync(ListenerUri, CancellationToken);
+            return transport;
+        }
+
+        public async Task<RedisTransport> GetTargetAndEstablish()
+        {
+            var transport = await GetTargetAndOpenAsync();            
+            await transport.SendAsync(new Session { State = SessionState.New }, CancellationToken);
+            ServerTransport = await Listener.AcceptTransportAsync(CancellationToken);
+            await ServerTransport.ReceiveAsync(CancellationToken);
+            EstablishedSession = Dummy.CreateSession(SessionState.Established);
+            await ServerTransport.SendAsync(EstablishedSession, CancellationToken);
+            await transport.ReceiveAsync(CancellationToken);
             return transport;
         }
 
@@ -96,7 +112,7 @@ namespace Lime.Transport.Redis.UnitTests
             TraceWriter = new Mock<ITraceWriter>();
             Listener = new RedisTransportListener(ListenerUri, EnvelopeSerializer, TraceWriter.Object);
             await Listener.StartAsync();
-            CancellationToken = TimeSpan.FromSeconds(5).ToCancellationToken();
+            CancellationToken = TimeSpan.FromSeconds(30).ToCancellationToken();
         }
 
 
@@ -112,7 +128,8 @@ namespace Lime.Transport.Redis.UnitTests
         {
             // Arrange
             var session = Dummy.CreateSession(SessionState.New);
-            var target = await GetTargetAndOpen();
+            session.Id = null;
+            var target = await GetTargetAndOpenAsync();
 
             // Act
             await target.SendAsync(session, CancellationToken);
@@ -124,6 +141,29 @@ namespace Lime.Transport.Redis.UnitTests
             receivedSession.State.ShouldBe(SessionState.New);
         }
 
+        [Test]
+        public async Task SendAsync_FinishingSessionEnvelope_ServerShouldReceive()
+        {
+            // Arrange            
+            var target = await GetTargetAndEstablish();
+            var session = Dummy.CreateSession(SessionState.Finishing);
+            session.Id = EstablishedSession.Id;
 
+            // Act
+            await target.SendAsync(session, CancellationToken);
+
+            // Assert
+            var receivedEnvelope = await ServerTransport.ReceiveAsync(CancellationToken);
+            var receivedSession = receivedEnvelope.ShouldBeOfType<Session>();
+            receivedSession.State.ShouldBe(SessionState.Finishing);
+        }
+
+        [Test]
+        public async Task SendAsync_MessageEnvelope_ServerShouldReceive()
+        {
+            // Arrange
+            var message = Dummy.CreateMessage(Dummy.CreateTextContent());
+
+        }
     }
 }

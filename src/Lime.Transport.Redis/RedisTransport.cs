@@ -86,48 +86,11 @@ namespace Lime.Transport.Redis
 
         public override async Task SendAsync(Envelope envelope, CancellationToken cancellationToken)
         {
-            var subscriber = _connectionMultiplexer.GetSubscriber();
-
             var session = envelope as Session;
             if (session != null &&
                 session.State <= SessionState.Established)
             {
-                if (string.IsNullOrWhiteSpace(session.Id))
-                {
-                    if (session.State != SessionState.New)
-                    {
-                        throw new InvalidOperationException("The session envelope must have an id");
-                    }
-
-                    if (_sendChannelName != null)
-                    {
-                        throw new InvalidOperationException("The send channel name is already defined");
-                    }
-
-                    // Sets a temporary id for receiving the session data.
-                    session.Id = EnvelopeId.NewId();
-                }
-
-                var receiveChannelName = GetReceiveChannelName(session.Id);
-
-                if (_receiveChannelName == null ||
-                    !_receiveChannelName.Equals(receiveChannelName))
-                {
-                    if (_receiveChannelName != null)
-                    {
-                        await subscriber
-                            .UnsubscribeAsync(_receiveChannelName)
-                            .WithCancellation(cancellationToken)
-                            .ConfigureAwait(false);
-                    }
-
-                    _receiveChannelName = receiveChannelName;
-
-                    await subscriber
-                        .SubscribeAsync(_receiveChannelName, HandleReceivedData)
-                        .WithCancellation(cancellationToken)
-                        .ConfigureAwait(false);
-                }
+                await UpdateReceiveChannelNameAsync(session, cancellationToken);
             }
 
             var envelopeJson = _envelopeSerializer.Serialize(envelope);
@@ -135,11 +98,14 @@ namespace Lime.Transport.Redis
             await _traceWriter.TraceIfEnabledAsync(envelopeJson, DataOperation.Send);
 
             // Send to the channel or to the server prefix
-            await subscriber
+            await _connectionMultiplexer
+                .GetSubscriber()
                 .PublishAsync(_sendChannelName ?? ServerChannelPrefix, envelopeJson)
                 .WithCancellation(cancellationToken)
                 .ConfigureAwait(false);
         }
+
+       
 
         public override async Task<Envelope> ReceiveAsync(CancellationToken cancellationToken)
         {
@@ -149,20 +115,12 @@ namespace Lime.Transport.Redis
             if (session != null &&
                 session.State <= SessionState.Established)
             {
-                if (string.IsNullOrWhiteSpace(session.Id))
-                {
-                    throw new InvalidOperationException(
-                        "An invalid session envelope was received: The session envelope must have an id");
-                }
-
-                _sendChannelName = GetSendChannelName(session.Id);
-                // Removes the temporary id
-                if (session.State == SessionState.New) session.Id = null;
+                UpdateSendChannelName(session);
             }
 
             return envelope;
         }
-
+       
         public override bool IsConnected => _connectionMultiplexer != null;
 
         protected override async Task PerformOpenAsync(Uri uri, CancellationToken cancellationToken)
@@ -209,6 +167,75 @@ namespace Lime.Transport.Redis
             }
         }
 
+        /// <summary>
+        /// Updates the name for sending envelopes. 
+        /// The send channel name is always related to the last received session id.
+        /// </summary>
+        /// <param name="session">The session.</param>
+        /// <exception cref="System.InvalidOperationException">An invalid session envelope was received: The session envelope must have an id</exception>
+        private void UpdateSendChannelName(Session session)
+        {
+            if (string.IsNullOrWhiteSpace(session.Id))
+            {
+                throw new InvalidOperationException(
+                    "An invalid session envelope was received: The session envelope must have an id");
+            }
+
+            _sendChannelName = GetSendChannelName(session.Id);
+            // Removes the temporary id
+            if (session.State == SessionState.New) session.Id = null;
+        }
+
+        /// <summary>
+        /// Updates the receive channel name for receiving envelopes.
+        /// The receive channel name is always related to the last sent session id.
+        /// If is changed, the Redis subscription must be updated.
+        /// </summary>
+        private async Task UpdateReceiveChannelNameAsync(Session session, CancellationToken cancellationToken)
+        {
+            if (session.State == SessionState.New)
+            {                
+                if (!string.IsNullOrWhiteSpace(session.Id))
+                {
+                    throw new InvalidOperationException("The 'new' session envelope should not have an id");
+                }
+
+                if (_sendChannelName != null)
+                {
+                    // If the send channel name is defined, it indicates that the current transport
+                    // has already received a session envelope, so we cannot and a 'new' session here.
+                    throw new InvalidOperationException("Cannot send a 'new' session when other state was already received");
+                }
+
+                // Sets a temporary id for receiving the session data.
+                // It will be used by the server transport to continue the session negotiation.
+                session.Id = EnvelopeId.NewId();
+            }
+
+            var receiveChannelName = GetReceiveChannelName(session.Id);
+
+            if (_receiveChannelName == null ||
+                !_receiveChannelName.Equals(receiveChannelName))
+            {
+                var subscriber = _connectionMultiplexer.GetSubscriber();
+
+                if (_receiveChannelName != null)
+                {
+                    await subscriber
+                        .UnsubscribeAsync(_receiveChannelName)
+                        .WithCancellation(cancellationToken)
+                        .ConfigureAwait(false);
+                }
+
+                _receiveChannelName = receiveChannelName;
+
+                await subscriber
+                    .SubscribeAsync(_receiveChannelName, HandleReceivedData)
+                    .WithCancellation(cancellationToken)
+                    .ConfigureAwait(false);
+            }
+        }
+
         private void HandleReceivedData(RedisChannel channel, RedisValue value)
         {
             var envelopeJson = (string) value;
@@ -224,9 +251,11 @@ namespace Lime.Transport.Redis
         private string GetReceiveChannelName(string id) => $"{_receiveChannelPrefix}:{id}";
 
         private string GetSendChannelName(string id) => $"{_sendChannelPrefix}:{id}";
+
         public Task<DomainRole> AuthenticateAsync(Identity identity)
         {
-            throw new NotImplementedException();
+            // TODO: Implement a proper authentication mechanism
+            return DomainRole.RootAuthority.AsCompletedTask();
         }
 
         protected virtual void Dispose(bool disposing)
