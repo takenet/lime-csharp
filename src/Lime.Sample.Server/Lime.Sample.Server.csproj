@@ -34,8 +34,13 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="StackExchange.Redis, Version=1.1.608.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\StackExchange.Redis.1.1.608\lib\net46\StackExchange.Redis.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.IO.Compression" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -49,6 +54,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Lime.Protocol\Lime.Protocol.csproj">
@@ -58,6 +64,10 @@
     <ProjectReference Include="..\Lime.Transport.Http\Lime.Transport.Http.csproj">
       <Project>{1095e1ba-c764-46b0-86d1-2290da9c07ad}</Project>
       <Name>Lime.Transport.Http</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Lime.Transport.Redis\Lime.Transport.Redis.csproj">
+      <Project>{fb575712-0805-496b-a6d7-b5597a50573d}</Project>
+      <Name>Lime.Transport.Redis</Name>
     </ProjectReference>
     <ProjectReference Include="..\Lime.Transport.Tcp\Lime.Transport.Tcp.csproj">
       <Project>{d24b4ef4-9b8c-4f89-bfc6-f76007936382}</Project>

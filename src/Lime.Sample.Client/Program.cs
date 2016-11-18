@@ -14,7 +14,9 @@ using Lime.Transport.Tcp;
 using Lime.Protocol.Security;
 using Lime.Protocol.Serialization.Newtonsoft;
 using Lime.Protocol.Util;
+using Lime.Transport.Redis;
 using Lime.Transport.WebSocket;
+using StackExchange.Redis;
 
 namespace Lime.Sample.Client
 {
@@ -56,20 +58,7 @@ namespace Lime.Sample.Client
             
             // Creates a new transport and connect to the server
             var serverUri = new Uri(serverUriValue);
-            ITransport transport;
-            switch (serverUri.Scheme)
-            {
-                case "net.tcp":
-                    transport = new TcpTransport(traceWriter: new DebugTraceWriter());
-                    break;
-                case "ws":
-                case "wss":
-                    transport = new ClientWebSocketTransport(new JsonNetSerializer(), new DebugTraceWriter());
-                    break;
-                default:
-                    Console.WriteLine("Unsupported URI scheme '{0}'", serverUri.Scheme);
-                    return;
-            }
+            var transport = GetTransportForUri(serverUri);
 
             // Creates a new client channel
             var builder = ClientChannelBuilder
@@ -194,6 +183,24 @@ namespace Lime.Sample.Client
 
             Console.WriteLine("Press any key to exit.");
             Console.Read();
+        }
+
+        private static ITransport GetTransportForUri(Uri uri)
+        {            
+            switch (uri.Scheme)
+            {
+                case "net.tcp":
+                    return new TcpTransport(traceWriter: new DebugTraceWriter());                    
+                case "ws":
+                case "wss":
+                    return new ClientWebSocketTransport(new JsonNetSerializer(), new DebugTraceWriter());
+                case "redis":
+                    var multiplexer = ConnectionMultiplexer.Connect(uri.DnsSafeHost);
+                    return new RedisTransport(multiplexer, new JsonNetSerializer());
+
+                default:
+                    throw new NotSupportedException($"Unsupported URI scheme '{uri.Scheme}'");                    
+            }            
         }
 
         static async Task ConsumeMessagesAsync(IClientChannel clientChannel, CancellationToken cancellationToken)
