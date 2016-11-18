@@ -107,7 +107,6 @@ namespace Lime.Transport.Redis
             await _connectionMultiplexer
                 .GetSubscriber()
                 .PublishAsync(_sendChannelName ?? GetListenerChannelName(_channelNamespace, ServerChannelPrefix), envelopeJson)
-                .WithCancellation(cancellationToken)
                 .ConfigureAwait(false);
         }
        
@@ -154,7 +153,8 @@ namespace Lime.Transport.Redis
                 {
                     await _connectionMultiplexer
                         .GetSubscriber()
-                        .UnsubscribeAsync(_receiveChannelName).WithCancellation(cancellationToken);
+                        .UnsubscribeAsync(_receiveChannelName)
+                        .ConfigureAwait(false);
                 }
 
                 _sendChannelName = null;
@@ -162,7 +162,7 @@ namespace Lime.Transport.Redis
 
                 if (_redisConfiguration != null)
                 {
-                    await _connectionMultiplexer.CloseAsync();
+                    await _connectionMultiplexer.CloseAsync().ConfigureAwait(false);
                 }
             }
             finally
@@ -227,7 +227,6 @@ namespace Lime.Transport.Redis
                 {
                     await subscriber
                         .UnsubscribeAsync(_receiveChannelName)
-                        .WithCancellation(cancellationToken)
                         .ConfigureAwait(false);
                 }
 
@@ -235,7 +234,6 @@ namespace Lime.Transport.Redis
 
                 await subscriber
                     .SubscribeAsync(_receiveChannelName, HandleReceivedData)
-                    .WithCancellation(cancellationToken)
                     .ConfigureAwait(false);
             }
         }

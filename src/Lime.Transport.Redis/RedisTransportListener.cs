@@ -19,6 +19,8 @@ namespace Lime.Transport.Redis
         private readonly IEnvelopeSerializer _envelopeSerializer;
         private readonly ITraceWriter _traceWriter;
         private readonly string _channelNamespace;
+        private readonly string _listenerChannelName;
+
         private readonly IConnectionMultiplexerFactory _connectionMultiplexerFactory;
         private readonly BufferBlock<ITransport> _transportBufferBlock;
         private readonly ConfigurationOptions _redisConfiguration;
@@ -62,6 +64,7 @@ namespace Lime.Transport.Redis
                     BoundedCapacity = acceptTransportBoundedCapacity
                 });
             _semaphore = new SemaphoreSlim(1, 1);
+            _listenerChannelName = GetListenerChannelName(_channelNamespace, RedisTransport.ServerChannelPrefix);
         }
 
         public Uri[] ListenerUris => 
@@ -84,7 +87,7 @@ namespace Lime.Transport.Redis
 
                 await _connectionMultiplexer
                     .GetSubscriber()
-                    .SubscribeAsync(GetListenerChannelName(_channelNamespace, RedisTransport.ServerChannelPrefix), HandleReceivedData)
+                    .SubscribeAsync(_listenerChannelName, HandleReceivedData)
                     .ConfigureAwait(false);
             }
             finally
@@ -108,7 +111,7 @@ namespace Lime.Transport.Redis
 
                 await _connectionMultiplexer
                     .GetSubscriber()
-                    .UnsubscribeAllAsync()
+                    .UnsubscribeAsync(_listenerChannelName)
                     .ConfigureAwait(false);
 
                 if (_redisConfiguration != null)
