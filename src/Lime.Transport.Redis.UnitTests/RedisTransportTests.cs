@@ -52,6 +52,13 @@ namespace Lime.Transport.Redis.UnitTests
                 new JsonNetSerializer());
         }
 
+        public async Task<RedisTransport> GetTargetAndOpen()
+        {
+            var transport = GetTarget();
+            await transport.OpenAsync(ListenerUri, CancellationToken);
+            return transport;
+        }
+
         [OneTimeSetUp]
         public void OneTimeSetup()
         {
@@ -105,10 +112,7 @@ namespace Lime.Transport.Redis.UnitTests
         {
             // Arrange
             var session = Dummy.CreateSession(SessionState.New);
-            var target = GetTarget();
-
-            await target.OpenAsync(ListenerUri, CancellationToken);
-
+            var target = await GetTargetAndOpen();
 
             // Act
             await target.SendAsync(session, CancellationToken);
@@ -119,5 +123,7 @@ namespace Lime.Transport.Redis.UnitTests
             var receivedSession = receivedEnvelope.ShouldBeOfType<Session>();
             receivedSession.State.ShouldBe(SessionState.New);
         }
+
+
     }
 }
