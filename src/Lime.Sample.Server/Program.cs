@@ -84,8 +84,7 @@ namespace Lime.Sample.Server
                         serializer);
 
                 case "redis":
-                    var multiplexer = ConnectionMultiplexer.Connect(uri.DnsSafeHost);
-                    return new RedisTransportListener(multiplexer, serializer);
+                    return new RedisTransportListener(uri, serializer);
 
                 default:
                     throw new NotSupportedException($"Unsupported URI scheme '{uri.Scheme}'");

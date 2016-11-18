@@ -49,6 +49,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ConnectionMultiplexerFactory.cs" />
+    <Compile Include="IConnectionMultiplexerFactory.cs" />
     <Compile Include="RedisTransport.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RedisTransportListener.cs" />

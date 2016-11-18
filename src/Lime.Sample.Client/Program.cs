@@ -195,8 +195,7 @@ namespace Lime.Sample.Client
                 case "wss":
                     return new ClientWebSocketTransport(new JsonNetSerializer(), new DebugTraceWriter());
                 case "redis":
-                    var multiplexer = ConnectionMultiplexer.Connect(uri.DnsSafeHost);
-                    return new RedisTransport(multiplexer, new JsonNetSerializer());
+                    return new RedisTransport(uri, new JsonNetSerializer());
 
                 default:
                     throw new NotSupportedException($"Unsupported URI scheme '{uri.Scheme}'");                    
