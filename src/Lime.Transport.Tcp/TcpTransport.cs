@@ -383,7 +383,7 @@ namespace Lime.Transport.Tcp
                                     .ConfigureAwait(false);
                             }
 
-                            _stream = sslStream;
+                            _stream = Stream.Synchronized(sslStream);
                             break;
 
                         default:
