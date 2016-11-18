@@ -8,7 +8,9 @@ using Lime.Protocol.Server;
 using Lime.Transport.Tcp;
 using Lime.Protocol.Security;
 using Lime.Protocol.Serialization.Newtonsoft;
+using Lime.Transport.Redis;
 using Lime.Transport.WebSocket;
+using StackExchange.Redis;
 
 namespace Lime.Sample.Server
 {
@@ -80,6 +82,10 @@ namespace Lime.Sample.Server
                         uri,
                         null,
                         serializer);
+
+                case "redis":
+                    var multiplexer = ConnectionMultiplexer.Connect(uri.DnsSafeHost);
+                    return new RedisTransportListener(multiplexer, serializer);
 
                 default:
                     throw new NotSupportedException($"Unsupported URI scheme '{uri.Scheme}'");

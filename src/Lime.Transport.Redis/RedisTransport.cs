@@ -11,7 +11,6 @@ namespace Lime.Transport.Redis
 {
     public class RedisTransport : TransportBase
     {
-        private const string REPLY_CHANNEL_KEY = "lime.transport.redis.replyChannel";
 
         internal const string CLIENT_CHANNEL_PREFIX = "client";
         internal const string SERVER_CHANNEL_PREFIX = "server";
@@ -28,19 +27,19 @@ namespace Lime.Transport.Redis
         private string _receiveChannelName;
 
         public RedisTransport(
-            IEnvelopeSerializer envelopeSerializer,
-            IConnectionMultiplexer connectionMultiplexer,
+            IConnectionMultiplexer connectionMultiplexer, 
+            IEnvelopeSerializer envelopeSerializer, 
             ITraceWriter traceWriter = null)
-            : this(envelopeSerializer, connectionMultiplexer, traceWriter, SERVER_CHANNEL_PREFIX, CLIENT_CHANNEL_PREFIX)
+            : this(connectionMultiplexer, envelopeSerializer, traceWriter, SERVER_CHANNEL_PREFIX, CLIENT_CHANNEL_PREFIX)
         {
             
         }
 
         internal RedisTransport(
-            IEnvelopeSerializer envelopeSerializer,
-            IConnectionMultiplexer connectionMultiplexer,                         
-            ITraceWriter traceWriter,
-            string sendChannelPrefix,
+            IConnectionMultiplexer connectionMultiplexer, 
+            IEnvelopeSerializer envelopeSerializer, 
+            ITraceWriter traceWriter, 
+            string sendChannelPrefix, 
             string receiveChannelPrefix)
         {
             if (connectionMultiplexer == null) throw new ArgumentNullException(nameof(connectionMultiplexer));
@@ -55,23 +54,58 @@ namespace Lime.Transport.Redis
 
         public override async Task SendAsync(Envelope envelope, CancellationToken cancellationToken)
         {
-            if (_receiveChannelName == null)
-            {
-                var session = envelope as Session;
-                if (session == null) throw new InvalidOperationException("A session envelope was expected");
+            var subscriber = _connectionMultiplexer.GetSubscriber();
 
+            var session = envelope as Session;
+            if (session != null &&
+                session.State <= SessionState.Established)
+            {
                 if (string.IsNullOrWhiteSpace(session.Id))
                 {
-                    _receiveChannelName = GetReceiveChannelName(session.Id);
+                    if (session.State != SessionState.New)
+                    {
+                        throw new InvalidOperationException("The session envelope must have an id");
+                    }
+
+                    if (_sendChannelName != null)
+                    {
+                        throw new InvalidOperationException("The send channel name is already defined");
+                    }
+                    
+                    // Create a temporary channel for receiving the session data.
+                    session.Id = EnvelopeId.NewId();                    
                 }
 
+                var receiveChannelName = GetReceiveChannelName(session.Id);
+
+                if (_receiveChannelName == null ||
+                    !_receiveChannelName.Equals(receiveChannelName))
+                {
+                    if (_receiveChannelName != null)
+                    {
+                        await subscriber
+                            .UnsubscribeAsync(_receiveChannelName)
+                            .WithCancellation(cancellationToken)
+                            .ConfigureAwait(false);
+                    }
+
+                    _receiveChannelName = receiveChannelName;
+
+                    await subscriber
+                        .SubscribeAsync(_receiveChannelName, HandleReceivedData)
+                        .WithCancellation(cancellationToken)
+                        .ConfigureAwait(false);
+                }
             }
 
             var envelopeJson = _envelopeSerializer.Serialize(envelope);
 
-            await _connectionMultiplexer
-                .GetSubscriber()
-                .PublishAsync(_sendChannelName ?? _sendChannelPrefix, envelopeJson)
+            await _traceWriter.TraceIfEnabledAsync(envelopeJson, DataOperation.Send);
+
+            // Send to the channel or to the server prefix
+            await subscriber
+                .PublishAsync(_sendChannelName ?? SERVER_CHANNEL_PREFIX, envelopeJson)
+                .WithCancellation(cancellationToken)
                 .ConfigureAwait(false);
         }
 
@@ -79,12 +113,17 @@ namespace Lime.Transport.Redis
         {
             var envelope = await ReceivedEnvelopesBufferBlock.ReceiveAsync(cancellationToken).ConfigureAwait(false);
 
-            if (envelope?.Metadata != null && 
-                envelope.Metadata.ContainsKey(REPLY_CHANNEL_KEY))
+            var session = envelope as Session;
+            if (session != null &&
+                session.State <= SessionState.Established)
             {
-                _sendChannelName = envelope.Metadata[REPLY_CHANNEL_KEY];
-                envelope.Metadata.Remove(REPLY_CHANNEL_KEY);
-                if (envelope.Metadata.Count == 0) envelope.Metadata = null;
+                if (string.IsNullOrWhiteSpace(session.Id))
+                {
+                    throw new InvalidOperationException("An invalid session envelope was received: The session envelope must have an id");
+                }
+
+                _sendChannelName = GetSendChannelName(session.Id);
+                if (session.State == SessionState.New) session.Id = null;
             }
 
             return envelope;
@@ -94,32 +133,33 @@ namespace Lime.Transport.Redis
 
         protected override Task PerformCloseAsync(CancellationToken cancellationToken)
         {
-            return _connectionMultiplexer.GetSubscriber().UnsubscribeAllAsync().WithCancellation(cancellationToken);
+            if (_receiveChannelName == null) return Task.CompletedTask;
+
+            return _connectionMultiplexer
+                .GetSubscriber()
+                .UnsubscribeAsync(_receiveChannelName).WithCancellation(cancellationToken);
         }
 
         protected override Task PerformOpenAsync(Uri uri, CancellationToken cancellationToken)
         {
             return Task.CompletedTask;
-
         }
 
-        private async void HandleReceivedData(RedisChannel channel, RedisValue value)
+        private void HandleReceivedData(RedisChannel channel, RedisValue value)
         {
             var envelopeJson = (string) value;
 
-            await _traceWriter.TraceIfEnabledAsync(envelopeJson, DataOperation.Receive);
+            _traceWriter.TraceIfEnabledAsync(envelopeJson, DataOperation.Receive).Wait();
             var envelope = _envelopeSerializer.Deserialize(envelopeJson);
             if (!ReceivedEnvelopesBufferBlock.Post(envelope))
             {                
-                await _traceWriter.TraceIfEnabledAsync("RedisTransport: The input buffer has not accepted the envelope", DataOperation.Error);
+                 _traceWriter.TraceIfEnabledAsync("RedisTransport: The input buffer has not accepted the envelope", DataOperation.Error).Wait();
             }
         }
-
-
-
+        
         private string GetReceiveChannelName(string id) => $"{_receiveChannelPrefix}:{id}";
 
-        private string GetSendChannelName(string id) => $"{_sendChannelName}:{id}";
+        private string GetSendChannelName(string id) => $"{_sendChannelPrefix}:{id}";
 
     }
 }
