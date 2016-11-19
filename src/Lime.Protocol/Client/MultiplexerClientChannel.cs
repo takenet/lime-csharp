@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -59,6 +60,8 @@ namespace Lime.Protocol.Client
             _outputActionBlocks = new ActionBlock<Envelope>[count];
 
             _channels = new IOnDemandClientChannel[count];
+            _listeners = new IChannelListener[count];
+
             for (var i = 0; i < _channels.Length; i++)
             {
                 var currentBuilder = builder
@@ -79,59 +82,47 @@ namespace Lime.Protocol.Client
                     _inputNotificationBufferBlock,
                     _inputCommandBufferBlock);
 
-                // Create a single bounded block for each channel
-                _outputActionBlocks[i] = new ActionBlock<Envelope>(async e =>
-                {
-                    if (e is Message) await channel.SendMessageAsync((Message) e);
-                    else if (e is Notification) await channel.SendNotificationAsync((Notification)e);                    
-                    else if (e is Command) await channel.SendCommandAsync((Command)e);
-                    else if (e is RequestResponseCommand)
-                    {
-                        var requestResponseCommand = (RequestResponseCommand) e;
-                        try
-                        {
-                            var response =
-                                await
-                                    channel.ProcessCommandAsync(requestResponseCommand.Request,
-                                        requestResponseCommand.CancellationToken);
-                            requestResponseCommand.ResponseTcs.TrySetResult(response);
-                        }
-                        catch(OperationCanceledException) when (requestResponseCommand.CancellationToken.IsCancellationRequested) { }
-                        catch (Exception ex)
-                        {
-                            requestResponseCommand.ResponseTcs.TrySetException(ex);
-                        }
-                    }
-                },
+                // Create a single bounded action block for each channel
+                _outputActionBlocks[i] = new ActionBlock<Envelope>(async e => await SendToChannelAsync(channel, e).ConfigureAwait(false),
                 new ExecutionDataflowBlockOptions() { BoundedCapacity = 1, MaxDegreeOfParallelism = 1});
-                _outputBufferBlock.LinkTo(_outputActionBlocks[i]);
+                _outputBufferBlock.LinkTo(_outputActionBlocks[i], new DataflowLinkOptions() { PropagateCompletion = true});
             }
 
             _semaphore = new SemaphoreSlim(1, 1);
         }
 
         public Task SendMessageAsync(Message message, CancellationToken cancellationToken)
-            => SendAsync(message, cancellationToken);
+            => SendToBufferAsync(message, cancellationToken);
 
         public Task SendNotificationAsync(Notification notification, CancellationToken cancellationToken)
-            => SendAsync(notification, cancellationToken);
+            => SendToBufferAsync(notification, cancellationToken);
 
         public Task SendCommandAsync(Command command, CancellationToken cancellationToken)
-            => SendAsync(command, cancellationToken);
+            => SendToBufferAsync(command, cancellationToken);
 
-        public Task<Message> ReceiveMessageAsync(CancellationToken cancellationToken)
-            => _inputMessageBufferBlock.ReceiveAsync(cancellationToken);
+        public async Task<Message> ReceiveMessageAsync(CancellationToken cancellationToken)
+        {
+            await EstablishIfRequiredAsync(cancellationToken).ConfigureAwait(false);
+            return await _inputMessageBufferBlock.ReceiveAsync(cancellationToken).ConfigureAwait(false);
+        }
 
-        public Task<Notification> ReceiveNotificationAsync(CancellationToken cancellationToken)
-            => _inputNotificationBufferBlock.ReceiveAsync(cancellationToken);
+        public async Task<Notification> ReceiveNotificationAsync(CancellationToken cancellationToken)
+        {
+            await EstablishIfRequiredAsync(cancellationToken).ConfigureAwait(false);
+            return await _inputNotificationBufferBlock.ReceiveAsync(cancellationToken).ConfigureAwait(false);
+        }
 
-        public Task<Command> ReceiveCommandAsync(CancellationToken cancellationToken)
-            => _inputCommandBufferBlock.ReceiveAsync(cancellationToken);
+        public async Task<Command> ReceiveCommandAsync(CancellationToken cancellationToken)
+        {
+            await EstablishIfRequiredAsync(cancellationToken).ConfigureAwait(false);
+            return await _inputCommandBufferBlock.ReceiveAsync(cancellationToken).ConfigureAwait(false);
+        }
 
         public async Task<Command> ProcessCommandAsync(Command requestCommand, CancellationToken cancellationToken)
         {
+            await EstablishIfRequiredAsync(cancellationToken).ConfigureAwait(false);
             var requestResponseCommand = new RequestResponseCommand(requestCommand, cancellationToken);
-            await SendAsync(requestResponseCommand, cancellationToken).ConfigureAwait(false);
+            await SendToBufferAsync(requestResponseCommand, cancellationToken).ConfigureAwait(false);
             using (cancellationToken.Register(() => requestResponseCommand.ResponseTcs.TrySetCanceled(cancellationToken)))
             {
                 return await requestResponseCommand.ResponseTcs.Task.ConfigureAwait(false);
@@ -170,6 +161,11 @@ namespace Lime.Protocol.Client
             await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
             try
             {
+                _outputBufferBlock.Complete();
+
+                await Task.WhenAll(_outputActionBlocks.Select(b => b.Completion))
+                    .ConfigureAwait(false);
+
                 for (var i = 0; i < _channels.Length; i++)
                 {
                     _listeners[i].Stop();
@@ -206,12 +202,63 @@ namespace Lime.Protocol.Client
             };
         }
 
-        private async Task SendAsync(Envelope envelope, CancellationToken cancellationToken)
+        private async Task EstablishIfRequiredAsync(CancellationToken cancellationToken)
+        {
+            if (!IsEstablished) await EstablishAsync(cancellationToken).ConfigureAwait(false);
+        }
+
+        private async Task SendToBufferAsync(Envelope envelope, CancellationToken cancellationToken)
         {
             if (!await _outputBufferBlock.SendAsync(envelope, cancellationToken).ConfigureAwait(false))
             {
                 throw new InvalidOperationException("The channel pipeline is complete");
             }
+        }
+
+        private async Task SendToChannelAsync(IOnDemandClientChannel channel, Envelope e)
+        {
+            try
+            {
+                if (e is Message) await channel.SendMessageAsync((Message) e);
+                else if (e is Notification) await channel.SendNotificationAsync((Notification) e);
+                else if (e is Command) await channel.SendCommandAsync((Command) e);
+                else if (e is RequestResponseCommand)
+                {
+                    var requestResponseCommand = (RequestResponseCommand) e;
+                    try
+                    {
+                        var response =
+                            await
+                                channel.ProcessCommandAsync(requestResponseCommand.Request,
+                                    requestResponseCommand.CancellationToken);
+                        requestResponseCommand.ResponseTcs.TrySetResult(response);
+                    }
+                    catch (OperationCanceledException)
+                        when (requestResponseCommand.CancellationToken.IsCancellationRequested)
+                    {
+                    }
+                    catch (Exception ex)
+                    {
+                        requestResponseCommand.ResponseTcs.TrySetException(ex);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                foreach (var handler in ChannelOperationFailedHandlers)
+                {
+                    await handler(
+                        new FailedChannelInformation(
+                            null,
+                            channel.IsEstablished ? SessionState.Established : SessionState.Failed,
+                            null,
+                            null,
+                            channel.IsEstablished,
+                            ex,
+                            nameof(SendToChannelAsync)));
+                }
+            }
+
         }
 
         public void Dispose()

@@ -53,16 +53,16 @@ namespace Lime.Sample.Client
                 password = Console.ReadLine();                
             }
 
-            var setPresence = false;
-            var setReceipts = false;
+            var setPresence = true;
+            var setReceipts = true;
             
             // Creates a new transport and connect to the server
             var serverUri = new Uri(serverUriValue);
-            var transport = GetTransportForUri(serverUri);
+            Func<ITransport> transportFactory = () => CreateTransportForUri(serverUri);
 
             // Creates a new client channel
             var builder = ClientChannelBuilder
-                .Create(transport, serverUri)
+                .Create(transportFactory, serverUri)
                 .AddBuiltHandler((channel, token) =>
                 {
                     channel.CommandModules.Add(new ReplyPingChannelModule(channel));
@@ -77,7 +77,9 @@ namespace Lime.Sample.Client
                             new LimeUri(UriTemplates.PRESENCE),
                             new Presence()
                             {
-                                Status = PresenceStatus.Available
+                                Status = PresenceStatus.Available,
+                                RoutingRule = RoutingRule.Identity,
+                                RoundRobin = true
                             },
                             t);
                     }
@@ -106,8 +108,10 @@ namespace Lime.Sample.Client
                     .WithIdentity(identity)
                     .WithPlainAuthentication(password);
             }
-                                    
-            var onDemandChannel = new OnDemandClientChannel(builder);
+
+            //var onDemandChannel = new OnDemandClientChannel(builder);
+            var onDemandChannel = new MultiplexerClientChannel(builder);
+
             var running = true;
             onDemandChannel.ChannelCreationFailedHandlers.Add(information =>
             {
@@ -143,6 +147,8 @@ namespace Lime.Sample.Client
                     return TaskUtil.TrueCompletedTask;
                 });
 
+
+            await onDemandChannel.EstablishAsync(CancellationToken.None);
             channelListener.Start(onDemandChannel);
 
             while (running)
@@ -185,7 +191,7 @@ namespace Lime.Sample.Client
             Console.Read();
         }
 
-        private static ITransport GetTransportForUri(Uri uri)
+        private static ITransport CreateTransportForUri(Uri uri)
         {            
             switch (uri.Scheme)
             {
