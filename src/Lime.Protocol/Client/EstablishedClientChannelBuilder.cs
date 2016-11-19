@@ -276,5 +276,10 @@ namespace Lime.Protocol.Client
 
             return clientChannel;
         }
+
+        internal EstablishedClientChannelBuilder ShallowCopy()
+        {
+            return (EstablishedClientChannelBuilder)MemberwiseClone();
+        }
     }
 }

@@ -54,6 +54,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Client\MultiplexerClientChannel.cs" />
     <Compile Include="DocumentContainer.cs" />
     <Compile Include="EnvelopeId.cs" />
     <Compile Include="Network\ChannelInformation.cs" />
