@@ -12,6 +12,11 @@ using Lime.Protocol.Network;
 
 namespace Lime.Protocol.Client
 {
+    /// <summary>
+    /// Implements a client channel that hold multiple connections with the server and distribute the load between these channels.
+    /// </summary>
+    /// <seealso cref="Lime.Protocol.Client.IOnDemandClientChannel" />
+    /// <seealso cref="System.IDisposable" />
     public sealed class MultiplexerClientChannel : IOnDemandClientChannel, IDisposable
     {
         private readonly IOnDemandClientChannel[] _channels;
@@ -23,11 +28,20 @@ namespace Lime.Protocol.Client
         private readonly BufferBlock<Notification> _inputNotificationBufferBlock;
         private readonly BufferBlock<Command> _inputCommandBufferBlock;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="MultiplexerClientChannel"/> class.
+        /// </summary>
+        /// <param name="builder">The channel builder.</param>
+        /// <param name="count">The number of channels to create.</param>
+        /// <param name="inputBoundedCapacity">The input buffer bounded capacity.</param>
+        /// <param name="outputBoundedCapacity">The output buffer bounded capacity.</param>
+        /// <exception cref="System.ArgumentNullException"></exception>
+        /// <exception cref="System.ArgumentOutOfRangeException"></exception>
         public MultiplexerClientChannel(
             EstablishedClientChannelBuilder builder, 
             int count = 5,
-            int inputBoundedCapacity = DataflowBlockOptions.Unbounded,
-            int outputBoundedCapacity = DataflowBlockOptions.Unbounded)
+            int inputBoundedCapacity = 1,
+            int outputBoundedCapacity = 1)
         {
             if (builder == null) throw new ArgumentNullException(nameof(builder));
             if (count <= 0) throw new ArgumentOutOfRangeException(nameof(count));
@@ -52,11 +66,12 @@ namespace Lime.Protocol.Client
             _inputNotificationBufferBlock = new BufferBlock<Notification>(inputOptions);
             _inputCommandBufferBlock = new BufferBlock<Command>(inputOptions);
 
-            // An output action block per channel
+            // The global output buffer
             _outputBufferBlock = new BufferBlock<Envelope>(new DataflowBlockOptions()
             {
                 BoundedCapacity = outputBoundedCapacity
             });
+            // An output action block per channel
             _outputActionBlocks = new ActionBlock<Envelope>[count];
 
             _channels = new IOnDemandClientChannel[count];
@@ -64,17 +79,17 @@ namespace Lime.Protocol.Client
 
             for (var i = 0; i < _channels.Length; i++)
             {
+                // Add an instance suffix to the builder
                 var currentBuilder = builder
                     .ShallowCopy()
                     .WithInstance($"{builder.Instance}-{i}");
-                _channels[i] = new OnDemandClientChannel(currentBuilder);
-                var channel = _channels[i];
-
+                var channel = new OnDemandClientChannel(currentBuilder);
+                
                 // Synchronize the handlers
-                SynchronizeCollections(channelCreatedHandlers, channel.ChannelCreatedHandlers);
-                SynchronizeCollections(channelDiscardedHandlers, channel.ChannelDiscardedHandlers);
-                SynchronizeCollections(channelCreationFailedHandlers, channel.ChannelCreationFailedHandlers);
-                SynchronizeCollections(channelOperationFailedHandlers, channel.ChannelOperationFailedHandlers);
+                AttachCollection(channelCreatedHandlers, channel.ChannelCreatedHandlers);
+                AttachCollection(channelDiscardedHandlers, channel.ChannelDiscardedHandlers);
+                AttachCollection(channelCreationFailedHandlers, channel.ChannelCreationFailedHandlers);
+                AttachCollection(channelOperationFailedHandlers, channel.ChannelOperationFailedHandlers);
 
                 // Setup the listener for the channel
                 _listeners[i] = new DataflowChannelListener(
@@ -86,6 +101,8 @@ namespace Lime.Protocol.Client
                 _outputActionBlocks[i] = new ActionBlock<Envelope>(async e => await SendToChannelAsync(channel, e).ConfigureAwait(false),
                 new ExecutionDataflowBlockOptions() { BoundedCapacity = 1, MaxDegreeOfParallelism = 1});
                 _outputBufferBlock.LinkTo(_outputActionBlocks[i], new DataflowLinkOptions() { PropagateCompletion = true});
+
+                _channels[i] = channel;
             }
 
             _semaphore = new SemaphoreSlim(1, 1);
@@ -172,6 +189,14 @@ namespace Lime.Protocol.Client
                 }
 
                 await Task.WhenAll(
+                    _listeners.Select(
+                        l => Task.WhenAll(
+                            l.MessageListenerTask, 
+                            l.NotificationListenerTask, 
+                            l.CommandListenerTask)))
+                    .ConfigureAwait(false);
+
+                await Task.WhenAll(
                     _channels.Select(c => c.FinishAsync(cancellationToken)))
                     .ConfigureAwait(false);
             }
@@ -181,7 +206,7 @@ namespace Lime.Protocol.Client
             }
         }
 
-        private void SynchronizeCollections<T>(INotifyCollectionChanged observableCollection, ICollection<T> collection)
+        private void AttachCollection<T>(INotifyCollectionChanged observableCollection, ICollection<T> collection)
         {
             observableCollection.CollectionChanged += (sender, e) =>
             {

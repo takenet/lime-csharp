@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Threading;
@@ -165,16 +166,39 @@ namespace Lime.Sample.Client
                 if (string.IsNullOrEmpty(toInput) || Node.TryParse(toInput, out to))
                 {
                     Console.Write("Message text: ");
-                    var message = new Message
-                    {
-                        To = to,
-                        Content = new PlainText
-                        {
-                            Text = Console.ReadLine()
-                        }
-                    };
+                    var text = Console.ReadLine();
 
-                    await onDemandChannel.SendMessageAsync(message, CancellationToken.None);
+                    var stopwatch = Stopwatch.StartNew();
+
+                    Console.Write("Number of times to send (ENTER to 1): ");
+                    int count;
+                    if (!int.TryParse(Console.ReadLine(), out count))
+                    {
+                        count = 1;
+                    }
+
+                    await Task.WhenAll(
+                        Enumerable
+                            .Range(0, count)
+                            .Select(async i =>
+                            {
+                                var message = new Message
+                                {
+                                    Id = i.ToString(),
+                                    To = to,
+                                    Content = new PlainText
+                                    {
+                                        Text = text
+                                    }
+                                };
+
+                                await onDemandChannel.SendMessageAsync(message, CancellationToken.None);
+                            }));
+
+                    stopwatch.Stop();
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+                    Console.WriteLine("Elapsed: {0} ms", stopwatch.ElapsedMilliseconds);
+                    Console.ResetColor();
                 }
 
             }
