@@ -77,6 +77,7 @@ namespace Lime.Transport.Redis.UnitTests
         public void OneTimeTearDown()
         {
             RedisProccess?.Close();
+            RedisProccess?.Dispose();
         }
 
         [SetUp]
