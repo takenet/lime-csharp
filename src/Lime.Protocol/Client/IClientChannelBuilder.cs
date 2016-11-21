@@ -29,7 +29,7 @@ namespace Lime.Protocol.Client
         /// <summary>
         /// Gets the buffers limit.
         /// </summary>        
-        int BuffersLimit { get; }
+        int EnvelopeBufferSize { get; }
 
         /// <summary>
         /// Builds a <see cref="ClientChannel"/> instance connecting the transport.

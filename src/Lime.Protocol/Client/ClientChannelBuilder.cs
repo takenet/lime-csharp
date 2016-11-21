@@ -36,7 +36,7 @@ namespace Lime.Protocol.Client
             _commandChannelModules = new List<Func<IClientChannel, IChannelModule<Command>>>();
             _builtHandlers = new List<Func<IClientChannel, CancellationToken, Task>>();
             SendTimeout = TimeSpan.FromSeconds(60);
-            BuffersLimit = 5;
+            EnvelopeBufferSize = 1;
         }
 
         /// <summary>
@@ -60,9 +60,9 @@ namespace Lime.Protocol.Client
         public TimeSpan? CloseTimeout { get; private set; }
 
         /// <summary>
-        /// Gets the buffers limit.
+        /// Gets the channel envelope buffer size.
         /// </summary>        
-        public int BuffersLimit { get; private set; }
+        public int EnvelopeBufferSize { get; private set; }
 
         /// <summary>
         /// Creates an instance of <see cref="ClientChannelBuilder"/> using the specified transport type.
@@ -143,7 +143,7 @@ namespace Lime.Protocol.Client
         public ClientChannelBuilder WithBuffersLimit(int buffersLimit)
         {
             if (buffersLimit <= 0) throw new ArgumentOutOfRangeException(nameof(buffersLimit));
-            BuffersLimit = buffersLimit;
+            EnvelopeBufferSize = buffersLimit;
             return this;
         }
 
@@ -244,7 +244,7 @@ namespace Lime.Protocol.Client
             var clientChannel = new ClientChannel(
                 transport,
                 SendTimeout,
-                BuffersLimit,
+                EnvelopeBufferSize,
                 autoReplyPings: false,
                 consumeTimeout: ConsumeTimeout,
                 closeTimeout: CloseTimeout);
