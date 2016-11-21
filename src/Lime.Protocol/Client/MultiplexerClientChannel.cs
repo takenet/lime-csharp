@@ -234,6 +234,7 @@ namespace Lime.Protocol.Client
 
         private async Task SendToBufferAsync(Envelope envelope, CancellationToken cancellationToken)
         {
+            if (envelope == null) throw new ArgumentNullException(nameof(envelope));
             if (!await _outputBufferBlock.SendAsync(envelope, cancellationToken).ConfigureAwait(false))
             {
                 throw new InvalidOperationException("The channel pipeline is complete");
