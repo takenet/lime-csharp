@@ -140,10 +140,22 @@ namespace Lime.Protocol.Client
         /// <param name="buffersLimit">The buffers limit.</param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentOutOfRangeException"></exception>
+        [Obsolete("Use the WithEnvelopeBufferSize method")]
         public ClientChannelBuilder WithBuffersLimit(int buffersLimit)
+        {        
+            return WithEnvelopeBufferSize(buffersLimit);
+        }
+
+        /// <summary>
+        /// Sets the envelope buffer size.
+        /// </summary>
+        /// <param name="envelopeBufferSize">The buffers limit.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentOutOfRangeException"></exception>
+        public ClientChannelBuilder WithEnvelopeBufferSize(int envelopeBufferSize)
         {
-            if (buffersLimit <= 0) throw new ArgumentOutOfRangeException(nameof(buffersLimit));
-            EnvelopeBufferSize = buffersLimit;
+            if (envelopeBufferSize <= 0) throw new ArgumentOutOfRangeException(nameof(envelopeBufferSize));
+            EnvelopeBufferSize = envelopeBufferSize;
             return this;
         }
 
