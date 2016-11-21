@@ -33,15 +33,15 @@ namespace Lime.Protocol.Client
         /// </summary>
         /// <param name="builder">The channel builder.</param>
         /// <param name="count">The number of channels to create.</param>
-        /// <param name="inputBoundedCapacity">The input buffer bounded capacity.</param>
-        /// <param name="outputBoundedCapacity">The output buffer bounded capacity.</param>
+        /// <param name="inputBufferSize">The input buffer bounded capacity.</param>
+        /// <param name="outputBufferSize">The output buffer bounded capacity.</param>
         /// <exception cref="System.ArgumentNullException"></exception>
         /// <exception cref="System.ArgumentOutOfRangeException"></exception>
         public MultiplexerClientChannel(
             EstablishedClientChannelBuilder builder, 
             int count = 5,
-            int inputBoundedCapacity = 1,
-            int outputBoundedCapacity = 1)
+            int inputBufferSize = 1,
+            int outputBufferSize = 1)
         {
             if (builder == null) throw new ArgumentNullException(nameof(builder));
             if (count <= 0) throw new ArgumentOutOfRangeException(nameof(count));
@@ -58,7 +58,7 @@ namespace Lime.Protocol.Client
 
             var inputOptions = new DataflowBlockOptions()
             {
-                BoundedCapacity = inputBoundedCapacity
+                BoundedCapacity = inputBufferSize
             };
 
             // Global input buffers
@@ -69,7 +69,7 @@ namespace Lime.Protocol.Client
             // The global output buffer
             _outputBufferBlock = new BufferBlock<Envelope>(new DataflowBlockOptions()
             {
-                BoundedCapacity = outputBoundedCapacity
+                BoundedCapacity = outputBufferSize
             });
             // An output action block per channel
             _outputActionBlocks = new ActionBlock<Envelope>[count];
