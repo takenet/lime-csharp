@@ -109,7 +109,7 @@ namespace Lime.Protocol.Network
             _notificationConsumerBlock.LinkTo(_drainEnvelopeBlock, e => e == null);
             _sessionConsumerBlock.LinkTo(_sessionBuffer, PropagateCompletionLinkOptions, e => e != null);
             _sessionConsumerBlock.LinkTo(_drainEnvelopeBlock, e => e == null);
-            _channelCommandProcessor = channelCommandProcessor ?? new ChannelCommandProcessor(this);
+            _channelCommandProcessor = channelCommandProcessor ?? new ChannelCommandProcessor();
             MessageModules = new List<IChannelModule<Message>>();
             NotificationModules = new List<IChannelModule<Notification>>();
             CommandModules = new List<IChannelModule<Command>>();
@@ -234,7 +234,7 @@ namespace Lime.Protocol.Network
         /// <exception cref="System.NotImplementedException"></exception>
         public virtual Task<Command> ProcessCommandAsync(Command requestCommand, CancellationToken cancellationToken)
         {
-            return _channelCommandProcessor.ProcessCommandAsync(requestCommand, cancellationToken);
+            return _channelCommandProcessor.ProcessCommandAsync(this, requestCommand, cancellationToken);
         }
 
         /// <summary>

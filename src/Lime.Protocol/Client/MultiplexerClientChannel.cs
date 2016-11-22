@@ -65,7 +65,7 @@ namespace Lime.Protocol.Client
             };
             _inputMessageBufferBlock = new BufferBlock<Message>(inputOptions);
             _inputNotificationBufferBlock = new BufferBlock<Notification>(inputOptions);
-            _channelCommandProcessor = new ChannelCommandProcessor(this);
+            _channelCommandProcessor = new ChannelCommandProcessor();
             // Uses the same channel command processor for all instances
             // to avoid problems with commands responses being received on different channels.
             builder.ChannelBuilder.WithChannelCommandProcessor(_channelCommandProcessor);
@@ -149,7 +149,7 @@ namespace Lime.Protocol.Client
         }
 
         public Task<Command> ProcessCommandAsync(Command requestCommand, CancellationToken cancellationToken) 
-            => _channelCommandProcessor.ProcessCommandAsync(requestCommand, cancellationToken);
+            => _channelCommandProcessor.ProcessCommandAsync(this, requestCommand, cancellationToken);
 
         public bool IsEstablished => _channels.Any(c => c.IsEstablished);
 
