@@ -379,7 +379,7 @@ namespace Lime.Protocol.Network
             try
             {
                 if (command != null &&
-                    !_channelCommandProcessor.SubmitCommandResult(command))
+                    !_channelCommandProcessor.TrySubmitCommandResult(command))
                 {
                     return command;
                 }

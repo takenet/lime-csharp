@@ -26,7 +26,9 @@ namespace Lime.Protocol.Client
         private readonly ActionBlock<Envelope>[] _outputActionBlocks;
         private readonly BufferBlock<Message> _inputMessageBufferBlock;
         private readonly BufferBlock<Notification> _inputNotificationBufferBlock;
+        private readonly TransformBlock<Command, Command> _processCommandTransformBlock;
         private readonly BufferBlock<Command> _inputCommandBufferBlock;
+        private readonly ChannelCommandProcessor _channelCommandProcessor;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MultiplexerClientChannel"/> class.
@@ -56,24 +58,32 @@ namespace Lime.Protocol.Client
             ChannelCreationFailedHandlers = channelCreationFailedHandlers;
             ChannelOperationFailedHandlers = channelOperationFailedHandlers;
 
-            var inputOptions = new DataflowBlockOptions()
-            {
-                BoundedCapacity = inputBufferSize
-            };
-
             // Global input buffers
+            var inputOptions = new ExecutionDataflowBlockOptions()
+            {
+                BoundedCapacity = inputBufferSize,
+                MaxDegreeOfParallelism = DataflowBlockOptions.Unbounded
+            };
             _inputMessageBufferBlock = new BufferBlock<Message>(inputOptions);
-            _inputNotificationBufferBlock = new BufferBlock<Notification>(inputOptions);
+            _inputNotificationBufferBlock = new BufferBlock<Notification>(inputOptions);            
+            _processCommandTransformBlock = new TransformBlock<Command, Command>(c =>
+            {
+                if (_channelCommandProcessor.TrySubmitCommandResult(c)) return null;
+                return c;
+            },
+            inputOptions);
             _inputCommandBufferBlock = new BufferBlock<Command>(inputOptions);
-
+            _processCommandTransformBlock.LinkTo(_inputCommandBufferBlock, c => c != null);
+            _processCommandTransformBlock.LinkTo(DataflowBlock.NullTarget<Command>(), c => c == null);
+            
             // The global output buffer
             _outputBufferBlock = new BufferBlock<Envelope>(new DataflowBlockOptions()
             {
                 BoundedCapacity = outputBufferSize
             });
+
             // An output action block per channel
             _outputActionBlocks = new ActionBlock<Envelope>[count];
-
             _channels = new IOnDemandClientChannel[count];
             _listeners = new IChannelListener[count];
 
@@ -82,7 +92,7 @@ namespace Lime.Protocol.Client
                 // Add an instance suffix to the builder
                 var currentBuilder = builder
                     .ShallowCopy()
-                    .WithInstance($"{builder.Instance}-{i}");
+                    .WithInstance($"{builder.Instance}-{i+1}");
                 var channel = new OnDemandClientChannel(currentBuilder);
                 
                 // Synchronize the handlers
@@ -95,7 +105,7 @@ namespace Lime.Protocol.Client
                 _listeners[i] = new DataflowChannelListener(
                     _inputMessageBufferBlock,
                     _inputNotificationBufferBlock,
-                    _inputCommandBufferBlock);
+                    _processCommandTransformBlock);
 
                 // Create a single bounded action block for each channel
                 _outputActionBlocks[i] = new ActionBlock<Envelope>(async e => await SendToChannelAsync(channel, e).ConfigureAwait(false),
@@ -106,6 +116,7 @@ namespace Lime.Protocol.Client
             }
 
             _semaphore = new SemaphoreSlim(1, 1);
+            _channelCommandProcessor = new ChannelCommandProcessor(this);
         }
 
         public Task SendMessageAsync(Message message, CancellationToken cancellationToken)
@@ -138,12 +149,7 @@ namespace Lime.Protocol.Client
         public async Task<Command> ProcessCommandAsync(Command requestCommand, CancellationToken cancellationToken)
         {
             await EstablishIfRequiredAsync(cancellationToken).ConfigureAwait(false);
-            var requestResponseCommand = new RequestResponseCommand(requestCommand, cancellationToken);
-            await SendToBufferAsync(requestResponseCommand, cancellationToken).ConfigureAwait(false);
-            using (cancellationToken.Register(() => requestResponseCommand.ResponseTcs.TrySetCanceled(cancellationToken)))
-            {
-                return await requestResponseCommand.ResponseTcs.Task.ConfigureAwait(false);
-            }
+            return await _channelCommandProcessor.ProcessCommandAsync(requestCommand, cancellationToken).ConfigureAwait(false);
         }
 
         public bool IsEstablished => _channels.Any(c => c.IsEstablished);
@@ -187,6 +193,8 @@ namespace Lime.Protocol.Client
                 {
                     _listeners[i].Stop();
                 }
+
+                _channelCommandProcessor.CancelAll();
 
                 await Task.WhenAll(
                     _listeners.Select(
@@ -248,26 +256,6 @@ namespace Lime.Protocol.Client
                 if (e is Message) await channel.SendMessageAsync((Message) e);
                 else if (e is Notification) await channel.SendNotificationAsync((Notification) e);
                 else if (e is Command) await channel.SendCommandAsync((Command) e);
-                else if (e is RequestResponseCommand)
-                {
-                    var requestResponseCommand = (RequestResponseCommand) e;
-                    try
-                    {
-                        var response =
-                            await
-                                channel.ProcessCommandAsync(requestResponseCommand.Request,
-                                    requestResponseCommand.CancellationToken);
-                        requestResponseCommand.ResponseTcs.TrySetResult(response);
-                    }
-                    catch (OperationCanceledException)
-                        when (requestResponseCommand.CancellationToken.IsCancellationRequested)
-                    {
-                    }
-                    catch (Exception ex)
-                    {
-                        requestResponseCommand.ResponseTcs.TrySetException(ex);
-                    }
-                }
             }
             catch (Exception ex)
             {
@@ -294,22 +282,6 @@ namespace Lime.Protocol.Client
             {
                 channel.DisposeIfDisposable();
             }
-        }
-
-        private class RequestResponseCommand : Envelope
-        {
-            public RequestResponseCommand(Command request, CancellationToken cancellationToken)
-            {
-                Request = request;
-                CancellationToken = cancellationToken;
-                ResponseTcs = new TaskCompletionSource<Command>(TaskCreationOptions.RunContinuationsAsynchronously);
-            }
-
-            public Command Request { get; }
-
-            public CancellationToken CancellationToken { get; }
-
-            public TaskCompletionSource<Command> ResponseTcs { get;  }
         }
         
     }

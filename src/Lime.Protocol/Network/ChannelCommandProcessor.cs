@@ -61,7 +61,7 @@ namespace Lime.Protocol.Network
         }
 
 
-        public bool SubmitCommandResult(Command responseCommand)
+        public bool TrySubmitCommandResult(Command responseCommand)
         {
             TaskCompletionSource<Command> pendingRequestCommand;
             if (responseCommand.Id.IsNullOrEmpty() ||
