@@ -146,11 +146,8 @@ namespace Lime.Protocol.Client
             return await _inputCommandBufferBlock.ReceiveAsync(cancellationToken).ConfigureAwait(false);
         }
 
-        public async Task<Command> ProcessCommandAsync(Command requestCommand, CancellationToken cancellationToken)
-        {
-            await EstablishIfRequiredAsync(cancellationToken).ConfigureAwait(false);
-            return await _channelCommandProcessor.ProcessCommandAsync(requestCommand, cancellationToken).ConfigureAwait(false);
-        }
+        public Task<Command> ProcessCommandAsync(Command requestCommand, CancellationToken cancellationToken) 
+            => _channelCommandProcessor.ProcessCommandAsync(requestCommand, cancellationToken);
 
         public bool IsEstablished => _channels.Any(c => c.IsEstablished);
 
