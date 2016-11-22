@@ -3,7 +3,6 @@ using System.CodeDom;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks.Dataflow;
@@ -32,7 +31,7 @@ namespace Lime.Protocol.Network
         private readonly BufferBlock<Notification> _notificationBuffer;
         private readonly BufferBlock<Session> _sessionBuffer;
         private readonly ITargetBlock<Envelope> _drainEnvelopeBlock;
-        private readonly ConcurrentDictionary<string, TaskCompletionSource<Command>> _pendingCommandsDictionary;        
+        private readonly ChannelCommandProcessor _channelCommandProcessor;        
         private readonly CancellationTokenSource _consumerCts;
         private readonly object _syncRoot;
         private SessionState _state;
@@ -100,7 +99,7 @@ namespace Lime.Protocol.Network
             _notificationConsumerBlock.LinkTo(_drainEnvelopeBlock, e => e == null);
             _sessionConsumerBlock.LinkTo(_sessionBuffer, PropagateCompletionLinkOptions, e => e != null);
             _sessionConsumerBlock.LinkTo(_drainEnvelopeBlock, e => e == null);
-            _pendingCommandsDictionary = new ConcurrentDictionary<string, TaskCompletionSource<Command>>();
+            _channelCommandProcessor = new ChannelCommandProcessor(this);
             MessageModules = new List<IChannelModule<Message>>();
             NotificationModules = new List<IChannelModule<Notification>>();
             CommandModules = new List<IChannelModule<Command>>();
@@ -223,43 +222,9 @@ namespace Lime.Protocol.Network
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns></returns>
         /// <exception cref="System.NotImplementedException"></exception>
-        public virtual async Task<Command> ProcessCommandAsync(Command requestCommand, CancellationToken cancellationToken)
+        public virtual Task<Command> ProcessCommandAsync(Command requestCommand, CancellationToken cancellationToken)
         {
-            if (requestCommand == null) throw new ArgumentNullException(nameof(requestCommand));
-            if (requestCommand.Status != CommandStatus.Pending)
-            {
-                throw new ArgumentException("Invalid command status", nameof(requestCommand));
-            }
-
-            if (requestCommand.Method == CommandMethod.Observe)
-            {
-                throw new ArgumentException("Invalid command method", nameof(requestCommand));
-            }
-
-            if (requestCommand.Id.IsNullOrEmpty())
-            {
-                throw new ArgumentException("Invalid command id", nameof(requestCommand));
-            }
-
-            var tcs = new TaskCompletionSource<Command>(TaskCreationOptions.RunContinuationsAsynchronously);
-            if (!_pendingCommandsDictionary.TryAdd(requestCommand.Id, tcs))
-            {
-                throw new InvalidOperationException("Could not register the pending command request. The command id is already in use.");
-            }
-            try
-            {
-                using (cancellationToken.Register(() => tcs.TrySetCanceled(cancellationToken)))
-                {
-                    await SendCommandAsync(requestCommand, cancellationToken).ConfigureAwait(false);
-                    var result = await tcs.Task.ConfigureAwait(false);
-                    return result;
-                }
-            }
-            finally
-            {
-                TaskCompletionSource<Command> removedTcs;
-                _pendingCommandsDictionary.TryRemove(requestCommand.Id, out removedTcs);
-            }                        
+            return _channelCommandProcessor.ProcessCommandAsync(requestCommand, cancellationToken);
         }
 
         /// <summary>
@@ -398,8 +363,7 @@ namespace Lime.Protocol.Network
             finally
             {
                 _transportBuffer.Complete();
-                _pendingCommandsDictionary.Values.ToList().ForEach(tcs => tcs.TrySetCanceled());
-                _pendingCommandsDictionary.Clear();
+                _channelCommandProcessor.CancelAll();
                 if (!_consumerCts.IsCancellationRequested) _consumerCts.Cancel();
             }
 
@@ -414,17 +378,10 @@ namespace Lime.Protocol.Network
 
             try
             {
-                if (command != null)
+                if (command != null &&
+                    !_channelCommandProcessor.SubmitCommandResult(command))
                 {
-                    TaskCompletionSource<Command> pendingCommand;
-                    if (command.Id.IsNullOrEmpty() ||
-                        command.Status == CommandStatus.Pending ||
-                        command.Method == CommandMethod.Observe ||
-                        !_pendingCommandsDictionary.TryRemove(command.Id, out pendingCommand) ||
-                        !pendingCommand.TrySetResult(command))
-                    {
-                        return command;
-                    }
+                    return command;
                 }
             }
             catch (OperationCanceledException) when (_consumerCts.IsCancellationRequested) { }
