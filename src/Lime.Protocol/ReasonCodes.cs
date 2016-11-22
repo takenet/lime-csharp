@@ -178,6 +178,11 @@ namespace Lime.Protocol
         /// </summary>
         public const int GATEWAY_NOT_SUPPORTED = 84;
         /// <summary>
+        /// The request limit has been reached
+        /// by the gateway
+        /// </summary>
+        public const int GATEWAY_REQUEST_LIMIT_REACHED = 85;
+        /// <summary>
         /// General application processing error
         /// </summary>
         public const int APPLICATION_ERROR = 101;        
