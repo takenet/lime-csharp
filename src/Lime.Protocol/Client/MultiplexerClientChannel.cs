@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -65,7 +64,11 @@ namespace Lime.Protocol.Client
                 MaxDegreeOfParallelism = DataflowBlockOptions.Unbounded
             };
             _inputMessageBufferBlock = new BufferBlock<Message>(inputOptions);
-            _inputNotificationBufferBlock = new BufferBlock<Notification>(inputOptions);            
+            _inputNotificationBufferBlock = new BufferBlock<Notification>(inputOptions);
+            _channelCommandProcessor = new ChannelCommandProcessor(this);
+            // Uses the same channel command processor for all instances
+            // to avoid problems with commands responses being received on different channels.
+            builder.ChannelBuilder.WithChannelCommandProcessor(_channelCommandProcessor);
             _processCommandTransformBlock = new TransformBlock<Command, Command>(c =>
             {
                 if (_channelCommandProcessor.TrySubmitCommandResult(c)) return null;
@@ -116,7 +119,6 @@ namespace Lime.Protocol.Client
             }
 
             _semaphore = new SemaphoreSlim(1, 1);
-            _channelCommandProcessor = new ChannelCommandProcessor(this);
         }
 
         public Task SendMessageAsync(Message message, CancellationToken cancellationToken)

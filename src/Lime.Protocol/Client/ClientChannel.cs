@@ -25,6 +25,7 @@ namespace Lime.Protocol.Client
         /// <param name="remoteIdleTimeout">The timeout to close the channel due to inactivity.</param>
         /// <param name="consumeTimeout">The channel consume timeout. Each envelope received from the transport must be consumed in the specified interval or it will cause the channel to be closed.</param>
         /// <param name="closeTimeout">The channel close timeout.</param>
+        /// <param name="channelCommandProcessor">The channel command processor.</param>
         public ClientChannel(
             ITransport transport,
             TimeSpan sendTimeout,
@@ -35,8 +36,9 @@ namespace Lime.Protocol.Client
             TimeSpan? remotePingInterval = null,
             TimeSpan? remoteIdleTimeout = null,
             TimeSpan? consumeTimeout = null,
-            TimeSpan? closeTimeout = null)
-            : base(transport, sendTimeout, consumeTimeout, closeTimeout ?? sendTimeout, envelopeBufferSize, fillEnvelopeRecipients, autoReplyPings, remotePingInterval, remoteIdleTimeout)
+            TimeSpan? closeTimeout = null,
+            IChannelCommandProcessor channelCommandProcessor = null)
+            : base(transport, sendTimeout, consumeTimeout, closeTimeout ?? sendTimeout, envelopeBufferSize, fillEnvelopeRecipients, autoReplyPings, remotePingInterval, remoteIdleTimeout, channelCommandProcessor)
         {
             if (autoNotifyReceipt)
             {

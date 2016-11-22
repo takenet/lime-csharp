@@ -10,13 +10,14 @@ namespace Lime.Protocol.Network
     /// Utility class for handling the command processing workflow for channels.
     /// </summary>
     /// <seealso cref="Lime.Protocol.Network.ICommandProcessor" />
-    internal class ChannelCommandProcessor : ICommandProcessor
+    public sealed class ChannelCommandProcessor : IChannelCommandProcessor
     {
         private readonly ICommandSenderChannel _commandSenderChannel;
         private readonly ConcurrentDictionary<string, TaskCompletionSource<Command>> _pendingCommandsDictionary;
 
         public ChannelCommandProcessor(ICommandSenderChannel commandSenderChannel)
         {
+            if (commandSenderChannel == null) throw new ArgumentNullException(nameof(commandSenderChannel));
             _commandSenderChannel = commandSenderChannel;
             _pendingCommandsDictionary = new ConcurrentDictionary<string, TaskCompletionSource<Command>>();
         }
@@ -60,9 +61,9 @@ namespace Lime.Protocol.Network
             }
         }
 
-
         public bool TrySubmitCommandResult(Command responseCommand)
         {
+            if (responseCommand == null) throw new ArgumentNullException(nameof(responseCommand));
             TaskCompletionSource<Command> pendingRequestCommand;
             if (responseCommand.Id.IsNullOrEmpty() ||
                 responseCommand.Status == CommandStatus.Pending ||

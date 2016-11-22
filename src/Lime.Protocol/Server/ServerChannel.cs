@@ -12,19 +12,20 @@ namespace Lime.Protocol.Server
     public class ServerChannel : ChannelBase, IServerChannel
     {
         /// <summary>
-        /// Initializes a new instance of the <a href="ServerChannel"/> class.
+        /// Initializes a new instance of the <a href="ServerChannel" /> class.
         /// </summary>
-        /// <param name="sessionId"></param>
-        /// <param name="serverNode"></param>
+        /// <param name="sessionId">The session identifier.</param>
+        /// <param name="serverNode">The server node.</param>
         /// <param name="transport">The transport to be used by the channel.</param>
         /// <param name="sendTimeout">The channel send timeout. Each send operation must be completed in the specified timeout or it will be canceled.</param>
         /// <param name="envelopeBufferSize">The number of envelopes to be buffered internally by the channel in the receive operations. If this limit is reached, the channel will not consume the transport until the buffer is consumed by the receive operations.</param>
-        /// <param name="fillEnvelopeRecipients"></param>
+        /// <param name="fillEnvelopeRecipients">if set to <c>true</c> [fill envelope recipients].</param>
         /// <param name="autoReplyPings">Indicates if the channel should reply automatically to ping request commands. In this case, the ping command are not returned by the ReceiveCommandAsync method.</param>
         /// <param name="remotePingInterval">The interval to ping the remote party.</param>
         /// <param name="remoteIdleTimeout">The timeout to close the channel due to inactivity.</param>
         /// <param name="consumeTimeout">The channel consume timeout. Each envelope received from the transport must be consumed in the specified interval or it will cause the channel to be closed.</param>
         /// <param name="closeTimeout">The channel close timeout.</param>
+        /// <param name="channelCommandProcessor">The channel command processor.</param>
         public ServerChannel(
             string sessionId, 
             Node serverNode, 
@@ -36,8 +37,9 @@ namespace Lime.Protocol.Server
             TimeSpan? remotePingInterval = null, 
             TimeSpan? remoteIdleTimeout = null,
             TimeSpan? consumeTimeout = null,
-            TimeSpan? closeTimeout = null)
-            : base(transport, sendTimeout, consumeTimeout, closeTimeout ?? sendTimeout, envelopeBufferSize, fillEnvelopeRecipients, autoReplyPings, remotePingInterval, remoteIdleTimeout)
+            TimeSpan? closeTimeout = null,
+            IChannelCommandProcessor channelCommandProcessor = null)
+            : base(transport, sendTimeout, consumeTimeout, closeTimeout ?? sendTimeout, envelopeBufferSize, fillEnvelopeRecipients, autoReplyPings, remotePingInterval, remoteIdleTimeout, channelCommandProcessor)
         {
             LocalNode = serverNode;
             SessionId = sessionId;

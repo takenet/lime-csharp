@@ -65,6 +65,11 @@ namespace Lime.Protocol.Client
         public int EnvelopeBufferSize { get; private set; }
 
         /// <summary>
+        /// Gets the channel command processor.
+        /// </summary>
+        public IChannelCommandProcessor ChannelCommandProcessor { get; private set; }
+
+        /// <summary>
         /// Creates an instance of <see cref="ClientChannelBuilder"/> using the specified transport type.
         /// </summary>
         /// <typeparam name="TTransport">The type of the transport.</typeparam>
@@ -106,7 +111,7 @@ namespace Lime.Protocol.Client
         /// </summary>
         /// <param name="sendTimeout">The send timeout.</param>
         /// <returns></returns>
-        public ClientChannelBuilder WithSendTimeout(TimeSpan sendTimeout)
+        public IClientChannelBuilder WithSendTimeout(TimeSpan sendTimeout)
         {
             SendTimeout = sendTimeout;
             return this;
@@ -117,7 +122,7 @@ namespace Lime.Protocol.Client
         /// </summary>
         /// <param name="consumeTimeout">The consume timeout.</param>
         /// <returns></returns>
-        public ClientChannelBuilder WithConsumeTimeout(TimeSpan? consumeTimeout)
+        public IClientChannelBuilder WithConsumeTimeout(TimeSpan? consumeTimeout)
         {
             ConsumeTimeout = consumeTimeout;
             return this;
@@ -128,7 +133,7 @@ namespace Lime.Protocol.Client
         /// </summary>
         /// <param name="closeTimeout">The close timeout.</param>
         /// <returns></returns>
-        public ClientChannelBuilder WithCloseTimeout(TimeSpan? closeTimeout)
+        public IClientChannelBuilder WithCloseTimeout(TimeSpan? closeTimeout)
         {
             CloseTimeout = closeTimeout;
             return this;
@@ -141,7 +146,7 @@ namespace Lime.Protocol.Client
         /// <returns></returns>
         /// <exception cref="System.ArgumentOutOfRangeException"></exception>
         [Obsolete("Use the WithEnvelopeBufferSize method")]
-        public ClientChannelBuilder WithBuffersLimit(int buffersLimit)
+        public IClientChannelBuilder WithBuffersLimit(int buffersLimit)
         {        
             return WithEnvelopeBufferSize(buffersLimit);
         }
@@ -152,10 +157,21 @@ namespace Lime.Protocol.Client
         /// <param name="envelopeBufferSize">The buffers limit.</param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentOutOfRangeException"></exception>
-        public ClientChannelBuilder WithEnvelopeBufferSize(int envelopeBufferSize)
+        public IClientChannelBuilder WithEnvelopeBufferSize(int envelopeBufferSize)
         {
             if (envelopeBufferSize <= 0) throw new ArgumentOutOfRangeException(nameof(envelopeBufferSize));
             EnvelopeBufferSize = envelopeBufferSize;
+            return this;
+        }
+
+        /// <summary>
+        /// Sets the channel command processor to be used.
+        /// </summary>
+        /// <param name="channelCommandProcessor">The channel command processor.</param>
+        /// <returns></returns>
+        public IClientChannelBuilder WithChannelCommandProcessor(IChannelCommandProcessor channelCommandProcessor)
+        {
+            ChannelCommandProcessor = channelCommandProcessor;
             return this;
         }
 
@@ -164,7 +180,7 @@ namespace Lime.Protocol.Client
         /// </summary>
         /// <param name="module">The module.</param>
         /// <returns></returns>
-        public ClientChannelBuilder AddMessageModule(IChannelModule<Message> module)
+        public IClientChannelBuilder AddMessageModule(IChannelModule<Message> module)
         {
             if (module == null) throw new ArgumentNullException(nameof(module));
             return AddMessageModule(c => module);
@@ -175,7 +191,7 @@ namespace Lime.Protocol.Client
         /// </summary>
         /// <param name="moduleFactory">The module factory.</param>
         /// <returns></returns>
-        public ClientChannelBuilder AddMessageModule(Func<IClientChannel, IChannelModule<Message>> moduleFactory)
+        public IClientChannelBuilder AddMessageModule(Func<IClientChannel, IChannelModule<Message>> moduleFactory)
         {            
             _messageChannelModules.Add(moduleFactory);
             return this;
@@ -186,7 +202,7 @@ namespace Lime.Protocol.Client
         /// </summary>
         /// <param name="module">The module.</param>
         /// <returns></returns>
-        public ClientChannelBuilder AddNotificationModule(IChannelModule<Notification> module)
+        public IClientChannelBuilder AddNotificationModule(IChannelModule<Notification> module)
         {
             if (module == null) throw new ArgumentNullException(nameof(module));
             return AddNotificationModule(c => module);
@@ -197,7 +213,7 @@ namespace Lime.Protocol.Client
         /// </summary>
         /// <param name="moduleFactory">The module factory.</param>
         /// <returns></returns>
-        public ClientChannelBuilder AddNotificationModule(Func<IClientChannel, IChannelModule<Notification>> moduleFactory)
+        public IClientChannelBuilder AddNotificationModule(Func<IClientChannel, IChannelModule<Notification>> moduleFactory)
         {
             if (moduleFactory == null) throw new ArgumentNullException(nameof(moduleFactory));
             _notificationChannelModules.Add(moduleFactory);
@@ -209,7 +225,7 @@ namespace Lime.Protocol.Client
         /// </summary>
         /// <param name="module">The module.</param>
         /// <returns></returns>
-        public ClientChannelBuilder AddCommandModule(IChannelModule<Command> module)
+        public IClientChannelBuilder AddCommandModule(IChannelModule<Command> module)
         {
             if (module == null) throw new ArgumentNullException(nameof(module));            
             return AddCommandModule(c => module);
@@ -220,7 +236,7 @@ namespace Lime.Protocol.Client
         /// </summary>
         /// <param name="moduleFactory">The module factory.</param>
         /// <returns></returns>
-        public ClientChannelBuilder AddCommandModule(Func<IClientChannel, IChannelModule<Command>> moduleFactory)
+        public IClientChannelBuilder AddCommandModule(Func<IClientChannel, IChannelModule<Command>> moduleFactory)
         {
             if (moduleFactory == null) throw new ArgumentNullException(nameof(moduleFactory));
             _commandChannelModules.Add(moduleFactory);
@@ -233,7 +249,7 @@ namespace Lime.Protocol.Client
         /// <param name="builtHandler">The handler to be executed.</param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException"></exception>
-        public ClientChannelBuilder AddBuiltHandler(Func<IClientChannel, CancellationToken, Task> builtHandler)
+        public IClientChannelBuilder AddBuiltHandler(Func<IClientChannel, CancellationToken, Task> builtHandler)
         {
             if (builtHandler == null) throw new ArgumentNullException(nameof(builtHandler));
             _builtHandlers.Add(builtHandler);
@@ -259,7 +275,8 @@ namespace Lime.Protocol.Client
                 EnvelopeBufferSize,
                 autoReplyPings: false,
                 consumeTimeout: ConsumeTimeout,
-                closeTimeout: CloseTimeout);
+                closeTimeout: CloseTimeout,
+                channelCommandProcessor: ChannelCommandProcessor);
 
             try
             {

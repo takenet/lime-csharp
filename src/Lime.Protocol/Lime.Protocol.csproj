@@ -54,6 +54,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Client\IClientChannelBuilder.cs" />
     <Compile Include="Client\IEstablishedClientChannelBuilder.cs" />
     <Compile Include="Client\MultiplexerClientChannel.cs" />
     <Compile Include="DocumentContainer.cs" />
@@ -66,6 +67,7 @@
     <Compile Include="Listeners\EventChannelListener.cs" />
     <Compile Include="Listeners\IChannelListener.cs" />
     <Compile Include="IdentityDocument.cs" />
+    <Compile Include="Network\IChannelCommandProcessor.cs" />
     <Compile Include="Network\ITransportInformation.cs" />
     <Compile Include="Network\TransportInformation.cs" />
     <Compile Include="Serialization\DictionaryExtensions.cs" />
@@ -87,7 +89,6 @@
     <Compile Include="Client\ClientChannel.cs" />
     <Compile Include="Client\ClientChannelBuilder.cs" />
     <Compile Include="Client\ClientChannelExtensions.cs" />
-    <Compile Include="Client\IClientChannelBuilder.cs" />
     <Compile Include="Client\IOnDemandClientChannel.cs" />
     <Compile Include="Client\OnDemandClientChannel.cs" />
     <Compile Include="Client\EstablishedClientChannelBuilder.cs" />

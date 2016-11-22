@@ -31,7 +31,7 @@ namespace Lime.Protocol.Network
         private readonly BufferBlock<Notification> _notificationBuffer;
         private readonly BufferBlock<Session> _sessionBuffer;
         private readonly ITargetBlock<Envelope> _drainEnvelopeBlock;
-        private readonly ChannelCommandProcessor _channelCommandProcessor;        
+        private readonly IChannelCommandProcessor _channelCommandProcessor;
         private readonly CancellationTokenSource _consumerCts;
         private readonly object _syncRoot;
         private SessionState _state;
@@ -51,7 +51,16 @@ namespace Lime.Protocol.Network
         /// <param name="autoReplyPings">Indicates if the channel should reply automatically to ping request commands. In this case, the ping command are not returned by the ReceiveCommandAsync method.</param>
         /// <param name="remotePingInterval">The interval to ping the remote party.</param>
         /// <param name="remoteIdleTimeout">The timeout to close the channel due to inactivity.</param>
+        /// <param name="channelCommandProcessor">The channel command processor.</param>
         /// <exception cref="System.ArgumentNullException"></exception>
+        /// <exception cref="System.ArgumentException">
+        /// Invalid send timeout
+        /// or
+        /// Invalid consume timeout
+        /// or
+        /// Invalid close timeout
+        /// </exception>
+        /// <exception cref="System.ArgumentOutOfRangeException"></exception>
         protected ChannelBase(
             ITransport transport, 
             TimeSpan sendTimeout,
@@ -61,7 +70,8 @@ namespace Lime.Protocol.Network
             bool fillEnvelopeRecipients, 
             bool autoReplyPings, 
             TimeSpan? remotePingInterval, 
-            TimeSpan? remoteIdleTimeout)
+            TimeSpan? remoteIdleTimeout,
+            IChannelCommandProcessor channelCommandProcessor)
         {
             if (transport == null) throw new ArgumentNullException(nameof(transport));
             if (sendTimeout == default(TimeSpan)) throw new ArgumentException("Invalid send timeout", nameof(sendTimeout));
@@ -99,7 +109,7 @@ namespace Lime.Protocol.Network
             _notificationConsumerBlock.LinkTo(_drainEnvelopeBlock, e => e == null);
             _sessionConsumerBlock.LinkTo(_sessionBuffer, PropagateCompletionLinkOptions, e => e != null);
             _sessionConsumerBlock.LinkTo(_drainEnvelopeBlock, e => e == null);
-            _channelCommandProcessor = new ChannelCommandProcessor(this);
+            _channelCommandProcessor = channelCommandProcessor ?? new ChannelCommandProcessor(this);
             MessageModules = new List<IChannelModule<Message>>();
             NotificationModules = new List<IChannelModule<Notification>>();
             CommandModules = new List<IChannelModule<Command>>();
