@@ -73,9 +73,9 @@ namespace Lime.Protocol.UnitTests.Client
             _clientChannelBuilder = null;
         }
 
-        private OnDemandClientChannel GetTarget()
+        private IOnDemandClientChannel GetTarget()
         {
-            return new OnDemandClientChannel(_establishedClientChannelBuilder.Object);
+            return new OnDemandClientChannel(_establishedClientChannelBuilder.Object);            
         }
 
         [Test]
@@ -279,7 +279,7 @@ namespace Lime.Protocol.UnitTests.Client
             // Arrange
             var message = Dummy.CreateMessage(Dummy.CreatePlainDocument());
             var target = GetTarget();
-            target.Dispose();
+            ((IDisposable)target).Dispose();
 
             // Act
             await target.SendMessageAsync(message, CancellationToken.None).ShouldThrowAsync<ObjectDisposedException>();
@@ -525,7 +525,7 @@ namespace Lime.Protocol.UnitTests.Client
         {
             // Arrange            
             var target = GetTarget();
-            target.Dispose();
+            ((IDisposable)target).Dispose();
 
             // Act
             var actual = await target.ReceiveMessageAsync(_cancellationToken).ShouldThrowAsync<ObjectDisposedException>();
@@ -808,7 +808,7 @@ namespace Lime.Protocol.UnitTests.Client
             // Arrange
             var notification = Dummy.CreateNotification(Event.Received);
             var target = GetTarget();
-            target.Dispose();
+            ((IDisposable)target).Dispose();
 
             // Act
             await target.SendNotificationAsync(notification, CancellationToken.None).ShouldThrowAsync<ObjectDisposedException>();
@@ -1054,7 +1054,7 @@ namespace Lime.Protocol.UnitTests.Client
         {
             // Arrange            
             var target = GetTarget();
-            target.Dispose();
+            ((IDisposable)target).Dispose();
 
             // Act
             var actual = await target.ReceiveNotificationAsync(_cancellationToken).ShouldThrowAsync<ObjectDisposedException>();
@@ -1337,7 +1337,7 @@ namespace Lime.Protocol.UnitTests.Client
             // Arrange
             var command = Dummy.CreateCommand(Dummy.CreatePlainDocument());
             var target = GetTarget();
-            target.Dispose();
+            ((IDisposable)target).Dispose();
 
             // Act
             await target.SendCommandAsync(command, CancellationToken.None).ShouldThrowAsync<ObjectDisposedException>();
@@ -1584,7 +1584,7 @@ namespace Lime.Protocol.UnitTests.Client
         {
             // Arrange            
             var target = GetTarget();
-            target.Dispose();
+            ((IDisposable)target).Dispose();
 
             // Act
             var actual = await target.ReceiveCommandAsync(_cancellationToken).ShouldThrowAsync<ObjectDisposedException>();
@@ -1801,7 +1801,7 @@ namespace Lime.Protocol.UnitTests.Client
             // Arrange            
             var requestCommand = Dummy.CreateCommand();
             var target = GetTarget();
-            target.Dispose();
+            ((IDisposable)target).Dispose();
 
             // Act
             var actual = await target.ProcessCommandAsync(requestCommand, _cancellationToken).ShouldThrowAsync<ObjectDisposedException>();

@@ -297,7 +297,7 @@ namespace Lime.Protocol.Client
         /// </summary>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException"></exception>
-        public EstablishedClientChannelBuilder CreateEstablishedClientChannelBuilder()
+        public IEstablishedClientChannelBuilder CreateEstablishedClientChannelBuilder()
         {
             return new EstablishedClientChannelBuilder(this);
         }

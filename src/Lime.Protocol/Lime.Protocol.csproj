@@ -54,6 +54,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Client\IEstablishedClientChannelBuilder.cs" />
     <Compile Include="Client\MultiplexerClientChannel.cs" />
     <Compile Include="DocumentContainer.cs" />
     <Compile Include="EnvelopeId.cs" />
@@ -87,7 +88,6 @@
     <Compile Include="Client\ClientChannelBuilder.cs" />
     <Compile Include="Client\ClientChannelExtensions.cs" />
     <Compile Include="Client\IClientChannelBuilder.cs" />
-    <Compile Include="Client\IEstablishedClientChannelBuilder.cs" />
     <Compile Include="Client\IOnDemandClientChannel.cs" />
     <Compile Include="Client\OnDemandClientChannel.cs" />
     <Compile Include="Client\EstablishedClientChannelBuilder.cs" />

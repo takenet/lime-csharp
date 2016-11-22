@@ -103,6 +103,7 @@
     <Otherwise />
   </Choose>
   <ItemGroup>
+    <Compile Include="Client\MultiplexerClientChannelTests.cs" />
     <Compile Include="Listeners\ChannelListenerTests.cs" />
     <Compile Include="Listeners\DataflowChannelListenerTests.cs" />
     <Compile Include="Client\ClientChannelBuilderTests.cs" />

@@ -40,7 +40,7 @@ namespace Lime.Protocol.Client
         /// <exception cref="System.ArgumentNullException"></exception>
         /// <exception cref="System.ArgumentOutOfRangeException"></exception>
         public MultiplexerClientChannel(
-            EstablishedClientChannelBuilder builder, 
+            IEstablishedClientChannelBuilder builder, 
             int count = 5,
             int inputBufferSize = 1,
             int outputBufferSize = 1)
@@ -91,7 +91,7 @@ namespace Lime.Protocol.Client
             {
                 // Add an instance suffix to the builder
                 var currentBuilder = builder
-                    .ShallowCopy()
+                    .Copy()
                     .WithInstance($"{builder.Instance}-{i+1}");
                 var channel = new OnDemandClientChannel(currentBuilder);
                 
