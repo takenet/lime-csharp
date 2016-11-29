@@ -1,6 +1,7 @@
 ﻿using Lime.Protocol.Security;
 using Newtonsoft.Json;
 using System;
+using System.Reflection;
 
 namespace Lime.Protocol.Serialization.Newtonsoft.Converters
 {

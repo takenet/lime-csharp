@@ -182,7 +182,6 @@ namespace Lime.Protocol.Network.Modules
         public void Dispose()
         {
             _cancellationTokenSource.Dispose();
-            _pingRemoteTask?.Dispose();
         }
     }
 }

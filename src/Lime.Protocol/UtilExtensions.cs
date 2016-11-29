@@ -156,48 +156,6 @@ namespace Lime.Protocol
         }
 
         /// <summary>
-        /// Converts a SecureString to a regular, unsecure string.        
-        /// </summary>
-        /// <a href="http://blogs.msdn.com/b/fpintos/archive/2009/06/12/how-to-properly-convert-securestring-to-string.aspx"/>
-        /// <param name="securePassword"></param>
-        /// <returns></returns>
-        public static string ToUnsecureString(this SecureString securePassword)
-        {
-            if (securePassword == null) throw new ArgumentNullException(nameof(securePassword));
-            
-            var unmanagedString = IntPtr.Zero;
-            try
-            {
-                unmanagedString = Marshal.SecureStringToGlobalAllocUnicode(securePassword);
-                return Marshal.PtrToStringUni(unmanagedString);
-            }
-            finally
-            {
-                Marshal.ZeroFreeGlobalAllocUnicode(unmanagedString);
-            }
-        }
-
-        /// <summary>
-        /// Converts a regular string to a SecureString
-        /// </summary>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        public static SecureString ToSecureString(this string value)
-        {
-            if (value == null)
-            {
-                throw new ArgumentNullException("value");
-            }
-
-            var secureString = new SecureString();
-            foreach (var c in value)
-            {
-                secureString.AppendChar(c);
-            }
-            return secureString;
-        }
-
-        /// <summary>
         /// Creates a CancellationToken
         /// with the specified delay
         /// </summary>
@@ -302,16 +260,9 @@ namespace Lime.Protocol
         /// <returns></returns>
         public static string NamedFormat(this string format, object source, IFormatProvider formatProvider)
         {
-            if (format == null)
-            {
-                throw new ArgumentNullException("format");
-            }
-
-            if (source == null)
-            {
-                throw new ArgumentNullException("source");
-            }
-
+            if (format == null) throw new ArgumentNullException(nameof(format));            
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            
             StringBuilder sb = new StringBuilder();
             Type type = source.GetType();
 
@@ -323,8 +274,8 @@ namespace Lime.Protocol
                 int length = g.Index - startIndex - 1;
                 sb.Append(format.Substring(startIndex, length));
 
-                string toGet = String.Empty;
-                string toFormat = String.Empty;
+                string toGet = string.Empty;
+                string toFormat = string.Empty;
                 int formatIndex = g.Value.IndexOf(":"); //formatting would be to the right of a :  
                 if (formatIndex == -1) //no formatting, no worries  
                 {
@@ -357,20 +308,20 @@ namespace Lime.Protocol
 
                 if (retrievedType != null) //Cool, we found something  
                 {
-                    string result = String.Empty;
-                    if (toFormat == String.Empty) //no format info  
-                    {
-                        result = retrievedType.InvokeMember("ToString",
-                            BindingFlags.Public | BindingFlags.NonPublic |
-                            BindingFlags.Instance | BindingFlags.InvokeMethod | BindingFlags.IgnoreCase
-                            , null, retrievedObject, null) as string;
+                    string result = string.Empty;
+
+                    var toStringMethod = retrievedType.GetMethod(nameof(ToString),
+                        BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance |
+                        BindingFlags.InvokeMethod | BindingFlags.IgnoreCase);
+
+
+                    if (toFormat == string.Empty) //no format info  
+                    {                        
+                        result = toStringMethod.Invoke(retrievedObject, null) as string;
                     }
                     else //format info  
                     {
-                        result = retrievedType.InvokeMember("ToString",
-                            BindingFlags.Public | BindingFlags.NonPublic |
-                            BindingFlags.Instance | BindingFlags.InvokeMethod | BindingFlags.IgnoreCase
-                            , null, retrievedObject, new object[] { toFormat, formatProvider }) as string;
+                        result = toStringMethod.Invoke(retrievedObject, new object[] { toFormat, formatProvider }) as string;  
                     }
                     sb.Append(result);
                 }

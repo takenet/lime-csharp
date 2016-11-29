@@ -33,11 +33,6 @@ namespace Lime.Protocol.Serialization
 
         static TypeUtil()
         {
-            AppDomain.CurrentDomain.UnhandledException += (s, e) =>
-            {
-                Trace.WriteLine($"LIME - Unhandled exception: {e.ExceptionObject}");
-            };
-
             _documentMediaTypeDictionary = new ConcurrentDictionary<MediaType, Type>();
             _authenticationSchemeDictionary = new ConcurrentDictionary<AuthenticationScheme, Type>();
             _enumTypeValueDictionary = new ConcurrentDictionary<Type, IDictionary<string, object>>();
@@ -45,10 +40,10 @@ namespace Lime.Protocol.Serialization
             _dataContractTypes = new HashSet<Type>();
 
             // Caches the known type (types decorated with DataContract in all loaded assemblies)
-            foreach (var type in GetAllLoadedTypes().Where(t => t.GetCustomAttribute<DataContractAttribute>() != null))
-            {
-                RegisterType(type);
-            }
+            //foreach (var type in GetAllLoadedTypes().Where(t => t.GetTypeInfo().GetCustomAttribute<DataContractAttribute>() != null))
+            //{
+            //    RegisterType(type);
+            //}
         }
 
         /// <summary>
@@ -63,7 +58,8 @@ namespace Lime.Protocol.Serialization
             var type = typeof(T);
 
             var parseMethod = typeof(T)
-                .GetMethod("Parse", BindingFlags.Static | BindingFlags.Public, null, new[] { typeof(string) }, null);
+                .GetTypeInfo()
+                .GetMethod("Parse", BindingFlags.Static | BindingFlags.Public);
 
             if (parseMethod == null)
             {
@@ -75,9 +71,19 @@ namespace Lime.Protocol.Serialization
                 throw new ArgumentException("The Parse method has an invalid return type");
             }
 
-            var parseFuncType = typeof(Func<,>).MakeGenericType(typeof(string), type);
+            var parameters = parseMethod.GetParameters();
+            if (parameters.Length != 1)
+            {
+                throw new ArgumentException($"The type '{type}' 'Parse' must accept only one argument");
+            }
 
-            return (Func<string, T>)Delegate.CreateDelegate(parseFuncType, parseMethod);
+            if (parameters[0].ParameterType != typeof(string))
+            {
+                throw new ArgumentException($"The type '{type}' 'Parse' argument should be a string");
+            }
+
+            var parseFuncType = typeof(Func<,>).MakeGenericType(typeof(string), type);
+            return (Func<string, T>) parseMethod.CreateDelegate(parseFuncType);
         }
 
         /// <summary>
@@ -89,11 +95,7 @@ namespace Lime.Protocol.Serialization
         /// <returns></returns>
         public static Func<string, object> GetParseFuncForType(Type type)
         {
-            if (type == null)
-            {
-                throw new ArgumentNullException("type");
-            }
-
+            if (type == null) throw new ArgumentNullException(nameof(type));            
             Func<string, object> parseFunc;
 
             if (!_typeParseFuncDictionary.TryGetValue(type, out parseFunc))
@@ -138,17 +140,11 @@ namespace Lime.Protocol.Serialization
         /// <returns></returns>
         public static bool TryParseString(string value, Type type, out object result)
         {
-            if (value == null)
-            {
-                throw new ArgumentNullException("value");
-            }
+            if (value == null) throw new ArgumentNullException(nameof(value));
+            if (type == null) throw new ArgumentNullException(nameof(type));
+            
 
-            if (type == null)
-            {
-                throw new ArgumentNullException("type");
-            }
-
-            if (type.IsGenericType &&
+            if (type.GetTypeInfo().IsGenericType &&
                 type.GetGenericTypeDefinition() == typeof(Nullable<>))
             {
                 type = type.GetGenericArguments()[0];
@@ -185,7 +181,7 @@ namespace Lime.Protocol.Serialization
                 result = resultArray;
                 return true;
             }
-            else if (type.IsEnum)
+            else if (type.GetTypeInfo().IsEnum)
             {
                 try
                 {
@@ -242,7 +238,7 @@ namespace Lime.Protocol.Serialization
         {
             var enumType = typeof(TEnum);
 
-            if (!enumType.IsEnum)
+            if (!enumType.GetTypeInfo().IsEnum)
             {
                 throw new ArgumentException("Type is not enum");
             }
@@ -374,11 +370,8 @@ namespace Lime.Protocol.Serialization
         /// <returns></returns>
         public static Func<object, object> BuildGetAccessor(MethodInfo methodInfo)
         {
-            if (methodInfo == null)
-            {
-                throw new ArgumentNullException("methodInfo");
-            }
-
+            if (methodInfo == null) throw new ArgumentNullException(nameof(methodInfo));
+                        
             var obj = Expression.Parameter(typeof(object), "o");
 
             Expression<Func<object, object>> expr =
@@ -416,11 +409,8 @@ namespace Lime.Protocol.Serialization
         /// <returns></returns>
         public static Action<object, object> BuildSetAccessor(MethodInfo methodInfo)
         {
-            if (methodInfo == null)
-            {
-                throw new ArgumentNullException("methodInfo");
-            }
-
+            if (methodInfo == null) throw new ArgumentNullException(nameof(methodInfo));
+            
             var obj = Expression.Parameter(typeof(object), "o");
             var value = Expression.Parameter(typeof(object));
 
@@ -449,142 +439,15 @@ namespace Lime.Protocol.Serialization
             return Activator.CreateInstance(type);
         }
 
-        /// <summary>
-        /// Gets all loaded types in the current <see cref="AppDomain"/>, except the ones in the <c>System</c> and <c>Microsoft</c> namespaces.
-        /// </summary>
-        /// <param name="loadReferences">Load all referenced assemblies before retrieving the types.</param>
-        /// <param name="ignoreExceptionLoadingReferencedAssembly">Ignore exceptions when loading a referenced assembly</param>
-        /// <returns></returns>
-        public static IEnumerable<Type> GetAllLoadedTypes(bool loadReferences = true, bool ignoreExceptionLoadingReferencedAssembly = false)
-        {
-            if (loadReferences)
-            {
-                if (!_referencedAssembliesLoaded)
-                {
-                    lock (_loadAssembliesSyncRoot)
-                    {
-                        if (!_referencedAssembliesLoaded)
-                        {
-                            try
-                            {
-                                LoadAssemblyAndReferences(
-                                    Assembly.GetExecutingAssembly().GetName(), 
-                                    IgnoreSystemAndMicrosoftAssembliesFilter, 
-                                    ignoreExceptionLoadingReferencedAssembly);
-                            }
-                            catch (Exception ex)
-                            {
-                                Trace.TraceError("LIME - An error occurred while loading the referenced assemblies: {0}", ex);
-                            }
-                            finally
-                            {
-                                _referencedAssembliesLoaded = true;
-                            }
-                        }
-                    }
-                }
-            }
-
-            try
-            {
-                return AppDomain
-                    .CurrentDomain
-                    .GetAssemblies()
-                    .Where(a => IgnoreSystemAndMicrosoftAssembliesFilter(a.GetName()))
-                    .SelectMany(a => a.GetTypes());
-            }
-            catch (Exception ex)
-            {
-                Trace.TraceError("LIME - An error occurred while loading all types: {0}", ex);
-                throw;
-            }
-        }
-
-        /// <summary>
-        /// Loads all assemblies and its references in a given path.
-        /// </summary>
-        /// <param name="path">The path to look for assemblies.</param>
-        /// <param name="searchPattern">The search pattern.</param>
-        /// <param name="assemblyFilter">The assembly filter.</param>
-        /// <param name="ignoreExceptionLoadingReferencedAssembly">Ignore exceptions when loading a referenced assembly</param>
-        /// <exception cref="System.ArgumentNullException">
-        /// </exception>
-        public static void LoadAssembliesAndReferences(string path, string searchPattern = "*.dll", Func<AssemblyName, bool> assemblyFilter = null, bool ignoreExceptionLoadingReferencedAssembly = false)
-        {
-            if (path == null) throw new ArgumentNullException(nameof(path));
-            if (searchPattern == null) throw new ArgumentNullException(nameof(searchPattern));            
-
-            foreach (var filePath in Directory.GetFiles(path, searchPattern))
-            {
-                LoadAssemblyAndReferences(AssemblyName.GetAssemblyName(filePath), assemblyFilter, ignoreExceptionLoadingReferencedAssembly);
-            }
-        }
-
-        /// <summary>
-        /// Loads an assembly and its references.
-        /// Only references that are used are actually loaded, since the .NET compiler ignores assemblies that are not used in the code.
-        /// </summary>
-        /// <param name="assemblyName">Name of the assembly.</param>
-        /// <param name="assemblyFilter">The assembly filter.</param>
-        /// <param name="ignoreExceptionLoadingReferencedAssembly">Ignore exceptions when loading a referenced assembly</param>
-        /// <exception cref="System.ArgumentNullException"></exception>
-        public static void LoadAssemblyAndReferences(AssemblyName assemblyName, Func<AssemblyName, bool> assemblyFilter = null, bool ignoreExceptionLoadingReferencedAssembly = false)
-        {
-            if (assemblyName == null) throw new ArgumentNullException(nameof(assemblyName));
-            var loadedAssemblieNames =
-                new HashSet<string>(
-                    AppDomain
-                        .CurrentDomain
-                        .GetAssemblies()
-                        .Select(a => a.GetName().FullName));
-            
-            LoadAssemblyAndReferences(assemblyName, assemblyFilter, loadedAssemblieNames, ignoreExceptionLoadingReferencedAssembly);
-        }
-
-        private static void LoadAssemblyAndReferences(AssemblyName assemblyName, Func<AssemblyName, bool> assemblyFilter, ISet<string> loadedAssembliesNames, bool ignoreExceptionLoadingReferencedAssembly)
-        {
-            Assembly assembly;
-            try
-            {
-                assembly = Assembly.Load(assemblyName);                
-            }
-            catch (Exception ex)
-            {
-                throw new TypeLoadException($"Could not load the assembly '{assemblyName.FullName}'", ex);
-            }
-            
-            loadedAssembliesNames.Add(assemblyName.FullName);
-
-            var referencedAssemblyNames =
-                assembly.GetReferencedAssemblies()
-                    .Where(
-                        a =>
-                            (assemblyFilter == null || assemblyFilter(a)) && !loadedAssembliesNames.Contains(a.FullName));
-
-            foreach (var referencedAssemblyName in referencedAssemblyNames)
-            {
-                try
-                {
-                    LoadAssemblyAndReferences(referencedAssemblyName, assemblyFilter, loadedAssembliesNames, ignoreExceptionLoadingReferencedAssembly);
-                }
-                catch (Exception ex)
-                {
-                    if (ignoreExceptionLoadingReferencedAssembly)
-                        Trace.WriteLine($"Could not load the referenced assembly '{referencedAssemblyName.FullName}' of assembly '{assemblyName.FullName}'");
-                    else
-                        throw new TypeLoadException($"Could not load the referenced assembly '{referencedAssemblyName.FullName}' of assembly '{assemblyName.FullName}'", ex);
-                }                
-            }
-        }
 
         private static void RegisterType(Type type)
         {
-            if (type.GetCustomAttribute<DataContractAttribute>() != null)
+            if (type.GetTypeInfo().GetCustomAttribute<DataContractAttribute>() != null)
             {
                 _dataContractTypes.Add(type);
             }
 
-            if (!type.IsAbstract)
+            if (!type.GetTypeInfo().IsAbstract)
             {
                 // Caches the documents (contents and resources)
                 if (typeof(Document).IsAssignableFrom(type))
@@ -608,7 +471,7 @@ namespace Lime.Protocol.Serialization
             }
 
             // Caches the enums
-            if (type.IsEnum)
+            if (type.GetTypeInfo().IsEnum)
             {
                 var enumNames = Enum.GetNames(type);
                 var memberValueDictionary = new Dictionary<string, object>();

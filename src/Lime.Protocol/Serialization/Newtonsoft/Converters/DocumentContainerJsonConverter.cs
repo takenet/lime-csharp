@@ -28,7 +28,7 @@ namespace Lime.Protocol.Serialization.Newtonsoft.Converters
                     if (!CanConvertDictionary.TryGetValue(objectType, out canConvert))
                     {
                         // This implementation works with all classes that have a 'type' property among a typeof(Document) property, not only the DocumentContainer class.
-                        if (objectType.IsAbstract) return false;
+                        if (objectType.GetTypeInfo().IsAbstract) return false;
 
                         var properties = objectType.GetProperties(BindingFlags.Public | BindingFlags.Instance);
                         canConvert =

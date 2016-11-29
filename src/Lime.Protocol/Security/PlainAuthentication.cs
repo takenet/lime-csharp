@@ -6,12 +6,11 @@ using Lime.Protocol.Serialization;
 namespace Lime.Protocol.Security
 {
     /// <summary>
-    /// Defines a plain authentication scheme,
-    /// that uses a password for authentication.
+    /// Defines a plain authentication scheme, that uses a password for authentication.
     /// Should be used only with encrypted sessions.
     /// </summary>
     [DataContract(Namespace = "http://limeprotocol.org/2014")]
-    public class PlainAuthentication : Authentication, IDisposable
+    public class PlainAuthentication : Authentication
     {
         public const string PASSWORD_KEY = "password";
 
@@ -21,39 +20,12 @@ namespace Lime.Protocol.Security
 
         }
 
-        ~PlainAuthentication()
-        {
-            Dispose(false);
-        } 
-
-        [IgnoreDataMember]
-        public SecureString SecurePassword { get; private set; }
-
         /// <summary>
         /// Base64 representation of the 
         /// identity password
         /// </summary>
         [DataMember(Name = PASSWORD_KEY)]
-        public string Password
-        {
-            get
-            {
-                return SecurePassword?.ToUnsecureString();
-            }
-            set
-            {
-                if (SecurePassword != null)
-                {
-                    SecurePassword.Dispose();
-                    SecurePassword = null;
-                }
-
-                if (value != null)
-                {
-                    SecurePassword = value.ToSecureString();
-                }
-            }
-        }     
+        public string Password { get; set; }
 
         /// <summary>
         /// Set a plain password to a 
@@ -74,31 +46,5 @@ namespace Lime.Protocol.Security
         {
             return string.IsNullOrWhiteSpace(Password) ? Password : Password.FromBase64();
         }
-
-        #region IDisposable Members
-
-        /// <summary>
-        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
-        /// </summary>
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        /// <summary>
-        /// Releases unmanaged and - optionally - managed resources.
-        /// </summary>
-        /// <param name="disposing"><c>true</c> to release both managed and unmanaged resources; <c>false</c> to release only unmanaged resources.</param>
-        protected virtual void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                SecurePassword?.Dispose();
-            }
-        }
-
-        #endregion 
-
     }
 }

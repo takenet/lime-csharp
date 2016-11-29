@@ -3,6 +3,7 @@ using System;
 using System.Linq;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
+using System.Reflection;
 
 namespace Lime.Protocol.Serialization.Newtonsoft.Converters
 {
@@ -26,7 +27,7 @@ namespace Lime.Protocol.Serialization.Newtonsoft.Converters
 
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, global::Newtonsoft.Json.JsonSerializer serializer)
         {
-            if (objectType.IsAbstract)
+            if (objectType.GetTypeInfo().IsAbstract)
             {
                 // The serialization is made by the container class (Message or Command)
                 return null;

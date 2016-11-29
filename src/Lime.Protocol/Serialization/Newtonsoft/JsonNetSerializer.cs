@@ -20,11 +20,11 @@ namespace Lime.Protocol.Serialization.Newtonsoft
         static JsonNetSerializer()
         {
             JsonConvert.DefaultSettings = () => Settings;
-            _serializer = global::Newtonsoft.Json.JsonSerializer.Create(Settings);
+            _serializer = JsonSerializer.Create(Settings);
         }
 
         private static JsonSerializerSettings _settings;
-        private static readonly global::Newtonsoft.Json.JsonSerializer _serializer;
+        private static readonly JsonSerializer _serializer;
 
         public static JsonSerializerSettings Settings
         {

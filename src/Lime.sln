@@ -28,8 +28,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Client", "Client", "{9827B4
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lime.Client.TestConsole", "Lime.Client.TestConsole\Lime.Client.TestConsole.csproj", "{9E13148D-726D-4E42-B924-4A1AF4F0DC3E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lime.Protocol", "Lime.Protocol\Lime.Protocol.csproj", "{0CFEE3A4-F914-4C45-BE13-A344C9CFA134}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lime.Transport.Tcp", "Lime.Transport.Tcp\Lime.Transport.Tcp.csproj", "{D24B4EF4-9B8C-4F89-BFC6-F76007936382}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Transports", "Transports", "{84538803-A033-47DD-A350-A04E84F6BAE8}"
@@ -55,6 +53,10 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lime.Transport.Redis", "Lime.Transport.Redis\Lime.Transport.Redis.csproj", "{FB575712-0805-496B-A6D7-B5597A50573D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lime.Transport.Redis.UnitTests", "Lime.Transport.Redis.UnitTests\Lime.Transport.Redis.UnitTests.csproj", "{602C344B-233D-4030-9F08-F84654BA0F98}"
+EndProject
+Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Lime.Protocol", "Lime.Protocol\Lime.Protocol.xproj", "{041927B9-C479-4BFA-97BB-C885F711EAE6}"
+EndProject
+Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Lime.Protocol.UnitTests.Core", "Lime.Protocol.UnitTests.Core\Lime.Protocol.UnitTests.Core.xproj", "{2863ACB6-5EE8-4915-A4B3-1AD854CA751A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -116,18 +118,6 @@ Global
 		{9E13148D-726D-4E42-B924-4A1AF4F0DC3E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9E13148D-726D-4E42-B924-4A1AF4F0DC3E}.Release|Any CPU.Build.0 = Release|Any CPU
 		{9E13148D-726D-4E42-B924-4A1AF4F0DC3E}.Release|x86.ActiveCfg = Release|Any CPU
-		{0CFEE3A4-F914-4C45-BE13-A344C9CFA134}.Ad-Hoc|Any CPU.ActiveCfg = Release|Any CPU
-		{0CFEE3A4-F914-4C45-BE13-A344C9CFA134}.Ad-Hoc|Any CPU.Build.0 = Release|Any CPU
-		{0CFEE3A4-F914-4C45-BE13-A344C9CFA134}.Ad-Hoc|x86.ActiveCfg = Release|Any CPU
-		{0CFEE3A4-F914-4C45-BE13-A344C9CFA134}.AppStore|Any CPU.ActiveCfg = Release|Any CPU
-		{0CFEE3A4-F914-4C45-BE13-A344C9CFA134}.AppStore|Any CPU.Build.0 = Release|Any CPU
-		{0CFEE3A4-F914-4C45-BE13-A344C9CFA134}.AppStore|x86.ActiveCfg = Release|Any CPU
-		{0CFEE3A4-F914-4C45-BE13-A344C9CFA134}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{0CFEE3A4-F914-4C45-BE13-A344C9CFA134}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{0CFEE3A4-F914-4C45-BE13-A344C9CFA134}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{0CFEE3A4-F914-4C45-BE13-A344C9CFA134}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{0CFEE3A4-F914-4C45-BE13-A344C9CFA134}.Release|Any CPU.Build.0 = Release|Any CPU
-		{0CFEE3A4-F914-4C45-BE13-A344C9CFA134}.Release|x86.ActiveCfg = Release|Any CPU
 		{D24B4EF4-9B8C-4F89-BFC6-F76007936382}.Ad-Hoc|Any CPU.ActiveCfg = Release|Any CPU
 		{D24B4EF4-9B8C-4F89-BFC6-F76007936382}.Ad-Hoc|Any CPU.Build.0 = Release|Any CPU
 		{D24B4EF4-9B8C-4F89-BFC6-F76007936382}.Ad-Hoc|x86.ActiveCfg = Release|Any CPU
@@ -280,6 +270,38 @@ Global
 		{602C344B-233D-4030-9F08-F84654BA0F98}.Release|Any CPU.Build.0 = Release|Any CPU
 		{602C344B-233D-4030-9F08-F84654BA0F98}.Release|x86.ActiveCfg = Release|Any CPU
 		{602C344B-233D-4030-9F08-F84654BA0F98}.Release|x86.Build.0 = Release|Any CPU
+		{041927B9-C479-4BFA-97BB-C885F711EAE6}.Ad-Hoc|Any CPU.ActiveCfg = Debug|Any CPU
+		{041927B9-C479-4BFA-97BB-C885F711EAE6}.Ad-Hoc|Any CPU.Build.0 = Debug|Any CPU
+		{041927B9-C479-4BFA-97BB-C885F711EAE6}.Ad-Hoc|x86.ActiveCfg = Debug|Any CPU
+		{041927B9-C479-4BFA-97BB-C885F711EAE6}.Ad-Hoc|x86.Build.0 = Debug|Any CPU
+		{041927B9-C479-4BFA-97BB-C885F711EAE6}.AppStore|Any CPU.ActiveCfg = Debug|Any CPU
+		{041927B9-C479-4BFA-97BB-C885F711EAE6}.AppStore|Any CPU.Build.0 = Debug|Any CPU
+		{041927B9-C479-4BFA-97BB-C885F711EAE6}.AppStore|x86.ActiveCfg = Debug|Any CPU
+		{041927B9-C479-4BFA-97BB-C885F711EAE6}.AppStore|x86.Build.0 = Debug|Any CPU
+		{041927B9-C479-4BFA-97BB-C885F711EAE6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{041927B9-C479-4BFA-97BB-C885F711EAE6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{041927B9-C479-4BFA-97BB-C885F711EAE6}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{041927B9-C479-4BFA-97BB-C885F711EAE6}.Debug|x86.Build.0 = Debug|Any CPU
+		{041927B9-C479-4BFA-97BB-C885F711EAE6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{041927B9-C479-4BFA-97BB-C885F711EAE6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{041927B9-C479-4BFA-97BB-C885F711EAE6}.Release|x86.ActiveCfg = Release|Any CPU
+		{041927B9-C479-4BFA-97BB-C885F711EAE6}.Release|x86.Build.0 = Release|Any CPU
+		{2863ACB6-5EE8-4915-A4B3-1AD854CA751A}.Ad-Hoc|Any CPU.ActiveCfg = Debug|Any CPU
+		{2863ACB6-5EE8-4915-A4B3-1AD854CA751A}.Ad-Hoc|Any CPU.Build.0 = Debug|Any CPU
+		{2863ACB6-5EE8-4915-A4B3-1AD854CA751A}.Ad-Hoc|x86.ActiveCfg = Debug|Any CPU
+		{2863ACB6-5EE8-4915-A4B3-1AD854CA751A}.Ad-Hoc|x86.Build.0 = Debug|Any CPU
+		{2863ACB6-5EE8-4915-A4B3-1AD854CA751A}.AppStore|Any CPU.ActiveCfg = Debug|Any CPU
+		{2863ACB6-5EE8-4915-A4B3-1AD854CA751A}.AppStore|Any CPU.Build.0 = Debug|Any CPU
+		{2863ACB6-5EE8-4915-A4B3-1AD854CA751A}.AppStore|x86.ActiveCfg = Debug|Any CPU
+		{2863ACB6-5EE8-4915-A4B3-1AD854CA751A}.AppStore|x86.Build.0 = Debug|Any CPU
+		{2863ACB6-5EE8-4915-A4B3-1AD854CA751A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2863ACB6-5EE8-4915-A4B3-1AD854CA751A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2863ACB6-5EE8-4915-A4B3-1AD854CA751A}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{2863ACB6-5EE8-4915-A4B3-1AD854CA751A}.Debug|x86.Build.0 = Debug|Any CPU
+		{2863ACB6-5EE8-4915-A4B3-1AD854CA751A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2863ACB6-5EE8-4915-A4B3-1AD854CA751A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2863ACB6-5EE8-4915-A4B3-1AD854CA751A}.Release|x86.ActiveCfg = Release|Any CPU
+		{2863ACB6-5EE8-4915-A4B3-1AD854CA751A}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -6,6 +6,8 @@ using System.Linq;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
+using Lime.Protocol.Serialization.Newtonsoft;
+using Newtonsoft.Json;
 
 namespace Lime.Protocol
 {
@@ -253,17 +255,6 @@ namespace Lime.Protocol
         /// <returns>
         /// A <see cref="System.String" /> that represents this instance.
         /// </returns>
-        public override string ToString()
-        {
-            using (var jsonWriter = new TextJsonWriter())
-            {
-                foreach (var keyAndValue in this)
-                {
-                    jsonWriter.WriteProperty(keyAndValue.Key, keyAndValue.Value);
-                }
-
-                return jsonWriter.ToString();
-            }
-        }
+        public override string ToString() => JsonConvert.SerializeObject(this, JsonNetSerializer.Settings);
     }
 }
