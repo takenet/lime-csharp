@@ -439,7 +439,6 @@ namespace Lime.Protocol.Serialization
             return Activator.CreateInstance(type);
         }
 
-
         private static void RegisterType(Type type)
         {
             if (type.GetTypeInfo().GetCustomAttribute<DataContractAttribute>() != null)

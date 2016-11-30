@@ -1,5 +1,5 @@
 {
-  "version": "0.7.0-*",
+  "version": "0.7.1-*",
   "title": "Lime.Transport.Tcp",
   "authors": [ "takenet", "andrebires" ],
   "copyright": "Copyright �  2014 Curupira S/A",
@@ -8,13 +8,12 @@
     "tags": [ "lime" ]
   },
   "dependencies": {
-    "Lime.Protocol": "0.7.0-*",
+    "Lime.Protocol": "0.7.1-*",
     "NETStandard.Library": "1.6.0",
     "System.Net.NameResolution": "4.3.0",
     "System.Net.Security": "4.3.0",
     "System.Reflection.TypeExtensions": "4.3.0"
   },
-
   "frameworks": {
     "netstandard1.6": {
       "imports": "dnxcore50"

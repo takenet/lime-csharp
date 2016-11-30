@@ -1,7 +1,7 @@
 {
   "title": "Lime.Protocol",
   "description": "C# LIME protocol stack implementation.",
-  "version": "0.7.0-*",
+  "version": "0.7.1-*",
   "authors": [ "takenet", "andrebires" ],
   "copyright": "Copyright �  2014 Curupira S/A",
   "packOptions": {
