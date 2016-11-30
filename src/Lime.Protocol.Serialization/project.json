@@ -1,0 +1,32 @@
+﻿{
+  "title": "Lime.Protocol.Serialization",
+  "description": "C# LIME protocol stack implementation.",
+  "version": "0.7.0-*",
+  "authors": [ "takenet", "andrebires" ],
+  "copyright": "Copyright �  2014 Curupira S/A",
+  "packOptions": {
+    "owners": [ "takenet", "andrebires" ],
+    "tags": [ "lime" ]
+  },
+  "dependencies": {
+    "Lime.Protocol": "0.7.0-*",
+    "Newtonsoft.Json": "9.0.1"
+  },
+  "frameworks": {
+    "netstandard1.5": {
+      "imports": "dnxcore50",
+      "dependencies": {
+        "NETStandard.Library": "1.6.0",        
+        "System.Reflection.TypeExtensions": "4.3.0"
+      }
+    },
+    "net461": {
+      "frameworkAssemblies": {
+        "System.Runtime.Serialization": "4.0.0"
+      },
+      "dependencies": {
+        "Microsoft.Tpl.Dataflow": "4.5.24"
+      }
+    } 
+  }
+}

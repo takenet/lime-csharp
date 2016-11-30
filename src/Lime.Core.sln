@@ -9,6 +9,10 @@ Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Lime.Messaging", "Lime.Mess
 EndProject
 Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Lime.Transport.Tcp", "Lime.Transport.Tcp\Lime.Transport.Tcp.xproj", "{27142C06-D423-43CA-B027-DE01035FAA5F}"
 EndProject
+Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Lime.Protocol.Serialization", "Lime.Protocol.Serialization\Lime.Protocol.Serialization.xproj", "{3E25EB12-76F9-4C8F-8D25-F07EEC70C7F7}"
+EndProject
+Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Lime.Sample.Client.Core", "Lime.Sample.Client.Core\Lime.Sample.Client.Core.xproj", "{60122D39-7BBD-4985-B99B-49736D8B1709}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +31,14 @@ Global
 		{27142C06-D423-43CA-B027-DE01035FAA5F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{27142C06-D423-43CA-B027-DE01035FAA5F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{27142C06-D423-43CA-B027-DE01035FAA5F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3E25EB12-76F9-4C8F-8D25-F07EEC70C7F7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3E25EB12-76F9-4C8F-8D25-F07EEC70C7F7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3E25EB12-76F9-4C8F-8D25-F07EEC70C7F7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3E25EB12-76F9-4C8F-8D25-F07EEC70C7F7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{60122D39-7BBD-4985-B99B-49736D8B1709}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{60122D39-7BBD-4985-B99B-49736D8B1709}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{60122D39-7BBD-4985-B99B-49736D8B1709}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{60122D39-7BBD-4985-B99B-49736D8B1709}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
