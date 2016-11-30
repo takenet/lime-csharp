@@ -26,6 +26,7 @@ namespace Lime.Transport.Tcp
     {
         public const int DEFAULT_BUFFER_SIZE = 8192 * 8;
 
+        public static readonly string UriSchemeNetTcp = "net.tcp";
         public static readonly TimeSpan ReadTimeout = TimeSpan.FromSeconds(5);
         public static readonly TimeSpan CloseTimeout = TimeSpan.FromSeconds(30);
 
@@ -502,8 +503,8 @@ namespace Lime.Transport.Tcp
             if (sslStream != null &&
                 sslStream.IsAuthenticated &&
                 sslStream.RemoteCertificate != null)
-            {
-                var certificate = new X509Certificate2(sslStream.RemoteCertificate);
+            {                
+                var certificate = sslStream.RemoteCertificate;
                 if (!string.IsNullOrWhiteSpace(certificate.Subject))
                 {
                     var commonNames = certificate
@@ -566,11 +567,11 @@ namespace Lime.Transport.Tcp
             cancellationToken.ThrowIfCancellationRequested();
 
             if (!_tcpClient.Connected)
-            {
+            {                
                 if (uri == null) throw new ArgumentNullException(nameof(uri), "The uri is mandatory for a not connected TCP client");
-                if (uri.Scheme != Uri.UriSchemeNetTcp)
+                if (uri.Scheme != UriSchemeNetTcp)
                 {
-                    throw new ArgumentException($"Invalid URI scheme. Expected is '{Uri.UriSchemeNetTcp}'.", nameof(uri));
+                    throw new ArgumentException($"Invalid URI scheme. Expected is '{UriSchemeNetTcp}'.", nameof(uri));
                 }
 
                 if (string.IsNullOrWhiteSpace(_hostName))
@@ -593,7 +594,7 @@ namespace Lime.Transport.Tcp
         protected override Task PerformCloseAsync(CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            _stream?.Close();
+            _stream?.Dispose();
             _tcpClient.Close();
             return Task.FromResult<object>(null);
         }

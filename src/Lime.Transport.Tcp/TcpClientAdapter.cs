@@ -1,10 +1,6 @@
 ﻿using System;
 using System.IO;
-using System.Linq;
-using System.Net;
-using System.Net.NetworkInformation;
 using System.Net.Sockets;
-using System.Security.Policy;
 using System.Threading.Tasks;
 
 namespace Lime.Transport.Tcp
@@ -46,7 +42,7 @@ namespace Lime.Transport.Tcp
         /// Disposes this System.Net.Sockets.TcpClient instance and requests that the
         /// underlying TCP connection be closed.
         /// </summary>
-        public void Close() => _tcpClient.Close();
+        public void Close() => _tcpClient.Dispose();
 
         /// <summary>
         /// Used by the class to provide the underlying network socket. 

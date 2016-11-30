@@ -3,7 +3,7 @@
   "description": "C# LIME protocol stack implementation.",
   "version": "0.7.0-*",
   "authors": [ "takenet", "andrebires" ],
-  "copyright": "Copyright ©  2014 Curupira S/A",
+  "copyright": "Copyright ï¿½  2014 Curupira S/A",
   "packOptions": {
     "owners": [ "takenet", "andrebires" ],
     "tags": [ "lime" ]
@@ -18,6 +18,11 @@
   "frameworks": {
     "netstandard1.6": {
       "imports": "dnxcore50"
-    }
+    },
+    "net461": {
+      "frameworkAssemblies": {
+        "System.Runtime.Serialization": "4.0.0"
+      }
+    } 
   }
 }

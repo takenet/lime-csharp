@@ -34,6 +34,18 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Lime.Messaging, Version=0.7.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Lime.Messaging\bin\Debug\net461\Lime.Messaging.dll</HintPath>
+    </Reference>
+    <Reference Include="Lime.Protocol, Version=0.7.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Lime.Transport.Tcp\bin\Debug\net461\Lime.Protocol.dll</HintPath>
+    </Reference>
+    <Reference Include="Lime.Transport.Tcp, Version=0.7.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Lime.Transport.Tcp\bin\Debug\net461\Lime.Transport.Tcp.dll</HintPath>
+    </Reference>
     <Reference Include="StackExchange.Redis, Version=1.1.608.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\StackExchange.Redis.1.1.608\lib\net46\StackExchange.Redis.dll</HintPath>
       <Private>True</Private>
@@ -55,28 +67,6 @@
   <ItemGroup>
     <None Include="App.config" />
     <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Lime.Messaging\Lime.Messaging.csproj">
-      <Project>{796a57b4-1fe0-4fe9-940f-e99083dc233a}</Project>
-      <Name>Lime.Messaging</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Lime.Protocol\Lime.Protocol.csproj">
-      <Project>{0cfee3a4-f914-4c45-be13-a344c9cfa134}</Project>
-      <Name>Lime.Protocol</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Lime.Transport.Redis\Lime.Transport.Redis.csproj">
-      <Project>{fb575712-0805-496b-a6d7-b5597a50573d}</Project>
-      <Name>Lime.Transport.Redis</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Lime.Transport.Tcp\Lime.Transport.Tcp.csproj">
-      <Project>{d24b4ef4-9b8c-4f89-bfc6-f76007936382}</Project>
-      <Name>Lime.Transport.Tcp</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Lime.Transport.WebSocket\Lime.Transport.WebSocket.csproj">
-      <Project>{A0A1C843-C74C-4204-A19E-2C1E9693BC55}</Project>
-      <Name>Lime.Transport.WebSocket</Name>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

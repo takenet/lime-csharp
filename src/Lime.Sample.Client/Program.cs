@@ -13,10 +13,7 @@ using Lime.Protocol.Network;
 using Lime.Protocol.Network.Modules;
 using Lime.Transport.Tcp;
 using Lime.Protocol.Security;
-using Lime.Protocol.Serialization.Newtonsoft;
 using Lime.Protocol.Util;
-using Lime.Transport.Redis;
-using Lime.Transport.WebSocket;
 using StackExchange.Redis;
 
 namespace Lime.Sample.Client
@@ -221,11 +218,11 @@ namespace Lime.Sample.Client
             {
                 case "net.tcp":
                     return new TcpTransport(traceWriter: new DebugTraceWriter());                    
-                case "ws":
-                case "wss":
-                    return new ClientWebSocketTransport(new JsonNetSerializer(), new DebugTraceWriter());
-                case "redis":
-                    return new RedisTransport(uri, new JsonNetSerializer());
+                //case "ws":
+                //case "wss":
+                //    return new ClientWebSocketTransport(new JsonNetSerializer(), new DebugTraceWriter());
+                //case "redis":
+                //    return new RedisTransport(uri, new JsonNetSerializer());
 
                 default:
                     throw new NotSupportedException($"Unsupported URI scheme '{uri.Scheme}'");                    
