@@ -1,7 +1,6 @@
 {
-  "title": "Lime.Protocol",
-  "description": "C# LIME protocol stack implementation.",
   "version": "0.7.0-*",
+  "title": "Lime.Messaging",
   "authors": [ "takenet", "andrebires" ],
   "copyright": "Copyright ©  2014 Curupira S/A",
   "packOptions": {
@@ -9,11 +8,8 @@
     "tags": [ "lime" ]
   },
   "dependencies": {
-    "NETStandard.Library": "1.6.0",
-    "Newtonsoft.Json": "9.0.1",
-    "System.Diagnostics.TraceSource": "4.3.0",
-    "System.Reflection.TypeExtensions": "4.3.0",
-    "System.Threading.Tasks.Dataflow": "4.7.0"
+    "Lime.Protocol": "0.7.0-*",
+    "NETStandard.Library": "1.6.0"
   },
   "frameworks": {
     "netstandard1.6": {

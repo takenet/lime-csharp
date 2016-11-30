@@ -54,66 +54,14 @@ namespace Lime.Messaging.Resources
         /// Base64 representation of the account password.
         /// </summary>
         [DataMember(Name = PASSWORD_KEY)]
-        public string Password
-        {
-            get
-            {
-                if (SecurePassword != null)
-                {
-                    return SecurePassword.ToUnsecureString();
-                }
-                return null;
-            }
-            set
-            {
-                if (SecurePassword != null)
-                {
-                    SecurePassword.Dispose();
-                    SecurePassword = null;
-                }
-
-                if (value != null)
-                {
-                    SecurePassword = value.ToSecureString();
-                }
-            }
-        }
-
-        [IgnoreDataMember]
-        public SecureString SecurePassword { get; private set; }
+        public string Password { get; set; }
 
         /// <summary>
         /// Base64 representation of the account password. 
         /// Mandatory in case of updating account password.
         /// </summary>
         [DataMember(Name = OLD_PASSWORD_KEY)]
-        public string OldPassword
-        {
-            get
-            {
-                if (SecureOldPassword != null)
-                {
-                    return SecureOldPassword.ToUnsecureString();
-                }
-                return null;
-            }
-            set
-            {
-                if (SecureOldPassword != null)
-                {
-                    SecureOldPassword.Dispose();
-                    SecureOldPassword = null;
-                }
-
-                if (value != null)
-                {
-                    SecureOldPassword = value.ToSecureString();
-                }
-            }
-        }  
-
-        [IgnoreDataMember]
-        public SecureString SecureOldPassword { get; private set; }
+        public string OldPassword { get; set; }
 
         /// <summary>
         /// Access key for updating the account without knowing the old password.
