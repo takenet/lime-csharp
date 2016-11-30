@@ -1,5 +1,5 @@
 {
-  "version": "0.7.1-*",
+  "version": "0.7.2-*",
   "title": "Lime.Messaging",
   "authors": [ "takenet", "andrebires" ],
   "copyright": "Copyright � 2014 Curupira S/A",
@@ -8,7 +8,7 @@
     "tags": [ "lime" ]
   },
   "dependencies": {
-    "Lime.Protocol": "0.7.1-*"
+    "Lime.Protocol": "0.7.2-*"
   },
   "frameworks": {
     "netstandard1.1": {

@@ -1,22 +1,24 @@
 {
-  "version": "0.7.1-*",
+  "version": "0.7.2-*",
   "title": "Lime.Transport.Tcp",
   "authors": [ "takenet", "andrebires" ],
-  "copyright": "Copyright �  2014 Curupira S/A",
+  "copyright": "Copyright ₢ 2014 Curupira S/A",
   "packOptions": {
     "owners": [ "takenet", "andrebires" ],
     "tags": [ "lime" ]
   },
   "dependencies": {
-    "Lime.Protocol": "0.7.1-*",
-    "NETStandard.Library": "1.6.0",
-    "System.Net.NameResolution": "4.3.0",
-    "System.Net.Security": "4.3.0",
-    "System.Reflection.TypeExtensions": "4.3.0"
+    "Lime.Protocol": "0.7.2-*"
   },
   "frameworks": {
     "netstandard1.6": {
-      "imports": "dnxcore50"
+      "imports": "dnxcore50",
+      "dependencies": {
+        "NETStandard.Library": "1.6.0",
+        "System.Net.NameResolution": "4.3.0",
+        "System.Net.Security": "4.3.0",
+        "System.Reflection.TypeExtensions": "4.3.0"
+      }
     },
     "net461": {
       "frameworkAssemblies": {  }

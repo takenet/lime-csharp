@@ -7,6 +7,7 @@ using Lime.Protocol.Util;
 
 namespace Lime.Protocol.Network
 {
+#if NET461    
     /// <summary>
     /// Traces into the default .NET tracers.
     /// </summary>
@@ -24,4 +25,5 @@ namespace Lime.Protocol.Network
 
         #endregion
     }
+#endif    
 }

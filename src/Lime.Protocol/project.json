@@ -1,7 +1,7 @@
 {
   "title": "Lime.Protocol",
   "description": "C# LIME protocol stack implementation.",
-  "version": "0.7.1-*",
+  "version": "0.7.2-*",
   "authors": [ "takenet", "andrebires" ],
   "copyright": "Copyright �  2014 Curupira S/A",
   "packOptions": {
@@ -13,11 +13,10 @@
       "imports": "dnxcore50",
       "dependencies": {
         "NETStandard.Library": "1.6.0",
-        "System.Diagnostics.TraceSource": "4.3.0",
         "System.Threading.Tasks.Dataflow": "4.7.0",
         "System.Runtime.Serialization.Primitives": "4.3.0"
       }
-    },
+    }, 
     "net461": {
       "frameworkAssemblies": {
         "System.Runtime.Serialization": "4.0.0"

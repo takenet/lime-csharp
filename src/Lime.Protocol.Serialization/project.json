@@ -1,7 +1,7 @@
 ﻿{
   "title": "Lime.Protocol.Serialization",
   "description": "C# LIME protocol serialization library",
-  "version": "0.7.1-*",
+  "version": "0.7.2-*",
   "authors": [ "takenet", "andrebires" ],
   "copyright": "Copyright �  2014 Curupira S/A",
   "packOptions": {
@@ -9,7 +9,7 @@
     "tags": [ "lime" ]
   },
   "dependencies": {
-    "Lime.Protocol": "0.7.1-*",
+    "Lime.Protocol": "0.7.2-*",
     "Newtonsoft.Json": "9.0.1"
   },
   "frameworks": {

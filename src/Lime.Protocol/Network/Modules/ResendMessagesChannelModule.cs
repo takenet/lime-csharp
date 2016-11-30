@@ -241,7 +241,9 @@ namespace Lime.Protocol.Network.Modules
             catch (ObjectDisposedException) { }
             catch (Exception ex)
             {
+#if NET461
                 Trace.TraceError("DestinationResendMessagesChannelModule.WaitForRetryAsync: {0}", ex.Message);
+#endif
             }
 
             return null;
@@ -263,7 +265,9 @@ namespace Lime.Protocol.Network.Modules
             {
                 Unbind();
                 await _inputBlock.SendAsync(sentMessage);
-                Trace.TraceError("DestinationResendMessagesChannelModule.ResendMessageAsync: {0}", ex.Message);                
+#if NET461                
+                Trace.TraceError("DestinationResendMessagesChannelModule.ResendMessageAsync: {0}", ex.Message);
+#endif                                
             }
         }
 
