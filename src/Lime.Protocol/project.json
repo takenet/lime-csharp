@@ -8,21 +8,23 @@
     "owners": [ "takenet", "andrebires" ],
     "tags": [ "lime" ]
   },
-  "dependencies": {
-    "NETStandard.Library": "1.6.0",
-    "Newtonsoft.Json": "9.0.1",
-    "System.Diagnostics.TraceSource": "4.3.0",
-    "System.Reflection.TypeExtensions": "4.3.0",
-    "System.Threading.Tasks.Dataflow": "4.7.0"
-  },
   "frameworks": {
-    "netstandard1.6": {
-      "imports": "dnxcore50"
+    "netstandard1.1": {
+      "imports": "dnxcore50",
+      "dependencies": {
+        "NETStandard.Library": "1.6.0",
+        "System.Diagnostics.TraceSource": "4.3.0",
+        "System.Threading.Tasks.Dataflow": "4.7.0",
+        "System.Runtime.Serialization.Primitives": "4.3.0"
+      }
     },
     "net461": {
       "frameworkAssemblies": {
         "System.Runtime.Serialization": "4.0.0"
+      },
+      "dependencies": {
+        "Microsoft.Tpl.Dataflow": "4.5.24"
       }
-    } 
+    }
   }
 }

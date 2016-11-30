@@ -26,12 +26,12 @@ namespace Lime.Protocol.Network
         /// <summary>
         /// Gets the local endpoint address.
         /// </summary>
-        EndPoint LocalEndPoint { get; }
+        string LocalEndPoint { get; }
 
         /// <summary>
         /// Gets the remote endpoint address.
         /// </summary>
-        EndPoint RemoteEndPoint { get; }
+        string RemoteEndPoint { get; }
 
         /// <summary>
         /// Gets specific transport options informations.

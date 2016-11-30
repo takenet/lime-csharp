@@ -165,11 +165,11 @@ namespace Lime.Protocol.Network.Modules
             }
         }
 
-        protected virtual Task OnExpectedNotificationReceivedAsync(SentMessage sentMessage, Notification notification, CancellationToken cancellationToken) => Task.CompletedTask;
+        protected virtual Task OnExpectedNotificationReceivedAsync(SentMessage sentMessage, Notification notification, CancellationToken cancellationToken) => TaskUtil.CompletedTask;
 
-        protected virtual Task OnResendSchedulingAsync(SentMessage sentMessage, CancellationToken cancellationToken) => Task.CompletedTask;
+        protected virtual Task OnResendSchedulingAsync(SentMessage sentMessage, CancellationToken cancellationToken) => TaskUtil.CompletedTask;
 
-        protected virtual Task OnResendLimitReachedAsync(SentMessage sentMessage, CancellationToken cancellationToken) => Task.CompletedTask;
+        protected virtual Task OnResendLimitReachedAsync(SentMessage sentMessage, CancellationToken cancellationToken) => TaskUtil.CompletedTask;
 
         protected void OnStateChangedImpl(SessionState state)
         {

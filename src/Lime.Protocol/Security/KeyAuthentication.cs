@@ -1,7 +1,4 @@
-﻿using System;
-using System.Runtime.Serialization;
-using System.Security;
-using Lime.Protocol.Serialization;
+﻿using System.Runtime.Serialization;
 
 namespace Lime.Protocol.Security
 {

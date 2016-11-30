@@ -6,13 +6,16 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Security;
-using System.Security.Cryptography;
-using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Lime.Protocol.Network;
+
+#if NET461    
+using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
+#endif
 
 namespace Lime.Protocol
 {
@@ -168,19 +171,16 @@ namespace Lime.Protocol
             return cts.Token;
         }
 
+#if NET461
         /// <summary>
-        /// Gets the identity value from 
-        /// the certificate subject
+        /// Gets the identity value from the certificate subject.
         /// </summary>
         /// <param name="certificate"></param>
         /// <returns></returns>
         public static Identity GetIdentity(this X509Certificate2 certificate)
         {
-            if (certificate == null)
-            {
-                throw new ArgumentNullException("certificate");
-            }            
-
+            if (certificate == null) throw new ArgumentNullException(nameof(certificate));
+            
             var identityName = certificate.GetNameInfo(
                 X509NameType.SimpleName, 
                 false);
@@ -194,6 +194,7 @@ namespace Lime.Protocol
 
             return identity;
         }
+#endif
 
         /// <summary>
         /// Gets the identity
@@ -232,12 +233,12 @@ namespace Lime.Protocol
             return values.Aggregate((a, b) => string.Format("{0},{1}", a, b)).TrimEnd(',');
         }
 
+#if NET461
+
         private static Regex formatRegex = new Regex(@"({)([^}]+)(})", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
         /// <summary>
-        /// Format the string using
-        /// the source object to populate
-        /// the named formats.
+        /// Format the string using the source object to populate the named formats.
         /// http://www.hanselman.com/blog/CommentView.aspx?guid=fde45b51-9d12-46fd-b877-da6172fe1791
         /// </summary>
         /// <param name="format"></param>
@@ -249,9 +250,7 @@ namespace Lime.Protocol
         }
 
         /// <summary>
-        /// Format the string using
-        /// the source object to populate
-        /// the named formats.
+        /// Format the string using the source object to populate the named formats.
         /// http://www.hanselman.com/blog/CommentView.aspx?guid=fde45b51-9d12-46fd-b877-da6172fe1791
         /// </summary>
         /// <param name="format"></param>
@@ -367,6 +366,9 @@ namespace Lime.Protocol
 
             return sb.ToString();
         }
+#endif
+
+
 
         /// <summary>
         /// Creates a completed task.

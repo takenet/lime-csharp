@@ -18,7 +18,13 @@ namespace Lime.Protocol.Network
         /// <param name="localEndPoint">The local end point.</param>
         /// <param name="remoteEndPoint">The remote end point.</param>
         /// <param name="options">The options.</param>
-        public TransportInformation(SessionCompression compression, SessionEncryption encryption, bool isConnected, EndPoint localEndPoint, EndPoint remoteEndPoint, IReadOnlyDictionary<string, object> options)
+        public TransportInformation(
+            SessionCompression compression, 
+            SessionEncryption encryption, 
+            bool isConnected, 
+            string localEndPoint, 
+            string remoteEndPoint, 
+            IReadOnlyDictionary<string, object> options)
         {
             Compression = compression;
             Encryption = encryption;
@@ -46,12 +52,12 @@ namespace Lime.Protocol.Network
         /// <summary>
         /// Gets the local endpoint address.
         /// </summary>
-        public EndPoint LocalEndPoint { get; }
+        public string LocalEndPoint { get; }
 
         /// <summary>
         /// Gets the remote endpoint address.
         /// </summary>
-        public EndPoint RemoteEndPoint { get; }
+        public string RemoteEndPoint { get; }
 
         /// <summary>
         /// Gets specific transport options informations.

@@ -1,13 +1,5 @@
-﻿using Lime.Protocol.Serialization;
-using System;
-using System.Collections;
+﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.Serialization;
-using System.Text;
-using System.Threading.Tasks;
-using Lime.Protocol.Serialization.Newtonsoft;
-using Newtonsoft.Json;
 
 namespace Lime.Protocol
 {
@@ -249,12 +241,5 @@ namespace Lime.Protocol
 
         #endregion
 
-        /// <summary>
-        /// Returns the JSON representation of the object.
-        /// </summary>
-        /// <returns>
-        /// A <see cref="System.String" /> that represents this instance.
-        /// </returns>
-        public override string ToString() => JsonConvert.SerializeObject(this, JsonNetSerializer.Settings);
     }
 }

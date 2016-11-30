@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.NetworkInformation;
 using System.Threading;
 using System.Threading.Tasks;
 using Lime.Protocol.Network;
@@ -32,7 +31,11 @@ namespace Lime.Protocol.Client
             Authenticator = (options, roundtrip) => new GuestAuthentication();
             EstablishmentTimeout = TimeSpan.FromSeconds(30);
             Identity = new Identity(EnvelopeId.NewId(), clientChannelBuilder.ServerUri.Host);
+#if NET461
             Instance = Environment.MachineName;
+#else
+            Instance = "default";
+#endif
         }
 
         /// <summary>
@@ -73,7 +76,12 @@ namespace Lime.Protocol.Client
         /// <summary>
         /// Gets the established handlers.
         /// </summary>
-        public IEnumerable<Func<IClientChannel, CancellationToken, Task>> EstablishedHandlers => _establishedHandlers.AsReadOnly();
+        public IEnumerable<Func<IClientChannel, CancellationToken, Task>> EstablishedHandlers =>
+#if NET461
+            _establishedHandlers.AsReadOnly();
+#else
+        new List<Func<IClientChannel, CancellationToken, Task>>(_establishedHandlers);
+#endif
 
         /// <summary>
         /// Sets the timeout to Build and establish a new session

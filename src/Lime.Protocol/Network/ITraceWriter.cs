@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Lime.Protocol.Util;
 
 namespace Lime.Protocol.Network
 {
@@ -53,7 +54,7 @@ namespace Lime.Protocol.Network
     {
         public static Task TraceIfEnabledAsync(this ITraceWriter traceWriter, string data, DataOperation operation)
         {
-            if (traceWriter == null || !traceWriter.IsEnabled) return Task.CompletedTask;
+            if (traceWriter == null || !traceWriter.IsEnabled) return TaskUtil.CompletedTask;
             return traceWriter.TraceAsync(data, operation);
         }
     }

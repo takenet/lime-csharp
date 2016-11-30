@@ -109,12 +109,12 @@ namespace Lime.Protocol.Network
         /// <summary>
         /// Gets the local endpoint address.
         /// </summary>
-        public virtual EndPoint LocalEndPoint => null;
+        public virtual string LocalEndPoint => null;
 
         /// <summary>
         /// Gets the remote endpoint address.
         /// </summary>
-        public virtual EndPoint RemoteEndPoint => null;
+        public virtual string RemoteEndPoint => null;
 
         /// <summary>
         /// Gets specific transport metadata information.
