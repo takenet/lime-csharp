@@ -6,6 +6,7 @@ using Lime.Protocol;
 using Lime.Protocol.Network;
 using Lime.Protocol.Security;
 using Lime.Protocol.UnitTests;
+using Lime.Transport.Http;
 using Lime.Transport.Http.Storage;
 using NUnit.Framework;
 using Moq;

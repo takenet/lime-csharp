@@ -17,3 +17,4 @@ using System.Runtime.InteropServices;
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
 [assembly: Guid("c572407b-ba88-4810-917e-80bff3506c7a")]
+[assembly: InternalsVisibleTo("Lime.Transport.Http.UnitTests.Core")]

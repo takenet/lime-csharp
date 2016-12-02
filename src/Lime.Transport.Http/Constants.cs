@@ -1,4 +1,6 @@
-﻿namespace Lime.Transport.Http
+﻿using System.Runtime.CompilerServices;
+
+namespace Lime.Transport.Http
 {
     internal static class Constants
     {

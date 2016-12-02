@@ -15,6 +15,7 @@ using Lime.Transport.Http.Serialization;
 using NUnit.Framework;
 using Moq;
 using Shouldly;
+using Newtonsoft.Json;
 
 namespace Lime.Transport.Http.UnitTests.Processors
 {
@@ -76,10 +77,10 @@ namespace Lime.Transport.Http.UnitTests.Processors
             FailedResponseCommand = Dummy.CreateCommand(status: CommandStatus.Failure);
             FailedResponseCommand.Reason = Dummy.CreateReason();
             FailedResponseCommand.Id = RequestCommand.Id;
-
-            RequestContent = JsonSerializer<Presence>.Serialize((Presence)Resource);
+            
+            RequestContent = JsonConvert.SerializeObject((Presence)Resource);
             BodyStream = new MemoryStream(Encoding.UTF8.GetBytes(RequestContent));
-            ResponseContent = JsonSerializer<Presence>.Serialize((Presence)ResourceSuccessResponseCommand.Resource);
+            ResponseContent = JsonConvert.SerializeObject((Presence)ResourceSuccessResponseCommand.Resource);
 
             BodyStream.Seek(0, SeekOrigin.Begin);
             SendCommandUri = new Uri("http://" + Constants.COMMANDS_PATH + ":" + Dummy.CreateRandomInt(50000) + "/" + Constants.COMMANDS_PATH + RequestCommand.Uri.ToString());

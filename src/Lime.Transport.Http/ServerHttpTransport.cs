@@ -9,6 +9,7 @@ using Lime.Protocol;
 using Lime.Protocol.Network;
 using Lime.Protocol.Security;
 using Lime.Transport.Http.Storage;
+using System.Runtime.CompilerServices;
 
 namespace Lime.Transport.Http
 {

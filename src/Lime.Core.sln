@@ -27,6 +27,8 @@ Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Lime.Transport.Tcp.UnitTest
 EndProject
 Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Lime.Transport.Http", "Lime.Transport.Http\Lime.Transport.Http.xproj", "{C572407B-BA88-4810-917E-80BFF3506C7A}"
 EndProject
+Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Lime.Transport.Http.UnitTests", "Lime.Transport.Http.UnitTests\Lime.Transport.Http.UnitTests.xproj", "{EF890348-DE0D-4741-A524-205273DE0C62}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -81,6 +83,10 @@ Global
 		{C572407B-BA88-4810-917E-80BFF3506C7A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C572407B-BA88-4810-917E-80BFF3506C7A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C572407B-BA88-4810-917E-80BFF3506C7A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EF890348-DE0D-4741-A524-205273DE0C62}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EF890348-DE0D-4741-A524-205273DE0C62}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EF890348-DE0D-4741-A524-205273DE0C62}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EF890348-DE0D-4741-A524-205273DE0C62}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
