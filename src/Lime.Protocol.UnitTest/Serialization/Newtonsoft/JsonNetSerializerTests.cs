@@ -13,6 +13,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NUnit.Framework;
 using Shouldly;
+using Lime.Messaging;
 
 namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 {
@@ -23,6 +24,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 
         private IEnvelopeSerializer GetTarget()
         {
+            Registrator.RegisterDocuments();
             return new JsonNetSerializer();
         }
 
@@ -1702,6 +1704,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 			var target = GetTarget();
 			var method = CommandMethod.Set;
 			var id = EnvelopeId.NewId();
+            TypeUtil.RegisterDocument<TestDocument>();
 
 			string json =
 			    $"{{\"type\":\"application/vnd.takenet.testdocument+json\",\"resource\":{{\"double\":10.1, \"NullableDouble\": 10.2}},\"method\":\"{method.ToString().ToCamelCase()}\",\"id\":\"{id}\"}}";

@@ -73,13 +73,13 @@ namespace Lime.Protocol.Serialization
             {
                 try
                 {
-                    var getParseFuncMethod = typeof(TypeUtil)
+                    var getParseFuncMethod = typeof(TypeUtilEx)
                         .GetMethod("GetParseFunc", BindingFlags.Static | BindingFlags.Public)
                         .MakeGenericMethod(type);
 
                     var genericGetParseFunc = getParseFuncMethod.Invoke(null, null);
 
-                    var parseFuncAdapterMethod = typeof(TypeUtil)
+                    var parseFuncAdapterMethod = typeof(TypeUtilEx)
                         .GetMethod("ParseFuncAdapter", BindingFlags.Static | BindingFlags.NonPublic)
                         .MakeGenericMethod(type);
 

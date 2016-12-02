@@ -4,8 +4,10 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 
+[assembly:InternalsVisibleTo("Lime.Protocol.Serialization")]
 namespace Lime.Protocol.Serialization
 {
     /// <summary>
@@ -184,6 +186,18 @@ namespace Lime.Protocol.Serialization
         {
             if (type == null) throw new ArgumentNullException(nameof(type));           
             return Activator.CreateInstance(type);
+        }
+
+        internal static void RegisterInternalTypes()
+        {
+            RegisterDocument<DocumentCollection>();
+            RegisterDocument<DocumentContainer>();
+            RegisterDocument<IdentityDocument>();
+            RegisterDocument<JsonDocument>();
+
+            RegisterType(typeof(GuestAuthentication));
+            RegisterType(typeof(KeyAuthentication));
+            RegisterType(typeof(PlainAuthentication));
         }
 
         private static void RegisterType(Type type)

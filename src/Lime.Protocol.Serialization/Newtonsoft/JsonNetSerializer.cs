@@ -19,6 +19,7 @@ namespace Lime.Protocol.Serialization.Newtonsoft
 
         static JsonNetSerializer()
         {
+            TypeUtil.RegisterInternalTypes();
             JsonConvert.DefaultSettings = () => Settings;
             _serializer = JsonSerializer.Create(Settings);
         }
