@@ -25,6 +25,8 @@ Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Lime.Protocol.Serialization
 EndProject
 Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Lime.Transport.Tcp.UnitTests", "Lime.Transport.Tcp.UnitTests\Lime.Transport.Tcp.UnitTests.xproj", "{068EDBA5-9650-40A7-874A-0ACF66659859}"
 EndProject
+Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Lime.Transport.Http", "Lime.Transport.Http\Lime.Transport.Http.xproj", "{C572407B-BA88-4810-917E-80BFF3506C7A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -75,6 +77,10 @@ Global
 		{068EDBA5-9650-40A7-874A-0ACF66659859}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{068EDBA5-9650-40A7-874A-0ACF66659859}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{068EDBA5-9650-40A7-874A-0ACF66659859}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C572407B-BA88-4810-917E-80BFF3506C7A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C572407B-BA88-4810-917E-80BFF3506C7A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C572407B-BA88-4810-917E-80BFF3506C7A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C572407B-BA88-4810-917E-80BFF3506C7A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

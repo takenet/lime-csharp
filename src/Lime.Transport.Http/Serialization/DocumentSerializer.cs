@@ -1,6 +1,9 @@
 ﻿using System;
 using Lime.Protocol;
 using Lime.Protocol.Serialization;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using System.Collections.Generic;
 
 namespace Lime.Transport.Http.Serialization
 {
@@ -18,7 +21,7 @@ namespace Lime.Transport.Http.Serialization
             var mediaType = document.GetMediaType();
             if (mediaType.IsJson)
             {
-                return JsonSerializer.Serialize(document);
+                return JsonConvert.SerializeObject(document);
             }
             else
             {
@@ -44,11 +47,11 @@ namespace Lime.Transport.Http.Serialization
             {
                 if (mediaType.IsJson)
                 {
-                    document = JsonSerializer.Deserialize(type, documentString) as Document;
+                    document = JsonConvert.DeserializeObject(documentString, type) as Document;
                 }
                 else
                 {
-                    var parseFunc = TypeUtil.GetParseFuncForType(type);
+                    var parseFunc = TypeUtilEx.GetParseFuncForType(type);
                     document = parseFunc(documentString) as Document;
                 }                
             }
@@ -56,8 +59,8 @@ namespace Lime.Transport.Http.Serialization
             {
                 if (mediaType.IsJson)
                 {
-                    var json = JsonObject.ParseJson(documentString);
-                    document = new JsonDocument(json, mediaType);
+                    var json = JObject.Parse(documentString);
+                    document = new JsonDocument(json.ToObject<Dictionary<string, object>>(), mediaType);
                 }
                 else
                 {
