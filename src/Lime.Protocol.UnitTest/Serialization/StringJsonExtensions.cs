@@ -9,6 +9,7 @@ namespace Lime.Protocol.UnitTests.Serialization
 {
     public static class StringJsonExtensions
     {
+        public const string DATE_FORMAT = "yyyy'-'MM'-'dd'T'HH':'mm':'ss'.'fff'Z'";
         public static bool HasValidJsonStackedBrackets(this string json)
         {
             if (json.Length == 0) return false;
@@ -67,19 +68,19 @@ namespace Lime.Protocol.UnitTests.Serialization
             if (value is double)
             {
                 return json.Contains(
-                    $"\"{key}\":{((double) value).ToString(CultureInfo.InvariantCulture)}");
+                    $"\"{key}\":{((double)value).ToString(CultureInfo.InvariantCulture)}");
             }
 
             if (value is DateTime)
             {
                 return json.Contains(
-                    $"\"{key}\":\"{((DateTime) value).ToUniversalTime().ToString(TextJsonWriter.DATE_FORMAT, CultureInfo.InvariantCulture)}\"");
+                    $"\"{key}\":\"{((DateTime)value).ToUniversalTime().ToString(DATE_FORMAT, CultureInfo.InvariantCulture)}\"");
             }
 
             if (value is DateTimeOffset)
             {
                 return json.Contains(
-                    $"\"{key}\":\"{((DateTimeOffset) value).ToUniversalTime().ToString(TextJsonWriter.DATE_FORMAT, CultureInfo.InvariantCulture)}\"");
+                    $"\"{key}\":\"{((DateTimeOffset)value).ToUniversalTime().ToString(DATE_FORMAT, CultureInfo.InvariantCulture)}\"");
             }
 
             if (value.GetType().IsEnum)
@@ -109,7 +110,7 @@ namespace Lime.Protocol.UnitTests.Serialization
                 stringBuilder.AppendFormat("\"{0}\":[", key);
 
                 foreach (var v in (Array)value)
-                {                    
+                {
                     if (v is int || v is long || v is bool)
                     {
                         stringBuilder.AppendFormat("{0},", v);
