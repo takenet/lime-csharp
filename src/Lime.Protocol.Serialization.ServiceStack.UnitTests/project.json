@@ -1,0 +1,21 @@
+{
+  "version": "1.0.0-*",
+
+  "dependencies": {
+    "Lime.Messaging": "0.7.2-*",
+    "Lime.Protocol": "0.7.2-*",
+    "Lime.Protocol.Serialization": "0.7.2-*",
+    "Lime.Protocol.UnitTest": "1.0.0-*"
+  },
+
+  "frameworks": {
+    "net461": {
+      "frameworkAssemblies": {
+
+      },
+      "dependencies": {
+        "Shouldly": "2.6.0"
+      }
+    }
+  }
+}

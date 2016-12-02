@@ -1,0 +1,32 @@
+﻿{
+  "title": "Lime.Transport.Serialization.ServiceStack",
+  "description": "C# LIME protocol serialization library using ServiceStack",
+  "version": "0.7.2-*",
+  "authors": [ "takenet", "andrebires" ],
+  "copyright": "Copyright ₢ 2014 Curupira S/A",
+  "packOptions": {
+    "owners": [ "takenet", "andrebires" ],
+    "tags": [ "lime" ]
+  },
+  "dependencies": {
+    "Lime.Protocol": "0.7.2-*",
+  },
+  "frameworks": {
+    "netstandard1.6": {
+      "imports": "dnxcore50",
+      "dependencies": {
+        "NETStandard.Library": "1.6.0",
+        "System.Reflection.TypeExtensions": "4.3.0"
+      }
+    },
+    "net461": {
+      "frameworkAssemblies": {
+        "System.Runtime.Serialization": "4.0.0"
+      },
+      "dependencies": {
+        "Microsoft.Tpl.Dataflow": "4.5.24",
+        "ServiceStack.Text": "4.0.23"
+      }
+    }
+  }
+}
