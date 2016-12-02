@@ -87,7 +87,8 @@ namespace Lime.Transport.Tcp.UnitTests
         {
             return new TcpTransport(
                 _tcpClient.Object,
-                _envelopeSerializer.Object,
+                _envelopeSerializer.Object, 
+                _serverUri.ToString(),
                 certificate,
                 bufferSize,
                 _traceWriter.Object);

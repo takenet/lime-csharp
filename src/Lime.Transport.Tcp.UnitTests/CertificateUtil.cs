@@ -3,7 +3,6 @@ using System.Collections.Concurrent;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
-using CERTENROLLLib;
 using Pluralsight.Crypto;
 using System.IO;
 

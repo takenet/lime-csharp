@@ -1,0 +1,25 @@
+﻿{
+  "version": "1.0.0-*",
+
+  "dependencies": {
+    "Lime.Messaging": "0.7.2-*",
+    "Lime.Protocol": "0.7.2-*",
+    "Lime.Protocol.Serialization": "0.7.2-*",
+    "Lime.Protocol.UnitTest": "1.0.0-*",
+    "Lime.Transport.Tcp": "0.7.2-*"
+  },
+
+  "frameworks": {
+    "net461": {
+      "frameworkAssemblies": {
+        "System.Runtime.Serialization": "4.0.0"
+      },
+      "dependencies": {
+        "Moq": "4.2.1409.1722",
+        "NUnit": "3.0.1",
+        "Pluralsight.Crypto": "1.1.0",
+        "Shouldly": "2.6.0"
+      }
+    }
+  }
+}
