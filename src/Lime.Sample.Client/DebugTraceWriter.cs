@@ -7,8 +7,6 @@ namespace Lime.Sample.Client
 {
     public class DebugTraceWriter : ITraceWriter
     {
-        #region ITraceWriter Members
-
         public Task TraceAsync(string data, DataOperation operation)
         {
             Debug.WriteLine($"{operation} - {data}");
@@ -19,7 +17,5 @@ namespace Lime.Sample.Client
         {
             get { return true; }
         }
-
-        #endregion
     }
 }

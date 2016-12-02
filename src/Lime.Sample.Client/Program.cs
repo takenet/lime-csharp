@@ -13,8 +13,8 @@ using Lime.Protocol.Network;
 using Lime.Protocol.Network.Modules;
 using Lime.Transport.Tcp;
 using Lime.Protocol.Security;
+using Lime.Protocol.Serialization.Newtonsoft;
 using Lime.Protocol.Util;
-using StackExchange.Redis;
 
 namespace Lime.Sample.Client
 {
@@ -26,7 +26,7 @@ namespace Lime.Sample.Client
         }
 
         static async Task MainAsync(string[] args)
-        {            
+        {
             Console.Write("Server URI (ENTER for default): ");
 
             var serverUriValue = Console.ReadLine();
@@ -48,25 +48,26 @@ namespace Lime.Sample.Client
             if (identity != null)
             {
                 Console.Write("Password: ");
-                password = Console.ReadLine();                
+                password = Console.ReadLine();
             }
 
             var setPresence = true;
             var setReceipts = true;
-            
+
             // Creates a new transport and connect to the server
             var serverUri = new Uri(serverUriValue);
             Func<ITransport> transportFactory = () => CreateTransportForUri(serverUri);
 
             // Creates a new client channel
             var builder = ClientChannelBuilder
-                .Create(transportFactory, serverUri)
+                .Create(transportFactory, serverUri)                
                 .AddBuiltHandler((channel, token) =>
                 {
                     channel.CommandModules.Add(new ReplyPingChannelModule(channel));
                     return TaskUtil.CompletedTask;
                 })
                 .CreateEstablishedClientChannelBuilder()
+                .WithEncryption(SessionEncryption.TLS)
                 .AddEstablishedHandler(async (c, t) =>
                 {
                     if (setPresence)
@@ -90,7 +91,7 @@ namespace Lime.Sample.Client
                             new LimeUri(UriTemplates.RECEIPT),
                             new Receipt()
                             {
-                                Events = new[] {Event.Received, Event.Dispatched}
+                                Events = new[] { Event.Received, Event.Dispatched }
                             },
                             t);
                     }
@@ -154,7 +155,7 @@ namespace Lime.Sample.Client
                 Console.Write("Destination node (Type EXIT to quit): ");
                 var toInput = Console.ReadLine();
                 if (toInput != null &&
-                    toInput.Equals("exit", StringComparison.InvariantCultureIgnoreCase))
+                    toInput.Equals("exit", StringComparison.OrdinalIgnoreCase))
                 {
                     break;
                 }
@@ -206,18 +207,18 @@ namespace Lime.Sample.Client
                 channelListener.NotificationListenerTask,
                 channelListener.CommandListenerTask);
 
-            await onDemandChannel.FinishAsync(CancellationToken.None);            
+            await onDemandChannel.FinishAsync(CancellationToken.None);
 
             Console.WriteLine("Press any key to exit.");
             Console.Read();
         }
 
         private static ITransport CreateTransportForUri(Uri uri)
-        {            
+        {
             switch (uri.Scheme)
             {
                 case "net.tcp":
-                    return new TcpTransport(traceWriter: new DebugTraceWriter());                    
+                    return new TcpTransport(new JsonNetSerializer(), traceWriter: new DebugTraceWriter());
                 //case "ws":
                 //case "wss":
                 //    return new ClientWebSocketTransport(new JsonNetSerializer(), new DebugTraceWriter());
@@ -225,8 +226,8 @@ namespace Lime.Sample.Client
                 //    return new RedisTransport(uri, new JsonNetSerializer());
 
                 default:
-                    throw new NotSupportedException($"Unsupported URI scheme '{uri.Scheme}'");                    
-            }            
+                    throw new NotSupportedException($"Unsupported URI scheme '{uri.Scheme}'");
+            }
         }
 
         static async Task ConsumeMessagesAsync(IClientChannel clientChannel, CancellationToken cancellationToken)
@@ -244,7 +245,7 @@ namespace Lime.Sample.Client
         static async Task ConsumeCommandsAsync(IClientChannel clientChannel, CancellationToken cancellationToken)
         {
             while (!cancellationToken.IsCancellationRequested)
-            {                
+            {
                 var command = await clientChannel.ReceiveCommandAsync(cancellationToken);
                 Console.ForegroundColor = ConsoleColor.DarkGreen;
                 Console.WriteLine("Command with id '{0}' received from '{1}' - Method: {2} - URI: {3}", command.Id, command.From ?? clientChannel.RemoteNode, command.Method, command.Uri);
@@ -258,15 +259,15 @@ namespace Lime.Sample.Client
             {
                 var notification = await clientChannel.ReceiveNotificationAsync(cancellationToken);
 
-                Console.ForegroundColor = ConsoleColor.DarkBlue;                
+                Console.ForegroundColor = ConsoleColor.DarkBlue;
                 Console.WriteLine("Notification with id {0} received from '{1}' - Event: {2}", notification.Id, notification.From ?? clientChannel.RemoteNode, notification.Event);
                 Console.ResetColor();
             }
-        }                            
+        }
     }
 
     public static class TaskExtensions
-    {        
+    {
         public static Task WithPassiveCancellation(this Task task)
         {
             return task.ContinueWith(t => t, TaskContinuationOptions.OnlyOnCanceled);
