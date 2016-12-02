@@ -44,7 +44,7 @@ namespace Lime.Protocol.Serialization.Newtonsoft.Converters
                 }
                 else if (jToken != null)
                 {
-                    var parseFunc = TypeUtil.GetParseFuncForType(documentType);
+                    var parseFunc = TypeUtilEx.GetParseFuncForType(documentType);
                     document = (Document)parseFunc(jToken.ToString());
                 }
                 else
