@@ -1,0 +1,21 @@
+﻿{
+  "version": "1.0.0-*",
+
+  "dependencies": {
+    "Lime.Messaging": "0.7.2-*",
+    "Lime.Protocol": "0.7.2-*",
+    "Lime.Protocol.Serialization": "0.7.2-*",
+    "Lime.Transport.Tcp": "0.7.2-*",
+    "StackExchange.Redis": "1.1.608",
+    "Microsoft.NETCore.App": {
+      "type": "platform",
+      "version": "1.0.1"
+    }
+  },
+
+  "frameworks": {
+    "netcoreapp1.0": {
+      "imports": "dnxcore50"
+    }
+  }
+}

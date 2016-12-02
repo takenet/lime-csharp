@@ -8,8 +8,8 @@ using Lime.Protocol.Server;
 using Lime.Transport.Tcp;
 using Lime.Protocol.Security;
 using Lime.Protocol.Serialization.Newtonsoft;
-using Lime.Transport.Redis;
-using Lime.Transport.WebSocket;
+//using Lime.Transport.Redis;
+//using Lime.Transport.WebSocket;
 using StackExchange.Redis;
 
 namespace Lime.Sample.Server
@@ -76,15 +76,15 @@ namespace Lime.Sample.Server
                         uri,
                         serverCertificate,
                         serializer);
-                case "ws":
-                case "wss":
-                    return new WebSocketTransportListener(
-                        uri,
-                        null,
-                        serializer);
-
-                case "redis":
-                    return new RedisTransportListener(uri, serializer);
+                //case "ws":
+                //case "wss":
+                //    return new WebSocketTransportListener(
+                //        uri,
+                //        null,
+                //        serializer);
+                //
+                //case "redis":
+                //    return new RedisTransportListener(uri, serializer);
 
                 default:
                     throw new NotSupportedException($"Unsupported URI scheme '{uri.Scheme}'");
