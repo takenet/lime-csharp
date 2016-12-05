@@ -10,6 +10,7 @@ using System.Linq;
 using System.Net.NetworkInformation;
 using System.Threading;
 using System.Threading.Tasks;
+using Lime.Protocol.Serialization.Newtonsoft;
 
 namespace Lime.Client.Console.Mono
 {
@@ -104,7 +105,7 @@ namespace Lime.Client.Console.Mono
 
 		private static async Task<IClientChannel> ConnectAsync()
 		{
-			var transport = new TcpTransport ();
+			var transport = new TcpTransport(new JsonNetSerializer(), traceWriter: new DebugTraceWriter());
 
 			await transport.OpenAsync (
 				new Uri ("net.tcp://takenet-iris.cloudapp.net:55321"),
