@@ -7,7 +7,7 @@ using System.Runtime.InteropServices;
 // associated with an assembly.
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("Lime.Client.Console.Mono.Core")]
+[assembly: AssemblyProduct("Lime.Client.Console.Mono.App")]
 [assembly: AssemblyTrademark("")]
 
 // Setting ComVisible to false makes the types in this assembly not visible
@@ -16,4 +16,4 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("1a5c1c44-ef2d-4a0a-8654-1bc89a5d7902")]
+[assembly: Guid("cff1ada0-7250-4638-940d-e06ca4f3d721")]
