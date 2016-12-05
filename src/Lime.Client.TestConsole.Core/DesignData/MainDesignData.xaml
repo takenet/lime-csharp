@@ -1,0 +1,8 @@
+﻿<vm:MainViewModel xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                  xmlns:vm="clr-namespace:Lime.Client.TestConsole.ViewModels">
+    <vm:MainViewModel.SelectedSession>
+        <vm:SessionViewModel />
+    </vm:MainViewModel.SelectedSession>
+    
+</vm:MainViewModel>

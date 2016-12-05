@@ -1,0 +1,58 @@
+﻿<vm:SessionViewModel xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                  xmlns:vm="clr-namespace:Lime.Client.TestConsole.ViewModels"
+                  InputJson="{}{&quot;state&quot;:&quot;new&quot;}"
+                  IsBusy="True"
+                  StatusMessage="Connecting..."
+                  LastSessionState="Established"
+                  LastNotificationEvent="Dispatched">
+    <vm:SessionViewModel.Envelopes>
+        <vm:EnvelopeViewModel Direction="Send"
+                              Json="{}{&quot;state&quot;:&quot;new&quot;}" />
+        <vm:EnvelopeViewModel Direction="Receive"
+                              Json="{}{
+    &quot;id&quot;: &quot;d35ad2be-9aa9-4825-9096-d6332655ed1d&quot;,
+    &quot;from&quot;: &quot;server@breakingbad.com/server1&quot;,    
+    &quot;state&quot;: &quot;negotiating&quot;,
+    &quot;encryptionOptions&quot;: [ &quot;none&quot;, &quot;tls&quot; ],
+    &quot;compressionOptions&quot;: [ &quot;none&quot;, &quot;gzip&quot; ]    
+}" />
+        <vm:EnvelopeViewModel Direction="Send"
+                              Json="{}{
+    &quot;id&quot;: &quot;d35ad2be-9aa9-4825-9096-d6332655ed1d&quot;,
+    &quot;state&quot;: &quot;negotiating&quot;,    
+    &quot;encryption&quot;: &quot;tls&quot;,
+    &quot;compression&quot;: &quot;none&quot;
+}" />
+        <vm:EnvelopeViewModel Direction="Receive"
+                              Json="{}{
+    &quot;id&quot;: &quot;d35ad2be-9aa9-4825-9096-d6332655ed1d&quot;,
+    &quot;from&quot;: &quot;server@breakingbad.com/server1&quot;,    
+    &quot;state&quot;: &quot;negotiating&quot;,    
+    &quot;encryption&quot;: &quot;tls&quot;,
+    &quot;compression&quot;: &quot;none&quot;
+}" IsRaw="True" />
+    </vm:SessionViewModel.Envelopes>
+    <vm:SessionViewModel.Variables>
+        <vm:VariableViewModel Name="from" Value="source@domain.com/instance" />
+        <vm:VariableViewModel Name="to" Value="destination@domain.com/instance" />
+    </vm:SessionViewModel.Variables>
+    <vm:SessionViewModel.Templates>
+
+        <vm:TemplateViewModel Name="Negotiating TLS/None" Category="Session" JsonTemplate="{}{
+    &quot;id&quot;: &quot;$sessionId&quot;,    
+    &quot;state&quot;: &quot;negotiating&quot;,
+    &quot;encryption&quot;: &quot;tls&quot;, 
+    &quot;compression&quot;: &quot;none&quot;
+}" />
+        
+    </vm:SessionViewModel.Templates>
+    <vm:SessionViewModel.Macros>
+        <vm:MacroViewModel Name="Close session" Category="Session" IsActive="True" />        
+        <vm:MacroViewModel Name="MyMacro" Category="Undefined" IsActive="False" />
+    </vm:SessionViewModel.Macros>
+    <vm:SessionViewModel.StatusMessages>
+        <vm:StatusMessageViewModel Message="Connecting" Timestamp="2014-06-06 14:55:00" IsError="False" />
+        <vm:StatusMessageViewModel Message="Could not connect to the remote server" Timestamp="2014-06-06 14:56:00" IsError="True" />
+    </vm:SessionViewModel.StatusMessages>
+</vm:SessionViewModel>

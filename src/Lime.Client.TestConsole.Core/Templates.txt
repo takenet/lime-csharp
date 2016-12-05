@@ -1,0 +1,58 @@
+﻿New	Session	{"state":"new"}
+Negotiating none/none	Session	{"id":"%sessionId","state":"negotiating","encryption":"none","compression":"none"}
+Negotiating none/tls	Session	{"id":"%sessionId","state":"negotiating","encryption":"tls","compression":"none"}
+Authenticating guest	Session	{"id":"%sessionId","from":"%guestIdentity","state":"authenticating","scheme":"guest"}
+Authenticating plain	Session	{"id":"%sessionId","from":"%from","state":"authenticating","scheme":"plain","authentication":{"password":"%password"}}
+Authenticating key	Session	{"id":"%sessionId","from":"%from","state":"authenticating","scheme":"key","authentication":{"key":"%key"}}
+Authenticating transport	Session	{"id":"%sessionId","from":"%from","state":"authenticating","scheme":"transport"}
+Finishing	Session	{"id":"%sessionId","state": "finishing"}
+Text message	Message	{"id":"%messageId","to":"%to","type":"text/plain","content":"%text"}
+Text message with pp	Message	{"id":"%messageId","from":"%delegateIdentity","to":"%to","pp":"%localNode","type":"text/plain","content":"%text"}
+Chat state message	Message	{"to":"%to","type":"application/vnd.lime.chatstate+json","content":{"state":"%chatState"}}
+Fire-and-forget text message	Message	{"to":"%to","type":"text/plain","content":"%text"}
+MediaLink message	Message	{"id":"%messageId","to":"%to","type":"application/vnd.lime.media-link+json","content":{"type":"%mediaLinkType","uri":"%mediaLinkUri","title":"%mediaLinkTitle","text":"%mediaLinkText","size":%mediaLinkSize,"previewUri":"%mediaLinkPreviewUri","previewType":"%mediaLinkPreviewType"}}
+Select message	Message	{"id":"%messageId","to":"%to","type":"application/vnd.lime.select+json","content":{"text":"%selectText","options":[{"order":1,"text":"%option1Text"},{"order":2,"text":"%option2Text"},{"order":3,"text":"%option3Text","type":"application/json","value":{"key1":"value1","key2":"value2"}}]}}
+Document select message	Message	{"id":"%messageId","to":"%to","type":"application/vnd.lime.document-select+json","content":{"header":{"type":"text/plain","value":"%selectText"},"options":[{"label":{"type":"text/plain","value":"%option1Text"}},{"label":{"type":"text/plain","value":"%option2Text"}},{"label":{"type":"text/plain","value":"%option3Text"},"value":{"type":"application/json","value":{"key1":"value1","key2":"value2"}}}]}}
+Text collection message	Message	{"id":"%messageId","to":"%to","type":"application/vnd.lime.collection+json","content":{"itemType":"text/plain","items":["%collectionItem1Text","%collectionItem2Text"]}}
+Location message	Message	{"id":"%messageId","to":"%to","type":"application/vnd.lime.location+json","content":{"latitude":%locationLatitude,"longitude":%locationLongitude,"altitude":%locationAltitude,"course":%locationCourse,"speed":%locationSpeed,"accuracy":%locationAccuracy}}
+Received notification	Notification	{"id":"%messageId","to":"%to","event":"received"}
+Consumed notification	Notification	{"id":"%messageId","to":"%to","event":"consumed"}
+Failed notification	Notification	{"id":"%messageId","from":"%from","to":"%to","event":"failed","reason":{"code":%reasonCode,"description":"%reasonDescription"}}
+Set presence available	Command	{"id":"%commandId","method":"set","type":"application/vnd.lime.presence+json","uri":"/presence","resource":{"status":"available"}}
+Set presence available identity	Command	{"id":"%commandId","method":"set","type":"application/vnd.lime.presence+json","uri":"/presence","resource":{"status":"available","routingRule":"identity"}}
+Set presence available promiscuous	Command	{"id":"%commandId","method":"set","type":"application/vnd.lime.presence+json","uri":"/presence","resource":{"status":"available","routingRule":"promiscuous"}}
+Set presence invisible	Command	{"id":"%commandId","method":"set","type":"application/vnd.lime.presence+json","uri":"/presence","resource":{"status":"invisible"}}
+Set presence unavailable	Command	{"id":"%commandId","method":"set","type":"application/vnd.lime.presence+json","uri":"/presence","resource":{"status":"unavailable"}}
+Get own presence	Command	{"id":"%commandId","method":"get","uri":"/presence"}
+Get presence	Command	{"id":"%commandId","from":"%from","pp":"%localNode","method":"get","uri":"/presence"}
+Subscribe own presence	Command	{"id":"%commandId","method":"subscribe","uri":"/presence"}
+Subscribe presence	Command	{"id":"%commandId","method":"subscribe","uri":"lime://%presenceIdentity/presence"}
+Get account	Command	{"id":"%commandId","from":"%from","pp":"%localNode","method":"get","uri":"/account"}
+Get own account	Command	{"id":"%commandId","method":"get","uri":"/account"}
+Set account	Command	{"id":"%commandId","from":"%accountIdentity","pp":"%localNode","method":"set","type":"application/vnd.lime.account+json","uri":"/account","resource":{"fullName":"%fullName","phoneNumber":"%phoneNumber","city":"%city","password":"%newPassword"}}
+Set account password	Command	{"id":"%commandId","method":"set","type":"application/vnd.lime.account+json","uri":"/account","resource":{"password":"%newPassword","oldPassword":"%oldPassword"}}
+Get directory account	Command	{"id":"%commandId","method":"get","uri":"lime://%domain/accounts/%accountIdentity"}
+Get directory accounts	Command	{"id":"%commandId","method":"get","uri":"lime://%domain/accounts"}
+Subscribe own account	Command	{"id":"%commandId","method":"subscribe","uri":"/acount"}
+Subscribe account	Command	{"id":"%commandId","method":"subscribe","uri":"lime://%accountIdentity/presence"}
+Set receipts all events	Command	{"id":"%commandId","method":"set","type":"application/vnd.lime.receipt+json","uri":"/receipt","resource":{"events":["failed","accepted","validated","authorized","dispatched","received","consumed"]}}
+Set receipts destination events	Command	{"id":"%commandId","method":"set","type":"application/vnd.lime.receipt+json","uri":"/receipt","resource":{"events":["failed","received","consumed"]}}
+Get groups	Command	{"id":"%commandId","method":"get","type":"application/vnd.lime.group+json","uri": "/groups"}
+Get group	Command	{"id":"%commandId","method":"get","type":"application/vnd.lime.group+json","uri": "/groups/%groupIdentity"}
+Set group	Command	{"id":"%commandId","method":"set","type":"application/vnd.lime.group+json","uri": "/groups","resource":{"identity":"%groupIdentity","name":"%groupName","type":"public"}}
+Get group members	Command	{"id":"%commandId","method":"get","uri": "/groups/%groupIdentity/members"}
+Set group member	Command	{"id":"%commandId","method":"set","type":"application/vnd.lime.groupmember+json","uri": "/groups/%groupIdentity/members","resource":{"address":"%groupMemberAddress","role":"%groupMemberRole"}}
+Get contacts	Command	{"id":"%commandId","method":"get","uri": "/contacts"}
+Set contact	Command	{"id":"%commandId","method":"set","type":"application/vnd.lime.contact+json","uri":"/contacts","resource":{"identity":"%contactIdentity","name":"%contactName","sharePresence":true,"shareAccountInfo":true}}
+Delete contact	Command	{"id":"%commandId","method":"delete","uri": "/contacts/%contactIdentity"}
+Set location	Command	{"id":  "%commandId","to":"postmaster@location.take.io","method":"set","type":"application/vnd.lime.location+json","uri":"/location","resource":{"latitude":10.1,"longitude":10.2}}
+Get location	Command	{"id":  "%commandId","to":"postmaster@location.take.io","method":"get","type":"application/vnd.lime.location+json","uri":"/location"}
+Set delegation	Command	{"id":"%commandId","method":"set","type":"application/vnd.lime.delegation+json","uri":"/delegations","resource":{"target":"%targetIdentity"}}
+Delete delegation	Command	{"id":"%commandId","method":"delete","type":"application/vnd.lime.delegation+json","uri":"/delegations/%targetIdentity"}
+Set distribution list	Command	{"id": "%commandId","to":"postmaster@broadcast.%domain","method":"set","type":"application/vnd.iris.distribution-list+json","uri":"/lists","resource":{"identity": "%distributionListIdentity"}} 
+Set distribution list recipient	Command	{"id": "%commandId","to":"postmaster@broadcast.%domain","method":"set","type":"application/vnd.lime.identity","uri":"/lists/%distributionListIdentity/recipients","resource": "%recipientIdentity"} 
+Set distribution list recipients	Command	{"id": "%commandId","to":"postmaster@broadcast.%domain","method":"set","type":"application/vnd.lime.collection+json","uri":"/lists/%distributionListIdentity/recipients","resource": {"itemType": "application/vnd.lime.identity", "items": ["%recipientIdentity1","%recipientIdentity2"]}} 
+Get distribution list recipients	Command	{"id": "%commandId","to":"postmaster@broadcast.%domain","method":"get","uri":"/lists/%distributionListIdentity/recipients?$take=20"}
+Delete distribution list recipient	Command	{"id": "%commandId","to":"postmaster@broadcast.%domain","method":"delete","uri":"/lists/%distributionListIdentity/recipients/%recipientIdentity"}
+Set scheduled message	Command	{"id": "%newGuid", "to": "postmaster@scheduler.%domain","method": "set","uri": "/schedules","type": "application/vnd.iris.schedule+json","resource": {"message": {"id": "%newGuid","to": "%to","type": "text/plain","content": "%text"},"when": "%when"}}
+Get ping	Command {"id": "%newGuid","to": "%to","method": "get","uri": "/ping"}
