@@ -17,3 +17,4 @@ using System.Runtime.InteropServices;
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
 [assembly: Guid("27142c06-d423-43ca-b027-de01035faa5f")]
+[assembly: InternalsVisibleTo("Lime.Transport.WebSocket")]
