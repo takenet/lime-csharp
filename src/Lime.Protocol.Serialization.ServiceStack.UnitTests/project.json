@@ -4,7 +4,7 @@
   "dependencies": {
     "Lime.Protocol": "0.7.*",
     "Lime.Protocol.Serialization": "0.7.*",
-    "Lime.Protocol.UnitTest": "0.7.*"
+    "Lime.Protocol.UnitTests": "0.7.*"
   },
 
   "frameworks": {

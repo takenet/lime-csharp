@@ -6,18 +6,22 @@
     "Lime.Protocol": "0.7.*",
     "Lime.Protocol.Serialization": "0.7.*",
     "Lime.Transport.Tcp": "0.7.*",
-    "Lime.Protocol.UnitTest": "1.0.0-*"
+    "Lime.Protocol.UnitTests": "1.0.0-*",
+    "NUnit": "3.5.0",
+    "dotnet-test-nunit": "3.4.0-beta-3",
+    "NUnit.Console": "3.5.0",
+    "NUnit3TestAdapter": "3.6.0"
   },
+
+  "testRunner": "nunit",
 
   "frameworks": {
     "net461": {
       "frameworkAssemblies": {
-        
+
       },
       "dependencies": {
         "Microsoft.Tpl.Dataflow": "4.5.24",
-        "NUnit": "3.0.1",
-        "NUnit.Console": "3.0.1",
         "Shouldly": "2.8.2"
       }
     }

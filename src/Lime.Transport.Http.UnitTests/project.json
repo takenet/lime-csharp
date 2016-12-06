@@ -5,7 +5,7 @@
     "Lime.Protocol": "0.7.*",
     "Lime.Protocol.Serialization": "0.7.*",
     "Lime.Transport.Http": "0.7.*",
-    "Lime.Protocol.UnitTest": "1.0.0-*",
+    "Lime.Protocol.UnitTests": "1.0.0-*",
     "NUnit": "3.5.0",
     "dotnet-test-nunit": "3.4.0-beta-3",
     "NUnit.Console": "3.5.0",
