@@ -1,6 +1,14 @@
 ﻿{
   "version": "1.0.0-*",
-
+  "buildOptions": {
+    "copyToOutput": {
+      "include": [
+        "client_fakedomain.local.pfx",
+        "fakedomain.local.pfx",
+        "root.fakedomain.local.pfx"
+      ]
+    }
+  },
   "dependencies": {
     "Lime.Protocol": "0.7.*",
     "Lime.Transport.Tcp": "0.7.*",
