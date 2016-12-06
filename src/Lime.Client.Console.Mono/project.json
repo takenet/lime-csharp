@@ -2,10 +2,10 @@
   "version": "1.0.0-*",
 
   "dependencies": {
-    "Lime.Messaging": "0.7.0-*",
-    "Lime.Protocol": "0.7.0-*",
-    "Lime.Protocol.Serialization": "0.7.0-*",
-    "Lime.Transport.Tcp": "0.7.0-*",
+    "Lime.Messaging": "0.7.*",
+    "Lime.Protocol": "0.7.*",
+    "Lime.Protocol.Serialization": "0.7.*",
+    "Lime.Transport.Tcp": "0.7.*",
     "Microsoft.NETCore.App": {
       "type": "platform",
       "version": "1.0.1"
