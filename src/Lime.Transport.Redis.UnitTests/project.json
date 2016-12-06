@@ -2,13 +2,12 @@
   "version": "1.0.0-*",
 
   "dependencies": {
-    "Lime.Messaging": "0.7.2-*",
-    "Lime.Protocol": "0.7.2-*",
-    "Lime.Protocol.Serialization": "0.7.2-*",
+    "Lime.Protocol": "0.7.4-*",
+    "Lime.Protocol.Serialization": "0.7.4-*",
+    "Lime.Transport.Redis": "0.7.4-*",
     "StackExchange.Redis": "1.1.608",
     "Newtonsoft.Json": "9.0.1",
-    "Lime.Protocol.UnitTest": "1.0.0-*",
-    "Lime.Transport.Redis": "1.0.0-*",
+    "Lime.Protocol.UnitTest": "1.0.0-*"
   },
 
   "frameworks": {

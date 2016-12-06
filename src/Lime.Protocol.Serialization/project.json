@@ -7,7 +7,7 @@
   "packOptions": {
     "owners": [ "takenet", "andrebires" ],
     "tags": [ "lime" ],
-    "projectUrl": "limeprotocol.org"
+    "projectUrl": "http://limeprotocol.org"
   },
   "dependencies": {
     "Lime.Protocol": "0.7.4-*",
