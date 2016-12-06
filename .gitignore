@@ -152,3 +152,6 @@ $RECYCLE.BIN/
 
 # VS 2015
 .vs/
+
+#NUnit reports
+*TestResult.xml
