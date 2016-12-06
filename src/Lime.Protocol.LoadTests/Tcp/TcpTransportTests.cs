@@ -95,7 +95,7 @@ namespace Lime.Protocol.LoadTests.Tcp
                 {
                     if (i % 5 == 0)
                     {
-                        return Dummy.CreateNotification(Event.Accepted);
+                        return Dummy.CreateNotification(Event.Received);
                     }
                     if (i % 3 == 0)
                     {

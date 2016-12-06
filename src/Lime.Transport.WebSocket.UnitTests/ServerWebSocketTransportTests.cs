@@ -140,10 +140,10 @@ namespace Lime.Transport.WebSocket.UnitTests
         }
 
         [Test]
-        public async Task SendAsync_DispatchedNotification_ClientShouldReceive()
+        public async Task SendAsync_ConsumedNotification_ClientShouldReceive()
         {
             // Arrange            
-            var notification = Dummy.CreateNotification(Event.Dispatched);
+            var notification = Dummy.CreateNotification(Event.Consumed);
             var target = await GetTargetAsync();
 
             // Act
@@ -171,7 +171,7 @@ namespace Lime.Transport.WebSocket.UnitTests
             var notifications = Enumerable.Range(0, count)
                 .Select(i =>
                 {
-                    var notification = Dummy.CreateNotification(Event.Dispatched);
+                    var notification = Dummy.CreateNotification(Event.Consumed);
                     notification.Id = EnvelopeId.NewId();
                     return notification;
                 })

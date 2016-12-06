@@ -24,8 +24,6 @@ namespace Lime.Client.Windows.Converters
                 {
                     case Event.Failed:
                         return Colors.Red;
-                    case Event.Accepted:
-                        return Colors.LightGreen;
                     case Event.Received:
                         return Colors.YellowGreen;
                     case Event.Consumed:

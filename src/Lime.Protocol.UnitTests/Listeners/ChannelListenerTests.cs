@@ -98,7 +98,7 @@ namespace Lime.Protocol.UnitTests.Listeners
             };
 
             _completionMessage = Dummy.CreateMessage(Dummy.CreateTextContent());
-            _completionNotification = Dummy.CreateNotification(Event.Authorized);
+            _completionNotification = Dummy.CreateNotification(Event.Consumed);
             _completionCommand = Dummy.CreateCommand();
 
             
@@ -279,7 +279,7 @@ namespace Lime.Protocol.UnitTests.Listeners
         public async Task Start_NotificationReceived_CallsConsumer()
         {
             // Arrange
-            var notification = Dummy.CreateNotification(Event.Authorized);
+            var notification = Dummy.CreateNotification(Event.Received);
             var target = GetAndStartTarget();
 
             // Act
@@ -302,7 +302,7 @@ namespace Lime.Protocol.UnitTests.Listeners
             for (int i = 0; i < count; i++)
             {
                 notifications.Add(
-                    Dummy.CreateNotification(Event.Authorized));
+                    Dummy.CreateNotification(Event.Received));
             }
             var target = GetAndStartTarget();
 
@@ -329,7 +329,7 @@ namespace Lime.Protocol.UnitTests.Listeners
             for (int i = 0; i < count; i++)
             {
                 notifications.Add(
-                    Dummy.CreateNotification(Event.Authorized));
+                    Dummy.CreateNotification(Event.Received));
             }
 
             int consumedCount = 0;
@@ -379,7 +379,7 @@ namespace Lime.Protocol.UnitTests.Listeners
         public async Task Start_NotificationConsumerThrowsException_StopsListenerTaskAndThrows()
         {
             // Arrange
-            var notification = Dummy.CreateNotification(Event.Authorized);
+            var notification = Dummy.CreateNotification(Event.Received);
             var exception = Dummy.CreateException<ApplicationException>();
             _notificationConsumer = m =>
             {

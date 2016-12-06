@@ -992,7 +992,7 @@ namespace Lime.Protocol.UnitTests.Network
         public async Task SendNotificationAsync_ModuleReturnsNotification_SendsModuleNotification()
         {
             // Arrange
-            var notification = Dummy.CreateNotification(Event.Authorized);
+            var notification = Dummy.CreateNotification(Event.Consumed);
             var moduleNotification = Dummy.CreateNotification(Event.Received);
             var tcs = new TaskCompletionSource<Envelope>();
             _transport
@@ -1018,7 +1018,7 @@ namespace Lime.Protocol.UnitTests.Network
         public async Task SendNotificationAsync_ModuleReturnsNull_DoNotCallTransport()
         {
             // Arrange
-            var notification = Dummy.CreateNotification(Event.Authorized);
+            var notification = Dummy.CreateNotification(Event.Consumed);
 
             var tcs = new TaskCompletionSource<Envelope>();
             _transport
@@ -1126,7 +1126,7 @@ namespace Lime.Protocol.UnitTests.Network
         public async Task ReceiveNotificationAsync_ModuleReturnsNotification_ReturnsModuleNotification()
         {
             // Arrange
-            var notification = Dummy.CreateNotification(Event.Authorized);
+            var notification = Dummy.CreateNotification(Event.Consumed);
             var moduleNotification = Dummy.CreateNotification(Event.Received);
 
             var cancellationToken = Dummy.CreateCancellationToken();
@@ -1157,7 +1157,7 @@ namespace Lime.Protocol.UnitTests.Network
         public async Task ReceiveNotificationAsync_ModuleReturnsNull_IgnoresNotification()
         {
             // Arrange
-            var notification1 = Dummy.CreateNotification(Event.Authorized);
+            var notification1 = Dummy.CreateNotification(Event.Consumed);
             var notification2 = Dummy.CreateNotification(Event.Received);
             var cancellationToken = Dummy.CreateCancellationToken();
             var tcs = new TaskCompletionSource<Envelope>();

@@ -39,9 +39,9 @@ namespace Lime.Transport.Http.UnitTests
 
         public Message TextMessage { get; set; }
 
-        public Notification AcceptedNotification { get; set; }
+        public Notification ReceivedNotification { get; set; }
 
-        public Notification DispatchedNotification { get; set; }
+        public Notification ConsumedNotification { get; set; }
 
         public Notification FailedNotification { get; set; }
 
@@ -83,20 +83,20 @@ namespace Lime.Transport.Http.UnitTests
 
             TextMessage = Dummy.CreateMessage(Dummy.CreateTextContent());
 
-            AcceptedNotification = Dummy.CreateNotification(Event.Accepted);
-            AcceptedNotification.Id = TextMessage.Id;
-            AcceptedNotification.To = TextMessage.From;
+            ReceivedNotification = Dummy.CreateNotification(Event.Received);
+            ReceivedNotification.Id = TextMessage.Id;
+            ReceivedNotification.To = TextMessage.From;
 
-            DispatchedNotification = Dummy.CreateNotification(Event.Dispatched);
-            DispatchedNotification.Id = TextMessage.Id;
-            DispatchedNotification.To = TextMessage.From;
+            ConsumedNotification = Dummy.CreateNotification(Event.Consumed);
+            ConsumedNotification.Id = TextMessage.Id;
+            ConsumedNotification.To = TextMessage.From;
 
             FailedNotification = Dummy.CreateNotification(Event.Failed);
             FailedNotification.Id = TextMessage.Id;
             FailedNotification.To = TextMessage.From;
             FailedNotification.Reason = Dummy.CreateReason();
 
-            WaitUntilEvent = DispatchedNotification.Event;
+            WaitUntilEvent = ConsumedNotification.Event;
 
             PresenceRequestCommand = Dummy.CreateCommand();
             PresenceRequestCommand.Uri = new LimeUri(UriTemplates.PRESENCE);            
@@ -175,16 +175,16 @@ namespace Lime.Transport.Http.UnitTests
                     
             // Act
             var notificationTask = Target.Value.ProcessMessageAsync(TextMessage, WaitUntilEvent, CancellationToken);
-            await Target.Value.SendAsync(AcceptedNotification, CancellationToken);
-            await Target.Value.SendAsync(DispatchedNotification, CancellationToken);
+            await Target.Value.SendAsync(ReceivedNotification, CancellationToken);
+            await Target.Value.SendAsync(ConsumedNotification, CancellationToken);
 
             // Assert
             var actual = await notificationTask;
-            actual.ShouldBe(DispatchedNotification);
+            actual.ShouldBe(ConsumedNotification);
 
             // Check for the removal of the pending notification
             NotificationStorage.Verify(n => n.StoreEnvelopeAsync(It.IsAny<Identity>(), It.IsAny<Notification>()), Times.Never());
-            await Target.Value.SendAsync(DispatchedNotification, CancellationToken);
+            await Target.Value.SendAsync(ConsumedNotification, CancellationToken);
             NotificationStorage.Verify(n => n.StoreEnvelopeAsync(It.IsAny<Identity>(), It.IsAny<Notification>()), Times.Once());
         }
 
@@ -198,7 +198,7 @@ namespace Lime.Transport.Http.UnitTests
 
             // Act
             var notificationTask = Target.Value.ProcessMessageAsync(TextMessage, WaitUntilEvent, CancellationToken);
-            await Target.Value.SendAsync(AcceptedNotification, CancellationToken);
+            await Target.Value.SendAsync(ReceivedNotification, CancellationToken);
             await Target.Value.SendAsync(FailedNotification, CancellationToken);
 
             // Assert
@@ -262,7 +262,7 @@ namespace Lime.Transport.Http.UnitTests
 
             // Check for the removal of the pending notification
             NotificationStorage.Verify(n => n.StoreEnvelopeAsync(It.IsAny<Identity>(), It.IsAny<Notification>()), Times.Never());
-            await Target.Value.SendAsync(DispatchedNotification, CancellationToken);
+            await Target.Value.SendAsync(ConsumedNotification, CancellationToken);
             NotificationStorage.Verify(n => n.StoreEnvelopeAsync(It.IsAny<Identity>(), It.IsAny<Notification>()), Times.Once());
         }
 
@@ -646,11 +646,11 @@ namespace Lime.Transport.Http.UnitTests
         {
             // Arrange
             NotificationStorage
-                .Setup(m => m.StoreEnvelopeAsync(DispatchedNotification.To.ToIdentity(), DispatchedNotification))
+                .Setup(m => m.StoreEnvelopeAsync(ConsumedNotification.To.ToIdentity(), ConsumedNotification))
                 .ReturnsAsync(false);
 
             // Act
-            await Target.Value.SendAsync(DispatchedNotification, CancellationToken).ShouldThrowAsync<InvalidOperationException>();
+            await Target.Value.SendAsync(ConsumedNotification, CancellationToken).ShouldThrowAsync<InvalidOperationException>();
         }
 
         [Test]
@@ -658,7 +658,7 @@ namespace Lime.Transport.Http.UnitTests
         {
             // Arrange
             NotificationStorage
-                .Setup(m => m.StoreEnvelopeAsync(DispatchedNotification.To.ToIdentity(), DispatchedNotification))
+                .Setup(m => m.StoreEnvelopeAsync(ConsumedNotification.To.ToIdentity(), ConsumedNotification))
                 .ReturnsAsync(true)
                 .Verifiable();
 
@@ -668,17 +668,17 @@ namespace Lime.Transport.Http.UnitTests
                 .Verifiable();
 
             NotificationStorage
-                .Setup(m => m.DeleteEnvelopeAsync(FailedNotification.To.ToIdentity(), DispatchedNotification.Id))
+                .Setup(m => m.DeleteEnvelopeAsync(FailedNotification.To.ToIdentity(), ConsumedNotification.Id))
                 .ReturnsAsync(true)
                 .Verifiable();
 
             NotificationStorage
-                .SetupSequence(m => m.GetEnvelopeAsync(DispatchedNotification.To.ToIdentity(), DispatchedNotification.Id))
+                .SetupSequence(m => m.GetEnvelopeAsync(ConsumedNotification.To.ToIdentity(), ConsumedNotification.Id))
                 .Returns(Task.FromResult<Notification>(null))
-                .Returns(Task.FromResult<Notification>(DispatchedNotification));                                   
+                .Returns(Task.FromResult<Notification>(ConsumedNotification));                                   
 
             // Act
-            await Target.Value.SendAsync(DispatchedNotification, CancellationToken);
+            await Target.Value.SendAsync(ConsumedNotification, CancellationToken);
             await Target.Value.SendAsync(FailedNotification, CancellationToken);
 
             // Assert
@@ -690,7 +690,7 @@ namespace Lime.Transport.Http.UnitTests
         {
             // Arrange
             NotificationStorage
-                .Setup(m => m.StoreEnvelopeAsync(DispatchedNotification.To.ToIdentity(), DispatchedNotification))
+                .Setup(m => m.StoreEnvelopeAsync(ConsumedNotification.To.ToIdentity(), ConsumedNotification))
                 .ReturnsAsync(true)
                 .Verifiable();
 
@@ -700,17 +700,17 @@ namespace Lime.Transport.Http.UnitTests
                 .Verifiable();
 
             NotificationStorage
-                .Setup(m => m.DeleteEnvelopeAsync(FailedNotification.To.ToIdentity(), DispatchedNotification.Id))
+                .Setup(m => m.DeleteEnvelopeAsync(FailedNotification.To.ToIdentity(), ConsumedNotification.Id))
                 .ReturnsAsync(true)
                 .Verifiable();
 
             NotificationStorage
-                .SetupSequence(m => m.GetEnvelopeAsync(DispatchedNotification.To.ToIdentity(), DispatchedNotification.Id))
+                .SetupSequence(m => m.GetEnvelopeAsync(ConsumedNotification.To.ToIdentity(), ConsumedNotification.Id))
                 .Returns(Task.FromResult<Notification>(null))
-                .Returns(Task.FromResult<Notification>(DispatchedNotification));
+                .Returns(Task.FromResult<Notification>(ConsumedNotification));
 
             // Act
-            await Target.Value.SendAsync(DispatchedNotification, CancellationToken);
+            await Target.Value.SendAsync(ConsumedNotification, CancellationToken);
             await Target.Value.SendAsync(FailedNotification, CancellationToken).ShouldThrowAsync<InvalidOperationException>();            
         }
 
@@ -719,23 +719,23 @@ namespace Lime.Transport.Http.UnitTests
         {
             // Arrange
             NotificationStorage
-                .Setup(m => m.StoreEnvelopeAsync(DispatchedNotification.To.ToIdentity(), DispatchedNotification))
+                .Setup(m => m.StoreEnvelopeAsync(ConsumedNotification.To.ToIdentity(), ConsumedNotification))
                 .ReturnsAsync(true)
                 .Verifiable();
                             
             NotificationStorage
-                .SetupSequence(m => m.GetEnvelopeAsync(DispatchedNotification.To.ToIdentity(), DispatchedNotification.Id))
+                .SetupSequence(m => m.GetEnvelopeAsync(ConsumedNotification.To.ToIdentity(), ConsumedNotification.Id))
                 .Returns(Task.FromResult<Notification>(null))
-                .Returns(Task.FromResult<Notification>(DispatchedNotification));
+                .Returns(Task.FromResult<Notification>(ConsumedNotification));
 
             // Act
-            await Target.Value.SendAsync(DispatchedNotification, CancellationToken);
-            await Target.Value.SendAsync(AcceptedNotification, CancellationToken);
+            await Target.Value.SendAsync(ConsumedNotification, CancellationToken);
+            await Target.Value.SendAsync(ReceivedNotification, CancellationToken);
 
             // Assert
             NotificationStorage.Verify();
-            NotificationStorage.Verify(m => m.StoreEnvelopeAsync(AcceptedNotification.To.ToIdentity(), AcceptedNotification), Times.Never());
-            NotificationStorage.Verify(m => m.DeleteEnvelopeAsync(FailedNotification.To.ToIdentity(), DispatchedNotification.Id), Times.Never());               
+            NotificationStorage.Verify(m => m.StoreEnvelopeAsync(ReceivedNotification.To.ToIdentity(), ReceivedNotification), Times.Never());
+            NotificationStorage.Verify(m => m.DeleteEnvelopeAsync(FailedNotification.To.ToIdentity(), ConsumedNotification.Id), Times.Never());               
         }
 
         [Test]
@@ -754,11 +754,11 @@ namespace Lime.Transport.Http.UnitTests
 
             // Act
             await Target.Value.SendAsync(FailedNotification, CancellationToken);
-            await Target.Value.SendAsync(AcceptedNotification, CancellationToken);
+            await Target.Value.SendAsync(ReceivedNotification, CancellationToken);
 
             // Assert
             NotificationStorage.Verify();
-            NotificationStorage.Verify(m => m.StoreEnvelopeAsync(AcceptedNotification.To.ToIdentity(), AcceptedNotification), Times.Never());
+            NotificationStorage.Verify(m => m.StoreEnvelopeAsync(ReceivedNotification.To.ToIdentity(), ReceivedNotification), Times.Never());
             NotificationStorage.Verify(m => m.DeleteEnvelopeAsync(FailedNotification.To.ToIdentity(), FailedNotification.Id), Times.Never());
         }
 

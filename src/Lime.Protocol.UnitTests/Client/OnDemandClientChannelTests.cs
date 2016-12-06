@@ -1946,7 +1946,7 @@ namespace Lime.Protocol.UnitTests.Client
             var message = Dummy.CreateMessage(Dummy.CreatePlainDocument());
             var receivedMessage = Dummy.CreateMessage(Dummy.CreateJsonDocument());
             var notification = Dummy.CreateNotification(Event.Received);
-            var receivedNotification = Dummy.CreateNotification(Event.Accepted);
+            var receivedNotification = Dummy.CreateNotification(Event.Consumed);
             var command = Dummy.CreateCommand(Dummy.CreatePing());
             var receivedCommand = Dummy.CreateCommand(Dummy.CreatePlainDocument());
             var requestCommand = Dummy.CreateCommand();

@@ -51,60 +51,54 @@ namespace Lime.Protocol
     }
 
     /// <summary>
-    /// Events that can happen 
-    /// in the message pipeline
+    /// Events that can happen in the message pipeline.
     /// </summary>
     [DataContract(Namespace = "http://limeprotocol.org/2014")]
     public enum Event
     {
         /// <summary>
-        /// A problem occurred during the processing 
-        /// of the message. In this case, the reason 
-        /// property of the notification SHOULD be 
-        /// present.
+        /// A problem occurred during the processing of the message. 
+        /// In this case, the reason  property of the notification SHOULD be present.
         /// </summary>
         [EnumMember(Value = "failed")]
         Failed,
 
         /// <summary>
-        /// The message was received 
-        /// and accepted by the server.
+        /// The message was received and accepted by the server.
         /// </summary>
         [EnumMember(Value = "accepted")]
+        [Obsolete("Use the 'Received' event instead")]
         Accepted,
 
         /// <summary>
-        /// The message format was 
-        /// validated by the server.
+        /// The message format was validated by the server.
         /// </summary>
         [EnumMember(Value = "validated")]
+        [Obsolete("This specific event should not be sent anymore")]
         Validated,
 
         /// <summary>
-        /// The dispatch of the message 
-        /// was authorized by the server.
+        /// The dispatch of the message was authorized by the server.
         /// </summary>
         [EnumMember(Value = "authorized")]
+        [Obsolete("This specific event should not be sent anymore")]
         Authorized,
 
         /// <summary>
-        /// The message was dispatched to 
-        /// the destination by the server.
+        /// The message was dispatched to the destination by the server.
         /// </summary>
         [EnumMember(Value = "dispatched")]
+        [Obsolete("Use the 'Consumed' event instead")]
         Dispatched,
 
         /// <summary>
-        /// The destination has 
-        /// received the message.
+        /// The node has received the message.
         /// </summary>
-        [EnumMember(Value = "received")]
+        [EnumMember(Value = "received")]        
         Received,
 
         /// <summary>
-        /// The destination has 
-        /// consumed the content of
-        /// the message.
+        /// The node has consumed the content of the message.
         /// </summary>
         [EnumMember(Value = "consumed")]
         Consumed
