@@ -314,8 +314,7 @@ namespace Lime.Client.Windows.ViewModels
                             new Receipt
                             {
                                 Events = new[]
-                                {
-                                    Event.Accepted,
+                                {                                    
                                     Event.Received,
                                     Event.Consumed
                                 }

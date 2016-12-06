@@ -86,7 +86,7 @@ namespace Lime.Protocol.UnitTests
         public void ShallowCopy_DispatchedNotification_ReturnsClone()
         {
             // Arrange
-            var notification = Dummy.CreateNotification(Event.Dispatched);
+            var notification = Dummy.CreateNotification(Event.Received);
 
             // Act
             var actual = notification.ShallowCopy();

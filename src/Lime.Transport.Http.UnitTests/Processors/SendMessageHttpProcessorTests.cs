@@ -34,7 +34,7 @@ namespace Lime.Transport.Http.UnitTests.Processors
 
         public Message Message { get; set; }
 
-        public Notification DispatchedNotification { get; set; }
+        public Notification ConsumedNotification { get; set; }
 
         public Notification FailedNotification { get; set; }
 
@@ -65,12 +65,12 @@ namespace Lime.Transport.Http.UnitTests.Processors
             PrincipalIdentity.SetupGet(p => p.Name).Returns(() => PrincipalIdentityName);
             
             Message = Dummy.CreateMessage(Dummy.CreateTextContent());
-            DispatchedNotification = Dummy.CreateNotification(Event.Dispatched);
-            DispatchedNotification.Id = Message.Id;
+            ConsumedNotification = Dummy.CreateNotification(Event.Consumed);
+            ConsumedNotification.Id = Message.Id;
             FailedNotification = Dummy.CreateNotification(Event.Failed);
             FailedNotification.Reason = Dummy.CreateReason();
             FailedNotification.Id = Message.Id;
-            WaitUntilEvent = DispatchedNotification.Event;
+            WaitUntilEvent = ConsumedNotification.Event;
             Content = Dummy.CreateRandomString(100);
             BodyStream = new MemoryStream(Encoding.UTF8.GetBytes(Content));
             BodyStream.Seek(0, SeekOrigin.Begin);
@@ -92,7 +92,7 @@ namespace Lime.Transport.Http.UnitTests.Processors
             // Arrange
             TransportSession
                 .Setup(t => t.ProcessMessageAsync(It.Is<Message>(m => m.Id == Message.Id && m.Content.ToString().Equals(Content)), WaitUntilEvent, CancellationToken))
-                .ReturnsAsync(DispatchedNotification)
+                .ReturnsAsync(ConsumedNotification)
                 .Verifiable();
 
             // Act

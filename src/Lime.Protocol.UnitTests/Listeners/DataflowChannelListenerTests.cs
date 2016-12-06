@@ -134,7 +134,7 @@ namespace Lime.Protocol.UnitTests.Listeners
         public async Task Start_NotificationReceived_SendsToBuffer()
         {
             // Arrange            
-            var notification = Dummy.CreateNotification(Event.Authorized);
+            var notification = Dummy.CreateNotification(Event.Received);
             var target = GetAndStartTarget();
 
             // Act
@@ -155,7 +155,7 @@ namespace Lime.Protocol.UnitTests.Listeners
             for (int i = 0; i < count; i++)
             {
                 notifications.Add(
-                    Dummy.CreateNotification(Event.Authorized));
+                    Dummy.CreateNotification(Event.Received));
             }
             var target = GetAndStartTarget();
 
@@ -177,7 +177,7 @@ namespace Lime.Protocol.UnitTests.Listeners
         public async Task Start_CompletedNotificationBufferBlock_StopsConsumerTask()
         {
             // Arrange            
-            var notification = Dummy.CreateNotification(Event.Authorized);
+            var notification = Dummy.CreateNotification(Event.Received);
             var target = GetAndStartTarget();
 
             // Act

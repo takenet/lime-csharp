@@ -93,7 +93,7 @@ namespace Lime.Sample.Client
                             new LimeUri(UriTemplates.RECEIPT),
                             new Receipt()
                             {
-                                Events = new[] {Event.Received, Event.Dispatched}
+                                Events = new[] {Event.Received, Event.Consumed}
                             },
                             t);
                     }
