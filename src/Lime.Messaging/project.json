@@ -1,14 +1,16 @@
 {
-  "version": "0.7.2-*",
   "title": "Lime.Messaging",
+  "description": "Common content types and resource for LIME messaging applications.",
+  "version": "0.7.4-*",
   "authors": [ "takenet", "andrebires" ],
   "copyright": "Copyright � 2014 Curupira S/A",
   "packOptions": {
     "owners": [ "takenet", "andrebires" ],
-    "tags": [ "lime" ]
+    "tags": [ "lime" ],
+    "projectUrl": "limeprotocol.org"
   },
   "dependencies": {
-    "Lime.Protocol": "0.7.2-*",
+    "Lime.Protocol": "0.7.4-*"
   },
   "frameworks": {
     "netstandard1.1": {

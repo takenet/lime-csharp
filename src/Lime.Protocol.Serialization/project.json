@@ -1,22 +1,23 @@
 ﻿{
   "title": "Lime.Protocol.Serialization",
   "description": "C# LIME protocol serialization library",
-  "version": "0.7.2-*",
+  "version": "0.7.4-*",
   "authors": [ "takenet", "andrebires" ],
   "copyright": "Copyright �  2014 Curupira S/A",
   "packOptions": {
     "owners": [ "takenet", "andrebires" ],
-    "tags": [ "lime" ]
+    "tags": [ "lime" ],
+    "projectUrl": "limeprotocol.org"
   },
   "dependencies": {
-    "Lime.Protocol": "0.7.2-*",
+    "Lime.Protocol": "0.7.4-*",
     "Newtonsoft.Json": "9.0.1"
   },
   "frameworks": {
     "netstandard1.6": {
       "imports": "dnxcore50",
       "dependencies": {
-        "NETStandard.Library": "1.6.0",        
+        "NETStandard.Library": "1.6.0",
         "System.Reflection.TypeExtensions": "4.3.0"
       }
     },
@@ -27,6 +28,6 @@
       "dependencies": {
         "Microsoft.Tpl.Dataflow": "4.5.24"
       }
-    } 
+    }
   }
 }
