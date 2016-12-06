@@ -2,9 +2,9 @@
   "version": "1.0.0-*",
 
   "dependencies": {
-    "Lime.Protocol": "0.7.4-*",
-    "Lime.Transport.Tcp": "0.7.4-*",
-    "Lime.Protocol.Serialization": "0.7.4-*",
+    "Lime.Protocol": "0.7.*",
+    "Lime.Transport.Tcp": "0.7.*",
+    "Lime.Protocol.Serialization": "0.7.*",
     "Lime.Protocol.UnitTest": "1.0.0-*"
   },
 
