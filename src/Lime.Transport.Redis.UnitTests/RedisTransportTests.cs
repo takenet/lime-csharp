@@ -15,6 +15,7 @@ using Lime.Protocol.UnitTests;
 using Moq;
 using NUnit.Framework;
 using Shouldly;
+using Lime.Messaging;
 
 namespace Lime.Transport.Redis.UnitTests
 {
@@ -83,6 +84,7 @@ namespace Lime.Transport.Redis.UnitTests
         [SetUp]
         public async Task SetUpAsync()
         {
+            Registrator.RegisterDocuments();
             ChannelNamespace = EnvelopeId.NewId();
             ListenerUri = new Uri("redis://localhost");
             EnvelopeSerializer = new JsonNetSerializer();
