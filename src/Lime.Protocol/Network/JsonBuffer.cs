@@ -1,12 +1,12 @@
 using System;
 using System.Text;
 
-namespace Lime.Transport
+namespace Lime.Protocol.Network
 {
     /// <summary>
     /// Provides a buffer with a method for JSON extraction.
     /// </summary>
-    internal sealed class JsonBuffer
+    public sealed class JsonBuffer
     {
         private readonly byte[] _buffer;
         private int _bufferCurPos;
@@ -113,7 +113,7 @@ namespace Lime.Transport
 
         public override string ToString()
         {
-            return Encoding.UTF8.GetString(_buffer);
+            return Encoding.UTF8.GetString(_buffer, 0, _buffer.Length);
         }
     }
 }

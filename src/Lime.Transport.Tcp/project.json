@@ -10,7 +10,8 @@
     "projectUrl": "http://limeprotocol.org"
   },
   "dependencies": {
-    "Lime.Protocol": "0.7.*"
+    "Lime.Protocol": "0.7.*",
+    "Lime.Protocol.Serialization": "0.7.*"
   },
   "frameworks": {
     "netstandard1.6": {

@@ -15,6 +15,7 @@ using Lime.Protocol;
 using Lime.Protocol.Network;
 using Lime.Protocol.Security;
 using Lime.Protocol.Serialization;
+using Lime.Protocol.Serialization.Newtonsoft;
 
 namespace Lime.Transport.Tcp
 {
@@ -43,6 +44,24 @@ namespace Lime.Transport.Tcp
 
         private Stream _stream;
         private string _hostName;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="TcpTransport"/> class.
+        /// </summary>
+        /// <param name="clientCertificate"></param>
+        /// <param name="bufferSize">Size of the buffer.</param>
+        /// <param name="traceWriter">The trace writer.</param>
+        /// <param name="serverCertificateValidationCallback">A callback to validate the server certificate in the TLS authentication process.</param>
+        /// <param name="ignoreDeserializationErrors">if set to <c>true</c> the deserialization on received envelopes will be ignored; otherwise, any deserialization error will be throw to the caller.</param>
+        public TcpTransport(
+            X509Certificate2 clientCertificate = null,
+            int bufferSize = DEFAULT_BUFFER_SIZE,
+            ITraceWriter traceWriter = null,
+            RemoteCertificateValidationCallback serverCertificateValidationCallback = null,
+            bool ignoreDeserializationErrors = false)
+            : this(new JsonNetSerializer(), clientCertificate, bufferSize, traceWriter, serverCertificateValidationCallback, ignoreDeserializationErrors)
+        {
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TcpTransport" /> class.

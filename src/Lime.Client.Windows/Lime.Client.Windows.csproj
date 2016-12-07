@@ -100,8 +100,26 @@
       <HintPath>..\packages\Newtonsoft.Json.9.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="SslCertBinding.Net, Version=1.0.2.0, Culture=neutral, PublicKeyToken=46398e4c25dead31, processorArchitecture=MSIL">
+      <HintPath>..\packages\SslCertBinding.Net.1.0.2\lib\net20\SslCertBinding.Net.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="StackExchange.Redis, Version=1.1.608.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\StackExchange.Redis.1.1.608\lib\net46\StackExchange.Redis.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
+    <Reference Include="System.IO.Compression" />
+    <Reference Include="System.Net" />
+    <Reference Include="System.Runtime.Caching" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.ServiceModel" />
+    <Reference Include="System.Threading.Tasks.Dataflow, Version=4.5.24.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Tpl.Dataflow.4.5.24\lib\portable-net45+win8+wpa81\System.Threading.Tasks.Dataflow.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Web" />
     <Reference Include="System.Windows.Interactivity, Version=4.5.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\MvvmLightLibs.4.4.32.7\lib\net45\System.Windows.Interactivity.dll</HintPath>
       <Private>True</Private>
@@ -314,20 +332,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Lime.Messaging\Lime.Messaging.csproj">
-      <Project>{796a57b4-1fe0-4fe9-940f-e99083dc233a}</Project>
-      <Name>Lime.Messaging</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Lime.Transport.Tcp\Lime.Transport.Tcp.csproj">
-      <Project>{d24b4ef4-9b8c-4f89-bfc6-f76007936382}</Project>
-      <Name>Lime.Transport.Tcp</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Lime.Protocol\Lime.Protocol.csproj">
-      <Project>{0cfee3a4-f914-4c45-be13-a344c9cfa134}</Project>
-      <Name>Lime.Protocol</Name>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Images\appbar.message.smiley.blue.ico" />
