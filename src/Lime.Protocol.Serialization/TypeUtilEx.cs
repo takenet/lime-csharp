@@ -1,17 +1,19 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
 namespace Lime.Protocol.Serialization
 {
     /// <summary>
-    /// Provides metadata information about the types.
+    /// Provides metadata about the types.
     /// </summary>
     public static class TypeUtilEx
     {
-        private static readonly ConcurrentDictionary<Type, Func<string, object>> _typeParseFuncDictionary = new ConcurrentDictionary<Type, Func<string, object>>();
-        
+        private static readonly ConcurrentDictionary<Type, Delegate> TypeParseDelegateDictionary = new ConcurrentDictionary<Type, Delegate>();
+        private static readonly ConcurrentDictionary<Type, Func<string, object>> TypeParseFuncDictionary = new ConcurrentDictionary<Type, Func<string, object>>();
+
         /// <summary>
         /// Gets the Parse static method of a Type as a func.
         /// </summary>
@@ -21,33 +23,33 @@ namespace Lime.Protocol.Serialization
         {
             var type = typeof(T);
 
-            var parseMethod = typeof(T)
-                .GetTypeInfo()
-                .GetMethod("Parse", BindingFlags.Static | BindingFlags.Public);
-
-            if (parseMethod == null)
+            Delegate parseDelegate;
+            if (!TypeParseDelegateDictionary.TryGetValue(type, out parseDelegate))
             {
-                throw new ArgumentException($"The type '{type}' doesn't contains a static 'Parse' method");
+                var parseMethod = typeof(T)
+                    .GetTypeInfo()
+                    .GetMethods(BindingFlags.Static | BindingFlags.Public)
+                    .FirstOrDefault(m =>
+                        m.Name.Equals("Parse") &&
+                        m.GetParameters().Length == 1 &&
+                        m.GetParameters()[0].ParameterType == typeof(string));
+
+                if (parseMethod == null)
+                {
+                    throw new ArgumentException($"The type '{type}' doesn't contains a static 'Parse(string)' method");
+                }
+
+                if (parseMethod.ReturnType != type)
+                {
+                    throw new ArgumentException("The Parse method has an invalid return type");
+                }
+
+                var parseFuncType = typeof(Func<,>).MakeGenericType(typeof(string), type);
+                parseDelegate = parseMethod.CreateDelegate(parseFuncType);
+                TypeParseDelegateDictionary.TryAdd(type, parseDelegate);
             }
 
-            if (parseMethod.ReturnType != type)
-            {
-                throw new ArgumentException("The Parse method has an invalid return type");
-            }
-
-            var parameters = parseMethod.GetParameters();
-            if (parameters.Length != 1)
-            {
-                throw new ArgumentException($"The type '{type}' 'Parse' must accept only one argument");
-            }
-
-            if (parameters[0].ParameterType != typeof(string))
-            {
-                throw new ArgumentException($"The type '{type}' 'Parse' argument should be a string");
-            }
-
-            var parseFuncType = typeof(Func<,>).MakeGenericType(typeof(string), type);
-            return (Func<string, T>) parseMethod.CreateDelegate(parseFuncType);
+            return (Func<string, T>) parseDelegate;
         }
 
         /// <summary>
@@ -57,25 +59,26 @@ namespace Lime.Protocol.Serialization
         /// <returns></returns>
         public static Func<string, object> GetParseFuncForType(Type type)
         {
-            if (type == null) throw new ArgumentNullException(nameof(type));            
+            if (type == null) throw new ArgumentNullException(nameof(type));
             Func<string, object> parseFunc;
-
-            if (!_typeParseFuncDictionary.TryGetValue(type, out parseFunc))
+            if (!TypeParseFuncDictionary.TryGetValue(type, out parseFunc))
             {
                 try
                 {
                     var getParseFuncMethod = typeof(TypeUtilEx)
+                        .GetTypeInfo()
                         .GetMethod(nameof(GetParseFunc), BindingFlags.Static | BindingFlags.Public)
                         .MakeGenericMethod(type);
 
                     var genericGetParseFunc = getParseFuncMethod.Invoke(null, null);
 
                     var parseFuncAdapterMethod = typeof(TypeUtilEx)
+                        .GetTypeInfo()
                         .GetMethod(nameof(ParseFuncAdapter), BindingFlags.Static | BindingFlags.NonPublic)
                         .MakeGenericMethod(type);
 
                     parseFunc = (Func<string, object>)parseFuncAdapterMethod.Invoke(null, new[] { genericGetParseFunc });
-                    _typeParseFuncDictionary.TryAdd(type, parseFunc);
+                    TypeParseDelegateDictionary.TryAdd(type, parseFunc);
                 }
                 catch (TargetInvocationException ex)
                 {
@@ -86,6 +89,12 @@ namespace Lime.Protocol.Serialization
             return parseFunc; 
         }
 
+        /// <summary>
+        /// Utility function to adapt a typed Func to a object one.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="parseFunc">The parse function.</param>
+        /// <returns></returns>
         private static Func<string, object> ParseFuncAdapter<T>(Func<string, T> parseFunc)
         {
             return (s) => (object)parseFunc(s);
