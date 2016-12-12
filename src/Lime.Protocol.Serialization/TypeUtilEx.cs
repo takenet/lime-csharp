@@ -78,7 +78,7 @@ namespace Lime.Protocol.Serialization
                         .MakeGenericMethod(type);
 
                     parseFunc = (Func<string, object>)parseFuncAdapterMethod.Invoke(null, new[] { genericGetParseFunc });
-                    TypeParseDelegateDictionary.TryAdd(type, parseFunc);
+                    TypeParseFuncDictionary.TryAdd(type, parseFunc);
                 }
                 catch (TargetInvocationException ex)
                 {
