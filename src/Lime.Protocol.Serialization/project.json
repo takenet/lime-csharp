@@ -17,7 +17,7 @@
     "netstandard1.6": {
       "imports": "dnxcore50",
       "dependencies": {
-        "NETStandard.Library": "1.6.0",
+        "NETStandard.Library": "1.6.1",
         "System.Reflection.TypeExtensions": "4.3.0"
       }
     },
