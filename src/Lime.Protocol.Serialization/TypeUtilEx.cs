@@ -1,10 +1,7 @@
-﻿using Lime.Protocol.Security;
-using System;
+﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Runtime.Serialization;
 
 namespace Lime.Protocol.Serialization
 {
@@ -14,13 +11,9 @@ namespace Lime.Protocol.Serialization
     public static class TypeUtilEx
     {
         private static readonly ConcurrentDictionary<Type, Func<string, object>> _typeParseFuncDictionary = new ConcurrentDictionary<Type, Func<string, object>>();
-
         
-
         /// <summary>
-        /// Gets the Parse static 
-        /// method of a Type as 
-        /// a func
+        /// Gets the Parse static method of a Type as a func.
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
@@ -58,9 +51,7 @@ namespace Lime.Protocol.Serialization
         }
 
         /// <summary>
-        /// Gets the Parse static 
-        /// method of a Type as 
-        /// a func
+        /// Gets the Parse static method of a Type as a func.
         /// </summary>
         /// <param name="type"></param>
         /// <returns></returns>
@@ -74,13 +65,13 @@ namespace Lime.Protocol.Serialization
                 try
                 {
                     var getParseFuncMethod = typeof(TypeUtilEx)
-                        .GetMethod("GetParseFunc", BindingFlags.Static | BindingFlags.Public)
+                        .GetMethod(nameof(GetParseFunc), BindingFlags.Static | BindingFlags.Public)
                         .MakeGenericMethod(type);
 
                     var genericGetParseFunc = getParseFuncMethod.Invoke(null, null);
 
                     var parseFuncAdapterMethod = typeof(TypeUtilEx)
-                        .GetMethod("ParseFuncAdapter", BindingFlags.Static | BindingFlags.NonPublic)
+                        .GetMethod(nameof(ParseFuncAdapter), BindingFlags.Static | BindingFlags.NonPublic)
                         .MakeGenericMethod(type);
 
                     parseFunc = (Func<string, object>)parseFuncAdapterMethod.Invoke(null, new[] { genericGetParseFunc });
@@ -95,15 +86,13 @@ namespace Lime.Protocol.Serialization
             return parseFunc; 
         }
 
-private static Func<string, object> ParseFuncAdapter<T>(Func<string, T> parseFunc)
+        private static Func<string, object> ParseFuncAdapter<T>(Func<string, T> parseFunc)
         {
             return (s) => (object)parseFunc(s);
         }
 
-
         /// <summary>
-        /// Try parses the string to 
-        /// a object of the specified type
+        /// Try parses the string to a object of the specified type.
         /// </summary>
         /// <param name="value"></param>
         /// <param name="type"></param>
@@ -146,7 +135,7 @@ private static Func<string, object> ParseFuncAdapter<T>(Func<string, T> parseFun
                     {
                         result = null;
                         return false;
-                    }                    
+                    }
                 }
 
                 result = resultArray;
@@ -182,9 +171,7 @@ private static Func<string, object> ParseFuncAdapter<T>(Func<string, T> parseFun
         }
 
          /// <summary>
-        /// Build a delegate to
-        /// get a property value
-        /// of a class
+        /// Build a delegate to get a property value of a class.
         /// </summary>
         /// <a href="http://stackoverflow.com/questions/10820453/reflection-performance-create-delegate-properties-c"/>
         /// <param name="methodInfo"></param>
@@ -195,9 +182,7 @@ private static Func<string, object> ParseFuncAdapter<T>(Func<string, T> parseFun
         }
 
         /// <summary>
-        /// Build a delegate to
-        /// get a property value
-        /// of a class
+        /// Build a delegate to get a property value of a class.
         /// </summary>
         /// <a href="http://stackoverflow.com/questions/10820453/reflection-performance-create-delegate-properties-c"/>
         /// <param name="methodInfo"></param>
@@ -220,10 +205,8 @@ private static Func<string, object> ParseFuncAdapter<T>(Func<string, T> parseFun
             return expr.Compile();
         }
 
-                /// <summary>
-        /// Build a delegate to
-        /// set a property value
-        /// of a class
+        /// <summary>
+        /// Build a delegate to set a property value of a class.
         /// </summary>
         /// <a href="http://stackoverflow.com/questions/10820453/reflection-performance-create-delegate-properties-c"/>
         /// <param name="methodInfo"></param>
@@ -234,9 +217,7 @@ private static Func<string, object> ParseFuncAdapter<T>(Func<string, T> parseFun
         }
 
         /// <summary>
-        /// Build a delegate to
-        /// set a property value
-        /// of a class
+        /// Build a delegate to set a property value of a class.
         /// </summary>
         /// <a href="http://stackoverflow.com/questions/10820453/reflection-performance-create-delegate-properties-c"/>
         /// <param name="methodInfo"></param>

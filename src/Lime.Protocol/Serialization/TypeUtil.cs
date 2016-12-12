@@ -2,12 +2,11 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 
-[assembly:InternalsVisibleTo("Lime.Protocol.Serialization")]
 namespace Lime.Protocol.Serialization
 {
     /// <summary>
@@ -17,16 +16,8 @@ namespace Lime.Protocol.Serialization
     {
         private static readonly ConcurrentDictionary<MediaType, Type> _documentMediaTypeDictionary;
         private static readonly ConcurrentDictionary<AuthenticationScheme, Type> _authenticationSchemeDictionary;
-        private static readonly ConcurrentDictionary<Type, IDictionary<string, object>> _enumTypeValueDictionary;
-        
+        private static readonly ConcurrentDictionary<Type, IDictionary<string, object>> _enumTypeValueDictionary;        
         private static readonly HashSet<Type> _dataContractTypes;
-
-        public static readonly Func<AssemblyName, bool> IgnoreSystemAndMicrosoftAssembliesFilter =
-            a => !a.FullName.StartsWith("System.", StringComparison.OrdinalIgnoreCase) &&
-                 !a.FullName.StartsWith("Microsoft.", StringComparison.OrdinalIgnoreCase);
-
-        private static readonly object _loadAssembliesSyncRoot = new object();
-        private static bool _referencedAssembliesLoaded;
 
         static TypeUtil()
         {
@@ -34,10 +25,7 @@ namespace Lime.Protocol.Serialization
             _authenticationSchemeDictionary = new ConcurrentDictionary<AuthenticationScheme, Type>();
             _enumTypeValueDictionary = new ConcurrentDictionary<Type, IDictionary<string, object>>();
             _dataContractTypes = new HashSet<Type>();
-        }
-
-        
-
+        }        
         
         /// <summary>
         /// Tries to get the registered type for
@@ -155,6 +143,26 @@ namespace Lime.Protocol.Serialization
             where TDocument : Document, new()
         {
             RegisterType(typeof(TDocument));
+        }
+
+        /// <summary>
+        /// Registers the documents types for an assembly.
+        /// </summary>
+        /// <param name="assembly">The assembly.</param>
+        /// <exception cref="ArgumentNullException"></exception>
+        public static void RegisterDocuments(Assembly assembly)
+        {
+            if (assembly == null) throw new ArgumentNullException(nameof(assembly));
+            var registerDocumentMethod = typeof(TypeUtil).GetMethod(nameof(RegisterDocument));
+
+            var documentTypes = assembly
+                .GetTypes()
+                .Where(t => !t.GetTypeInfo().IsAbstract && typeof(Document).IsAssignableFrom(t));
+
+            foreach (var type in documentTypes)
+            {
+                registerDocumentMethod.MakeGenericMethod(type).Invoke(null, null);
+            }
         }
 
         /// <summary>
