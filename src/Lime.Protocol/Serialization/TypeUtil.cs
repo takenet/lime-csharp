@@ -25,6 +25,7 @@ namespace Lime.Protocol.Serialization
             _authenticationSchemeDictionary = new ConcurrentDictionary<AuthenticationScheme, Type>();
             _enumTypeValueDictionary = new ConcurrentDictionary<Type, IDictionary<string, object>>();
             _dataContractTypes = new HashSet<Type>();
+            RegisterInternalTypes();
         }        
         
         /// <summary>
@@ -196,7 +197,7 @@ namespace Lime.Protocol.Serialization
             return Activator.CreateInstance(type);
         }
 
-        internal static void RegisterInternalTypes()
+        private static void RegisterInternalTypes()
         {
             RegisterDocument<DocumentCollection>();
             RegisterDocument<DocumentContainer>();

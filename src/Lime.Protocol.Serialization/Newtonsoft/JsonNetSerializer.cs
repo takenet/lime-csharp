@@ -15,11 +15,10 @@ namespace Lime.Protocol.Serialization.Newtonsoft
     /// <seealso cref="Lime.Protocol.Serialization.IEnvelopeSerializer" />
     public class JsonNetSerializer : IEnvelopeSerializer
     {
-        private static object _syncRoot = new object();
+        private static readonly object _syncRoot = new object();
 
         static JsonNetSerializer()
         {
-            TypeUtil.RegisterInternalTypes();
             JsonConvert.DefaultSettings = () => Settings;
             _serializer = JsonSerializer.Create(Settings);
         }
