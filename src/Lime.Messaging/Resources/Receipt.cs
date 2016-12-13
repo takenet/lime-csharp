@@ -29,11 +29,5 @@ namespace Lime.Messaging.Resources
         /// </summary>
         [DataMember(Name = EVENTS_KEY)]
         public Event[] Events { get; set; }
-
-        /// <summary>
-        /// Indicates if the events sent by nodes between the message originator and destination (server, gateways) should be delivered.
-        /// </summary>
-        [DataMember(Name = DELIVER_HOPS_KEY)]
-        public bool? DeliverHops { get; set; }
     }
 }
