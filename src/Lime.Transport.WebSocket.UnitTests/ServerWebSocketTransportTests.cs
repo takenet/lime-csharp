@@ -20,7 +20,7 @@ namespace Lime.Transport.WebSocket.UnitTests
     {
         public async Task<ServerWebSocketTransport> GetTargetAsync()
         {
-            await Listener.StartAsync();
+            await Listener.StartAsync(CancellationToken);
             var listenerTask = Listener.AcceptTransportAsync(CancellationToken);
             await Client.OpenAsync(ListenerUri, CancellationToken);
             var webSocketTransport = (ServerWebSocketTransport)await listenerTask;
@@ -62,7 +62,7 @@ namespace Lime.Transport.WebSocket.UnitTests
         {
             try
             {
-                Listener.StopAsync().Wait();
+                Listener.StopAsync(CancellationToken).Wait();
             }
             catch (AggregateException) { }
         }
