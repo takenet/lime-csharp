@@ -26,6 +26,6 @@
       "dependencies": {
         "Microsoft.Tpl.Dataflow": "4.5.24"
       }
-    }
+    }    
   }
 }

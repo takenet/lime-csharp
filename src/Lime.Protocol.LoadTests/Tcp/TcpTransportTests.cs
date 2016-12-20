@@ -32,7 +32,7 @@ namespace Lime.Protocol.LoadTests.Tcp
             _cancellationToken = TimeSpan.FromSeconds(30).ToCancellationToken();
             _envelopeSerializer = new FakeEnvelopeSerializer(10);
             _tcpTransportListener = new TcpTransportListener(_uri, null, _envelopeSerializer);
-            await _tcpTransportListener.StartAsync();
+            await _tcpTransportListener.StartAsync(_cancellationToken);
             var serverTcpTransportTask = _tcpTransportListener.AcceptTransportAsync(_cancellationToken);
             _clientTcpTransport = new TcpTransport(_envelopeSerializer);
             await _clientTcpTransport.OpenAsync(_uri, _cancellationToken);
@@ -45,7 +45,7 @@ namespace Lime.Protocol.LoadTests.Tcp
         {
             await _clientTcpTransport.CloseAsync(CancellationToken.None);
             await _serverTcpTransport.CloseAsync(CancellationToken.None);
-            await _tcpTransportListener.StopAsync();
+            await _tcpTransportListener.StopAsync(_cancellationToken);
         }
 
         [Test]

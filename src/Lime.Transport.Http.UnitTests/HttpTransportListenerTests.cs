@@ -177,8 +177,8 @@ namespace Lime.Transport.Http.UnitTests
         [Test]
         public async Task StartAsync_ValidHostAndPort_ServerStarted()
         {
-            // Act
-            await Target.StartAsync();
+            // Act            
+            await Target.StartAsync(CancellationToken);
 
             // Assert
             HttpServer.Verify(s => s.Start(), Times.Once());
@@ -188,15 +188,15 @@ namespace Lime.Transport.Http.UnitTests
         public async Task StartAsync_CallTwice_ThrowsInvalidOperationException()
         {
             // Act
-            await Target.StartAsync();
-            Should.ThrowAsync<InvalidOperationException>(async () => await Target.StartAsync());
+            await Target.StartAsync(CancellationToken);
+            Should.ThrowAsync<InvalidOperationException>(async () => await Target.StartAsync(CancellationToken));
         }
 
         [Test]
         public async Task AcceptTransportAsync_NewRequest_RetunsTransport()
         {
             // Act
-            await Target.StartAsync();
+            await Target.StartAsync(CancellationToken);
             HttpTransportProvider.Raise(h => h.TransportCreated += null, new TransportEventArgs(Transport.Object));
             var transport = await Target.AcceptTransportAsync(CancellationToken);
 
@@ -215,9 +215,9 @@ namespace Lime.Transport.Http.UnitTests
         public async Task StopAsync_ActiveListener_StopsListening()
         {
             // Act
-            await Target.StartAsync();
+            await Target.StartAsync(CancellationToken);
 
-            await Target.StopAsync();
+            await Target.StopAsync(CancellationToken);
 
             // Assert
             HttpServer.Verify(s => s.Stop(), Times.Once());
@@ -227,7 +227,7 @@ namespace Lime.Transport.Http.UnitTests
         public async Task StopAsync_ListenerNotStarted_ThrowsInvalidOperationException()
         {
             // Act
-            await Target.StopAsync().ShouldThrowAsync<InvalidOperationException>();
+            await Target.StopAsync(CancellationToken).ShouldThrowAsync<InvalidOperationException>();
         }
 
         [Test]
@@ -252,7 +252,7 @@ namespace Lime.Transport.Http.UnitTests
                 .Verifiable();
 
             // Act
-            await Target.StartAsync();
+            await Target.StartAsync(CancellationToken);
             HttpServerRequestBuffer.Post(Processor1HttpRequest);
 
             // Assert
@@ -286,7 +286,7 @@ namespace Lime.Transport.Http.UnitTests
                 .ReturnsAsync(session);
 
             // Act
-            await Target.StartAsync();
+            await Target.StartAsync(CancellationToken);
             HttpServerRequestBuffer.Post(Processor1HttpRequest);
 
             // Assert
@@ -310,7 +310,7 @@ namespace Lime.Transport.Http.UnitTests
                 .ReturnsAsync(session);
 
             // Act
-            await Target.StartAsync();
+            await Target.StartAsync(CancellationToken);
             HttpServerRequestBuffer.Post(Processor1HttpRequest);
 
             // Assert
@@ -327,7 +327,7 @@ namespace Lime.Transport.Http.UnitTests
                 .Throws<OperationCanceledException>();
 
             // Act
-            await Target.StartAsync();
+            await Target.StartAsync(CancellationToken);
             HttpServerRequestBuffer.Post(Processor1HttpRequest);
 
             // Assert
@@ -345,7 +345,7 @@ namespace Lime.Transport.Http.UnitTests
                 Principal.Object);
 
             // Act
-            await Target.StartAsync();
+            await Target.StartAsync(CancellationToken);
             HttpServerRequestBuffer.Post(invalidHttpRequest);
 
             // Assert
@@ -376,7 +376,7 @@ namespace Lime.Transport.Http.UnitTests
 
 
             // Act
-            await Target.StartAsync();
+            await Target.StartAsync(CancellationToken);
             HttpServerRequestBuffer.Post(Processor1HttpRequest);
 
             // Assert
@@ -415,7 +415,7 @@ namespace Lime.Transport.Http.UnitTests
                 .Verifiable();
 
             // Act
-            await Target.StartAsync();
+            await Target.StartAsync(CancellationToken);
             HttpServerRequestBuffer.Post(Processor1HttpRequest);
 
             // Assert

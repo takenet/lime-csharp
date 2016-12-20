@@ -113,7 +113,7 @@ namespace Lime.Transport.Http
         public Uri[] ListenerUris { get; private set; }
 
 
-        public Task StartAsync()
+        public Task StartAsync(CancellationToken cancellationToken)
         {
             if (_httpServerListenerTask != null)
             {
@@ -142,7 +142,7 @@ namespace Lime.Transport.Http
             }
         }        
 
-        public async Task StopAsync()
+        public async Task StopAsync(CancellationToken cancellationToken)
         {
             if (_httpServerListenerTask == null)
             {
