@@ -210,7 +210,7 @@ namespace Lime.Protocol.Serialization
             if (!type.GetTypeInfo().IsAbstract)
             {
                 // Caches the documents (contents and resources)
-                if (typeof(Document).IsAssignableFrom(type))
+                if (typeof(Document).GetTypeInfo().IsAssignableFrom(type.GetTypeInfo()))
                 {
                     var document = Activator.CreateInstance(type) as Document;
                     if (document != null)
@@ -220,7 +220,7 @@ namespace Lime.Protocol.Serialization
                 }
 
                 // Caches the Authentication schemes
-                if (typeof(Authentication).IsAssignableFrom(type))
+                if (typeof(Authentication).GetTypeInfo().IsAssignableFrom(type.GetTypeInfo()))
                 {
                     var authentication = Activator.CreateInstance(type) as Authentication;
                     if (authentication != null)
