@@ -14,7 +14,7 @@ using System.Runtime.InteropServices;
 // to COM components.  If you need to access a type in this assembly from
 // COM, set the ComVisible attribute to true on that type.
 [assembly: ComVisible(false)]
-
+[assembly: InternalsVisibleTo("Lime.Protocol.Serialization")]
 
 #if NET461 || NETSTANDARD1_1 
 

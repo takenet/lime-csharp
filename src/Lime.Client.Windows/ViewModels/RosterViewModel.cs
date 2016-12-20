@@ -17,6 +17,7 @@ using Lime.Messaging.Resources;
 using Lime.Protocol;
 using Lime.Protocol.Client;
 using Lime.Protocol.Network;
+using SmartFormat;
 
 namespace Lime.Client.Windows.ViewModels
 {
@@ -437,9 +438,9 @@ namespace Lime.Client.Windows.ViewModels
 
                     if (selectedContact != null &&
                         selectedContact.Contact != null)
-                    {
+                    {                        
                         await _clientChannel.DeleteResourceAsync(
-                            LimeUri.Parse(UriTemplates.CONTACT.NamedFormat(new { contactIdentity = SelectedContact.Contact })),
+                            LimeUri.Parse(Smart.Format(UriTemplates.CONTACT, new { contactIdentity = SelectedContact.Contact })),
                             _receiveTimeout.ToCancellationToken());
 
                         await GetContactsAsync();
@@ -635,7 +636,7 @@ namespace Lime.Client.Windows.ViewModels
                     selectedContact.Contact != null)
                 {
                     await _clientChannel.DeleteResourceAsync(
-                        LimeUri.Parse(UriTemplates.CONTACT.NamedFormat(new { contactIdentity =  selectedContact.Contact.Identity })),
+                        LimeUri.Parse(Smart.Format(UriTemplates.CONTACT, new { contactIdentity =  selectedContact.Contact.Identity })),
                         _receiveTimeout.ToCancellationToken());
 
                     await GetContactsAsync();

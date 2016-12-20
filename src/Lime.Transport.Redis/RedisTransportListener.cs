@@ -72,9 +72,9 @@ namespace Lime.Transport.Redis
             .GetEndPoints()
             .Select(e => new Uri($"{RedisScheme}://{e}")).ToArray();
 
-        public async Task StartAsync()
+        public async Task StartAsync(CancellationToken cancellationToken)
         {
-            await _semaphore.WaitAsync().ConfigureAwait(false);
+            await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
             try
             {
                 if (_connectionMultiplexer != null)
@@ -99,9 +99,9 @@ namespace Lime.Transport.Redis
         public Task<ITransport> AcceptTransportAsync(CancellationToken cancellationToken) => 
             _transportBufferBlock.ReceiveAsync(cancellationToken);
 
-        public async Task StopAsync()
+        public async Task StopAsync(CancellationToken cancellationToken)
         {
-            await _semaphore.WaitAsync().ConfigureAwait(false);
+            await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
             try
             {
                 if (_connectionMultiplexer == null)

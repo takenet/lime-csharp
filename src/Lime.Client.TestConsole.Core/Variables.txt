@@ -1,8 +1,0 @@
-﻿from	andre@limeprotocol.org
-to	%from
-password	MTIzNDU2
-text	Hello world!
-groupIdentity	chat@groups.limeprotocol.org
-groupName	Lime Chat
-messageId	%newGuid
-commandId	%newGuid

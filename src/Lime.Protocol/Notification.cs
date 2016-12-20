@@ -65,9 +65,9 @@ namespace Lime.Protocol
 
         /// <summary>
         /// The message was received and accepted by the server.
+        /// This event is similar to the <see cref="Received"/> but is emitted by an intermediate node (hop) and not by the message's final destination.
         /// </summary>
         [EnumMember(Value = "accepted")]
-        [Obsolete("Use the 'Received' event instead")]
         Accepted,
 
         /// <summary>
@@ -86,9 +86,9 @@ namespace Lime.Protocol
 
         /// <summary>
         /// The message was dispatched to the destination by the server.
+        /// This event is similar to the <see cref="Consumed"/> but is emitted by an intermediate node (hop) and not by the message's final destination.
         /// </summary>
         [EnumMember(Value = "dispatched")]
-        [Obsolete("Use the 'Consumed' event instead")]
         Dispatched,
 
         /// <summary>

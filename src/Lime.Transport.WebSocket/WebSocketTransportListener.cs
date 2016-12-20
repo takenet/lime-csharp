@@ -107,7 +107,7 @@ namespace Lime.Transport.WebSocket
 
         public Uri[] ListenerUris { get; }
 
-        public Task StartAsync()
+        public Task StartAsync(CancellationToken cancellationToken)
         {
             if (_httpListener.IsListening) throw new InvalidOperationException("The listener is already active");
             var listenerUri = ListenerUris[0];
@@ -153,18 +153,19 @@ namespace Lime.Transport.WebSocket
             }
         }
 
-        public async Task StopAsync()
+        public async Task StopAsync(CancellationToken cancellationToken)
         {
             if (_acceptTransportTask == null) throw new InvalidOperationException("The listener is not active");
             _acceptTransportCts.Cancel();
             using (var cts = new CancellationTokenSource(StopTimeout))
+            using (var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cts.Token, cancellationToken))
             {
                 ITransport pendingTransport;
                 while (_transportBufferBufferBlock.TryReceive(out pendingTransport))
                 {
                     try
                     {
-                        await pendingTransport.CloseAsync(cts.Token).ConfigureAwait(false);
+                        await pendingTransport.CloseAsync(linkedCts.Token).ConfigureAwait(false);
                     }
                     catch { }
                     finally

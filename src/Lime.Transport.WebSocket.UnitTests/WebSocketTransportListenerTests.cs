@@ -46,7 +46,7 @@ namespace Lime.Transport.WebSocket.UnitTests
         {
             try
             {
-                Target.StopAsync().Wait();
+                Target.StopAsync(CancellationToken).Wait();
             }
             catch (AggregateException) { }
         }
@@ -67,7 +67,7 @@ namespace Lime.Transport.WebSocket.UnitTests
         public async Task StartAsync_ValidHostAndPort_ServerStarted()
         {
             // Act
-            await Target.StartAsync();
+            await Target.StartAsync(CancellationToken);
 
             // Assert
             var acceptTransportTask = Target.AcceptTransportAsync(CancellationToken);
@@ -79,7 +79,7 @@ namespace Lime.Transport.WebSocket.UnitTests
         public async Task AcceptTransportAsync_NewConnection_RetunsTransport()
         {
             // Arrange
-            await Target.StartAsync();
+            await Target.StartAsync(CancellationToken);
             var clientTransport = new ClientWebSocketTransport(EnvelopeSerializer);
 
 
@@ -96,7 +96,7 @@ namespace Lime.Transport.WebSocket.UnitTests
         public async Task AcceptTransportAsync_MultipleConnections_RetunsTransports()
         {
             // Arrange
-            await Target.StartAsync();
+            await Target.StartAsync(CancellationToken);
 
             var count = Dummy.CreateRandomInt(100) + 1;
             var clientTransports = Enumerable.Range(0, count)
@@ -134,10 +134,10 @@ namespace Lime.Transport.WebSocket.UnitTests
         public async Task StopAsync_ActiveListener_StopsListening()
         {
             // Arrange
-            await Target.StartAsync();
+            await Target.StartAsync(CancellationToken);
 
             // Act
-            await Target.StopAsync();
+            await Target.StopAsync(CancellationToken);
 
             // Assert
             try

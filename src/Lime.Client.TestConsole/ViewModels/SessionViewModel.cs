@@ -26,6 +26,7 @@ using System.Windows.Threading;
 using Lime.Transport.Tcp;
 using Lime.Protocol.Serialization.Newtonsoft;
 using Lime.Transport.WebSocket;
+using Newtonsoft.Json.Linq;
 
 namespace Lime.Client.TestConsole.ViewModels
 {
@@ -631,9 +632,9 @@ namespace Lime.Client.TestConsole.ViewModels
         {
             try
             {
-                var jsonObject = JsonObject.ParseJson(InputJson);
+                var jsonObject = JObject.Parse(InputJson);
 
-                if (jsonObject.Any())
+                if (jsonObject.HasValues)
                 {
                     var envelopeViewModel = new EnvelopeViewModel();
                     envelopeViewModel.Json = InputJson;
@@ -667,7 +668,7 @@ namespace Lime.Client.TestConsole.ViewModels
                     AddStatusMessage("The input is a invalid or empty JSON document", true);
                 }
             }
-            catch (ArgumentException)
+            catch 
             {
                 AddStatusMessage("The input is a invalid JSON document", true);
             }

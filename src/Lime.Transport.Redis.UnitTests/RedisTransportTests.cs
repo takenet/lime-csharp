@@ -89,8 +89,8 @@ namespace Lime.Transport.Redis.UnitTests
             ListenerUri = new Uri("redis://localhost");
             EnvelopeSerializer = new JsonNetSerializer();
             TraceWriter = new Mock<ITraceWriter>();
-            Listener = new RedisTransportListener(ListenerUri, EnvelopeSerializer, TraceWriter.Object, channelNamespace: ChannelNamespace);
-            await Listener.StartAsync();
+            Listener = new RedisTransportListener(ListenerUri, EnvelopeSerializer, TraceWriter.Object, channelNamespace: ChannelNamespace);            
+            await Listener.StartAsync(CancellationToken);
             CancellationToken = TimeSpan.FromSeconds(5).ToCancellationToken();
         }
 
@@ -98,7 +98,7 @@ namespace Lime.Transport.Redis.UnitTests
         [TearDown]
         public async Task TearDownAsync()
         {
-            await Listener.StopAsync();
+            await Listener.StopAsync(CancellationToken);
             Listener.Dispose();
         }
 

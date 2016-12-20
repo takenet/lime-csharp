@@ -65,9 +65,9 @@ namespace Lime.Transport.Tcp
         /// Could not resolve the IPAddress of the hostname
         /// </exception>
         /// <exception cref="System.InvalidOperationException">The listener is already active</exception>
-        public async Task StartAsync()
+        public async Task StartAsync(CancellationToken cancellationToken)
         {
-            await _semaphore.WaitAsync().ConfigureAwait(false);
+            await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
             try
             {
                 if (_tcpListener != null)
@@ -145,9 +145,9 @@ namespace Lime.Transport.Tcp
         /// Stops the tranport listener
         /// </summary>
         /// <returns></returns>
-        public async Task StopAsync()
+        public async Task StopAsync(CancellationToken cancellationToken)
         {
-            await _semaphore.WaitAsync().ConfigureAwait(false);
+            await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
             try
             {
                 if (_tcpListener == null)

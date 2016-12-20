@@ -68,14 +68,14 @@ namespace Lime.Transport.Tcp.UnitTests
                     {
                         return true;
                     });
-            _tcpListener.StartAsync();
+            _tcpListener.StartAsync(_cancellationToken);
         }
 
 
         [TearDown]
         public async Task TearDownAsync()
         {
-            await _tcpListener.StopAsync();
+            await _tcpListener.StopAsync(_cancellationToken);
             _tcpListener.DisposeIfDisposable();
         }
 

@@ -234,112 +234,6 @@ namespace Lime.Protocol
         }
 
 #if NET461
-
-        private static Regex formatRegex = new Regex(@"({)([^}]+)(})", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-
-        /// <summary>
-        /// Format the string using the source object to populate the named formats.
-        /// http://www.hanselman.com/blog/CommentView.aspx?guid=fde45b51-9d12-46fd-b877-da6172fe1791
-        /// </summary>
-        /// <param name="format"></param>
-        /// <param name="source"></param>
-        /// <returns></returns>
-        public static string NamedFormat(this string format, object source)
-        {
-            return NamedFormat(format, source, null);
-        }
-
-        /// <summary>
-        /// Format the string using the source object to populate the named formats.
-        /// http://www.hanselman.com/blog/CommentView.aspx?guid=fde45b51-9d12-46fd-b877-da6172fe1791
-        /// </summary>
-        /// <param name="format"></param>
-        /// <param name="source">The format names source object.</param>
-        /// <param name="formatProvider">The format provider for the ToString method.</param>
-        /// <returns></returns>
-        public static string NamedFormat(this string format, object source, IFormatProvider formatProvider)
-        {
-            if (format == null) throw new ArgumentNullException(nameof(format));            
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            
-            StringBuilder sb = new StringBuilder();
-            Type type = source.GetType();
-
-            MatchCollection mc = formatRegex.Matches(format);
-            int startIndex = 0;
-            foreach (Match m in mc)
-            {
-                Group g = m.Groups[2]; //it's second in the match between { and }  
-                int length = g.Index - startIndex - 1;
-                sb.Append(format.Substring(startIndex, length));
-
-                string toGet = string.Empty;
-                string toFormat = string.Empty;
-                int formatIndex = g.Value.IndexOf(":"); //formatting would be to the right of a :  
-                if (formatIndex == -1) //no formatting, no worries  
-                {
-                    toGet = g.Value;
-                }
-                else //pickup the formatting  
-                {
-                    toGet = g.Value.Substring(0, formatIndex);
-                    toFormat = g.Value.Substring(formatIndex + 1);
-                }
-
-                //first try properties  
-                var retrievedProperty = type.GetProperty(toGet);
-                Type retrievedType = null;
-                object retrievedObject = null;
-                if (retrievedProperty != null)
-                {
-                    retrievedType = retrievedProperty.PropertyType;
-                    retrievedObject = retrievedProperty.GetValue(source, null);
-                }
-                else //try fields  
-                {
-                    var retrievedField = type.GetField(toGet);
-                    if (retrievedField != null)
-                    {
-                        retrievedType = retrievedField.FieldType;
-                        retrievedObject = retrievedField.GetValue(source);
-                    }
-                }
-
-                if (retrievedType != null) //Cool, we found something  
-                {
-                    string result = string.Empty;
-
-                    var toStringMethod = retrievedType.GetMethod(nameof(ToString),
-                        BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance |
-                        BindingFlags.InvokeMethod | BindingFlags.IgnoreCase);
-
-
-                    if (toFormat == string.Empty) //no format info  
-                    {                        
-                        result = toStringMethod.Invoke(retrievedObject, null) as string;
-                    }
-                    else //format info  
-                    {
-                        result = toStringMethod.Invoke(retrievedObject, new object[] { toFormat, formatProvider }) as string;  
-                    }
-                    sb.Append(result);
-                }
-                else //didn't find a property with that name, so be gracious and put it back  
-                {
-                    sb.Append("{");
-                    sb.Append(g.Value);
-                    sb.Append("}");
-                }
-                startIndex = g.Index + g.Length + 1;
-            }
-            if (startIndex < format.Length) //include the rest (end) of the string  
-            {
-                sb.Append(format.Substring(startIndex));
-            }
-            return sb.ToString();
-        }
-
-
         /// <summary>
         /// Gets a SHA1 hash for the specified string.
         /// </summary>
@@ -367,8 +261,6 @@ namespace Lime.Protocol
             return sb.ToString();
         }
 #endif
-
-
 
         /// <summary>
         /// Creates a completed task.
