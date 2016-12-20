@@ -1,8 +1,0 @@
-﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                    xmlns:converters="clr-namespace:Lime.Client.TestConsole.Converters">
-    <converters:DataOperationToBrushConverter x:Key="DataOperationToBrushConverter" />
-    <converters:IsErrorToBrushConverter x:Key="IsErrorToBrushConverter" />
-    <converters:IsRawToBrushConverter x:Key="IsRawToBrushConverter" />
-    <converters:ToStringConverter x:Key="ToStringConverter" />
-</ResourceDictionary>
