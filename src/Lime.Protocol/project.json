@@ -18,6 +18,14 @@
         "System.Runtime.Serialization.Primitives": "4.3.0"
       }
     },
+    "netstandard1.6": {
+      "imports": "dnxcore50",
+      "dependencies": {
+        "NETStandard.Library": "1.6.1",
+        "System.Threading.Tasks.Dataflow": "4.7.0",
+        "System.Runtime.Serialization.Primitives": "4.3.0"
+      }
+    },
     "net461": {
       "frameworkAssemblies": {
         "System.Runtime.Serialization": "4.0.0"
@@ -25,6 +33,6 @@
       "dependencies": {
         "Microsoft.Tpl.Dataflow": "4.5.24"
       }
-    }    
+    }
   }
 }

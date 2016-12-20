@@ -16,7 +16,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 [assembly: InternalsVisibleTo("Lime.Protocol.Serialization")]
 
-#if NET461 || NETSTANDARD1_1 
+#if NET461 || NETSTANDARD1_1 || NETSTANDARD1_6
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
 [assembly: Guid("041927b9-c479-4bfa-97bb-c885f711eae6")]

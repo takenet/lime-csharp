@@ -27,6 +27,8 @@ namespace Lime.Sample.Client
 
         static async Task MainAsync(string[] args)
         {
+            var channelListener = new TypeChannelListener<MyListener>(new MyListener());
+
             Console.Write("Server URI (ENTER for default): ");
 
             var serverUriValue = Console.ReadLine();
@@ -121,30 +123,32 @@ namespace Lime.Sample.Client
             });
 
 
-            var channelListener = new ChannelListener(message =>
-            {
-                Console.ForegroundColor = ConsoleColor.DarkRed;
-                Console.WriteLine("Message with id '{0}' received from '{1}': {2}", message.Id, message.GetSender(),
-                    message.Content);
-                Console.ResetColor();
-                return TaskUtil.TrueCompletedTask;
-            },
-                notification =>
-                {
-                    Console.ForegroundColor = ConsoleColor.DarkBlue;
-                    Console.WriteLine("Notification with id {0} received from '{1}' - Event: {2}",
-                        notification.Id, notification.GetSender(), notification.Event);
-                    Console.ResetColor();
-                    return TaskUtil.TrueCompletedTask;
-                },
-                command =>
-                {
-                    Console.ForegroundColor = ConsoleColor.DarkGreen;
-                    Console.WriteLine("Command with id '{0}' received from '{1}' - Method: {2} - URI: {3}", command.Id,
-                        command.GetSender(), command.Method, command.Uri);
-                    Console.ResetColor();
-                    return TaskUtil.TrueCompletedTask;
-                });
+            
+
+            //var channelListener = new TypeChannelListener<MyListener>(message =>
+            //{
+            //    Console.ForegroundColor = ConsoleColor.DarkRed;
+            //    Console.WriteLine("Message with id '{0}' received from '{1}': {2}", message.Id, message.GetSender(),
+            //        message.Content);
+            //    Console.ResetColor();
+            //    return TaskUtil.TrueCompletedTask;
+            //},
+            //    notification =>
+            //    {
+            //        Console.ForegroundColor = ConsoleColor.DarkBlue;
+            //        Console.WriteLine("Notification with id {0} received from '{1}' - Event: {2}",
+            //            notification.Id, notification.GetSender(), notification.Event);
+            //        Console.ResetColor();
+            //        return TaskUtil.TrueCompletedTask;
+            //    },
+            //    command =>
+            //    {
+            //        Console.ForegroundColor = ConsoleColor.DarkGreen;
+            //        Console.WriteLine("Command with id '{0}' received from '{1}' - Method: {2} - URI: {3}", command.Id,
+            //            command.GetSender(), command.Method, command.Uri);
+            //        Console.ResetColor();
+            //        return TaskUtil.TrueCompletedTask;
+            //    });
 
 
             await onDemandChannel.EstablishAsync(CancellationToken.None);
@@ -230,40 +234,6 @@ namespace Lime.Sample.Client
             }
         }
 
-        static async Task ConsumeMessagesAsync(IClientChannel clientChannel, CancellationToken cancellationToken)
-        {
-            while (!cancellationToken.IsCancellationRequested)
-            {
-                var message = await clientChannel.ReceiveMessageAsync(cancellationToken);
-
-                Console.ForegroundColor = ConsoleColor.DarkRed;
-                Console.WriteLine("Message with id '{0}' received from '{1}': {2}", message.Id, message.From ?? clientChannel.RemoteNode, message.Content);
-                Console.ResetColor();
-            }
-        }
-
-        static async Task ConsumeCommandsAsync(IClientChannel clientChannel, CancellationToken cancellationToken)
-        {
-            while (!cancellationToken.IsCancellationRequested)
-            {
-                var command = await clientChannel.ReceiveCommandAsync(cancellationToken);
-                Console.ForegroundColor = ConsoleColor.DarkGreen;
-                Console.WriteLine("Command with id '{0}' received from '{1}' - Method: {2} - URI: {3}", command.Id, command.From ?? clientChannel.RemoteNode, command.Method, command.Uri);
-                Console.ResetColor();
-            }
-        }
-
-        static async Task ConsumeNotificationsAsync(IClientChannel clientChannel, CancellationToken cancellationToken)
-        {
-            while (!cancellationToken.IsCancellationRequested)
-            {
-                var notification = await clientChannel.ReceiveNotificationAsync(cancellationToken);
-
-                Console.ForegroundColor = ConsoleColor.DarkBlue;
-                Console.WriteLine("Notification with id {0} received from '{1}' - Event: {2}", notification.Id, notification.From ?? clientChannel.RemoteNode, notification.Event);
-                Console.ResetColor();
-            }
-        }
     }
 
     public static class TaskExtensions
