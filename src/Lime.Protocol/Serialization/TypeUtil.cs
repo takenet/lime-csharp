@@ -154,15 +154,15 @@ namespace Lime.Protocol.Serialization
         public static void RegisterDocuments(Assembly assembly)
         {
             if (assembly == null) throw new ArgumentNullException(nameof(assembly));
-            var registerDocumentMethod = typeof(TypeUtil).GetMethod(nameof(RegisterDocument));
+            var registerDocumentMethod = typeof(TypeUtil).GetRuntimeMethods().First(m => m.Name == nameof(RegisterDocument));
 
             var documentTypes = assembly
-                .GetTypes()
-                .Where(t => !t.GetTypeInfo().IsAbstract && typeof(Document).IsAssignableFrom(t));
+                .DefinedTypes
+                .Where(t => !t.IsAbstract && typeof(Document).GetTypeInfo().IsAssignableFrom(t));
 
             foreach (var type in documentTypes)
             {
-                registerDocumentMethod.MakeGenericMethod(type).Invoke(null, null);
+                registerDocumentMethod.MakeGenericMethod(type.AsType()).Invoke(null, null);
             }
         }
 
