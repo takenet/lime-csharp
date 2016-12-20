@@ -6,3 +6,4 @@ groupIdentity	chat@groups.limeprotocol.org
 groupName	Lime Chat
 messageId	%newGuid
 commandId	%newGuid
+webLinkTarget	blank
