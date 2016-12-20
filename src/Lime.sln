@@ -37,15 +37,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Samples", "Samples", "{967A
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Transports", "Transports", "{215CAFFF-E0B2-4107-86B4-DFB767339781}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Client", "Client", "{90C98BB8-5A1B-4A8D-A646-D81283AD86B7}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{0B6E3D3A-B9F8-46EC-AD0F-6BE117A8C6C6}"
 	ProjectSection(SolutionItems) = preProject
 		..\.gitignore = ..\.gitignore
 		..\README.md = ..\README.md
 	EndProjectSection
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lime.Client.TestConsole", "Lime.Client.TestConsole\Lime.Client.TestConsole.csproj", "{9E13148D-726D-4E42-B924-4A1AF4F0DC3E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -113,10 +109,6 @@ Global
 		{FA70C038-FADD-4C79-BC43-61492D667E98}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FA70C038-FADD-4C79-BC43-61492D667E98}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FA70C038-FADD-4C79-BC43-61492D667E98}.Release|Any CPU.Build.0 = Release|Any CPU
-		{9E13148D-726D-4E42-B924-4A1AF4F0DC3E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{9E13148D-726D-4E42-B924-4A1AF4F0DC3E}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{9E13148D-726D-4E42-B924-4A1AF4F0DC3E}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{9E13148D-726D-4E42-B924-4A1AF4F0DC3E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -132,6 +124,5 @@ Global
 		{355EE108-16FD-4846-AF5F-B633063BF9E9} = {215CAFFF-E0B2-4107-86B4-DFB767339781}
 		{4C50C2D2-4CAB-4FAA-96D6-DE412D2817DA} = {215CAFFF-E0B2-4107-86B4-DFB767339781}
 		{FA70C038-FADD-4C79-BC43-61492D667E98} = {215CAFFF-E0B2-4107-86B4-DFB767339781}
-		{9E13148D-726D-4E42-B924-4A1AF4F0DC3E} = {90C98BB8-5A1B-4A8D-A646-D81283AD86B7}
 	EndGlobalSection
 EndGlobal
