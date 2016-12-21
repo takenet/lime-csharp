@@ -27,7 +27,7 @@ namespace Lime.Sample.Client
 
         static async Task MainAsync(string[] args)
         {
-            var channelListener = new TypeChannelListener<MyListener>(new MyListener());
+            var channelListener = new TypeChannelListener(new MyListener());
 
             Console.Write("Server URI (ENTER for default): ");
 

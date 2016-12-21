@@ -1,6 +1,7 @@
-﻿#if !NETSTANDARD1_1
+﻿#if NETSTANDARD1_6 || NET461
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -13,11 +14,16 @@ using static Lime.Protocol.Message;
 
 namespace Lime.Protocol.Listeners
 {
-    public class TypeChannelListener<T> : IChannelListener
+    public class TypeChannelListener : IChannelListener
     {
         public const string MESSAGE_KEY = "message";
         public const string CANCELLATION_TOKEN_KEY = "cancellationToken";
-        public static readonly Dictionary<string, Type> MessageParameters = new Dictionary<string, Type>
+        public const string MESSAGE_SENDER_CHANNEL_KEY = "messageSenderChannel";
+        public const string NOTIFICATION_SENDER_CHANNEL_KEY = "notificationSenderChannel";
+        public const string COMMAND_SENDER_CHANNEL_KEY = "commandSenderChannel";
+        public const string COMMAND_PROCESSOR_KEY = "commandProcessor";
+
+        private static readonly IDictionary<string, Type> MessageParameters = new Dictionary<string, Type>
         {
             { ID_KEY, typeof(string) },
             { FROM_KEY, typeof(Node) },
@@ -26,21 +32,66 @@ namespace Lime.Protocol.Listeners
             { CONTENT_KEY, typeof(IDocument) },
             { METADATA_KEY, typeof(IDictionary<string, string>) },
             { MESSAGE_KEY, typeof(Message) },
-            { CANCELLATION_TOKEN_KEY, typeof(CancellationToken) }
+            { CANCELLATION_TOKEN_KEY, typeof(CancellationToken) },
+            { MESSAGE_SENDER_CHANNEL_KEY, typeof(IMessageSenderChannel) },
+            { NOTIFICATION_SENDER_CHANNEL_KEY, typeof(INotificationSenderChannel) },
+            { COMMAND_SENDER_CHANNEL_KEY, typeof(ICommandSenderChannel) },
+            { COMMAND_PROCESSOR_KEY, typeof(ICommandProcessor) },
         };
-        private readonly ChannelListener _channelListener;
-        private readonly Dictionary<string, MethodInfo> _contentTypeMethodDictionary;
-        private readonly T _instance;
 
-        public TypeChannelListener(T instance)
+        private readonly object _listener;
+        private readonly ChannelListener _channelListener;
+        private readonly IDictionary<string, MethodInfo> _contentTypeMethodDictionary;
+        private readonly IDictionary<string, object> _internalValuesDictionary;
+
+        public TypeChannelListener(object listener)
         {
-            if (instance == null) throw new ArgumentNullException(nameof(instance));
-            _instance = instance;
-            MessageNotMatchedHandlers =new List<Func<Message, Task>>();
+            if (listener == null) throw new ArgumentNullException(nameof(listener));
+            _listener = listener;
+            MessageNotMatchedHandlers = new List<Func<Message, Task>>();
             MessageConsumeFailedHandlers = new List<Func<Message, Exception, Task>>();
             _contentTypeMethodDictionary = new Dictionary<string, MethodInfo>();
+            _internalValuesDictionary = new Dictionary<string, object>();
+            _channelListener = new ChannelListener(
+                ConsumeMessageAsync,
+                ConsumeNotificationAsync,
+                ConsumeCommandAsync);
+            RegisterListenerMethods();
+        }
 
-            var messageReceiverMethods = typeof(T)
+        public void Start(IEstablishedReceiverChannel establishedReceiverChannel)
+        {
+            _internalValuesDictionary[MESSAGE_SENDER_CHANNEL_KEY] = establishedReceiverChannel as IMessageSenderChannel;
+            _internalValuesDictionary[NOTIFICATION_SENDER_CHANNEL_KEY] = establishedReceiverChannel as INotificationSenderChannel;
+            _internalValuesDictionary[COMMAND_SENDER_CHANNEL_KEY] = establishedReceiverChannel as ICommandSenderChannel;
+            _internalValuesDictionary[COMMAND_PROCESSOR_KEY] = establishedReceiverChannel as ICommandProcessor;
+            _channelListener.Start(establishedReceiverChannel);
+        }
+
+        public void Stop()
+        {
+            _channelListener.Stop();
+        }
+
+        public Task<Message> MessageListenerTask => _channelListener.MessageListenerTask;
+
+        public Task<Notification> NotificationListenerTask => _channelListener.NotificationListenerTask;
+
+        public Task<Command> CommandListenerTask => _channelListener.CommandListenerTask;
+
+        public ICollection<Func<Message, Task>> MessageNotMatchedHandlers { get; }
+
+        public ICollection<Func<Message, Exception, Task>> MessageConsumeFailedHandlers { get; }
+
+        public void Dispose()
+        {
+            _channelListener.Dispose();
+        }
+
+        private void RegisterListenerMethods()
+        {
+            var messageReceiverMethods = _listener
+                .GetType()
                 .GetTypeInfo()
                 .GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.FlattenHierarchy);
 
@@ -84,7 +135,7 @@ namespace Lime.Protocol.Listeners
                         throw new ArgumentException(
                             $"The method '{method.Name}' already defines a '{CONTENT_KEY}' parameter and should define only convention arguments. The invalid argument is '{unconventionalParameter.Name}'.");
                     }
-                    
+
                     if (contentParameter.ParameterType == typeof(JsonDocument))
                     {
                         if (string.IsNullOrWhiteSpace(messageReceiver.ContentType))
@@ -96,7 +147,7 @@ namespace Lime.Protocol.Listeners
                         if (!mediaType.IsJson)
                         {
                             throw new ArgumentException(
-                               $"The method '{method.Name}' argument '{contentParameter.Name}' content type must be of JSON subtype.");
+                                $"The method '{method.Name}' argument '{contentParameter.Name}' content type must be of JSON subtype.");
                         }
                     }
                     else if (contentParameter.ParameterType == typeof(PlainDocument))
@@ -110,12 +161,12 @@ namespace Lime.Protocol.Listeners
                         if (mediaType.IsJson)
                         {
                             throw new ArgumentException(
-                               $"The method '{method.Name}' argument '{contentParameter.Name}' content type must be of plain type.");
+                                $"The method '{method.Name}' argument '{contentParameter.Name}' content type must be of plain type.");
                         }
                     }
                     else if (typeof(IDocument).GetTypeInfo().IsAssignableFrom(contentParameter.ParameterType))
                     {
-                        var document = (IDocument) Activator.CreateInstance(contentParameter.ParameterType);
+                        var document = (IDocument)Activator.CreateInstance(contentParameter.ParameterType);
                         var documentContentType = document.GetMediaType().ToString();
 
                         if (string.IsNullOrWhiteSpace(messageReceiver.ContentType))
@@ -134,7 +185,7 @@ namespace Lime.Protocol.Listeners
                             $"The method '{method.Name}' argument '{contentParameter.Name}' must inherit 'IDocument'.");
                     }
                 }
-                else 
+                else
                 {
                     // Create a document type for the method
                     messageReceiver.ContentType =
@@ -149,39 +200,6 @@ namespace Lime.Protocol.Listeners
 
                 _contentTypeMethodDictionary.Add(messageReceiver.ContentType.ToLowerInvariant(), method);
             }
-            
-
-            _channelListener = new ChannelListener(
-                ConsumeMessageAsync,
-                ConsumeNotificationAsync,
-                ConsumeCommandAsync);
-        }
-
-        public void Start(IEstablishedReceiverChannel channel)
-        {
-            _channelListener.Start(channel);
-        }
-
-        public void Stop()
-        {
-            _channelListener.Stop();
-        }
-
-        public Task<Message> MessageListenerTask => _channelListener.MessageListenerTask;
-
-        public Task<Notification> NotificationListenerTask => _channelListener.NotificationListenerTask;
-
-        public Task<Command> CommandListenerTask => _channelListener.CommandListenerTask;
-
-
-        public ICollection<Func<Message, Task>> MessageNotMatchedHandlers { get; }
-
-        public ICollection<Func<Message, Exception, Task>> MessageConsumeFailedHandlers { get; }
-
-
-        public void Dispose()
-        {
-            _channelListener.Dispose();
         }
 
         private async Task<bool> ConsumeMessageAsync(Message message)
@@ -191,7 +209,7 @@ namespace Lime.Protocol.Listeners
                 MethodInfo method;
                 if (_contentTypeMethodDictionary.TryGetValue(message.Type.ToString().ToLowerInvariant(), out method))
                 {
-                    var values = new Dictionary<string, object>
+                    var conventionMessageValues = new Dictionary<string, object>
                     {
                         {ID_KEY, message.Id},
                         {FROM_KEY, message.From},
@@ -209,7 +227,7 @@ namespace Lime.Protocol.Listeners
                     {
                         foreach (var keyValue in jsonDocumentContent)
                         {
-                            values.Add(keyValue.Key, keyValue.Value);
+                            conventionMessageValues.Add(keyValue.Key, keyValue.Value);
                         }
                     }
 
@@ -217,9 +235,10 @@ namespace Lime.Protocol.Listeners
                         .Select(p =>
                         {
                             object value;
-                            if (!values.TryGetValue(p.Name, out value))
+                            if (!conventionMessageValues.TryGetValue(p.Name, out value) &&
+                                !_internalValuesDictionary.TryGetValue(p.Name, out value))
                             {
-                                throw new ArgumentException($"Could not find the value for the argument '{p.Name}' in the received message content", nameof(message));
+                                throw new ArgumentException($"Could not find the value for the argument '{p.Name}' for the method '{method.Name}'", nameof(message));
                             }
 
                             if (!p.ParameterType.GetTypeInfo().IsInstanceOfType(value))
@@ -231,14 +250,14 @@ namespace Lime.Protocol.Listeners
                                 catch
                                 {
                                     throw new ArgumentException(
-                                        $"The argument '{p.Name}' expects a different type than the available. The expected type is '{p.ParameterType.Name}' and available is '{value.GetType().Name}'.",
+                                        $"The argument '{p.Name}' of method '{method.Name}' expects a different type than the available. The expected type is '{p.ParameterType.Name}' and available is '{value.GetType().Name}'.",
                                         nameof(message));
                                 }
                             }
 
                             return value;
                         }).ToArray();
-                    await (Task) method.Invoke(_instance, arguments);
+                    await (Task) method.Invoke(_listener, arguments);
                 }
                 else
                 {
