@@ -51,8 +51,8 @@ namespace Lime.Sample.Client
             });
         }
 
-        [CommandProcessor(Method = CommandMethod.Set, UriTemplate = "/presence")]
-        public Task SetPresenceAsync(Presence presence, Node @from, CancellationToken cancellationToken)
+        [CommandProcessor(Method = CommandMethod.Set, UriTemplate = "/presence", ResourceType = "application/vnd.lime.presence+json")]
+        public Task SetPresenceAsync(Presence resource, Node @from, CancellationToken cancellationToken)
         {
             return Task.CompletedTask;
         }
