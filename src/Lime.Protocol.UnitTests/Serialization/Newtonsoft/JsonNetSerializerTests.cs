@@ -708,6 +708,25 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
         }
 
         [Test]
+        [Category("Serialize")]
+        public void Serialize_InputMessage_ReturnsValidJsonString()
+        {
+            // Arrange
+            var input = Dummy.CreateInput();
+            var message = Dummy.CreateMessage(input);
+            var target = GetTarget();
+
+            // Act
+            var resultString = target.Serialize(message);
+
+            // Assert
+            Assert.IsTrue(resultString.HasValidJsonStackedBrackets());
+            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.ID_KEY, message.Id));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.FROM_KEY, message.From));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.TO_KEY, message.To));
+        }
+
+        [Test]
 		[Category("Serialize")]
 		public void Serialize_IdentityDocumentMessage_ReturnsValidJsonString()
 		{
@@ -1225,7 +1244,29 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 			Assert.AreEqual(state, textContent.State);
 		}
 
-		[Test]
+        [Test]
+        [Category("Deserialize")]
+        public void Deserialize_DocumentSelect_ReturnValidInstance()
+        {
+            // Arrange
+            var json = "{\"id\":\"a77fa426-2990-4b98-adbf-db897436017b\",\"to\":\"949839515125748@messenger.gw.msging.net\",\"type\":\"application/vnd.lime.document-select+json\",\"content\":{\"header\":{\"type\":\"text/plain\",\"value\":\"Envie sua localizacao\"},\"options\":[{\"label\":{\"type\":\"application/vnd.lime.input+json\",\"value\":{\"validation\":{\"rule\":\"type\",\"type\":\"application/vnd.lime.location+json\"}}}}]}}";
+            var target = GetTarget();
+
+            // Act
+            var envelope = target.Deserialize(json);
+
+            // Assert
+            var message = envelope.ShouldBeOfType<Message>();
+            var documentSelect = message.Content.ShouldBeOfType<DocumentSelect>();
+            var header = documentSelect.Header.Value.ShouldBeOfType<PlainText>();
+            header.Text.ShouldBe("Envie sua localizacao");
+            documentSelect.Options.Length.ShouldBe(1);
+            var input = documentSelect.Options[0].Label.Value.ShouldBeOfType<Input>();
+            input.Validation.Rule.ShouldBe(InputValidationRule.Type);
+            input.Validation.Type.ShouldBe(Location.MediaType);
+        }
+
+        [Test]
 		[Category("Deserialize")]
 		public void Deserialize_UnknownPlainContentMessage_ReturnsValidInstance()
 		{

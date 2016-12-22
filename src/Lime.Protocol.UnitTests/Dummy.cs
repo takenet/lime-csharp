@@ -513,5 +513,18 @@ namespace Lime.Protocol.UnitTests
                 Type = CreatePlainMediaType()
             };
         }
+
+        public static Input CreateInput()
+        {
+            return new Input
+            {
+                Label = CreateDocumentContainer(CreateTextContent()),
+                Validation = new InputValidation
+                {
+                    Rule = InputValidationRule.Type,
+                    Type = CreateJsonMediaType()
+                }
+            };
+        }
     }
 }
