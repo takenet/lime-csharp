@@ -46,5 +46,14 @@ namespace Lime.Messaging.Contents
         /// <param name="value"></param>
         /// <returns></returns>
         public static PlainText Parse(string value) => new PlainText() { Text = value };
+
+        /// <summary>
+        /// Performs an implicit conversion from <see cref="PlainText"/> to <see cref="System.String"/>.
+        /// </summary>
+        /// <param name="plainText">The plain text.</param>
+        /// <returns>
+        /// The result of the conversion.
+        /// </returns>
+        public static implicit operator string(PlainText plainText) => plainText.Text;
     }
 }

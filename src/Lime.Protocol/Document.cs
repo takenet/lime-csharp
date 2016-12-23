@@ -12,23 +12,36 @@ namespace Lime.Protocol
     {
         protected MediaType _mediaType;
 
-        #region Constructor
-
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Document"/> class.
+        /// </summary>
+        /// <param name="mediaType">Type of the media.</param>
+        /// <exception cref="System.ArgumentNullException"></exception>
         protected Document(MediaType mediaType)
         {
             if (mediaType == null) throw new ArgumentNullException(nameof(mediaType));            
             _mediaType = mediaType;
         }
 
-        #endregion
-
-        #region IDocument Members
-
+        /// <summary>
+        /// Gets the type of the media for the document.
+        /// </summary>
+        /// <returns></returns>
         public MediaType GetMediaType()
         {
             return _mediaType;
         }
 
-        #endregion
+        /// <summary>
+        /// Performs an implicit conversion from <see cref="System.String"/> to <see cref="Document"/>.
+        /// </summary>
+        /// <param name="value">The value.</param>
+        /// <returns>
+        /// The result of the conversion.
+        /// </returns>
+        public static implicit operator Document(string value)
+        {
+            return new PlainDocument(value, MediaType.TextPlain);
+        }
     }
 }

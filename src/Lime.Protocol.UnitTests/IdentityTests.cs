@@ -384,5 +384,32 @@ namespace Lime.Protocol.UnitTests
         }
 
         #endregion
+
+        #region Conversion
+
+        [Test]
+        [Category("Conversion")]
+        public void Conversion_FromString_ReturnsValidIdentity()
+        {
+            // Act
+            Identity identity = "name@domain.com";
+
+            // Assert
+            identity.Name.ShouldBe("name");
+            identity.Domain.ShouldBe("domain.com");
+        }
+
+        [Test]
+        [Category("Conversion")]
+        public void Conversion_ToString_ReturnsValidIdentity()
+        {
+            // Act
+            string identity = new Identity("name", "domain.com");
+
+            // Assert
+            identity.ShouldBe("name@domain.com");
+        }
+
+        #endregion
     }
 }

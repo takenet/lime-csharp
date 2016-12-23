@@ -67,15 +67,50 @@ namespace Lime.Protocol
                    ((Instance == null && node.Instance == null) || (Instance != null && Instance.Equals(node.Instance, StringComparison.CurrentCultureIgnoreCase)));
         }
 
-        public static bool operator ==(Node left, Node right)
-        {
-            return Equals(left, right);
-        }
+        /// <summary>
+        /// Implements the operator ==.
+        /// </summary>
+        /// <param name="left">The left.</param>
+        /// <param name="right">The right.</param>
+        /// <returns>
+        /// The result of the operator.
+        /// </returns>
+        public static bool operator ==(Node left, Node right) => Equals(left, right);
 
-        public static bool operator !=(Node left, Node right)
-        {
-            return !Equals(left, right);
-        }
+        /// <summary>
+        /// Implements the operator !=.
+        /// </summary>
+        /// <param name="left">The left.</param>
+        /// <param name="right">The right.</param>
+        /// <returns>
+        /// The result of the operator.
+        /// </returns>
+        public static bool operator !=(Node left, Node right) => !Equals(left, right);
+
+        /// <summary>
+        /// Performs an implicit conversion from <see cref="System.String"/> to <see cref="Node"/>.
+        /// </summary>
+        /// <param name="value">The value.</param>
+        /// <returns>
+        /// The result of the conversion.
+        /// </returns>
+        /// <summary>
+        /// Performs an implicit conversion from <see cref="System.String"/> to <see cref="Node"/>.
+        /// </summary>
+        /// <param name="value">The value.</param>
+        /// <returns>
+        /// The result of the conversion.
+        /// </returns>
+        public static implicit operator Node(string value) => Parse(value);
+
+        /// <summary>
+        /// Performs an implicit conversion from <see cref="Node"/> to <see cref="System.String"/>.
+        /// </summary>
+        /// <param name="node">The node.</param>
+        /// <returns>
+        /// The result of the conversion.
+        /// </returns>
+        public static implicit operator string(Node node) => node.ToString();
 
         /// <summary>
         /// Returns a hash code for this instance.
@@ -83,10 +118,7 @@ namespace Lime.Protocol
         /// <returns>
         /// A hash code for this instance, suitable for use in hashing algorithms and data structures like a hash table. 
         /// </returns>
-        public override int GetHashCode()
-        {
-            return base.GetHashCode();
-        }
+        public override int GetHashCode() => base.GetHashCode();
 
         /// <summary>
         /// Parses the string to a valid Node.

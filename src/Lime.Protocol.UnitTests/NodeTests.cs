@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Shouldly;
 
 namespace Lime.Protocol.UnitTests
 {
@@ -132,5 +133,32 @@ namespace Lime.Protocol.UnitTests
 
         #endregion Parse
 
+        #region Conversion
+
+        [Test]
+        [Category("Conversion")]
+        public void Conversion_FromString_ReturnsValidNode()
+        {
+            // Act
+            Node node = "name@domain.com/instance";
+
+            // Assert
+            node.Name.ShouldBe("name");
+            node.Domain.ShouldBe("domain.com");
+            node.Instance.ShouldBe("instance");
+        }
+
+        [Test]
+        [Category("Conversion")]
+        public void Conversion_ToString_ReturnsValidNode()
+        {
+            // Act
+            string node = new Node("name", "domain.com", "instance");
+
+            // Assert
+            node.ShouldBe("name@domain.com/instance");
+        } 
+
+        #endregion
     }
 }
