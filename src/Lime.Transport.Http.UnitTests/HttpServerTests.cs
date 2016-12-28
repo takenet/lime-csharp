@@ -160,7 +160,7 @@ namespace Lime.Transport.Http.UnitTests
             httpListenerBasicIdentity.Name.ShouldBe(Identity.ToString());
             httpListenerBasicIdentity.Password.ShouldBe(Password);
             actual.Uri.ShouldBe(RequestUri);
-            actual.CorrelatorId.ShouldNotBe(Guid.Empty);
+            actual.CorrelatorId.ShouldNotBeNullOrWhiteSpace();
             actual.QueryString.ShouldNotBe(null);
             actual.QueryString.Get("value1").ShouldBe(QueryStringValue1);
             actual.QueryString.Get("value2").ShouldBe(QueryStringValue2.ToString());
@@ -183,7 +183,7 @@ namespace Lime.Transport.Http.UnitTests
             httpListenerBasicIdentity.Name.ShouldBe(Identity.ToString());
             httpListenerBasicIdentity.Password.ShouldBe(Password);
             actual.Uri.ShouldBe(RequestUri);
-            actual.CorrelatorId.ShouldNotBe(Guid.Empty);
+            actual.CorrelatorId.ShouldNotBeNullOrWhiteSpace();
             actual.QueryString.ShouldNotBe(null);
             actual.QueryString.Get("value1").ShouldBe(QueryStringValue1);
             actual.QueryString.Get("value2").ShouldBe(QueryStringValue2.ToString());
@@ -243,7 +243,7 @@ namespace Lime.Transport.Http.UnitTests
         public async Task SubmitResponseAsync_InvalidCorrelationId_ThrowsArgumentException()
         {
             // Act
-            var httpResponse = HttpResponseFactory(new HttpRequest("POST", new Uri("http://localhost"), correlatorId: Guid.Empty));
+            var httpResponse = HttpResponseFactory(new HttpRequest("POST", new Uri("http://localhost"), correlatorId: ""));
             await Target.Value.SubmitResponseAsync(httpResponse).ShouldThrowAsync<ArgumentException>();
         }
     }

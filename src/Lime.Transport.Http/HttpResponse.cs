@@ -12,13 +12,11 @@ namespace Lime.Transport.Http
     /// </summary>
     public sealed class HttpResponse
     {
-        #region Constructor
-
-        public HttpResponse(Guid correlatorId, HttpStatusCode statusCode, string statusDescription = null, WebHeaderCollection headers = null, MediaType contentType = null, Stream bodyStream = null, string body = null)
+        public HttpResponse(string correlatorId, HttpStatusCode statusCode, string statusDescription = null, WebHeaderCollection headers = null, MediaType contentType = null, Stream bodyStream = null, string body = null)
         {
-            if (correlatorId.Equals(default(Guid)))
+            if (string.IsNullOrWhiteSpace(correlatorId))
             {
-                throw new ArgumentException("CorrelatorId must be a valid GUID", "correlatorId");
+                throw new ArgumentException("CorrelatorId must be a valid string", nameof(correlatorId));
             }
 
             CorrelatorId = correlatorId;
@@ -57,11 +55,7 @@ namespace Lime.Transport.Http
             }
         }
 
-        #endregion
-
-        #region Public Properties
-
-        public Guid CorrelatorId { get; private set; }
+        public string CorrelatorId { get; private set; }
 
         public HttpStatusCode StatusCode { get; private set; }
 
@@ -73,7 +67,5 @@ namespace Lime.Transport.Http
 
 
         public Stream BodyStream { get; private set; }
-
-        #endregion
     }    
 }

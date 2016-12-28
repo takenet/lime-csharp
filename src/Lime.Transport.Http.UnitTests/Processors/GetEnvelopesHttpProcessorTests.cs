@@ -51,7 +51,7 @@ namespace Lime.Transport.Http.UnitTests.Processors
             PrincipalIdentityName = Identity.ToString();
             PrincipalIdentity.SetupGet(p => p.Name).Returns(() => PrincipalIdentityName);       
             GetMessagesUri = new Uri("http://" + Constants.MESSAGES_PATH + ":" + Dummy.CreateRandomInt(50000) + "/" + Constants.MESSAGES_PATH);
-            GetMessagesHttpRequest = new HttpRequest("DELETE", GetMessagesUri, Principal.Object, Guid.NewGuid());
+            GetMessagesHttpRequest = new HttpRequest("DELETE", GetMessagesUri, Principal.Object, Guid.NewGuid().ToString());
             GetMessagesUriTemplateMatch = new UriTemplateMatch();
             EnvelopeIds = new[]
             {

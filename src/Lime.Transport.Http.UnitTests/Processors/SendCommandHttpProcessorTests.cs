@@ -84,7 +84,7 @@ namespace Lime.Transport.Http.UnitTests.Processors
 
             BodyStream.Seek(0, SeekOrigin.Begin);
             SendCommandUri = new Uri("http://" + Constants.COMMANDS_PATH + ":" + Dummy.CreateRandomInt(50000) + "/" + Constants.COMMANDS_PATH + RequestCommand.Uri.ToString());
-            SendCommandHttpRequest = new HttpRequest("POST", SendCommandUri, Principal.Object, Guid.Parse(RequestCommand.Id), bodyStream: BodyStream, contentType: Resource.GetMediaType());
+            SendCommandHttpRequest = new HttpRequest("POST", SendCommandUri, Principal.Object, RequestCommand.Id, bodyStream: BodyStream, contentType: Resource.GetMediaType());
             SendCommandHttpRequest.Headers.Add(Constants.ENVELOPE_FROM_HEADER, RequestCommand.From.ToString());
             SendCommandHttpRequest.Headers.Add(Constants.ENVELOPE_TO_HEADER, RequestCommand.To.ToString());
             TransportSession = new Mock<ITransportSession>();

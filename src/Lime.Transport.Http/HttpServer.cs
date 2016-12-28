@@ -85,11 +85,11 @@ namespace Lime.Transport.Http
                     .WithCancellation(cancellationToken)
                     .ConfigureAwait(false);
 
-                Guid correlatorId;
+                string correlatorId;
                 do
                 {
-                    correlatorId = Guid.NewGuid();
-                } while (!_memoryCache.Add(correlatorId.ToString(), context, _cacheItemPolicy));
+                    correlatorId = Guid.NewGuid().ToString();
+                } while (!_memoryCache.Add(correlatorId, context, _cacheItemPolicy));
 
                 MediaType contentType = null;
                 if (!string.IsNullOrEmpty(context.Request.ContentType))

@@ -58,7 +58,7 @@ namespace Lime.Transport.Http.UnitTests.Processors
             Envelope.Pp = Dummy.CreateNode();
             EnvelopeId = Envelope.Id;
             GetMessageUri = new Uri("http://" + Constants.MESSAGES_PATH + ":" + Dummy.CreateRandomInt(50000) + "/" + EnvelopeId);
-            GetMessageHttpRequest = new HttpRequest("GET", GetMessageUri, Principal.Object, Guid.NewGuid());
+            GetMessageHttpRequest = new HttpRequest("GET", GetMessageUri, Principal.Object, Guid.NewGuid().ToString());
             GetMessageUriTemplateMatch = new UriTemplateMatch();
             GetMessageUriTemplateMatch.BoundVariables.Add("id", EnvelopeId.ToString());
             GetMessageHttpResponse = new HttpResponse(GetMessageHttpRequest.CorrelatorId, System.Net.HttpStatusCode.OK);
