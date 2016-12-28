@@ -56,4 +56,4 @@ Set distribution list recipients	Command	{"id": "%commandId","to":"postmaster@br
 Get distribution list recipients	Command	{"id": "%commandId","to":"postmaster@broadcast.%domain","method":"get","uri":"/lists/%distributionListIdentity/recipients?$take=20"}
 Delete distribution list recipient	Command	{"id": "%commandId","to":"postmaster@broadcast.%domain","method":"delete","uri":"/lists/%distributionListIdentity/recipients/%recipientIdentity"}
 Set scheduled message	Command	{"id": "%newGuid", "to": "postmaster@scheduler.%domain","method": "set","uri": "/schedules","type": "application/vnd.iris.schedule+json","resource": {"message": {"id": "%newGuid","to": "%to","type": "text/plain","content": "%text"},"when": "%when"}}
-Get ping	Command {"id": "%newGuid","to": "%to","method": "get","uri": "/ping"}
+Ping	Command	{"id": "%newGuid","to": "%to","method": "get","uri": "/ping"}

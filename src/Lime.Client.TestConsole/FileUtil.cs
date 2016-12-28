@@ -20,7 +20,14 @@ namespace Lime.Client.TestConsole
 
                 if (!File.Exists(appDataFileName))
                 {
-                    File.Copy(fileName, appDataFileName);                    
+                    if (File.Exists(fileName))
+                    {
+                        File.Copy(fileName, appDataFileName);
+                    }
+                    else
+                    {
+                        File.Create(appDataFileName).Close();
+                    }
                 }
 
                 fileName = appDataFileName;
