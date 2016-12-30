@@ -183,6 +183,10 @@ namespace Lime.Protocol
         /// </summary>
         public const int GATEWAY_REQUEST_LIMIT_REACHED = 85;
         /// <summary>
+        /// The gateway operation timed out
+        /// </summary>
+        public const int GATEWAY_OPERATION_TIMED_OUT = 86;
+        /// <summary>
         /// General application processing error
         /// </summary>
         public const int APPLICATION_ERROR = 101;        
