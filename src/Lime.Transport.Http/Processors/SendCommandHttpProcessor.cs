@@ -6,7 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Lime.Protocol;
 using Lime.Protocol.Network;
-using Lime.Transport.Http.Serialization;
+using Lime.Protocol.Serialization;
 
 namespace Lime.Transport.Http.Processors
 {
@@ -14,15 +14,11 @@ namespace Lime.Transport.Http.Processors
     {
         private readonly string[] _exceptUriSegments;
 
-        #region Constructor
-
         public SendCommandHttpProcessor(IDocumentSerializer documentSerializer = null, ITraceWriter traceWriter = null)
             : base(new HashSet<string> { Constants.HTTP_METHOD_GET, Constants.HTTP_METHOD_POST, Constants.HTTP_METHOD_DELETE }, new UriTemplate(string.Format("/{0}/*", Constants.COMMANDS_PATH)), documentSerializer ?? new DocumentSerializer(), traceWriter)
         {
             _exceptUriSegments = new[] { Constants.COMMANDS_PATH + Constants.ROOT };
         }
-
-        #endregion
 
         public override async Task<HttpResponse> ProcessAsync(HttpRequest request, UriTemplateMatch match, ITransportSession transport, CancellationToken cancellationToken)
         {
@@ -64,8 +60,6 @@ namespace Lime.Transport.Http.Processors
             }
         }
 
-        #region SendEnvelopeHttpProcessorBase Members
-
         protected override async Task FillEnvelopeAsync(Command envelope, HttpRequest request)
         {
             CommandMethod method;
@@ -98,10 +92,6 @@ namespace Lime.Transport.Http.Processors
                 throw new LimeException(ReasonCodes.VALIDATION_INVALID_METHOD, "Invalid method");
             }
         }
-        
-        #endregion
-
-        #region Private Methods
 
         private bool TryConvertToCommandMethod(string httpMethod, out CommandMethod commandMethod)
         {
@@ -121,9 +111,5 @@ namespace Lime.Transport.Http.Processors
                     return false;
             }
         }
-
-        #endregion
-
-
     }
 }

@@ -9,16 +9,12 @@ using Lime.Protocol.Serialization;
 namespace Lime.Transport.Http.Processors
 {
     public class SendNotificationHttpProcessor : SendEnvelopeHttpProcessorBase<Notification>
-    {        
-        #region Constructor
-
+    {
         public SendNotificationHttpProcessor(ITraceWriter traceWriter = null)
             : base(new HashSet<string> { Constants.HTTP_METHOD_POST }, new UriTemplate(string.Format("/{0}", Constants.NOTIFICATIONS_PATH)), null, traceWriter)
         {
 
         }
-
-        #endregion
 
         protected override async Task FillEnvelopeAsync(Notification envelope, HttpRequest request)
         {

@@ -53,8 +53,6 @@ namespace Lime.Transport.Http
             _pendingCommandsDictionary = new ConcurrentDictionary<string, TaskCompletionSource<Command>>();
         }
 
-        #region IEmulatedTransport Members
-
         public DateTimeOffset Expiration { get; private set; }
 
         /// <summary>
@@ -213,10 +211,6 @@ namespace Lime.Transport.Http
             }
         }
 
-        #endregion
-
-        #region TransportBase Members
-
         public override SessionCompression[] GetSupportedCompression()
         {
             return new[] { SessionCompression.None };
@@ -325,10 +319,6 @@ namespace Lime.Transport.Http
         }
 
         public override bool IsConnected => true;
-
-        #endregion
-
-        #region Private Methods
 
         private async Task SendSessionAsync(Session session, CancellationToken cancellationToken)
         {
@@ -477,8 +467,5 @@ namespace Lime.Transport.Http
                 await SubmitAsync(commandResponse, cancellationToken).ConfigureAwait(false);
             }
         }
-
-        #endregion
-
     }
 }

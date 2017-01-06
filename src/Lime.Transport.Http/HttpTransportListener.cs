@@ -7,9 +7,9 @@ using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using Lime.Protocol;
 using Lime.Protocol.Network;
+using Lime.Protocol.Serialization;
 using Lime.Protocol.Server;
 using Lime.Transport.Http.Processors;
-using Lime.Transport.Http.Serialization;
 using Lime.Transport.Http.Storage;
 
 namespace Lime.Transport.Http

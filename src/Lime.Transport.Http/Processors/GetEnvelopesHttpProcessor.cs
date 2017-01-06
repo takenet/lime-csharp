@@ -14,8 +14,6 @@ namespace Lime.Transport.Http.Processors
     {
         private readonly IEnvelopeStorage<T> _envelopeStorage;
 
-        #region Constructor
-
         public GetEnvelopesHttpProcessor(IEnvelopeStorage<T> envelopeStorage, string path)
         {
             _envelopeStorage = envelopeStorage;
@@ -23,10 +21,6 @@ namespace Lime.Transport.Http.Processors
             Methods = new HashSet<string> { Constants.HTTP_METHOD_GET };
             Template = new UriTemplate(string.Format("/{0}", path));
         }
-
-        #endregion
-
-        #region IHttpProcessor Members
 
         public HashSet<string> Methods { get; private set; }
 
@@ -66,7 +60,5 @@ namespace Lime.Transport.Http.Processors
                 return new HttpResponse(request.CorrelatorId, HttpStatusCode.BadRequest);
             }            
         }
-
-        #endregion
     }
 }

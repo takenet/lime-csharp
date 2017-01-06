@@ -4,7 +4,7 @@ using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using Lime.Protocol;
-using Lime.Transport.Http.Serialization;
+using Lime.Protocol.Serialization;
 using Lime.Transport.Http.Storage;
 
 namespace Lime.Transport.Http.Processors
@@ -12,14 +12,8 @@ namespace Lime.Transport.Http.Processors
     public abstract class GetEnvelopeByIdHttpProcessorBase<T> : IHttpProcessor
         where T : Envelope
     {
-        #region Private Fields
-
         private readonly IEnvelopeStorage<T> _envelopeStorage;
         private readonly IDocumentSerializer _serializer;
-
-        #endregion
-
-        #region Constructor
 
         public GetEnvelopeByIdHttpProcessorBase(IEnvelopeStorage<T> envelopeStorage, string path)
         {
@@ -29,10 +23,6 @@ namespace Lime.Transport.Http.Processors
             Methods = new HashSet<string> { Constants.HTTP_METHOD_GET };
             Template = new UriTemplate(string.Format("/{0}/{{id}}", path));
         }
-
-        #endregion
-
-        #region IHttpProcessor Members
 
         public HashSet<string> Methods { get; }
 
@@ -71,8 +61,6 @@ namespace Lime.Transport.Http.Processors
             }
             return new HttpResponse(request.CorrelatorId, HttpStatusCode.BadRequest);
         }
-
-        #endregion
 
         protected abstract HttpResponse GetEnvelopeResponse(T envelope, HttpRequest request);
     }

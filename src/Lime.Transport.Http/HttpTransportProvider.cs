@@ -15,8 +15,6 @@ namespace Lime.Transport.Http
 {
     public sealed class HttpTransportProvider : IHttpTransportProvider, IDisposable
     {
-        #region Private Fields
-
         private readonly bool _useHttps;
         private readonly ConcurrentDictionary<string, ITransportSession> _transportDictionary;
         private readonly IEnvelopeStorage<Message> _messageStorage;
@@ -24,10 +22,6 @@ namespace Lime.Transport.Http
         private readonly Timer _expirationTimer;
         private readonly TimeSpan _expirationInactivityInterval;
         private readonly TimeSpan _closeTransportTimeout;
-
-        #endregion
-
-        #region Constructor
 
         public HttpTransportProvider(bool useHttps, IEnvelopeStorage<Message> messageStorage, IEnvelopeStorage<Notification> notificationStorage, 
             TimeSpan expirationInactivityInterval, TimeSpan expirationTimerInterval = default(TimeSpan), TimeSpan closeTransportTimeout = default(TimeSpan))
@@ -47,10 +41,6 @@ namespace Lime.Transport.Http
             _expirationTimer.Elapsed += ExpirationTimer_Elapsed;
             _expirationTimer.Start();
         }
-
-        #endregion
-
-        #region IHttpTransportProvider Members
 
         public ITransportSession GetTransport(IPrincipal requestPrincipal, bool cacheInstance)
         {
@@ -83,8 +73,6 @@ namespace Lime.Transport.Http
         }
 
         public event EventHandler<TransportEventArgs> TransportCreated;
-
-        #endregion
 
         /// <summary>
         /// Creates a new instance
@@ -161,13 +149,9 @@ namespace Lime.Transport.Http
             }
         }
 
-        #region IDisposable Members
-
         public void Dispose()
         {
             _expirationTimer.Dispose();
         }
-
-        #endregion
     }
 }

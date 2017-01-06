@@ -11,7 +11,6 @@ using Lime.Protocol.Serialization;
 using Lime.Protocol.UnitTests;
 using Lime.Transport.Http;
 using Lime.Transport.Http.Processors;
-using Lime.Transport.Http.Serialization;
 using NUnit.Framework;
 using Moq;
 using Shouldly;

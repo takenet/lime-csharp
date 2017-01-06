@@ -1,16 +1,12 @@
 ﻿using System;
-using Lime.Protocol;
-using Lime.Protocol.Serialization;
+using System.Collections.Generic;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using System.Collections.Generic;
 
-namespace Lime.Transport.Http.Serialization
+namespace Lime.Protocol.Serialization
 {
     public sealed class DocumentSerializer : IDocumentSerializer
     {
-        #region IDocumentSerializer Members
-
         public string Serialize(Document document)
         {
             if (document == null)
@@ -23,10 +19,7 @@ namespace Lime.Transport.Http.Serialization
             {
                 return JsonConvert.SerializeObject(document);
             }
-            else
-            {
-                return document.ToString();
-            }            
+            return document.ToString();
         }
 
         public Document Deserialize(string documentString, MediaType mediaType)
@@ -70,7 +63,5 @@ namespace Lime.Transport.Http.Serialization
 
             return document;           
         }
-
-        #endregion
     }
 }

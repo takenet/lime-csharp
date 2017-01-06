@@ -6,21 +6,15 @@ using System.Threading;
 using System.Threading.Tasks;
 using Lime.Protocol;
 using Lime.Protocol.Network;
-using Lime.Transport.Http.Serialization;
+using Lime.Protocol.Serialization;
 
 namespace Lime.Transport.Http.Processors
 {
     public abstract class SendEnvelopeHttpProcessorBase<T> : IHttpProcessor
         where T : Envelope, new()
     {
-        #region Private Fields
-
         protected readonly IDocumentSerializer _serializer;
         protected readonly ITraceWriter _traceWriter;
-
-        #endregion
-
-        #region Constructor
 
         public SendEnvelopeHttpProcessorBase(HashSet<string> methods, UriTemplate template, IDocumentSerializer serializer, ITraceWriter traceWriter = null)
         {
@@ -30,10 +24,6 @@ namespace Lime.Transport.Http.Processors
             _serializer = serializer;
             _traceWriter = traceWriter;
         }
-
-        #endregion
-
-        #region IHttpProcessor Members
 
         public HashSet<string> Methods { get; private set; }
 
@@ -47,10 +37,6 @@ namespace Lime.Transport.Http.Processors
             await transport.SubmitAsync(envelope, cancellationToken).ConfigureAwait(false);
             return new HttpResponse(request.CorrelatorId, HttpStatusCode.Accepted, body: envelope.Id.ToString());                     
         }
-
-        #endregion
-        
-        #region Protected Methods
 
         protected async Task<T> GetEnvelopeFromRequestAsync(HttpRequest request)
         {
@@ -98,7 +84,5 @@ namespace Lime.Transport.Http.Processors
 
             return document;
         }
-
-        #endregion        
     }
 }

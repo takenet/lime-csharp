@@ -5,21 +5,17 @@ using System.Threading;
 using System.Threading.Tasks;
 using Lime.Protocol;
 using Lime.Protocol.Network;
-using Lime.Transport.Http.Serialization;
+using Lime.Protocol.Serialization;
 
 namespace Lime.Transport.Http.Processors
 {
     public sealed class SendMessageHttpProcessor : SendEnvelopeHttpProcessorBase<Message>
     {
-        #region Constructor
-
         public SendMessageHttpProcessor(ITraceWriter traceWriter = null)
             : base(new HashSet<string> { Constants.HTTP_METHOD_POST }, new UriTemplate(string.Format("/{0}", Constants.MESSAGES_PATH)), new DocumentSerializer(), traceWriter)
         {
 
         }
-
-        #endregion
 
         public override async Task<HttpResponse> ProcessAsync(HttpRequest request, UriTemplateMatch match, ITransportSession transport, CancellationToken cancellationToken)
         {
