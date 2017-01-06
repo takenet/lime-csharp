@@ -16,6 +16,10 @@ Select message	Message	{"id":"%messageId","to":"%to","type":"application/vnd.lim
 Document select message	Message	{"id":"%messageId","to":"%to","type":"application/vnd.lime.document-select+json","content":{"header":{"type":"text/plain","value":"%selectText"},"options":[{"label":{"type":"text/plain","value":"%option1Text"}},{"label":{"type":"text/plain","value":"%option2Text"}},{"label":{"type":"text/plain","value":"%option3Text"},"value":{"type":"application/json","value":{"key1":"value1","key2":"value2"}}}]}}
 Text collection message	Message	{"id":"%messageId","to":"%to","type":"application/vnd.lime.collection+json","content":{"itemType":"text/plain","items":["%collectionItem1Text","%collectionItem2Text"]}}
 Location message	Message	{"id":"%messageId","to":"%to","type":"application/vnd.lime.location+json","content":{"latitude":%locationLatitude,"longitude":%locationLongitude,"altitude":%locationAltitude,"course":%locationCourse,"speed":%locationSpeed,"accuracy":%locationAccuracy}}
+Input text message	Message	{"id":"%messageId","to":"%to","type":"application/vnd.lime.input+json","content":{"label":{"type":"%inputLabelType","value":"%inputLabelValue"},"validation":{"rule":"text"}}}
+Input location message	Message	{"id":"%messageId","to":"%to","type":"application/vnd.lime.input+json","content":{"label":{"type":"%inputLabelType","value":"%inputLabelValue"},"validation":{"rule":"type","type":"application/vnd.lime.location+json"}}}
+Document container message	Message	{"id":"%messageId","to":"%to","type":"application/vnd.lime.container+json","content":{"type":"%documentContainerType","value":"%documentContainerValue"}}
+Sensitive container message	Message	{"id":"%messageId","to":"%to","type":"application/vnd.lime.sensitive+json","content":{"type":"%sensitiveContainerType","value":"%sensitiveContainerValue"}}
 Received notification	Notification	{"id":"%messageId","to":"%to","event":"received"}
 Consumed notification	Notification	{"id":"%messageId","to":"%to","event":"consumed"}
 Failed notification	Notification	{"id":"%messageId","from":"%from","to":"%to","event":"failed","reason":{"code":%reasonCode,"description":"%reasonDescription"}}
