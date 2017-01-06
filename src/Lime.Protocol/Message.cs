@@ -7,7 +7,7 @@ namespace Lime.Protocol
     /// Provides the transport of a content between nodes in a network.
     /// </summary>
     [DataContract(Namespace = "http://limeprotocol.org/2014")]
-    public class Message : Envelope
+    public class Message : Envelope, IDocumentContainer
     {
         public const string TYPE_KEY = "type";
         public const string CONTENT_KEY = "content";
@@ -41,5 +41,11 @@ namespace Lime.Protocol
         /// </summary>
         [DataMember(Name = CONTENT_KEY, IsRequired = true)]
         public Document Content { get; set; }
+
+        /// <summary>
+        /// Gets the contained document.
+        /// </summary>
+        /// <returns></returns>
+        Document IDocumentContainer.GetDocument() => Content;
     }
 }

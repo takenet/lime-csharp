@@ -7,7 +7,7 @@ namespace Lime.Messaging.Contents
     /// Represents a container for sensitive documents from the user that should not be stored.
     /// </summary>
     /// <seealso cref="Lime.Protocol.Document" />
-    public class SensitiveContainer : Document
+    public class SensitiveContainer : Document, IDocumentContainer
     {
         public const string MIME_TYPE = "application/vnd.lime.sensitive+json";
         public const string TYPE_KEY = "type";
@@ -41,5 +41,11 @@ namespace Lime.Messaging.Contents
         /// </value>
         [DataMember(Name = VALUE_KEY)]
         public Document Value { get; set; }
+
+        /// <summary>
+        /// Gets the contained document.
+        /// </summary>
+        /// <returns></returns>
+        Document IDocumentContainer.GetDocument() => Value;
     }
 }
