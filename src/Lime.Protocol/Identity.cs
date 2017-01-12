@@ -116,7 +116,7 @@ namespace Lime.Protocol
         /// <returns>
         /// The result of the conversion.
         /// </returns>
-        public static implicit operator Identity(string value) => Parse(value);
+        public static implicit operator Identity(string value) => value == null ? null : Parse(value);
 
         /// <summary>
         /// Performs an implicit conversion from <see cref="Identity"/> to <see cref="System.String"/>.
@@ -125,7 +125,7 @@ namespace Lime.Protocol
         /// <returns>
         /// The result of the conversion.
         /// </returns>
-        public static implicit operator string(Identity identity) => identity.ToString();
+        public static implicit operator string(Identity identity) => identity?.ToString();
 
         /// <summary>
         /// Creates a Node instance based on the identity,

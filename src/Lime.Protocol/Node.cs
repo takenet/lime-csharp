@@ -101,7 +101,7 @@ namespace Lime.Protocol
         /// <returns>
         /// The result of the conversion.
         /// </returns>
-        public static implicit operator Node(string value) => Parse(value);
+        public static implicit operator Node(string value) => value == null ? null : Parse(value);
 
         /// <summary>
         /// Performs an implicit conversion from <see cref="Node"/> to <see cref="System.String"/>.
@@ -110,7 +110,7 @@ namespace Lime.Protocol
         /// <returns>
         /// The result of the conversion.
         /// </returns>
-        public static implicit operator string(Node node) => node.ToString();
+        public static implicit operator string(Node node) => node?.ToString();
 
         /// <summary>
         /// Returns a hash code for this instance.

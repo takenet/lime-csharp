@@ -41,6 +41,7 @@ namespace Lime.Protocol
         /// </returns>
         public static implicit operator Document(string value)
         {
+            if (value == null) return null;
             return new PlainDocument(value, MediaType.TextPlain);
         }
     }

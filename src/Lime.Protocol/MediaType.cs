@@ -146,7 +146,7 @@ namespace Lime.Protocol
         /// <returns>
         /// The result of the conversion.
         /// </returns>
-        public static implicit operator MediaType(string value) => Parse(value);
+        public static implicit operator MediaType(string value) => value == null ? null : Parse(value);
 
         /// <summary>
         /// Performs an implicit conversion from <see cref="MediaType"/> to <see cref="System.String"/>.
@@ -155,7 +155,7 @@ namespace Lime.Protocol
         /// <returns>
         /// The result of the conversion.
         /// </returns>
-        public static implicit operator string(MediaType mediaType) => mediaType.ToString();
+        public static implicit operator string(MediaType mediaType) => mediaType?.ToString();
 
         /// <summary> 
         /// Parses the string to a MediaType object.
