@@ -362,6 +362,17 @@ namespace Lime.Protocol.UnitTests
             Assert.IsNull(identity.Name);
         }
 
+        [Test]
+        [Category("Parse")]
+        public void Parse_OnlyAt_ReturnsValidIdentity()
+        {
+            var identityString = "@";
+
+            var identity = Identity.Parse(identityString);
+
+            Assert.IsNull(identity.Name);
+            Assert.IsNull(identity.Domain);
+        }
 
         [Test]
         [Category("Parse")]
