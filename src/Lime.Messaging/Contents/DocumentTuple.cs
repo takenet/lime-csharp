@@ -1,9 +1,10 @@
-﻿using System;
+﻿using Lime.Protocol;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 
-namespace Lime.Protocol
+namespace Lime.Messaging.Contents
 {
     /// <summary>
     /// Aggregates multiple documents of different types.
