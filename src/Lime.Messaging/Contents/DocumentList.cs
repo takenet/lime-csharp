@@ -4,7 +4,7 @@ using System.Runtime.Serialization;
 namespace Lime.Messaging.Contents
 {
     /// <summary>
-    /// Defines a list of <see cref="Document"/> with a header and footer.
+    /// Defines a list of <see cref="Document"/> with a header.
     /// </summary>
     /// <seealso cref="Document" />
     [DataContract]
@@ -13,7 +13,6 @@ namespace Lime.Messaging.Contents
         public const string MIME_TYPE = "application/vnd.lime.list+json";
         public const string HEADER_KEY = "header";
         public const string ITEMS_KEY = "items";
-        public const string FOOTER_KEY = "footer";
 
         /// <summary>
         /// Initializes a new instance of the <see cref="DocumentList"/> class.
@@ -41,15 +40,5 @@ namespace Lime.Messaging.Contents
         /// </value>
         [DataMember(Name = ITEMS_KEY)]
         public DocumentContainer[] Items { get; set; }
-
-        /// <summary>
-        /// Gets or sets the list footer document.
-        /// </summary>
-        /// <value>
-        /// The footer.
-        /// </value>
-        [DataMember(Name = FOOTER_KEY)]
-        public DocumentContainer Footer { get; set; }
-
     }
 }
