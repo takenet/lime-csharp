@@ -96,12 +96,12 @@
       <HintPath>..\packages\Lime.Messaging.0.7.86-beta\lib\net461\Lime.Messaging.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Lime.Protocol, Version=0.7.86.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Lime.Protocol.0.7.86-beta\lib\net461\Lime.Protocol.dll</HintPath>
+    <Reference Include="Lime.Protocol, Version=0.7.88.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Lime.Protocol.0.7.88-beta\lib\net461\Lime.Protocol.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Lime.Protocol.Serialization, Version=0.7.86.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Lime.Protocol.Serialization.0.7.86-beta\lib\net461\Lime.Protocol.Serialization.dll</HintPath>
+    <Reference Include="Lime.Protocol.Serialization, Version=0.7.88.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Lime.Protocol.Serialization.0.7.88-beta\lib\net461\Lime.Protocol.Serialization.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Lime.Transport.Tcp, Version=0.7.86.0, Culture=neutral, processorArchitecture=MSIL">

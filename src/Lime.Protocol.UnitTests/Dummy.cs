@@ -163,6 +163,14 @@ namespace Lime.Protocol.UnitTests
             return authentication;
         }
 
+        public static ExternalAuthentication CreateExternalAuthentication()
+        {
+            var authentication = new ExternalAuthentication();
+            authentication.Issuer = CreateRandomString(8);
+            authentication.SetToBase64Token(CreateRandomString(8, _extendedChars));
+            return authentication;
+        }
+
         public static AuthenticationScheme[] CreateSchemeOptions()
         {
             return new AuthenticationScheme[] { AuthenticationScheme.Guest, AuthenticationScheme.Plain };
