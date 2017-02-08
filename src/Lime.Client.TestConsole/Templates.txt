@@ -5,6 +5,7 @@ Authenticating guest	Session	{"id":"%sessionId","from":"%guestIdentity","state":
 Authenticating plain	Session	{"id":"%sessionId","from":"%from","state":"authenticating","scheme":"plain","authentication":{"password":"%password"}}
 Authenticating key	Session	{"id":"%sessionId","from":"%from","state":"authenticating","scheme":"key","authentication":{"key":"%key"}}
 Authenticating transport	Session	{"id":"%sessionId","from":"%from","state":"authenticating","scheme":"transport"}
+Authenticating external	Session	{"id":"%sessionId","from":"%from","state":"authenticating","scheme":"external","authentication":{"token":"%token","issuer":"%issuer"}}
 Finishing	Session	{"id":"%sessionId","state": "finishing"}
 Text message	Message	{"id":"%messageId","to":"%to","type":"text/plain","content":"%text"}
 Text message with pp	Message	{"id":"%messageId","from":"%delegateIdentity","to":"%to","pp":"%localNode","type":"text/plain","content":"%text"}

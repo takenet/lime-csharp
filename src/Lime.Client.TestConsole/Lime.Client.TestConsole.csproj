@@ -35,7 +35,7 @@
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
     <OpenBrowserOnPublish>false</OpenBrowserOnPublish>
-    <ApplicationRevision>2</ApplicationRevision>
+    <ApplicationRevision>3</ApplicationRevision>
     <ApplicationVersion>0.7.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
@@ -188,6 +188,7 @@
     <Compile Include="Macros\NotifyMessageConsumedMacro.cs" />
     <Compile Include="Macros\ReplyPingMacro.cs" />
     <Compile Include="Macros\NotifyMessageReceivedMacro.cs" />
+    <Compile Include="Macros\SendAuthenticatingExternalMacro.cs" />
     <Compile Include="Macros\SendAuthenticatingKeyMacro.cs" />
     <Compile Include="Macros\SendAuthenticatingMacroBase.cs" />
     <Compile Include="Macros\SendAuthenticatingGuestMacro.cs" />
