@@ -208,6 +208,7 @@ namespace Lime.Protocol.Serialization
             RegisterType(typeof(KeyAuthentication));
             RegisterType(typeof(PlainAuthentication));
             RegisterType(typeof(TransportAuthentication));
+            RegisterType(typeof(ExternalAuthentication));
         }
 
         private static void RegisterType(Type type)
