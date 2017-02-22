@@ -20,9 +20,9 @@ using Lime.Protocol.Serialization.Newtonsoft;
 namespace Lime.Transport.Tcp
 {
     /// <summary>
-	/// Provides the messaging protocol transport for TCP connections.
-	/// </summary>
-	public class TcpTransport : TransportBase, ITransport, IAuthenticatableTransport
+    /// Provides the messaging protocol transport for TCP connections.
+    /// </summary>
+    public class TcpTransport : TransportBase, ITransport, IAuthenticatableTransport, IDisposable
     {
         public const int DEFAULT_BUFFER_SIZE = 8192 * 8;
 
@@ -44,6 +44,7 @@ namespace Lime.Transport.Tcp
 
         private Stream _stream;
         private string _hostName;
+        private bool _disposed;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TcpTransport"/> class.
@@ -593,10 +594,34 @@ namespace Lime.Transport.Tcp
         /// <exception cref="System.NotImplementedException"></exception>
         protected override Task PerformCloseAsync(CancellationToken cancellationToken)
         {
-            cancellationToken.ThrowIfCancellationRequested();
-            _stream?.Dispose();
+            cancellationToken.ThrowIfCancellationRequested();            
             _tcpClient.Close();
             return Task.FromResult<object>(null);
+        }
+
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// </summary>
+        public void Dispose()
+        {
+            Dispose(true);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!_disposed)
+            {
+                if (disposing)
+                {
+                    _sendSemaphore.Dispose();
+                    _receiveSemaphore.Dispose();
+                    _stream?.Dispose();
+                    _clientCertificate?.Dispose();
+                    _serverCertificate?.Dispose();
+                }
+
+                _disposed = true;
+            }
         }
 
         private async Task<Envelope> GetEnvelopeFromBufferAsync()
