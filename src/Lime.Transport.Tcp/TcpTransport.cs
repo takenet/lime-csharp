@@ -594,7 +594,10 @@ namespace Lime.Transport.Tcp
         /// <exception cref="System.NotImplementedException"></exception>
         protected override Task PerformCloseAsync(CancellationToken cancellationToken)
         {
-            cancellationToken.ThrowIfCancellationRequested();            
+            cancellationToken.ThrowIfCancellationRequested();
+#if NET461
+            _stream?.Close();
+#endif
             _tcpClient.Close();
             return Task.FromResult<object>(null);
         }
