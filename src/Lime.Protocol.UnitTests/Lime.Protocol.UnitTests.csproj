@@ -2,8 +2,8 @@
 
   <PropertyGroup>
     <TargetFramework>net461</TargetFramework>
-    <AssemblyName>Lime.Transport.Http.UnitTests</AssemblyName>
-    <PackageId>Lime.Transport.Http.UnitTests</PackageId>
+    <AssemblyName>Lime.Protocol.UnitTests</AssemblyName>
+    <PackageId>Lime.Protocol.UnitTests</PackageId>
     <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
     <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
     <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
@@ -11,17 +11,18 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Lime.Messaging\Lime.Messaging.csproj" />
     <ProjectReference Include="..\Lime.Protocol\Lime.Protocol.csproj" />
     <ProjectReference Include="..\Lime.Protocol.Serialization\Lime.Protocol.Serialization.csproj" />
-    <ProjectReference Include="..\Lime.Transport.Http\Lime.Transport.Http.csproj" />
-    <ProjectReference Include="..\Lime.Protocol.UnitTests\Lime.Protocol.UnitTests.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.0.0" />
     <PackageReference Include="NUnit" Version="3.6.1" />
     <PackageReference Include="dotnet-test-nunit" Version="3.4.0-beta-3" />
+    <PackageReference Include="Microsoft.DotNet.InternalAbstractions" Version="1.0.0" />
     <PackageReference Include="NUnit.Console" Version="3.6.1" />
+    <PackageReference Include="NUnit.Runners" Version="3.6.1" />
     <PackageReference Include="NUnit3TestAdapter" Version="3.7.0" />
   </ItemGroup>
 
@@ -31,10 +32,6 @@
     <PackageReference Include="Newtonsoft.Json" Version="9.0.1" />
     <PackageReference Include="Shouldly" Version="2.8.2" />
     <Reference Include="System.Runtime.Serialization" />
-    <Reference Include="System.Net.Http" />
-    <Reference Include="System.ServiceModel" />
-    <Reference Include="System.Web" />
-    <Reference Include="System.Net" />
     <Reference Include="System" />
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>

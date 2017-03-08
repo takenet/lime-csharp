@@ -2,8 +2,8 @@
 
   <PropertyGroup>
     <TargetFramework>net461</TargetFramework>
-    <AssemblyName>Lime.Transport.Http.UnitTests</AssemblyName>
-    <PackageId>Lime.Transport.Http.UnitTests</PackageId>
+    <AssemblyName>Lime.Transport.Tcp.UnitTests</AssemblyName>
+    <PackageId>Lime.Transport.Tcp.UnitTests</PackageId>
     <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
     <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
     <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
@@ -11,9 +11,15 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Update="client_fakedomain.local.pfx;fakedomain.local.pfx;root.fakedomain.local.pfx">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Lime.Protocol\Lime.Protocol.csproj" />
+    <ProjectReference Include="..\Lime.Transport.Tcp\Lime.Transport.Tcp.csproj" />
     <ProjectReference Include="..\Lime.Protocol.Serialization\Lime.Protocol.Serialization.csproj" />
-    <ProjectReference Include="..\Lime.Transport.Http\Lime.Transport.Http.csproj" />
     <ProjectReference Include="..\Lime.Protocol.UnitTests\Lime.Protocol.UnitTests.csproj" />
   </ItemGroup>
 
@@ -26,15 +32,10 @@
   </ItemGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'net461' ">
-    <PackageReference Include="Microsoft.Tpl.Dataflow" Version="4.5.24" />
     <PackageReference Include="Moq" Version="4.7.1" />
-    <PackageReference Include="Newtonsoft.Json" Version="9.0.1" />
+    <PackageReference Include="Pluralsight.Crypto" Version="1.1.0" />
     <PackageReference Include="Shouldly" Version="2.8.2" />
     <Reference Include="System.Runtime.Serialization" />
-    <Reference Include="System.Net.Http" />
-    <Reference Include="System.ServiceModel" />
-    <Reference Include="System.Web" />
-    <Reference Include="System.Net" />
     <Reference Include="System" />
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>

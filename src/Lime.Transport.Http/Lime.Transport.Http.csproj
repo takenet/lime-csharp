@@ -1,0 +1,38 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Description>C# LIME http transport library</Description>
+    <Copyright>Copyright �  2014 Curupira S/A</Copyright>
+    <AssemblyTitle>Lime.Transport.Http</AssemblyTitle>
+    <VersionPrefix>0.7.4</VersionPrefix>
+    <Authors>takenet;andrebires</Authors>
+    <TargetFramework>net461</TargetFramework>
+    <AssemblyName>Lime.Transport.Http</AssemblyName>
+    <PackageId>Lime.Transport.Http</PackageId>
+    <PackageTags>lime</PackageTags>
+    <PackageProjectUrl>http://limeprotocol.org</PackageProjectUrl>
+    <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
+    <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
+    <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Lime.Protocol\Lime.Protocol.csproj" />
+    <ProjectReference Include="..\Lime.Protocol.Serialization\Lime.Protocol.Serialization.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="9.0.1" />
+  </ItemGroup>
+
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net461' ">
+    <PackageReference Include="Microsoft.Tpl.Dataflow" Version="4.5.24" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Runtime.Caching" />
+    <Reference Include="System.ServiceModel" />
+    <Reference Include="System.Web" />
+    <Reference Include="System" />
+    <Reference Include="Microsoft.CSharp" />
+  </ItemGroup>
+
+</Project>

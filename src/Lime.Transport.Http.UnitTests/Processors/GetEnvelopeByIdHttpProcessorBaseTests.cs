@@ -98,7 +98,7 @@ namespace Lime.Transport.Http.UnitTests.Processors
             // Arrange
             EnvelopeStorage
                 .Setup(m => m.GetEnvelopeAsync(Identity, EnvelopeId))
-                .ReturnsAsync(null)
+                .ReturnsAsync(() => null)
                 .Verifiable();
 
             // Act
