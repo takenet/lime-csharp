@@ -8,15 +8,30 @@ using Lime.Protocol.UnitTests;
 using Lime.Transport.Http;
 using Lime.Transport.Http.Processors;
 using Lime.Transport.Http.Storage;
-using NUnit.Framework;
+using Xunit;
 using Moq;
 using Shouldly;
 
 namespace Lime.Transport.Http.UnitTests.Processors
 {
-    [TestFixture]
     public class DeleteEnvelopeByIdHttpProcessorTests
     {
+        public DeleteEnvelopeByIdHttpProcessorTests()
+        {
+            MessageEnvelopeStorage = new Mock<IEnvelopeStorage<Message>>();
+            Principal = new Mock<IPrincipal>();
+            PrincipalIdentity = new Mock<System.Security.Principal.IIdentity>();
+            Principal.SetupGet(p => p.Identity).Returns(() => PrincipalIdentity.Object);
+            Identity = Dummy.CreateIdentity();
+            PrincipalIdentityName = Identity.ToString();
+            PrincipalIdentity.SetupGet(p => p.Name).Returns(() => PrincipalIdentityName);
+            MessageId = EnvelopeId.NewId();
+            DeleteMessageUri = new Uri("http://" + Constants.MESSAGES_PATH + ":" + Dummy.CreateRandomInt(50000) + "/" + MessageId);
+            DeleteMessageHttpRequest = new HttpRequest("DELETE", DeleteMessageUri, Principal.Object, Guid.NewGuid().ToString());
+            DeleteMessageUriTemplateMatch = new UriTemplateMatch();
+            DeleteMessageUriTemplateMatch.BoundVariables.Add("id", MessageId.ToString());
+            Target = new DeleteEnvelopeByIdHttpProcessor<Message>(MessageEnvelopeStorage.Object, Constants.MESSAGES_PATH);
+        }
 
         public Mock<IEnvelopeStorage<Message>> MessageEnvelopeStorage { get; set; }
 
@@ -38,25 +53,7 @@ namespace Lime.Transport.Http.UnitTests.Processors
 
         public DeleteEnvelopeByIdHttpProcessor<Message> Target { get; set; }
 
-        [SetUp]
-        public void Arrange()
-        {
-            MessageEnvelopeStorage = new Mock<IEnvelopeStorage<Message>>();
-            Principal = new Mock<IPrincipal>();
-            PrincipalIdentity = new Mock<System.Security.Principal.IIdentity>();
-            Principal.SetupGet(p => p.Identity).Returns(() => PrincipalIdentity.Object);
-            Identity = Dummy.CreateIdentity();
-            PrincipalIdentityName = Identity.ToString();
-            PrincipalIdentity.SetupGet(p => p.Name).Returns(() => PrincipalIdentityName);                        
-            MessageId = EnvelopeId.NewId();
-            DeleteMessageUri = new Uri("http://" + Constants.MESSAGES_PATH + ":" + Dummy.CreateRandomInt(50000) + "/" + MessageId);
-            DeleteMessageHttpRequest = new HttpRequest("DELETE", DeleteMessageUri, Principal.Object, Guid.NewGuid().ToString());
-            DeleteMessageUriTemplateMatch = new UriTemplateMatch();
-            DeleteMessageUriTemplateMatch.BoundVariables.Add("id", MessageId.ToString());
-            Target = new DeleteEnvelopeByIdHttpProcessor<Message>(MessageEnvelopeStorage.Object, Constants.MESSAGES_PATH);
-        }
-
-        [Test]
+        [Fact]
         public async Task ProcessAsync_ValidHttpRequest_RetunsOKHttpResponse()
         {
             // Arrange
@@ -74,7 +71,7 @@ namespace Lime.Transport.Http.UnitTests.Processors
             MessageEnvelopeStorage.Verify();
         }
 
-        [Test]
+        [Fact]
         public async Task ProcessAsync_UnknownEnvelopeId_RetunsNotFoundHttpResponse()
         {
             // Arrange
@@ -92,7 +89,7 @@ namespace Lime.Transport.Http.UnitTests.Processors
             MessageEnvelopeStorage.Verify();
         }
 
-        [Test]
+        [Fact]
         public async Task ProcessAsync_RequestUriWithoutId_RetunsBadRequestHttpResponse()
         {
             // Arrange
@@ -107,7 +104,7 @@ namespace Lime.Transport.Http.UnitTests.Processors
             MessageEnvelopeStorage.Verify();
         }
 
-        [Test]
+        [Fact]
         public async Task ProcessAsync_InvalidPrincipalNameFormat_RetunsBadRequestHttpResponse()
         {
             // Arrange

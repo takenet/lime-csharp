@@ -11,13 +11,12 @@ using Lime.Protocol.Serialization.Newtonsoft;
 using Lime.Protocol.UnitTests.Serialization.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using NUnit.Framework;
+using Xunit;
 using Shouldly;
 using Lime.Messaging;
 
 namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 {
-    [TestFixture]
     public class JsonNetSerializerTests
     {
         private static readonly global::Newtonsoft.Json.JsonSerializer JsonSerializer = global::Newtonsoft.Json.JsonSerializer.Create(JsonNetSerializer.Settings);
@@ -30,8 +29,8 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 
         #region Serialize
 
-        [Test]
-        [Category("Serialize")]
+        [Fact]
+        [Trait("Category", "Serialize")]
         public void Serialize_AbsoluteUriRequestCommand_ReturnsValidJsonString()
         {
             var target = GetTarget();
@@ -52,27 +51,27 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 
             var resultString = target.Serialize(command);
 
-            Assert.IsTrue(resultString.HasValidJsonStackedBrackets());
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.ID_KEY, command.Id));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.FROM_KEY, command.From));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.PP_KEY, command.Pp));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.TO_KEY, command.To));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Command.METHOD_KEY, command.Method));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Command.URI_KEY, command.Uri));
+            Assert.True(resultString.HasValidJsonStackedBrackets());
+            Assert.True(resultString.ContainsJsonProperty(Envelope.ID_KEY, command.Id));
+            Assert.True(resultString.ContainsJsonProperty(Envelope.FROM_KEY, command.From));
+            Assert.True(resultString.ContainsJsonProperty(Envelope.PP_KEY, command.Pp));
+            Assert.True(resultString.ContainsJsonProperty(Envelope.TO_KEY, command.To));
+            Assert.True(resultString.ContainsJsonProperty(Command.METHOD_KEY, command.Method));
+            Assert.True(resultString.ContainsJsonProperty(Command.URI_KEY, command.Uri));
             
             
-            Assert.IsTrue(resultString.ContainsJsonProperty(Command.METHOD_KEY, command.Method));
-            Assert.IsTrue(resultString.ContainsJsonProperty(metadataKey1, metadataValue1));
-            Assert.IsTrue(resultString.ContainsJsonProperty(metadataKey2, metadataValue2));
+            Assert.True(resultString.ContainsJsonProperty(Command.METHOD_KEY, command.Method));
+            Assert.True(resultString.ContainsJsonProperty(metadataKey1, metadataValue1));
+            Assert.True(resultString.ContainsJsonProperty(metadataKey2, metadataValue2));
             
-            Assert.IsFalse(resultString.ContainsJsonKey(Command.STATUS_KEY));
-            Assert.IsFalse(resultString.ContainsJsonKey(Command.REASON_KEY));
-            Assert.IsFalse(resultString.ContainsJsonKey(Command.TYPE_KEY));
-            Assert.IsFalse(resultString.ContainsJsonKey(Command.RESOURCE_KEY));
+            Assert.False(resultString.ContainsJsonKey(Command.STATUS_KEY));
+            Assert.False(resultString.ContainsJsonKey(Command.REASON_KEY));
+            Assert.False(resultString.ContainsJsonKey(Command.TYPE_KEY));
+            Assert.False(resultString.ContainsJsonKey(Command.RESOURCE_KEY));
         }
 
-        [Test]
-        [Category("Serialize")]
+        [Fact]
+        [Trait("Category", "Serialize")]
         public void Serialize_RelativeUriRequestCommand_ReturnsValidJsonString()
         {
             var target = GetTarget();
@@ -86,24 +85,24 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 
             var resultString = target.Serialize(command);
 
-            Assert.IsTrue(resultString.HasValidJsonStackedBrackets());
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.ID_KEY, command.Id));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.FROM_KEY, command.From));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.PP_KEY, command.Pp));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.TO_KEY, command.To));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Command.METHOD_KEY, command.Method));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Command.URI_KEY, command.Uri));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Command.METHOD_KEY, command.Method));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Command.TYPE_KEY, resource.GetMediaType()));
-            Assert.IsTrue(resultString.ContainsJsonKey(Command.RESOURCE_KEY));
+            Assert.True(resultString.HasValidJsonStackedBrackets());
+            Assert.True(resultString.ContainsJsonProperty(Envelope.ID_KEY, command.Id));
+            Assert.True(resultString.ContainsJsonProperty(Envelope.FROM_KEY, command.From));
+            Assert.True(resultString.ContainsJsonProperty(Envelope.PP_KEY, command.Pp));
+            Assert.True(resultString.ContainsJsonProperty(Envelope.TO_KEY, command.To));
+            Assert.True(resultString.ContainsJsonProperty(Command.METHOD_KEY, command.Method));
+            Assert.True(resultString.ContainsJsonProperty(Command.URI_KEY, command.Uri));
+            Assert.True(resultString.ContainsJsonProperty(Command.METHOD_KEY, command.Method));
+            Assert.True(resultString.ContainsJsonProperty(Command.TYPE_KEY, resource.GetMediaType()));
+            Assert.True(resultString.ContainsJsonKey(Command.RESOURCE_KEY));
 
-            Assert.IsFalse(resultString.ContainsJsonKey(Command.METADATA_KEY));
-            Assert.IsFalse(resultString.ContainsJsonKey(Command.STATUS_KEY));
-            Assert.IsFalse(resultString.ContainsJsonKey(Command.REASON_KEY));            
+            Assert.False(resultString.ContainsJsonKey(Command.METADATA_KEY));
+            Assert.False(resultString.ContainsJsonKey(Command.STATUS_KEY));
+            Assert.False(resultString.ContainsJsonKey(Command.REASON_KEY));            
         }
 
-        [Test]
-        [Category("Serialize")]
+        [Fact]
+        [Trait("Category", "Serialize")]
         public void Serialize_CapabilityRequestCommand_ReturnsValidJsonString()
         {
             var target = GetTarget();
@@ -124,27 +123,27 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 
             var resultString = target.Serialize(command);
 
-            Assert.IsTrue(resultString.HasValidJsonStackedBrackets());
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.ID_KEY, command.Id));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.FROM_KEY, command.From));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.PP_KEY, command.Pp));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.TO_KEY, command.To));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Command.METHOD_KEY, command.Method));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Command.TYPE_KEY, command.Resource.GetMediaType()));
-            Assert.IsTrue(resultString.ContainsJsonKey(Command.RESOURCE_KEY));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Command.METHOD_KEY, command.Method));
-            Assert.IsTrue(resultString.ContainsJsonProperty(metadataKey1, metadataValue1));
-            Assert.IsTrue(resultString.ContainsJsonProperty(metadataKey2, metadataValue2));
+            Assert.True(resultString.HasValidJsonStackedBrackets());
+            Assert.True(resultString.ContainsJsonProperty(Envelope.ID_KEY, command.Id));
+            Assert.True(resultString.ContainsJsonProperty(Envelope.FROM_KEY, command.From));
+            Assert.True(resultString.ContainsJsonProperty(Envelope.PP_KEY, command.Pp));
+            Assert.True(resultString.ContainsJsonProperty(Envelope.TO_KEY, command.To));
+            Assert.True(resultString.ContainsJsonProperty(Command.METHOD_KEY, command.Method));
+            Assert.True(resultString.ContainsJsonProperty(Command.TYPE_KEY, command.Resource.GetMediaType()));
+            Assert.True(resultString.ContainsJsonKey(Command.RESOURCE_KEY));
+            Assert.True(resultString.ContainsJsonProperty(Command.METHOD_KEY, command.Method));
+            Assert.True(resultString.ContainsJsonProperty(metadataKey1, metadataValue1));
+            Assert.True(resultString.ContainsJsonProperty(metadataKey2, metadataValue2));
 
-            Assert.IsTrue(resultString.ContainsJsonProperty(Capability.CONTENT_TYPES_KEY, resource.ContentTypes));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Capability.RESOURCE_TYPES_KEY, resource.ResourceTypes));
+            Assert.True(resultString.ContainsJsonProperty(Capability.CONTENT_TYPES_KEY, resource.ContentTypes));
+            Assert.True(resultString.ContainsJsonProperty(Capability.RESOURCE_TYPES_KEY, resource.ResourceTypes));
 
-            Assert.IsFalse(resultString.ContainsJsonKey(Command.STATUS_KEY));
-            Assert.IsFalse(resultString.ContainsJsonKey(Command.REASON_KEY));
+            Assert.False(resultString.ContainsJsonKey(Command.STATUS_KEY));
+            Assert.False(resultString.ContainsJsonKey(Command.REASON_KEY));
         }
 
-        [Test]
-        [Category("Serialize")]
+        [Fact]
+        [Trait("Category", "Serialize")]
         public void Serialize_AccountRequestCommand_ReturnsValidJsonString()
         {
             var target = GetTarget();
@@ -155,26 +154,26 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 
             var resultString = target.Serialize(command);
 
-            Assert.IsTrue(resultString.HasValidJsonStackedBrackets());
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.ID_KEY, command.Id));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.FROM_KEY, command.From));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.TO_KEY, command.To));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Command.METHOD_KEY, command.Method));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Command.TYPE_KEY, command.Resource.GetMediaType()));
-            Assert.IsTrue(resultString.ContainsJsonKey(Command.RESOURCE_KEY));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Command.METHOD_KEY, command.Method));
+            Assert.True(resultString.HasValidJsonStackedBrackets());
+            Assert.True(resultString.ContainsJsonProperty(Envelope.ID_KEY, command.Id));
+            Assert.True(resultString.ContainsJsonProperty(Envelope.FROM_KEY, command.From));
+            Assert.True(resultString.ContainsJsonProperty(Envelope.TO_KEY, command.To));
+            Assert.True(resultString.ContainsJsonProperty(Command.METHOD_KEY, command.Method));
+            Assert.True(resultString.ContainsJsonProperty(Command.TYPE_KEY, command.Resource.GetMediaType()));
+            Assert.True(resultString.ContainsJsonKey(Command.RESOURCE_KEY));
+            Assert.True(resultString.ContainsJsonProperty(Command.METHOD_KEY, command.Method));
 
-            Assert.IsTrue(resultString.ContainsJsonProperty(Account.FULL_NAME_KEY, resource.FullName));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Account.PHOTO_URI_KEY, resource.PhotoUri));
+            Assert.True(resultString.ContainsJsonProperty(Account.FULL_NAME_KEY, resource.FullName));
+            Assert.True(resultString.ContainsJsonProperty(Account.PHOTO_URI_KEY, resource.PhotoUri));
 
-            Assert.IsFalse(resultString.ContainsJsonKey(Envelope.PP_KEY));
-            Assert.IsFalse(resultString.ContainsJsonKey(Command.METADATA_KEY));
-            Assert.IsFalse(resultString.ContainsJsonKey(Command.STATUS_KEY));
-            Assert.IsFalse(resultString.ContainsJsonKey(Command.REASON_KEY));
+            Assert.False(resultString.ContainsJsonKey(Envelope.PP_KEY));
+            Assert.False(resultString.ContainsJsonKey(Command.METADATA_KEY));
+            Assert.False(resultString.ContainsJsonKey(Command.STATUS_KEY));
+            Assert.False(resultString.ContainsJsonKey(Command.REASON_KEY));
         }
 
-        [Test]
-        [Category("Serialize")]
+        [Fact]
+        [Trait("Category", "Serialize")]
         public void Serialize_RosterResponseCommand_ReturnsValidJsonString()
         {
             var target = GetTarget();
@@ -195,37 +194,37 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 
             var resultString = target.Serialize(command);
 
-            Assert.IsTrue(resultString.HasValidJsonStackedBrackets());
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.ID_KEY, command.Id));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.FROM_KEY, command.From));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.PP_KEY, command.Pp));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.TO_KEY, command.To));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Command.METHOD_KEY, command.Method));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Command.TYPE_KEY, command.Resource.GetMediaType()));
-            Assert.IsTrue(resultString.ContainsJsonKey(Command.RESOURCE_KEY));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Command.METHOD_KEY, command.Method));
-            Assert.IsTrue(resultString.ContainsJsonProperty(metadataKey1, metadataValue1));
-            Assert.IsTrue(resultString.ContainsJsonProperty(metadataKey2, metadataValue2));
+            Assert.True(resultString.HasValidJsonStackedBrackets());
+            Assert.True(resultString.ContainsJsonProperty(Envelope.ID_KEY, command.Id));
+            Assert.True(resultString.ContainsJsonProperty(Envelope.FROM_KEY, command.From));
+            Assert.True(resultString.ContainsJsonProperty(Envelope.PP_KEY, command.Pp));
+            Assert.True(resultString.ContainsJsonProperty(Envelope.TO_KEY, command.To));
+            Assert.True(resultString.ContainsJsonProperty(Command.METHOD_KEY, command.Method));
+            Assert.True(resultString.ContainsJsonProperty(Command.TYPE_KEY, command.Resource.GetMediaType()));
+            Assert.True(resultString.ContainsJsonKey(Command.RESOURCE_KEY));
+            Assert.True(resultString.ContainsJsonProperty(Command.METHOD_KEY, command.Method));
+            Assert.True(resultString.ContainsJsonProperty(metadataKey1, metadataValue1));
+            Assert.True(resultString.ContainsJsonProperty(metadataKey2, metadataValue2));
 
-            Assert.IsTrue(resultString.ContainsJsonKey(DocumentCollection.ITEMS_KEY));
-            Assert.IsTrue(resultString.ContainsJsonKey(DocumentCollection.TOTAL_KEY));
+            Assert.True(resultString.ContainsJsonKey(DocumentCollection.ITEMS_KEY));
+            Assert.True(resultString.ContainsJsonKey(DocumentCollection.TOTAL_KEY));
             var contacts = resource.Items.Cast<Contact>().ToArray();
-            Assert.IsTrue(resultString.ContainsJsonProperty(Contact.IDENTITY_KEY, contacts[0].Identity));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Contact.NAME_KEY, contacts[0].Name));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Contact.IS_PENDING_KEY, contacts[0].IsPending));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Contact.SHARE_ACCOUNT_INFO_KEY, contacts[0].ShareAccountInfo));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Contact.IDENTITY_KEY, contacts[1].Identity));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Contact.NAME_KEY, contacts[1].Name));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Contact.SHARE_PRESENCE_KEY, contacts[1].SharePresence));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Contact.IDENTITY_KEY, contacts[2].Identity));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Contact.NAME_KEY, contacts[2].Name));
+            Assert.True(resultString.ContainsJsonProperty(Contact.IDENTITY_KEY, contacts[0].Identity));
+            Assert.True(resultString.ContainsJsonProperty(Contact.NAME_KEY, contacts[0].Name));
+            Assert.True(resultString.ContainsJsonProperty(Contact.IS_PENDING_KEY, contacts[0].IsPending));
+            Assert.True(resultString.ContainsJsonProperty(Contact.SHARE_ACCOUNT_INFO_KEY, contacts[0].ShareAccountInfo));
+            Assert.True(resultString.ContainsJsonProperty(Contact.IDENTITY_KEY, contacts[1].Identity));
+            Assert.True(resultString.ContainsJsonProperty(Contact.NAME_KEY, contacts[1].Name));
+            Assert.True(resultString.ContainsJsonProperty(Contact.SHARE_PRESENCE_KEY, contacts[1].SharePresence));
+            Assert.True(resultString.ContainsJsonProperty(Contact.IDENTITY_KEY, contacts[2].Identity));
+            Assert.True(resultString.ContainsJsonProperty(Contact.NAME_KEY, contacts[2].Name));
 
-            Assert.IsTrue(resultString.ContainsJsonKey(Command.STATUS_KEY));
-            Assert.IsFalse(resultString.ContainsJsonKey(Command.REASON_KEY));
+            Assert.True(resultString.ContainsJsonKey(Command.STATUS_KEY));
+            Assert.False(resultString.ContainsJsonKey(Command.REASON_KEY));
         }
 
-        [Test]
-        [Category("Serialize")]
+        [Fact]
+        [Trait("Category", "Serialize")]
         public void Serialize_ContactCollectionResponseCommand_ReturnsValidJsonString()
         {
             var target = GetTarget();
@@ -257,28 +256,28 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 
             var resultString = target.Serialize(command);
 
-            Assert.IsTrue(resultString.HasValidJsonStackedBrackets());
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.ID_KEY, command.Id));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.FROM_KEY, command.From));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.PP_KEY, command.Pp));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.TO_KEY, command.To));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Command.METHOD_KEY, command.Method));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Command.TYPE_KEY, command.Resource.GetMediaType()));
-            Assert.IsTrue(resultString.ContainsJsonKey(Command.RESOURCE_KEY));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Command.METHOD_KEY, command.Method));
-            Assert.IsTrue(resultString.ContainsJsonProperty(metadataKey1, metadataValue1));
-            Assert.IsTrue(resultString.ContainsJsonProperty(metadataKey2, metadataValue2));
+            Assert.True(resultString.HasValidJsonStackedBrackets());
+            Assert.True(resultString.ContainsJsonProperty(Envelope.ID_KEY, command.Id));
+            Assert.True(resultString.ContainsJsonProperty(Envelope.FROM_KEY, command.From));
+            Assert.True(resultString.ContainsJsonProperty(Envelope.PP_KEY, command.Pp));
+            Assert.True(resultString.ContainsJsonProperty(Envelope.TO_KEY, command.To));
+            Assert.True(resultString.ContainsJsonProperty(Command.METHOD_KEY, command.Method));
+            Assert.True(resultString.ContainsJsonProperty(Command.TYPE_KEY, command.Resource.GetMediaType()));
+            Assert.True(resultString.ContainsJsonKey(Command.RESOURCE_KEY));
+            Assert.True(resultString.ContainsJsonProperty(Command.METHOD_KEY, command.Method));
+            Assert.True(resultString.ContainsJsonProperty(metadataKey1, metadataValue1));
+            Assert.True(resultString.ContainsJsonProperty(metadataKey2, metadataValue2));
 
-            Assert.IsTrue(resultString.ContainsJsonKey(DocumentCollection.ITEMS_KEY));
-            Assert.IsTrue(resultString.ContainsJsonProperty(DocumentCollection.ITEM_TYPE_KEY, contact1.GetMediaType()));
-            Assert.IsTrue(resultString.ContainsJsonProperty(DocumentCollection.TOTAL_KEY, resource.Items.Length));
+            Assert.True(resultString.ContainsJsonKey(DocumentCollection.ITEMS_KEY));
+            Assert.True(resultString.ContainsJsonProperty(DocumentCollection.ITEM_TYPE_KEY, contact1.GetMediaType()));
+            Assert.True(resultString.ContainsJsonProperty(DocumentCollection.TOTAL_KEY, resource.Items.Length));
   
-            Assert.IsTrue(resultString.ContainsJsonKey(Command.STATUS_KEY));
-            Assert.IsFalse(resultString.ContainsJsonKey(Command.REASON_KEY));
+            Assert.True(resultString.ContainsJsonKey(Command.STATUS_KEY));
+            Assert.False(resultString.ContainsJsonKey(Command.REASON_KEY));
         }
 
-        [Test]
-        [Category("Serialize")]
+        [Fact]
+        [Trait("Category", "Serialize")]
         public void Serialize_PresenceRequestCommand_ReturnsValidJsonString()
         {
             var target = GetTarget();
@@ -289,27 +288,27 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 
             var resultString = target.Serialize(command);
 
-            Assert.IsTrue(resultString.HasValidJsonStackedBrackets());
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.ID_KEY, command.Id));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.FROM_KEY, command.From));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.TO_KEY, command.To));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Command.METHOD_KEY, command.Method));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Command.TYPE_KEY, command.Resource.GetMediaType()));
-            Assert.IsTrue(resultString.ContainsJsonKey(Command.RESOURCE_KEY));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Command.METHOD_KEY, command.Method));
+            Assert.True(resultString.HasValidJsonStackedBrackets());
+            Assert.True(resultString.ContainsJsonProperty(Envelope.ID_KEY, command.Id));
+            Assert.True(resultString.ContainsJsonProperty(Envelope.FROM_KEY, command.From));
+            Assert.True(resultString.ContainsJsonProperty(Envelope.TO_KEY, command.To));
+            Assert.True(resultString.ContainsJsonProperty(Command.METHOD_KEY, command.Method));
+            Assert.True(resultString.ContainsJsonProperty(Command.TYPE_KEY, command.Resource.GetMediaType()));
+            Assert.True(resultString.ContainsJsonKey(Command.RESOURCE_KEY));
+            Assert.True(resultString.ContainsJsonProperty(Command.METHOD_KEY, command.Method));
 
-            Assert.IsTrue(resultString.ContainsJsonProperty(Presence.MESSAGE_KEY, resource.Message));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Presence.LAST_SEEN_KEY, resource.LastSeen));
+            Assert.True(resultString.ContainsJsonProperty(Presence.MESSAGE_KEY, resource.Message));
+            Assert.True(resultString.ContainsJsonProperty(Presence.LAST_SEEN_KEY, resource.LastSeen));
 
 
-            Assert.IsFalse(resultString.ContainsJsonKey(Envelope.PP_KEY));
-            Assert.IsFalse(resultString.ContainsJsonKey(Command.METADATA_KEY));
-            Assert.IsFalse(resultString.ContainsJsonProperty(Command.STATUS_KEY, "pending"));
-            Assert.IsFalse(resultString.ContainsJsonKey(Command.REASON_KEY));
+            Assert.False(resultString.ContainsJsonKey(Envelope.PP_KEY));
+            Assert.False(resultString.ContainsJsonKey(Command.METADATA_KEY));
+            Assert.False(resultString.ContainsJsonProperty(Command.STATUS_KEY, "pending"));
+            Assert.False(resultString.ContainsJsonKey(Command.REASON_KEY));
         }
 
-        [Test]
-        [Category("Serialize")]
+        [Fact]
+        [Trait("Category", "Serialize")]
         public void Serialize_PresenceRequestWithOffsetDateCommand_ReturnsValidJsonString()
         {
             var target = GetTarget();
@@ -321,26 +320,26 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 
             var resultString = target.Serialize(command);
 
-            Assert.IsTrue(resultString.HasValidJsonStackedBrackets());
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.ID_KEY, command.Id));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.FROM_KEY, command.From));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.TO_KEY, command.To));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Command.METHOD_KEY, command.Method));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Command.TYPE_KEY, command.Resource.GetMediaType()));
-            Assert.IsTrue(resultString.ContainsJsonKey(Command.RESOURCE_KEY));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Command.METHOD_KEY, command.Method));
+            Assert.True(resultString.HasValidJsonStackedBrackets());
+            Assert.True(resultString.ContainsJsonProperty(Envelope.ID_KEY, command.Id));
+            Assert.True(resultString.ContainsJsonProperty(Envelope.FROM_KEY, command.From));
+            Assert.True(resultString.ContainsJsonProperty(Envelope.TO_KEY, command.To));
+            Assert.True(resultString.ContainsJsonProperty(Command.METHOD_KEY, command.Method));
+            Assert.True(resultString.ContainsJsonProperty(Command.TYPE_KEY, command.Resource.GetMediaType()));
+            Assert.True(resultString.ContainsJsonKey(Command.RESOURCE_KEY));
+            Assert.True(resultString.ContainsJsonProperty(Command.METHOD_KEY, command.Method));
 
-            Assert.IsTrue(resultString.ContainsJsonProperty(Presence.MESSAGE_KEY, resource.Message));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Presence.LAST_SEEN_KEY, resource.LastSeen));
+            Assert.True(resultString.ContainsJsonProperty(Presence.MESSAGE_KEY, resource.Message));
+            Assert.True(resultString.ContainsJsonProperty(Presence.LAST_SEEN_KEY, resource.LastSeen));
 
-            Assert.IsFalse(resultString.ContainsJsonKey(Envelope.PP_KEY));
-            Assert.IsFalse(resultString.ContainsJsonKey(Command.METADATA_KEY));
-            Assert.IsFalse(resultString.ContainsJsonProperty(Command.STATUS_KEY, "pending"));
-            Assert.IsFalse(resultString.ContainsJsonKey(Command.REASON_KEY));
+            Assert.False(resultString.ContainsJsonKey(Envelope.PP_KEY));
+            Assert.False(resultString.ContainsJsonKey(Command.METADATA_KEY));
+            Assert.False(resultString.ContainsJsonProperty(Command.STATUS_KEY, "pending"));
+            Assert.False(resultString.ContainsJsonKey(Command.REASON_KEY));
         }
 
-        [Test]
-        [Category("Serialize")]
+        [Fact]
+        [Trait("Category", "Serialize")]
         public void Serialize_FailurePingResponseCommand_ReturnsValidJsonString()
         {
             var target = GetTarget();
@@ -350,23 +349,23 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 
             var resultString = target.Serialize(command);
 
-            Assert.IsTrue(resultString.HasValidJsonStackedBrackets());
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.FROM_KEY, command.From));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.ID_KEY, command.Id));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.TO_KEY, command.To));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Command.METHOD_KEY, command.Method));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Command.STATUS_KEY, command.Status));
-            Assert.IsTrue(resultString.ContainsJsonKey(Command.REASON_KEY));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Reason.CODE_KEY, command.Reason.Code));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Reason.DESCRIPTION_KEY, command.Reason.Description));
+            Assert.True(resultString.HasValidJsonStackedBrackets());
+            Assert.True(resultString.ContainsJsonProperty(Envelope.FROM_KEY, command.From));
+            Assert.True(resultString.ContainsJsonProperty(Envelope.ID_KEY, command.Id));
+            Assert.True(resultString.ContainsJsonProperty(Envelope.TO_KEY, command.To));
+            Assert.True(resultString.ContainsJsonProperty(Command.METHOD_KEY, command.Method));
+            Assert.True(resultString.ContainsJsonProperty(Command.STATUS_KEY, command.Status));
+            Assert.True(resultString.ContainsJsonKey(Command.REASON_KEY));
+            Assert.True(resultString.ContainsJsonProperty(Reason.CODE_KEY, command.Reason.Code));
+            Assert.True(resultString.ContainsJsonProperty(Reason.DESCRIPTION_KEY, command.Reason.Description));
 
-            Assert.IsFalse(resultString.ContainsJsonKey(Envelope.PP_KEY));
-            Assert.IsFalse(resultString.ContainsJsonKey(Envelope.METADATA_KEY));
-            Assert.IsFalse(resultString.ContainsJsonKey(Command.RESOURCE_KEY));
+            Assert.False(resultString.ContainsJsonKey(Envelope.PP_KEY));
+            Assert.False(resultString.ContainsJsonKey(Envelope.METADATA_KEY));
+            Assert.False(resultString.ContainsJsonKey(Command.RESOURCE_KEY));
         }
 
-        [Test]
-        [Category("Serialize")]
+        [Fact]
+        [Trait("Category", "Serialize")]
         public void Serialize_TextMessage_ReturnsValidJsonString()
         {
             var target = GetTarget();
@@ -384,20 +383,20 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             message.Metadata.Add(metadataKey2, metadataValue2);
 
             var resultString = target.Serialize(message);
-            Assert.IsTrue(resultString.HasValidJsonStackedBrackets());
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.ID_KEY, message.Id));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.FROM_KEY, message.From));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.PP_KEY, message.Pp));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.TO_KEY, message.To));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Message.TYPE_KEY, message.Content.GetMediaType()));
-            Assert.IsTrue(resultString.ContainsJsonKey(Message.CONTENT_KEY));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Message.CONTENT_KEY, content.Text));
-            Assert.IsTrue(resultString.ContainsJsonProperty(metadataKey1, metadataValue1));
-            Assert.IsTrue(resultString.ContainsJsonProperty(metadataKey2, metadataValue2));
+            Assert.True(resultString.HasValidJsonStackedBrackets());
+            Assert.True(resultString.ContainsJsonProperty(Envelope.ID_KEY, message.Id));
+            Assert.True(resultString.ContainsJsonProperty(Envelope.FROM_KEY, message.From));
+            Assert.True(resultString.ContainsJsonProperty(Envelope.PP_KEY, message.Pp));
+            Assert.True(resultString.ContainsJsonProperty(Envelope.TO_KEY, message.To));
+            Assert.True(resultString.ContainsJsonProperty(Message.TYPE_KEY, message.Content.GetMediaType()));
+            Assert.True(resultString.ContainsJsonKey(Message.CONTENT_KEY));
+            Assert.True(resultString.ContainsJsonProperty(Message.CONTENT_KEY, content.Text));
+            Assert.True(resultString.ContainsJsonProperty(metadataKey1, metadataValue1));
+            Assert.True(resultString.ContainsJsonProperty(metadataKey2, metadataValue2));
         }
 
-        [Test]
-        [Category("Serialize")]
+        [Fact]
+        [Trait("Category", "Serialize")]
         public void Serialize_UnknownJsonContentMessage_ReturnsValidJsonString()
         {
             var target = GetTarget();
@@ -416,29 +415,29 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 
             var resultString = target.Serialize(message);
 
-            Assert.IsTrue(resultString.HasValidJsonStackedBrackets());
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.ID_KEY, message.Id));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.FROM_KEY, message.From));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.PP_KEY, message.Pp));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.TO_KEY, message.To));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Message.TYPE_KEY, message.Content.GetMediaType()));
-            Assert.IsTrue(resultString.ContainsJsonKey(Message.CONTENT_KEY));
+            Assert.True(resultString.HasValidJsonStackedBrackets());
+            Assert.True(resultString.ContainsJsonProperty(Envelope.ID_KEY, message.Id));
+            Assert.True(resultString.ContainsJsonProperty(Envelope.FROM_KEY, message.From));
+            Assert.True(resultString.ContainsJsonProperty(Envelope.PP_KEY, message.Pp));
+            Assert.True(resultString.ContainsJsonProperty(Envelope.TO_KEY, message.To));
+            Assert.True(resultString.ContainsJsonProperty(Message.TYPE_KEY, message.Content.GetMediaType()));
+            Assert.True(resultString.ContainsJsonKey(Message.CONTENT_KEY));
             
             foreach (var keyValuePair in content)
             {
                     // TODO: Verify for array properties
                 if (!keyValuePair.Value.GetType().IsArray)
                 {
-                    Assert.IsTrue(resultString.ContainsJsonProperty(keyValuePair.Key, keyValuePair.Value));
+                    Assert.True(resultString.ContainsJsonProperty(keyValuePair.Key, keyValuePair.Value));
                 }				
             }            
             
-            Assert.IsTrue(resultString.ContainsJsonProperty(metadataKey1, metadataValue1));
-            Assert.IsTrue(resultString.ContainsJsonProperty(metadataKey2, metadataValue2));
+            Assert.True(resultString.ContainsJsonProperty(metadataKey1, metadataValue1));
+            Assert.True(resultString.ContainsJsonProperty(metadataKey2, metadataValue2));
         }
 
-        [Test]
-        [Category("Serialize")]
+        [Fact]
+        [Trait("Category", "Serialize")]
         public void Serialize_UnknownPlainContentMessage_ReturnsValidJsonString()
         {
             var target = GetTarget();
@@ -457,20 +456,20 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 
             var resultString = target.Serialize(message);
 
-            Assert.IsTrue(resultString.HasValidJsonStackedBrackets());
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.ID_KEY, message.Id));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.FROM_KEY, message.From));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.PP_KEY, message.Pp));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.TO_KEY, message.To));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Message.TYPE_KEY, message.Content.GetMediaType()));
-            Assert.IsTrue(resultString.ContainsJsonKey(Message.CONTENT_KEY));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Message.CONTENT_KEY, content.Value));           
-            Assert.IsTrue(resultString.ContainsJsonProperty(metadataKey1, metadataValue1));
-            Assert.IsTrue(resultString.ContainsJsonProperty(metadataKey2, metadataValue2));
+            Assert.True(resultString.HasValidJsonStackedBrackets());
+            Assert.True(resultString.ContainsJsonProperty(Envelope.ID_KEY, message.Id));
+            Assert.True(resultString.ContainsJsonProperty(Envelope.FROM_KEY, message.From));
+            Assert.True(resultString.ContainsJsonProperty(Envelope.PP_KEY, message.Pp));
+            Assert.True(resultString.ContainsJsonProperty(Envelope.TO_KEY, message.To));
+            Assert.True(resultString.ContainsJsonProperty(Message.TYPE_KEY, message.Content.GetMediaType()));
+            Assert.True(resultString.ContainsJsonKey(Message.CONTENT_KEY));
+            Assert.True(resultString.ContainsJsonProperty(Message.CONTENT_KEY, content.Value));           
+            Assert.True(resultString.ContainsJsonProperty(metadataKey1, metadataValue1));
+            Assert.True(resultString.ContainsJsonProperty(metadataKey2, metadataValue2));
         }
 
-        [Test]
-        [Category("Serialize")]
+        [Fact]
+        [Trait("Category", "Serialize")]
         public void Serialize_FireAndForgetTextMessage_ReturnsValidJsonString()
         {
             var target = GetTarget();
@@ -481,21 +480,21 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 
             var resultString = target.Serialize(message);
 
-            Assert.IsTrue(resultString.HasValidJsonStackedBrackets());
+            Assert.True(resultString.HasValidJsonStackedBrackets());
 
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.FROM_KEY, message.From));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.TO_KEY, message.To));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Message.TYPE_KEY, message.Content.GetMediaType()));
-            Assert.IsTrue(resultString.ContainsJsonKey(Message.CONTENT_KEY));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Message.CONTENT_KEY, content.Text));
+            Assert.True(resultString.ContainsJsonProperty(Envelope.FROM_KEY, message.From));
+            Assert.True(resultString.ContainsJsonProperty(Envelope.TO_KEY, message.To));
+            Assert.True(resultString.ContainsJsonProperty(Message.TYPE_KEY, message.Content.GetMediaType()));
+            Assert.True(resultString.ContainsJsonKey(Message.CONTENT_KEY));
+            Assert.True(resultString.ContainsJsonProperty(Message.CONTENT_KEY, content.Text));
 
-            Assert.IsFalse(resultString.ContainsJsonKey(Envelope.ID_KEY));
-            Assert.IsFalse(resultString.ContainsJsonKey(Envelope.PP_KEY));
-            Assert.IsFalse(resultString.ContainsJsonKey(Envelope.METADATA_KEY));
+            Assert.False(resultString.ContainsJsonKey(Envelope.ID_KEY));
+            Assert.False(resultString.ContainsJsonKey(Envelope.PP_KEY));
+            Assert.False(resultString.ContainsJsonKey(Envelope.METADATA_KEY));
         }
 
-        [Test]
-        [Category("Serialize")]
+        [Fact]
+        [Trait("Category", "Serialize")]
         public void Serialize_ReceivedNotification_ReturnsValidJsonString()
         {
             var target = GetTarget();
@@ -514,20 +513,20 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 
             var resultString = target.Serialize(notification);
 
-            Assert.IsTrue(resultString.HasValidJsonStackedBrackets());
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.ID_KEY, notification.Id));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.FROM_KEY, notification.From));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.PP_KEY, notification.Pp));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.TO_KEY, notification.To));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Notification.EVENT_KEY, notification.Event));
-            Assert.IsTrue(resultString.ContainsJsonProperty(metadataKey1, metadataValue1));
-            Assert.IsTrue(resultString.ContainsJsonProperty(metadataKey2, metadataValue2));
+            Assert.True(resultString.HasValidJsonStackedBrackets());
+            Assert.True(resultString.ContainsJsonProperty(Envelope.ID_KEY, notification.Id));
+            Assert.True(resultString.ContainsJsonProperty(Envelope.FROM_KEY, notification.From));
+            Assert.True(resultString.ContainsJsonProperty(Envelope.PP_KEY, notification.Pp));
+            Assert.True(resultString.ContainsJsonProperty(Envelope.TO_KEY, notification.To));
+            Assert.True(resultString.ContainsJsonProperty(Notification.EVENT_KEY, notification.Event));
+            Assert.True(resultString.ContainsJsonProperty(metadataKey1, metadataValue1));
+            Assert.True(resultString.ContainsJsonProperty(metadataKey2, metadataValue2));
 
-            Assert.IsFalse(resultString.ContainsJsonKey(Notification.REASON_KEY));
+            Assert.False(resultString.ContainsJsonKey(Notification.REASON_KEY));
         }
 
-        [Test]
-        [Category("Serialize")]
+        [Fact]
+        [Trait("Category", "Serialize")]
         public void Serialize_FailedNotification_ReturnsValidJsonString()
         {
             var target = GetTarget();
@@ -538,20 +537,20 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 
             var resultString = target.Serialize(notification);
 
-            Assert.IsTrue(resultString.HasValidJsonStackedBrackets());
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.ID_KEY, notification.Id));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.FROM_KEY, notification.From));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.TO_KEY, notification.To));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Notification.EVENT_KEY, notification.Event));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Reason.CODE_KEY, notification.Reason.Code));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Reason.DESCRIPTION_KEY, notification.Reason.Description));
+            Assert.True(resultString.HasValidJsonStackedBrackets());
+            Assert.True(resultString.ContainsJsonProperty(Envelope.ID_KEY, notification.Id));
+            Assert.True(resultString.ContainsJsonProperty(Envelope.FROM_KEY, notification.From));
+            Assert.True(resultString.ContainsJsonProperty(Envelope.TO_KEY, notification.To));
+            Assert.True(resultString.ContainsJsonProperty(Notification.EVENT_KEY, notification.Event));
+            Assert.True(resultString.ContainsJsonProperty(Reason.CODE_KEY, notification.Reason.Code));
+            Assert.True(resultString.ContainsJsonProperty(Reason.DESCRIPTION_KEY, notification.Reason.Description));
 
-            Assert.IsFalse(resultString.ContainsJsonKey(Envelope.PP_KEY));
-            Assert.IsFalse(resultString.ContainsJsonKey(Envelope.METADATA_KEY));
+            Assert.False(resultString.ContainsJsonKey(Envelope.PP_KEY));
+            Assert.False(resultString.ContainsJsonKey(Envelope.METADATA_KEY));
         }
 
-        [Test]
-        [Category("Serialize")]
+        [Fact]
+        [Trait("Category", "Serialize")]
         public void Serialize_AuthenticatingSession_ReturnsValidJsonString()
         {
             var target = GetTarget();
@@ -571,22 +570,22 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 
             var resultString = target.Serialize(session);
 
-            Assert.IsTrue(resultString.HasValidJsonStackedBrackets());
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.ID_KEY, session.Id));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.FROM_KEY, session.From));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.TO_KEY, session.To));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Session.STATE_KEY, session.State));
-            Assert.IsTrue(resultString.ContainsJsonProperty(metadataKey1, metadataValue1));
-            Assert.IsTrue(resultString.ContainsJsonProperty(metadataKey2, metadataValue2));
-            Assert.IsTrue(resultString.ContainsJsonKey(Session.AUTHENTICATION_KEY));
-            Assert.IsTrue(resultString.ContainsJsonProperty(PlainAuthentication.PASSWORD_KEY, plainAuthentication.Password));
+            Assert.True(resultString.HasValidJsonStackedBrackets());
+            Assert.True(resultString.ContainsJsonProperty(Envelope.ID_KEY, session.Id));
+            Assert.True(resultString.ContainsJsonProperty(Envelope.FROM_KEY, session.From));
+            Assert.True(resultString.ContainsJsonProperty(Envelope.TO_KEY, session.To));
+            Assert.True(resultString.ContainsJsonProperty(Session.STATE_KEY, session.State));
+            Assert.True(resultString.ContainsJsonProperty(metadataKey1, metadataValue1));
+            Assert.True(resultString.ContainsJsonProperty(metadataKey2, metadataValue2));
+            Assert.True(resultString.ContainsJsonKey(Session.AUTHENTICATION_KEY));
+            Assert.True(resultString.ContainsJsonProperty(PlainAuthentication.PASSWORD_KEY, plainAuthentication.Password));
 
-            Assert.IsFalse(resultString.ContainsJsonKey(Envelope.PP_KEY));
-            Assert.IsFalse(resultString.ContainsJsonKey(Session.REASON_KEY));
+            Assert.False(resultString.ContainsJsonKey(Envelope.PP_KEY));
+            Assert.False(resultString.ContainsJsonKey(Session.REASON_KEY));
         }
 
-        [Test]
-        [Category("Serialize")]
+        [Fact]
+        [Trait("Category", "Serialize")]
         public void Serialize_AuthenticatingSessionExternal_ReturnsValidJsonString()
         {
             var target = GetTarget();
@@ -606,23 +605,23 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 
             var resultString = target.Serialize(session);
 
-            Assert.IsTrue(resultString.HasValidJsonStackedBrackets());
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.ID_KEY, session.Id));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.FROM_KEY, session.From));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.TO_KEY, session.To));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Session.STATE_KEY, session.State));
-            Assert.IsTrue(resultString.ContainsJsonProperty(metadataKey1, metadataValue1));
-            Assert.IsTrue(resultString.ContainsJsonProperty(metadataKey2, metadataValue2));
-            Assert.IsTrue(resultString.ContainsJsonKey(Session.AUTHENTICATION_KEY));
-            Assert.IsTrue(resultString.ContainsJsonProperty(ExternalAuthentication.TOKEN_KEY, authentication.Token));
+            Assert.True(resultString.HasValidJsonStackedBrackets());
+            Assert.True(resultString.ContainsJsonProperty(Envelope.ID_KEY, session.Id));
+            Assert.True(resultString.ContainsJsonProperty(Envelope.FROM_KEY, session.From));
+            Assert.True(resultString.ContainsJsonProperty(Envelope.TO_KEY, session.To));
+            Assert.True(resultString.ContainsJsonProperty(Session.STATE_KEY, session.State));
+            Assert.True(resultString.ContainsJsonProperty(metadataKey1, metadataValue1));
+            Assert.True(resultString.ContainsJsonProperty(metadataKey2, metadataValue2));
+            Assert.True(resultString.ContainsJsonKey(Session.AUTHENTICATION_KEY));
+            Assert.True(resultString.ContainsJsonProperty(ExternalAuthentication.TOKEN_KEY, authentication.Token));
 
-            Assert.IsFalse(resultString.ContainsJsonKey(Envelope.PP_KEY));
-            Assert.IsFalse(resultString.ContainsJsonKey(Session.REASON_KEY));
+            Assert.False(resultString.ContainsJsonKey(Envelope.PP_KEY));
+            Assert.False(resultString.ContainsJsonKey(Session.REASON_KEY));
         }
 
 
-        [Test]
-        [Category("Serialize")]
+        [Fact]
+        [Trait("Category", "Serialize")]
         public void Serialize_FailedSession_ReturnsValidJsonString()
         {
             var target = GetTarget();
@@ -633,22 +632,22 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 
             var resultString = target.Serialize(session);
 
-            Assert.IsTrue(resultString.HasValidJsonStackedBrackets());
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.ID_KEY, session.Id));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.FROM_KEY, session.From));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.TO_KEY, session.To));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Session.STATE_KEY, session.State));
-            Assert.IsTrue(resultString.ContainsJsonKey(Session.REASON_KEY));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Reason.CODE_KEY, session.Reason.Code));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Reason.DESCRIPTION_KEY, session.Reason.Description));
+            Assert.True(resultString.HasValidJsonStackedBrackets());
+            Assert.True(resultString.ContainsJsonProperty(Envelope.ID_KEY, session.Id));
+            Assert.True(resultString.ContainsJsonProperty(Envelope.FROM_KEY, session.From));
+            Assert.True(resultString.ContainsJsonProperty(Envelope.TO_KEY, session.To));
+            Assert.True(resultString.ContainsJsonProperty(Session.STATE_KEY, session.State));
+            Assert.True(resultString.ContainsJsonKey(Session.REASON_KEY));
+            Assert.True(resultString.ContainsJsonProperty(Reason.CODE_KEY, session.Reason.Code));
+            Assert.True(resultString.ContainsJsonProperty(Reason.DESCRIPTION_KEY, session.Reason.Description));
 
-            Assert.IsFalse(resultString.ContainsJsonKey(Envelope.PP_KEY));
-            Assert.IsFalse(resultString.ContainsJsonKey(Envelope.METADATA_KEY));
-            Assert.IsFalse(resultString.ContainsJsonKey(Session.AUTHENTICATION_KEY));
+            Assert.False(resultString.ContainsJsonKey(Envelope.PP_KEY));
+            Assert.False(resultString.ContainsJsonKey(Envelope.METADATA_KEY));
+            Assert.False(resultString.ContainsJsonKey(Session.AUTHENTICATION_KEY));
         }
 
-        [Test]
-        [Category("Serialize")]
+        [Fact]
+        [Trait("Category", "Serialize")]
         public void Serialize_ChatStateMessage_ReturnsValidJsonString()
         {            
             // Arrange
@@ -660,15 +659,15 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             var resultString = target.Serialize(message);
 
             // Assert
-            Assert.IsTrue(resultString.HasValidJsonStackedBrackets());
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.ID_KEY, message.Id));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.FROM_KEY, message.From));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.TO_KEY, message.To));
-            Assert.IsTrue(resultString.ContainsJsonProperty(ChatState.STATE_KEY, chatState.State));
+            Assert.True(resultString.HasValidJsonStackedBrackets());
+            Assert.True(resultString.ContainsJsonProperty(Envelope.ID_KEY, message.Id));
+            Assert.True(resultString.ContainsJsonProperty(Envelope.FROM_KEY, message.From));
+            Assert.True(resultString.ContainsJsonProperty(Envelope.TO_KEY, message.To));
+            Assert.True(resultString.ContainsJsonProperty(ChatState.STATE_KEY, chatState.State));
         }
 
-        [Test]
-        [Category("Serialize")]
+        [Fact]
+        [Trait("Category", "Serialize")]
         public void Serialize_SelectMessage_ReturnsValidJsonString()
         {
             // Arrange
@@ -680,16 +679,16 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             var resultString = target.Serialize(message);
 
             // Assert
-            Assert.IsTrue(resultString.HasValidJsonStackedBrackets());
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.ID_KEY, message.Id));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.FROM_KEY, message.From));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.TO_KEY, message.To));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Select.TEXT_KEY, select.Text));
-            Assert.IsTrue(resultString.ContainsJsonKey(Select.OPTIONS_KEY));
+            Assert.True(resultString.HasValidJsonStackedBrackets());
+            Assert.True(resultString.ContainsJsonProperty(Envelope.ID_KEY, message.Id));
+            Assert.True(resultString.ContainsJsonProperty(Envelope.FROM_KEY, message.From));
+            Assert.True(resultString.ContainsJsonProperty(Envelope.TO_KEY, message.To));
+            Assert.True(resultString.ContainsJsonProperty(Select.TEXT_KEY, select.Text));
+            Assert.True(resultString.ContainsJsonKey(Select.OPTIONS_KEY));
             foreach (var option in select.Options)
             {
-                Assert.IsTrue(resultString.ContainsJsonProperty(SelectOption.TEXT_KEY, option.Text));
-                Assert.IsTrue(resultString.ContainsJsonProperty(SelectOption.TYPE_KEY, option.Type));
+                Assert.True(resultString.ContainsJsonProperty(SelectOption.TEXT_KEY, option.Text));
+                Assert.True(resultString.ContainsJsonProperty(SelectOption.TYPE_KEY, option.Type));
                 if (option.Type.IsJson)
                 {
                     var properties = option.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public);
@@ -700,7 +699,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
                             continue;
                         try
                         {
-                            Assert.IsTrue(resultString.ContainsJsonProperty(property.Name.ToCamelCase(),
+                            Assert.True(resultString.ContainsJsonProperty(property.Name.ToCamelCase(),
                                 propertyValue));
                         }
                         catch (NotSupportedException)
@@ -712,13 +711,13 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
                 }
                 else
                 {
-                    Assert.IsTrue(resultString.ContainsJsonProperty(SelectOption.VALUE_KEY, option.Value.ToString()));
+                    Assert.True(resultString.ContainsJsonProperty(SelectOption.VALUE_KEY, option.Value.ToString()));
                 }
             }
         }
 
-        [Test]
-        [Category("Serialize")]
+        [Fact]
+        [Trait("Category", "Serialize")]
         public void Serialize_DocumentSelectMessage_ReturnsValidJsonString()
         {
             // Arrange
@@ -732,19 +731,19 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             // Assert
             var dictionary = JsonConvert.DeserializeObject<Dictionary<string, object>>(resultString, JsonNetSerializer.Settings);
             var selectJson = dictionary[Message.CONTENT_KEY].ShouldBeAssignableTo<JObject>();            
-            Assert.IsTrue(resultString.HasValidJsonStackedBrackets());
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.ID_KEY, message.Id));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.FROM_KEY, message.From));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.TO_KEY, message.To));
-            Assert.IsTrue(resultString.ContainsJsonKey(DocumentSelect.HEADER_KEY));
+            Assert.True(resultString.HasValidJsonStackedBrackets());
+            Assert.True(resultString.ContainsJsonProperty(Envelope.ID_KEY, message.Id));
+            Assert.True(resultString.ContainsJsonProperty(Envelope.FROM_KEY, message.From));
+            Assert.True(resultString.ContainsJsonProperty(Envelope.TO_KEY, message.To));
+            Assert.True(resultString.ContainsJsonKey(DocumentSelect.HEADER_KEY));
             var headerJson = selectJson[DocumentSelect.HEADER_KEY].ShouldBeAssignableTo<JObject>();
-            Assert.IsTrue(resultString.ContainsJsonKey(DocumentSelect.OPTIONS_KEY));
+            Assert.True(resultString.ContainsJsonKey(DocumentSelect.OPTIONS_KEY));
             var optionsJson = selectJson[DocumentSelect.OPTIONS_KEY].ShouldBeAssignableTo<JArray>();
             optionsJson.Count.ShouldBe(select.Options.Length);
         }
 
-        [Test]
-        [Category("Serialize")]
+        [Fact]
+        [Trait("Category", "Serialize")]
         public void Serialize_InputMessage_ReturnsValidJsonString()
         {
             // Arrange
@@ -756,14 +755,14 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             var resultString = target.Serialize(message);
 
             // Assert
-            Assert.IsTrue(resultString.HasValidJsonStackedBrackets());
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.ID_KEY, message.Id));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.FROM_KEY, message.From));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.TO_KEY, message.To));
+            Assert.True(resultString.HasValidJsonStackedBrackets());
+            Assert.True(resultString.ContainsJsonProperty(Envelope.ID_KEY, message.Id));
+            Assert.True(resultString.ContainsJsonProperty(Envelope.FROM_KEY, message.From));
+            Assert.True(resultString.ContainsJsonProperty(Envelope.TO_KEY, message.To));
         }
 
-        [Test]
-        [Category("Serialize")]
+        [Fact]
+        [Trait("Category", "Serialize")]
         public void Serialize_IdentityDocumentMessage_ReturnsValidJsonString()
         {
             // Arrange
@@ -775,17 +774,17 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             var resultString = target.Serialize(message);
 
             // Assert
-            Assert.IsTrue(resultString.HasValidJsonStackedBrackets());
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.ID_KEY, message.Id));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.FROM_KEY, message.From));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.TO_KEY, message.To));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Message.TYPE_KEY, message.Content.GetMediaType()));
-            Assert.IsTrue(resultString.ContainsJsonKey(Message.CONTENT_KEY));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Message.CONTENT_KEY, identityDocument.Value));
+            Assert.True(resultString.HasValidJsonStackedBrackets());
+            Assert.True(resultString.ContainsJsonProperty(Envelope.ID_KEY, message.Id));
+            Assert.True(resultString.ContainsJsonProperty(Envelope.FROM_KEY, message.From));
+            Assert.True(resultString.ContainsJsonProperty(Envelope.TO_KEY, message.To));
+            Assert.True(resultString.ContainsJsonProperty(Message.TYPE_KEY, message.Content.GetMediaType()));
+            Assert.True(resultString.ContainsJsonKey(Message.CONTENT_KEY));
+            Assert.True(resultString.ContainsJsonProperty(Message.CONTENT_KEY, identityDocument.Value));
         }
 
-        [Test]
-        [Category("Serialize")]
+        [Fact]
+        [Trait("Category", "Serialize")]
         public void Serialize_DocumentContainerDocumentCollectionMessage_ReturnsValidJsonString()
         {
             // Arrange
@@ -805,26 +804,26 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             var resultString = target.Serialize(message);
 
             // Assert
-            Assert.IsTrue(resultString.HasValidJsonStackedBrackets());
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.ID_KEY, message.Id));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.FROM_KEY, message.From));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.TO_KEY, message.To));
-            Assert.IsTrue(resultString.ContainsJsonProperty(DocumentContainer.VALUE_KEY, document1.Text));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Presence.MESSAGE_KEY, document2.Message));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Presence.LAST_SEEN_KEY, document2.LastSeen));
+            Assert.True(resultString.HasValidJsonStackedBrackets());
+            Assert.True(resultString.ContainsJsonProperty(Envelope.ID_KEY, message.Id));
+            Assert.True(resultString.ContainsJsonProperty(Envelope.FROM_KEY, message.From));
+            Assert.True(resultString.ContainsJsonProperty(Envelope.TO_KEY, message.To));
+            Assert.True(resultString.ContainsJsonProperty(DocumentContainer.VALUE_KEY, document1.Text));
+            Assert.True(resultString.ContainsJsonProperty(Presence.MESSAGE_KEY, document2.Message));
+            Assert.True(resultString.ContainsJsonProperty(Presence.LAST_SEEN_KEY, document2.LastSeen));
             foreach (var keyValuePair in document3)
             {
                 // TODO: Verify for array properties
                 if (!keyValuePair.Value.GetType().IsArray)
                 {
-                    Assert.IsTrue(resultString.ContainsJsonProperty(keyValuePair.Key, keyValuePair.Value));
+                    Assert.True(resultString.ContainsJsonProperty(keyValuePair.Key, keyValuePair.Value));
                 }
             }
-            Assert.IsTrue(resultString.ContainsJsonProperty(DocumentContainer.VALUE_KEY, container4.Value));
+            Assert.True(resultString.ContainsJsonProperty(DocumentContainer.VALUE_KEY, container4.Value));
         }
 
-        [Test]
-        [Category("Serialize")]
+        [Fact]
+        [Trait("Category", "Serialize")]
         public void Serialize_WebLinkMessage_ReturnsValidJsonString()
         {
             // Arrange
@@ -837,19 +836,19 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             var resultString = target.Serialize(message);
 
             // Assert
-            Assert.IsTrue(resultString.HasValidJsonStackedBrackets());
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.ID_KEY, message.Id));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.FROM_KEY, message.From));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.TO_KEY, message.To));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Message.TYPE_KEY, message.Content.GetMediaType()));
-            Assert.IsTrue(resultString.ContainsJsonKey(Message.CONTENT_KEY));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Link.URI_KEY, Uri.EscapeUriString(uri.ToString())));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Link.PREVIEW_TYPE_KEY, webLink.PreviewType));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Link.PREVIEW_URI_KEY, webLink.PreviewUri));
+            Assert.True(resultString.HasValidJsonStackedBrackets());
+            Assert.True(resultString.ContainsJsonProperty(Envelope.ID_KEY, message.Id));
+            Assert.True(resultString.ContainsJsonProperty(Envelope.FROM_KEY, message.From));
+            Assert.True(resultString.ContainsJsonProperty(Envelope.TO_KEY, message.To));
+            Assert.True(resultString.ContainsJsonProperty(Message.TYPE_KEY, message.Content.GetMediaType()));
+            Assert.True(resultString.ContainsJsonKey(Message.CONTENT_KEY));
+            Assert.True(resultString.ContainsJsonProperty(Link.URI_KEY, Uri.EscapeUriString(uri.ToString())));
+            Assert.True(resultString.ContainsJsonProperty(Link.PREVIEW_TYPE_KEY, webLink.PreviewType));
+            Assert.True(resultString.ContainsJsonProperty(Link.PREVIEW_URI_KEY, webLink.PreviewUri));
         }
 
-        [Test]
-        [Category("Serialize")]
+        [Fact]
+        [Trait("Category", "Serialize")]
         public void Serialize_Deserialize_DocumentWithEnvelope()
         {
             var schedule = new Schedule();
@@ -882,8 +881,8 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 
         #region Deserialize
 
-        [Test]
-        [Category("Deserialize")]
+        [Fact]
+        [Trait("Category", "Deserialize")]
         public void Deserialize_CapabilityRequestCommand_ReturnsValidInstance()
         {
             var target = GetTarget();
@@ -917,33 +916,33 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             var envelope = target.Deserialize(json);
 
             var command = envelope.ShouldBeOfType<Command>();
-            Assert.AreEqual(id, command.Id);
-            Assert.AreEqual(from, command.From);
-            Assert.AreEqual(pp, command.Pp);
-            Assert.AreEqual(to, command.To);
+            Assert.Equal(id, command.Id);
+            Assert.Equal(from, command.From);
+            Assert.Equal(pp, command.Pp);
+            Assert.Equal(to, command.To);
 
-            Assert.AreEqual(method, command.Method);
-            Assert.IsNotNull(command.Metadata);
-            Assert.IsTrue(command.Metadata.ContainsKey(randomKey1));
-            Assert.AreEqual(command.Metadata[randomKey1], randomString1);
-            Assert.IsTrue(command.Metadata.ContainsKey(randomKey2));
-            Assert.AreEqual(command.Metadata[randomKey2], randomString2);
+            Assert.Equal(method, command.Method);
+            Assert.NotNull(command.Metadata);
+            Assert.True(command.Metadata.ContainsKey(randomKey1));
+            Assert.Equal(command.Metadata[randomKey1], randomString1);
+            Assert.True(command.Metadata.ContainsKey(randomKey2));
+            Assert.Equal(command.Metadata[randomKey2], randomString2);
             
             var capability = command.Resource.ShouldBeOfType<Capability>();
-            Assert.IsTrue(capability.ContentTypes.Any(c => c.Equals(contentType1)));
-            Assert.IsTrue(capability.ContentTypes.Any(c => c.Equals(contentType2)));
-            Assert.IsTrue(capability.ContentTypes.Any(c => c.Equals(contentType3)));
+            Assert.True(capability.ContentTypes.Any(c => c.Equals(contentType1)));
+            Assert.True(capability.ContentTypes.Any(c => c.Equals(contentType2)));
+            Assert.True(capability.ContentTypes.Any(c => c.Equals(contentType3)));
 
-            Assert.IsTrue(capability.ResourceTypes.Any(c => c.Equals(resourceType1)));
-            Assert.IsTrue(capability.ResourceTypes.Any(c => c.Equals(resourceType2)));
-            Assert.IsTrue(capability.ResourceTypes.Any(c => c.Equals(resourceType3)));
+            Assert.True(capability.ResourceTypes.Any(c => c.Equals(resourceType1)));
+            Assert.True(capability.ResourceTypes.Any(c => c.Equals(resourceType2)));
+            Assert.True(capability.ResourceTypes.Any(c => c.Equals(resourceType3)));
 
-            Assert.IsNotNull(command.Uri);
-            Assert.AreEqual(command.Uri, resourceUri);
+            Assert.NotNull(command.Uri);
+            Assert.Equal(command.Uri, resourceUri);
         }
 
-        [Test]
-        [Category("Deserialize")]
+        [Fact]
+        [Trait("Category", "Deserialize")]
         public void Deserialize_AccountRequestCommand_ReturnsValidInstance()
         {
             var target = GetTarget();
@@ -972,8 +971,8 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
         }
 
 
-        [Test]
-        [Category("Deserialize")]
+        [Fact]
+        [Trait("Category", "Deserialize")]
         public void Deserialize_PresenceRequestCommand_ReturnsValidInstance()
         {
             var target = GetTarget();
@@ -1019,8 +1018,8 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             presence.Priority.ShouldBe(priority);
         }
 
-        [Test]
-        [Category("Deserialize")]
+        [Fact]
+        [Trait("Category", "Deserialize")]
         public void Deserialize_AbsoluteUriRequestCommand_ReturnsValidInstance()
         {
             var target = GetTarget();
@@ -1046,27 +1045,27 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             var envelope = target.Deserialize(json);
 
             var command = envelope.ShouldBeOfType<Command>();
-            Assert.AreEqual(id, command.Id);
-            Assert.AreEqual(from, command.From);
-            Assert.AreEqual(pp, command.Pp);
-            Assert.AreEqual(to, command.To);
+            Assert.Equal(id, command.Id);
+            Assert.Equal(from, command.From);
+            Assert.Equal(pp, command.Pp);
+            Assert.Equal(to, command.To);
 
-            Assert.AreEqual(method, command.Method);
-            Assert.IsNotNull(command.Metadata);
-            Assert.IsTrue(command.Metadata.ContainsKey(randomKey1));
-            Assert.AreEqual(command.Metadata[randomKey1], randomString1);
-            Assert.IsTrue(command.Metadata.ContainsKey(randomKey2));
-            Assert.AreEqual(command.Metadata[randomKey2], randomString2);
+            Assert.Equal(method, command.Method);
+            Assert.NotNull(command.Metadata);
+            Assert.True(command.Metadata.ContainsKey(randomKey1));
+            Assert.Equal(command.Metadata[randomKey1], randomString1);
+            Assert.True(command.Metadata.ContainsKey(randomKey2));
+            Assert.Equal(command.Metadata[randomKey2], randomString2);
 
-            Assert.IsNotNull(command.Uri);
-            Assert.AreEqual(command.Uri, resourceUri);
+            Assert.NotNull(command.Uri);
+            Assert.Equal(command.Uri, resourceUri);
 
-            Assert.IsNull(command.Type);
-            Assert.IsNull(command.Resource);
+            Assert.Null(command.Type);
+            Assert.Null(command.Resource);
         }
 
-        [Test]
-        [Category("Deserialize")]
+        [Fact]
+        [Trait("Category", "Deserialize")]
         public void Deserialize_ReceiptRequestCommand_ReturnsValidInstance()
         {
             var target = GetTarget();
@@ -1080,20 +1079,20 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             var envelope = target.Deserialize(json);
 
             var command = envelope.ShouldBeOfType<Command>();
-            Assert.AreEqual(id, command.Id);
-            Assert.IsNull(command.From);
-            Assert.IsNull(command.Pp);
-            Assert.IsNull(command.To);
+            Assert.Equal(id, command.Id);
+            Assert.Null(command.From);
+            Assert.Null(command.Pp);
+            Assert.Null(command.To);
 
-            Assert.AreEqual(method, command.Method);
-            Assert.IsNull(command.Metadata);
-            Assert.AreEqual(command.Type.ToString(), Receipt.MIME_TYPE);
-            Assert.IsNotNull(command.Resource);
+            Assert.Equal(method, command.Method);
+            Assert.Null(command.Metadata);
+            Assert.Equal(command.Type.ToString(), Receipt.MIME_TYPE);
+            Assert.NotNull(command.Resource);
             command.Resource.ShouldBeOfType<Receipt>();
         }
 
-        [Test]
-        [Category("Deserialize")]
+        [Fact]
+        [Trait("Category", "Deserialize")]
         public void Deserialize_ContactCollectionResponseCommand_ReturnsValidInstance()
         {
             var target = GetTarget();
@@ -1124,50 +1123,50 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             var envelope = target.Deserialize(json);
 
             var command = envelope.ShouldBeOfType<Command>();
-            Assert.AreEqual(id, command.Id);
-            Assert.AreEqual(from, command.From);
-            Assert.AreEqual(pp, command.Pp);
-            Assert.AreEqual(to, command.To);
+            Assert.Equal(id, command.Id);
+            Assert.Equal(from, command.From);
+            Assert.Equal(pp, command.Pp);
+            Assert.Equal(to, command.To);
 
-            Assert.AreEqual(method, command.Method);
-            Assert.IsNotNull(command.Metadata);
-            Assert.IsTrue(command.Metadata.ContainsKey(randomKey1));
-            Assert.AreEqual(command.Metadata[randomKey1], randomString1);
-            Assert.IsTrue(command.Metadata.ContainsKey(randomKey2));
-            Assert.AreEqual(command.Metadata[randomKey2], randomString2);
+            Assert.Equal(method, command.Method);
+            Assert.NotNull(command.Metadata);
+            Assert.True(command.Metadata.ContainsKey(randomKey1));
+            Assert.Equal(command.Metadata[randomKey1], randomString1);
+            Assert.True(command.Metadata.ContainsKey(randomKey2));
+            Assert.Equal(command.Metadata[randomKey2], randomString2);
             
             var documents = command.Resource.ShouldBeOfType<DocumentCollection>();
-            Assert.IsNotNull(documents.Items, "Items is null");
-            Assert.AreEqual(documents.Items.Length, 3);		    
+            Assert.NotNull(documents.Items);
+            Assert.Equal(documents.Items.Length, 3);		    
 
             var contacts = documents.Cast<Contact>().ToArray();
 
-            Assert.IsTrue(contacts[0].Identity.Equals(identity1));
-            Assert.IsTrue(contacts[0].Name.Equals(name1));
-            Assert.IsTrue(contacts[0].IsPending.HasValue);
-            Assert.IsTrue(contacts[0].IsPending.Value);
-            Assert.IsTrue(contacts[0].ShareAccountInfo.HasValue);
-            Assert.IsFalse(contacts[0].ShareAccountInfo.Value);
-            Assert.IsFalse(contacts[0].SharePresence.HasValue);
+            Assert.True(contacts[0].Identity.Equals(identity1));
+            Assert.True(contacts[0].Name.Equals(name1));
+            Assert.True(contacts[0].IsPending.HasValue);
+            Assert.True(contacts[0].IsPending.Value);
+            Assert.True(contacts[0].ShareAccountInfo.HasValue);
+            Assert.False(contacts[0].ShareAccountInfo.Value);
+            Assert.False(contacts[0].SharePresence.HasValue);
 
-            Assert.IsTrue(contacts[1].Identity.Equals(identity2));
-            Assert.IsTrue(contacts[1].Name.Equals(name2));
-            Assert.IsFalse(contacts[1].IsPending.HasValue);
-            Assert.IsFalse(contacts[1].ShareAccountInfo.HasValue);
-            Assert.IsTrue(contacts[1].SharePresence.HasValue);
-            Assert.IsFalse(contacts[1].SharePresence.Value);
+            Assert.True(contacts[1].Identity.Equals(identity2));
+            Assert.True(contacts[1].Name.Equals(name2));
+            Assert.False(contacts[1].IsPending.HasValue);
+            Assert.False(contacts[1].ShareAccountInfo.HasValue);
+            Assert.True(contacts[1].SharePresence.HasValue);
+            Assert.False(contacts[1].SharePresence.Value);
 
-            Assert.IsTrue(contacts[2].Identity.Equals(identity3));
-            Assert.IsTrue(contacts[2].Name.Equals(name3));
-            Assert.IsTrue(contacts[2].IsPending.HasValue);
-            Assert.IsTrue(contacts[2].IsPending.Value);
-            Assert.IsFalse(contacts[2].ShareAccountInfo.HasValue);
-            Assert.IsTrue(contacts[2].SharePresence.HasValue);
-            Assert.IsFalse(contacts[2].SharePresence.Value);			
+            Assert.True(contacts[2].Identity.Equals(identity3));
+            Assert.True(contacts[2].Name.Equals(name3));
+            Assert.True(contacts[2].IsPending.HasValue);
+            Assert.True(contacts[2].IsPending.Value);
+            Assert.False(contacts[2].ShareAccountInfo.HasValue);
+            Assert.True(contacts[2].SharePresence.HasValue);
+            Assert.False(contacts[2].SharePresence.Value);			
         }
 
-        [Test]
-        [Category("Deserialize")]
+        [Fact]
+        [Trait("Category", "Deserialize")]
         public void Deserialize_FailureCapabilityResponseCommand_ReturnsValidInstance()
         {
             var target = GetTarget();
@@ -1184,24 +1183,24 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 
             var envelope = target.Deserialize(json);			
             var command = envelope.ShouldBeOfType<Command>();
-            Assert.AreEqual(id, command.Id);
-            Assert.AreEqual(from, command.From);
-            Assert.AreEqual(to, command.To);
-            Assert.AreEqual(method, command.Method);
+            Assert.Equal(id, command.Id);
+            Assert.Equal(from, command.From);
+            Assert.Equal(to, command.To);
+            Assert.Equal(method, command.Method);
 
-            Assert.IsNull(command.Pp);
-            Assert.IsNull(command.Metadata);
-            Assert.IsNull(command.Type);
-            Assert.IsNull(command.Resource);
+            Assert.Null(command.Pp);
+            Assert.Null(command.Metadata);
+            Assert.Null(command.Type);
+            Assert.Null(command.Resource);
 
-            Assert.IsNotNull(command.Reason);
+            Assert.NotNull(command.Reason);
 
-            Assert.AreEqual(reason.Code, command.Reason.Code);
-            Assert.AreEqual(reason.Description, command.Reason.Description);
+            Assert.Equal(reason.Code, command.Reason.Code);
+            Assert.Equal(reason.Description, command.Reason.Description);
         }
 
-        [Test]
-        [Category("Deserialize")]
+        [Fact]
+        [Trait("Category", "Deserialize")]
         public void Deserialize_TextMessage_ReturnsValidInstance()
         {
             var target = GetTarget();
@@ -1224,24 +1223,24 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             var envelope = target.Deserialize(json);
 
             var message = envelope.ShouldBeOfType<Message>();
-            Assert.AreEqual(id, message.Id);
-            Assert.AreEqual(from, message.From);
-            Assert.AreEqual(pp, message.Pp);
-            Assert.AreEqual(to, message.To);
-            Assert.IsNotNull(message.Metadata);
-            Assert.IsTrue(message.Metadata.ContainsKey(randomKey1));
-            Assert.AreEqual(message.Metadata[randomKey1], randomString1);
-            Assert.IsTrue(message.Metadata.ContainsKey(randomKey2));
-            Assert.AreEqual(message.Metadata[randomKey2], randomString2);
+            Assert.Equal(id, message.Id);
+            Assert.Equal(from, message.From);
+            Assert.Equal(pp, message.Pp);
+            Assert.Equal(to, message.To);
+            Assert.NotNull(message.Metadata);
+            Assert.True(message.Metadata.ContainsKey(randomKey1));
+            Assert.Equal(message.Metadata[randomKey1], randomString1);
+            Assert.True(message.Metadata.ContainsKey(randomKey2));
+            Assert.Equal(message.Metadata[randomKey2], randomString2);
 
             message.Content.ShouldBeOfType<PlainText>();
 
             var textContent = (PlainText)message.Content;
-            Assert.AreEqual(text, textContent.Text);
+            Assert.Equal(text, textContent.Text);
         }
 
-        [Test]
-        [Category("Deserialize")]
+        [Fact]
+        [Trait("Category", "Deserialize")]
         public void Deserialize_ChatStateMessage_ReturnsValidInstance()
         {
             var target = GetTarget();
@@ -1264,24 +1263,24 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             var envelope = target.Deserialize(json);
 
             var message = envelope.ShouldBeOfType<Message>();
-            Assert.AreEqual(id, message.Id);
-            Assert.AreEqual(from, message.From);
-            Assert.AreEqual(pp, message.Pp);
-            Assert.AreEqual(to, message.To);
-            Assert.IsNotNull(message.Metadata);
-            Assert.IsTrue(message.Metadata.ContainsKey(randomKey1));
-            Assert.AreEqual(message.Metadata[randomKey1], randomString1);
-            Assert.IsTrue(message.Metadata.ContainsKey(randomKey2));
-            Assert.AreEqual(message.Metadata[randomKey2], randomString2);
+            Assert.Equal(id, message.Id);
+            Assert.Equal(from, message.From);
+            Assert.Equal(pp, message.Pp);
+            Assert.Equal(to, message.To);
+            Assert.NotNull(message.Metadata);
+            Assert.True(message.Metadata.ContainsKey(randomKey1));
+            Assert.Equal(message.Metadata[randomKey1], randomString1);
+            Assert.True(message.Metadata.ContainsKey(randomKey2));
+            Assert.Equal(message.Metadata[randomKey2], randomString2);
 
             message.Content.ShouldBeOfType<ChatState>();
 
             var textContent = (ChatState)message.Content;
-            Assert.AreEqual(state, textContent.State);
+            Assert.Equal(state, textContent.State);
         }
 
-        [Test]
-        [Category("Deserialize")]
+        [Fact]
+        [Trait("Category", "Deserialize")]
         public void Deserialize_DocumentSelect_ReturnValidInstance()
         {
             // Arrange
@@ -1302,8 +1301,8 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             input.Validation.Type.ShouldBe(Location.MediaType);
         }
 
-        [Test]
-        [Category("Deserialize")]
+        [Fact]
+        [Trait("Category", "Deserialize")]
         public void Deserialize_UnknownPlainContentMessage_ReturnsValidInstance()
         {
             var target = GetTarget();
@@ -1327,26 +1326,26 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             var envelope = target.Deserialize(json);
 
             var message = envelope.ShouldBeOfType<Message>();
-            Assert.AreEqual(id, message.Id);
-            Assert.AreEqual(from, message.From);
-            Assert.AreEqual(pp, message.Pp);
-            Assert.AreEqual(to, message.To);
-            Assert.IsNotNull(message.Metadata);
-            Assert.IsTrue(message.Metadata.ContainsKey(randomKey1));
-            Assert.AreEqual(message.Metadata[randomKey1], randomString1);
-            Assert.IsTrue(message.Metadata.ContainsKey(randomKey2));
-            Assert.AreEqual(message.Metadata[randomKey2], randomString2);
+            Assert.Equal(id, message.Id);
+            Assert.Equal(from, message.From);
+            Assert.Equal(pp, message.Pp);
+            Assert.Equal(to, message.To);
+            Assert.NotNull(message.Metadata);
+            Assert.True(message.Metadata.ContainsKey(randomKey1));
+            Assert.Equal(message.Metadata[randomKey1], randomString1);
+            Assert.True(message.Metadata.ContainsKey(randomKey2));
+            Assert.Equal(message.Metadata[randomKey2], randomString2);
 
-            Assert.IsNotNull(message.Type);
-            Assert.AreEqual(message.Type, type);
+            Assert.NotNull(message.Type);
+            Assert.Equal(message.Type, type);
             
             var content = message.Content.ShouldBeOfType<PlainDocument>();
-            Assert.AreEqual(text, content.Value);
+            Assert.Equal(text, content.Value);
 
         }
 
-        [Test]
-        [Category("Deserialize")]
+        [Fact]
+        [Trait("Category", "Deserialize")]
         public void Deserialize_IdentityDocumentMessage_ReturnsValidInstance()
         {
             var target = GetTarget();
@@ -1364,21 +1363,21 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             var envelope = target.Deserialize(json);
 
             var message = envelope.ShouldBeOfType<Message>();
-            Assert.AreEqual(id, message.Id);
-            Assert.AreEqual(from, message.From);
-            Assert.AreEqual(to, message.To);
+            Assert.Equal(id, message.Id);
+            Assert.Equal(from, message.From);
+            Assert.Equal(to, message.To);
 
-            Assert.IsNotNull(message.Type);
-            Assert.AreEqual(message.Type, type);
+            Assert.NotNull(message.Type);
+            Assert.Equal(message.Type, type);
 
             var content = message.Content.ShouldBeOfType<IdentityDocument>();
-            Assert.AreEqual(identityDocument.Value, content.Value);
+            Assert.Equal(identityDocument.Value, content.Value);
 
         }
 
 
-        [Test]
-        [Category("Deserialize")]
+        [Fact]
+        [Trait("Category", "Deserialize")]
         public void Deserialize_UnknownJsonContentMessage_ReturnsValidInstance()
         {
             var target = GetTarget();
@@ -1421,51 +1420,51 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             var envelope = target.Deserialize(json);
 
             var message = envelope.ShouldBeOfType<Message>();
-            Assert.AreEqual(id, message.Id);
-            Assert.AreEqual(from, message.From);
-            Assert.AreEqual(pp, message.Pp);
-            Assert.AreEqual(to, message.To);
-            Assert.IsNotNull(message.Metadata);
-            Assert.IsTrue(message.Metadata.ContainsKey(randomKey1));
-            Assert.AreEqual(message.Metadata[randomKey1], randomString1);
-            Assert.IsTrue(message.Metadata.ContainsKey(randomKey2));
-            Assert.AreEqual(message.Metadata[randomKey2], randomString2);
+            Assert.Equal(id, message.Id);
+            Assert.Equal(from, message.From);
+            Assert.Equal(pp, message.Pp);
+            Assert.Equal(to, message.To);
+            Assert.NotNull(message.Metadata);
+            Assert.True(message.Metadata.ContainsKey(randomKey1));
+            Assert.Equal(message.Metadata[randomKey1], randomString1);
+            Assert.True(message.Metadata.ContainsKey(randomKey2));
+            Assert.Equal(message.Metadata[randomKey2], randomString2);
 
-            Assert.IsNotNull(message.Type);
-            Assert.AreEqual(message.Type, type);
+            Assert.NotNull(message.Type);
+            Assert.Equal(message.Type, type);
             
             var content = message.Content.ShouldBeOfType<JsonDocument>();
 
-            Assert.IsTrue(content.ContainsKey(propertyName1));
-            Assert.AreEqual(content[propertyName1], propertyValue1);
-            Assert.IsTrue(content.ContainsKey(propertyName2));            
-            Assert.AreEqual(content[propertyName2], propertyValue2);            
-            Assert.IsTrue(content.ContainsKey(propertyName3));
-            Assert.IsTrue(content[propertyName3] is IList<object>);
+            Assert.True(content.ContainsKey(propertyName1));
+            Assert.Equal(content[propertyName1], propertyValue1);
+            Assert.True(content.ContainsKey(propertyName2));            
+            Assert.Equal(content[propertyName2], propertyValue2);            
+            Assert.True(content.ContainsKey(propertyName3));
+            Assert.True(content[propertyName3] is IList<object>);
 
             var list = (IList<object>) content[propertyName3];
-            Assert.AreEqual(2, list.Count);
+            Assert.Equal(2, list.Count);
 
             for (int i = 0; i < list.Count; i++)
             {
                 var item = (IDictionary<string, object>)list[i];
                 if (i == 0)
                 {
-                    Assert.IsTrue(item.ContainsKey(arrayPropertyName1));
-                    Assert.AreEqual(arrayPropertyValue1, item[arrayPropertyName1]);
-                    Assert.IsTrue(item.ContainsKey(arrayPropertyName2));
-                    Assert.AreEqual(arrayPropertyValue2, item[arrayPropertyName2]);
+                    Assert.True(item.ContainsKey(arrayPropertyName1));
+                    Assert.Equal(arrayPropertyValue1, item[arrayPropertyName1]);
+                    Assert.True(item.ContainsKey(arrayPropertyName2));
+                    Assert.Equal(arrayPropertyValue2, item[arrayPropertyName2]);
                 }
                 else if (i == 1)
                 {
-                    Assert.IsTrue(item.ContainsKey(arrayPropertyName3));
-                    Assert.AreEqual(arrayPropertyValue3, item[arrayPropertyName3]);
-                    Assert.IsTrue(item.ContainsKey(arrayPropertyName4));
-                    Assert.AreEqual(arrayPropertyValue4, item[arrayPropertyName4]);
+                    Assert.True(item.ContainsKey(arrayPropertyName3));
+                    Assert.Equal(arrayPropertyValue3, item[arrayPropertyName3]);
+                    Assert.True(item.ContainsKey(arrayPropertyName4));
+                    Assert.Equal(arrayPropertyValue4, item[arrayPropertyName4]);
                 }
             }
 
-            Assert.IsTrue(content.ContainsKey(propertyName4));
+            Assert.True(content.ContainsKey(propertyName4));
 
             DateTime dateTime;
             if (content[propertyName4] is DateTime)
@@ -1485,8 +1484,8 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             dateTime.Millisecond.ShouldBe(propertyValue4.Millisecond);
         }
 
-        [Test]
-        [Category("Deserialize")]
+        [Fact]
+        [Trait("Category", "Deserialize")]
         public void Deserialize_GenericJsonContentMessage_ReturnsValidInstance()
         {
             var target = GetTarget();
@@ -1515,29 +1514,29 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             var envelope = target.Deserialize(json);
 
             var message = envelope.ShouldBeOfType<Message>();
-            Assert.AreEqual(id, message.Id);
-            Assert.AreEqual(from, message.From);
-            Assert.AreEqual(pp, message.Pp);
-            Assert.AreEqual(to, message.To);
-            Assert.IsNotNull(message.Metadata);
-            Assert.IsTrue(message.Metadata.ContainsKey(randomKey1));
-            Assert.AreEqual(message.Metadata[randomKey1], randomString1);
-            Assert.IsTrue(message.Metadata.ContainsKey(randomKey2));
-            Assert.AreEqual(message.Metadata[randomKey2], randomString2);
+            Assert.Equal(id, message.Id);
+            Assert.Equal(from, message.From);
+            Assert.Equal(pp, message.Pp);
+            Assert.Equal(to, message.To);
+            Assert.NotNull(message.Metadata);
+            Assert.True(message.Metadata.ContainsKey(randomKey1));
+            Assert.Equal(message.Metadata[randomKey1], randomString1);
+            Assert.True(message.Metadata.ContainsKey(randomKey2));
+            Assert.Equal(message.Metadata[randomKey2], randomString2);
 
-            Assert.IsNotNull(message.Type);
-            Assert.AreEqual(message.Type, type);
+            Assert.NotNull(message.Type);
+            Assert.Equal(message.Type, type);
             
             var content = message.Content.ShouldBeOfType<JsonDocument>();
 
-            Assert.IsTrue(content.ContainsKey(propertyName1));
-            Assert.AreEqual(content[propertyName1], propertyValue1);
-            Assert.IsTrue(content.ContainsKey(propertyName2));
-            Assert.AreEqual(content[propertyName2], propertyValue2);
+            Assert.True(content.ContainsKey(propertyName1));
+            Assert.Equal(content[propertyName1], propertyValue1);
+            Assert.True(content.ContainsKey(propertyName2));
+            Assert.Equal(content[propertyName2], propertyValue2);
         }
 
-        [Test]
-        [Category("Deserialize")]
+        [Fact]
+        [Trait("Category", "Deserialize")]
         public void Deserialize_FireAndForgetTextMessage_ReturnsValidInstance()
         {
             // Arrange
@@ -1553,18 +1552,18 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 
             // Assert
             var message = envelope.ShouldBeOfType<Message>();
-            Assert.AreEqual(from, message.From);
-            Assert.AreEqual(to, message.To);
+            Assert.Equal(from, message.From);
+            Assert.Equal(to, message.To);
 
-            Assert.IsNull(message.Id);
-            Assert.IsNull(message.Pp);
-            Assert.IsNull(message.Metadata);
+            Assert.Null(message.Id);
+            Assert.Null(message.Pp);
+            Assert.Null(message.Metadata);
             var textContent = message.Content.ShouldBeOfType<PlainText>();
-            Assert.AreEqual(text, textContent.Text);
+            Assert.Equal(text, textContent.Text);
         }
 
-        [Test]
-        [Category("Deserialize")]
+        [Fact]
+        [Trait("Category", "Deserialize")]
         public void Deserialize_FireAndForgetChatStateMessage_ReturnsValidInstance()
         {
             // Arrange
@@ -1580,18 +1579,18 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 
             // Assert
             var message = envelope.ShouldBeOfType<Message>();
-            Assert.AreEqual(from, message.From);
-            Assert.AreEqual(to, message.To);
+            Assert.Equal(from, message.From);
+            Assert.Equal(to, message.To);
 
-            Assert.IsNull(message.Id);
-            Assert.IsNull(message.Pp);
-            Assert.IsNull(message.Metadata);			
+            Assert.Null(message.Id);
+            Assert.Null(message.Pp);
+            Assert.Null(message.Metadata);			
             var textContent = message.Content.ShouldBeOfType<ChatState>();
-            Assert.AreEqual(state, textContent.State);            
+            Assert.Equal(state, textContent.State);            
         }
 
-        [Test]
-        [Category("Deserialize")]
+        [Fact]
+        [Trait("Category", "Deserialize")]
         public void Deserialize_ReceivedNotification_ReturnsValidInstance()
         {
             var target = GetTarget();
@@ -1613,23 +1612,23 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 
             var envelope = target.Deserialize(json);
             var notification = envelope.ShouldBeOfType<Notification>();
-            Assert.AreEqual(id, notification.Id);
-            Assert.AreEqual(from, notification.From);
-            Assert.AreEqual(pp, notification.Pp);
-            Assert.AreEqual(to, notification.To);
-            Assert.IsNotNull(notification.Metadata);
-            Assert.IsTrue(notification.Metadata.ContainsKey(randomKey1));
-            Assert.AreEqual(notification.Metadata[randomKey1], randomString1);
-            Assert.IsTrue(notification.Metadata.ContainsKey(randomKey2));
-            Assert.AreEqual(notification.Metadata[randomKey2], randomString2);
+            Assert.Equal(id, notification.Id);
+            Assert.Equal(from, notification.From);
+            Assert.Equal(pp, notification.Pp);
+            Assert.Equal(to, notification.To);
+            Assert.NotNull(notification.Metadata);
+            Assert.True(notification.Metadata.ContainsKey(randomKey1));
+            Assert.Equal(notification.Metadata[randomKey1], randomString1);
+            Assert.True(notification.Metadata.ContainsKey(randomKey2));
+            Assert.Equal(notification.Metadata[randomKey2], randomString2);
 
-            Assert.AreEqual(@event, notification.Event);
+            Assert.Equal(@event, notification.Event);
 
-            Assert.IsNull(notification.Reason);
+            Assert.Null(notification.Reason);
         }
 
-        [Test]
-        [Category("Deserialize")]
+        [Fact]
+        [Trait("Category", "Deserialize")]
         public void Deserialize_FailedNotification_ReturnsValidInstance()
         {
             var target = GetTarget();
@@ -1649,22 +1648,22 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             var envelope = target.Deserialize(json);
 
             var notification = envelope.ShouldBeOfType<Notification>();
-            Assert.AreEqual(id, notification.Id);
-            Assert.AreEqual(from, notification.From);
-            Assert.AreEqual(to, notification.To);
-            Assert.AreEqual(@event, notification.Event);
+            Assert.Equal(id, notification.Id);
+            Assert.Equal(from, notification.From);
+            Assert.Equal(to, notification.To);
+            Assert.Equal(@event, notification.Event);
 
-            Assert.IsNull(notification.Pp);
-            Assert.IsNull(notification.Metadata);
+            Assert.Null(notification.Pp);
+            Assert.Null(notification.Metadata);
 
-            Assert.IsNotNull(notification.Reason);
+            Assert.NotNull(notification.Reason);
 
-            Assert.AreEqual(reasonCode, notification.Reason.Code);
-            Assert.AreEqual(reasonDescription, notification.Reason.Description);
+            Assert.Equal(reasonCode, notification.Reason.Code);
+            Assert.Equal(reasonDescription, notification.Reason.Description);
         }
 
-        [Test]
-        [Category("Deserialize")]
+        [Fact]
+        [Trait("Category", "Deserialize")]
         public void Deserialize_AuthenticatingSession_ReturnsValidInstance()
         {
             var target = GetTarget();
@@ -1689,23 +1688,23 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             var envelope = target.Deserialize(json);
             
             var session = envelope.ShouldBeOfType<Session>();
-            Assert.AreEqual(id, session.Id);
-            Assert.AreEqual(from, session.From);
-            Assert.AreEqual(to, session.To);
-            Assert.IsNotNull(session.Metadata);
-            Assert.IsTrue(session.Metadata.ContainsKey(randomKey1));
-            Assert.AreEqual(session.Metadata[randomKey1], randomString1);
-            Assert.IsTrue(session.Metadata.ContainsKey(randomKey2));
-            Assert.AreEqual(session.Metadata[randomKey2], randomString2);
+            Assert.Equal(id, session.Id);
+            Assert.Equal(from, session.From);
+            Assert.Equal(to, session.To);
+            Assert.NotNull(session.Metadata);
+            Assert.True(session.Metadata.ContainsKey(randomKey1));
+            Assert.Equal(session.Metadata[randomKey1], randomString1);
+            Assert.True(session.Metadata.ContainsKey(randomKey2));
+            Assert.Equal(session.Metadata[randomKey2], randomString2);
 
-            Assert.AreEqual(state, session.State);
+            Assert.Equal(state, session.State);
 
-            Assert.IsNull(session.Pp);
-            Assert.IsNull(session.Reason);
+            Assert.Null(session.Pp);
+            Assert.Null(session.Reason);
         }
 
-        [Test]
-        [Category("Deserialize")]
+        [Fact]
+        [Trait("Category", "Deserialize")]
         public void Deserialize_FailedSessionNullProperties_ReturnsValidInstance()
         {
             var target = GetTarget();
@@ -1724,22 +1723,22 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             var envelope = target.Deserialize(json);
 
             var session = envelope.ShouldBeOfType<Session>();
-            Assert.AreEqual(id, session.Id);
-            Assert.AreEqual(from, session.From);
-            Assert.AreEqual(to, session.To);
+            Assert.Equal(id, session.Id);
+            Assert.Equal(from, session.From);
+            Assert.Equal(to, session.To);
 
-            Assert.AreEqual(state, session.State);
+            Assert.Equal(state, session.State);
 
-            Assert.IsNotNull(session.Reason);
-            Assert.AreEqual(reasonCode, session.Reason.Code);
-            Assert.AreEqual(reasonDescription, session.Reason.Description);
+            Assert.NotNull(session.Reason);
+            Assert.Equal(reasonCode, session.Reason.Code);
+            Assert.Equal(reasonDescription, session.Reason.Description);
 
-            Assert.IsNull(session.Pp);
-            Assert.IsNull(session.Metadata);
+            Assert.Null(session.Pp);
+            Assert.Null(session.Metadata);
         }
 
-        [Test]
-        [Category("Deserialize")]
+        [Fact]
+        [Trait("Category", "Deserialize")]
         public void Deserialize_SessionAuthenticatingWithPlainAuthentication_ReturnsValidInstance()
         {
             // Arrange
@@ -1757,8 +1756,8 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
         }
 
 
-        [Test]
-        [Category("Deserialize")]
+        [Fact]
+        [Trait("Category", "Deserialize")]
         public void Deserialize_SessionAuthenticatingWithExternalAuthentication_ReturnsValidInstance()
         {
             // Arrange
@@ -1777,8 +1776,8 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
         }
 
 
-        [Test]
-        [Category("Deserialize")]
+        [Fact]
+        [Trait("Category", "Deserialize")]
         public void Deserialize_SessionAuthenticatingWithGuestAuthentication_ReturnsValidInstance()
         {
             // Arrange
@@ -1794,8 +1793,8 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             session.Authentication.ShouldBeOfType<GuestAuthentication>();
         }
 
-        [Test]
-        [Category("Deserialize")]
+        [Fact]
+        [Trait("Category", "Deserialize")]
         public void Deserialize_RandomResourceRequestCommand_ReturnsValidInstance()
         {
             // Arrange
@@ -1819,8 +1818,8 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             document.NullableDouble.ShouldBe(10.2d);
         }
 
-        [Test]
-        [Category("Deserialize")]
+        [Fact]
+        [Trait("Category", "Deserialize")]
         public void Deserialize_DocumentContainerDocumentCollectionMessage_ReturnsValidInstance()
         {
             // Arrange
@@ -1861,8 +1860,8 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             document4.Value.ShouldBe("9nav5pkhswvsw7mh24r1b3agbgic43piylveh1z6xtfz77nibt");
         }
 
-        [Test]
-        [Category("Deserialize")]
+        [Fact]
+        [Trait("Category", "Deserialize")]
         public void Deserialize_DocumentSelectMessage_ReturnsValidInstance()
         {
             // Arrange            
@@ -1899,8 +1898,8 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             option2Value.ShouldContainKeyAndValue("value", (long)1);
         }
 
-        [Test]
-        [Category("Deserialize")]
+        [Fact]
+        [Trait("Category", "Deserialize")]
         public void Deserialize_CommandWithMessage_ReturnsValidInstance()
         {
             // Arrange
@@ -1920,8 +1919,8 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             var message = jObject.ToObject(typeof(Message), JsonSerializer).ShouldBeOfType<Message>();
         }
 
-        [Test]
-        [Category("Deserialize")]
+        [Fact]
+        [Trait("Category", "Deserialize")]
         public void Deserialize_WeblinkMessage_ReturnsValidInstance()
         {
             // Arrange

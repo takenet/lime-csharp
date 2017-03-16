@@ -8,15 +8,38 @@ using Lime.Protocol.UnitTests;
 using Lime.Transport.Http;
 using Lime.Transport.Http.Processors;
 using Lime.Transport.Http.Storage;
-using NUnit.Framework;
+using Xunit;
 using Moq;
 using Shouldly;
 
 namespace Lime.Transport.Http.UnitTests.Processors
 {
-    [TestFixture]
+    
     public class GetEnvelopeByIdHttpProcessorBaseTests
     {
+        public GetEnvelopeByIdHttpProcessorBaseTests()
+        {
+            EnvelopeStorage = new Mock<IEnvelopeStorage<Envelope>>();
+            Principal = new Mock<IPrincipal>();
+            PrincipalIdentity = new Mock<System.Security.Principal.IIdentity>();
+            Principal.SetupGet(p => p.Identity).Returns(() => PrincipalIdentity.Object);
+            Identity = Dummy.CreateIdentity();
+            PrincipalIdentityName = Identity.ToString();
+            PrincipalIdentity.SetupGet(p => p.Name).Returns(() => PrincipalIdentityName);
+            Envelope = Dummy.CreateMessage(Dummy.CreateTextContent());
+            Envelope.Pp = Dummy.CreateNode();
+            EnvelopeId = Envelope.Id;
+            GetMessageUri = new Uri("http://" + Constants.MESSAGES_PATH + ":" + Dummy.CreateRandomInt(50000) + "/" + EnvelopeId);
+            GetMessageHttpRequest = new HttpRequest("GET", GetMessageUri, Principal.Object, Guid.NewGuid().ToString());
+            GetMessageUriTemplateMatch = new UriTemplateMatch();
+            GetMessageUriTemplateMatch.BoundVariables.Add("id", EnvelopeId.ToString());
+            GetMessageHttpResponse = new HttpResponse(GetMessageHttpRequest.CorrelatorId, System.Net.HttpStatusCode.OK);
+            CancellationToken = TimeSpan.FromSeconds(5).ToCancellationToken();
+
+            Target = new MockGetEnvelopeByIdHttpProcessorBase(EnvelopeStorage.Object, Constants.MESSAGES_PATH);
+            Target.GetEnvelopeResponseFunc = (m, r) => GetMessageHttpResponse;
+        }
+
         public Mock<IEnvelopeStorage<Envelope>> EnvelopeStorage { get; set; }
 
         public Mock<IPrincipal> Principal { get; set; }
@@ -44,31 +67,9 @@ namespace Lime.Transport.Http.UnitTests.Processors
 
         public MockGetEnvelopeByIdHttpProcessorBase Target { get; private set; }
 
-        [SetUp]
-        public void Arrange()
-        {
-            EnvelopeStorage = new Mock<IEnvelopeStorage<Envelope>>();
-            Principal = new Mock<IPrincipal>();
-            PrincipalIdentity = new Mock<System.Security.Principal.IIdentity>();
-            Principal.SetupGet(p => p.Identity).Returns(() => PrincipalIdentity.Object);
-            Identity = Dummy.CreateIdentity();
-            PrincipalIdentityName = Identity.ToString();
-            PrincipalIdentity.SetupGet(p => p.Name).Returns(() => PrincipalIdentityName);
-            Envelope = Dummy.CreateMessage(Dummy.CreateTextContent());
-            Envelope.Pp = Dummy.CreateNode();
-            EnvelopeId = Envelope.Id;
-            GetMessageUri = new Uri("http://" + Constants.MESSAGES_PATH + ":" + Dummy.CreateRandomInt(50000) + "/" + EnvelopeId);
-            GetMessageHttpRequest = new HttpRequest("GET", GetMessageUri, Principal.Object, Guid.NewGuid().ToString());
-            GetMessageUriTemplateMatch = new UriTemplateMatch();
-            GetMessageUriTemplateMatch.BoundVariables.Add("id", EnvelopeId.ToString());
-            GetMessageHttpResponse = new HttpResponse(GetMessageHttpRequest.CorrelatorId, System.Net.HttpStatusCode.OK);
-            CancellationToken = TimeSpan.FromSeconds(5).ToCancellationToken();
 
-            Target = new MockGetEnvelopeByIdHttpProcessorBase(EnvelopeStorage.Object, Constants.MESSAGES_PATH);
-            Target.GetEnvelopeResponseFunc = (m, r) => GetMessageHttpResponse;                      
-        }
 
-        [Test]
+        [Fact]
         public async Task ProcessAsync_ExistingId_GetsFromStorageAndReturnsOKHttpResponse()
         {
             // Arrange
@@ -92,7 +93,7 @@ namespace Lime.Transport.Http.UnitTests.Processors
             actual.Headers[Constants.ENVELOPE_PP_HEADER].ShouldBe(Envelope.Pp.ToString());
         }
 
-        [Test]
+        [Fact]
         public async Task ProcessAsync_NonExistingId_ReturnsNotFoundHttpResponse()
         {
             // Arrange
@@ -110,7 +111,7 @@ namespace Lime.Transport.Http.UnitTests.Processors
             actual.StatusCode.ShouldBe(HttpStatusCode.NotFound);
         }
 
-        [Test]
+        [Fact]
         public async Task ProcessAsync_RequestUriWithoutId_RetunsBadRequestHttpResponse()
         {
             // Arrange
@@ -125,7 +126,7 @@ namespace Lime.Transport.Http.UnitTests.Processors
             EnvelopeStorage.Verify();
         }
 
-        [Test]
+        [Fact]
         public async Task ProcessAsync_InvalidPrincipalNameFormat_RetunsBadRequestHttpResponse()
         {
             // Arrange

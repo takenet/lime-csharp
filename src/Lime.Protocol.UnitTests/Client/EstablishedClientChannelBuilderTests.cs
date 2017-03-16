@@ -7,12 +7,12 @@ using Lime.Protocol.Network;
 using Lime.Protocol.Security;
 using Lime.Protocol.Util;
 using Moq;
-using NUnit.Framework;
+using Xunit;
 using Shouldly;
 
 namespace Lime.Protocol.UnitTests.Client
 {
-    [TestFixture]
+    
     public class EstablishedClientChannelBuilderTests
     {
         private CancellationToken _cancellationToken;
@@ -30,10 +30,7 @@ namespace Lime.Protocol.UnitTests.Client
         private Session _authenticatingSession;
         private Session _establishedSession;
 
-        #region Scenario
-
-        [SetUp]
-        public void Setup()
+        public EstablishedClientChannelBuilderTests()
         {                  
             _cancellationToken = TimeSpan.FromSeconds(5).ToCancellationToken();
             _clientChannel = new Mock<IClientChannel>();
@@ -105,21 +102,12 @@ namespace Lime.Protocol.UnitTests.Client
                 .Returns(_transport.Object);
         }
 
-        [TearDown]
-        public void Teardown()
-        {
-            _clientChannelBuilder = null;
-            _clientChannel = null;
-        }
-
-        #endregion
-
         private EstablishedClientChannelBuilder GetTarget()
         {
             return new EstablishedClientChannelBuilder(_clientChannelBuilder.Object);
         }
 
-        [Test]
+        [Fact]
         public async Task WithCompression_GZipCompression_EstablishesSessionWithSelectedOption()
         {
             // Arrange                        
@@ -134,7 +122,7 @@ namespace Lime.Protocol.UnitTests.Client
             _transport.Verify(t => t.SetCompressionAsync(compression, It.IsAny<CancellationToken>()), Times.Once);            
         }
 
-        [Test]
+        [Fact]
         public async Task WithCompression_GZipCompressionSelector_EstablishesSessionWithSelectedOption()
         {
             // Arrange        
@@ -150,7 +138,7 @@ namespace Lime.Protocol.UnitTests.Client
             _transport.Verify(t => t.SetCompressionAsync(compression, It.IsAny<CancellationToken>()), Times.Once);
         }
 
-        [Test]
+        [Fact]
         public void WithCompression_NullCompressionSelector_ThrowsArgumentNullException()
         {
             // Arrange                    
@@ -162,7 +150,7 @@ namespace Lime.Protocol.UnitTests.Client
             action.ShouldThrow<ArgumentNullException>();
         }
 
-        [Test]
+        [Fact]
         public async Task WithEncryption_TLSEncryption_EstablishesSessionWithSelectedOption()
         {
             // Arrange                        
@@ -177,7 +165,7 @@ namespace Lime.Protocol.UnitTests.Client
             _transport.Verify(t => t.SetEncryptionAsync(encryption, It.IsAny<CancellationToken>()), Times.Once);
         }
 
-        [Test]
+        [Fact]
         public async Task WithEncryption_TLSEncryptionSelector_EstablishesSessionWithSelectedOption()
         {
             // Arrange        
@@ -193,7 +181,7 @@ namespace Lime.Protocol.UnitTests.Client
             _transport.Verify(t => t.SetEncryptionAsync(encryption, It.IsAny<CancellationToken>()), Times.Once);
         }
 
-        [Test]
+        [Fact]
         public void WithEncryption_NullEncryptionSelector_ThrowsArgumentNullException()
         {
             // Arrange                    
@@ -205,7 +193,7 @@ namespace Lime.Protocol.UnitTests.Client
             action.ShouldThrow<ArgumentNullException>();
         }
 
-        [Test]
+        [Fact]
         public async Task WithAuthentication_PlainAuthentication_EstablishesSessionWithSelectedOption()
         {
             // Arrange                        
@@ -220,7 +208,7 @@ namespace Lime.Protocol.UnitTests.Client
             _clientChannel.Verify(c => c.AuthenticateSessionAsync(It.IsAny<Identity>(), authentication, It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Once);
         }
 
-        [Test]
+        [Fact]
         public async Task WithAuthentication_PlainAuthenticationAuthenticator_EstablishesSessionWithSelectedOption()
         {
             // Arrange                        
@@ -237,7 +225,7 @@ namespace Lime.Protocol.UnitTests.Client
             _clientChannel.Verify(c => c.AuthenticateSessionAsync(It.IsAny<Identity>(), authentication, It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Once);
         }
 
-        [Test]
+        [Fact]
         public void WithAuthentication_NullAuthenticator_ThrowsArgumentNullException()
         {
             // Arrange                        
@@ -250,7 +238,7 @@ namespace Lime.Protocol.UnitTests.Client
             action.ShouldThrow<ArgumentNullException>();
         }
 
-        [Test]
+        [Fact]
         public async Task WithPlainAuthentication_AnyPassword_EstablishesSessionWithSelectedOption()
         {
             // Arrange                        
@@ -270,7 +258,7 @@ namespace Lime.Protocol.UnitTests.Client
                 Times.Once);
         }
 
-        [Test]
+        [Fact]
         public void WithPlainAuthentication_NullPassword_ThrowsArgumentNullException()
         {
             // Arrange                        
@@ -282,7 +270,7 @@ namespace Lime.Protocol.UnitTests.Client
             action.ShouldThrow<ArgumentNullException>();
         }
 
-        [Test]
+        [Fact]
         public async Task WithKeyAuthentication_AnyPassword_EstablishesSessionWithSelectedOption()
         {
             // Arrange                        
@@ -302,7 +290,7 @@ namespace Lime.Protocol.UnitTests.Client
                 Times.Once);
         }
 
-        [Test]
+        [Fact]
         public void WithKeyAuthentication_NullPassword_ThrowsArgumentNullException()
         {
             // Arrange                        
@@ -314,7 +302,7 @@ namespace Lime.Protocol.UnitTests.Client
             action.ShouldThrow<ArgumentNullException>();            
         }
 
-        [Test]
+        [Fact]
         public async Task WithIdentity_AnyIdentity_EstablishesSessionWithSelectedOption()
         {
             // Arrange                        
@@ -334,7 +322,7 @@ namespace Lime.Protocol.UnitTests.Client
                 Times.Once);
         }
 
-        [Test]
+        [Fact]
         public async Task WithInstance_AnyInstance_EstablishesSessionWithSelectedOption()
         {
             // Arrange                        
@@ -354,7 +342,7 @@ namespace Lime.Protocol.UnitTests.Client
                 Times.Once);
         }
 
-        [Test]
+        [Fact]
         public async Task WithCompression_Encryption_Identity_Authentication_Instance_AnyOptions_EstablishesSessionWithSelectedOptions()
         {
             // Arrange                
@@ -385,7 +373,7 @@ namespace Lime.Protocol.UnitTests.Client
                 Times.Once);
         }
 
-        [Test]
+        [Fact]
         public async Task AddEstablishedHandler_CallsBuildAsync_ShouldExecuteHandler()
         {
             // Arrange            
@@ -411,7 +399,7 @@ namespace Lime.Protocol.UnitTests.Client
             handlerCancellationToken.ShouldBe(_cancellationToken);
         }
 
-        [Test]
+        [Fact]
         public async Task AddEstablishedHandler_HandlerThrowsException_ShouldDisposeChannelAndRethrowToCaller()
         {
             // Arrange            
@@ -431,7 +419,7 @@ namespace Lime.Protocol.UnitTests.Client
             _disposableClientChannel.Verify(d => d.Dispose(), Times.Once);                            
         }
 
-        [Test]
+        [Fact]
         public async Task AddEstablishedHandler_MultipleHandlers_ShouldExecuteHandlers()
         {
             // Arrange            

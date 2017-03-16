@@ -10,7 +10,6 @@ using Lime.Protocol.Serialization;
 using Lime.Protocol.Serialization.Newtonsoft;
 using Lime.Protocol.UnitTests;
 using Moq;
-using NUnit.Framework;
 using Shouldly;
 using Xunit;
 

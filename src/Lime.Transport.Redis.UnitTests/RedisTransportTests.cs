@@ -44,26 +44,6 @@ namespace Lime.Transport.Redis.UnitTests
 
         public string ChannelNamespace { get; private set; }
 
-        [SetUp]
-        public async Task SetUpAsync()
-        {
-            Registrator.RegisterDocuments();
-            ChannelNamespace = EnvelopeId.NewId();
-            ListenerUri = new Uri("redis://localhost");
-            EnvelopeSerializer = new JsonNetSerializer();
-            TraceWriter = new Mock<ITraceWriter>();
-            Listener = new RedisTransportListener(ListenerUri, EnvelopeSerializer, TraceWriter.Object, channelNamespace: ChannelNamespace);
-            await Listener.StartAsync(CancellationToken);
-            CancellationToken = TimeSpan.FromSeconds(5).ToCancellationToken();
-        }
-
-
-        [TearDown]
-        public async Task TearDownAsync()
-        {
-            await Listener.StopAsync(CancellationToken);
-            Listener.Dispose();
-        }
 
         public RedisTransport GetTarget()
         {

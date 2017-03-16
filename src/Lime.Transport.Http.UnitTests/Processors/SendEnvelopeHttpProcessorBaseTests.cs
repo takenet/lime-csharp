@@ -11,15 +11,37 @@ using Lime.Protocol.Serialization;
 using Lime.Protocol.UnitTests;
 using Lime.Transport.Http;
 using Lime.Transport.Http.Processors;
-using NUnit.Framework;
+using Xunit;
 using Moq;
 using Shouldly;
 
 namespace Lime.Transport.Http.UnitTests.Processors
 {
-    [TestFixture]
     public class SendEnvelopeHttpProcessorBaseTests
     {
+        public SendEnvelopeHttpProcessorBaseTests()
+        {
+            DocumentSerializer = new Mock<IDocumentSerializer>();
+            Principal = new Mock<IPrincipal>();
+            PrincipalIdentity = new Mock<System.Security.Principal.IIdentity>();
+            Principal.SetupGet(p => p.Identity).Returns(() => PrincipalIdentity.Object);
+            Identity = Dummy.CreateIdentity();
+            PrincipalIdentityName = Identity.ToString();
+            PrincipalIdentity.SetupGet(p => p.Name).Returns(() => PrincipalIdentityName);
+            SendMessageUri = new Uri("http://" + Constants.MESSAGES_PATH + ":" + Dummy.CreateRandomInt(50000) + "/" + Constants.MESSAGES_PATH);
+            Envelope = Dummy.CreateMessage(Dummy.CreateTextContent());
+            Content = Dummy.CreateRandomString(100);
+            BodyStream = new MemoryStream(Encoding.UTF8.GetBytes(Content));
+            BodyStream.Seek(0, SeekOrigin.Begin);
+            SendMessageHttpRequest = new HttpRequest("POST", SendMessageUri, Principal.Object, Envelope.Id, bodyStream: BodyStream, contentType: MediaType.Parse(Constants.TEXT_PLAIN_HEADER_VALUE));
+            SendMessageHttpRequest.Headers.Add(Constants.ENVELOPE_FROM_HEADER, Envelope.From.ToString());
+            SendMessageHttpRequest.Headers.Add(Constants.ENVELOPE_TO_HEADER, Envelope.To.ToString());
+            TransportSession = new Mock<ITransportSession>();
+            CancellationToken = TimeSpan.FromSeconds(5).ToCancellationToken();
+
+            Target = new MockSendEnvelopeHttpProcessorBase(new HashSet<string>(), new UriTemplate("/"), DocumentSerializer.Object);
+        }
+
         public Mock<IDocumentSerializer> DocumentSerializer { get; set; }
 
         public Mock<IPrincipal> Principal { get; set; }
@@ -46,31 +68,8 @@ namespace Lime.Transport.Http.UnitTests.Processors
 
         public MockSendEnvelopeHttpProcessorBase Target { get; set; }
 
-        [SetUp]
-        public void Arrange()
-        {
-            DocumentSerializer = new Mock<IDocumentSerializer>();
-            Principal = new Mock<IPrincipal>();
-            PrincipalIdentity = new Mock<System.Security.Principal.IIdentity>();
-            Principal.SetupGet(p => p.Identity).Returns(() => PrincipalIdentity.Object);
-            Identity = Dummy.CreateIdentity();
-            PrincipalIdentityName = Identity.ToString();
-            PrincipalIdentity.SetupGet(p => p.Name).Returns(() => PrincipalIdentityName);
-            SendMessageUri = new Uri("http://" + Constants.MESSAGES_PATH + ":" + Dummy.CreateRandomInt(50000) + "/" + Constants.MESSAGES_PATH);
-            Envelope = Dummy.CreateMessage(Dummy.CreateTextContent());
-            Content = Dummy.CreateRandomString(100);
-            BodyStream = new MemoryStream(Encoding.UTF8.GetBytes(Content));
-            BodyStream.Seek(0, SeekOrigin.Begin);
-            SendMessageHttpRequest = new HttpRequest("POST", SendMessageUri, Principal.Object, Envelope.Id, bodyStream: BodyStream, contentType: MediaType.Parse(Constants.TEXT_PLAIN_HEADER_VALUE));
-            SendMessageHttpRequest.Headers.Add(Constants.ENVELOPE_FROM_HEADER, Envelope.From.ToString());
-            SendMessageHttpRequest.Headers.Add(Constants.ENVELOPE_TO_HEADER, Envelope.To.ToString());
-            TransportSession = new Mock<ITransportSession>();
-            CancellationToken = TimeSpan.FromSeconds(5).ToCancellationToken();
 
-            Target = new MockSendEnvelopeHttpProcessorBase(new HashSet<string>(), new UriTemplate("/"), DocumentSerializer.Object);
-        }
-
-        [Test]
+        [Fact]
         public async Task ProcessAsync_ValidEnvelope_CallsTransport()
         {
             
