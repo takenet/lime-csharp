@@ -12,12 +12,22 @@ using Lime.Protocol.UnitTests;
 using Moq;
 using NUnit.Framework;
 using Shouldly;
+using Xunit;
 
 namespace Lime.Transport.WebSocket.UnitTests
 {
-    [TestFixture]
-    public class ServerWebSocketTransportTests
+    public class ServerWebSocketTransportTests : IDisposable
     {
+        public ServerWebSocketTransportTests()
+        {
+            ListenerUri = new Uri("ws://localhost:8081");
+            EnvelopeSerializer = new JsonNetSerializer();
+            TraceWriter = new Mock<ITraceWriter>();
+            Listener = new WebSocketTransportListener(ListenerUri, SslCertificate, EnvelopeSerializer, TraceWriter.Object);
+            CancellationToken = TimeSpan.FromSeconds(30).ToCancellationToken();
+            Client = new ClientWebSocketTransport(EnvelopeSerializer);
+        }
+
         public async Task<ServerWebSocketTransport> GetTargetAsync()
         {
             await Listener.StartAsync(CancellationToken);
@@ -46,28 +56,7 @@ namespace Lime.Transport.WebSocket.UnitTests
 
         public ClientWebSocketTransport Client { get; set; }
 
-        [SetUp]
-        public void SetUp()
-        {
-            ListenerUri = new Uri("ws://localhost:8081");
-            EnvelopeSerializer = new JsonNetSerializer();
-            TraceWriter = new Mock<ITraceWriter>();
-            Listener = new WebSocketTransportListener(ListenerUri, SslCertificate, EnvelopeSerializer, TraceWriter.Object);
-            CancellationToken = TimeSpan.FromSeconds(30).ToCancellationToken();
-            Client = new ClientWebSocketTransport(EnvelopeSerializer);
-        }
-
-        [TearDown]
-        public void TearDown()
-        {
-            try
-            {
-                Listener.StopAsync(CancellationToken).Wait();
-            }
-            catch (AggregateException) { }
-        }
-
-        [Test]
+        [Fact]
         public async Task SendAsync_EstablishedSessionEnvelope_ClientShouldReceive()
         {
             // Arrange            
@@ -98,7 +87,7 @@ namespace Lime.Transport.WebSocket.UnitTests
             actualSession.Metadata.ShouldBe(session.Metadata);
         }
 
-        [Test]
+        [Fact]
         public async Task SendAsync_FullSessionEnvelope_ClientShouldReceive()
         {
             // Arrange            
@@ -139,7 +128,7 @@ namespace Lime.Transport.WebSocket.UnitTests
             actualSession.Metadata.ShouldBe(session.Metadata);
         }
 
-        [Test]
+        [Fact]
         public async Task SendAsync_ConsumedNotification_ClientShouldReceive()
         {
             // Arrange            
@@ -163,7 +152,7 @@ namespace Lime.Transport.WebSocket.UnitTests
             actualNotification.Metadata.ShouldBe(notification.Metadata);
         }
 
-        [Test]
+        [Fact]
         public async Task SendAsync_MultipleParallelNotifications_ClientShouldReceive()
         {
             // Arrange            
@@ -215,7 +204,7 @@ namespace Lime.Transport.WebSocket.UnitTests
         }
 
 
-        [Test]
+        [Fact]
         public async Task ReceiveAsync_NewSessionEnvelope_ServerShouldReceive()
         {
             // Arrange            
@@ -246,7 +235,7 @@ namespace Lime.Transport.WebSocket.UnitTests
             actualSession.Metadata.ShouldBe(session.Metadata);
         }
 
-        [Test]
+        [Fact]
         public async Task ReceiveAsync_FullSessionEnvelope_ServerShouldReceive()
         {
             // Arrange            
@@ -287,7 +276,7 @@ namespace Lime.Transport.WebSocket.UnitTests
             actualSession.Metadata.ShouldBe(session.Metadata);
         }
 
-        [Test]
+        [Fact]
         public async Task CloseAsync_ConnectedTransport_PerformClose()
         {
             // Arrange
@@ -305,12 +294,21 @@ namespace Lime.Transport.WebSocket.UnitTests
             try
             {
                 await target.SendAsync(session, CancellationToken); // Send something to assert is connected
-                Assert.Fail("Send was succeeded but an exception was expected");
+                throw new Exception("Send was succeeded but an exception was expected");
             }
             catch (Exception ex)
             {
                 ex.ShouldBeOfType<InvalidOperationException>();
             }            
+        }
+
+        public void Dispose()
+        {
+            try
+            {
+                Listener.StopAsync(CancellationToken).Wait();
+            }
+            catch (AggregateException) { }
         }
     }
 }

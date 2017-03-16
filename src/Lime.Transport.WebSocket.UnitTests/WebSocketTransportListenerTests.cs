@@ -12,12 +12,23 @@ using Lime.Protocol.UnitTests;
 using Moq;
 using NUnit.Framework;
 using Shouldly;
+using Xunit;
 
 namespace Lime.Transport.WebSocket.UnitTests
 {
-    [TestFixture]
-    public class WebSocketTransportListenerTests
+
+    public class WebSocketTransportListenerTests : IDisposable
     {
+        public WebSocketTransportListenerTests()
+        {
+            ListenerUri = new Uri("ws://localhost:8081");
+            EnvelopeSerializer = new JsonNetSerializer();
+            TraceWriter = new Mock<ITraceWriter>();
+            Target = new WebSocketTransportListener(ListenerUri, SslCertificate, EnvelopeSerializer, TraceWriter.Object);
+
+            CancellationToken = TimeSpan.FromSeconds(5).ToCancellationToken();
+        }
+
         public WebSocketTransportListener Target { get; private set; }
 
         public Uri ListenerUri { get; private set; }
@@ -30,28 +41,7 @@ namespace Lime.Transport.WebSocket.UnitTests
 
         public CancellationToken CancellationToken { get; private set; }
 
-        [SetUp]
-        public void SetUp()
-        {
-            ListenerUri = new Uri("ws://localhost:8081");
-            EnvelopeSerializer = new JsonNetSerializer();
-            TraceWriter = new Mock<ITraceWriter>();
-            Target = new WebSocketTransportListener(ListenerUri, SslCertificate, EnvelopeSerializer, TraceWriter.Object);
-
-            CancellationToken = TimeSpan.FromSeconds(5).ToCancellationToken();
-        }
-
-        [TearDown]
-        public void TearDown()
-        {
-            try
-            {
-                Target.StopAsync(CancellationToken).Wait();
-            }
-            catch (AggregateException) { }
-        }
-
-        [Test]
+        [Fact]
         public void ListenerUris_ValidHostAndPort_GetsRegisteredUris()
         {
             // Act
@@ -63,7 +53,7 @@ namespace Lime.Transport.WebSocket.UnitTests
             listenerUris[0].ShouldBe(ListenerUri);
         }
 
-        [Test]
+        [Fact]
         public async Task StartAsync_ValidHostAndPort_ServerStarted()
         {
             // Act
@@ -75,7 +65,7 @@ namespace Lime.Transport.WebSocket.UnitTests
             await clientTransport.OpenAsync(ListenerUri, CancellationToken);
         }
 
-        [Test]
+        [Fact]
         public async Task AcceptTransportAsync_NewConnection_RetunsTransport()
         {
             // Arrange
@@ -92,7 +82,7 @@ namespace Lime.Transport.WebSocket.UnitTests
             transport.ShouldNotBeNull();
         }
 
-        [Test]
+        [Fact]
         public async Task AcceptTransportAsync_MultipleConnections_RetunsTransports()
         {
             // Arrange
@@ -123,14 +113,14 @@ namespace Lime.Transport.WebSocket.UnitTests
             actualTransports.Count.ShouldBe(clientTransports.Count);
         }
 
-        [Test]
+        [Fact]
         public async Task AcceptTransportAsync_ListenerNotStarted_ThrowsInvalidOperationException()
         {
             // Act
             var transport = await Target.AcceptTransportAsync(CancellationToken).ShouldThrowAsync<InvalidOperationException>();
         }
 
-        [Test]
+        [Fact]
         public async Task StopAsync_ActiveListener_StopsListening()
         {
             // Arrange
@@ -144,7 +134,7 @@ namespace Lime.Transport.WebSocket.UnitTests
             {
                 var clientTransport = new ClientWebSocketTransport(EnvelopeSerializer);
                 await clientTransport.OpenAsync(ListenerUri, CancellationToken);
-                Assert.Fail("The listener is active");
+                throw new Exception("The listener is active");
             }
             catch (WebSocketException ex)
             {
@@ -152,5 +142,13 @@ namespace Lime.Transport.WebSocket.UnitTests
             }
         }
 
+        public void Dispose()
+        {
+            try
+            {
+                Target.StopAsync(CancellationToken).Wait();
+            }
+            catch (AggregateException) { }
+        }
     }
 }
