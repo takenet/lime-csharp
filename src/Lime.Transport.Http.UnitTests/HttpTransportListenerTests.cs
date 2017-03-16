@@ -11,16 +11,83 @@ using Lime.Protocol;
 using Lime.Protocol.Network;
 using Lime.Protocol.UnitTests;
 using Lime.Transport.Http;
-using NUnit.Framework;
 using Moq;
 using Shouldly;
 using TransportEventArgs = Lime.Transport.Http.TransportEventArgs;
+using Xunit;
 
 namespace Lime.Transport.Http.UnitTests
 {
-    [TestFixture]
-    public class HttpTransportListenerTests
+    public class HttpTransportListenerTests : IDisposable
     {
+        public HttpTransportListenerTests()
+        {
+            Host = "localhost";
+            Port = 8080 + Dummy.CreateRandomInt(10000);
+            CancellationToken = TimeSpan.FromSeconds(5).ToCancellationToken();
+            ClientNode = Dummy.CreateNode();
+            User = ClientNode.ToIdentity().ToString();
+            Password = Dummy.CreateRandomString(20);
+            MessagesUrl = "http://" + Host + ":" + Port + "/messages";
+
+            SessionId = EnvelopeId.NewId().ToString();
+            ServerNode = Dummy.CreateNode();
+            SendTimeout = TimeSpan.FromSeconds(5);
+            Reason = Dummy.CreateReason();
+
+            SentMessage = new Message()
+            {
+                Id = EnvelopeId.NewId(),
+                To = Dummy.CreateNode(),
+                Content = Dummy.CreateTextContent()
+            };
+
+            HttpServer = new Mock<IHttpServer>();
+            HttpServerRequestBuffer = new BufferBlock<HttpRequest>();
+
+            var tcs = new TaskCompletionSource<HttpResponse>();
+            HttpServer
+                .Setup(s => s.SubmitResponseAsync(It.IsAny<HttpResponse>()))
+                .Callback((HttpResponse r) => tcs.SetResult(r));
+            HttpServerResponse = tcs.Task;
+
+            HttpServer
+                .Setup(s => s.AcceptRequestAsync(It.IsAny<CancellationToken>()))
+                .Returns((CancellationToken cancellationToken) => HttpServerRequestBuffer.ReceiveAsync(cancellationToken));
+
+            Transport = new Mock<ITransport>();
+            EmulatedTransport = new Mock<ITransportSession>();
+            SessionExpiration = DateTimeOffset.Parse("Mon, 15 Jun 2009 20:45:30 GMT");
+            EmulatedTransport.SetupGet(t => t.Expiration).Returns(() => SessionExpiration);
+            Principal = new Mock<IPrincipal>();
+            HttpTransportProvider = new Mock<IHttpTransportProvider>();
+            HttpTransportProvider
+                .Setup(h => h.GetTransport(Principal.Object, It.IsAny<bool>()))
+                .Returns(() => EmulatedTransport.Object);
+
+            Processor1Methods = new HashSet<string> { "GET" };
+            Processor1Template = new UriTemplate("/" + Dummy.CreateRandomString(10));
+            Processor1 = new Mock<IHttpProcessor>();
+            Processor1.SetupGet(p => p.Methods).Returns(Processor1Methods);
+            Processor1.SetupGet(p => p.Template).Returns(Processor1Template);
+
+            var uri = new Uri("http://" + Host + ":" + Port + Processor1Template);
+            Processor1HttpRequest = new HttpRequest("GET", uri, Principal.Object);
+
+            Processor2Methods = new HashSet<string> { "POST", "DELETE", "GET" };
+            Processor2Template = new UriTemplate("/" + Dummy.CreateRandomString(10) + "/{id}");
+            Processor2 = new Mock<IHttpProcessor>();
+            Processor2.SetupGet(p => p.Methods).Returns(Processor2Methods);
+            Processor2.SetupGet(p => p.Template).Returns(Processor2Template);
+
+            Target = new HttpTransportListener(
+                Port,
+                Host,
+                httpServer: HttpServer.Object,
+                httpTransportProvider: HttpTransportProvider.Object,
+                processors: new[] { Processor1.Object, Processor2.Object });
+        }
+
         #region Public properties
 
         public string Host { get; private set; }
@@ -82,86 +149,7 @@ namespace Lime.Transport.Http.UnitTests
 
         #endregion
 
-        [SetUp]
-        public void Arrange()
-        {
-            Host = "localhost";
-            Port = 8080 + Dummy.CreateRandomInt(10000);
-            CancellationToken = TimeSpan.FromSeconds(5).ToCancellationToken();
-            ClientNode = Dummy.CreateNode();
-            User = ClientNode.ToIdentity().ToString();
-            Password = Dummy.CreateRandomString(20);
-            MessagesUrl = "http://" + Host + ":" + Port + "/messages";
-
-            SessionId = EnvelopeId.NewId().ToString();
-            ServerNode = Dummy.CreateNode();
-            SendTimeout = TimeSpan.FromSeconds(5);
-            Reason = Dummy.CreateReason();
-
-            SentMessage = new Message()
-            {
-                Id = EnvelopeId.NewId(),
-                To = Dummy.CreateNode(),
-                Content = Dummy.CreateTextContent()
-            };
-
-            HttpServer = new Mock<IHttpServer>();
-            HttpServerRequestBuffer = new BufferBlock<HttpRequest>();
-
-            var tcs = new TaskCompletionSource<HttpResponse>();
-            HttpServer
-                .Setup(s => s.SubmitResponseAsync(It.IsAny<HttpResponse>()))
-                .Callback((HttpResponse r) => tcs.SetResult(r));
-            HttpServerResponse = tcs.Task;
-
-            HttpServer
-                .Setup(s => s.AcceptRequestAsync(It.IsAny<CancellationToken>()))
-                .Returns((CancellationToken cancellationToken) => HttpServerRequestBuffer.ReceiveAsync(cancellationToken));
-
-            Transport = new Mock<ITransport>();            
-            EmulatedTransport = new Mock<ITransportSession>();
-            SessionExpiration = DateTimeOffset.Parse("Mon, 15 Jun 2009 20:45:30 GMT");
-            EmulatedTransport.SetupGet(t => t.Expiration).Returns(() => SessionExpiration);
-            Principal = new Mock<IPrincipal>();
-            HttpTransportProvider = new Mock<IHttpTransportProvider>();
-            HttpTransportProvider
-                .Setup(h => h.GetTransport(Principal.Object, It.IsAny<bool>()))
-                .Returns(() => EmulatedTransport.Object);
-
-            Processor1Methods = new HashSet<string> { "GET" };
-            Processor1Template = new UriTemplate("/" + Dummy.CreateRandomString(10));
-            Processor1 = new Mock<IHttpProcessor>();
-            Processor1.SetupGet(p => p.Methods).Returns(Processor1Methods);
-            Processor1.SetupGet(p => p.Template).Returns(Processor1Template);
-
-            var uri = new Uri("http://" + Host + ":" + Port + Processor1Template);
-            Processor1HttpRequest = new HttpRequest("GET", uri, Principal.Object);
-
-            Processor2Methods = new HashSet<string> { "POST", "DELETE", "GET" };
-            Processor2Template = new UriTemplate("/" + Dummy.CreateRandomString(10) + "/{id}");
-            Processor2 = new Mock<IHttpProcessor>();
-            Processor2.SetupGet(p => p.Methods).Returns(Processor2Methods);
-            Processor2.SetupGet(p => p.Template).Returns(Processor2Template);
-
-            Target = new HttpTransportListener(
-                Port,
-                Host,
-                httpServer: HttpServer.Object,
-                httpTransportProvider: HttpTransportProvider.Object,
-                processors: new[] { Processor1.Object, Processor2.Object });
-
-        }
-
-        [TearDown]
-        public void Dispose()
-        {
-            if (Target != null)
-            {
-                Target.Dispose();
-            }
-        }
-
-        [Test]
+        [Fact]
         public void ListenerUris_ValidHostAndPort_GetsRegisteredUris()
         {
             // Act
@@ -174,7 +162,7 @@ namespace Lime.Transport.Http.UnitTests
 
         }
 
-        [Test]
+        [Fact]
         public async Task StartAsync_ValidHostAndPort_ServerStarted()
         {
             // Act            
@@ -184,7 +172,7 @@ namespace Lime.Transport.Http.UnitTests
             HttpServer.Verify(s => s.Start(), Times.Once());
         }
 
-        [Test]
+        [Fact]
         public async Task StartAsync_CallTwice_ThrowsInvalidOperationException()
         {
             // Act
@@ -192,7 +180,7 @@ namespace Lime.Transport.Http.UnitTests
             Should.ThrowAsync<InvalidOperationException>(async () => await Target.StartAsync(CancellationToken));
         }
 
-        [Test]
+        [Fact]
         public async Task AcceptTransportAsync_NewRequest_RetunsTransport()
         {
             // Act
@@ -204,14 +192,14 @@ namespace Lime.Transport.Http.UnitTests
             transport.ShouldBe(Transport.Object);
         }
 
-        [Test]
+        [Fact]
         public async Task AcceptTransportAsync_ListenerNotStarted_ThrowsInvalidOperationException()
         {
             // Act
             var transport = await Target.AcceptTransportAsync(CancellationToken).ShouldThrowAsync<InvalidOperationException>();
         }
 
-        [Test]
+        [Fact]
         public async Task StopAsync_ActiveListener_StopsListening()
         {
             // Act
@@ -223,14 +211,14 @@ namespace Lime.Transport.Http.UnitTests
             HttpServer.Verify(s => s.Stop(), Times.Once());
         }
 
-        [Test]
+        [Fact]
         public async Task StopAsync_ListenerNotStarted_ThrowsInvalidOperationException()
         {
             // Act
             await Target.StopAsync(CancellationToken).ShouldThrowAsync<InvalidOperationException>();
         }
 
-        [Test]
+        [Fact]
         public async Task ProcessAsync_ValidUrlAuthenticatedUser_CallProcessorAndKeepSession()
         {
             // Arrange            
@@ -266,7 +254,7 @@ namespace Lime.Transport.Http.UnitTests
             HttpTransportProvider.Verify(h => h.GetTransport(Principal.Object, true), Times.Once());
         }
 
-        [Test]
+        [Fact]
         public async Task ProcessAsync_InvalidSessionAuthentication_ReturnsUnauthorized()
         {
             // Arrange
@@ -295,7 +283,7 @@ namespace Lime.Transport.Http.UnitTests
             actualResponse.StatusDescription.ShouldBe(session.Reason.Description);
         }
 
-        [Test]
+        [Fact]
         public async Task ProcessAsync_FailedSessionEmptyReason_ReturnsServiceUnavailable()
         {
             // Arrange
@@ -318,7 +306,7 @@ namespace Lime.Transport.Http.UnitTests
             actualResponse.StatusCode.ShouldBe(HttpStatusCode.ServiceUnavailable);
         }
 
-        [Test]
+        [Fact]
         public async Task ProcessAsync_RequestTimedOut_ReturnsTimeout()
         {
             // Arrange
@@ -335,7 +323,7 @@ namespace Lime.Transport.Http.UnitTests
             actualResponse.StatusCode.ShouldBe(HttpStatusCode.RequestTimeout);
         }
 
-        [Test]
+        [Fact]
         public async Task ProcessAsync_InvalidUrl_ReturnsNotFound()
         {
             // Arrange
@@ -353,7 +341,7 @@ namespace Lime.Transport.Http.UnitTests
             actualResponse.StatusCode.ShouldBe(HttpStatusCode.NotFound);
         }
 
-        [Test]
+        [Fact]
         public async Task ProcessAsync_ProcessorRaisesException_ReturnsInternalServerError()
         {
             // Arrange            
@@ -391,7 +379,7 @@ namespace Lime.Transport.Http.UnitTests
             Processor1.Verify();
         }
 
-        [Test]
+        [Fact]
         public async Task ProcessAsync_SessionCloseHeader_FinishTransport()
         {
             // Arrange            
@@ -427,5 +415,12 @@ namespace Lime.Transport.Http.UnitTests
             HttpTransportProvider.Verify(h => h.GetTransport(Principal.Object, false), Times.Once());
         }
 
+        public void Dispose()
+        {
+            if (Target != null)
+            {
+                Target.Dispose();
+            }
+        }
     }
 }
