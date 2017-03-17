@@ -4,7 +4,7 @@
     <Description>C# LIME transport redis library</Description>
     <Copyright>Copyright �  2014 Curupira S/A</Copyright>
     <AssemblyTitle>Lime.Transport.Redis</AssemblyTitle>
-    <VersionPrefix>0.7.4</VersionPrefix>
+    <VersionPrefix></VersionPrefix>
     <Authors>takenet;andrebires</Authors>
     <TargetFramework>net461</TargetFramework>
     <AssemblyName>Lime.Transport.Redis</AssemblyName>

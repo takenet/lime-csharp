@@ -4,7 +4,7 @@
     <Description>C# LIME tcp transport library</Description>
     <Copyright>Copyright ₢ 2014 Curupira S/A</Copyright>
     <AssemblyTitle>Lime.Transport.Tcp</AssemblyTitle>
-    <VersionPrefix>0.7.4</VersionPrefix>
+    <VersionPrefix></VersionPrefix>
     <Authors>takenet;andrebires</Authors>
     <TargetFrameworks>netstandard1.6;net461</TargetFrameworks>
     <AssemblyName>Lime.Transport.Tcp</AssemblyName>

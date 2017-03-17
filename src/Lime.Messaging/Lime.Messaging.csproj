@@ -4,7 +4,7 @@
     <Description>Common content types and resource for LIME messaging applications.</Description>
     <Copyright>Copyright � 2014 Curupira S/A</Copyright>
     <AssemblyTitle>Lime.Messaging</AssemblyTitle>
-    <VersionPrefix>0.7.4</VersionPrefix>
+    <VersionPrefix></VersionPrefix>
     <Authors>takenet;andrebires</Authors>
     <TargetFrameworks>netstandard1.1;net461</TargetFrameworks>
     <AssemblyName>Lime.Messaging</AssemblyName>
