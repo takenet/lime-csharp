@@ -187,6 +187,10 @@ namespace Lime.Protocol
         /// </summary>
         public const int GATEWAY_OPERATION_TIMED_OUT = 86;
         /// <summary>
+        /// The destination on the Gateway end has blocked the originator
+        /// </summary>
+        public const int GATEWAY_UNAUTHORIZED_SENDER = 87;
+        /// <summary>
         /// General application processing error
         /// </summary>
         public const int APPLICATION_ERROR = 101;        
