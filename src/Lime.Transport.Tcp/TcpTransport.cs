@@ -619,8 +619,6 @@ namespace Lime.Transport.Tcp
                     _sendSemaphore.Dispose();
                     _receiveSemaphore.Dispose();
                     _stream?.Dispose();
-                    _clientCertificate?.Dispose();
-                    _serverCertificate?.Dispose();
                 }
 
                 _disposed = true;
