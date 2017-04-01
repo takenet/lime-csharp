@@ -111,8 +111,8 @@ After the transport options negotiation, the server can request client authentic
 
 When the server establishes the session, it assign to the client an unique node identifier, in the format **name@domain/instance** similar to the Jabber ID in the XMPP protocol. This identifier is important for envelope routing in multi-party server connection scenarios. 
 
-####Examples
-#####Client negotiation
+#### Examples
+##### Client negotiation
 
 ```csharp
 // Method 1: Establish the session using a helper method
@@ -175,7 +175,7 @@ if (session.State == SessionState.Established)
 
 ```
 
-#####Server negotiation
+##### Server negotiation
 ```csharp
 // Awaits for the 'new' session envelope from the client
 var receivedSession = await serverChannel.ReceiveNewSessionAsync(CancellationToken.None);
@@ -218,7 +218,7 @@ if (receivedSession.Authentication is PlainAuthentication &&
 
 With an established session the nodes can exchange messages, notifications and commands until the server finishes the session. The ```IChannel``` interface defines methods to send and receive specific envelopes, like the ```SendMessageAsync``` and ```ReceiveMessageAsync``` for messages or ```SendCommandAsync``` and ```ReceiveCommandAsync``` for commands.
 
-####Routing
+#### Routing
 
 The protocol doesn't defines explicitly how envelope routing should work during a session. The only thing defined is that if an originator does not provide the ```to``` property value, it means that the message is addressed to the immediate remote party; in the same way if a node has received an envelope without the ```from``` property value, it must assume that the envelope is originated by the remote party. 
 
