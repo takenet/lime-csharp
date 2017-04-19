@@ -164,7 +164,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             Assert.True(resultString.ContainsJsonProperty(Command.METHOD_KEY, command.Method));
 
             Assert.True(resultString.ContainsJsonProperty(Account.FULL_NAME_KEY, resource.FullName));
-            Assert.True(resultString.ContainsJsonProperty(Account.PHOTO_URI_KEY, resource.PhotoUri));
+            Assert.True(resultString.ContainsJsonProperty(Account.PHOTO_URI_KEY, resource.PhotoUri.OriginalString));
 
             Assert.False(resultString.ContainsJsonKey(Envelope.PP_KEY));
             Assert.False(resultString.ContainsJsonKey(Command.METADATA_KEY));
@@ -842,10 +842,36 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             Assert.True(resultString.ContainsJsonProperty(Envelope.TO_KEY, message.To));
             Assert.True(resultString.ContainsJsonProperty(Message.TYPE_KEY, message.Content.GetMediaType()));
             Assert.True(resultString.ContainsJsonKey(Message.CONTENT_KEY));
-            Assert.True(resultString.ContainsJsonProperty(Link.URI_KEY, Uri.EscapeUriString(uri.ToString())));
+            Assert.True(resultString.ContainsJsonProperty(Link.URI_KEY, uri.OriginalString));
             Assert.True(resultString.ContainsJsonProperty(Link.PREVIEW_TYPE_KEY, webLink.PreviewType));
-            Assert.True(resultString.ContainsJsonProperty(Link.PREVIEW_URI_KEY, webLink.PreviewUri));
+            Assert.True(resultString.ContainsJsonProperty(Link.PREVIEW_URI_KEY, webLink.PreviewUri.OriginalString));
         }
+
+        [Fact]
+        [Trait("Category", "Serialize")]
+        public void Serialize_WebLinkWithEscapedUriMessage_ReturnsValidJsonString()
+        {
+            // Arrange
+            var uri = new Uri("http://fake.domain.com:5678?email=anyone%40gmail.com&address=https%3A%2F%2Fgoogle.com%3Fq%3Dbanana%2520azul");
+            var webLink = Dummy.CreateWebLink(uri);
+            var message = Dummy.CreateMessage(webLink);
+            var target = GetTarget();
+
+            // Act
+            var resultString = target.Serialize(message);
+
+            // Assert
+            Assert.True(resultString.HasValidJsonStackedBrackets());
+            Assert.True(resultString.ContainsJsonProperty(Envelope.ID_KEY, message.Id));
+            Assert.True(resultString.ContainsJsonProperty(Envelope.FROM_KEY, message.From));
+            Assert.True(resultString.ContainsJsonProperty(Envelope.TO_KEY, message.To));
+            Assert.True(resultString.ContainsJsonProperty(Message.TYPE_KEY, message.Content.GetMediaType()));
+            Assert.True(resultString.ContainsJsonKey(Message.CONTENT_KEY));
+            Assert.True(resultString.ContainsJsonProperty(Link.URI_KEY, uri.OriginalString));
+            Assert.True(resultString.ContainsJsonProperty(Link.PREVIEW_TYPE_KEY, webLink.PreviewType));
+            Assert.True(resultString.ContainsJsonProperty(Link.PREVIEW_URI_KEY, webLink.PreviewUri.OriginalString));
+        }
+
 
         [Fact]
         [Trait("Category", "Serialize")]
@@ -1935,13 +1961,32 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             var actualMessage = actual.ShouldBeOfType<Message>();
             var webLink = actualMessage.Content.ShouldBeOfType<WebLink>();
             webLink.Uri.ShouldNotBeNull();
-            webLink.Uri.ToString().ShouldBe("http://e0x0rkuaof.com:9288/");
+            webLink.Uri.OriginalString.ShouldBe("http://e0x0rkuaof.com:9288/");
             webLink.PreviewUri.ShouldNotBeNull();
-            webLink.PreviewUri.ToString().ShouldBe("http://pcmcjxomhd.com:9875/");            
+            webLink.PreviewUri.OriginalString.ShouldBe("http://pcmcjxomhd.com:9875/");            
             webLink.PreviewType.ShouldNotBeNull();
             webLink.PreviewType.ToString().ShouldBe("image/jpeg");
             webLink.Text.ShouldBe("b9s38pra6s7w7b4w1jca6lzf9zp8927ciy4lwdsa3y1gc2ekiw");
 
+        }
+
+        [Fact]
+        [Trait("Category", "Deserialize")]
+        public void Deserialize_WeblinkWithEscapedUriMessage_ReturnsValidInstance()
+        {
+            // Arrange
+            var json =
+                "{\"type\":\"application/vnd.lime.web-link+json\",\"content\":{\"uri\":\"http://fake.domain.com:5678?email=anyone%40gmail.com&address=https%3A%2F%2Fgoogle.com%3Fq%3Dbanana%2520azul\"},\"id\":\"25058656-ea3e-4f2a-9b27-fe14d1470796\",\"from\":\"6fjghzjm@3j9saev4nj.com/gtax0\",\"to\":\"cghusdgu@f0m512bqfb.com/jjjak\"}";
+            var target = GetTarget();
+
+            // Act
+            var actual = target.Deserialize(json);
+
+            // Assert
+            var actualMessage = actual.ShouldBeOfType<Message>();
+            var webLink = actualMessage.Content.ShouldBeOfType<WebLink>();
+            webLink.Uri.ShouldNotBeNull();
+            webLink.Uri.OriginalString.ShouldBe("http://fake.domain.com:5678?email=anyone%40gmail.com&address=https%3A%2F%2Fgoogle.com%3Fq%3Dbanana%2520azul");
         }
 
         #endregion
