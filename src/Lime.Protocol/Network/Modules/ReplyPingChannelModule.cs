@@ -25,8 +25,7 @@ namespace Lime.Protocol.Network.Modules
         public override async Task<Command> OnReceivingAsync(Command envelope, CancellationToken cancellationToken)
         {
             if (!envelope.IsPingRequest()) return envelope;
-
-            if (!envelope.To.Equals(_channel.LocalNode)) return envelope;
+            if (envelope.To != null && !envelope.To.Equals(_channel.LocalNode)) return envelope;
 
             var pingCommandResponse = new Command
             {
