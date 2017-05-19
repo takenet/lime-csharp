@@ -641,7 +641,7 @@ namespace Lime.Protocol.UnitTests.Client
                 .Returns(Task.FromResult<Envelope>(command))
                 .Returns(tcs.Task);
 
-            var target = GetTarget(state: SessionState.Established, autoReplyPings: true);
+            var target = GetTarget(state: SessionState.Established, autoReplyPings: true, localNode: command.To);
             
             await Task.Delay(250);
 
@@ -671,7 +671,7 @@ namespace Lime.Protocol.UnitTests.Client
                 .Returns(Task.FromResult<Envelope>(command))
                 .Returns(tcs.Task);
 
-            var target = GetTarget(state: SessionState.Established, autoReplyPings: true);
+            var target = GetTarget(state: SessionState.Established, autoReplyPings: true, localNode: command.To);
 
             await Task.Delay(250);
 
