@@ -28,20 +28,7 @@ namespace Lime.Transport.Redis.UnitTests
             var redisProcesses = Process.GetProcessesByName("redis-server");
             if (!redisProcesses.Any())
             {
-                var executablePath = Path.Combine(AssemblyDirectory, @"..\..\..\packages\redis-64.3.0.503\tools\redis-server.exe");
-
-                if (!File.Exists(executablePath))
-                {
-                    throw new Exception($"Could not find the Redis executable at '{executablePath}'");
-                }
-
-                var processStartInfo = new ProcessStartInfo()
-                {
-                    FileName = executablePath,
-                    CreateNoWindow = true,
-                    WindowStyle = ProcessWindowStyle.Hidden
-                };
-                RedisProccess = Process.Start(processStartInfo);
+                throw new Exception("Redis is not running");
             }
         }
 

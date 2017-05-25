@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Lime.Protocol.Network
 {
@@ -32,5 +29,10 @@ namespace Lime.Protocol.Network
         /// Gets the command modules for processing sent and received commands.
         /// </summary>
         ICollection<IChannelModule<Command>> CommandModules { get; }
+
+        /// <summary>
+        /// Occurs when the channel consumer task throws an exception.
+        /// </summary>
+        event EventHandler<ExceptionEventArgs> ConsumerException;
     }
 }

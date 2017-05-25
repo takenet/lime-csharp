@@ -204,7 +204,9 @@ namespace Lime.Transport.WebSocket
                 }
                 catch (Exception ex)
                 {
+                    var args = new ExceptionEventArgs(ex);
                     ListenerException.RaiseEvent(this, new ExceptionEventArgs(ex));
+                    await args.WaitForDeferralsAsync();
                 }
             }
         }

@@ -257,6 +257,15 @@ namespace Lime.Protocol.UnitTests.Network
                 .Returns(Task.FromResult<Envelope>(message))
                 .Throws(exception);
             var target = GetTarget(SessionState.Established, 5);
+            Exception actualException = null;
+            target.ConsumerException += (sender, e) =>
+            {
+                using (e.GetDeferral())
+                {
+                    actualException = e.Exception;
+                }
+            };
+
             var cancellationToken = Dummy.CreateCancellationToken();
             
             // Act
@@ -267,6 +276,7 @@ namespace Lime.Protocol.UnitTests.Network
 
             // Assert
             target.ReceiveMessageAsync(cancellationToken).ShouldThrow<ApplicationException>();
+            actualException.ShouldBe(actualException);
         }
 
         [Fact]

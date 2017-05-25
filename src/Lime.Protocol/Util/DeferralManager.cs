@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Lime.Protocol.Util
@@ -18,10 +19,10 @@ namespace Lime.Protocol.Util
             return new Deferral(_count);
         }
 
-        public Task SignalAndWaitAsync()
+        public Task SignalAndWaitAsync(CancellationToken cancellationToken)
         {
             _count.Signal();
-            return _count.WaitAsync();
+            return _count.WaitAsync(cancellationToken);
         }
 
         private sealed class Deferral : IDisposable

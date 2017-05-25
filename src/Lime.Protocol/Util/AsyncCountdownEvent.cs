@@ -56,29 +56,12 @@ namespace Lime.Protocol.Util
         /// <summary>
         /// Asynchronously waits for this event to be set.
         /// </summary>
-        public Task WaitAsync()
+        public async Task WaitAsync(CancellationToken cancellationToken)
         {
-            return _tcs.Task;
-        }
-
-        /// <summary>
-        /// Synchronously waits for this event to be set. This method may block the calling thread.
-        /// </summary>
-        public void Wait()
-        {
-            WaitAsync().Wait();
-        }
-
-        /// <summary>
-        /// Synchronously waits for this event to be set. This method may block the calling thread.
-        /// </summary>
-        /// <param name="cancellationToken">The cancellation token used to cancel the wait. If this token is already canceled, this method will first check whether the event is set.</param>
-        public void Wait(CancellationToken cancellationToken)
-        {
-            var ret = WaitAsync();
-            if (ret.IsCompleted)
-                return;
-            ret.Wait(cancellationToken);
+            using (cancellationToken.Register(() => _tcs.TrySetCanceled()))
+            {
+                await _tcs.Task.ConfigureAwait(false);
+            }
         }
 
         /// <summary>
