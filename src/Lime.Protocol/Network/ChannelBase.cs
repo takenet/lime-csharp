@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Threading.Tasks.Dataflow;
 using Lime.Protocol.Network.Modules;
+using System.Text;
 
 namespace Lime.Protocol.Network
 {
@@ -344,12 +345,35 @@ namespace Lime.Protocol.Network
                         var envelope = await ReceiveFromTransportAsync(_consumerCts.Token).ConfigureAwait(false);
                         if (envelope == null) continue;
 
-                        using (var cts = _consumeTimeout == null ? new CancellationTokenSource() : new CancellationTokenSource(_consumeTimeout.Value))
-                        using (var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cts.Token, _consumerCts.Token))
+                        using (var timeoutCts = _consumeTimeout == null ? new CancellationTokenSource() : new CancellationTokenSource(_consumeTimeout.Value))
+                        using (var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(timeoutCts.Token, _consumerCts.Token))
                         {
-                            if (!await _transportBuffer.SendAsync(envelope, linkedCts.Token))
+                            try
                             {
-                                throw new InvalidOperationException("Transport buffer limit reached");
+                                if (!await _transportBuffer.SendAsync(envelope, linkedCts.Token))
+                                {
+                                    throw new InvalidOperationException("Transport buffer limit reached");
+                                }
+                            }
+                            catch (OperationCanceledException ex) when (timeoutCts.IsCancellationRequested && _consumeTimeout != null)
+                            {
+                                var exceptionMessageBuilder = new StringBuilder($"The transport consumer has timed out after {_consumeTimeout.Value.TotalSeconds} seconds.");
+                                if (_messageBuffer.Count > 0
+                                    || _notificationBuffer.Count > 0
+                                    || _commandBuffer.Count > 0
+                                    || _sessionBuffer.Count > 0)
+                                {
+                                    exceptionMessageBuilder.Append(
+                                        $" The receiver buffer has {_messageBuffer.Count} ({_messageConsumerBlock.InputCount}/{_messageConsumerBlock.OutputCount}) messages,");
+                                    exceptionMessageBuilder.Append(
+                                        $" {_notificationBuffer.Count} ({_notificationConsumerBlock.InputCount}/{_notificationConsumerBlock.OutputCount}) notifications,");
+                                    exceptionMessageBuilder.Append(
+                                        $" {_commandBuffer.Count} ({_commandConsumerBlock.InputCount}/{_commandConsumerBlock.OutputCount}) commands,");
+                                    exceptionMessageBuilder.Append(
+                                        $" and {_sessionBuffer.Count} sessions and it may be the cause of the problem. Please ensure that the channel receive methods are being called.");
+                                }
+
+                                throw new TimeoutException(exceptionMessageBuilder.ToString(), ex);
                             }
                         }
                     }

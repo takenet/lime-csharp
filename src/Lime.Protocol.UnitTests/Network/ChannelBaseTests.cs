@@ -30,7 +30,7 @@ namespace Lime.Protocol.UnitTests.Network
             _sendTimeout = TimeSpan.FromSeconds(30);
         }
 
-        public ChannelBase GetTarget(SessionState state, int buffersLimit = 5, bool fillEnvelopeRecipients = false, Node remoteNode = null, Node localNode = null, bool autoReplyPings = false, TimeSpan? remotePingInterval = null, TimeSpan? remoteIdleTimeout = null)
+        public ChannelBase GetTarget(SessionState state, int buffersLimit = 5, bool fillEnvelopeRecipients = false, Node remoteNode = null, Node localNode = null, bool autoReplyPings = false, TimeSpan? remotePingInterval = null, TimeSpan? remoteIdleTimeout = null, TimeSpan? consumeTimeout = null)
         {
             return new TestChannel(
                 state,
@@ -42,7 +42,8 @@ namespace Lime.Protocol.UnitTests.Network
                 localNode,
                 autoReplyPings,
                 remotePingInterval,
-                remoteIdleTimeout
+                remoteIdleTimeout,
+                consumeTimeout: consumeTimeout
                 );
         }
 
@@ -461,6 +462,39 @@ namespace Lime.Protocol.UnitTests.Network
             {
                 mock.Verify(m => m.OnReceivingAsync(message, It.IsAny<CancellationToken>()), Times.Once());
             }
+        }
+
+
+        [Fact]
+        [Trait("Category", "ReceiveMessageAsync")]
+        public async Task ReceiveMessageAsync_ChannelNotBeingConsumer_ThrowsTimeoutException()
+        {
+            // Arrange
+            var content = Dummy.CreateTextContent();
+            var message = Dummy.CreateMessage(content);
+
+            var cancellationToken = Dummy.CreateCancellationToken();
+            var tcs = new TaskCompletionSource<Envelope>();
+            _transport
+                .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(Task.FromResult<Envelope>(message));
+
+            var target = (TestChannel)GetTarget(SessionState.Established, buffersLimit: 1, consumeTimeout: TimeSpan.FromSeconds(1));
+
+            // Act
+            Exception exception = null;
+            target.ConsumerException += (sender, e) =>
+            {
+                exception = e.Exception;
+            };
+            target.SetState(SessionState.Established);
+
+            await Task.Delay(TimeSpan.FromSeconds(2));
+
+            // Assert
+            exception.ShouldNotBeNull();
+            var timeoutException = exception.ShouldBeOfType<TimeoutException>();
+            timeoutException.Message.ShouldBe("The transport consumer has timed out after 1 seconds. The receiver buffer has 1 (0/1) messages, 0 (0/0) notifications, 0 (0/0) commands, and 0 sessions and it may be the cause of the problem. Please ensure that the channel receive methods are being called.");
         }
 
         #endregion
@@ -1663,8 +1697,8 @@ namespace Lime.Protocol.UnitTests.Network
 
         private class TestChannel : ChannelBase
         {
-            public TestChannel(SessionState state, ITransport transport, TimeSpan sendTimeout, int envelopeBufferSize, bool fillEnvelopeRecipients, Node remoteNode = null, Node localNode = null, bool autoReplyPings = false, TimeSpan? remotePingInterval = null, TimeSpan? remoteIdleTimeout = null, int resendMessageTryCount = 0, TimeSpan? resendMessageInterval = null)
-                : base(transport, sendTimeout, sendTimeout, sendTimeout, envelopeBufferSize, fillEnvelopeRecipients, autoReplyPings, remotePingInterval, remoteIdleTimeout, null)
+            public TestChannel(SessionState state, ITransport transport, TimeSpan sendTimeout, int envelopeBufferSize, bool fillEnvelopeRecipients, Node remoteNode = null, Node localNode = null, bool autoReplyPings = false, TimeSpan? remotePingInterval = null, TimeSpan? remoteIdleTimeout = null, int resendMessageTryCount = 0, TimeSpan? resendMessageInterval = null, TimeSpan? consumeTimeout = null)
+                : base(transport, sendTimeout, consumeTimeout ?? sendTimeout, sendTimeout, envelopeBufferSize, fillEnvelopeRecipients, autoReplyPings, remotePingInterval, remoteIdleTimeout, null)
             {                
                 RemoteNode = remoteNode;
                 LocalNode = localNode;
