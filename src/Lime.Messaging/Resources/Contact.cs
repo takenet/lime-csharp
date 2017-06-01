@@ -19,6 +19,7 @@ namespace Lime.Messaging.Resources
         public const string SHARE_PRESENCE_KEY = "sharePresence";
         public const string SHARE_ACCOUNT_INFO_KEY = "shareAccountInfo";
         public const string PRIORITY_KEY = "priority";
+        public const string GROUP_KEY = "group";
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Contact"/> class.
@@ -74,6 +75,12 @@ namespace Lime.Messaging.Resources
         /// </value>
         [DataMember(Name = PRIORITY_KEY, EmitDefaultValue = false)]
         public int? Priority { get; set; }
+
+        /// <summary>
+        /// Indicate the contact group.
+        /// </summary>
+        [DataMember(Name = GROUP_KEY, EmitDefaultValue = false)]
+        public string Group { get; set; }
 
         [IgnoreDataMember]
         string IIdentity.Name => Identity?.Name;
