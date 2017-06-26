@@ -148,7 +148,8 @@ namespace Lime.Protocol.Network
             _insideQuotes = false;
             _isEscaping = false;
 
-            if (_buffer.Length > _bufferSize)
+            if (_buffer.Length > _bufferSize
+                && _bufferCurPos < _bufferSize)
             {
                 var currentBuffer = _buffer;
                 var decreasedBuffer = _arrayPool.Rent(_bufferSize);
