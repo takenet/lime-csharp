@@ -70,7 +70,7 @@ namespace Lime.Transport.Tcp.UnitTests
 
         #region Private methods
 
-        private TcpTransport GetTarget(X509Certificate2 certificate = null, int bufferSize = TcpTransport.DEFAULT_BUFFER_SIZE)
+        private TcpTransport GetTarget(X509Certificate2 certificate = null, int bufferSize = TcpTransport.DEFAULT_BUFFER_SIZE, int maxBufferSize = 0)
         {
             return new TcpTransport(
                 _tcpClient.Object,
@@ -78,9 +78,10 @@ namespace Lime.Transport.Tcp.UnitTests
                 _serverUri.ToString(),
                 certificate,
                 bufferSize,
+                maxBufferSize,
                 _traceWriter.Object);
         }
-        private async Task<TcpTransport> GetAndOpenTargetAsync(int bufferSize = TcpTransport.DEFAULT_BUFFER_SIZE, Stream stream = null)
+        private async Task<TcpTransport> GetAndOpenTargetAsync(int bufferSize = TcpTransport.DEFAULT_BUFFER_SIZE, Stream stream = null, int maxBufferSize = 0)
         {
             if (stream == null)
             {
@@ -101,7 +102,7 @@ namespace Lime.Transport.Tcp.UnitTests
                 .Setup(s => s.GetStream())
                 .Returns(stream);
 
-            var target = GetTarget(bufferSize: bufferSize);
+            var target = GetTarget(bufferSize: bufferSize, maxBufferSize: maxBufferSize);
 
             await target.OpenAsync(uri, cancellationToken);
             return target;
@@ -570,7 +571,7 @@ namespace Lime.Transport.Tcp.UnitTests
             var messageJson = Dummy.CreateMessageJson();
             var cancelationToken = Dummy.CreateCancellationToken();
             byte[] messageBuffer = Encoding.UTF8.GetBytes(messageJson);
-            int bufferSize = messageBuffer.Length - 1;
+            int bufferSize = messageBuffer.Length / 2;
             var stream = new TestStream(messageBuffer);
             var target = await GetAndOpenTargetAsync(bufferSize, stream);
 
@@ -607,7 +608,7 @@ namespace Lime.Transport.Tcp.UnitTests
             var cancelationToken = Dummy.CreateCancellationToken();
             byte[] messageBuffer = Encoding.UTF8.GetBytes(messageJson);
             var messageBufferParts = SplitBuffer(messageBuffer);
-            int bufferSize = messageBuffer.Length - 1;
+            int bufferSize = messageBuffer.Length / 2;
             var stream = new TestStream(messageBufferParts);
             var target = await GetAndOpenTargetAsync(bufferSize, stream);
 
@@ -623,9 +624,40 @@ namespace Lime.Transport.Tcp.UnitTests
             }
             catch (Exception ex)
             {
-                Assert.True(ex is BufferOverflowException);
-                Assert.True(stream.CloseInvoked);
+                ex.ShouldBeOfType<BufferOverflowException>();
+                stream.CloseInvoked.ShouldBe(true);
             }            
+        }
+
+        [Fact]
+        [Trait("Category", "ReceiveAsync")]
+        public async Task ReceiveAsync_MultipleReadsBiggerThenBuffer_IncreasesBuffer()
+        {
+            var content = Dummy.CreateTextContent();
+            var message = Dummy.CreateMessage(content);
+            var messageJson = Dummy.CreateMessageJson();
+            var cancelationToken = Dummy.CreateCancellationToken();
+            byte[] messageBuffer = Encoding.UTF8.GetBytes(messageJson);
+            var messageBufferParts = SplitBuffer(messageBuffer);
+            int bufferSize = messageBuffer.Length / 2;
+            var stream = new TestStream(messageBufferParts);
+            var target = await GetAndOpenTargetAsync(bufferSize, stream);
+
+            _envelopeSerializer
+                .Setup(e => e.Deserialize(messageJson))
+                .Returns(message)
+                .Verifiable();
+
+            try
+            {
+                var actual = await target.ReceiveAsync(cancelationToken);
+                throw new Exception("The expected exception didn't occurred");
+            }
+            catch (Exception ex)
+            {
+                ex.ShouldBeOfType<BufferOverflowException>();
+                stream.CloseInvoked.ShouldBe(true);
+            }
         }
 
 

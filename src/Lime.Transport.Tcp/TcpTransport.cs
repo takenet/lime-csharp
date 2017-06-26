@@ -16,6 +16,7 @@ using Lime.Protocol.Network;
 using Lime.Protocol.Security;
 using Lime.Protocol.Serialization;
 using Lime.Protocol.Serialization.Newtonsoft;
+using System.Buffers;
 
 namespace Lime.Transport.Tcp
 {
@@ -24,7 +25,8 @@ namespace Lime.Transport.Tcp
     /// </summary>
     public class TcpTransport : TransportBase, ITransport, IAuthenticatableTransport, IDisposable
     {
-        public const int DEFAULT_BUFFER_SIZE = 8192 * 8;
+        public const int DEFAULT_BUFFER_SIZE = 8192;
+        public const int DEFAULT_MAX_BUFFER_SIZE = DEFAULT_BUFFER_SIZE * 1024;
 
         public static readonly string UriSchemeNetTcp = "net.tcp";
         public static readonly TimeSpan ReadTimeout = TimeSpan.FromSeconds(5);
@@ -60,7 +62,27 @@ namespace Lime.Transport.Tcp
             ITraceWriter traceWriter = null,
             RemoteCertificateValidationCallback serverCertificateValidationCallback = null,
             bool ignoreDeserializationErrors = false)
-            : this(new JsonNetSerializer(), clientCertificate, bufferSize, traceWriter, serverCertificateValidationCallback, ignoreDeserializationErrors)
+            : this(new JsonNetSerializer(), clientCertificate, bufferSize, DEFAULT_MAX_BUFFER_SIZE, traceWriter, serverCertificateValidationCallback, ignoreDeserializationErrors)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="TcpTransport"/> class.
+        /// </summary>
+        /// <param name="clientCertificate"></param>
+        /// <param name="bufferSize">Size of the buffer.</param>
+        /// <param name="maxBufferSize">Max size of the buffer for increasing.</param>
+        /// <param name="traceWriter">The trace writer.</param>
+        /// <param name="serverCertificateValidationCallback">A callback to validate the server certificate in the TLS authentication process.</param>
+        /// <param name="ignoreDeserializationErrors">if set to <c>true</c> the deserialization on received envelopes will be ignored; otherwise, any deserialization error will be throw to the caller.</param>
+        public TcpTransport(
+            X509Certificate2 clientCertificate = null,
+            int bufferSize = DEFAULT_BUFFER_SIZE,
+            int maxBufferSize = DEFAULT_MAX_BUFFER_SIZE,
+            ITraceWriter traceWriter = null,
+            RemoteCertificateValidationCallback serverCertificateValidationCallback = null,
+            bool ignoreDeserializationErrors = false)
+            : this(new JsonNetSerializer(), clientCertificate, bufferSize, maxBufferSize, traceWriter, serverCertificateValidationCallback, ignoreDeserializationErrors)
         {
         }
 
@@ -70,6 +92,7 @@ namespace Lime.Transport.Tcp
         /// <param name="envelopeSerializer">The envelope serializer.</param>
         /// <param name="clientCertificate">The client certificate.</param>
         /// <param name="bufferSize">Size of the buffer.</param>
+        /// <param name="maxBufferSize">Max size of the buffer for increasing.</param>
         /// <param name="traceWriter">The trace writer.</param>
         /// <param name="serverCertificateValidationCallback">A callback to validate the server certificate in the TLS authentication process.</param>
         /// <param name="ignoreDeserializationErrors">if set to <c>true</c> the deserialization on received envelopes will be ignored; otherwise, any deserialization error will be throw to the caller.</param>
@@ -77,10 +100,11 @@ namespace Lime.Transport.Tcp
             IEnvelopeSerializer envelopeSerializer,
             X509Certificate2 clientCertificate = null,
             int bufferSize = DEFAULT_BUFFER_SIZE,
+            int maxBufferSize = DEFAULT_MAX_BUFFER_SIZE,
             ITraceWriter traceWriter = null,
             RemoteCertificateValidationCallback serverCertificateValidationCallback = null,
             bool ignoreDeserializationErrors = false)
-            : this(new TcpClientAdapter(new TcpClient()), envelopeSerializer, null, clientCertificate, null, bufferSize, traceWriter, serverCertificateValidationCallback, null, ignoreDeserializationErrors)
+            : this(new TcpClientAdapter(new TcpClient()), envelopeSerializer, null, clientCertificate, null, bufferSize, maxBufferSize, null, traceWriter, serverCertificateValidationCallback, null, ignoreDeserializationErrors)
         {
         }
 
@@ -92,6 +116,7 @@ namespace Lime.Transport.Tcp
         /// <param name="hostName">Name of the host.</param>
         /// <param name="clientCertificate">The client certificate.</param>
         /// <param name="bufferSize">Size of the buffer.</param>
+        /// <param name="maxBufferSize">Max size of the buffer for increasing.</param>
         /// <param name="traceWriter">The trace writer.</param>
         /// <param name="serverCertificateValidationCallback">A callback to validate the server certificate in the TLS authentication process.</param>
         /// <param name="ignoreDeserializationErrors">if set to <c>true</c> the deserialization on received envelopes will be ignored; otherwise, any deserialization error will be throw to the caller.</param>
@@ -101,10 +126,11 @@ namespace Lime.Transport.Tcp
             string hostName,
             X509Certificate2 clientCertificate = null,
             int bufferSize = DEFAULT_BUFFER_SIZE,
+            int maxBufferSize = DEFAULT_MAX_BUFFER_SIZE,
             ITraceWriter traceWriter = null,
             RemoteCertificateValidationCallback serverCertificateValidationCallback = null,
             bool ignoreDeserializationErrors = false)
-            : this(tcpClient, envelopeSerializer, null, clientCertificate, hostName, bufferSize, traceWriter, serverCertificateValidationCallback, null, ignoreDeserializationErrors)
+            : this(tcpClient, envelopeSerializer, null, clientCertificate, hostName, bufferSize, maxBufferSize, null, traceWriter, serverCertificateValidationCallback, null, ignoreDeserializationErrors)
 
         {
         }
@@ -117,6 +143,8 @@ namespace Lime.Transport.Tcp
         /// <param name="envelopeSerializer">The envelope serializer.</param>
         /// <param name="serverCertificate">The server certificate.</param>
         /// <param name="bufferSize">Size of the buffer.</param>
+        /// <param name="maxBufferSize">Max size of the buffer for increasing.</param>
+        /// <param name="arrayPool">The array pool instance, to allow reusing the created buffers.</param>
         /// <param name="traceWriter">The trace writer.</param>
         /// <param name="clientCertificateValidationCallback">A callback to validate the client certificate in the TLS authentication process.</param>
         /// <param name="ignoreDeserializationErrors">if set to <c>true</c> the deserialization on received envelopes will be ignored; otherwise, any deserialization error will be throw to the caller.</param>
@@ -125,10 +153,12 @@ namespace Lime.Transport.Tcp
             IEnvelopeSerializer envelopeSerializer,
             X509Certificate2 serverCertificate,
             int bufferSize = DEFAULT_BUFFER_SIZE,
+            int maxBufferSize = DEFAULT_MAX_BUFFER_SIZE,
+            ArrayPool<byte> arrayPool = null,
             ITraceWriter traceWriter = null,
             RemoteCertificateValidationCallback clientCertificateValidationCallback = null,
             bool ignoreDeserializationErrors = false)
-            : this(tcpClient, envelopeSerializer, serverCertificate, null, null, bufferSize, traceWriter, null, clientCertificateValidationCallback, ignoreDeserializationErrors)
+            : this(tcpClient, envelopeSerializer, serverCertificate, null, null, bufferSize, maxBufferSize, arrayPool, traceWriter, null, clientCertificateValidationCallback, ignoreDeserializationErrors)
         {
         }
 
@@ -141,6 +171,8 @@ namespace Lime.Transport.Tcp
         /// <param name="clientCertificate">The client certificate.</param>
         /// <param name="hostName">Name of the host.</param>
         /// <param name="bufferSize">Size of the buffer.</param>
+        /// <param name="maxBufferSize">Max size of the buffer.</param>
+        /// <param name="arrayPool">The array pool instance, to allow reusing the created buffers.</param>
         /// <param name="traceWriter">The trace writer.</param>
         /// <param name="serverCertificateValidationCallback">The server certificate validation callback.</param>
         /// <param name="clientCertificateValidationCallback">The client certificate validation callback.</param>
@@ -157,26 +189,26 @@ namespace Lime.Transport.Tcp
             X509Certificate2 clientCertificate,
             string hostName,
             int bufferSize,
+            int maxBufferSize,
+            ArrayPool<byte> arrayPool,
             ITraceWriter traceWriter,
             RemoteCertificateValidationCallback serverCertificateValidationCallback,
             RemoteCertificateValidationCallback clientCertificateValidationCallback,
             bool ignoreDeserializationErrors)
         {
-            if (tcpClient == null) throw new ArgumentNullException(nameof(tcpClient));
-            if (envelopeSerializer == null) throw new ArgumentNullException(nameof(envelopeSerializer));
-
-            _tcpClient = tcpClient;
-            _jsonBuffer = new JsonBuffer(bufferSize);
-            _envelopeSerializer = envelopeSerializer;
-            _hostName = hostName;
-            _traceWriter = traceWriter;
-            _ignoreDeserializationErrors = ignoreDeserializationErrors;
-            _receiveSemaphore = new SemaphoreSlim(1);
-            _sendSemaphore = new SemaphoreSlim(1);
+            _tcpClient = tcpClient ?? throw new ArgumentNullException(nameof(tcpClient));
+            _envelopeSerializer = envelopeSerializer ?? throw new ArgumentNullException(nameof(envelopeSerializer));
             _serverCertificate = serverCertificate;
             _clientCertificate = clientCertificate;
+            _hostName = hostName;
+            _traceWriter = traceWriter;
             _serverCertificateValidationCallback = serverCertificateValidationCallback ?? ValidateServerCertificate;
             _clientCertificateValidationCallback = clientCertificateValidationCallback ?? ValidateClientCertificate;
+            _ignoreDeserializationErrors = ignoreDeserializationErrors;
+
+            _jsonBuffer = new JsonBuffer(bufferSize, maxBufferSize, arrayPool);
+            _receiveSemaphore = new SemaphoreSlim(1);
+            _sendSemaphore = new SemaphoreSlim(1);
         }
 
         /// <summary>
@@ -190,7 +222,7 @@ namespace Lime.Transport.Tcp
         {
             if (envelope == null) throw new ArgumentNullException(nameof(envelope));
             if (_stream == null) throw new InvalidOperationException("The stream was not initialized. Call OpenAsync first.");
-            if (!_stream.CanWrite) throw new InvalidOperationException("Invalid stream state");            
+            if (!_stream.CanWrite) throw new InvalidOperationException("Invalid stream state");
 
             var envelopeJson = _envelopeSerializer.Serialize(envelope);
             await TraceAsync(envelopeJson, DataOperation.Send).ConfigureAwait(false);
@@ -200,7 +232,7 @@ namespace Lime.Transport.Tcp
 
             try
             {
-                await _stream.WriteAsync(jsonBytes, 0, jsonBytes.Length, cancellationToken).ConfigureAwait(false);                
+                await _stream.WriteAsync(jsonBytes, 0, jsonBytes.Length, cancellationToken).ConfigureAwait(false);
             }
             catch (IOException)
             {
@@ -278,15 +310,18 @@ namespace Lime.Transport.Tcp
 
                         if (_jsonBuffer.BufferCurPos > _jsonBuffer.Buffer.Length)
                         {
-                            await CloseWithTimeoutAsync().ConfigureAwait(false);
-                            await TraceAsync($"{nameof(RemoteEndPoint)}: {RemoteEndPoint} - BufferOverflow: {Encoding.UTF8.GetString(_jsonBuffer.Buffer)}", DataOperation.Error).ConfigureAwait(false);
-
-                            throw new BufferOverflowException("Maximum buffer size reached");
+                            _jsonBuffer.IncreaseBuffer();
                         }
                     }
                 }
 
                 return envelope;
+            }
+            catch (BufferOverflowException)
+            {
+                await CloseWithTimeoutAsync().ConfigureAwait(false);
+                await TraceAsync($"{nameof(RemoteEndPoint)}: {RemoteEndPoint} - BufferOverflow: {Encoding.UTF8.GetString(_jsonBuffer.Buffer)}", DataOperation.Error).ConfigureAwait(false);
+                throw;
             }
             finally
             {
@@ -620,6 +655,7 @@ namespace Lime.Transport.Tcp
                     _sendSemaphore.Dispose();
                     _receiveSemaphore.Dispose();
                     _stream?.Dispose();
+                    _jsonBuffer.Dispose();
                 }
 
                 _disposed = true;

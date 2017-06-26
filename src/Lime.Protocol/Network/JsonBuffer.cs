@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 using System.Text;
 
 namespace Lime.Protocol.Network
@@ -6,9 +7,13 @@ namespace Lime.Protocol.Network
     /// <summary>
     /// Provides a buffer with a method for JSON extraction.
     /// </summary>
-    public sealed class JsonBuffer
+    public sealed class JsonBuffer : IDisposable
     {
-        private readonly byte[] _buffer;
+        private readonly int _bufferSize;
+        private readonly int _maxBufferSize;
+        private readonly ArrayPool<byte> _arrayPool;
+
+        private byte[] _buffer;
         private int _bufferCurPos;
         private int _jsonStartPos;
         private int _jsonCurPos;
@@ -16,10 +21,19 @@ namespace Lime.Protocol.Network
         private bool _jsonStarted;
         private bool _insideQuotes;
         private bool _isEscaping;
-
-        public JsonBuffer(int bufferSize)
+        
+        /// <summary>
+        /// Creates a new instance of <see cref="JsonBuffer"/> class.
+        /// </summary>
+        /// <param name="bufferSize">The default buffer size.</param>
+        /// <param name="maxBufferSize">The max buffer size for increasing.</param>
+        /// <param name="arrayPool">The array pool for getting buffer instances.</param>
+        public JsonBuffer(int bufferSize, int maxBufferSize = 0, ArrayPool<byte> arrayPool = null)
         {
-            _buffer = new byte[bufferSize];
+            _bufferSize = bufferSize;
+            _maxBufferSize = maxBufferSize;
+            _arrayPool = arrayPool ?? ArrayPool<byte>.Shared;
+            _buffer = _arrayPool.Rent(bufferSize);
         }
 
         public byte[] Buffer => _buffer;
@@ -99,11 +113,8 @@ namespace Lime.Protocol.Network
                 _bufferCurPos -= (jsonLenght + _jsonStartPos);
                 System.Buffer.BlockCopy(_buffer, jsonLenght + _jsonStartPos, _buffer, 0, _bufferCurPos);
 
-                _jsonCurPos = 0;
-                _jsonStartPos = 0;
-                _jsonStarted = false;
-                _insideQuotes = false;
-                _isEscaping = false;
+                Reset();
+
 
                 return true;
             }
@@ -111,9 +122,50 @@ namespace Lime.Protocol.Network
             return false;
         }
 
+        /// <summary>
+        /// Increases the receiver buffer, if allowed.
+        /// </summary>
+        public void IncreaseBuffer()
+        {
+            if (_maxBufferSize == 0 
+                || _buffer.Length + _bufferSize > _maxBufferSize)
+            {
+                throw new BufferOverflowException("Maximum buffer size reached");
+            }
+
+            var currentBuffer = _buffer;
+            var increasedBuffer = _arrayPool.Rent(_buffer.Length + _bufferSize);
+            System.Buffer.BlockCopy(currentBuffer, 0, increasedBuffer, 0, currentBuffer.Length);
+            _buffer = increasedBuffer;
+            _arrayPool.Return(currentBuffer);
+        }
+
+        private void Reset()
+        {
+            _jsonCurPos = 0;
+            _jsonStartPos = 0;
+            _jsonStarted = false;
+            _insideQuotes = false;
+            _isEscaping = false;
+
+            if (_buffer.Length > _bufferSize)
+            {
+                var currentBuffer = _buffer;
+                var decreasedBuffer = _arrayPool.Rent(_bufferSize);
+                System.Buffer.BlockCopy(currentBuffer, 0, decreasedBuffer, 0, _bufferSize);
+                _buffer = decreasedBuffer;
+                _arrayPool.Return(currentBuffer);
+            }
+        }
+
         public override string ToString()
         {
             return Encoding.UTF8.GetString(_buffer, 0, _buffer.Length);
+        }
+
+        public void Dispose()
+        {
+            _arrayPool.Return(_buffer);
         }
     }
 }
