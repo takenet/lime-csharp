@@ -308,7 +308,7 @@ namespace Lime.Transport.Tcp
 
                         _jsonBuffer.BufferCurPos += read;
 
-                        if (_jsonBuffer.BufferCurPos > _jsonBuffer.Buffer.Length)
+                        if (_jsonBuffer.BufferCurPos >= _jsonBuffer.Buffer.Length)
                         {
                             _jsonBuffer.IncreaseBuffer();
                         }
@@ -319,8 +319,8 @@ namespace Lime.Transport.Tcp
             }
             catch (BufferOverflowException)
             {
-                await CloseWithTimeoutAsync().ConfigureAwait(false);
                 await TraceAsync($"{nameof(RemoteEndPoint)}: {RemoteEndPoint} - BufferOverflow: {Encoding.UTF8.GetString(_jsonBuffer.Buffer)}", DataOperation.Error).ConfigureAwait(false);
+                await CloseWithTimeoutAsync().ConfigureAwait(false);
                 throw;
             }
             finally

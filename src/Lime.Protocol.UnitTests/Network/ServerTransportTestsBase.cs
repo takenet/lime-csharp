@@ -60,7 +60,7 @@ namespace Lime.Protocol.Network.UnitTests
 
         public Mock<ITraceWriter> TraceWriter { get; private set; }
 
-        public CancellationToken CancellationToken { get; private set; }
+        public CancellationToken CancellationToken { get; set; }
 
         public TClientTransport Client { get; set; }
 
