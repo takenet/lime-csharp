@@ -245,6 +245,7 @@ namespace Lime.Transport.Tcp
                                 _jsonBuffer.BufferCurPos,
                                 _jsonBuffer.Buffer.Length - _jsonBuffer.BufferCurPos,
                                 cancellationToken);
+                        
 
                         while (!readTask.IsCompleted && CanRead)
                         {

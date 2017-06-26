@@ -93,11 +93,11 @@ namespace Lime.Protocol.Network
             if (jsonLenght > 1)
             {
                 json = new byte[jsonLenght];
-                Array.Copy(_buffer, _jsonStartPos, json, 0, jsonLenght);
+                System.Buffer.BlockCopy(_buffer, _jsonStartPos, json, 0, jsonLenght);
 
                 // Shifts the buffer to the left
                 _bufferCurPos -= (jsonLenght + _jsonStartPos);
-                Array.Copy(_buffer, jsonLenght + _jsonStartPos, _buffer, 0, _bufferCurPos);
+                System.Buffer.BlockCopy(_buffer, jsonLenght + _jsonStartPos, _buffer, 0, _bufferCurPos);
 
                 _jsonCurPos = 0;
                 _jsonStartPos = 0;
