@@ -17,7 +17,7 @@ namespace Lime.Transport.Tcp.UnitTests
     public class ServerTcpTransportTests : ServerTransportTestsBase<TcpTransport, TcpTransport, TcpTransportListener>
     {
         public ServerTcpTransportTests()
-            : base(new Uri("net.tcp://localhost:55321"))
+            : base(new Uri("net.tcp://localhost:55322"))
         {
         }
 
