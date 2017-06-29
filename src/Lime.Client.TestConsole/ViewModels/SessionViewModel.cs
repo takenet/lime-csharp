@@ -871,7 +871,7 @@ namespace Lime.Client.TestConsole.ViewModels
 
         private void LoadVariables()
         {
-            foreach (var lineValues in FileUtil.GetFileLines(VARIABLES_FILE_NAME, VARIABLES_FILE_SEPARATOR, true))
+            foreach (var lineValues in FileUtil.GetFileLines(VARIABLES_FILE_NAME, VARIABLES_FILE_SEPARATOR))
             {
                 if (lineValues.Length >= 2)
                 {
@@ -889,7 +889,7 @@ namespace Lime.Client.TestConsole.ViewModels
         private void SaveVariables()
         {
             var lineValues = Variables.Select(v => new [] {v.Name, v.Value}).ToArray();
-            FileUtil.SaveFile(lineValues, VARIABLES_FILE_NAME, VARIABLES_FILE_SEPARATOR, true);            
+            FileUtil.SaveFile(lineValues, VARIABLES_FILE_NAME, VARIABLES_FILE_SEPARATOR);
 
         }
 
@@ -929,7 +929,7 @@ namespace Lime.Client.TestConsole.ViewModels
                 Macros.Add(macroViewModel);
             }
 
-            foreach (var lineValues in FileUtil.GetFileLines(MACROS_FILE_NAME, MACROS_FILE_SEPARATOR, true))
+            foreach (var lineValues in FileUtil.GetFileLines(MACROS_FILE_NAME, MACROS_FILE_SEPARATOR))
             {
                 if (lineValues.Length >= 2)
                 {
@@ -945,7 +945,7 @@ namespace Lime.Client.TestConsole.ViewModels
         private void SaveMacros()
         {
             var lineValues = Macros.Select(m => new[] { m.Name, m.IsActive.ToString() }).ToArray();
-            FileUtil.SaveFile(lineValues, MACROS_FILE_NAME, MACROS_FILE_SEPARATOR, true);
+            FileUtil.SaveFile(lineValues, MACROS_FILE_NAME, MACROS_FILE_SEPARATOR);
         }
 
         private async Task ReceiveEnvelopeAsync(Envelope envelope, Dispatcher dispatcher)

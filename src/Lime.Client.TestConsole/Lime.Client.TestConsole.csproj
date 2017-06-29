@@ -304,14 +304,10 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Templates.txt">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
+    <Content Include="Templates.txt" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Variables.txt">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
+    <Content Include="Variables.txt" />
   </ItemGroup>
   <ItemGroup>
     <Resource Include="lime.ico" />

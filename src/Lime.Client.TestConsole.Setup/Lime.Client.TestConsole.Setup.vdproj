@@ -555,6 +555,12 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_CE62CD9DE02340619CB59CB3735AC89D"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_D0D77D88942929CDC026DA48755533DF"
         "OwnerKey" = "8:_8CA1DA4091D34CC1995E588C231179B4"
         "MsmSig" = "8:_UNDEFINED"
@@ -563,6 +569,12 @@
         {
         "MsmKey" = "8:_D64AC207E416FD95422FF6118089B40F"
         "OwnerKey" = "8:_8CA1DA4091D34CC1995E588C231179B4"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_D789B4EF711F445E8F7411AF80560267"
+        "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -695,12 +707,6 @@
         {
         "MsmKey" = "8:_FC5758B85F215966E1E40E4A1AD18B38"
         "OwnerKey" = "8:_8CA1DA4091D34CC1995E588C231179B4"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_DC2DA9721933CCBA3566EB01BEED3CC9"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -1201,6 +1207,12 @@
         "OwnerKey" = "8:_0A217E03626932C8BCC1B2CA5FA1EA23"
         "MsmSig" = "8:_UNDEFINED"
         }
+        "Entry"
+        {
+        "MsmKey" = "8:_UNDEFINED"
+        "OwnerKey" = "8:_DC2DA9721933CCBA3566EB01BEED3CC9"
+        "MsmSig" = "8:_UNDEFINED"
+        }
     }
     "Configurations"
     {
@@ -1219,6 +1231,14 @@
         "PrivateKeyFile" = "8:"
         "TimeStampServer" = "8:"
         "InstallerBootstrapper" = "3:2"
+            "BootstrapperCfg:{63ACBE69-63AA-4F98-B2B6-99F9E24495F2}"
+            {
+            "Enabled" = "11:TRUE"
+            "PromptEnabled" = "11:TRUE"
+            "PrerequisitesLocation" = "2:1"
+            "Url" = "8:"
+            "ComponentsUrl" = "8:"
+            }
         }
         "Release"
         {
@@ -1235,6 +1255,22 @@
         "PrivateKeyFile" = "8:"
         "TimeStampServer" = "8:"
         "InstallerBootstrapper" = "3:2"
+            "BootstrapperCfg:{63ACBE69-63AA-4F98-B2B6-99F9E24495F2}"
+            {
+            "Enabled" = "11:TRUE"
+            "PromptEnabled" = "11:TRUE"
+            "PrerequisitesLocation" = "2:1"
+            "Url" = "8:"
+            "ComponentsUrl" = "8:"
+                "Items"
+                {
+                    "{EDC2488A-8267-493A-A98E-7D9C3B36CDF3}:.NETFramework,Version=v4.6.1"
+                    {
+                    "Name" = "8:Microsoft .NET Framework 4.6.1 (x86 and x64)"
+                    "ProductCode" = "8:.NETFramework,Version=v4.6.1"
+                    }
+                }
+            }
         }
     }
     "Deployable"
@@ -3423,6 +3459,26 @@
             "IsDependency" = "11:TRUE"
             "IsolateTo" = "8:"
             }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_CE62CD9DE02340619CB59CB3735AC89D"
+            {
+            "SourcePath" = "8:..\\Lime.Client.TestConsole\\Templates.txt"
+            "TargetName" = "8:Templates.txt"
+            "Tag" = "8:"
+            "Folder" = "8:_7A25DF186ECF477993B3B2B2A28E3155"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
             "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_D0D77D88942929CDC026DA48755533DF"
             {
             "AssemblyRegister" = "3:1"
@@ -3483,6 +3539,26 @@
             "Register" = "3:1"
             "Exclude" = "11:FALSE"
             "IsDependency" = "11:TRUE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_D789B4EF711F445E8F7411AF80560267"
+            {
+            "SourcePath" = "8:..\\Lime.Client.TestConsole\\Variables.txt"
+            "TargetName" = "8:Variables.txt"
+            "Tag" = "8:"
+            "Folder" = "8:_7A25DF186ECF477993B3B2B2A28E3155"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
             "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_DC2DA9721933CCBA3566EB01BEED3CC9"
@@ -3925,6 +4001,28 @@
         }
         "Folder"
         {
+            "{1525181F-901A-416C-8A58-119130FE478E}:_5459BF588FB24BD2ABAFFFAE90C8BA69"
+            {
+            "Name" = "8:#1915"
+            "AlwaysCreate" = "11:FALSE"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Property" = "8:AppDataFolder"
+                "Folders"
+                {
+                    "{9EF0B969-E518-4E46-987F-47570745A589}:_7A25DF186ECF477993B3B2B2A28E3155"
+                    {
+                    "Name" = "8:LIME Test Console"
+                    "AlwaysCreate" = "11:FALSE"
+                    "Condition" = "8:"
+                    "Transitive" = "11:FALSE"
+                    "Property" = "8:_06A6F865E3D84F23B12966B68F7E47CB"
+                        "Folders"
+                        {
+                        }
+                    }
+                }
+            }
             "{1525181F-901A-416C-8A58-119130FE478E}:_717819A596904EEEB17B002D2CE4C704"
             {
             "Name" = "8:#1916"
@@ -3986,15 +4084,15 @@
         {
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:LIME Test Console"
-        "ProductCode" = "8:{A217614E-5DC5-4AF1-87A7-A19622522CD4}"
-        "PackageCode" = "8:{1318D87C-2172-4260-BD8B-621F3EA4C1F1}"
+        "ProductCode" = "8:{07C7CA63-6562-44DF-9880-676188EE107D}"
+        "PackageCode" = "8:{6A1B002F-F416-4F25-993F-DF4B88AE5882}"
         "UpgradeCode" = "8:{B9AD92D4-F4EB-4A05-A4FC-EF185D868EE3}"
         "AspNetVersion" = "8:4.0.30319.0"
         "RestartWWWService" = "11:FALSE"
         "RemovePreviousVersions" = "11:TRUE"
         "DetectNewerInstalledVersion" = "11:TRUE"
         "InstallAllUsers" = "11:TRUE"
-        "ProductVersion" = "8:1.0.0"
+        "ProductVersion" = "8:1.0.1"
         "Manufacturer" = "8:LIME Protocol"
         "ARPHELPTELEPHONE" = "8:"
         "ARPHELPLINK" = "8:"

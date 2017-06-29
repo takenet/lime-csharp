@@ -10,29 +10,26 @@ namespace Lime.Client.TestConsole
 {
     public static class FileUtil
     {
-        public const string APP_DATA_FOLDER_NAME = "LimeTestConsole";
+        public const string APP_DATA_FOLDER_NAME = "LIME Test Console";
 
-        public static IEnumerable<string[]> GetFileLines(string fileName, char separator, bool loadFromAppData = false)
+        public static IEnumerable<string[]> GetFileLines(string fileName, char separator)
         {
-            if (loadFromAppData)
+            var appDataFileName = GetAppDataFileName(fileName);
+
+            if (!File.Exists(appDataFileName))
             {
-                var appDataFileName = GetAppDataFileName(fileName);
-
-                if (!File.Exists(appDataFileName))
+                if (File.Exists(fileName))
                 {
-                    if (File.Exists(fileName))
-                    {
-                        File.Copy(fileName, appDataFileName);
-                    }
-                    else
-                    {
-                        File.Create(appDataFileName).Close();
-                    }
+                    File.Copy(fileName, appDataFileName);
                 }
-
-                fileName = appDataFileName;
+                else
+                {
+                    File.Create(appDataFileName).Close();
+                }
             }
 
+            fileName = appDataFileName;
+            
             using (var fileStream = File.Open(fileName, FileMode.OpenOrCreate, FileAccess.Read))
             {
                 using (var streamReader = new StreamReader(fileStream))
@@ -50,13 +47,9 @@ namespace Lime.Client.TestConsole
             }
         }
 
-        public static void SaveFile(IEnumerable<string[]> content, string fileName, char separator, bool saveToAppData = false)
+        public static void SaveFile(IEnumerable<string[]> content, string fileName, char separator)
         {
-            if (saveToAppData)
-            {
-                fileName = GetAppDataFileName(fileName);
-            }
-
+            fileName = GetAppDataFileName(fileName);
             File.WriteAllLines(fileName, content.Select(s => string.Join(separator.ToString(CultureInfo.InvariantCulture), s)));
         }
 
