@@ -4,6 +4,6 @@
     {
         string Serialize(Document document);
 
-        Document Deserialize(string documentString, MediaType mediaType);        
+        Document Deserialize(string value, MediaType mediaType);
     }
 }

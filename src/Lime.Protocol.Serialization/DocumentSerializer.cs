@@ -2,66 +2,47 @@
 using System.Collections.Generic;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Lime.Protocol.Serialization.Newtonsoft;
 
 namespace Lime.Protocol.Serialization
 {
     public sealed class DocumentSerializer : IDocumentSerializer
     {
-        public string Serialize(Document document)
-        {
-            if (document == null)
-            {
-                throw new ArgumentNullException(nameof(document));
-            }
+        public static readonly JsonSerializer JsonSerializer = JsonSerializer.Create(JsonNetSerializer.Settings);
 
-            var mediaType = document.GetMediaType();
+        public Document Deserialize(string value, MediaType mediaType)
+        {
+            if (value == null) throw new ArgumentNullException(nameof(value));
+            if (mediaType == null) throw new ArgumentNullException(nameof(mediaType));
+
+            Type documentType;
             if (mediaType.IsJson)
             {
-                return JsonConvert.SerializeObject(document);
+                var jsonObject = JObject.Parse(value);
+                if (TypeUtil.TryGetTypeForMediaType(mediaType, out documentType))
+                {
+                    return (Document)jsonObject.ToObject(documentType, JsonSerializer);
+                }
+                var dictionary = jsonObject.ToObject<Dictionary<string, object>>(JsonSerializer);
+                return new JsonDocument(dictionary, mediaType);
             }
-            return document.ToString();
+
+            if (TypeUtil.TryGetTypeForMediaType(mediaType, out documentType))
+            {
+                var parseFunc = TypeUtilEx.GetParseFuncForType(documentType);
+                return parseFunc(value) as Document;
+            }
+            return new PlainDocument(value, mediaType);
         }
 
-        public Document Deserialize(string documentString, MediaType mediaType)
+        public string Serialize(Document document)
         {
-            if (documentString == null)
-            {
-                throw new ArgumentNullException(nameof(documentString));
-            }
+            if (document == null) throw new ArgumentNullException(nameof(document));
 
-            if (mediaType == null)
-            {
-                throw new ArgumentNullException(nameof(mediaType));
-            }
+            if (!document.GetMediaType().IsJson) return document.ToString();
 
-            Document document = null;
-            Type type;
-            if (TypeUtil.TryGetTypeForMediaType(mediaType, out type))
-            {
-                if (mediaType.IsJson)
-                {
-                    document = JsonConvert.DeserializeObject(documentString, type) as Document;
-                }
-                else
-                {
-                    var parseFunc = TypeUtilEx.GetParseFuncForType(type);
-                    document = parseFunc(documentString) as Document;
-                }                
-            }
-            else
-            {
-                if (mediaType.IsJson)
-                {
-                    var json = JObject.Parse(documentString);
-                    document = new JsonDocument(json.ToObject<Dictionary<string, object>>(), mediaType);
-                }
-                else
-                {
-                    document = new PlainDocument(documentString, mediaType);
-                }
-            }
-
-            return document;           
+            var jsonObject = JObject.FromObject(document, JsonSerializer);
+            return JsonConvert.SerializeObject(jsonObject, Formatting.None, JsonNetSerializer.Settings);
         }
     }
 }
