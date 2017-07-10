@@ -1,4 +1,4 @@
-version: 0.6.{build}-alpha
+version: 0.7.{build}-alpha
 image: Visual Studio 2017
 configuration: Release
 platform: Any CPU
@@ -26,15 +26,16 @@ build:
   verbosity: normal
 after_build:
 - dotnet pack src/Lime.Protocol/Lime.Protocol.csproj --configuration Release /p:Version=%APPVEYOR_BUILD_VERSION%
+- dotnet pack src/Lime.Protocol.Serialization/Lime.Protocol.Serialization.csproj --configuration Release /p:Version=%APPVEYOR_BUILD_VERSION%
 - dotnet pack src/Lime.Messaging/Lime.Messaging.csproj --configuration Release /p:Version=%APPVEYOR_BUILD_VERSION%
-- dotnet pack src/Lime.Protocol.Serialization.Newtonsoft/Lime.Protocol.Serialization.Newtonsoft.csproj --configuration Release /p:Version=%APPVEYOR_BUILD_VERSION%
 - dotnet pack src/Lime.Transport.Tcp/Lime.Transport.Tcp.csproj --configuration Release /p:Version=%APPVEYOR_BUILD_VERSION%
 - dotnet pack src/Lime.Transport.WebSocket/Lime.Transport.WebSocket.csproj --configuration Release /p:Version=%APPVEYOR_BUILD_VERSION%
 - dotnet pack src/Lime.Transport.Http/Lime.Transport.Http.csproj --configuration Release /p:Version=%APPVEYOR_BUILD_VERSION%
 test:
-  assemblies:
-    only:
-      - '**\*Tests.dll'
+  assemblies:    
+    - '**\*Tests.dll'
+    except: 
+      - 'Lime.Transport.Redis.UnitTests.dll'
 artifacts:
   - path: '**\Lime*.nupkg'
 deploy:
