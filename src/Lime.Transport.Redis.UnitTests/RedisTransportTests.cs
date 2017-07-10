@@ -10,13 +10,12 @@ using Lime.Protocol.Serialization;
 using Lime.Protocol.Serialization.Newtonsoft;
 using Lime.Protocol.UnitTests;
 using Moq;
-using NUnit.Framework;
 using Shouldly;
-using Lime.Messaging;
 using Xunit;
 
 namespace Lime.Transport.Redis.UnitTests
 {
+    [Trait("Category", nameof(Redis))]
     public class RedisTransportTests : IClassFixture<RedisFixture>
     {
         private readonly RedisFixture _redisFixture;

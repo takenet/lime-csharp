@@ -34,8 +34,9 @@ after_build:
 test:
   assemblies:    
     - '**\*Tests.dll'
-    except: 
-      - 'Lime.Transport.Redis.UnitTests.dll'
+  categories: 
+    except:
+      - 'Redis'
 artifacts:
   - path: '**\Lime*.nupkg'
 deploy:
