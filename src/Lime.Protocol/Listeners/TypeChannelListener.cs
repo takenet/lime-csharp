@@ -1,4 +1,4 @@
-﻿#if NETSTANDARD1_6 || NET461
+﻿#if !NETSTANDARD1_1
 
 using System;
 using System.Collections.Concurrent;
