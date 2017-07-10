@@ -33,9 +33,8 @@ after_build:
 - dotnet pack src/Lime.Transport.Http/Lime.Transport.Http.csproj --configuration Release /p:Version=%APPVEYOR_BUILD_VERSION%
 test:
   assemblies:
-  only:
-    - test-assembly-A.dll
-    - '**\*Tests.dll'
+    only:
+      - '**\*Tests.dll'
 artifacts:
   - path: '**\Lime*.nupkg'
 deploy:
