@@ -3,8 +3,6 @@ using System.Linq;
 using System.Net;
 using System.Net.Security;
 using System.Net.Sockets;
-using System.Security;
-using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
@@ -12,37 +10,60 @@ using Lime.Protocol;
 using Lime.Protocol.Network;
 using Lime.Protocol.Serialization;
 using Lime.Protocol.Server;
+using System.Buffers;
 
 namespace Lime.Transport.Tcp
 {
     public class TcpTransportListener : ITransportListener
     {
-        private readonly X509Certificate2 _sslCertificate;
+        private readonly X509Certificate2 _serverCertificate;
         private readonly IEnvelopeSerializer _envelopeSerializer;
+        private readonly int _bufferSize;
+        private readonly int _maxBufferSize;
+        private readonly ArrayPool<byte> _arrayPool;
         private readonly ITraceWriter _traceWriter;
         private readonly RemoteCertificateValidationCallback _clientCertificateValidationCallback;
         private readonly SemaphoreSlim _semaphore;
         private TcpListener _tcpListener;
 
-        public TcpTransportListener(Uri listenerUri, X509Certificate2 sslCertificate, IEnvelopeSerializer envelopeSerializer, ITraceWriter traceWriter = null, RemoteCertificateValidationCallback clientCertificateValidationCallback = null)
+        /// <summary>
+        /// Initializes a new instance of <see cref="TcpTransportListener"/> class.
+        /// </summary>
+        /// <param name="listenerUri">The URI for listening new connections.</param>
+        /// <param name="serverCertificate">The certificate to encrypt the connections with TLS.</param>
+        /// <param name="envelopeSerializer">The serializer for envelopes.</param>
+        /// <param name="bufferSize">The initial size of the buffer for each created transport.</param>
+        /// <param name="maxBufferSize">The max size of the buffer for each created transport, when increased.</param>
+        /// <param name="arrayPool">The array pool for reusing <see cref="byte[]"/> instances.</param>
+        /// <param name="traceWriter"></param>
+        /// <param name="clientCertificateValidationCallback"></param>
+        public TcpTransportListener(
+            Uri listenerUri,
+            X509Certificate2 serverCertificate,
+            IEnvelopeSerializer envelopeSerializer,
+            int bufferSize = TcpTransport.DEFAULT_BUFFER_SIZE,
+            int maxBufferSize = TcpTransport.DEFAULT_MAX_BUFFER_SIZE,
+            ArrayPool<byte> arrayPool = null,
+            ITraceWriter traceWriter = null,
+            RemoteCertificateValidationCallback clientCertificateValidationCallback = null)
         {
-            if (listenerUri == null) throw new ArgumentNullException(nameof(listenerUri));            
+            if (listenerUri == null) throw new ArgumentNullException(nameof(listenerUri));
             if (listenerUri.Scheme != TcpTransport.UriSchemeNetTcp)
             {
                 throw new ArgumentException($"Invalid URI scheme. The expected value is '{TcpTransport.UriSchemeNetTcp}'.");
             }
-            if (envelopeSerializer == null) throw new ArgumentNullException(nameof(envelopeSerializer));
-
             ListenerUris = new[] { listenerUri };
-
-            if (sslCertificate != null &&
-                !sslCertificate.HasPrivateKey)
+            if (serverCertificate != null
+                && !serverCertificate.HasPrivateKey)
             {
-                throw new ArgumentException("The certificate must have a private key");
+                throw new ArgumentException("The certificate must have a private key", nameof(serverCertificate));
             }
-
-            _sslCertificate = sslCertificate;
-            _envelopeSerializer = envelopeSerializer;
+            _serverCertificate = serverCertificate;
+            _envelopeSerializer = envelopeSerializer ?? throw new ArgumentNullException(nameof(envelopeSerializer));
+            _bufferSize = bufferSize;
+            _maxBufferSize = maxBufferSize;
+            // https://github.com/dotnet/corefx/blob/master/src/System.Buffers/src/System/Buffers/DefaultArrayPool.cs
+            _arrayPool = arrayPool ?? ArrayPool<byte>.Create(_maxBufferSize, 50);
             _traceWriter = traceWriter;
             _clientCertificateValidationCallback = clientCertificateValidationCallback;
             _semaphore = new SemaphoreSlim(1);
@@ -52,7 +73,7 @@ namespace Lime.Transport.Tcp
         /// Gets the transport 
         /// listener URIs.
         /// </summary>
-        public Uri[] ListenerUris { get; private set; }
+        public Uri[] ListenerUris { get; }
 
         /// <summary>
         /// Start listening connections.
@@ -135,10 +156,13 @@ namespace Lime.Transport.Tcp
 
             return new TcpTransport(
                 new TcpClientAdapter(tcpClient),
-                _envelopeSerializer, 
-                _sslCertificate,
+                _envelopeSerializer,
+                _serverCertificate,
+                _bufferSize,
+                _maxBufferSize,
+                _arrayPool,
                 clientCertificateValidationCallback: _clientCertificateValidationCallback,
-                traceWriter: _traceWriter);            
+                traceWriter: _traceWriter);
         }
 
         /// <summary>
@@ -156,7 +180,7 @@ namespace Lime.Transport.Tcp
                 }
 
                 _tcpListener.Stop();
-                _tcpListener = null;               
+                _tcpListener = null;
             }
             finally
             {

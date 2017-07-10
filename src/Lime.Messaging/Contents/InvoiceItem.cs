@@ -3,16 +3,26 @@ using System.Runtime.Serialization;
 namespace Lime.Messaging.Contents
 {
     /// <summary>
-    /// Defines a invoice item.
+    /// Defines an invoice item.
     /// </summary>
     [DataContract(Namespace = "http://limeprotocol.org/2014")]
     public class InvoiceItem : Item
     {
+        public const string COMPLEMENT_KEY = "complement";
         public const string QUANTITY_KEY = "quantity";
         public const string UNIT_KEY = "unit";
         public const string CURRENCY_KEY = "currency";        
         public const string TAXES_KEY = "taxes";
         public const string TOTAL_KEY = "total";
+
+        /// <summary>
+        /// Gets or sets the item description complement.
+        /// </summary>
+        /// <value>
+        /// The description complement
+        /// </value>
+        [DataMember(Name = COMPLEMENT_KEY)]
+        public string Complement { get; set; }
 
         /// <summary>
         /// Gets or sets the item quantity.

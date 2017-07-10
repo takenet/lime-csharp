@@ -336,13 +336,14 @@ namespace Lime.Protocol.Client
                         try
                         {
                             _cts?.Cancel();
-                            _cts?.Dispose();                            
+                            _cts?.Dispose();
+                            _clientChannel?.DisposeIfDisposable();
                         }
                         catch { }
                         finally
                         {
                             _cts = null;
-                        }                        
+                        }
 
                         clientChannel = _clientChannel = await _builder
                             .BuildAndEstablishAsync(cancellationToken)

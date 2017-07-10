@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Lime.Messaging.Contents;
@@ -16,32 +13,28 @@ using Moq;
 using NUnit.Framework;
 using Shouldly;
 using Lime.Messaging;
+using Xunit;
 
 namespace Lime.Transport.Redis.UnitTests
 {
-    [TestFixture]
-    public class RedisTransportTests
+    public class RedisTransportTests : IClassFixture<RedisFixture>
     {
-        public static string AssemblyDirectory
-        {
-            get
-            {
-                string codeBase = Assembly.GetExecutingAssembly().CodeBase;
-                UriBuilder uri = new UriBuilder(codeBase);
-                string path = Uri.UnescapeDataString(uri.Path);
-                return Path.GetDirectoryName(path);
-            }
-        }
+        private readonly RedisFixture _redisFixture;
 
+        public RedisTransportTests(RedisFixture redisFixture)
+        {
+            _redisFixture = redisFixture;
+        }
+        
         public Uri ListenerUri { get; private set; }
 
-        public IEnvelopeSerializer EnvelopeSerializer { get; private set; }        
+        public IEnvelopeSerializer EnvelopeSerializer { get; private set; }
 
         public RedisTransportListener Listener { get; private set; }
 
         public Mock<ITraceWriter> TraceWriter { get; private set; }
 
-        public CancellationToken CancellationToken { get; private set; }        
+        public CancellationToken CancellationToken { get; private set; }
 
         public ITransport ServerTransport { get; private set; }
 
@@ -51,56 +44,6 @@ namespace Lime.Transport.Redis.UnitTests
 
         public string ChannelNamespace { get; private set; }
 
-        [OneTimeSetUp]
-        public void OneTimeSetup()
-        {
-            var redisProcesses = Process.GetProcessesByName("redis-server");
-            if (!redisProcesses.Any())
-            {                
-                var executablePath = Path.Combine(AssemblyDirectory, @"..\..\..\packages\redis-64.3.0.503\tools\redis-server.exe");
-
-                if (!File.Exists(executablePath))
-                {
-                    throw new Exception($"Could not find the Redis executable at '{executablePath}'");
-                }
-
-                var processStartInfo = new ProcessStartInfo()
-                {
-                    FileName = executablePath,
-                    CreateNoWindow = true,
-                    WindowStyle = ProcessWindowStyle.Hidden
-                };
-                RedisProccess = Process.Start(processStartInfo);
-            }
-        }
-
-        [OneTimeTearDown]
-        public void OneTimeTearDown()
-        {
-            RedisProccess?.Close();
-            RedisProccess?.Dispose();
-        }
-
-        [SetUp]
-        public async Task SetUpAsync()
-        {
-            Registrator.RegisterDocuments();
-            ChannelNamespace = EnvelopeId.NewId();
-            ListenerUri = new Uri("redis://localhost");
-            EnvelopeSerializer = new JsonNetSerializer();
-            TraceWriter = new Mock<ITraceWriter>();
-            Listener = new RedisTransportListener(ListenerUri, EnvelopeSerializer, TraceWriter.Object, channelNamespace: ChannelNamespace);            
-            await Listener.StartAsync(CancellationToken);
-            CancellationToken = TimeSpan.FromSeconds(5).ToCancellationToken();
-        }
-
-
-        [TearDown]
-        public async Task TearDownAsync()
-        {
-            await Listener.StopAsync(CancellationToken);
-            Listener.Dispose();
-        }
 
         public RedisTransport GetTarget()
         {
@@ -130,7 +73,7 @@ namespace Lime.Transport.Redis.UnitTests
         }
 
 
-        [Test]
+        [Fact]
         public async Task SendAsync_NewSessionEnvelope_ServerShouldReceive()
         {
             // Arrange
@@ -148,8 +91,7 @@ namespace Lime.Transport.Redis.UnitTests
             receivedSession.State.ShouldBe(SessionState.New);
         }
 
-        [Test]
-        [Ignore("dotnet test nunit broke this test. Please run all tests via 'dotnet test project.json'")]
+        [Fact]
         public async Task SendAsync_FinishingSessionEnvelope_ServerShouldReceive()
         {
             // Arrange            
@@ -166,7 +108,7 @@ namespace Lime.Transport.Redis.UnitTests
             actualSession.State.ShouldBe(SessionState.Finishing);
         }
 
-        [Test]
+        [Fact]
         public async Task SendAsync_MessageEnvelope_ServerShouldReceive()
         {
             // Arrange
@@ -187,7 +129,7 @@ namespace Lime.Transport.Redis.UnitTests
             actualContent.Text.ShouldBe(content.Text);
         }
 
-        [Test]
+        [Fact]
         public async Task SendAsync_NotificationEnvelope_ServerShouldReceive()
         {
             // Arrange            
@@ -206,7 +148,7 @@ namespace Lime.Transport.Redis.UnitTests
             actual.Event.ShouldBe(notification.Event);
         }
 
-        [Test]
+        [Fact]
         public async Task SendAsync_CommandEnvelope_ServerShouldReceive()
         {
             // Arrange
@@ -230,7 +172,7 @@ namespace Lime.Transport.Redis.UnitTests
             actualResource.Priority.ShouldBe(presence.Priority);
         }
 
-        [Test]
+        [Fact]
         public async Task ReceiveAsync_MessageEnvelope_ClientShouldReceive()
         {
             // Arrange
@@ -251,7 +193,7 @@ namespace Lime.Transport.Redis.UnitTests
             actualContent.Text.ShouldBe(content.Text);
         }
 
-        [Test]
+        [Fact]
         public async Task ReceiveAsync_NotificationEnvelope_ClientShouldReceive()
         {
             // Arrange            
@@ -270,7 +212,7 @@ namespace Lime.Transport.Redis.UnitTests
             actual.Event.ShouldBe(notification.Event);
         }
 
-        [Test]
+        [Fact]
         public async Task ReceiveAsync_CommandEnvelope_ClientShouldReceive()
         {
             // Arrange

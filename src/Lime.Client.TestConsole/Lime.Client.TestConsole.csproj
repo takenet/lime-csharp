@@ -35,8 +35,8 @@
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
     <OpenBrowserOnPublish>false</OpenBrowserOnPublish>
-    <ApplicationRevision>9</ApplicationRevision>
-    <ApplicationVersion>0.5.0.%2a</ApplicationVersion>
+    <ApplicationRevision>4</ApplicationRevision>
+    <ApplicationVersion>0.7.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -84,43 +84,41 @@
       <HintPath>..\packages\MvvmLightLibs.4.4.32.7\lib\net45\GalaSoft.MvvmLight.Extras.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Lime.Messaging, Version=0.7.48.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Lime.Messaging.0.7.48-beta\lib\net461\Lime.Messaging.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="Lime.Messaging, Version=0.7.162.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Lime.Messaging.0.7.162-beta\lib\net461\Lime.Messaging.dll</HintPath>
     </Reference>
-    <Reference Include="Lime.Protocol, Version=0.7.48.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Lime.Protocol.0.7.48-beta\lib\net461\Lime.Protocol.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="Lime.Protocol, Version=0.7.162.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Lime.Protocol.0.7.162-beta\lib\net461\Lime.Protocol.dll</HintPath>
     </Reference>
-    <Reference Include="Lime.Protocol.Serialization, Version=0.7.48.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Lime.Protocol.Serialization.0.7.48-beta\lib\net461\Lime.Protocol.Serialization.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="Lime.Protocol.Serialization, Version=0.7.162.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Lime.Protocol.Serialization.0.7.162-beta\lib\net461\Lime.Protocol.Serialization.dll</HintPath>
     </Reference>
-    <Reference Include="Lime.Transport.Tcp, Version=0.7.48.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Lime.Transport.Tcp.0.7.48-beta\lib\net461\Lime.Transport.Tcp.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="Lime.Transport.Tcp, Version=0.7.162.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Lime.Transport.Tcp.0.7.162-beta\lib\net461\Lime.Transport.Tcp.dll</HintPath>
     </Reference>
-    <Reference Include="Lime.Transport.WebSocket, Version=0.7.48.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Lime.Transport.WebSocket.0.7.48-beta\lib\net461\Lime.Transport.WebSocket.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="Lime.Transport.WebSocket, Version=0.7.162.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Lime.Transport.WebSocket.0.7.162-beta\lib\net461\Lime.Transport.WebSocket.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Practices.ServiceLocation, Version=1.3.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\CommonServiceLocator.1.3\lib\portable-net4+sl5+netcore45+wpa81+wp8\Microsoft.Practices.ServiceLocation.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>packages\Newtonsoft.Json.9.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <HintPath>..\packages\Newtonsoft.Json.9.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="SslCertBinding.Net, Version=1.0.2.0, Culture=neutral, PublicKeyToken=46398e4c25dead31, processorArchitecture=MSIL">
-      <HintPath>packages\SslCertBinding.Net.1.0.2\lib\net20\SslCertBinding.Net.dll</HintPath>
+      <HintPath>..\packages\SslCertBinding.Net.1.0.2\lib\net20\SslCertBinding.Net.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="StackExchange.Redis, Version=1.1.608.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>packages\StackExchange.Redis.1.1.608\lib\net46\StackExchange.Redis.dll</HintPath>
+      <HintPath>..\packages\StackExchange.Redis.1.1.608\lib\net46\StackExchange.Redis.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Buffers, Version=4.0.1.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Buffers.4.3.0\lib\netstandard1.1\System.Buffers.dll</HintPath>
+    </Reference>
     <Reference Include="System.Data" />
     <Reference Include="System.IO.Compression" />
     <Reference Include="System.Net" />
@@ -188,6 +186,7 @@
     <Compile Include="Macros\NotifyMessageConsumedMacro.cs" />
     <Compile Include="Macros\ReplyPingMacro.cs" />
     <Compile Include="Macros\NotifyMessageReceivedMacro.cs" />
+    <Compile Include="Macros\SendAuthenticatingExternalMacro.cs" />
     <Compile Include="Macros\SendAuthenticatingKeyMacro.cs" />
     <Compile Include="Macros\SendAuthenticatingMacroBase.cs" />
     <Compile Include="Macros\SendAuthenticatingGuestMacro.cs" />
@@ -305,14 +304,10 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Templates.txt">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
+    <Content Include="Templates.txt" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Variables.txt">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
+    <Content Include="Variables.txt" />
   </ItemGroup>
   <ItemGroup>
     <Resource Include="lime.ico" />

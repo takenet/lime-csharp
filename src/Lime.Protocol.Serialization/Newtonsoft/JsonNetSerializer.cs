@@ -43,7 +43,6 @@ namespace Lime.Protocol.Serialization.Newtonsoft
                                 new NodeJsonConverter(),
                                 new LimeUriJsonConverter(),
                                 new MediaTypeJsonConverter(),
-                                new UriJsonConverter(),
                                 new SessionJsonConverter(),
                                 new AuthenticationJsonConverter(),
                                 new DocumentContainerJsonConverter(),

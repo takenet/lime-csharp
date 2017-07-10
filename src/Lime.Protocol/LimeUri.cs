@@ -23,7 +23,7 @@ namespace Lime.Protocol
         {
             if (string.IsNullOrWhiteSpace(uriPath)) throw new ArgumentNullException(nameof(uriPath));
 
-			if (Uri.IsWellFormedUriString(uriPath, UriKind.Absolute))
+            if (Uri.IsWellFormedUriString(uriPath, UriKind.Absolute))
             {
                 _absoluteUri = new Uri(uriPath);
                 if (!_absoluteUri.Scheme.Equals(LIME_URI_SCHEME))
@@ -36,7 +36,7 @@ namespace Lime.Protocol
                 throw new ArgumentException("Invalid URI format");
             }
 
-            Path = uriPath.TrimEnd('/');            
+            Path = uriPath.TrimEnd('/');
         }
 
         /// <summary>

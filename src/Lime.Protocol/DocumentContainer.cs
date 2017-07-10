@@ -8,7 +8,7 @@ namespace Lime.Protocol
     /// </summary>
     /// <seealso cref="Lime.Protocol.Document" />
     [DataContract(Namespace = "http://limeprotocol.org/2014")]
-    public class DocumentContainer : Document
+    public class DocumentContainer : Document, IDocumentContainer
     {
         public const string MIME_TYPE = "application/vnd.lime.container+json";        
         public const string TYPE_KEY = "type";
@@ -41,5 +41,11 @@ namespace Lime.Protocol
         /// </value>
         [DataMember(Name = VALUE_KEY)]
         public Document Value { get; set; }
+
+        /// <summary>
+        /// Gets the contained document.
+        /// </summary>
+        /// <returns></returns>
+        Document IDocumentContainer.GetDocument() => Value;
     }
 }

@@ -8,13 +8,32 @@ namespace Lime.Protocol
     /// </summary>
     public class MediaType
     {
-        #region Constructor
+        /// <summary>
+        /// Represents the text/plain media type.
+        /// </summary>
+        public static readonly MediaType TextPlain = new MediaType(DiscreteTypes.Text, SubTypes.Plain);
 
+        /// <summary>
+        /// Represents the application/json media type.
+        /// </summary>
+        public static readonly MediaType ApplicationJson = new MediaType(DiscreteTypes.Application, SubTypes.JSON);
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="MediaType"/> class.
+        /// </summary>
         public MediaType()
         {
 
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="MediaType"/> class.
+        /// </summary>
+        /// <param name="type">The type.</param>
+        /// <param name="subtype">The subtype.</param>
+        /// <param name="suffix">The suffix.</param>
+        /// <exception cref="System.ArgumentNullException">
+        /// </exception>
         public MediaType(string type, string subtype, string suffix = null)
         {
             if (string.IsNullOrWhiteSpace(type)) throw new ArgumentNullException(nameof(type));            
@@ -24,10 +43,6 @@ namespace Lime.Protocol
             Subtype = subtype;
             Suffix = suffix;
         }
-
-        #endregion
-
-        #region Public Properties
 
         /// <summary>
         /// The top-level type identifier. The valid values are text, application, image, audio and video.
@@ -50,10 +65,6 @@ namespace Lime.Protocol
         /// </summary>
         public bool IsJson => (Suffix != null && Suffix.Equals(SubTypes.JSON, StringComparison.OrdinalIgnoreCase)) ||
                               (Subtype != null && Subtype.Equals(SubTypes.JSON, StringComparison.OrdinalIgnoreCase));
-
-        #endregion
-
-        #region Public Methods
 
         /// <summary>
         /// Returns a <see cref="System.String" /> that represents this instance.
@@ -102,15 +113,49 @@ namespace Lime.Protocol
                    (Suffix == null && mediaType.Suffix == null || (Suffix != null && mediaType.Suffix != null && Suffix.Equals(mediaType.Suffix, StringComparison.CurrentCultureIgnoreCase)));
         }
 
+        /// <summary>
+        /// Implements the operator ==.
+        /// </summary>
+        /// <param name="left">The left.</param>
+        /// <param name="right">The right.</param>
+        /// <returns>
+        /// The result of the operator.
+        /// </returns>
         public static bool operator ==(MediaType left, MediaType right)
         {
             return Equals(left, right);
         }
 
+        /// <summary>
+        /// Implements the operator !=.
+        /// </summary>
+        /// <param name="left">The left.</param>
+        /// <param name="right">The right.</param>
+        /// <returns>
+        /// The result of the operator.
+        /// </returns>
         public static bool operator !=(MediaType left, MediaType right)
         {
             return !Equals(left, right);
         }
+
+        /// <summary>
+        /// Performs an implicit conversion from <see cref="System.String" /> to <see cref="MediaType" />.
+        /// </summary>
+        /// <param name="value">The value.</param>
+        /// <returns>
+        /// The result of the conversion.
+        /// </returns>
+        public static implicit operator MediaType(string value) => value == null ? null : Parse(value);
+
+        /// <summary>
+        /// Performs an implicit conversion from <see cref="MediaType"/> to <see cref="System.String"/>.
+        /// </summary>
+        /// <param name="mediaType">Type of the media.</param>
+        /// <returns>
+        /// The result of the conversion.
+        /// </returns>
+        public static implicit operator string(MediaType mediaType) => mediaType?.ToString();
 
         /// <summary> 
         /// Parses the string to a MediaType object.
@@ -164,8 +209,6 @@ namespace Lime.Protocol
                 return false;
             }
         }
-
-        #endregion
 
         public static class DiscreteTypes
         {

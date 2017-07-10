@@ -871,7 +871,7 @@ namespace Lime.Client.TestConsole.ViewModels
 
         private void LoadVariables()
         {
-            foreach (var lineValues in FileUtil.GetFileLines(VARIABLES_FILE_NAME, VARIABLES_FILE_SEPARATOR, true))
+            foreach (var lineValues in FileUtil.GetFileLines(VARIABLES_FILE_NAME, VARIABLES_FILE_SEPARATOR))
             {
                 if (lineValues.Length >= 2)
                 {
@@ -888,8 +888,8 @@ namespace Lime.Client.TestConsole.ViewModels
 
         private void SaveVariables()
         {
-            var lineValues = Variables.Select(v => new [] {v.Name, v.Value});
-            FileUtil.SaveFile(lineValues, VARIABLES_FILE_NAME, VARIABLES_FILE_SEPARATOR, true);            
+            var lineValues = Variables.Select(v => new [] {v.Name, v.Value}).ToArray();
+            FileUtil.SaveFile(lineValues, VARIABLES_FILE_NAME, VARIABLES_FILE_SEPARATOR);
 
         }
 
@@ -908,6 +908,9 @@ namespace Lime.Client.TestConsole.ViewModels
             }
         }
 
+        public const string MACROS_FILE_NAME = "Macros.txt";
+        public const char MACROS_FILE_SEPARATOR = '\t';
+
         private void LoadMacros()
         {
             var macroTypes = Assembly
@@ -925,6 +928,24 @@ namespace Lime.Client.TestConsole.ViewModels
 
                 Macros.Add(macroViewModel);
             }
+
+            foreach (var lineValues in FileUtil.GetFileLines(MACROS_FILE_NAME, MACROS_FILE_SEPARATOR))
+            {
+                if (lineValues.Length >= 2)
+                {
+                    var macro = Macros.FirstOrDefault(m => m.Name == lineValues[0]);
+                    if (macro != null)
+                    {
+                        macro.IsActive = bool.Parse(lineValues[1]);
+                    }
+                }
+            }
+        }
+
+        private void SaveMacros()
+        {
+            var lineValues = Macros.Select(m => new[] { m.Name, m.IsActive.ToString() }).ToArray();
+            FileUtil.SaveFile(lineValues, MACROS_FILE_NAME, MACROS_FILE_SEPARATOR);
         }
 
         private async Task ReceiveEnvelopeAsync(Envelope envelope, Dispatcher dispatcher)
@@ -982,7 +1003,8 @@ namespace Lime.Client.TestConsole.ViewModels
             if (!IsInDesignMode)
             {
                 SaveHost();
-                SaveVariables();                
+                SaveVariables();
+                SaveMacros();
             }
         }
 

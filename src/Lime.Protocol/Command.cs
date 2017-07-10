@@ -8,7 +8,7 @@ namespace Lime.Protocol
     /// Allows the manipulation of node resources, like server session parameters or information related to the network nodes.
     /// </summary>
     [DataContract(Namespace = "http://limeprotocol.org/2014")]
-    public class Command : Envelope
+    public class Command : Envelope, IDocumentContainer
     {
         public const string URI_KEY = "uri";
         public const string TYPE_KEY = Message.TYPE_KEY;
@@ -77,6 +77,12 @@ namespace Lime.Protocol
         /// </summary>
         [DataMember(Name = REASON_KEY)]
         public Reason Reason { get; set; }
+
+        /// <summary>
+        /// Gets the contained document.
+        /// </summary>
+        /// <returns></returns>
+        Document IDocumentContainer.GetDocument() => Resource;
     }
 
     /// <summary>

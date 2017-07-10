@@ -163,6 +163,14 @@ namespace Lime.Protocol.UnitTests
             return authentication;
         }
 
+        public static ExternalAuthentication CreateExternalAuthentication()
+        {
+            var authentication = new ExternalAuthentication();
+            authentication.Issuer = CreateRandomString(8);
+            authentication.SetToBase64Token(CreateRandomString(8, _extendedChars));
+            return authentication;
+        }
+
         public static AuthenticationScheme[] CreateSchemeOptions()
         {
             return new AuthenticationScheme[] { AuthenticationScheme.Guest, AuthenticationScheme.Plain };
@@ -511,6 +519,19 @@ namespace Lime.Protocol.UnitTests
                 Text = CreateRandomString(50),
                 Size = CreateRandomInt(100),
                 Type = CreatePlainMediaType()
+            };
+        }
+
+        public static Input CreateInput()
+        {
+            return new Input
+            {
+                Label = CreateDocumentContainer(CreateTextContent()),
+                Validation = new InputValidation
+                {
+                    Rule = InputValidationRule.Type,
+                    Type = CreateJsonMediaType()
+                }
             };
         }
     }

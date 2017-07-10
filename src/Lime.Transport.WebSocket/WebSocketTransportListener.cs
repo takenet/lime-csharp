@@ -78,29 +78,29 @@ namespace Lime.Transport.WebSocket
             }
 
             ListenerUris = new[] { listenerUri };
-            if (envelopeSerializer == null)
-            {
-                throw new ArgumentNullException(nameof(envelopeSerializer));
-            }
             _tlsCertificate = tlsCertificate;
-            _envelopeSerializer = envelopeSerializer;
+            _envelopeSerializer = envelopeSerializer ?? throw new ArgumentNullException(nameof(envelopeSerializer));
             _traceWriter = traceWriter;
             _bufferSize = bufferSize;
             _bindCertificateToPort = bindCertificateToPort;
             _applicationId = applicationId ?? DefaultApplicationId;
             _keepAliveInterval = keepAliveInterval ?? System.Net.WebSockets.WebSocket.DefaultKeepAliveInterval;
             _httpListener = new HttpListener();
+            
             var boundedCapacity = new ExecutionDataflowBlockOptions()
             {
                 BoundedCapacity = acceptTransportBoundedCapacity
             };
-            _httpListenerContextBufferBlock = new BufferBlock<HttpListenerContext>(
-                boundedCapacity);
+
+            // Create blocks
+            _httpListenerContextBufferBlock = new BufferBlock<HttpListenerContext>(boundedCapacity);
             _httpListenerWebSocketContextTransformBlock = new TransformBlock<HttpListenerContext, ITransport>(
-                async c => await AcceptWebSocketAsync(c), boundedCapacity);
+                c => AcceptWebSocketAsync(c), boundedCapacity);
             _transportBufferBufferBlock = new BufferBlock<ITransport>(boundedCapacity);
             _nullTargetBlock = DataflowBlock.NullTarget<ITransport>();
-            _httpListenerContextBufferBlock.LinkTo(_httpListenerWebSocketContextTransformBlock);            
+
+            // Link blocks
+            _httpListenerContextBufferBlock.LinkTo(_httpListenerWebSocketContextTransformBlock);
             _httpListenerWebSocketContextTransformBlock.LinkTo(_transportBufferBufferBlock, t => t != null);
             _httpListenerWebSocketContextTransformBlock.LinkTo(_nullTargetBlock, t => t == null);
         }
@@ -129,12 +129,12 @@ namespace Lime.Transport.WebSocket
                         _tlsCertificate.Thumbprint, _tlsCertificate.Store, ipPort, _applicationId));
             }
 
-            _httpListener.Start();            
+            _httpListener.Start();
             _acceptTransportCts?.Dispose();
             _acceptTransportCts = new CancellationTokenSource();
             _acceptTransportTask = Task.Run(AcceptTransportsAsync);
             return Task.CompletedTask;
-        }        
+        }
 
         public async Task<ITransport> AcceptTransportAsync(CancellationToken cancellationToken)
         {
@@ -177,7 +177,12 @@ namespace Lime.Transport.WebSocket
             _httpListener.Stop();
             await _acceptTransportTask.ConfigureAwait(false);
         }
-       
+
+        /// <summary>
+        /// Occurs when the listener loop raises an exception.
+        /// </summary>
+        public event EventHandler<ExceptionEventArgs> ListenerException;
+
         private async Task AcceptTransportsAsync()
         {
             while (!_acceptTransportCts.IsCancellationRequested)
@@ -195,37 +200,42 @@ namespace Lime.Transport.WebSocket
                 }
                 catch (OperationCanceledException) when (_acceptTransportCts.IsCancellationRequested)
                 {
-                    break;                    
+                    break;
                 }
-                catch (HttpListenerException ex)
+                catch (Exception ex)
                 {
-                    if (ex.ErrorCode == 995)
-                    {
-                        // Workarround since the GetContextAsync method doesn't supports cancellation
-                        // "The I/O operation has been aborted because of either a thread exit or an application request"
-                        throw new OperationCanceledException("The listener was canceled", ex);
-                    }
-
-                    throw;
+                    var args = new ExceptionEventArgs(ex);
+                    ListenerException.RaiseEvent(this, new ExceptionEventArgs(ex));
+                    await args.WaitForDeferralsAsync();
                 }
             }
         }
 
         private async Task<ITransport> AcceptWebSocketAsync(HttpListenerContext httpListenerContext)
         {
-            if (!httpListenerContext.Request.IsWebSocketRequest)
+            try
             {
-                httpListenerContext.Response.StatusCode = 400;
-                httpListenerContext.Response.Close();
-                return null;
+                if (!httpListenerContext.Request.IsWebSocketRequest)
+                {
+                    httpListenerContext.Response.StatusCode = 400;
+                    httpListenerContext.Response.Close();
+                    return null;
+                }
+
+                var context = await httpListenerContext.AcceptWebSocketAsync(
+                    LimeUri.LIME_URI_SCHEME, _bufferSize, _keepAliveInterval)
+                    .WithCancellation(_acceptTransportCts.Token)
+                    .ConfigureAwait(false);
+
+                return new ServerWebSocketTransport(context, _envelopeSerializer, _traceWriter, _bufferSize);
+            }
+            catch (OperationCanceledException) when (_acceptTransportCts.IsCancellationRequested) { }
+            catch (Exception ex)
+            {
+                ListenerException.RaiseEvent(this, new ExceptionEventArgs(ex));
             }
 
-            var context = await httpListenerContext.AcceptWebSocketAsync(
-                LimeUri.LIME_URI_SCHEME, _bufferSize, _keepAliveInterval)
-                .WithCancellation(_acceptTransportCts.Token)
-                .ConfigureAwait(false);
-
-            return new ServerWebSocketTransport(context, _envelopeSerializer, _traceWriter, _bufferSize);
+            return null;
         }
     }
 }

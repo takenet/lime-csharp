@@ -100,6 +100,11 @@ namespace Lime.Protocol
         /// </summary>
         public const int AUTHORIZATION_QUOTA_THRESHOLD_EXCEEDED = 34;
         /// <summary>
+        /// The sender does not have the required permission
+        /// to execute the operation
+        /// </summary>
+        public const int AUTHORIZATION_PERMISSION_REQUIRED = 35;
+        /// <summary>
         /// General routing error
         /// </summary>
         public const int ROUTING_ERROR = 41;
@@ -182,6 +187,14 @@ namespace Lime.Protocol
         /// by the gateway
         /// </summary>
         public const int GATEWAY_REQUEST_LIMIT_REACHED = 85;
+        /// <summary>
+        /// The gateway operation timed out
+        /// </summary>
+        public const int GATEWAY_OPERATION_TIMED_OUT = 86;
+        /// <summary>
+        /// The destination on the Gateway end has blocked the originator
+        /// </summary>
+        public const int GATEWAY_UNAUTHORIZED_SENDER = 87;
         /// <summary>
         /// General application processing error
         /// </summary>

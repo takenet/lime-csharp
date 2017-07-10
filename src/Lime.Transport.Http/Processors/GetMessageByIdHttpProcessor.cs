@@ -2,7 +2,7 @@
 using System.Net;
 using System.Text;
 using Lime.Protocol;
-using Lime.Transport.Http.Serialization;
+using Lime.Protocol.Serialization;
 using Lime.Transport.Http.Storage;
 
 namespace Lime.Transport.Http.Processors
@@ -11,15 +11,11 @@ namespace Lime.Transport.Http.Processors
     {
         private readonly IDocumentSerializer _serializer;
 
-        #region Constructor
-
         public GetMessageByIdHttpProcessor(IEnvelopeStorage<Message> messageStorage)
             : base(messageStorage, Constants.MESSAGES_PATH)
         {
             _serializer = new DocumentSerializer();
         }
-
-        #endregion
 
         protected override HttpResponse GetEnvelopeResponse(Message envelope, HttpRequest request)
         {

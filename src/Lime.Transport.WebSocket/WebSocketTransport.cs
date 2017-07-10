@@ -208,7 +208,7 @@ namespace Lime.Transport.WebSocket
                 }
             }
             
-            await CloseWebSocketAsync(cancellationToken).ConfigureAwait(false);            
+            await CloseWebSocketAsync(cancellationToken).ConfigureAwait(false);
         }
 
         protected void StopListenerTask()
@@ -271,6 +271,7 @@ namespace Lime.Transport.WebSocket
         {
             if (disposing)
             {
+                _jsonBuffer.Dispose();
                 WebSocket.Dispose();
                 _sendSemaphore.Dispose();
                 _listenerCts?.Dispose();

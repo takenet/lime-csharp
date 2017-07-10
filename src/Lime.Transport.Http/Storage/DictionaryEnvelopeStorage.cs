@@ -15,8 +15,6 @@ namespace Lime.Transport.Http.Storage
             _identityEnvelopeDictionary = new ConcurrentDictionary<Identity, ConcurrentDictionary<string, T>>();
         }
 
-        #region IEnvelopeStorage<T> Members
-
         public Task<bool> StoreEnvelopeAsync(Identity owner, T envelope)
         {
             if (owner == null) throw new ArgumentNullException(nameof(owner));            
@@ -68,7 +66,5 @@ namespace Lime.Transport.Http.Storage
 
             return Task.FromResult(deleted);
         }
-
-        #endregion
     }
 }

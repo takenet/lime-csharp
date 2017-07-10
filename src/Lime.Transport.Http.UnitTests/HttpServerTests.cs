@@ -10,72 +10,17 @@ using System.Threading.Tasks;
 using Lime.Protocol;
 using Lime.Protocol.UnitTests;
 using Lime.Transport.Http;
-using NUnit.Framework;
 using Shouldly;
+using Xunit;
 
 namespace Lime.Transport.Http.UnitTests
 {
-    [TestFixture]
     public class HttpServerTests
     {
-        public string Path { get; set; }
-
-        public int Port { get; set; }
-        
-        public string[] Prefixes { get; set; }
-
-        public AuthenticationSchemes AuthenticationSchemes { get; set; }
-
-        public TcpClient TcpClient { get; set; }
-
-        public Identity Identity { get; set; }
-
-        public string Password { get; set; }
-
-        public NetworkCredential Credential { get; set; }
-
-        public HttpClientHandler HttpClientHandler { get; set; }        
-
-        public HttpClient HttpClient { get; set; }
-
-
-        public Guid EnvelopeId { get; set; }
-
-        public string QueryStringValue1 { get; set; }
-
-        public int QueryStringValue2 { get; set; }
-
-        public Uri RequestUri { get; set; }
-
-        public HttpRequestMessage GetHttpRequestMessage { get; set; }
-
-        public MediaType RequestBodyMediaType { get; set; }
-
-        public string RequestBody { get; set; }
-
-        public HttpRequestMessage PostHttpRequestMessage { get; set; }
-
-        public WebHeaderCollection HttpResponseHeaders { get; set; }
-
-        public MediaType ResponseBodyMediaType { get; set; }
-
-        public string ResponseBody { get; set; }
-
-        public Stream ResponseBodyStream { get; set; }
-
-        public Func<HttpRequest, HttpResponse> HttpResponseFactory { get; set; }
-
-        public CancellationToken CancellationToken { get; set; }
-
-        public Lazy<HttpServer> Target { get; set; }
-
-
-
-        [SetUp]
-        public void Arrange()
+        public HttpServerTests()
         {
             Path = "/" + Dummy.CreateRandomString(15);
-            Port = 50000 + Dummy.CreateRandomInt(1000);            
+            Port = 50000 + Dummy.CreateRandomInt(1000);
             Prefixes = new[]
             {
                 "http://*:" + Port  + Path + "/"
@@ -107,12 +52,62 @@ namespace Lime.Transport.Http.UnitTests
             ResponseBody = Dummy.CreateMessageJson();
             ResponseBodyStream = new MemoryStream(Encoding.UTF8.GetBytes(ResponseBody));
             HttpResponseFactory = r => new HttpResponse(r.CorrelatorId, HttpStatusCode.OK, Dummy.CreateRandomString(50), HttpResponseHeaders, ResponseBodyMediaType, ResponseBodyStream);
-            
+
             CancellationToken = TimeSpan.FromSeconds(5).ToCancellationToken();
             Target = new Lazy<HttpServer>(() => new HttpServer(Prefixes, AuthenticationSchemes, TimeSpan.FromSeconds(60)));
         }
 
-        [Test]
+        public string Path { get; set; }
+
+        public int Port { get; set; }
+        
+        public string[] Prefixes { get; set; }
+
+        public AuthenticationSchemes AuthenticationSchemes { get; set; }
+
+        public TcpClient TcpClient { get; set; }
+
+        public Identity Identity { get; set; }
+
+        public string Password { get; set; }
+
+        public NetworkCredential Credential { get; set; }
+
+        public HttpClientHandler HttpClientHandler { get; set; }        
+
+        public HttpClient HttpClient { get; set; }
+
+        public Guid EnvelopeId { get; set; }
+
+        public string QueryStringValue1 { get; set; }
+
+        public int QueryStringValue2 { get; set; }
+
+        public Uri RequestUri { get; set; }
+
+        public HttpRequestMessage GetHttpRequestMessage { get; set; }
+
+        public MediaType RequestBodyMediaType { get; set; }
+
+        public string RequestBody { get; set; }
+
+        public HttpRequestMessage PostHttpRequestMessage { get; set; }
+
+        public WebHeaderCollection HttpResponseHeaders { get; set; }
+
+        public MediaType ResponseBodyMediaType { get; set; }
+
+        public string ResponseBody { get; set; }
+
+        public Stream ResponseBodyStream { get; set; }
+
+        public Func<HttpRequest, HttpResponse> HttpResponseFactory { get; set; }
+
+        public CancellationToken CancellationToken { get; set; }
+
+        public Lazy<HttpServer> Target { get; set; }
+
+        [Fact]
         public void Start_LocalUri_ListensToAddress()
         {
             // Act
@@ -122,7 +117,7 @@ namespace Lime.Transport.Http.UnitTests
             TcpClient.Connect("localhost", Port);            
         }
 
-        [Test]
+        [Fact]
         public void Stop_LocalUri_StopsListening()
         {
             // Arrange
@@ -143,7 +138,7 @@ namespace Lime.Transport.Http.UnitTests
             }            
         }
 
-        [Test]
+        [Fact]
         public async Task AcceptRequestAsync_GetRequest_ReturnsHttpRequest()
         {
             // Arrange
@@ -160,13 +155,13 @@ namespace Lime.Transport.Http.UnitTests
             httpListenerBasicIdentity.Name.ShouldBe(Identity.ToString());
             httpListenerBasicIdentity.Password.ShouldBe(Password);
             actual.Uri.ShouldBe(RequestUri);
-            actual.CorrelatorId.ShouldNotBe(Guid.Empty);
+            actual.CorrelatorId.ShouldNotBeNullOrWhiteSpace();
             actual.QueryString.ShouldNotBe(null);
             actual.QueryString.Get("value1").ShouldBe(QueryStringValue1);
             actual.QueryString.Get("value2").ShouldBe(QueryStringValue2.ToString());
         }
 
-        [Test]
+        [Fact]
         public async Task AcceptRequestAsync_PostRequestNoId_ReturnsHttpRequestWithBody()
         {
             // Arrange
@@ -183,14 +178,14 @@ namespace Lime.Transport.Http.UnitTests
             httpListenerBasicIdentity.Name.ShouldBe(Identity.ToString());
             httpListenerBasicIdentity.Password.ShouldBe(Password);
             actual.Uri.ShouldBe(RequestUri);
-            actual.CorrelatorId.ShouldNotBe(Guid.Empty);
+            actual.CorrelatorId.ShouldNotBeNullOrWhiteSpace();
             actual.QueryString.ShouldNotBe(null);
             actual.QueryString.Get("value1").ShouldBe(QueryStringValue1);
             actual.QueryString.Get("value2").ShouldBe(QueryStringValue2.ToString());
             actual.ContentType.ShouldBe(RequestBodyMediaType);
         }
 
-        [Test]
+        [Fact]
         public async Task AcceptRequestAsync_CancelRequest_ThrowsTaskCanceledException()
         {
             // Arrange
@@ -203,7 +198,7 @@ namespace Lime.Transport.Http.UnitTests
             acceptRequestTask.ShouldThrowAsync<TaskCanceledException>();
         }
 
-        [Test]
+        [Fact]
         public async Task SubmitResponseAsync_ExistingCorrelationId_CompletesRequest()
         {
             // Arrange
@@ -239,11 +234,11 @@ namespace Lime.Transport.Http.UnitTests
             responseBody.ShouldBe(ResponseBody);
         }
 
-        [Test]
+        [Fact]
         public async Task SubmitResponseAsync_InvalidCorrelationId_ThrowsArgumentException()
         {
             // Act
-            var httpResponse = HttpResponseFactory(new HttpRequest("POST", new Uri("http://localhost"), correlatorId: Guid.Empty));
+            var httpResponse = HttpResponseFactory(new HttpRequest("POST", new Uri("http://localhost"), correlatorId: ""));
             await Target.Value.SubmitResponseAsync(httpResponse).ShouldThrowAsync<ArgumentException>();
         }
     }

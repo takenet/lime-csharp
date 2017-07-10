@@ -11,13 +11,7 @@ namespace Lime.Transport.Http.Processors
     public class DeleteEnvelopeByIdHttpProcessor<T> : IHttpProcessor
         where T : Envelope
     {
-        #region Private Fields
-
         private readonly IEnvelopeStorage<T> _envelopeStorage;
-
-        #endregion
-
-        #region Constructor
 
         public DeleteEnvelopeByIdHttpProcessor(IEnvelopeStorage<T> envelopeStorage, string path)
         {
@@ -26,10 +20,6 @@ namespace Lime.Transport.Http.Processors
             Methods = new HashSet<string> { Constants.HTTP_METHOD_DELETE };
             Template = new UriTemplate(string.Format("/{0}/{{id}}", path));
         }
-
-        #endregion
-
-        #region IHttpProcessor Members
 
         public HashSet<string> Methods { get; }
 
@@ -54,7 +44,5 @@ namespace Lime.Transport.Http.Processors
             }
             return new HttpResponse(request.CorrelatorId, HttpStatusCode.BadRequest);
         }
-
-        #endregion
     }
 }

@@ -1,0 +1,26 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp1.1</TargetFramework>
+    <AssemblyName>Lime.Sample.Server</AssemblyName>
+    <OutputType>Exe</OutputType>
+    <PackageId>Lime.Sample.Server</PackageId>
+    <RuntimeFrameworkVersion>1.1.1</RuntimeFrameworkVersion>
+    <PackageTargetFallback>$(PackageTargetFallback);dnxcore50</PackageTargetFallback>
+    <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
+    <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
+    <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Lime.Messaging\Lime.Messaging.csproj" />
+    <ProjectReference Include="..\Lime.Protocol\Lime.Protocol.csproj" />
+    <ProjectReference Include="..\Lime.Protocol.Serialization\Lime.Protocol.Serialization.csproj" />
+    <ProjectReference Include="..\Lime.Transport.Tcp\Lime.Transport.Tcp.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="StackExchange.Redis" Version="1.1.608" />
+  </ItemGroup>
+
+</Project>

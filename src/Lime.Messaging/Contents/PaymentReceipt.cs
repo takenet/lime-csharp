@@ -13,7 +13,8 @@ namespace Lime.Messaging.Contents
     {
         public const string MIME_TYPE = "application/vnd.lime.payment-receipt+json";
 
-        public const string METHOD_KEY = "method";        
+        public const string ADDRESS_KEY = "address";
+        public const string METHOD_KEY = "method";
         public const string CODE_KEY = "code";
         public const string PAID_ON_KEY = "paidOn";
         public const string CURRENCY_KEY = "currency";
@@ -77,6 +78,15 @@ namespace Lime.Messaging.Contents
         /// </value>
         [DataMember(Name = TAXES_KEY)]
         public decimal? Taxes { get; set; }
+
+        /// <summary>
+        /// Gets or sets the receipt address value.
+        /// </summary>
+        /// <value>
+        /// The address.
+        /// </value>
+        [DataMember(Name = ADDRESS_KEY)]
+        public PaymentAddress Address { get; set; }
 
         /// <summary>
         /// Gets or sets the receipt total value, including taxes.

@@ -75,7 +75,9 @@ namespace Lime.Sample.Server
                     return new TcpTransportListener(
                         uri,
                         serverCertificate,
-                        serializer);
+                        serializer,
+                        1024,
+                        2048);
                 //case "ws":
                 //case "wss":
                 //    return new WebSocketTransportListener(

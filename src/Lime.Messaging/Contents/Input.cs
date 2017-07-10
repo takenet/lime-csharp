@@ -28,13 +28,13 @@ namespace Lime.Messaging.Contents
         /// <summary>
         /// Gets or sets the input label that should be shown to the user.
         /// </summary>
-        [DataMember(Name = LABEL_KEY, IsRequired = true)]
+        [DataMember(Name = LABEL_KEY)]
         public DocumentContainer Label { get; set; }
 
         /// <summary>
         /// Gets or sets the validation rules to be enforced into the user response message for the input.
         /// </summary>
-        [DataMember(Name = LABEL_KEY)]
+        [DataMember(Name = VALIDATION_KEY)]
         public InputValidation Validation { get; set; }
 
         /// <summary>

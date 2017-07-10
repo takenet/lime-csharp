@@ -24,6 +24,7 @@ namespace Lime.Messaging.Resources
         public const string ALLOW_ANONYMOUS_SENDER_KEY = "allowAnonymousSender";
         public const string ALLOW_UNKNOWN_SENDER_KEY = "allowUnknownSender";
         public const string STORE_MESSAGE_CONTENT_KEY = "storeMessageContent";
+        public const string ENCRYPT_MESSAGE_CONTENT_KEY = "encryptMessageContent";
         public const string ACCESS_KEY_KEY = "accessKey";
         public const string ALTERNATIVE_ACCOUNT_KEY = "alternativeAccount";
         public const string PUBLISH_TO_DIRECTORY_KEY = "publishToDirectory";
@@ -93,6 +94,12 @@ namespace Lime.Messaging.Resources
         /// </summary>
         [DataMember(Name = STORE_MESSAGE_CONTENT_KEY, EmitDefaultValue = false)]
         public bool? StoreMessageContent { get; set; }
+
+        /// <summary>
+        /// Indicates if the content of messages from this account should be encrypted in the server. 
+        /// </summary>
+        [DataMember(Name = ENCRYPT_MESSAGE_CONTENT_KEY, EmitDefaultValue = false)]
+        public bool? EncryptMessageContent { get; set; }
 
         /// <summary>
         /// Alternative account address.

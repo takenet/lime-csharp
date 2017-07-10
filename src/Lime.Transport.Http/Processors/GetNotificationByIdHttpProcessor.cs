@@ -7,15 +7,11 @@ namespace Lime.Transport.Http.Processors
 {
     public sealed class GetNotificationByIdHttpProcessor : GetEnvelopeByIdHttpProcessorBase<Notification>
     {
-        #region Constructor
-
         public GetNotificationByIdHttpProcessor(IEnvelopeStorage<Notification> notificationStorage)
             : base(notificationStorage, Constants.NOTIFICATIONS_PATH)
         {
             
         }
-
-        #endregion
 
 
         protected override HttpResponse GetEnvelopeResponse(Notification envelope, HttpRequest request)

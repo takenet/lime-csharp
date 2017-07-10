@@ -53,8 +53,8 @@ namespace Lime.Sample.Client
                 password = Console.ReadLine();
             }
 
-            var setPresence = true;
-            var setReceipts = true;
+            var setPresence = false;
+            var setReceipts = false;
 
             // Creates a new transport and connect to the server
             var serverUri = new Uri(serverUriValue);
@@ -69,7 +69,7 @@ namespace Lime.Sample.Client
                     return TaskUtil.CompletedTask;
                 })
                 .CreateEstablishedClientChannelBuilder()
-                .WithEncryption(SessionEncryption.TLS)
+                .WithEncryption(SessionEncryption.None)
                 .AddEstablishedHandler(async (c, t) =>
                 {
                     if (setPresence)
@@ -222,7 +222,7 @@ namespace Lime.Sample.Client
             switch (uri.Scheme)
             {
                 case "net.tcp":
-                    return new TcpTransport(new JsonNetSerializer(), traceWriter: new DebugTraceWriter());
+                    return new TcpTransport(new JsonNetSerializer(), bufferSize: 1024, traceWriter: new DebugTraceWriter());
                 //case "ws":
                 //case "wss":
                 //    return new ClientWebSocketTransport(new JsonNetSerializer(), new DebugTraceWriter());

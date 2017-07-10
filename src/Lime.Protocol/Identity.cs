@@ -82,15 +82,50 @@ namespace Lime.Protocol
                    ((Domain == null && identity.Domain == null) || (Domain != null && Domain.Equals(identity.Domain, StringComparison.CurrentCultureIgnoreCase)));
         }
 
-        public static bool operator ==(Identity left, Identity right)
-        {
-            return Equals(left, right);
-        }
+        /// <summary>
+        /// Implements the operator ==.
+        /// </summary>
+        /// <param name="left">The left.</param>
+        /// <param name="right">The right.</param>
+        /// <returns>
+        /// The result of the operator.
+        /// </returns>
+        public static bool operator ==(Identity left, Identity right) => Equals(left, right);
 
-        public static bool operator !=(Identity left, Identity right)
-        {
-            return !Equals(left, right);
-        }
+        /// <summary>
+        /// Implements the operator !=.
+        /// </summary>
+        /// <param name="left">The left.</param>
+        /// <param name="right">The right.</param>
+        /// <returns>
+        /// The result of the operator.
+        /// </returns>
+        public static bool operator !=(Identity left, Identity right) => !Equals(left, right);
+
+        /// <summary>
+        /// Performs an implicit conversion from <see cref="System.String"/> to <see cref="Identity"/>.
+        /// </summary>
+        /// <param name="value">The value.</param>
+        /// <returns>
+        /// The result of the conversion.
+        /// </returns>
+        /// <summary>
+        /// Performs an implicit conversion from <see cref="System.String"/> to <see cref="Identity"/>.
+        /// </summary>
+        /// <param name="value">The value.</param>
+        /// <returns>
+        /// The result of the conversion.
+        /// </returns>
+        public static implicit operator Identity(string value) => value == null ? null : Parse(value);
+
+        /// <summary>
+        /// Performs an implicit conversion from <see cref="Identity"/> to <see cref="System.String"/>.
+        /// </summary>
+        /// <param name="identity">The identity.</param>
+        /// <returns>
+        /// The result of the conversion.
+        /// </returns>
+        public static implicit operator string(Identity identity) => identity?.ToString();
 
         /// <summary>
         /// Creates a Node instance based on the identity,
@@ -123,7 +158,7 @@ namespace Lime.Protocol
             return new Identity
             {
                 Name = !string.IsNullOrWhiteSpace(splittedIdentity[0]) ? splittedIdentity[0] : null,
-                Domain = splittedIdentity.Length > 1 ? splittedIdentity[1].Split('/')[0] : null
+                Domain = splittedIdentity.Length > 1 && !string.IsNullOrWhiteSpace(splittedIdentity[1]) ? splittedIdentity[1].Split('/')[0] : null
             };
         }
 

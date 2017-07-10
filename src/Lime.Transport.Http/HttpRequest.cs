@@ -17,7 +17,7 @@ namespace Lime.Transport.Http
             string method, 
             Uri uri, 
             IPrincipal user = null, 
-            Guid correlatorId = default(Guid),
+            string correlatorId = null,
             WebHeaderCollection headers = null, 
             NameValueCollection queryString = null, 
             MediaType contentType = null, 
@@ -29,7 +29,7 @@ namespace Lime.Transport.Http
             Uri = uri;
             Method = method;
             User = user;
-            CorrelatorId = correlatorId.Equals(default(Guid)) ? Guid.NewGuid() : correlatorId;
+            CorrelatorId = string.IsNullOrWhiteSpace(correlatorId) ? Guid.NewGuid().ToString() : correlatorId;
             Headers = headers ?? new WebHeaderCollection();
             QueryString = queryString ?? new NameValueCollection();
 
@@ -54,7 +54,7 @@ namespace Lime.Transport.Http
             }
         }
 
-        public Guid CorrelatorId { get; private set; }
+        public string CorrelatorId { get; private set; }
 
         public string Method { get; private set; }
 

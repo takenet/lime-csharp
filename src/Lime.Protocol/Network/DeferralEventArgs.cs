@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Lime.Protocol.Network
@@ -29,9 +30,9 @@ namespace Lime.Protocol.Network
             return _deferrals.GetDeferral();
         }
 
-        public Task WaitForDeferralsAsync()
+        public Task WaitForDeferralsAsync(CancellationToken cancellationToken = default(CancellationToken))
         {
-            return _deferrals.SignalAndWaitAsync();
+            return _deferrals.SignalAndWaitAsync(cancellationToken);
         }
     }
 }

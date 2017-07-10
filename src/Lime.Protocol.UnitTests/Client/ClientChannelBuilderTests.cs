@@ -6,12 +6,11 @@ using Lime.Protocol.Client;
 using Lime.Protocol.Network;
 using Lime.Protocol.Util;
 using Moq;
-using NUnit.Framework;
+using Xunit;
 using Shouldly;
 
 namespace Lime.Protocol.UnitTests.Client
 {
-    [TestFixture]
     public class ClientChannelBuilderTests
     {
         private Mock<ITransport> _transport;
@@ -19,29 +18,20 @@ namespace Lime.Protocol.UnitTests.Client
         private TimeSpan _sendTimeout;
         private CancellationToken _cancellationToken;
 
-        
-        [SetUp]
-        public void Setup()
+        public ClientChannelBuilderTests()
         {
-            _transport = new Mock<ITransport>();         
+            _transport = new Mock<ITransport>();
             _serverUri = Dummy.CreateUri("net.tcp", 55321);
             _sendTimeout = TimeSpan.FromSeconds(5);
             _cancellationToken = TimeSpan.FromSeconds(5).ToCancellationToken();
-        }
-
-        [TearDown]
-        public void Teardown()
-        {
-            _transport = null;
-        }
-        
+        }        
 
         private ClientChannelBuilder GetTarget()
         {
             return ClientChannelBuilder.Create(_transport.Object, _serverUri);
         }
 
-        [Test]
+        [Fact]
         public async Task Create_ValidTransportAndUri_CallsTransportOpen()
         {
             // Arrange            
@@ -60,7 +50,7 @@ namespace Lime.Protocol.UnitTests.Client
             channel.Transport.ShouldBe(_transport.Object);
         }
 
-        [Test]
+        [Fact]
         public async Task Create_TransportIsConnected_DoNotCallTransportOpen()
         {
             // Arrange            
@@ -75,7 +65,7 @@ namespace Lime.Protocol.UnitTests.Client
             _transport.Verify(t => t.OpenAsync(_serverUri, _cancellationToken), Times.Never);
         }
         
-        [Test]
+        [Fact]
         public async Task AddMessageModule_NewMessageModule_AddsToCreatedChannel()
         {
             // Arrange            
@@ -91,7 +81,7 @@ namespace Lime.Protocol.UnitTests.Client
             channel.MessageModules.ShouldContain(moduleMock.Object);
         }
         
-        [Test]
+        [Fact]
         public async Task AddCommandModule_NewCommandModule_AddsToCreatedChannel()
         {
             // Arrange            
@@ -107,7 +97,7 @@ namespace Lime.Protocol.UnitTests.Client
             channel.CommandModules.ShouldContain(moduleMock.Object);
         }
         
-        [Test]
+        [Fact]
         public async Task AddNotificationModule_NewNotificationModule_AddsToCreatedChannel()
         {
             // Arrange            
@@ -123,7 +113,7 @@ namespace Lime.Protocol.UnitTests.Client
             channel.NotificationModules.ShouldContain(moduleMock.Object);
         }       
         
-        [Test]
+        [Fact]
         public async Task AddBuiltHandler_SingleHandler_ShouldExecuteHandler()
         {
             // Arrange            
@@ -149,7 +139,7 @@ namespace Lime.Protocol.UnitTests.Client
             handlerCancellationToken.ShouldBe(_cancellationToken);
         }
 
-        [Test]
+        [Fact]
         public async Task AddBuiltHandler_HandlerThrowsException_ShouldRethrowToCaller()
         {
             // Arrange            
@@ -167,7 +157,7 @@ namespace Lime.Protocol.UnitTests.Client
             await target.BuildAsync(_cancellationToken).ShouldThrowAsync<ApplicationException>();
         }
 
-        [Test]
+        [Fact]
         public async Task AddBuiltHandler_MultipleHandlers_ShouldExecuteHandlers()
         {
             // Arrange            

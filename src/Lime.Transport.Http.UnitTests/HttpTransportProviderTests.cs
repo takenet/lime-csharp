@@ -7,15 +7,36 @@ using Lime.Protocol.Network;
 using Lime.Protocol.UnitTests;
 using Lime.Transport.Http;
 using Lime.Transport.Http.Storage;
-using NUnit.Framework;
 using Moq;
 using Shouldly;
+using Xunit;
 
 namespace Lime.Transport.Http.UnitTests
 {
-    [TestFixture]
     public class HttpTransportProviderTests
     {
+        public HttpTransportProviderTests()
+        {
+            CancellationToken = TimeSpan.FromSeconds(5).ToCancellationToken();
+
+            UseHttps = true;
+
+            MessageStorage = new Mock<IEnvelopeStorage<Message>>();
+            NotificationStorage = new Mock<IEnvelopeStorage<Notification>>();
+
+            Identity = Dummy.CreateIdentity();
+            Password = Dummy.CreateRandomString(12);
+            HttpListenerBasicIdentity = new HttpListenerBasicIdentity(Identity.ToString(), Password);
+            Principal = new Mock<IPrincipal>();
+            Principal.SetupGet(p => p.Identity).Returns(HttpListenerBasicIdentity);
+
+            CacheInstance = true;
+            ExpirationInactivityInterval = TimeSpan.FromSeconds(30);
+            ExpirationTimerInterval = TimeSpan.FromSeconds(5);
+
+            Target = new Lazy<HttpTransportProvider>(() => new HttpTransportProvider(UseHttps, MessageStorage.Object, NotificationStorage.Object, ExpirationInactivityInterval, ExpirationTimerInterval, CloseTransportTimeout));
+        }
+
         public CancellationToken CancellationToken { get; private set; }
 
         public bool UseHttps { get; set; }
@@ -42,31 +63,7 @@ namespace Lime.Transport.Http.UnitTests
 
         public Lazy<HttpTransportProvider> Target { get; set; }
 
-        [SetUp]
-        public void Arrange()
-        {
-            CancellationToken = TimeSpan.FromSeconds(5).ToCancellationToken();
-
-            UseHttps = true;
-
-            MessageStorage = new Mock<IEnvelopeStorage<Message>>();
-            NotificationStorage = new Mock<IEnvelopeStorage<Notification>>();
-
-            Identity = Dummy.CreateIdentity();
-            Password = Dummy.CreateRandomString(12);
-            HttpListenerBasicIdentity = new HttpListenerBasicIdentity(Identity.ToString(), Password);
-            Principal = new Mock<IPrincipal>();
-            Principal.SetupGet(p => p.Identity).Returns(HttpListenerBasicIdentity);
-
-            CacheInstance = true;
-            ExpirationInactivityInterval = TimeSpan.FromSeconds(30);
-            ExpirationTimerInterval = TimeSpan.FromSeconds(5);
-
-            Target = new Lazy<HttpTransportProvider>(() => new HttpTransportProvider(UseHttps, MessageStorage.Object, NotificationStorage.Object, ExpirationInactivityInterval, ExpirationTimerInterval, CloseTransportTimeout));
-        }
-
-
-        [Test]
+        [Fact]
         public void GetTransport_NewSessionCacheInstance_ReturnsAndCacheTransport()
         {
             // Act
@@ -77,7 +74,7 @@ namespace Lime.Transport.Http.UnitTests
             second.ShouldBe(first);
         }
 
-        [Test]
+        [Fact]
         public void GetTransport_CacheInstanceAndCloseTransport_ReturnsNewTransport()
         {
             // Act
@@ -89,7 +86,7 @@ namespace Lime.Transport.Http.UnitTests
             second.ShouldNotBe(first);
         }
 
-        [Test]
+        [Fact]
         public void GetTransport_DoNotCacheInstance_ReturnsNewTransport()
         {
             CacheInstance = false;
@@ -102,7 +99,7 @@ namespace Lime.Transport.Http.UnitTests
             second.ShouldNotBe(first);
         }
 
-        [Test]
+        [Fact]
         public void GetTransport_CacheFirstAndDoNotCacheAfter_ReturnsCachedAndNewTransport()
         {
             // Act
@@ -115,7 +112,7 @@ namespace Lime.Transport.Http.UnitTests
             third.ShouldNotBe(second);
         }
 
-        [Test]
+        [Fact]
         public void ExpirationTimer_Elapsed_ExpiredTransport_CloseTransport()
         {
             // Arrange

@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using NUnit.Framework;
+using Xunit;
 using System.Threading.Tasks;
 using Lime.Protocol.Client;
 using Lime.Protocol.Network;
@@ -12,7 +12,7 @@ using Lime.Protocol.Util;
 
 namespace Lime.Protocol.UnitTests.Client
 {
-    [TestFixture]
+    
     public class OnDemandClientChannelTests
     {
         private TimeSpan _sendTimeout;
@@ -25,8 +25,7 @@ namespace Lime.Protocol.UnitTests.Client
         private Mock<IDisposable> _disposableClientChannel;
         private Mock<ITransport> _transport;
 
-        [SetUp]
-        public void Setup()
+        public OnDemandClientChannelTests()
         {
             _sendTimeout = TimeSpan.FromSeconds(15);
             _cancellationToken = _sendTimeout.ToCancellationToken();
@@ -64,21 +63,12 @@ namespace Lime.Protocol.UnitTests.Client
                 .Returns(_sendTimeout);
         }
 
-        [TearDown]
-        public void Teardown()
-        {
-            _clientChannel = null;
-            _transport = null;
-            _establishedClientChannelBuilder = null;
-            _clientChannelBuilder = null;
-        }
-
         private IOnDemandClientChannel GetTarget()
         {
             return new OnDemandClientChannel(_establishedClientChannelBuilder.Object);            
         }
 
-        [Test]
+        [Fact]
         public async Task SendMessageAsync_NotEstablishedChannel_BuildChannelAndSends()
         {
             // Arrange
@@ -103,7 +93,7 @@ namespace Lime.Protocol.UnitTests.Client
             channelInformation.State.ShouldBe(SessionState.Established);
         }
 
-        [Test]
+        [Fact]
         public async Task SendMessageAsync_NotEstablishedChannelMultipleCalls_BuildChannelOnceAndSends()
         {
             // Arrange
@@ -132,7 +122,7 @@ namespace Lime.Protocol.UnitTests.Client
             }            
         }
 
-        [Test]
+        [Fact]
         public async Task SendMessageAsync_ChannelCreatedHandlerThrowsException_ThrowsExceptionToTheCaller()
         {
             // Arrange
@@ -148,7 +138,7 @@ namespace Lime.Protocol.UnitTests.Client
             await target.SendMessageAsync(message, CancellationToken.None).ShouldThrowAsync<ApplicationException>();
         }
 
-        [Test]
+        [Fact]
         public async Task SendMessageAsync_MultipleChannelCreatedHandlerThrowsException_ThrowsAggregateExceptionToTheCaller()
         {
             // Arrange
@@ -178,7 +168,7 @@ namespace Lime.Protocol.UnitTests.Client
             }
         }
 
-        [Test]
+        [Fact]
         public async Task SendMessageAsync_EstablishedChannel_SendsToExistingChannel()
         {
             // Arrange
@@ -197,7 +187,7 @@ namespace Lime.Protocol.UnitTests.Client
             _clientChannel.Verify(c => c.SendMessageAsync(message, CancellationToken.None), Times.Once());
         }
 
-        [Test]
+        [Fact]
         public async Task SendMessageAsync_ChannelCreationFailed_RecreateChannelAndSend()
         {
             // Arrange
@@ -236,7 +226,7 @@ namespace Lime.Protocol.UnitTests.Client
             createdChannelInformation.SessionId.ShouldBe(_sessionId);
         }
 
-        [Test]
+        [Fact]
         public async Task SendMessageAsync_ChannelCreationFailsMultipleTimes_TryRecreateChannelAndSend()
         {
             // Arrange
@@ -273,7 +263,7 @@ namespace Lime.Protocol.UnitTests.Client
             handlerArgs.Select(e => e.Exception).ShouldContain(exception3);
         }
 
-        [Test]
+        [Fact]
         public async Task SendMessageAsync_ChannelDisposed_ThrowsObjectDisposed()
         {
             // Arrange
@@ -285,7 +275,7 @@ namespace Lime.Protocol.UnitTests.Client
             await target.SendMessageAsync(message, CancellationToken.None).ShouldThrowAsync<ObjectDisposedException>();
         }
 
-        [Test]
+        [Fact]
         public async Task SendMessageAsync_ChannelCreationFailedHandlerReturnFalse_ThrowsException()
         {
             // Arrange
@@ -302,7 +292,7 @@ namespace Lime.Protocol.UnitTests.Client
             await target.SendMessageAsync(message, CancellationToken.None).ShouldThrowAsync<ApplicationException>();
         }
 
-        [Test]
+        [Fact]
         public async Task SendMessageAsync_ChannelCreationFailedMultipleHandlersOneReturnsFalse_ThrowsException()
         {
             // Arrange
@@ -337,7 +327,7 @@ namespace Lime.Protocol.UnitTests.Client
             handlerCallCount.ShouldBe(3);            
         }
 
-        [Test]
+        [Fact]
         public async Task SendMessageAsync_ChannelOperationFailed_RecreateChannelAndSend()
         {
             // Arrange
@@ -400,7 +390,7 @@ namespace Lime.Protocol.UnitTests.Client
             discardedChannelInformation.SessionId.ShouldBe(_sessionId);
         }
                         
-        [Test]
+        [Fact]
         public async Task ReceiveMessageAsync_NotEstablishedChannel_BuildChannelAndReceives()
         {
             // Arrange
@@ -420,7 +410,7 @@ namespace Lime.Protocol.UnitTests.Client
             _clientChannel.Verify(c => c.ReceiveMessageAsync(_cancellationToken), Times.Once());            
         }
 
-        [Test]
+        [Fact]
         public async Task ReceiveMessageAsync_EstablishedChannel_ReceivesFromExistingChannel()
         {
             // Arrange
@@ -443,7 +433,7 @@ namespace Lime.Protocol.UnitTests.Client
             _clientChannel.Verify(c => c.ReceiveMessageAsync(_cancellationToken), Times.Once());
         }
 
-        [Test]
+        [Fact]
         public async Task ReceiveMessageAsync_ChannelCreationFailed_RecreateChannelAndReceives()
         {
             // Arrange
@@ -478,7 +468,7 @@ namespace Lime.Protocol.UnitTests.Client
             failedChannelInformation.IsConnected.ShouldBeFalse();
         }
 
-        [Test]
+        [Fact]
         public async Task ReceiveMessageAsync_ChannelCreationFailsMultipleTimes_TryRecreateChannelAndReceives()
         {
             // Arrange
@@ -520,7 +510,7 @@ namespace Lime.Protocol.UnitTests.Client
             failedChannelInformations.Select(e => e.Exception).ShouldContain(exception3);
         }
 
-        [Test]
+        [Fact]
         public async Task ReceiveMessageAsync_ChannelDisposed_ThrowsObjectDisposed()
         {
             // Arrange            
@@ -531,7 +521,7 @@ namespace Lime.Protocol.UnitTests.Client
             var actual = await target.ReceiveMessageAsync(_cancellationToken).ShouldThrowAsync<ObjectDisposedException>();
         }
 
-        [Test]
+        [Fact]
         public void ReceiveMessageAsync_CanceledToken_ThrowsTaskCanceledException()
         {
             // Arrange
@@ -547,7 +537,7 @@ namespace Lime.Protocol.UnitTests.Client
             target.ReceiveMessageAsync(cts.Token).ShouldThrow<TaskCanceledException>();
         }
 
-        [Test]
+        [Fact]
         public async Task ReceiveMessageAsync_ChannelCreationFailedHandlerReturnFalse_ThrowsException()
         {
             // Arrange
@@ -564,7 +554,7 @@ namespace Lime.Protocol.UnitTests.Client
             var actual = await target.ReceiveMessageAsync(_cancellationToken).ShouldThrowAsync<ApplicationException>();
         }
 
-        [Test]
+        [Fact]
         public async Task ReceiveMessageAsync_ChannelOperationFailed_RecreateChannelAndReceives()
         {
             // Arrange
@@ -607,7 +597,7 @@ namespace Lime.Protocol.UnitTests.Client
             failedChannelInformation.OperationName.ShouldBe(nameof(IOnDemandClientChannel.ReceiveMessageAsync));
         }
         
-        [Test]
+        [Fact]
         public async Task SendNotificationAsync_NotEstablishedChannel_BuildChannelAndSends()
         {
             // Arrange
@@ -632,7 +622,7 @@ namespace Lime.Protocol.UnitTests.Client
             channelInformation.State.ShouldBe(SessionState.Established);
         }
 
-        [Test]
+        [Fact]
         public async Task SendNotificationAsync_NotEstablishedChannelMultipleCalls_BuildChannelOnceAndSends()
         {
             // Arrange
@@ -661,7 +651,7 @@ namespace Lime.Protocol.UnitTests.Client
             }
         }
 
-        [Test]
+        [Fact]
         public async Task SendNotificationAsync_ChannelCreatedHandlerThrowsException_ThrowsExceptionToTheCaller()
         {
             // Arrange
@@ -677,7 +667,7 @@ namespace Lime.Protocol.UnitTests.Client
             await target.SendNotificationAsync(notification, CancellationToken.None).ShouldThrowAsync<ApplicationException>();
         }
 
-        [Test]
+        [Fact]
         public async Task SendNotificationAsync_MultipleChannelCreatedHandlerThrowsException_ThrowsAggregateExceptionToTheCaller()
         {
             // Arrange
@@ -707,7 +697,7 @@ namespace Lime.Protocol.UnitTests.Client
             }
         }
 
-        [Test]
+        [Fact]
         public async Task SendNotificationAsync_EstablishedChannel_SendsToExistingChannel()
         {
             // Arrange
@@ -726,7 +716,7 @@ namespace Lime.Protocol.UnitTests.Client
             _clientChannel.Verify(c => c.SendNotificationAsync(notification, CancellationToken.None), Times.Once());
         }
 
-        [Test]
+        [Fact]
         public async Task SendNotificationAsync_ChannelCreationFailed_RecreateChannelAndSend()
         {
             // Arrange
@@ -765,7 +755,7 @@ namespace Lime.Protocol.UnitTests.Client
             createdChannelInformation.SessionId.ShouldBe(_sessionId);
         }
 
-        [Test]
+        [Fact]
         public async Task SendNotificationAsync_ChannelCreationFailsMultipleTimes_TryRecreateChannelAndSend()
         {
             // Arrange
@@ -802,7 +792,7 @@ namespace Lime.Protocol.UnitTests.Client
             handlerArgs.Select(e => e.Exception).ShouldContain(exception3);
         }
 
-        [Test]
+        [Fact]
         public async Task SendNotificationAsync_ChannelDisposed_ThrowsObjectDisposed()
         {
             // Arrange
@@ -814,7 +804,7 @@ namespace Lime.Protocol.UnitTests.Client
             await target.SendNotificationAsync(notification, CancellationToken.None).ShouldThrowAsync<ObjectDisposedException>();
         }
 
-        [Test]
+        [Fact]
         public async Task SendNotificationAsync_ChannelCreationFailedHandlerReturnFalse_ThrowsException()
         {
             // Arrange
@@ -831,7 +821,7 @@ namespace Lime.Protocol.UnitTests.Client
             await target.SendNotificationAsync(notification, CancellationToken.None).ShouldThrowAsync<ApplicationException>();
         }
 
-        [Test]
+        [Fact]
         public async Task SendNotificationAsync_ChannelCreationFailedMultipleHandlersOneReturnsFalse_ThrowsException()
         {
             // Arrange
@@ -866,7 +856,7 @@ namespace Lime.Protocol.UnitTests.Client
             handlerCallCount.ShouldBe(3);
         }
 
-        [Test]
+        [Fact]
         public async Task SendNotificationAsync_ChannelOperationFailed_RecreateChannelAndSend()
         {
             // Arrange
@@ -929,7 +919,7 @@ namespace Lime.Protocol.UnitTests.Client
             discardedChannelInformation.SessionId.ShouldBe(_sessionId);
         }
 
-        [Test]
+        [Fact]
         public async Task ReceiveNotificationAsync_NotEstablishedChannel_BuildChannelAndReceives()
         {
             // Arrange
@@ -949,7 +939,7 @@ namespace Lime.Protocol.UnitTests.Client
             _clientChannel.Verify(c => c.ReceiveNotificationAsync(_cancellationToken), Times.Once());
         }
 
-        [Test]
+        [Fact]
         public async Task ReceiveNotificationAsync_EstablishedChannel_ReceivesFromExistingChannel()
         {
             // Arrange
@@ -972,7 +962,7 @@ namespace Lime.Protocol.UnitTests.Client
             _clientChannel.Verify(c => c.ReceiveNotificationAsync(_cancellationToken), Times.Once());
         }
 
-        [Test]
+        [Fact]
         public async Task ReceiveNotificationAsync_ChannelCreationFailed_RecreateChannelAndReceives()
         {
             // Arrange
@@ -1007,7 +997,7 @@ namespace Lime.Protocol.UnitTests.Client
             failedChannelInformation.IsConnected.ShouldBeFalse();
         }
 
-        [Test]
+        [Fact]
         public async Task ReceiveNotificationAsync_ChannelCreationFailsMultipleTimes_TryRecreateChannelAndReceives()
         {
             // Arrange
@@ -1049,7 +1039,7 @@ namespace Lime.Protocol.UnitTests.Client
             failedChannelInformations.Select(e => e.Exception).ShouldContain(exception3);
         }
 
-        [Test]
+        [Fact]
         public async Task ReceiveNotificationAsync_ChannelDisposed_ThrowsObjectDisposed()
         {
             // Arrange            
@@ -1060,7 +1050,7 @@ namespace Lime.Protocol.UnitTests.Client
             var actual = await target.ReceiveNotificationAsync(_cancellationToken).ShouldThrowAsync<ObjectDisposedException>();
         }
 
-        [Test]
+        [Fact]
         public void ReceiveNotificationAsync_CanceledToken_ThrowsTaskCanceledException()
         {
             // Arrange
@@ -1076,7 +1066,7 @@ namespace Lime.Protocol.UnitTests.Client
             target.ReceiveNotificationAsync(cts.Token).ShouldThrow<TaskCanceledException>();
         }
 
-        [Test]
+        [Fact]
         public async Task ReceiveNotificationAsync_ChannelCreationFailedHandlerReturnFalse_ThrowsException()
         {
             // Arrange
@@ -1093,7 +1083,7 @@ namespace Lime.Protocol.UnitTests.Client
             var actual = await target.ReceiveNotificationAsync(_cancellationToken).ShouldThrowAsync<ApplicationException>();
         }
 
-        [Test]
+        [Fact]
         public async Task ReceiveNotificationAsync_ChannelOperationFailed_RecreateChannelAndReceives()
         {
             // Arrange
@@ -1136,7 +1126,7 @@ namespace Lime.Protocol.UnitTests.Client
             failedChannelInformation.OperationName.ShouldBe(nameof(IOnDemandClientChannel.ReceiveNotificationAsync));
         }
         
-        [Test]
+        [Fact]
         public async Task SendCommandAsync_NotEstablishedChannel_BuildChannelAndSends()
         {
             // Arrange
@@ -1161,7 +1151,7 @@ namespace Lime.Protocol.UnitTests.Client
             channelInformation.State.ShouldBe(SessionState.Established);
         }
 
-        [Test]
+        [Fact]
         public async Task SendCommandAsync_NotEstablishedChannelMultipleCalls_BuildChannelOnceAndSends()
         {
             // Arrange
@@ -1190,7 +1180,7 @@ namespace Lime.Protocol.UnitTests.Client
             }
         }
 
-        [Test]
+        [Fact]
         public async Task SendCommandAsync_ChannelCreatedHandlerThrowsException_ThrowsExceptionToTheCaller()
         {
             // Arrange
@@ -1206,7 +1196,7 @@ namespace Lime.Protocol.UnitTests.Client
             await target.SendCommandAsync(command, CancellationToken.None).ShouldThrowAsync<ApplicationException>();
         }
 
-        [Test]
+        [Fact]
         public async Task SendCommandAsync_MultipleChannelCreatedHandlerThrowsException_ThrowsAggregateExceptionToTheCaller()
         {
             // Arrange
@@ -1236,7 +1226,7 @@ namespace Lime.Protocol.UnitTests.Client
             }
         }
 
-        [Test]
+        [Fact]
         public async Task SendCommandAsync_EstablishedChannel_SendsToExistingChannel()
         {
             // Arrange
@@ -1255,7 +1245,7 @@ namespace Lime.Protocol.UnitTests.Client
             _clientChannel.Verify(c => c.SendCommandAsync(command, CancellationToken.None), Times.Once());
         }
 
-        [Test]
+        [Fact]
         public async Task SendCommandAsync_ChannelCreationFailed_RecreateChannelAndSend()
         {
             // Arrange
@@ -1294,7 +1284,7 @@ namespace Lime.Protocol.UnitTests.Client
             createdChannelInformation.SessionId.ShouldBe(_sessionId);
         }
 
-        [Test]
+        [Fact]
         public async Task SendCommandAsync_ChannelCreationFailsMultipleTimes_TryRecreateChannelAndSend()
         {
             // Arrange
@@ -1331,7 +1321,7 @@ namespace Lime.Protocol.UnitTests.Client
             handlerArgs.Select(e => e.Exception).ShouldContain(exception3);
         }
 
-        [Test]
+        [Fact]
         public async Task SendCommandAsync_ChannelDisposed_ThrowsObjectDisposed()
         {
             // Arrange
@@ -1343,7 +1333,7 @@ namespace Lime.Protocol.UnitTests.Client
             await target.SendCommandAsync(command, CancellationToken.None).ShouldThrowAsync<ObjectDisposedException>();
         }
 
-        [Test]
+        [Fact]
         public async Task SendCommandAsync_ChannelCreationFailedHandlerReturnFalse_ThrowsException()
         {
             // Arrange
@@ -1360,7 +1350,7 @@ namespace Lime.Protocol.UnitTests.Client
             await target.SendCommandAsync(command, CancellationToken.None).ShouldThrowAsync<ApplicationException>();
         }
 
-        [Test]
+        [Fact]
         public async Task SendCommandAsync_ChannelCreationFailedMultipleHandlersOneReturnsFalse_ThrowsException()
         {
             // Arrange
@@ -1395,7 +1385,7 @@ namespace Lime.Protocol.UnitTests.Client
             handlerCallCount.ShouldBe(3);
         }
 
-        [Test]
+        [Fact]
         public async Task SendCommandAsync_ChannelOperationFailed_RecreateChannelAndSend()
         {
             // Arrange
@@ -1459,7 +1449,7 @@ namespace Lime.Protocol.UnitTests.Client
             discardedChannelInformation.SessionId.ShouldBe(_sessionId);
         }
 
-        [Test]
+        [Fact]
         public async Task ReceiveCommandAsync_NotEstablishedChannel_BuildChannelAndReceives()
         {
             // Arrange
@@ -1479,7 +1469,7 @@ namespace Lime.Protocol.UnitTests.Client
             _clientChannel.Verify(c => c.ReceiveCommandAsync(_cancellationToken), Times.Once());
         }
 
-        [Test]
+        [Fact]
         public async Task ReceiveCommandAsync_EstablishedChannel_ReceivesFromExistingChannel()
         {
             // Arrange
@@ -1502,7 +1492,7 @@ namespace Lime.Protocol.UnitTests.Client
             _clientChannel.Verify(c => c.ReceiveCommandAsync(_cancellationToken), Times.Once());
         }
 
-        [Test]
+        [Fact]
         public async Task ReceiveCommandAsync_ChannelCreationFailed_RecreateChannelAndReceives()
         {
             // Arrange
@@ -1537,7 +1527,7 @@ namespace Lime.Protocol.UnitTests.Client
             failedChannelInformation.IsConnected.ShouldBeFalse();
         }
 
-        [Test]
+        [Fact]
         public async Task ReceiveCommandAsync_ChannelCreationFailsMultipleTimes_TryRecreateChannelAndReceives()
         {
             // Arrange
@@ -1579,7 +1569,7 @@ namespace Lime.Protocol.UnitTests.Client
             failedChannelInformations.Select(e => e.Exception).ShouldContain(exception3);
         }
 
-        [Test]
+        [Fact]
         public async Task ReceiveCommandAsync_ChannelDisposed_ThrowsObjectDisposed()
         {
             // Arrange            
@@ -1590,7 +1580,7 @@ namespace Lime.Protocol.UnitTests.Client
             var actual = await target.ReceiveCommandAsync(_cancellationToken).ShouldThrowAsync<ObjectDisposedException>();
         }
 
-        [Test]
+        [Fact]
         public async Task ReceiveCommandAsync_CanceledToken_ThrowsTaskCanceledException()
         {
             // Arrange
@@ -1606,7 +1596,7 @@ namespace Lime.Protocol.UnitTests.Client
             target.ReceiveCommandAsync(cts.Token).ShouldThrow<TaskCanceledException>();
         }
 
-        [Test]
+        [Fact]
         public async Task ReceiveCommandAsync_ChannelCreationFailedHandlerReturnFalse_ThrowsException()
         {
             // Arrange
@@ -1623,7 +1613,7 @@ namespace Lime.Protocol.UnitTests.Client
             var actual = await target.ReceiveCommandAsync(_cancellationToken).ShouldThrowAsync<ApplicationException>();
         }
 
-        [Test]
+        [Fact]
         public async Task ReceiveCommandAsync_ChannelOperationFailed_RecreateChannelAndReceives()
         {
             // Arrange
@@ -1667,7 +1657,7 @@ namespace Lime.Protocol.UnitTests.Client
         }
 
         
-        [Test]
+        [Fact]
         public async Task ProcessCommandAsync_NotEstablishedChannel_BuildChannelAndProcesses()
         {
             // Arrange
@@ -1689,7 +1679,7 @@ namespace Lime.Protocol.UnitTests.Client
             _clientChannel.Verify(c => c.ProcessCommandAsync(requestCommand, _cancellationToken), Times.Once());
         }
 
-        [Test]
+        [Fact]
         public async Task ProcessCommandAsync_EstablishedChannel_ProcessesWithExistingChannel()
         {
             // Arrange
@@ -1714,7 +1704,7 @@ namespace Lime.Protocol.UnitTests.Client
             _clientChannel.Verify(c => c.ProcessCommandAsync(requestCommand, _cancellationToken), Times.Once());
         }
 
-        [Test]
+        [Fact]
         public async Task ProcessCommandAsync_ChannelCreationFailed_RecreateChannelAndProcesses()
         {
             // Arrange
@@ -1751,7 +1741,7 @@ namespace Lime.Protocol.UnitTests.Client
             failedChannelInformation.IsConnected.ShouldBeFalse();
         }
 
-        [Test]
+        [Fact]
         public async Task ProcessCommandAsync_ChannelCreationFailsMultipleTimes_TryRecreateChannelAndProcesses()
         {
             // Arrange
@@ -1795,7 +1785,7 @@ namespace Lime.Protocol.UnitTests.Client
             failedChannelInformations.Select(e => e.Exception).ShouldContain(exception3);
         }
 
-        [Test]
+        [Fact]
         public async Task ProcessCommandAsync_ChannelDisposed_ThrowsObjectDisposed()
         {
             // Arrange            
@@ -1807,7 +1797,7 @@ namespace Lime.Protocol.UnitTests.Client
             var actual = await target.ProcessCommandAsync(requestCommand, _cancellationToken).ShouldThrowAsync<ObjectDisposedException>();
         }
 
-        [Test]
+        [Fact]
         public void ProcessCommandAsync_CanceledToken_ThrowsTaskCanceledException()
         {
             // Arrange
@@ -1826,7 +1816,7 @@ namespace Lime.Protocol.UnitTests.Client
             task.ShouldThrow<TaskCanceledException>();
         }
 
-        [Test]        
+        [Fact]        
         public async Task ProcessCommandAsync_ChannelCreationFailedHandlerReturnFalse_ThrowsException()
         {
             // Arrange
@@ -1843,7 +1833,7 @@ namespace Lime.Protocol.UnitTests.Client
             var actual = await target.ProcessCommandAsync(requestCommand, _cancellationToken).ShouldThrowAsync<ApplicationException>();
         }
 
-        [Test]
+        [Fact]
         public async Task ProcessCommandAsync_ChannelOperationFailed_RecreateChannelAndProcesses()
         {
             // Arrange
@@ -1895,7 +1885,7 @@ namespace Lime.Protocol.UnitTests.Client
             failedChannelInformation.OperationName.ShouldBe(nameof(IOnDemandClientChannel.ProcessCommandAsync));
         }
 
-        [Test]
+        [Fact]
         public async Task FinishAsync_EstablishedChannel_SendFinishingAndAwaitsForFinishedSession()
         {
             // Arrange
@@ -1916,7 +1906,7 @@ namespace Lime.Protocol.UnitTests.Client
             _disposableClientChannel.Verify(c => c.Dispose(), Times.Once);
         }
 
-        [Test]
+        [Fact]
         public async Task FinishAsync_NotEstablishedChannel_DoNotSendEnvelopes()
         {
             // Arrange
@@ -1939,7 +1929,7 @@ namespace Lime.Protocol.UnitTests.Client
             _disposableClientChannel.Verify(c => c.Dispose(), Times.Once);
         }
         
-        [Test]
+        [Fact]
         public async Task Send_Receive_Process_Message_Command_Notification_Async_ChannelOperationFailed_RecreateChannelOnceAndSend()
         {
             // Arrange
@@ -2067,7 +2057,7 @@ namespace Lime.Protocol.UnitTests.Client
             actualProcessed.ShouldBe(responseCommand);
         }
 
-        [Test]
+        [Fact]
         public async Task EstablishAsync_NotEstablishedChannel_BuildChannel()
         {
             // Arrange            
@@ -2090,7 +2080,7 @@ namespace Lime.Protocol.UnitTests.Client
             channelInformation.State.ShouldBe(SessionState.Established);
         }
 
-        [Test]
+        [Fact]
         public async Task EstablishAsync_EstablishedChannel_KeepsExistingChannel()
         {
             // Arrange
@@ -2107,7 +2097,7 @@ namespace Lime.Protocol.UnitTests.Client
                 Times.Never());
         }
 
-        [Test]
+        [Fact]
         public async Task EstablishAsync_ChannelCreationFailed_RecreateChannel()
         {
             // Arrange

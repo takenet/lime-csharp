@@ -14,17 +14,18 @@ namespace Lime.Protocol.Network.Modules
         public const string PING_URI = "/ping";
         private static readonly Document PingDocument = new JsonDocument(MediaType.Parse(PING_MEDIA_TYPE));
 
-        private readonly ICommandChannel _commandChannel;
+        private readonly IChannel _channel;
 
-        public ReplyPingChannelModule(ICommandChannel commandChannel)
+        public ReplyPingChannelModule(IChannel channel)
         {
-            if (commandChannel == null) throw new ArgumentNullException(nameof(commandChannel));
-            _commandChannel = commandChannel;
+            if (channel == null) throw new ArgumentNullException(nameof(channel));
+            _channel = channel;
         }
 
         public override async Task<Command> OnReceivingAsync(Command envelope, CancellationToken cancellationToken)
         {
             if (!envelope.IsPingRequest()) return envelope;
+            if (envelope.To != null && !envelope.To.ToIdentity().Equals(_channel.LocalNode.ToIdentity())) return envelope;
 
             var pingCommandResponse = new Command
             {
@@ -35,7 +36,7 @@ namespace Lime.Protocol.Network.Modules
                 Resource = PingDocument
             };
 
-            await _commandChannel.SendCommandAsync(pingCommandResponse, cancellationToken).ConfigureAwait(false);
+            await _channel.SendCommandAsync(pingCommandResponse, cancellationToken).ConfigureAwait(false);
             return null;
         }
     }
