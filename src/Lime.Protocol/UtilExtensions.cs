@@ -284,7 +284,7 @@ namespace Lime.Protocol
             {
                 Code = ReasonCodes.GENERAL_ERROR,
                 Description = exception.Message
-            };            
+            };
         }
     }
 }

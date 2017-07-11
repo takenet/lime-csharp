@@ -5,7 +5,7 @@ using Lime.Protocol.Util;
 
 namespace Lime.Protocol.Network.Modules
 {
-#if NET461
+#if !NETSTANDARD1_1
 
     /// <summary>
     /// Defines a channel module that controls envelope throughput

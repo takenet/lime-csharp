@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace Lime.Protocol.Util
 {
-#if NET461
+#if !NETSTANDARD1_1
     /// <summary>
     /// Used to control the rate of some occurrence per unit of time.
     /// </summary>

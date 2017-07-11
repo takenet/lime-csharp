@@ -31,10 +31,10 @@ namespace Lime.Protocol.Client
             Authenticator = (options, roundtrip) => new GuestAuthentication();
             EstablishmentTimeout = TimeSpan.FromSeconds(30);
             Identity = new Identity(EnvelopeId.NewId(), clientChannelBuilder.ServerUri.Host);
-#if NET461
-            Instance = Environment.MachineName;
-#else
+#if NETSTANDARD1_1
             Instance = "default";
+#else
+            Instance = Environment.MachineName;
 #endif
         }
 
@@ -77,10 +77,11 @@ namespace Lime.Protocol.Client
         /// Gets the established handlers.
         /// </summary>
         public IEnumerable<Func<IClientChannel, CancellationToken, Task>> EstablishedHandlers =>
-#if NET461
-            _establishedHandlers.AsReadOnly();
+#if NETSTANDARD1_1
+            new List<Func<IClientChannel, CancellationToken, Task>>(_establishedHandlers);
+            
 #else
-        new List<Func<IClientChannel, CancellationToken, Task>>(_establishedHandlers);
+            _establishedHandlers.AsReadOnly();
 #endif
 
         /// <summary>

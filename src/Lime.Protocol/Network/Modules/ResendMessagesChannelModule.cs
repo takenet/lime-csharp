@@ -241,7 +241,7 @@ namespace Lime.Protocol.Network.Modules
             catch (ObjectDisposedException) { }
             catch (Exception ex)
             {
-#if NET461
+#if !NETSTANDARD1_1
                 Trace.TraceError("DestinationResendMessagesChannelModule.WaitForRetryAsync: {0}", ex.Message);
 #endif
             }

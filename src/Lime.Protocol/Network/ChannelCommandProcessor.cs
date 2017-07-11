@@ -39,6 +39,7 @@ namespace Lime.Protocol.Network
             }
 
 #if NETSTANDARD1_1
+            // TODO: Without the TaskCreationOptions.RunContinuationsAsynchronously, there may occurs deadlock on command results.
             var tcs = new TaskCompletionSource<Command>();
 #else
             var tcs = new TaskCompletionSource<Command>(TaskCreationOptions.RunContinuationsAsynchronously);

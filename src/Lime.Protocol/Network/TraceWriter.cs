@@ -1,13 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Text;
+﻿using System.Diagnostics;
 using System.Threading.Tasks;
 using Lime.Protocol.Util;
 
 namespace Lime.Protocol.Network
 {
-#if NET461    
+#if !NETSTANDARD1_1    
     /// <summary>
     /// Traces into the default .NET tracers.
     /// </summary>
