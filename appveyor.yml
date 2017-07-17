@@ -14,11 +14,17 @@ assembly_info:
   assembly_informational_version: '{version}'
 before_build:
 - ps: |
-    $xmlPath = "$env:appveyor_build_folder/src/Lime.Protocol/Lime.Protocol.csproj"
-    $xml = [xml](get-content $xmlPath)
-    $propertyGroup = $xml.Project.PropertyGroup | Where { $_.Version}
-    $propertyGroup.Version = $env:appveyor_build_version
-    $xml.Save($xmlPath)
+    function UpdateProjectVersion($xmlPath, $version)
+    {
+        $xml = [xml](get-content $xmlPath)
+        $propertyGroup = $xml.Project.PropertyGroup | Where { $_.Version}
+        $propertyGroup.Version = $version
+        $xml.Save($xmlPath)
+    }
+    UpdateProjectVersion("$env:appveyor_build_folder/src/Lime.Protocol/Lime.Protocol.csproj", $env:appveyor_build_version)
+    UpdateProjectVersion("$env:appveyor_build_folder/src/Lime.Protocol.Serialization/Lime.Protocol.Serialization.csproj", $env:appveyor_build_version)
+    UpdateProjectVersion("$env:appveyor_build_folder/src/Lime.Messaging/Lime.Messaging.csproj", $env:appveyor_build_version)
+
 - dotnet restore src/Lime.sln
 build:
   parallel: true
@@ -30,7 +36,7 @@ after_build:
 - dotnet pack src/Lime.Messaging/Lime.Messaging.csproj --configuration Release /p:Version=%APPVEYOR_BUILD_VERSION%
 - dotnet pack src/Lime.Transport.Tcp/Lime.Transport.Tcp.csproj --configuration Release /p:Version=%APPVEYOR_BUILD_VERSION%
 - dotnet pack src/Lime.Transport.WebSocket/Lime.Transport.WebSocket.csproj --configuration Release /p:Version=%APPVEYOR_BUILD_VERSION%
-- dotnet pack src/Lime.Transport.Http/Lime.Transport.Http.csproj --configuration Release /p:Version=%APPVEYOR_BUILD_VERSION%
+- dotnet pack src/Lime.Transport.Redis/Lime.Transport.Redis.csproj --configuration Release /p:Version=%APPVEYOR_BUILD_VERSION%
 test:
   assemblies:    
     - '**\*Tests.dll'
