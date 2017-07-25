@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
+using Lime.Messaging;
 using Lime.Messaging.Contents;
 using Lime.Messaging.Resources;
 using Lime.Protocol;
@@ -16,13 +17,26 @@ using Xunit;
 namespace Lime.Transport.Redis.UnitTests
 {
     [Trait("Category", nameof(Redis))]
-    public class RedisTransportTests : IClassFixture<RedisFixture>
+    public class RedisTransportTests : IClassFixture<RedisFixture>, IDisposable
     {
         private readonly RedisFixture _redisFixture;
 
-        public RedisTransportTests(RedisFixture redisFixture)
+        static RedisTransportTests()
         {
+            Registrator.RegisterDocuments();
+        }
+
+        public RedisTransportTests(RedisFixture redisFixture)
+        {            
             _redisFixture = redisFixture;
+
+            ChannelNamespace = EnvelopeId.NewId();
+            ListenerUri = new Uri("redis://localhost");
+            EnvelopeSerializer = new JsonNetSerializer();
+            TraceWriter = new Mock<ITraceWriter>();
+            Listener = new RedisTransportListener(ListenerUri, EnvelopeSerializer, TraceWriter.Object, channelNamespace: ChannelNamespace);            
+            CancellationToken = TimeSpan.FromSeconds(5).ToCancellationToken();
+            Listener.StartAsync(CancellationToken).Wait();
         }
         
         public Uri ListenerUri { get; private set; }
@@ -53,7 +67,7 @@ namespace Lime.Transport.Redis.UnitTests
         }
 
         public async Task<RedisTransport> GetTargetAndOpenAsync()
-        {
+        {           
             var transport = GetTarget();
             await transport.OpenAsync(ListenerUri, CancellationToken);
             return transport;
@@ -234,6 +248,12 @@ namespace Lime.Transport.Redis.UnitTests
             actualResource.Message.ShouldBe(presence.Message);
             actualResource.RoutingRule.ShouldBe(presence.RoutingRule);
             actualResource.Priority.ShouldBe(presence.Priority);
+        }
+
+        public void Dispose()
+        {
+            Listener.StopAsync(CancellationToken).Wait();
+            Listener.Dispose();
         }
     }
 }

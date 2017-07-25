@@ -20,7 +20,6 @@ namespace Lime.Transport.Redis
         private readonly ITraceWriter _traceWriter;
         private readonly string _channelNamespace;
         private readonly string _listenerChannelName;
-
         private readonly IConnectionMultiplexerFactory _connectionMultiplexerFactory;
         private readonly BufferBlock<ITransport> _transportBufferBlock;
         private readonly ConfigurationOptions _redisConfiguration;
