@@ -12,16 +12,17 @@ namespace Lime.Protocol.Network
     /// <seealso cref="Lime.Protocol.Network.ICommandProcessor" />
     public sealed class ChannelCommandProcessor : IChannelCommandProcessor
     {
+        private readonly ICommandSenderChannel _commandSenderChannel;
         private readonly ConcurrentDictionary<string, TaskCompletionSource<Command>> _pendingCommandsDictionary;
 
-        public ChannelCommandProcessor()
+        public ChannelCommandProcessor(ICommandSenderChannel commandSenderChannel)
         {
+            _commandSenderChannel = commandSenderChannel ?? throw new ArgumentNullException(nameof(commandSenderChannel));
             _pendingCommandsDictionary = new ConcurrentDictionary<string, TaskCompletionSource<Command>>();
         }
         
-        public async Task<Command> ProcessCommandAsync(ICommandSenderChannel commandSenderChannel, Command requestCommand, CancellationToken cancellationToken)
+        public async Task<Command> ProcessCommandAsync(Command requestCommand, CancellationToken cancellationToken)
         {
-            if (commandSenderChannel == null) throw new ArgumentNullException(nameof(commandSenderChannel));
             if (requestCommand == null) throw new ArgumentNullException(nameof(requestCommand));
             if (requestCommand.Status != CommandStatus.Pending)
             {
@@ -57,7 +58,7 @@ namespace Lime.Protocol.Network
                 using (cancellationToken.Register(() => tcs.TrySetCanceled(cancellationToken)))
 #endif
                 {
-                    await commandSenderChannel.SendCommandAsync(requestCommand, cancellationToken).ConfigureAwait(false);
+                    await _commandSenderChannel.SendCommandAsync(requestCommand, cancellationToken).ConfigureAwait(false);
                     var result = await tcs.Task.ConfigureAwait(false);
                     return result;
                 }
