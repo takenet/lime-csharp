@@ -27,7 +27,7 @@ namespace Lime.Protocol.Client
         private readonly BufferBlock<Notification> _inputNotificationBufferBlock;
         private readonly TransformBlock<Command, Command> _processCommandTransformBlock;
         private readonly BufferBlock<Command> _inputCommandBufferBlock;
-        private readonly ChannelCommandProcessor _channelCommandProcessor;
+        private readonly IChannelCommandProcessor _channelCommandProcessor;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MultiplexerClientChannel"/> class.
@@ -36,13 +36,15 @@ namespace Lime.Protocol.Client
         /// <param name="count">The number of channels to create.</param>
         /// <param name="inputBufferSize">The input buffer bounded capacity.</param>
         /// <param name="outputBufferSize">The output buffer bounded capacity.</param>
+        /// <param name="channelCommandProcessor">The workflow for processing commands.</param>
         /// <exception cref="System.ArgumentNullException"></exception>
         /// <exception cref="System.ArgumentOutOfRangeException"></exception>
         public MultiplexerClientChannel(
             IEstablishedClientChannelBuilder builder, 
             int count = 5,
             int inputBufferSize = 1,
-            int outputBufferSize = 1)
+            int outputBufferSize = 1,
+            IChannelCommandProcessor channelCommandProcessor = null)
         {
             if (builder == null) throw new ArgumentNullException(nameof(builder));
             if (count <= 0) throw new ArgumentOutOfRangeException(nameof(count));
@@ -65,7 +67,7 @@ namespace Lime.Protocol.Client
             };
             _inputMessageBufferBlock = new BufferBlock<Message>(inputOptions);
             _inputNotificationBufferBlock = new BufferBlock<Notification>(inputOptions);
-            _channelCommandProcessor = new ChannelCommandProcessor(this);
+            _channelCommandProcessor = channelCommandProcessor ?? new ChannelCommandProcessor(this);
             // Uses the same channel command processor for all instances
             // to avoid problems with commands responses being received on different channels.
             builder.ChannelBuilder.WithChannelCommandProcessor(_channelCommandProcessor);
