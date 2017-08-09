@@ -108,7 +108,7 @@ namespace Lime.Protocol.Network
             _notificationConsumerBlock.LinkTo(_drainEnvelopeBlock, e => e == null);
             _sessionConsumerBlock.LinkTo(_sessionBuffer, PropagateCompletionLinkOptions, e => e != null);
             _sessionConsumerBlock.LinkTo(_drainEnvelopeBlock, e => e == null);
-            _channelCommandProcessor = channelCommandProcessor ?? new ChannelCommandProcessor(this);
+            _channelCommandProcessor = channelCommandProcessor ?? new ChannelCommandProcessor();
             MessageModules = new List<IChannelModule<Message>>();
             NotificationModules = new List<IChannelModule<Notification>>();
             CommandModules = new List<IChannelModule<Command>>();
@@ -237,7 +237,7 @@ namespace Lime.Protocol.Network
         /// <returns></returns>
         /// <exception cref="System.NotImplementedException"></exception>
         public virtual Task<Command> ProcessCommandAsync(Command requestCommand, CancellationToken cancellationToken)
-            => _channelCommandProcessor.ProcessCommandAsync(requestCommand, cancellationToken);
+            => _channelCommandProcessor.ProcessCommandAsync(this, requestCommand, cancellationToken);
 
         /// <summary>
         /// Sends a notification to the remote node.
