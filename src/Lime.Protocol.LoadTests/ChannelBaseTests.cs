@@ -13,11 +13,11 @@ using Lime.Protocol.Server;
 using Lime.Protocol.UnitTests;
 using NUnit.Framework;
 using Shouldly;
+using Xunit;
 
 namespace Lime.Protocol.LoadTests
 {
-    [TestFixture]
-    public class ChannelBaseTests
+    public class ChannelBaseTests : IDisposable
     {
         private CancellationToken _cancellationToken;
 
@@ -28,7 +28,10 @@ namespace Lime.Protocol.LoadTests
         private ClientChannel _clientChannel;
         private ServerChannel _serverChannel;
 
-        [SetUp]
+        public ChannelBaseTests()
+        {
+            SetupAsync().Wait();
+        }
         public async Task SetupAsync()
         {
             _cancellationToken = TimeSpan.FromSeconds(10).ToCancellationToken();
@@ -62,7 +65,12 @@ namespace Lime.Protocol.LoadTests
                 clientEstablishSessionTask);
         }
 
-        [TearDown]
+        public void Dispose()
+        {
+            TeardownAsync().Wait();
+        }
+
+        
         public async Task TeardownAsync()
         {
             await _serverChannel.SendFinishedSessionAsync(_cancellationToken);
@@ -70,7 +78,7 @@ namespace Lime.Protocol.LoadTests
         }
 
 
-        [Test]
+        [Fact]
         public async Task Send10000EnvelopesAsync()
         {
             // Arrange
@@ -120,6 +128,8 @@ namespace Lime.Protocol.LoadTests
             // Assert
             sw.ElapsedMilliseconds.ShouldBeLessThan(count * 2);
         }
+
+        
     }
 
     public class FakeTransport : TransportBase, ITransport

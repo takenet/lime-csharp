@@ -211,10 +211,10 @@ namespace Lime.Transport.Tcp
             var jsonBytes = Encoding.UTF8.GetBytes(envelopeJson);
 
             await _sendSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
-
+            
             try
             {
-                await _stream.WriteAsync(jsonBytes, 0, jsonBytes.Length, cancellationToken).ConfigureAwait(false);
+                await _stream.WriteAsync(jsonBytes, 0, jsonBytes.Length, cancellationToken).WithCancellation(cancellationToken).ConfigureAwait(false);
             }
             catch (IOException)
             {

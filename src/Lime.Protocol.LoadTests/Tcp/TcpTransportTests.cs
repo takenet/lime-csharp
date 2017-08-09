@@ -9,13 +9,13 @@ using Lime.Protocol.Serialization;
 using Lime.Protocol.Serialization.Newtonsoft;
 using Lime.Protocol.UnitTests;
 using Lime.Transport.Tcp;
-using NUnit.Framework;
 using Shouldly;
+using Xunit;
 
 namespace Lime.Protocol.LoadTests.Tcp
 {
-    [TestFixture]
-    public class TcpTransportTests
+
+    public class TcpTransportTests : IDisposable
     {
         private Uri _uri;
         private CancellationToken _cancellationToken;
@@ -25,30 +25,31 @@ namespace Lime.Protocol.LoadTests.Tcp
         private TcpTransport _serverTcpTransport;
 
 
-        [SetUp]
-        public async Task SetupAsync()
+
+        public TcpTransportTests()
         {
             _uri = new Uri("net.tcp://localhost:55321");
             _cancellationToken = TimeSpan.FromSeconds(30).ToCancellationToken();
             _envelopeSerializer = new FakeEnvelopeSerializer(10);
             _tcpTransportListener = new TcpTransportListener(_uri, null, _envelopeSerializer);
-            await _tcpTransportListener.StartAsync(_cancellationToken);
+            _tcpTransportListener.StartAsync(_cancellationToken).Wait();
             var serverTcpTransportTask = _tcpTransportListener.AcceptTransportAsync(_cancellationToken);
             _clientTcpTransport = new TcpTransport(_envelopeSerializer);
-            await _clientTcpTransport.OpenAsync(_uri, _cancellationToken);
-            _serverTcpTransport = (TcpTransport)await serverTcpTransportTask;
-            await _serverTcpTransport.OpenAsync(_uri, _cancellationToken);
+            _clientTcpTransport.OpenAsync(_uri, _cancellationToken).Wait();
+            _serverTcpTransport = (TcpTransport)serverTcpTransportTask.Result;
+            _serverTcpTransport.OpenAsync(_uri, _cancellationToken).Wait();
         }
 
-        [TearDown]
-        public async Task TeardownAsync()
+        public void Dispose()
         {
-            await _clientTcpTransport.CloseAsync(CancellationToken.None);
-            await _serverTcpTransport.CloseAsync(CancellationToken.None);
-            await _tcpTransportListener.StopAsync(_cancellationToken);
+            _clientTcpTransport.CloseAsync(CancellationToken.None).Wait();
+            _serverTcpTransport.CloseAsync(CancellationToken.None).Wait();
+            _tcpTransportListener.StopAsync(_cancellationToken).Wait();
         }
 
-        [Test]
+
+        [Fact]
+        [Trait("tcp", "Receive10kEnvelopes")]
         public async Task Send10000EnvelopesAsync()
         {
             // Arrange
@@ -75,6 +76,37 @@ namespace Lime.Protocol.LoadTests.Tcp
             // Assert
             sw.ElapsedMilliseconds.ShouldBeLessThan(count * 2);
         }
+
+        [Fact]
+        [Trait("tcp", "Send200EnvelopesWithoutReceive")]
+        public async Task Send200EnvelopesWithoutReceiveAsync()
+        {
+            // Arrange
+            var count = 200;
+            var envelopes = Enumerable
+                .Range(0, count)
+                .Select(i => Dummy.CreateMessage(Dummy.CreateTextContent()));
+
+            // Act
+            var sw = Stopwatch.StartNew();
+            foreach (var envelope in envelopes)
+            {
+                await _clientTcpTransport.SendAsync(envelope, _cancellationToken);
+            }
+
+            var receivedEnvelopes = Enumerable
+                .Range(0, count)
+                .Select(i => _serverTcpTransport.ReceiveAsync(_cancellationToken))
+                .ToArray();
+
+            await Task.WhenAll(receivedEnvelopes);
+            sw.Stop();
+
+            // Assert
+            sw.ElapsedMilliseconds.ShouldBeLessThan(count * 2);
+        }
+
+
     }
 
     public sealed class FakeEnvelopeSerializer : IEnvelopeSerializer
@@ -104,7 +136,7 @@ namespace Lime.Protocol.LoadTests.Tcp
                     if (i % 2 == 0)
                     {
                         return Dummy.CreateMessage(Dummy.CreateTextContent());
-                    } 
+                    }
                     return Dummy.CreateMessage(Dummy.CreateSelect());
                 })
                 .ToArray();
