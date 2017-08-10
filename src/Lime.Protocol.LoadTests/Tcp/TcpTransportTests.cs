@@ -78,6 +78,32 @@ namespace Lime.Protocol.LoadTests.Tcp
         }
 
         [Fact]
+        [Trait("tcp", "SendAndReceive100kEnvelopes")]
+        public async Task SendAndReceive100000EnvelopesAsync()
+        {
+            // Arrange
+            var count = 100000;
+            
+            var envelopes = Enumerable
+                .Range(0, count)
+                .Select(i => Dummy.CreateMessage(Dummy.CreateTextContent()));
+
+            var receivedEnvelopes = Enumerable
+                .Range(0, count)
+                .Select(i => _serverTcpTransport.ReceiveAsync(_cancellationToken))
+                .ToArray();
+
+            // Act
+            var sw = Stopwatch.StartNew();
+            var sendTasks = envelopes.Select(e => _clientTcpTransport.SendAsync(e, _cancellationToken));
+            await Task.WhenAll(sendTasks.Concat(receivedEnvelopes));
+            sw.Stop();
+            
+            // Assert
+            sw.ElapsedMilliseconds.ShouldBeLessThan((long)(count * 0.17));
+        }
+
+        [Fact]
         [Trait("tcp", "Send200EnvelopesWithoutReceive")]
         public async Task Send200EnvelopesWithoutReceiveAsync()
         {

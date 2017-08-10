@@ -17,6 +17,7 @@ using Lime.Protocol.Security;
 using Lime.Protocol.Serialization;
 using Lime.Protocol.Serialization.Newtonsoft;
 using System.Buffers;
+using Lime.Protocol.Util;
 
 namespace Lime.Transport.Tcp
 {
@@ -47,6 +48,7 @@ namespace Lime.Transport.Tcp
         private Stream _stream;
         private string _hostName;
         private bool _disposed;
+        private SyncStreamWriter _streamWriter;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TcpTransport"/> class.
@@ -210,21 +212,23 @@ namespace Lime.Transport.Tcp
             await TraceAsync(envelopeJson, DataOperation.Send).ConfigureAwait(false);
             var jsonBytes = Encoding.UTF8.GetBytes(envelopeJson);
 
-            await _sendSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
-            
-            try
-            {
-                await _stream.WriteAsync(jsonBytes, 0, jsonBytes.Length, cancellationToken).WithCancellation(cancellationToken).ConfigureAwait(false);
-            }
-            catch (IOException)
-            {
-                await CloseWithTimeoutAsync().ConfigureAwait(false);
-                throw;
-            }
-            finally
-            {
-                _sendSemaphore.Release();
-            }
+            await _streamWriter.WriteAsync(jsonBytes, cancellationToken);
+
+            //await _sendSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+
+            //try
+            //{
+            //    await _stream.WriteAsync(jsonBytes, 0, jsonBytes.Length, cancellationToken).WithCancellation(cancellationToken).ConfigureAwait(false);
+            //}
+            //catch (IOException)
+            //{
+            //    await CloseWithTimeoutAsync().ConfigureAwait(false);
+            //    throw;
+            //}
+            //finally
+            //{
+            //    _sendSemaphore.Release();
+            //}
         }
 
         /// <summary>
@@ -425,6 +429,8 @@ namespace Lime.Transport.Tcp
             {
                 _sendSemaphore.Release();
             }
+
+            _streamWriter = new SyncStreamWriter(_stream);
         }
 
         /// <summary>
@@ -602,6 +608,7 @@ namespace Lime.Transport.Tcp
             }
 
             _stream = _tcpClient.GetStream();
+            _streamWriter = new SyncStreamWriter(_stream);
         }
 
         /// <summary>
