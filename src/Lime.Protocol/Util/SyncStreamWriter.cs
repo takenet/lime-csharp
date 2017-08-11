@@ -17,12 +17,14 @@ namespace Lime.Protocol.Util
         private CancellationTokenSource _cancellationTokenSource;
 
         public Task Execution => _writeStreamTask;
-
+        
         public SyncStreamWriter(Stream stream)
         {
             _cancellationTokenSource = new CancellationTokenSource();
             _stream = stream;
-            _writeQueue = new BufferBlock<byte[]>(new DataflowBlockOptions { BoundedCapacity = 100 });
+            //Increasing this buffer can increase the throuput but comes with a price:
+            //The stream can become invalid (disconnection) and the messages will remain in the buffer
+            _writeQueue = new BufferBlock<byte[]>(new DataflowBlockOptions { BoundedCapacity = 1 });
             _writeStreamTask = Task.Factory.StartNew(WriteStream, TaskCreationOptions.LongRunning);
         }
 
