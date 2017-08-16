@@ -100,7 +100,7 @@ namespace Lime.Protocol.Server
             return this;
         }
 
-        public IServer Build(CancellationToken cancellationToken)
+        public IServer Build()
         {
             return new Server(
                 TransportListener,

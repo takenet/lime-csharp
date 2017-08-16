@@ -63,6 +63,7 @@ namespace Lime.Protocol.Server
             {
                 if (_listenerTask != null) throw new InvalidOperationException("The server is already started");
 
+                // Initialiaze a block for holding the channel consumer tasks.
                 _consumerBlock = new ActionBlock<IServerChannel>(
                     ConsumeAsync,
                     new ExecutionDataflowBlockOptions
@@ -73,8 +74,9 @@ namespace Lime.Protocol.Server
 
                 await _transportListener.StartAsync(cancellationToken).ConfigureAwait(false);
 
+                // Initialize a backgound task for listening for new transport connections
                 _listenerCts = new CancellationTokenSource();
-                _listenerTask = Task.Run((Func<Task>) (() => ListenAsync(_listenerCts.Token)));
+                _listenerTask = Task.Run(() => ListenAsync(_listenerCts.Token));
             }
             finally
             {
@@ -116,8 +118,9 @@ namespace Lime.Protocol.Server
                 try
                 {
                     var transport = await _transportListener.AcceptTransportAsync(cancellationToken).ConfigureAwait(false);
+                    await transport.OpenAsync(null, cancellationToken).ConfigureAwait(false);
                     var channel = _serverChannelFactory(transport);
-                    if (!await DataflowBlock.SendAsync<IServerChannel>(_consumerBlock, channel, cancellationToken))
+                    if (!await _consumerBlock.SendAsync<IServerChannel>(channel, cancellationToken))
                     {
                         // The server pipeline is complete
                         break;
@@ -134,6 +137,7 @@ namespace Lime.Protocol.Server
         {
             try
             {
+                // Establishes the session
                 await serverChannel.EstablishSessionAsync(
                         serverChannel.Transport.GetSupportedCompression().Intersect(_enabledCompressionOptions)
                             .ToArray(),
@@ -156,12 +160,11 @@ namespace Lime.Protocol.Server
                         return;
                     }
 
+                    // Initializes a new consumer
                     var channelListener = _channelListenerFactory();
 
                     try
                     {
-
-
                         // Consume the channel envelopes
                         channelListener.Start(serverChannel);
 
