@@ -163,7 +163,7 @@ namespace Lime.Sample.Server
                                 Name = EnvelopeId.NewId(),
                                 Domain = "limeprotocol.org",
                                 Instance = Environment.MachineName
-                            }),
+                            }).AsCompletedTask(),
                     cancellationToken);
 
                 if (serverChannel.State == SessionState.Established)

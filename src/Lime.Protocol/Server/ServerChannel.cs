@@ -15,7 +15,7 @@ namespace Lime.Protocol.Server
         /// Initializes a new instance of the <a href="ServerChannel" /> class.
         /// </summary>
         /// <param name="sessionId">The session identifier.</param>
-        /// <param name="serverNode">The server node.</param>
+        /// <param name="localNode">The server node.</param>
         /// <param name="transport">The transport to be used by the channel.</param>
         /// <param name="sendTimeout">The channel send timeout. Each send operation must be completed in the specified timeout or it will be canceled.</param>
         /// <param name="envelopeBufferSize">The number of envelopes to be buffered internally by the channel in the receive operations. If this limit is reached, the channel will not consume the transport until the buffer is consumed by the receive operations.</param>
@@ -27,22 +27,22 @@ namespace Lime.Protocol.Server
         /// <param name="closeTimeout">The channel close timeout.</param>
         /// <param name="channelCommandProcessor">The channel command processor.</param>
         public ServerChannel(
-            string sessionId, 
-            Node serverNode, 
-            ITransport transport, 
-            TimeSpan sendTimeout, 
-            int envelopeBufferSize = 1, 
-            bool fillEnvelopeRecipients = false, 
-            bool autoReplyPings = false, 
-            TimeSpan? remotePingInterval = null, 
+            string sessionId,
+            Node localNode,
+            ITransport transport,
+            TimeSpan sendTimeout,
+            int envelopeBufferSize = 1,
+            bool fillEnvelopeRecipients = false,
+            bool autoReplyPings = false,
+            TimeSpan? remotePingInterval = null,
             TimeSpan? remoteIdleTimeout = null,
             TimeSpan? consumeTimeout = null,
             TimeSpan? closeTimeout = null,
             IChannelCommandProcessor channelCommandProcessor = null)
             : base(transport, sendTimeout, consumeTimeout, closeTimeout ?? sendTimeout, envelopeBufferSize, fillEnvelopeRecipients, autoReplyPings, remotePingInterval, remoteIdleTimeout, channelCommandProcessor)
         {
-            LocalNode = serverNode;
-            SessionId = sessionId;
+            SessionId = sessionId ?? throw new ArgumentNullException(nameof(sessionId));
+            LocalNode = localNode ?? throw new ArgumentNullException(nameof(localNode));
         }
 
         /// <summary>

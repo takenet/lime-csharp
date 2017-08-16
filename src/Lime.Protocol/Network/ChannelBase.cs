@@ -72,13 +72,12 @@ namespace Lime.Protocol.Network
             TimeSpan? remoteIdleTimeout,
             IChannelCommandProcessor channelCommandProcessor)
         {
-            if (transport == null) throw new ArgumentNullException(nameof(transport));
             if (sendTimeout == default(TimeSpan)) throw new ArgumentException("Invalid send timeout", nameof(sendTimeout));
             if (consumeTimeout != null && consumeTimeout.Value == default(TimeSpan)) throw new ArgumentException("Invalid consume timeout", nameof(consumeTimeout));
             if (closeTimeout == default(TimeSpan)) throw new ArgumentException("Invalid close timeout", nameof(closeTimeout));
             if (envelopeBufferSize <= 0) throw new ArgumentOutOfRangeException(nameof(envelopeBufferSize));
 
-            Transport = transport;
+            Transport = transport ?? throw new ArgumentNullException(nameof(transport));
             Transport.Closing += Transport_Closing;
             _sendTimeout = sendTimeout;
             _consumeTimeout = consumeTimeout;
