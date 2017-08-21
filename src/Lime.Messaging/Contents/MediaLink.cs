@@ -37,7 +37,7 @@ namespace Lime.Messaging.Contents
         
         /// <summary>
         /// Gets or sets the media size, in bytes.
-        /// </summary>
+        /// </summary> 
         /// <value>
         /// The size.
         /// </value>
@@ -46,6 +46,7 @@ namespace Lime.Messaging.Contents
 
         /// <summary>
         /// Gets or sets the media display aspect ratio.
+        /// Common values are 1:1, 4:3 and 16:9.
         /// </summary>
         [DataMember(Name = ASPECT_RATIO_KEY)]
         public string AspectRatio { get; set; }
