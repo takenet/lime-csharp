@@ -11,9 +11,10 @@ namespace Lime.Messaging.Contents
     [DataContract(Namespace = "http://limeprotocol.org/2014")]
     public class MediaLink : Link
     {
-        public const string MIME_TYPE = "application/vnd.lime.media-link+json";       
-        public const string TYPE_KEY = "type";        
-        public const string SIZE_KEY = "size";        
+        public const string MIME_TYPE = "application/vnd.lime.media-link+json";
+        public const string TYPE_KEY = "type";
+        public const string SIZE_KEY = "size";
+        public const string ASPECT_RATIO_KEY = "aspectRatio";
 
         public static readonly MediaType MediaType = MediaType.Parse(MIME_TYPE);
 
@@ -33,6 +34,7 @@ namespace Lime.Messaging.Contents
         /// </value>
         [DataMember(Name = TYPE_KEY)]
         public MediaType Type { get; set; }       
+        
         /// <summary>
         /// Gets or sets the media size, in bytes.
         /// </summary>
@@ -41,5 +43,11 @@ namespace Lime.Messaging.Contents
         /// </value>
         [DataMember(Name = SIZE_KEY)]
         public long? Size { get; set; }
+
+        /// <summary>
+        /// Gets or sets the media display aspect ratio.
+        /// </summary>
+        [DataMember(Name = ASPECT_RATIO_KEY)]
+        public string AspectRatio { get; set; }
     }
 }
