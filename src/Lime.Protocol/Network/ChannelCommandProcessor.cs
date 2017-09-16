@@ -72,6 +72,12 @@ namespace Lime.Protocol.Network
         public bool TrySubmitCommandResult(Command responseCommand)
         {
             if (responseCommand == null) throw new ArgumentNullException(nameof(responseCommand));
+            if (responseCommand.Id.IsNullOrEmpty())
+            {
+                throw new ArgumentException("Invalid command id", nameof(responseCommand));
+            }
+
+
             TaskCompletionSource<Command> pendingRequestCommand;
             if (responseCommand.Id.IsNullOrEmpty() ||
                 responseCommand.Status == CommandStatus.Pending ||

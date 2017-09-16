@@ -84,6 +84,10 @@ namespace Lime.Protocol.Client
                 {
                     return await channel.ProcessCommandAsync(requestCommand, cancellationToken).ConfigureAwait(false);
                 }
+                catch (ArgumentException)
+                {
+                    throw;
+                }
                 catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
                 {
                     throw;
@@ -215,6 +219,10 @@ namespace Lime.Protocol.Client
                 {
                     await sendFunc(channel, envelope).ConfigureAwait(false);
                     return;
+                }
+                catch (ArgumentException)
+                {
+                    throw;
                 }
                 catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
                 {
