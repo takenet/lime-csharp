@@ -28,14 +28,10 @@ namespace Lime.Protocol.Listeners
         /// <exception cref="System.ArgumentNullException">
         /// </exception>
         public ChannelListener(Func<Message, Task<bool>> messageConsumer, Func<Notification, Task<bool>> notificationConsumer, Func<Command, Task<bool>> commandConsumer)
-        {            
-            if (messageConsumer == null) throw new ArgumentNullException(nameof(messageConsumer));
-            if (notificationConsumer == null) throw new ArgumentNullException(nameof(notificationConsumer));
-            if (commandConsumer == null) throw new ArgumentNullException(nameof(commandConsumer));
-
-            _messageConsumer = messageConsumer;
-            _notificationConsumer = notificationConsumer;
-            _commandConsumer = commandConsumer;
+        {
+            _messageConsumer = messageConsumer ?? throw new ArgumentNullException(nameof(messageConsumer));
+            _notificationConsumer = notificationConsumer ?? throw new ArgumentNullException(nameof(notificationConsumer));
+            _commandConsumer = commandConsumer ?? throw new ArgumentNullException(nameof(commandConsumer));
             _cts = new CancellationTokenSource();
             _syncRoot = new object();
         }

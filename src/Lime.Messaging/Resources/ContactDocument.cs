@@ -22,6 +22,7 @@ namespace Lime.Messaging.Resources
         public const string TIMEZONE_KEY = "timezone";
         public const string CULTURE_KEY = "culture";
         public const string EXTRAS_KEY = "extras";
+        public const string SOURCE_KEY = "source";
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ContactDocument"/> class.
@@ -92,6 +93,12 @@ namespace Lime.Messaging.Resources
         /// </summary>        
         [DataMember(Name = EXTRAS_KEY)]
         public IDictionary<string, string> Extras { get; set; }
+
+        /// <summary>
+        /// Where the account came from.
+        /// </summary>
+        [DataMember(Name = SOURCE_KEY)]
+        public string Source { get; set; }
     }
 
     /// <summary>
