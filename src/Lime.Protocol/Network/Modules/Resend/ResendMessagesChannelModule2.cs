@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Lime.Protocol.Network.Modules
+namespace Lime.Protocol.Network.Modules.Resend
 {
     public class ResendMessagesChannelModule2 : IChannelModule<Message>, IChannelModule<Notification>, IDisposable
     {
@@ -12,6 +12,7 @@ namespace Lime.Protocol.Network.Modules
 
         private readonly IChannel _channel;
         private readonly IMessageStorage _messageStorage;
+        private readonly IKeyProvider _keyProvider;
         private readonly int _maxResendCount;
         private readonly TimeSpan _resendWindow;
         private readonly object _syncRoot = new object();
@@ -20,10 +21,16 @@ namespace Lime.Protocol.Network.Modules
         private Task _resendTask;
         private CancellationTokenSource _cts;
 
-        protected ResendMessagesChannelModule2(IChannel channel, IMessageStorage messageStorage, int maxResendCount, TimeSpan resendWindow)
+        protected ResendMessagesChannelModule2(
+            IChannel channel, 
+            IMessageStorage messageStorage, 
+            IKeyProvider keyProvider,            
+            int maxResendCount, 
+            TimeSpan resendWindow)
         {
             _channel = channel ?? throw new ArgumentNullException(nameof(channel));
             _messageStorage = messageStorage ?? throw new ArgumentNullException(nameof(messageStorage));
+            _keyProvider = keyProvider ?? throw new ArgumentNullException(nameof(keyProvider));
             _maxResendCount = maxResendCount;
             _resendWindow = resendWindow;
         }
@@ -34,7 +41,7 @@ namespace Lime.Protocol.Network.Modules
             {
                 if (state == SessionState.Established)
                 {
-                    _channelKey = GetChannelKey(_channel);
+                    _channelKey = _keyProvider.GetChannelKey(_channel);
                     _cts = new CancellationTokenSource();
                     _resendTask = Task.Run(() => ResendExpiredMessagesAsync(_cts.Token));
                 }
@@ -49,14 +56,16 @@ namespace Lime.Protocol.Network.Modules
         public async Task<Message> OnSendingAsync(Message envelope, CancellationToken cancellationToken)
         {
             if (string.IsNullOrWhiteSpace(envelope.Id)) return envelope;
-            var messageKey = GetMessageKey(envelope, _channel);
+            var messageKey = _keyProvider.GetMessageKey(envelope, _channel);
             await _messageStorage.AddAsync(_channelKey, messageKey, envelope, DateTimeOffset.UtcNow.Add(_resendWindow), cancellationToken);
             return envelope;
         }
 
-        public Task<Notification> OnReceivingAsync(Notification envelope, CancellationToken cancellationToken)
+        public async Task<Notification> OnReceivingAsync(Notification envelope, CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            var messageKey = _keyProvider.GetMessageKey(envelope, _channel);
+            await _messageStorage.RemoveAsync(_channelKey, messageKey, cancellationToken);
+            return envelope;
         }
 
         public Task<Notification> OnSendingAsync(Notification envelope, CancellationToken cancellationToken) 
@@ -65,23 +74,19 @@ namespace Lime.Protocol.Network.Modules
         public Task<Message> OnReceivingAsync(Message envelope, CancellationToken cancellationToken) 
             => envelope.AsCompletedTask();
 
-        public static ResendMessagesChannelModule2 CreateAndRegister(IChannel channel, IMessageStorage messageStorage, int maxResendCount, TimeSpan resendWindow)
+        public static ResendMessagesChannelModule2 CreateAndRegister(
+            IChannel channel, 
+            int maxResendCount, 
+            TimeSpan resendWindow, 
+            IMessageStorage messageStorage = null, 
+            IKeyProvider keyProvider = null)
         {
-            var resendMessagesChannelModule = new ResendMessagesChannelModule2(channel, messageStorage, maxResendCount, resendWindow);
+            var resendMessagesChannelModule = new ResendMessagesChannelModule2(
+                channel, messageStorage ?? new MemoryMessageStorage(), keyProvider ?? new KeyProvider(), maxResendCount, resendWindow);
             channel.MessageModules.Add(resendMessagesChannelModule);
             channel.NotificationModules.Add(resendMessagesChannelModule);
             return resendMessagesChannelModule;
         }
-
-        /// <summary>
-        /// Defines the channel key using the local and remote nodes.
-        /// The channel key should be the same when a channel disconnects and reconnects with the same instance.
-        /// </summary>
-        /// <param name="channel"></param>
-        /// <returns></returns>
-        private static string GetChannelKey(IChannel channel) => $"{channel.RemoteNode.ToIdentity()}:{channel.LocalNode}".ToLowerInvariant();
-
-        private static string GetMessageKey(Message message, IChannel channel) => $"{(message.To ?? channel.RemoteNode).ToIdentity()}:{message.Id}".ToLowerInvariant();
 
         private async Task ResendExpiredMessagesAsync(CancellationToken cancellationToken)
         {            
@@ -132,7 +137,7 @@ namespace Lime.Protocol.Network.Modules
                         }
                         else
                         {
-                            await _messageStorage.AddExpiredMessage(_channelKey, expiredMessageKey, expiredMessage,
+                            await _messageStorage.AddDeadMessageAsync(_channelKey, expiredMessageKey, expiredMessage,
                                 cancellationToken);
                         }
                     }
@@ -169,16 +174,5 @@ namespace Lime.Protocol.Network.Modules
             Dispose(true);
             GC.SuppressFinalize(this);
         }
-    }
-
-    public interface IMessageStorage
-    {
-        Task AddAsync(string channelkey, string messageKey, Message message, DateTimeOffset expiration, CancellationToken cancellationToken);
-
-        Task<Message> RemoveAsync(string channelkey, string messageKey, CancellationToken cancellationToken);
-
-        Task<IEnumerable<string>> GetExpiredMessageKeysAsync(string channelKey, CancellationToken cancellationToken);
-
-        Task AddExpiredMessage(string channelkey, string messageKey, Message message, CancellationToken cancellationToken);
     }
 }
