@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -8,13 +9,19 @@ using Lime.Protocol.Util;
 
 namespace Lime.Protocol.Network.Modules.Resend
 {
+    /// <inheritdoc />
+    /// <summary>
+    /// Represents a memory message storage for resending messages.
+    /// </summary>
     public sealed class MemoryMessageStorage : IMessageStorage
     {
         private readonly ConcurrentDictionary<string, ConcurrentDictionary<string, MessageWithExpiration>> _channelMessageDictionary;
+        private readonly ConcurrentDictionary<string, HashSet<Message>> _deadMessagesDictionary;
 
-        public MemoryMessageStorage()
+        public MemoryMessageStorage(ConcurrentDictionary<string, HashSet<Message>> deadMessagesDictionary = null)
         {
             _channelMessageDictionary = new ConcurrentDictionary<string, ConcurrentDictionary<string, MessageWithExpiration>>();
+            _deadMessagesDictionary = deadMessagesDictionary;
         }
 
         public Task AddAsync(string channelKey, string messageKey, Message message, DateTimeOffset expiration, CancellationToken cancellationToken)
@@ -24,8 +31,16 @@ namespace Lime.Protocol.Network.Modules.Resend
             return TaskUtil.CompletedTask;
         }
 
-        public Task AddDeadMessageAsync(string channelKey, string messageKey, Message message, CancellationToken cancellationToken) 
-            => TaskUtil.CompletedTask;
+        public Task AddDeadMessageAsync(string channelKey, string messageKey, Message message, CancellationToken cancellationToken)
+        {
+            if (_deadMessagesDictionary != null)
+            {
+                var messageList = _deadMessagesDictionary.GetOrAdd(channelKey, (i) => new HashSet<Message>());
+                messageList.Add(message);
+            }
+
+            return TaskUtil.CompletedTask;
+        }
 
         public Task<IEnumerable<string>> GetExpiredMessageKeysAsync(string channelKey, CancellationToken cancellationToken) 
             => GetMessageDictionary(channelKey)
@@ -47,7 +62,7 @@ namespace Lime.Protocol.Network.Modules.Resend
         private ConcurrentDictionary<string, MessageWithExpiration> GetMessageDictionary(string channelKey) 
             => _channelMessageDictionary.GetOrAdd(channelKey, k => new ConcurrentDictionary<string, MessageWithExpiration>());
 
-        private class MessageWithExpiration
+        public sealed class MessageWithExpiration
         {
             public MessageWithExpiration(Message message, DateTimeOffset expiration)
             {

@@ -21,7 +21,7 @@ namespace Lime.Protocol.Network.Modules.Resend
         private Task _resendTask;
         private CancellationTokenSource _cts;
 
-        protected ResendMessagesChannelModule2(
+        public ResendMessagesChannelModule2(
             IChannel channel, 
             IMessageStorage messageStorage, 
             IKeyProvider keyProvider,            
@@ -41,23 +41,28 @@ namespace Lime.Protocol.Network.Modules.Resend
             {
                 if (state == SessionState.Established)
                 {
-                    _channelKey = _keyProvider.GetChannelKey(_channel);
-                    _cts = new CancellationTokenSource();
-                    _resendTask = Task.Run(() => ResendExpiredMessagesAsync(_cts.Token));
+                    StartResendTask();
                 }
                 else if (state > SessionState.Established)
                 {
-                    _cts?.Cancel();
-                    _resendTask?.GetAwaiter().GetResult();
+                    StopResendTask();
                 }
             }
-        }        
+        }
 
         public async Task<Message> OnSendingAsync(Message envelope, CancellationToken cancellationToken)
         {
             if (string.IsNullOrWhiteSpace(envelope.Id)) return envelope;
             var messageKey = _keyProvider.GetMessageKey(envelope, _channel);
-            await _messageStorage.AddAsync(_channelKey, messageKey, envelope, DateTimeOffset.UtcNow.Add(_resendWindow), cancellationToken);
+
+            var resendCount = GetMessageResendCount(envelope);
+
+            await _messageStorage.AddAsync(
+                _channelKey, 
+                messageKey, 
+                envelope, 
+                DateTimeOffset.UtcNow.AddTicks(_resendWindow.Ticks * (resendCount + 1)), 
+                cancellationToken);
             return envelope;
         }
 
@@ -74,6 +79,17 @@ namespace Lime.Protocol.Network.Modules.Resend
         public Task<Message> OnReceivingAsync(Message envelope, CancellationToken cancellationToken) 
             => envelope.AsCompletedTask();
 
+        /// <summary>
+        /// Register the module to the specified channel.
+        /// </summary>
+        /// <param name="channel"></param>
+        public void RegisterTo(IChannel channel)
+        {
+            if (channel == null) throw new ArgumentNullException(nameof(channel));
+            channel.MessageModules.Add(this);
+            channel.NotificationModules.Add(this);
+        }
+
         public static ResendMessagesChannelModule2 CreateAndRegister(
             IChannel channel, 
             int maxResendCount, 
@@ -83,19 +99,38 @@ namespace Lime.Protocol.Network.Modules.Resend
         {
             var resendMessagesChannelModule = new ResendMessagesChannelModule2(
                 channel, messageStorage ?? new MemoryMessageStorage(), keyProvider ?? new KeyProvider(), maxResendCount, resendWindow);
-            channel.MessageModules.Add(resendMessagesChannelModule);
-            channel.NotificationModules.Add(resendMessagesChannelModule);
+            resendMessagesChannelModule.RegisterTo(channel);
             return resendMessagesChannelModule;
+        }
+
+        private void StartResendTask()
+        {
+            _channelKey = _keyProvider.GetChannelKey(_channel);
+            _cts = new CancellationTokenSource();
+            _resendTask = Task.Run(() => ResendExpiredMessagesAsync(_cts.Token));
+        }
+
+        private void StopResendTask()
+        {
+            try
+            {
+                _cts?.Cancel();
+                _resendTask?.GetAwaiter().GetResult();
+                _cts?.Dispose();
+            }
+            catch (ObjectDisposedException) { }
         }
 
         private async Task ResendExpiredMessagesAsync(CancellationToken cancellationToken)
         {            
             while (!cancellationToken.IsCancellationRequested)
-            {
+            {                
                 try
                 {
+                    await Task.Delay(_resendWindow, cancellationToken);
+
                     var expiredMessageKeys =
-                        await _messageStorage.GetExpiredMessageKeysAsync(_channelKey, _cts.Token);
+                        await _messageStorage.GetExpiredMessageKeysAsync(_channelKey, cancellationToken);
 
                     foreach (var expiredMessageKey in expiredMessageKeys)
                     {
@@ -104,18 +139,14 @@ namespace Lime.Protocol.Network.Modules.Resend
                         var expiredMessage = await _messageStorage.RemoveAsync(_channelKey, expiredMessageKey, cancellationToken);
                         if (expiredMessage == null) continue; // It may be already removed
                         
-                        var resendCount = 0;
+                        var resendCount = GetMessageResendCount(expiredMessage);
 
                         // Check the message resend limit
-                        if (expiredMessage.Metadata == null 
-                            || !expiredMessage.Metadata.TryGetValue(RESENT_COUNT_METADATA_KEY, out var resendCountValue) 
-                            || !int.TryParse(resendCountValue, out resendCount) 
-                            || resendCount < _maxResendCount)
+                        if (resendCount < _maxResendCount)
                         {
                             // Set the metadata key
                             resendCount++;
-                            if (expiredMessage.Metadata == null) expiredMessage.Metadata = new Dictionary<string, string>();
-                            expiredMessage.Metadata[RESENT_COUNT_METADATA_KEY] = resendCount.ToString();
+                            SetMessageResendCount(expiredMessage, resendCount);
 
                             try
                             {
@@ -154,6 +185,7 @@ namespace Lime.Protocol.Network.Modules.Resend
 
                     if (_channel.State != SessionState.Established || !_channel.Transport.IsConnected)
                     {
+                        StopResendTask();
                         break;
                     }
                     throw;
@@ -161,11 +193,25 @@ namespace Lime.Protocol.Network.Modules.Resend
             }
         }
 
+        private static int GetMessageResendCount(Message expiredMessage)
+        {
+            if (expiredMessage.Metadata != null 
+                && expiredMessage.Metadata.TryGetValue(RESENT_COUNT_METADATA_KEY, out var resendCountValue) 
+                && int.TryParse(resendCountValue, out var resendCount)) return resendCount;
+            return 0;
+        }
+
+        private static void SetMessageResendCount(Message expiredMessage, int resendCount)
+        {
+            if (expiredMessage.Metadata == null) expiredMessage.Metadata = new Dictionary<string, string>();
+            expiredMessage.Metadata[RESENT_COUNT_METADATA_KEY] = resendCount.ToString();
+        }
+
         protected virtual void Dispose(bool disposing)
         {
             if (disposing)
             {
-                _cts?.Dispose();
+                StopResendTask();
             }
         }
 
