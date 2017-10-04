@@ -1,7 +1,7 @@
 ﻿namespace Lime.Protocol.Network.Modules.Resend
 {
     /// <summary>
-    /// Create the keys to be used by the <see cref="ResendMessagesChannelModule2"/> module.
+    /// Create the keys to be used by the <see cref="ResendMessagesChannelModule"/> module.
     /// </summary>
     public interface IKeyProvider
     {

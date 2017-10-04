@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace Lime.Protocol.Network.Modules.Resend
 {
-    public class ResendMessagesChannelModule2 : IChannelModule<Message>, IChannelModule<Notification>, IDisposable
+    public sealed class ResendMessagesChannelModule : IChannelModule<Message>, IChannelModule<Notification>, IDisposable
     {
         const string RESENT_COUNT_METADATA_KEY = "#resentCount";
 
@@ -21,7 +20,7 @@ namespace Lime.Protocol.Network.Modules.Resend
         private Task _resendTask;
         private CancellationTokenSource _cts;
 
-        public ResendMessagesChannelModule2(
+        public ResendMessagesChannelModule(
             IChannel channel, 
             IMessageStorage messageStorage, 
             IKeyProvider keyProvider,            
@@ -35,7 +34,7 @@ namespace Lime.Protocol.Network.Modules.Resend
             _resendWindow = resendWindow;
         }
 
-        public virtual void OnStateChanged(SessionState state)
+        public void OnStateChanged(SessionState state)
         {
             lock (_syncRoot)
             {
@@ -90,14 +89,14 @@ namespace Lime.Protocol.Network.Modules.Resend
             channel.NotificationModules.Add(this);
         }
 
-        public static ResendMessagesChannelModule2 CreateAndRegister(
+        public static ResendMessagesChannelModule CreateAndRegister(
             IChannel channel, 
             int maxResendCount, 
             TimeSpan resendWindow, 
             IMessageStorage messageStorage = null, 
             IKeyProvider keyProvider = null)
         {
-            var resendMessagesChannelModule = new ResendMessagesChannelModule2(
+            var resendMessagesChannelModule = new ResendMessagesChannelModule(
                 channel, messageStorage ?? new MemoryMessageStorage(), keyProvider ?? new KeyProvider(), maxResendCount, resendWindow);
             resendMessagesChannelModule.RegisterTo(channel);
             return resendMessagesChannelModule;
@@ -207,18 +206,9 @@ namespace Lime.Protocol.Network.Modules.Resend
             expiredMessage.Metadata[RESENT_COUNT_METADATA_KEY] = resendCount.ToString();
         }
 
-        protected virtual void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                StopResendTask();
-            }
-        }
-
         public void Dispose()
         {
-            Dispose(true);
-            GC.SuppressFinalize(this);
+            StopResendTask();
         }
     }
 }

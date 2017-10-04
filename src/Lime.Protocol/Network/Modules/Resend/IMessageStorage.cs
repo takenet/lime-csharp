@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 namespace Lime.Protocol.Network.Modules.Resend
 {
     /// <summary>
-    /// Defines a service for storing messages for the <see cref="ResendMessagesChannelModule2"/> module.
+    /// Defines a service for storing messages for the <see cref="ResendMessagesChannelModule"/> module.
     /// </summary>
     public interface IMessageStorage
     {
