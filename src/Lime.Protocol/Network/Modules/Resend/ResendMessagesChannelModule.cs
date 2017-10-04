@@ -13,6 +13,7 @@ namespace Lime.Protocol.Network.Modules.Resend
         private readonly IChannel _channel;
         private readonly IMessageStorage _messageStorage;
         private readonly IKeyProvider _keyProvider;
+        private readonly IDeadMessageHandler _deadMessageHandler;
         private readonly int _maxResendCount;
         private readonly TimeSpan _resendWindow;
         private readonly object _syncRoot = new object();
@@ -24,13 +25,15 @@ namespace Lime.Protocol.Network.Modules.Resend
         public ResendMessagesChannelModule(
             IChannel channel, 
             IMessageStorage messageStorage, 
-            IKeyProvider keyProvider,            
+            IKeyProvider keyProvider,       
+            IDeadMessageHandler deadMessageHandler,
             int maxResendCount, 
             TimeSpan resendWindow)
         {
             _channel = channel ?? throw new ArgumentNullException(nameof(channel));
             _messageStorage = messageStorage ?? throw new ArgumentNullException(nameof(messageStorage));
             _keyProvider = keyProvider ?? throw new ArgumentNullException(nameof(keyProvider));
+            _deadMessageHandler = deadMessageHandler ?? throw new ArgumentNullException(nameof(deadMessageHandler));
             _maxResendCount = maxResendCount;
             _resendWindow = resendWindow;
         }
@@ -94,11 +97,17 @@ namespace Lime.Protocol.Network.Modules.Resend
             IChannel channel, 
             int maxResendCount, 
             TimeSpan resendWindow, 
-            IMessageStorage messageStorage = null, 
-            IKeyProvider keyProvider = null)
+            IMessageStorage messageStorage = null,             
+            IKeyProvider keyProvider = null,
+            IDeadMessageHandler deadMessageHandler = null)
         {
             var resendMessagesChannelModule = new ResendMessagesChannelModule(
-                channel, messageStorage ?? new MemoryMessageStorage(), keyProvider ?? new KeyProvider(), maxResendCount, resendWindow);
+                channel, 
+                messageStorage ?? new MemoryMessageStorage(), 
+                keyProvider ?? KeyProvider.Instance,
+                deadMessageHandler ?? DiscardDeadMessageHandler.Instance,
+                maxResendCount, 
+                resendWindow);
             resendMessagesChannelModule.RegisterTo(channel);
             return resendMessagesChannelModule;
         }
@@ -172,8 +181,7 @@ namespace Lime.Protocol.Network.Modules.Resend
                         }
                         else
                         {
-                            await _messageStorage.AddDeadMessageAsync(_channelKey, expiredMessageKey, expiredMessage,
-                                cancellationToken);
+                            await _deadMessageHandler.HandleDeadMessageAsync(expiredMessage, _channel, cancellationToken);
                         }
                     }
                 }

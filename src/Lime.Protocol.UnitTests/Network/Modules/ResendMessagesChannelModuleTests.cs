@@ -54,13 +54,13 @@ namespace Lime.Protocol.UnitTests.Network.Modules
             return channel;
         }
 
-        private ResendMessagesChannelModule GetTarget(bool setEstablishedState = true, Mock<IChannel> channel = null, IMessageStorage messageStorage = null)
+        private ResendMessagesChannelModule GetTarget(bool setEstablishedState = true, Mock<IChannel> channel = null, IMessageStorage messageStorage = null, IDeadMessageHandler deadMessageHandler = null)
         {
             if (channel == null) channel = _channel;
 
             var target =
                 ResendMessagesChannelModule.CreateAndRegister(channel.Object, _resendMessageTryCount,
-                    _resendMessageInterval, messageStorage);
+                    _resendMessageInterval, messageStorage, deadMessageHandler: deadMessageHandler);
 
             channel
                 .Setup(c => c.SendMessageAsync(It.IsAny<Message>(), It.IsAny<CancellationToken>()))
@@ -125,11 +125,10 @@ namespace Lime.Protocol.UnitTests.Network.Modules
         public async Task OnSending_MessageWithoutNotification_ShouldResendUntilLimit()
         {
             // Arrange
-            var deadMessagesDictionary = new ConcurrentDictionary<string, HashSet<Message>>();
-            var messageStorage = new MemoryMessageStorage(deadMessagesDictionary);
+            var deadMessageHandler = new Mock<IDeadMessageHandler>();
             var message = Dummy.CreateMessage(Dummy.CreateTextContent());
             message.Id = EnvelopeId.NewId();
-            var target = GetTarget(messageStorage: messageStorage);
+            var target = GetTarget(deadMessageHandler: deadMessageHandler.Object);
 
             // Act
             var actual = await ((IChannelModule<Message>)target).OnSendingAsync(message, _cancellationToken);
@@ -138,7 +137,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
             // Assert
             actual.ShouldBe(message);
             _channel.Verify(c => c.SendMessageAsync(message, It.IsAny<CancellationToken>()), Times.Exactly(_resendMessageTryCount));
-            deadMessagesDictionary.ShouldContain(s => s.Value.Contains(message));
+            deadMessageHandler.Verify(h => h.HandleDeadMessageAsync(message, It.IsAny<IChannelInformation>(), It.IsAny<CancellationToken>()), Times.Once());
         }
 
         [Fact]

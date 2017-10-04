@@ -38,15 +38,5 @@ namespace Lime.Protocol.Network.Modules.Resend
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
         Task<IEnumerable<string>> GetMessagesToResendKeysAsync(string channelKey, DateTimeOffset reference, CancellationToken cancellationToken);
-
-        /// <summary>
-        /// Optionally stores a dead message.
-        /// </summary>
-        /// <param name="channelKey"></param>
-        /// <param name="messageKey"></param>
-        /// <param name="message"></param>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        Task AddDeadMessageAsync(string channelKey, string messageKey, Message message, CancellationToken cancellationToken);
     }
 }

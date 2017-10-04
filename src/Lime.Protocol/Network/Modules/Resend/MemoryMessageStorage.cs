@@ -15,29 +15,16 @@ namespace Lime.Protocol.Network.Modules.Resend
     public sealed class MemoryMessageStorage : IMessageStorage
     {
         private readonly ConcurrentDictionary<string, ConcurrentDictionary<string, MessageWithExpiration>> _channelMessageDictionary;
-        private readonly ConcurrentDictionary<string, HashSet<Message>> _deadMessagesDictionary;
 
-        public MemoryMessageStorage(ConcurrentDictionary<string, HashSet<Message>> deadMessagesDictionary = null)
+        public MemoryMessageStorage()
         {
             _channelMessageDictionary = new ConcurrentDictionary<string, ConcurrentDictionary<string, MessageWithExpiration>>();
-            _deadMessagesDictionary = deadMessagesDictionary;
         }
 
         public Task AddAsync(string channelKey, string messageKey, Message message, DateTimeOffset resendAt, CancellationToken cancellationToken)
         {
             var messageDictionary = GetMessageDictionary(channelKey);
             messageDictionary[messageKey] = new MessageWithExpiration(message, resendAt);
-            return TaskUtil.CompletedTask;
-        }
-
-        public Task AddDeadMessageAsync(string channelKey, string messageKey, Message message, CancellationToken cancellationToken)
-        {
-            if (_deadMessagesDictionary != null)
-            {
-                var messageList = _deadMessagesDictionary.GetOrAdd(channelKey, (i) => new HashSet<Message>());
-                messageList.Add(message);
-            }
-
             return TaskUtil.CompletedTask;
         }
 
