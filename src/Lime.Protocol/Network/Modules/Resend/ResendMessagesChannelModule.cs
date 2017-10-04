@@ -41,11 +41,11 @@ namespace Lime.Protocol.Network.Modules.Resend
             {
                 if (state == SessionState.Established)
                 {
-                    StartResendTask();
+                    if (_resendTask == null) StartResendTask();
                 }
                 else if (state > SessionState.Established)
                 {
-                    StopResendTask();
+                    if (_resendTask != null) StopResendTask();
                 }
             }
         }
@@ -117,6 +117,7 @@ namespace Lime.Protocol.Network.Modules.Resend
                 _cts?.Cancel();
                 _resendTask?.GetAwaiter().GetResult();
                 _cts?.Dispose();
+                _resendTask = null;
             }
             catch (ObjectDisposedException) { }
         }
