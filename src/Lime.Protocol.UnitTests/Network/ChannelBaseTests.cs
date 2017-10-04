@@ -529,6 +529,34 @@ namespace Lime.Protocol.UnitTests.Network
 
         [Fact]
         [Trait("Category", "SendCommandAsync")]
+        public async Task SendCommandAsync_ObserverCommand_CallsTransport()
+        {
+            var tcs = new TaskCompletionSource<Envelope>();
+            _transport
+                .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(tcs.Task);
+
+            var target = GetTarget(SessionState.Established);
+
+            var resource = Dummy.CreatePing();
+            var command = Dummy.CreateCommand();
+            command.Id = null;
+            command.Method = CommandMethod.Observe;
+
+            await target.SendCommandAsync(command, CancellationToken.None);
+
+            _transport.Verify(
+                t => t.SendAsync(It.Is<Command>(
+                        e => e.Id == command.Id &&
+                             e.From.Equals(command.From) &&
+                             e.To.Equals(command.To) &&
+                             e.Resource == command.Resource),
+                    It.IsAny<CancellationToken>()),
+                Times.Once());
+        }
+
+        [Fact]
+        [Trait("Category", "SendCommandAsync")]
         public async Task SendCommandAsync_NullCommand_ThrowsArgumentNullException()
         {
             var tcs = new TaskCompletionSource<Envelope>();
@@ -658,6 +686,29 @@ namespace Lime.Protocol.UnitTests.Network
         {            
             var content = Dummy.CreateTextContent();
             var command = Dummy.CreateCommand(content);
+
+            var cancellationToken = Dummy.CreateCancellationToken();
+
+            var tcs = new TaskCompletionSource<Envelope>();
+            _transport
+                .SetupSequence(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(Task.FromResult<Envelope>(command))
+                .Returns(tcs.Task);
+
+            var target = GetTarget(SessionState.Established);
+            var actual = await target.ReceiveCommandAsync(cancellationToken);
+
+            Assert.Equal(command, actual);
+            _transport.Verify();
+        }
+
+        [Fact]
+        [Trait("Category", "ReceiveCommandAsync")]
+        public async Task ReceiveCommandAsync_ObserveCommand_ReadsTransport()
+        {
+            var command = Dummy.CreateCommand();
+            command.Id = null;
+            command.Method = CommandMethod.Observe;
 
             var cancellationToken = Dummy.CreateCancellationToken();
 
