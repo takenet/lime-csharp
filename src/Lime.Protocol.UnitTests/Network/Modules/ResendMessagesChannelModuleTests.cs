@@ -31,8 +31,8 @@ namespace Lime.Protocol.UnitTests.Network.Modules
             _transport.Setup(t => t.IsConnected).Returns(true);
             _channel = CreateChannel();
             _resendMessageTryCount = 3;
-            _resendMessageInterval = TimeSpan.FromMilliseconds(300);
-            _resendMessageIntervalWithSafeMargin = TimeSpan.FromMilliseconds(330);
+            _resendMessageInterval = TimeSpan.FromMilliseconds(500);
+            _resendMessageIntervalWithSafeMargin = TimeSpan.FromMilliseconds(550);
             _cancellationToken = CancellationToken.None;
             _filterByDestination = false;
             _targets = new List<ResendMessagesChannelModule>();
@@ -340,7 +340,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
 
             // Act
             var actual = await ((IChannelModule<Message>)target).OnSendingAsync(message, _cancellationToken);
-            await Task.Delay(TimeSpan.FromTicks(_resendMessageIntervalWithSafeMargin.Ticks * 3));
+            await Task.Delay(TimeSpan.FromTicks(_resendMessageIntervalWithSafeMargin.Ticks * 4));
             target.OnStateChanged(SessionState.Failed);
             await Task.Delay(_resendMessageIntervalWithSafeMargin);
 
