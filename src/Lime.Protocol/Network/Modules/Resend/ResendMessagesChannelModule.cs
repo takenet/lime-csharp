@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Lime.Protocol.Network.Modules.Resend
 {
-    public sealed class ResendMessagesChannelModule : IChannelModule<Message>, IChannelModule<Notification>, IDisposable
+    public class ResendMessagesChannelModule : IChannelModule<Message>, IChannelModule<Notification>, IDisposable
     {
         const string RESENT_COUNT_METADATA_KEY = "#resentCount";
 
@@ -35,7 +35,7 @@ namespace Lime.Protocol.Network.Modules.Resend
             _resendWindow = resendWindow;
         }
 
-        public void OnStateChanged(SessionState state)
+        public virtual void OnStateChanged(SessionState state)
         {
             lock (_syncRoot)
             {
@@ -50,7 +50,7 @@ namespace Lime.Protocol.Network.Modules.Resend
             }
         }
 
-        public async Task<Message> OnSendingAsync(Message envelope, CancellationToken cancellationToken)
+        public virtual async Task<Message> OnSendingAsync(Message envelope, CancellationToken cancellationToken)
         {
             if (string.IsNullOrWhiteSpace(envelope.Id)) return envelope;
             var messageKey = _keyProvider.GetMessageKey(envelope, _channel);
@@ -66,24 +66,24 @@ namespace Lime.Protocol.Network.Modules.Resend
             return envelope;
         }
 
-        public async Task<Notification> OnReceivingAsync(Notification envelope, CancellationToken cancellationToken)
+        public virtual async Task<Notification> OnReceivingAsync(Notification envelope, CancellationToken cancellationToken)
         {
             var messageKey = _keyProvider.GetMessageKey(envelope, _channel);
             await _messageStorage.RemoveAsync(_channelKey, messageKey, cancellationToken);
             return envelope;
         }
 
-        public Task<Notification> OnSendingAsync(Notification envelope, CancellationToken cancellationToken) 
+        public virtual Task<Notification> OnSendingAsync(Notification envelope, CancellationToken cancellationToken) 
             => envelope.AsCompletedTask();
 
-        public Task<Message> OnReceivingAsync(Message envelope, CancellationToken cancellationToken) 
+        public virtual Task<Message> OnReceivingAsync(Message envelope, CancellationToken cancellationToken) 
             => envelope.AsCompletedTask();
 
         /// <summary>
         /// Register the module to the specified channel.
         /// </summary>
         /// <param name="channel"></param>
-        public void RegisterTo(IChannel channel)
+        public virtual void RegisterTo(IChannel channel)
         {
             if (channel == null) throw new ArgumentNullException(nameof(channel));
             channel.MessageModules.Add(this);
