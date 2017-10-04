@@ -157,11 +157,14 @@ namespace Lime.Protocol.Network.Modules.Resend
                                 // Create a new CTS because the exception can be caused by the cancellation of the method token
                                 using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5)))
                                 {
-                                    // If any error occurs when resending the message, put the expired message
-                                    // back into the storage before throwing the exception.
-                                    await _messageStorage.AddAsync(_channelKey, expiredMessageKey, expiredMessage,
-                                        DateTimeOffset.UtcNow, cts.Token);
-
+                                    try
+                                    {
+                                        // If any error occurs when resending the message, put the expired message
+                                        // back into the storage before throwing the exception.
+                                        await _messageStorage.AddAsync(_channelKey, expiredMessageKey, expiredMessage,
+                                            DateTimeOffset.UtcNow, cts.Token);
+                                    }
+                                    catch (OperationCanceledException) { }
                                     throw;
                                 }
                             }
