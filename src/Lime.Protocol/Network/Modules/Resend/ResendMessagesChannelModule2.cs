@@ -130,7 +130,7 @@ namespace Lime.Protocol.Network.Modules.Resend
                     await Task.Delay(_resendWindow, cancellationToken);
 
                     var expiredMessageKeys =
-                        await _messageStorage.GetExpiredMessageKeysAsync(_channelKey, cancellationToken);
+                        await _messageStorage.GetMessagesToResendKeysAsync(_channelKey, DateTimeOffset.UtcNow, cancellationToken);
 
                     foreach (var expiredMessageKey in expiredMessageKeys)
                     {

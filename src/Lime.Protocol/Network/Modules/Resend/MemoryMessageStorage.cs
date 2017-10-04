@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -24,10 +23,10 @@ namespace Lime.Protocol.Network.Modules.Resend
             _deadMessagesDictionary = deadMessagesDictionary;
         }
 
-        public Task AddAsync(string channelKey, string messageKey, Message message, DateTimeOffset expiration, CancellationToken cancellationToken)
+        public Task AddAsync(string channelKey, string messageKey, Message message, DateTimeOffset resendAt, CancellationToken cancellationToken)
         {
             var messageDictionary = GetMessageDictionary(channelKey);
-            messageDictionary[messageKey] = new MessageWithExpiration(message, expiration);
+            messageDictionary[messageKey] = new MessageWithExpiration(message, resendAt);
             return TaskUtil.CompletedTask;
         }
 
@@ -42,9 +41,9 @@ namespace Lime.Protocol.Network.Modules.Resend
             return TaskUtil.CompletedTask;
         }
 
-        public Task<IEnumerable<string>> GetExpiredMessageKeysAsync(string channelKey, CancellationToken cancellationToken) 
+        public Task<IEnumerable<string>> GetMessagesToResendKeysAsync(string channelKey, DateTimeOffset reference, CancellationToken cancellationToken) 
             => GetMessageDictionary(channelKey)
-                .Where(m => m.Value.Expiration <= DateTimeOffset.UtcNow)
+                .Where(m => m.Value.Expiration <= reference)
                 .Select(m => m.Key)
                 .AsCompletedTask();
 

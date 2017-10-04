@@ -38,7 +38,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
             _targets = new List<ResendMessagesChannelModule2>();
         }
 
-        private TimeSpan ResendLimit => TimeSpan.FromTicks(_resendMessageIntervalWithSafeMargin.Ticks * (_resendMessageTryCount * 5));
+        private TimeSpan ResendLimit => TimeSpan.FromTicks(_resendMessageIntervalWithSafeMargin.Ticks * (_resendMessageTryCount * 6));
 
         private Mock<IChannel> CreateChannel(Node localNode = null, Node remoteNode = null)
         {
@@ -230,7 +230,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
             // Act
             var actual = await ((IChannelModule<Message>)target).OnSendingAsync(message, _cancellationToken);            
             var actualNotification = await ((IChannelModule<Notification>)target).OnReceivingAsync(notification, _cancellationToken);
-            await Task.Delay(TimeSpan.FromTicks(_resendMessageIntervalWithSafeMargin.Ticks * (_resendMessageTryCount * 2)));
+            await Task.Delay(ResendLimit);
 
             // Assert
             actual.ShouldBe(message);
@@ -248,18 +248,29 @@ namespace Lime.Protocol.UnitTests.Network.Modules
             var notification = Dummy.CreateNotification(Event.Received);
             notification.Id = message.Id;
             notification.From = message.To;
-            var target = GetTarget();
+            var channel = CreateChannel();
+            var target = GetTarget(channel: channel);
+            var callCount = 0;
+            channel
+                .Setup(c => c.SendMessageAsync(It.IsAny<Message>(), It.IsAny<CancellationToken>()))
+                .Returns((Message m, CancellationToken c) => ((IChannelModule<Message>)target).OnSendingAsync(m, _cancellationToken))
+                .Callback(async (Message m,  CancellationToken c) =>
+                {
+                    callCount++;
+                    if (callCount == 2)
+                    {
+                        await ((IChannelModule<Notification>)target).OnReceivingAsync(notification, _cancellationToken);
+                    }
+                });
+
 
             // Act
             var actual = await ((IChannelModule<Message>)target).OnSendingAsync(message, _cancellationToken);
-            await Task.Delay(TimeSpan.FromTicks(_resendMessageIntervalWithSafeMargin.Ticks * 3));
-            var actualNotification = await ((IChannelModule<Notification>)target).OnReceivingAsync(notification, _cancellationToken);
             await Task.Delay(ResendLimit);
 
             // Assert
             actual.ShouldBe(message);
-            actualNotification.ShouldBe(notification);
-            _channel.Verify(c => c.SendMessageAsync(message, It.IsAny<CancellationToken>()), Times.Exactly(2));
+            channel.Verify(c => c.SendMessageAsync(message, It.IsAny<CancellationToken>()), Times.Exactly(2));
         }
 
         [Fact]
