@@ -241,18 +241,17 @@ namespace Lime.Protocol.Client
         public override async Task<Session> ReceiveSessionAsync(CancellationToken cancellationToken)
         {
             var session = await base.ReceiveSessionAsync(cancellationToken).ConfigureAwait(false);
-
-            SessionId = session.Id;
-            State = session.State;
-
-            if (session.State == SessionState.Established &&
-                !session.Id.IsNullOrEmpty())
+            
+            if (session.State == SessionState.Established && !session.Id.IsNullOrEmpty())
             {
                 LocalNode = session.To;
                 RemoteNode = session.From;
             }
-            else if (session.State == SessionState.Finished ||
-                     session.State == SessionState.Failed)
+
+            SessionId = session.Id;
+            State = session.State;
+
+            if (session.State == SessionState.Finished || session.State == SessionState.Failed)
             {
                 await CloseTransportAsync().ConfigureAwait(false);
             }
