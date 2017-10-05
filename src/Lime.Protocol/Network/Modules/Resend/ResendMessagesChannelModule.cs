@@ -133,7 +133,7 @@ namespace Lime.Protocol.Network.Modules.Resend
 
         private async Task ResendExpiredMessagesAsync(CancellationToken cancellationToken)
         {            
-            while (!cancellationToken.IsCancellationRequested)
+            while (!cancellationToken.IsCancellationRequested && _channel.State == SessionState.Established && _channel.Transport.IsConnected)
             {                
                 try
                 {
@@ -194,12 +194,7 @@ namespace Lime.Protocol.Network.Modules.Resend
 #if !NETSTANDARD1_1
                     Trace.TraceError(ex.ToString());
 #endif
-
-                    if (_channel.State != SessionState.Established || !_channel.Transport.IsConnected)
-                    {
-                        StopResendTask();
-                        break;
-                    }
+                    if (_channel.State != SessionState.Established || !_channel.Transport.IsConnected) break;                    
                     throw;
                 }
             }
