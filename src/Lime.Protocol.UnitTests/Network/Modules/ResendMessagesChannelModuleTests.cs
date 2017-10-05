@@ -39,7 +39,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
         }
 
         private TimeSpan ResendLimit => TimeSpan.FromTicks(
-            (Enumerable.Range(1, _resendMessageTryCount).Sum() + _resendMessageTryCount + 1) * _resendMessageIntervalWithSafeMargin.Ticks);
+            (Enumerable.Range(1, _resendMessageTryCount + 1).Sum() + _resendMessageTryCount) * _resendMessageIntervalWithSafeMargin.Ticks);
 
         private Mock<IChannel> CreateChannel(Node localNode = null, Node remoteNode = null)
         {
