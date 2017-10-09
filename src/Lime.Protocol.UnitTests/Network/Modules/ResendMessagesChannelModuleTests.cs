@@ -59,13 +59,13 @@ namespace Lime.Protocol.UnitTests.Network.Modules
             Mock<IChannel> channel = null, 
             IMessageStorage messageStorage = null, 
             IDeadMessageHandler deadMessageHandler = null,
-            Event? eventToRemovePendingMessage = null)
+            Event[] eventsToRemovePendingMessage = null)
         {
             if (channel == null) channel = _channel;
 
             var target =
                 ResendMessagesChannelModule.CreateAndRegister(channel.Object, _resendMessageTryCount,
-                    _resendMessageInterval, messageStorage, deadMessageHandler: deadMessageHandler, eventToRemovePendingMessage: eventToRemovePendingMessage);
+                    _resendMessageInterval, messageStorage, deadMessageHandler: deadMessageHandler, eventsToRemovePendingMessage: eventsToRemovePendingMessage);
 
             channel
                 .Setup(c => c.SendMessageAsync(It.IsAny<Message>(), It.IsAny<CancellationToken>()))
@@ -115,8 +115,8 @@ namespace Lime.Protocol.UnitTests.Network.Modules
             {
                 var actual = await ((IChannelModule<Message>)target).OnSendingAsync(message, _cancellationToken);
                 actuals.Add(actual);
-            }            
-            await Task.Delay(_resendMessageIntervalWithSafeMargin);
+            }
+            await Task.Delay(ResendLimit);
 
             // Assert
             foreach (var message in messages)
@@ -155,7 +155,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
             var notification = Dummy.CreateNotification(Event.Received);
             notification.Id = message.Id;
             notification.From = message.To;            
-            var target = GetTarget(deadMessageHandler: deadMessageHandler.Object, eventToRemovePendingMessage: Event.Accepted);
+            var target = GetTarget(deadMessageHandler: deadMessageHandler.Object, eventsToRemovePendingMessage: new[] { Event.Accepted });
 
             // Act
             var actual = await ((IChannelModule<Message>)target).OnSendingAsync(message, _cancellationToken);
@@ -188,7 +188,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
                 var actual = await ((IChannelModule<Message>)target).OnSendingAsync(message, _cancellationToken);
                 actuals.Add(actual);
             }
-            await Task.Delay(TimeSpan.FromTicks(_resendMessageIntervalWithSafeMargin.Ticks * (_resendMessageTryCount * 2)));
+            await Task.Delay(ResendLimit);
 
             // Assert            
             foreach (var message in messages)

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -16,7 +17,7 @@ namespace Lime.Protocol.Network.Modules.Resend
         private readonly IDeadMessageHandler _deadMessageHandler;
         private readonly int _maxResendCount;
         private readonly TimeSpan _resendWindow;
-        private readonly Event? _eventToRemovePendingMessage;
+        private readonly Event[] _eventsToRemovePendingMessage;
         private readonly object _syncRoot = new object();
 
         private string _channelKey;
@@ -30,7 +31,7 @@ namespace Lime.Protocol.Network.Modules.Resend
             IDeadMessageHandler deadMessageHandler,
             int maxResendCount, 
             TimeSpan resendWindow,
-            Event? eventToRemovePendingMessage)
+            Event[] eventsToRemovePendingMessage = null)
         {
             _channel = channel ?? throw new ArgumentNullException(nameof(channel));
             _messageStorage = messageStorage ?? throw new ArgumentNullException(nameof(messageStorage));
@@ -38,7 +39,11 @@ namespace Lime.Protocol.Network.Modules.Resend
             _deadMessageHandler = deadMessageHandler ?? throw new ArgumentNullException(nameof(deadMessageHandler));
             _maxResendCount = maxResendCount;
             _resendWindow = resendWindow;
-            _eventToRemovePendingMessage = eventToRemovePendingMessage;
+            if (eventsToRemovePendingMessage != null && eventsToRemovePendingMessage.Length == 0)
+            {
+                throw new ArgumentException("At least one event must be provided", nameof(eventsToRemovePendingMessage));
+            }
+            _eventsToRemovePendingMessage = eventsToRemovePendingMessage;
         }
 
         public virtual void OnStateChanged(SessionState state)
@@ -74,7 +79,8 @@ namespace Lime.Protocol.Network.Modules.Resend
 
         public virtual async Task<Notification> OnReceivingAsync(Notification envelope, CancellationToken cancellationToken)
         {
-            if (_eventToRemovePendingMessage != null && envelope.Event != _eventToRemovePendingMessage.Value)
+            if (_eventsToRemovePendingMessage != null 
+                && !_eventsToRemovePendingMessage.Contains(envelope.Event))
             {
                 return envelope;
             }
@@ -108,7 +114,7 @@ namespace Lime.Protocol.Network.Modules.Resend
             IMessageStorage messageStorage = null,             
             IKeyProvider keyProvider = null,
             IDeadMessageHandler deadMessageHandler = null,
-            Event? eventToRemovePendingMessage = null)
+            Event[] eventsToRemovePendingMessage = null)
         {
             var resendMessagesChannelModule = new ResendMessagesChannelModule(
                 channel, 
@@ -117,7 +123,7 @@ namespace Lime.Protocol.Network.Modules.Resend
                 deadMessageHandler ?? DiscardDeadMessageHandler.Instance,
                 maxResendCount, 
                 resendWindow,
-                eventToRemovePendingMessage);
+                eventsToRemovePendingMessage);
             resendMessagesChannelModule.RegisterTo(channel);
             return resendMessagesChannelModule;
         }
