@@ -16,6 +16,7 @@ namespace Lime.Protocol.Network.Modules.Resend
         private readonly IDeadMessageHandler _deadMessageHandler;
         private readonly int _maxResendCount;
         private readonly TimeSpan _resendWindow;
+        private readonly Event? _eventToRemovePendingMessage;
         private readonly object _syncRoot = new object();
 
         private string _channelKey;
@@ -28,7 +29,8 @@ namespace Lime.Protocol.Network.Modules.Resend
             IKeyProvider keyProvider,       
             IDeadMessageHandler deadMessageHandler,
             int maxResendCount, 
-            TimeSpan resendWindow)
+            TimeSpan resendWindow,
+            Event? eventToRemovePendingMessage)
         {
             _channel = channel ?? throw new ArgumentNullException(nameof(channel));
             _messageStorage = messageStorage ?? throw new ArgumentNullException(nameof(messageStorage));
@@ -36,6 +38,7 @@ namespace Lime.Protocol.Network.Modules.Resend
             _deadMessageHandler = deadMessageHandler ?? throw new ArgumentNullException(nameof(deadMessageHandler));
             _maxResendCount = maxResendCount;
             _resendWindow = resendWindow;
+            _eventToRemovePendingMessage = eventToRemovePendingMessage;
         }
 
         public virtual void OnStateChanged(SessionState state)
@@ -71,6 +74,11 @@ namespace Lime.Protocol.Network.Modules.Resend
 
         public virtual async Task<Notification> OnReceivingAsync(Notification envelope, CancellationToken cancellationToken)
         {
+            if (_eventToRemovePendingMessage != null && envelope.Event != _eventToRemovePendingMessage.Value)
+            {
+                return envelope;
+            }
+
             var messageKey = _keyProvider.GetMessageKey(envelope, _channel);
             await _messageStorage.RemoveAsync(_channelKey, messageKey, cancellationToken);
             return envelope;
@@ -99,7 +107,8 @@ namespace Lime.Protocol.Network.Modules.Resend
             TimeSpan resendWindow, 
             IMessageStorage messageStorage = null,             
             IKeyProvider keyProvider = null,
-            IDeadMessageHandler deadMessageHandler = null)
+            IDeadMessageHandler deadMessageHandler = null,
+            Event? eventToRemovePendingMessage = null)
         {
             var resendMessagesChannelModule = new ResendMessagesChannelModule(
                 channel, 
@@ -107,7 +116,8 @@ namespace Lime.Protocol.Network.Modules.Resend
                 keyProvider ?? KeyProvider.Instance,
                 deadMessageHandler ?? DiscardDeadMessageHandler.Instance,
                 maxResendCount, 
-                resendWindow);
+                resendWindow,
+                eventToRemovePendingMessage);
             resendMessagesChannelModule.RegisterTo(channel);
             return resendMessagesChannelModule;
         }

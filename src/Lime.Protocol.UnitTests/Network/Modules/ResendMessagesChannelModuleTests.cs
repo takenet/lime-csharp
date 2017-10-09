@@ -54,13 +54,18 @@ namespace Lime.Protocol.UnitTests.Network.Modules
             return channel;
         }
 
-        private ResendMessagesChannelModule GetTarget(bool setEstablishedState = true, Mock<IChannel> channel = null, IMessageStorage messageStorage = null, IDeadMessageHandler deadMessageHandler = null)
+        private ResendMessagesChannelModule GetTarget(
+            bool setEstablishedState = true, 
+            Mock<IChannel> channel = null, 
+            IMessageStorage messageStorage = null, 
+            IDeadMessageHandler deadMessageHandler = null,
+            Event? eventToRemovePendingMessage = null)
         {
             if (channel == null) channel = _channel;
 
             var target =
                 ResendMessagesChannelModule.CreateAndRegister(channel.Object, _resendMessageTryCount,
-                    _resendMessageInterval, messageStorage, deadMessageHandler: deadMessageHandler);
+                    _resendMessageInterval, messageStorage, deadMessageHandler: deadMessageHandler, eventToRemovePendingMessage: eventToRemovePendingMessage);
 
             channel
                 .Setup(c => c.SendMessageAsync(It.IsAny<Message>(), It.IsAny<CancellationToken>()))
@@ -132,6 +137,29 @@ namespace Lime.Protocol.UnitTests.Network.Modules
 
             // Act
             var actual = await ((IChannelModule<Message>)target).OnSendingAsync(message, _cancellationToken);
+            await Task.Delay(ResendLimit);
+
+            // Assert
+            actual.ShouldBe(message);
+            _channel.Verify(c => c.SendMessageAsync(message, It.IsAny<CancellationToken>()), Times.Exactly(_resendMessageTryCount));
+            deadMessageHandler.Verify(h => h.HandleDeadMessageAsync(message, It.IsAny<IChannelInformation>(), It.IsAny<CancellationToken>()), Times.Once());
+        }
+
+        [Fact]
+        public async Task OnSending_MessageWithNotificationFromDifferentEvent_ShouldResendUntilLimit()
+        {
+            // Arrange
+            var deadMessageHandler = new Mock<IDeadMessageHandler>();
+            var message = Dummy.CreateMessage(Dummy.CreateTextContent());
+            message.Id = EnvelopeId.NewId();
+            var notification = Dummy.CreateNotification(Event.Received);
+            notification.Id = message.Id;
+            notification.From = message.To;            
+            var target = GetTarget(deadMessageHandler: deadMessageHandler.Object, eventToRemovePendingMessage: Event.Accepted);
+
+            // Act
+            var actual = await ((IChannelModule<Message>)target).OnSendingAsync(message, _cancellationToken);
+            await ((IChannelModule<Notification>)target).OnReceivingAsync(notification, _cancellationToken);
             await Task.Delay(ResendLimit);
 
             // Assert
