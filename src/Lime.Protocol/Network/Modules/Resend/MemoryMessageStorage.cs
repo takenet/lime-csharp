@@ -14,23 +14,48 @@ namespace Lime.Protocol.Network.Modules.Resend
     /// </summary>
     public sealed class MemoryMessageStorage : IMessageStorage
     {
-        private readonly ConcurrentDictionary<string, ConcurrentDictionary<string, MessageWithExpiration>> _channelMessageDictionary;
+        private readonly TimeSpan _resendExpiration;
+        private readonly int _checkForRemovalInterval;
+        private readonly ConcurrentDictionary<string, ConcurrentDictionary<string, MessageToResend>> _channelMessageDictionary;
+        private long _addCount;
 
         public MemoryMessageStorage()
+            : this(TimeSpan.FromMinutes(10), 5)
         {
-            _channelMessageDictionary = new ConcurrentDictionary<string, ConcurrentDictionary<string, MessageWithExpiration>>();
+            
+        }
+
+        /// <summary>
+        /// Initialize a new instance of <see cref="MemoryMessageStorage"/>.
+        /// </summary>
+        /// <param name="resendExpiration">The interval to remove messages to resend for storage.</param>
+        /// <param name="checkForRemovalInterval">The interval for checking for messages to removal.</param>
+        public MemoryMessageStorage(TimeSpan resendExpiration, int checkForRemovalInterval)
+        {
+            if (resendExpiration <= TimeSpan.Zero) throw new ArgumentException("The resend expiration value must be positive", nameof(resendExpiration));
+            if (checkForRemovalInterval <= 0) throw new ArgumentOutOfRangeException(nameof(checkForRemovalInterval));
+
+            _resendExpiration = resendExpiration;
+            _checkForRemovalInterval = checkForRemovalInterval;
+            _channelMessageDictionary = new ConcurrentDictionary<string, ConcurrentDictionary<string, MessageToResend>>();
         }
 
         public Task AddAsync(string channelKey, string messageKey, Message message, DateTimeOffset resendAt, CancellationToken cancellationToken)
         {
+            // Try remove pending messages for each number of configured messages
+            if (++_addCount % _checkForRemovalInterval == 0)
+            {
+                RemoveOldPendingMessages();
+            }
+
             var messageDictionary = GetMessageDictionary(channelKey);
-            messageDictionary[messageKey] = new MessageWithExpiration(message, resendAt);
+            messageDictionary[messageKey] = new MessageToResend(message, resendAt);
             return TaskUtil.CompletedTask;
         }
 
         public Task<IEnumerable<string>> GetMessagesToResendKeysAsync(string channelKey, DateTimeOffset reference, CancellationToken cancellationToken) 
             => GetMessageDictionary(channelKey)
-                .Where(m => m.Value.Expiration <= reference)
+                .Where(m => m.Value.ResendAt <= reference)
                 .Select(m => m.Key)
                 .AsCompletedTask();
 
@@ -45,20 +70,48 @@ namespace Lime.Protocol.Network.Modules.Resend
             return Task.FromResult<Message>(null);
         }
 
-        private ConcurrentDictionary<string, MessageWithExpiration> GetMessageDictionary(string channelKey) 
-            => _channelMessageDictionary.GetOrAdd(channelKey, k => new ConcurrentDictionary<string, MessageWithExpiration>());
+        private ConcurrentDictionary<string, MessageToResend> GetMessageDictionary(string channelKey) 
+            => _channelMessageDictionary.GetOrAdd(channelKey, k => new ConcurrentDictionary<string, MessageToResend>());
 
-        public sealed class MessageWithExpiration
+        private void RemoveOldPendingMessages()
         {
-            public MessageWithExpiration(Message message, DateTimeOffset expiration)
+            var reference = DateTimeOffset.UtcNow.AddTicks(_resendExpiration.Ticks * -1);
+
+            var expiredChannelKeys = new List<string>();
+
+            foreach (var keyValuePair in _channelMessageDictionary)
+            {
+                var messageDictionary = keyValuePair.Value;
+
+                var expiredKeys = messageDictionary
+                    .Where(m => m.Value.ResendAt <= reference)
+                    .Select(m => m.Key);
+
+                foreach (var expiredKey in expiredKeys)
+                {
+                    messageDictionary.TryRemove(expiredKey, out _);
+                }
+
+                if (messageDictionary.IsEmpty) expiredChannelKeys.Add(keyValuePair.Key);
+            }
+
+            foreach (var expiredChannelKey in expiredChannelKeys)
+            {
+                _channelMessageDictionary.TryRemove(expiredChannelKey, out _);
+            }
+        }
+
+        public sealed class MessageToResend
+        {
+            public MessageToResend(Message message, DateTimeOffset resendAt)
             {
                 Message = message ?? throw new ArgumentNullException(nameof(message));
-                Expiration = expiration;
+                ResendAt = resendAt;
             }
 
             public Message Message { get; }
 
-            public DateTimeOffset Expiration { get; }
+            public DateTimeOffset ResendAt { get; }
         }
     }
 }
