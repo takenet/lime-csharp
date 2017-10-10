@@ -4,12 +4,15 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Lime.Protocol.Client;
 
 namespace Lime.Protocol.Network.Modules.Resend
 {
     public class ResendMessagesChannelModule : IChannelModule<Message>, IChannelModule<Notification>, IDisposable
     {
         const string RESENT_COUNT_METADATA_KEY = "#resentCount";
+        const string RESENT_SESSION_KEY = "#resentSession";
+        const string RESENT_CHANNEL_ROLE_METADATA_KEY = "#resentChannelRole";
 
         private readonly IChannel _channel;
         private readonly IMessageStorage _messageStorage;
@@ -224,10 +227,12 @@ namespace Lime.Protocol.Network.Modules.Resend
             return 0;
         }
 
-        private static void SetMessageResendCount(Message expiredMessage, int resendCount)
+        private void SetMessageResendCount(Message expiredMessage, int resendCount)
         {
             if (expiredMessage.Metadata == null) expiredMessage.Metadata = new Dictionary<string, string>();
             expiredMessage.Metadata[RESENT_COUNT_METADATA_KEY] = resendCount.ToString();
+            expiredMessage.Metadata[RESENT_SESSION_KEY] = _channel.SessionId;
+            expiredMessage.Metadata[RESENT_CHANNEL_ROLE_METADATA_KEY] = _channel is IClientChannel ? "Client" : "Server";
         }
 
         public void Dispose()
