@@ -11,7 +11,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Lime.Protocol.Network;
 
-#if NET461    
+#if !NETSTANDARD1_1
 using System.Text.RegularExpressions;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
@@ -171,7 +171,7 @@ namespace Lime.Protocol
             return cts.Token;
         }
 
-#if NET461
+#if !NETSTANDARD1_1
         /// <summary>
         /// Gets the identity value from the certificate subject.
         /// </summary>
@@ -233,7 +233,7 @@ namespace Lime.Protocol
             return values.Aggregate((a, b) => string.Format("{0},{1}", a, b)).TrimEnd(',');
         }
 
-#if NET461
+#if !NETSTANDARD1_1
         /// <summary>
         /// Gets a SHA1 hash for the specified string.
         /// </summary>
