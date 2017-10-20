@@ -6,7 +6,7 @@
     <AssemblyTitle>Lime.Transport.WebSocket</AssemblyTitle>
     <VersionPrefix></VersionPrefix>
     <Authors>takenet;andrebires</Authors>
-    <TargetFramework>net461</TargetFramework>
+    <TargetFrameworks>net461</TargetFrameworks>
     <AssemblyName>Lime.Transport.WebSocket</AssemblyName>
     <PackageId>Lime.Transport.WebSocket</PackageId>
     <PackageTags>lime</PackageTags>
@@ -30,8 +30,6 @@
     <PackageReference Include="Microsoft.Tpl.Dataflow" Version="4.5.24" />
     <PackageReference Include="SslCertBinding.Net" Version="1.0.2" />
     <Reference Include="System.Runtime.Serialization" />
-    <Reference Include="System.Runtime.Caching" />
-    <Reference Include="System.ServiceModel" />
     <Reference Include="System.Web" />
     <Reference Include="System.Net" />
     <Reference Include="System" />
