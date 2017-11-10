@@ -73,6 +73,11 @@ namespace Lime.Transport.WebSocket
                 await WebSocket.SendAsync(new ArraySegment<byte>(jsonBytes), WebSocketMessageType.Text, true,
                     cancellationToken).ConfigureAwait(false);
             }
+            catch(WebSocketException)
+            {
+                await CloseWithTimeoutAsync().ConfigureAwait(false);
+                throw;
+            }
             finally
             {
                 _sendSemaphore.Release();
@@ -275,6 +280,14 @@ namespace Lime.Transport.WebSocket
                 WebSocket.Dispose();
                 _sendSemaphore.Dispose();
                 _listenerCts?.Dispose();
+            }
+        }
+
+        private Task CloseWithTimeoutAsync()
+        {
+            using (var cts = new CancellationTokenSource(CloseTimeout))
+            {
+                return CloseAsync(cts.Token);
             }
         }
     }
