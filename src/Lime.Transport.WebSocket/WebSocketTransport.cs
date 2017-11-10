@@ -54,7 +54,7 @@ namespace Lime.Transport.WebSocket
             if (envelope == null) throw new ArgumentNullException(nameof(envelope));
             if (WebSocket.State != WebSocketState.Open)
             {
-                throw new InvalidOperationException("The connection was not initialized. Call OpenAsync first.");
+                throw new InvalidOperationException("Could not send envelope: websocket is not open");
             }
 
             var envelopeJson = _envelopeSerializer.Serialize(envelope);
@@ -68,12 +68,17 @@ namespace Lime.Transport.WebSocket
             var jsonBytes = Encoding.UTF8.GetBytes(envelopeJson);
             await _sendSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
 
+            if (WebSocket.State != WebSocketState.Open)
+            {
+                throw new InvalidOperationException("Could not send envelope: websocket is not open");
+            }
+
             try
             {
                 await WebSocket.SendAsync(new ArraySegment<byte>(jsonBytes), WebSocketMessageType.Text, true,
                     cancellationToken).ConfigureAwait(false);
             }
-            catch(WebSocketException)
+            catch (WebSocketException)
             {
                 await CloseWithTimeoutAsync().ConfigureAwait(false);
                 throw;
@@ -164,6 +169,7 @@ namespace Lime.Transport.WebSocket
 
         protected override Task PerformOpenAsync(Uri uri, CancellationToken cancellationToken)
         {
+
             if (_listenerTask != null) throw new InvalidOperationException("The listener is already active");
             _listenerCts?.Dispose();
             _listenerCts = new CancellationTokenSource();
@@ -212,7 +218,7 @@ namespace Lime.Transport.WebSocket
                     StopListenerTask();
                 }
             }
-            
+
             await CloseWebSocketAsync(cancellationToken).ConfigureAwait(false);
         }
 
@@ -251,10 +257,10 @@ namespace Lime.Transport.WebSocket
             }
 
             CloseStatus = WebSocketCloseStatus.NormalClosure;
-            _closeFrameTcs.TrySetResult(receiveResult);            
+            _closeFrameTcs.TrySetResult(receiveResult);
         }
 
-        public override bool IsConnected => WebSocket.State 
+        public override bool IsConnected => WebSocket.State
             >= WebSocketState.Open && WebSocket.State <= WebSocketState.CloseReceived; // We need to consider the Close status here to make the channel call the CloseAsync method.
 
 
