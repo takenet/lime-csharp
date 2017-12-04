@@ -13,23 +13,27 @@ namespace Lime.Messaging.Contents
         public static readonly MediaType MediaType = MediaType.Parse(MIME_TYPE);
 
         public const string STATE_KEY = "state";
+        public const string INTERVAL_KEY = "interval";
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ChatState"/> class.
         /// </summary>
         public ChatState()
-            : base(MediaType)            
+            : base(MediaType)
         {
         }
 
         /// <summary>
         /// Gets or sets the chat state.
-        /// </summary>
-        /// <value>
-        /// The state.
-        /// </value>
+        /// </summary>        
         [DataMember(Name = STATE_KEY)]
         public ChatStateEvent State { get; set; }
+
+        /// <summary>
+        /// Gets or sets the interval in milisseconds for displaying the state.
+        /// </summary>
+        [DataMember(Name = INTERVAL_KEY)]
+        public int? Interval { get; set; }
 
         /// <summary>
         /// Returns a <see cref="System.String" /> that represents this instance.
