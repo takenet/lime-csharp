@@ -114,7 +114,7 @@ namespace Lime.Protocol.Network
         }
 
         /// <summary>
-        /// Sets the resource value asynchronous.
+        /// Sets the resource value.
         /// </summary>
         /// <typeparam name="TResource">The type of the resource.</typeparam>
         /// <param name="channel">The channel.</param>
@@ -129,7 +129,7 @@ namespace Lime.Protocol.Network
         }
 
         /// <summary>
-        /// Sets the resource value asynchronous.
+        /// Sets the resource value.
         /// </summary>
         /// <typeparam name="TResource">The type of the resource.</typeparam>
         /// <param name="channel">The channel.</param>
@@ -221,6 +221,68 @@ namespace Lime.Protocol.Network
                     throw new LimeException(responseCommand.Reason.Code, responseCommand.Reason.Description);
                 }
                 throw new InvalidOperationException("An invalid command response was received");
+            }
+        }
+
+        /// <summary>
+        /// Merges the resource value.
+        /// </summary>
+        /// <typeparam name="TResource">The type of the resource.</typeparam>
+        /// <param name="channel">The channel.</param>
+        /// <param name="uri">The resource uri.</param>
+        /// <param name="resource">The resource to be merge.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">channel</exception>
+        public static Task MergeResourceAsync<TResource>(this ICommandChannel channel, LimeUri uri, TResource resource, CancellationToken cancellationToken) where TResource : Document
+        {
+            return MergeResourceAsync(channel, uri, resource, null, cancellationToken);
+        }
+
+        /// <summary>
+        /// Merges the resource value.
+        /// </summary>
+        /// <typeparam name="TResource">The type of the resource.</typeparam>
+        /// <param name="channel">The channel.</param>
+        /// <param name="uri">The resource uri.</param>
+        /// <param name="resource">The resource to be merge.</param>
+        /// <param name="from">The originator to be used in the command.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">channel</exception>
+        /// <exception cref="LimeException"></exception>
+        public static async Task MergeResourceAsync<TResource>(this ICommandChannel channel, LimeUri uri, TResource resource, Node from, CancellationToken cancellationToken) where TResource : Document
+        {
+            if (channel == null) throw new ArgumentNullException(nameof(channel));
+            if (uri == null) throw new ArgumentNullException(nameof(uri));
+            if (resource == null) throw new ArgumentNullException(nameof(resource));
+
+            var requestCommand = new Command
+            {
+                From = from,
+                Method = CommandMethod.Merge,
+                Uri = uri,
+                Resource = resource
+            };
+
+            var responseCommand = await channel.ProcessCommandAsync(requestCommand, cancellationToken).ConfigureAwait(false);
+            if (responseCommand.Status != CommandStatus.Success)
+            {
+                if (responseCommand.Reason != null)
+                {
+                    throw new LimeException(responseCommand.Reason.Code, responseCommand.Reason.Description);
+                }
+                else
+                {
+#if DEBUG
+                    if (requestCommand == responseCommand)
+                    {
+                        throw new InvalidOperationException("The request and the response are the same instance");
+                    }
+#endif
+
+                    throw new InvalidOperationException("An invalid command response was received");
+                }
             }
         }
     }

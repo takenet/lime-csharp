@@ -129,6 +129,12 @@ namespace Lime.Protocol
         /// </summary>
         [EnumMember(Value = "observe")]
         Observe,
+
+        /// <summary>
+        /// Merges the resource document with an existing one. If the resource doesn't exists, it is created.
+        /// </summary>
+        [EnumMember(Value = "merge")]
+        Merge,
     }
 
     /// <summary>
