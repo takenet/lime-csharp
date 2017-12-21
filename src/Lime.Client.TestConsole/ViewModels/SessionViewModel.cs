@@ -396,7 +396,7 @@ namespace Lime.Client.TestConsole.ViewModels
                 if (_templatesFilter != null)
                 {
                     TemplatesView.Filter = o =>
-                        o is TemplateViewModel template && template.Name.Contains(TemplatesFilter);
+                        o is TemplateViewModel template && template.Name.ToLowerInvariant().Contains(TemplatesFilter.ToLowerInvariant());
                 }
                 else
                 {
