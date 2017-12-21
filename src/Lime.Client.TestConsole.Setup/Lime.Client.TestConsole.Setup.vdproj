@@ -1935,11 +1935,6 @@
             "AssemblyAsmDisplayName" = "8:Lime.Transport.Tcp, Version=0.7.194.0, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
-                    "_32A5BAFDA52FC8B8B0267371442DF3ED"
-                    {
-                    "Name" = "8:Lime.Transport.Tcp.dll"
-                    "Attributes" = "3:512"
-                    }
                 }
             "SourcePath" = "8:Lime.Transport.Tcp.dll"
             "TargetName" = "8:"
@@ -2513,11 +2508,6 @@
             "AssemblyAsmDisplayName" = "8:Lime.Messaging, Version=0.7.194.0, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
-                    "_6CE274FB466BE086E201C738A8BC4287"
-                    {
-                    "Name" = "8:Lime.Messaging.dll"
-                    "Attributes" = "3:512"
-                    }
                 }
             "SourcePath" = "8:Lime.Messaging.dll"
             "TargetName" = "8:"
@@ -3009,11 +2999,6 @@
             "AssemblyAsmDisplayName" = "8:Lime.Protocol.Serialization, Version=0.7.194.0, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
-                    "_9B80866BDE8C255B16300AD7C9955CBA"
-                    {
-                    "Name" = "8:Lime.Protocol.Serialization.dll"
-                    "Attributes" = "3:512"
-                    }
                 }
             "SourcePath" = "8:Lime.Protocol.Serialization.dll"
             "TargetName" = "8:"
@@ -3762,11 +3747,6 @@
             "AssemblyAsmDisplayName" = "8:Lime.Transport.WebSocket, Version=0.7.194.0, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
-                    "_F6EC4762C43CDFF772CBBBC7E20B0C01"
-                    {
-                    "Name" = "8:Lime.Transport.WebSocket.dll"
-                    "Attributes" = "3:512"
-                    }
                 }
             "SourcePath" = "8:Lime.Transport.WebSocket.dll"
             "TargetName" = "8:"
@@ -3917,11 +3897,6 @@
             "AssemblyAsmDisplayName" = "8:Lime.Protocol, Version=0.7.194.0, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
-                    "_F88F8EE27D9F001E93D2A5C79428D155"
-                    {
-                    "Name" = "8:Lime.Protocol.dll"
-                    "Attributes" = "3:512"
-                    }
                 }
             "SourcePath" = "8:Lime.Protocol.dll"
             "TargetName" = "8:"
@@ -4092,15 +4067,15 @@
         {
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:LIME Test Console"
-        "ProductCode" = "8:{186D14E2-2F5A-4248-AF29-9C0F58D7FDCA}"
-        "PackageCode" = "8:{477C1ADF-020C-4326-89C6-610F527E8823}"
+        "ProductCode" = "8:{1CA2389A-37A6-4658-8A6A-4B9FA2947A38}"
+        "PackageCode" = "8:{6B3A5951-FF67-4B3F-B317-8E71E71AF0D1}"
         "UpgradeCode" = "8:{B9AD92D4-F4EB-4A05-A4FC-EF185D868EE3}"
         "AspNetVersion" = "8:4.0.30319.0"
         "RestartWWWService" = "11:FALSE"
         "RemovePreviousVersions" = "11:TRUE"
         "DetectNewerInstalledVersion" = "11:TRUE"
         "InstallAllUsers" = "11:TRUE"
-        "ProductVersion" = "8:1.0.2"
+        "ProductVersion" = "8:1.0.3"
         "Manufacturer" = "8:LIME Protocol"
         "ARPHELPTELEPHONE" = "8:"
         "ARPHELPLINK" = "8:"
