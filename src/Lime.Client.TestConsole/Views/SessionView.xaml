@@ -171,12 +171,14 @@
                     <Grid Grid.Row="1">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
                             <RowDefinition Height="*" />
                             <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
 
                         <Label Grid.Row="0" Content="Templates" FontWeight="Bold"  />
-                        <ScrollViewer Grid.Row="1" PreviewMouseWheel="ScrollViewer_PreviewMouseWheel">
+                        <xctk:WatermarkTextBox Watermark="Search templates" Grid.Row="1" Text="{Binding TemplatesFilter, UpdateSourceTrigger=PropertyChanged}" />
+                        <ScrollViewer Grid.Row="2" PreviewMouseWheel="ScrollViewer_PreviewMouseWheel">
                             <ListBox ItemsSource="{Binding TemplatesView}" SelectedValue="{Binding SelectedTemplate}">
                                 <i:Interaction.Triggers>
                                     <i:EventTrigger EventName="MouseDoubleClick">
@@ -199,7 +201,7 @@
                                 </ListBox.GroupStyle>
                             </ListBox>
                         </ScrollViewer>
-                        <StackPanel Grid.Row="2" Orientation="Horizontal">
+                        <StackPanel Grid.Row="3" Orientation="Horizontal">
                             <Button Content="_Load" ToolTip="Load the selected template to the input" Command="{Binding LoadTemplateCommand }" />
                         </StackPanel>
                     </Grid>

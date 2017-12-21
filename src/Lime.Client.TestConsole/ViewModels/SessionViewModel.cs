@@ -385,6 +385,28 @@ namespace Lime.Client.TestConsole.ViewModels
         }
 
 
+        private string _templatesFilter;
+
+        public string TemplatesFilter {
+            get { return _templatesFilter; }
+            set
+            {
+                _templatesFilter = value;
+
+                if (_templatesFilter != null)
+                {
+                    TemplatesView.Filter = o =>
+                        o is TemplateViewModel template && template.Name.Contains(TemplatesFilter);
+                }
+                else
+                {
+                    TemplatesView.Filter = null;
+                }
+                RaisePropertyChanged(() => TemplatesView);
+
+            }
+        }
+
 
         private ObservableCollectionEx<TemplateViewModel> _templates;
 
@@ -398,9 +420,10 @@ namespace Lime.Client.TestConsole.ViewModels
 
                 if (_templates != null)
                 {
-                    TemplatesView = CollectionViewSource.GetDefaultView(_templates);
+                    TemplatesView = CollectionViewSource.GetDefaultView(_templates);                    
                     TemplatesView.GroupDescriptions.Add(new PropertyGroupDescription("Category"));
                     TemplatesView.SortDescriptions.Add(new SortDescription("SortOrder", ListSortDirection.Ascending));
+
 
                     RaisePropertyChanged(() => TemplatesView);                    
                 }
