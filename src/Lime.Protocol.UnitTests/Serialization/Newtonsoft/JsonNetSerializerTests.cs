@@ -1972,6 +1972,32 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 
         [Fact]
         [Trait("Category", "Deserialize")]
+        public void Deserialize_InvalidWeblinkMessage_ReturnsJsonDocument()
+        {
+            // Arrange
+            var json =
+                "{\"type\":\"application/vnd.lime.web-link+json\",\"content\":{\"uri\":{\"value\":\"http://e0x0rkuaof.com:9288/\"},\"previewUri\":\"http://pcmcjxomhd.com:9875/\",\"previewType\":\"image/jpeg\",\"text\":\"b9s38pra6s7w7b4w1jca6lzf9zp8927ciy4lwdsa3y1gc2ekiw\"},\"id\":\"25058656-ea3e-4f2a-9b27-fe14d1470796\",\"from\":\"6fjghzjm@3j9saev4nj.com/gtax0\",\"to\":\"cghusdgu@f0m512bqfb.com/jjjak\"}";
+            var target = GetTarget();
+
+            // Act
+            var actual = target.Deserialize(json);
+
+            // Assert
+            var actualMessage = actual.ShouldBeOfType<Message>();
+            var jsonDocument = actualMessage.Content.ShouldBeOfType<JsonDocument>();
+            jsonDocument["uri"].ShouldNotBeNull();
+            var uri = jsonDocument["uri"].ShouldBeOfType<Dictionary<string, object>>();
+            uri["value"].ShouldBe("http://e0x0rkuaof.com:9288/");
+            jsonDocument["previewUri"].ShouldNotBeNull();
+            jsonDocument["previewUri"].ShouldBe("http://pcmcjxomhd.com:9875/");
+            jsonDocument["previewType"].ShouldNotBeNull();
+            jsonDocument["previewType"].ToString().ShouldBe("image/jpeg");
+            jsonDocument["text"].ShouldBe("b9s38pra6s7w7b4w1jca6lzf9zp8927ciy4lwdsa3y1gc2ekiw");
+
+        }
+
+        [Fact]
+        [Trait("Category", "Deserialize")]
         public void Deserialize_WeblinkWithEscapedUriMessage_ReturnsValidInstance()
         {
             // Arrange

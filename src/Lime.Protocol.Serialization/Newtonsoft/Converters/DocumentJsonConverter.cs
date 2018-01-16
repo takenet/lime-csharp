@@ -1,19 +1,16 @@
 ﻿using Newtonsoft.Json;
 using System;
-using System.Linq;
-using Newtonsoft.Json.Linq;
-using Newtonsoft.Json.Serialization;
 using System.Reflection;
 
 namespace Lime.Protocol.Serialization.Newtonsoft.Converters
 {
     public class DocumentJsonConverter : JsonConverter
     {
-        private readonly global::Newtonsoft.Json.JsonSerializer _alternativeSerializer;
+        private readonly JsonSerializer _alternativeSerializer;
 
         public DocumentJsonConverter(JsonSerializerSettings settings)
         {
-            _alternativeSerializer = global::Newtonsoft.Json.JsonSerializer.Create(settings);
+            _alternativeSerializer = JsonSerializer.Create(settings);
         }
 
         public override bool CanRead => true;
@@ -25,7 +22,7 @@ namespace Lime.Protocol.Serialization.Newtonsoft.Converters
             return typeof(Document).IsAssignableFrom(objectType) && !typeof(DocumentCollection).IsAssignableFrom(objectType);
         }
 
-        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, global::Newtonsoft.Json.JsonSerializer serializer)
+        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
             if (objectType.GetTypeInfo().IsAbstract)
             {
@@ -38,15 +35,14 @@ namespace Lime.Protocol.Serialization.Newtonsoft.Converters
             return instance;
         }
 
-        public override void WriteJson(JsonWriter writer, object value, global::Newtonsoft.Json.JsonSerializer serializer)
+        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
-            var document = value as Document;
-            if (document != null)
-            {                                                                
+            if (value is Document document)
+            {
                 if (document.GetMediaType().IsJson)
                 {
                     // TODO: Any document inside the value will not be correct handled.
-                    _alternativeSerializer.Serialize(writer, document);                    
+                    _alternativeSerializer.Serialize(writer, document);
                 }
                 else
                 {

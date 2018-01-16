@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace Lime.Protocol.Serialization.Newtonsoft.Converters
@@ -9,22 +10,19 @@ namespace Lime.Protocol.Serialization.Newtonsoft.Converters
     {
         public static object GetTokenValue(this JToken token)
         {
-            var jValue = token as JValue;
-            if (jValue != null)
+            if (token is JValue jValue)
             {
                 return jValue.Value;
             }
 
-            var jArray = token as JArray;
-            if (jArray != null)
+            if (token is JArray jArray)
             {
                 return jArray
                     .Select(GetTokenValue)
                     .ToArray();
             }
 
-            var dictionary = token as IDictionary<string, JToken>;
-            if (dictionary != null)
+            if (token is IDictionary<string, JToken> dictionary)
             {
                 return dictionary.ToDictionary(k => k.Key, v => GetTokenValue(v.Value));
             }
@@ -34,43 +32,50 @@ namespace Lime.Protocol.Serialization.Newtonsoft.Converters
 
         public static Document ToDocument(this JToken jToken, MediaType mediaType, global::Newtonsoft.Json.JsonSerializer serializer)
         {
-            Type documentType;
             Document document;
-            if (TypeUtil.TryGetTypeForMediaType(mediaType, out documentType))
+            if (TypeUtil.TryGetTypeForMediaType(mediaType, out var documentType))
             {
-                if (mediaType.IsJson)
+                try
                 {
-                    document = (Document)serializer.Deserialize(jToken.CreateReader(), documentType);                    
+                    if (mediaType.IsJson)
+                    {
+                        document = (Document) serializer.Deserialize(jToken.CreateReader(), documentType);
+                    }
+                    else if (jToken != null)
+                    {
+                        var parseFunc = TypeUtilEx.GetParseFuncForType(documentType);
+                        document = (Document) parseFunc(jToken.ToString());
+                    }
+                    else
+                    {
+                        document = (Document) Activator.CreateInstance(documentType);
+                    }
+
+                    return document;
                 }
-                else if (jToken != null)
+                catch (JsonSerializationException) { }
+                catch (ArgumentException) { }
+                catch (TypeLoadException)
                 {
-                    var parseFunc = TypeUtilEx.GetParseFuncForType(documentType);
-                    document = (Document)parseFunc(jToken.ToString());
+                    // Ignore deserialization exceptions and return a Plain/Json document instead
+                }
+            }
+
+            if (mediaType.IsJson)
+            {
+                if (jToken is IDictionary<string, JToken> contentJsonObject)
+                {
+                    var contentDictionary = contentJsonObject.ToDictionary(k => k.Key, v => v.Value.GetTokenValue());
+                    document = new JsonDocument(contentDictionary, mediaType);
                 }
                 else
                 {
-                    document = (Document)Activator.CreateInstance(documentType);
+                    throw new ArgumentException("The property is not a JSON");
                 }
             }
             else
             {
-                if (mediaType.IsJson)
-                {
-                    var contentJsonObject = jToken as IDictionary<string, JToken>;
-                    if (contentJsonObject != null)
-                    {
-                        var contentDictionary = contentJsonObject.ToDictionary(k => k.Key, v => v.Value.GetTokenValue());
-                        document = new JsonDocument(contentDictionary, mediaType);
-                    }
-                    else
-                    {
-                        throw new ArgumentException("The property is not a JSON");
-                    }
-                }
-                else
-                {
-                    document = new PlainDocument(jToken.ToString(), mediaType);
-                }
+                document = new PlainDocument(jToken.ToString(), mediaType);
             }
             return document;
         }

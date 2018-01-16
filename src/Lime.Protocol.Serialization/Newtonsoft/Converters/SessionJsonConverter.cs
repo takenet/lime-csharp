@@ -35,8 +35,7 @@ namespace Lime.Protocol.Serialization.Newtonsoft.Converters
                 if (jObject[Session.SCHEME_KEY] != null)
                 {
                     var authenticationScheme = jObject[Session.SCHEME_KEY].ToObject<AuthenticationScheme>();
-                    Type authenticationType;
-                    if (TypeUtil.TryGetTypeForAuthenticationScheme(authenticationScheme, out authenticationType))
+                    if (TypeUtil.TryGetTypeForAuthenticationScheme(authenticationScheme, out var authenticationType))
                     {
                         session.Authentication = (Authentication)Activator.CreateInstance(authenticationType);
                         if (jObject[Session.AUTHENTICATION_KEY] != null)

@@ -20,8 +20,7 @@ namespace Lime.Protocol.Serialization.Newtonsoft.Converters
 
         public override bool CanConvert(Type objectType)
         {
-            bool canConvert;
-            if (!CanConvertDictionary.TryGetValue(objectType, out canConvert))
+            if (!CanConvertDictionary.TryGetValue(objectType, out var canConvert))
             {
                 lock (SyncRoot)
                 {
