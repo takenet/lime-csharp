@@ -1,23 +1,24 @@
-﻿using System;
-using System.Runtime.Serialization;
+﻿using System.Runtime.Serialization;
 
 namespace Lime.Protocol
 {
     /// <summary>
-    /// Represents an identity document.
+    /// Represents a node document.
     /// </summary>
     [DataContract(Namespace = "http://limeprotocol.org/2014")]
-    public sealed class IdentityDocument : Document
+    public sealed class NodeDocument : Document
     {
-        public const string MIME_TYPE = "application/vnd.lime.identity";
+        public const string MIME_TYPE = "application/vnd.lime.node";
         public static readonly MediaType MediaType = MediaType.Parse(MIME_TYPE);
 
-        public IdentityDocument() 
+        public NodeDocument() 
             : this(null)
+            
         {
         }
 
-        public IdentityDocument(Identity value) : base(MediaType)
+        public NodeDocument(Node value)
+            : base(MediaType)
         {
             Value = value;
         }
@@ -35,6 +36,6 @@ namespace Lime.Protocol
         /// </summary>
         /// <param name="value"></param>
         /// <returns></returns>
-        public static IdentityDocument Parse(string value) => new IdentityDocument(value);
+        public static NodeDocument Parse(string value) => new NodeDocument(value);
     }
 }
