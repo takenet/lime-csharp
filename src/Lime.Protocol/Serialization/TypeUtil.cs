@@ -141,7 +141,7 @@ namespace Lime.Protocol.Serialization
         /// </summary>
         /// <typeparam name="TDocument"></typeparam>
         public static void RegisterDocument<TDocument>() 
-            where TDocument : Document, new()
+            where TDocument : IDocument, new()
         {
             RegisterType(typeof(TDocument));
         }
@@ -158,7 +158,7 @@ namespace Lime.Protocol.Serialization
 
             var documentTypes = assembly
                 .DefinedTypes
-                .Where(t => !t.IsAbstract && typeof(Document).GetTypeInfo().IsAssignableFrom(t));
+                .Where(t => !t.IsAbstract && typeof(IDocument).GetTypeInfo().IsAssignableFrom(t));
 
             foreach (var type in documentTypes)
             {
@@ -221,9 +221,9 @@ namespace Lime.Protocol.Serialization
             if (!type.GetTypeInfo().IsAbstract)
             {
                 // Caches the documents (contents and resources)
-                if (typeof(Document).GetTypeInfo().IsAssignableFrom(type.GetTypeInfo()))
+                if (typeof(IDocument).GetTypeInfo().IsAssignableFrom(type.GetTypeInfo()))
                 {
-                    var document = Activator.CreateInstance(type) as Document;
+                    var document = Activator.CreateInstance(type) as IDocument;
                     if (document != null)
                     {
                         _documentMediaTypeDictionary[document.GetMediaType()] = type;
