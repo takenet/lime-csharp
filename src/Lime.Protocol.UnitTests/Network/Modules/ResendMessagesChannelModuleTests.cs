@@ -13,7 +13,7 @@ using Shouldly;
 
 namespace Lime.Protocol.UnitTests.Network.Modules
 {
-    
+    [TestClass]
     public class ResendMessagesChannelModuleTests : IDisposable
     {
         private readonly Mock<ITransport> _transport;

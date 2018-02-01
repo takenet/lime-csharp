@@ -17,6 +17,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Lime.Protocol.LoadTests
 {
+    [TestClass]
     public class ChannelBaseTests : IDisposable
     {
         private CancellationToken _cancellationToken;

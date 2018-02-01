@@ -1,8 +1,10 @@
 ﻿using System;
 using Lime.Protocol.Network.UnitTests;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Lime.Transport.WebSocket.UnitTests
 {
+    [TestClass]
     public class ServerWebSocketTransportTests : ServerTransportTestsBase<ServerWebSocketTransport, ClientWebSocketTransport, WebSocketTransportListener>
     {
         public ServerWebSocketTransportTests()

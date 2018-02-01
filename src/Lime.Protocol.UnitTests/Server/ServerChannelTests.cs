@@ -11,7 +11,7 @@ using Shouldly;
 
 namespace Lime.Protocol.UnitTests.Server
 {
-    
+    [TestClass]
     public class ServerChannelTests
     {
         #region Private fields

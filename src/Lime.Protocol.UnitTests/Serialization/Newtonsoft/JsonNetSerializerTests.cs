@@ -17,6 +17,7 @@ using Lime.Messaging;
 
 namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 {
+    [TestClass]
     public class JsonNetSerializerTests
     {
         private static readonly JsonSerializer JsonSerializer = global::Newtonsoft.Json.JsonSerializer.Create(JsonNetSerializer.Settings);

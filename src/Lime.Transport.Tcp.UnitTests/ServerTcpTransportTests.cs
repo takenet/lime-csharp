@@ -14,6 +14,7 @@ namespace Lime.Transport.Tcp.UnitTests
     /// <summary>
     /// Tests for <see cref="TcpTransport"/> class using real TCP connections.
     /// </summary>    
+    [TestClass]
     public class ServerTcpTransportTests : ServerTransportTestsBase<TcpTransport, TcpTransport, TcpTransportListener>
     {
         public ServerTcpTransportTests()

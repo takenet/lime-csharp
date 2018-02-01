@@ -4,7 +4,7 @@ using Shouldly;
 
 namespace Lime.Protocol.UnitTests
 {
-    
+    [TestClass]
     public class LimeUriTests
     {        
         [TestMethod]

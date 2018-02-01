@@ -16,6 +16,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Lime.Transport.Redis.UnitTests
 {
+    [TestClass]
     [TestCategory(nameof(Redis))]
     public class RedisTransportTests
     {

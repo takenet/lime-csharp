@@ -20,6 +20,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Lime.Transport.Tcp.UnitTests
 {
+    [TestClass]
     public class TcpTransportTests : IDisposable
     {
         #region Private Fields
