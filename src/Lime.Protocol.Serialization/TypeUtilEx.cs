@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -12,8 +13,12 @@ namespace Lime.Protocol.Serialization
     public static class TypeUtilEx
     {
         private static readonly ConcurrentDictionary<Type, Delegate> TypeParseDelegateDictionary = new ConcurrentDictionary<Type, Delegate>();
-        private static readonly ConcurrentDictionary<Type, Func<string, object>> TypeParseFuncDictionary = new ConcurrentDictionary<Type, Func<string, object>>();
+        private static readonly ConcurrentDictionary<Type, Delegate> FormattedTypeParseDelegateDictionary = new ConcurrentDictionary<Type, Delegate>();
 
+        private static readonly ConcurrentDictionary<Type, Func<string, object>> TypeParseFuncDictionary = new ConcurrentDictionary<Type, Func<string, object>>();
+        private static readonly ConcurrentDictionary<Type, Func<string, IFormatProvider, object>> FormattedTypeParseFuncDictionary = new ConcurrentDictionary<Type, Func<string, IFormatProvider, object>>();
+
+        
         /// <summary>
         /// Gets the Parse static method of a Type as a func.
         /// </summary>
@@ -23,8 +28,7 @@ namespace Lime.Protocol.Serialization
         {
             var type = typeof(T);
 
-            Delegate parseDelegate;
-            if (!TypeParseDelegateDictionary.TryGetValue(type, out parseDelegate))
+            if (!TypeParseDelegateDictionary.TryGetValue(type, out var parseDelegate))
             {
                 var parseMethod = typeof(T)
                     .GetTypeInfo()
@@ -55,13 +59,53 @@ namespace Lime.Protocol.Serialization
         /// <summary>
         /// Gets the Parse static method of a Type as a func.
         /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public static Func<string, IFormatProvider, T> GetFormattedParseFunc<T>()
+        {
+            var type = typeof(T);
+
+            if (!FormattedTypeParseDelegateDictionary.TryGetValue(type, out var parseDelegate))
+            {
+                var parseMethod = typeof(T)
+                    .GetTypeInfo()
+                    .GetMethods(BindingFlags.Static | BindingFlags.Public)
+                    .FirstOrDefault(m =>
+                        m.Name.Equals("Parse") &&
+                        m.GetParameters().Length == 2 &&
+                        m.GetParameters()[0].ParameterType == typeof(string) &&
+                        m.GetParameters()[1].ParameterType == typeof(IFormatProvider));
+
+                if (parseMethod == null)
+                {
+                    throw new ArgumentException(
+                        $"The type '{type}' doesn't contains a static 'Parse(string, IFormatProvider)' method");
+                }
+
+                if (parseMethod.ReturnType != type)
+                {
+                    throw new ArgumentException("The Parse method has an invalid return type");
+                }
+
+                var parseFuncType = typeof(Func<,,>).MakeGenericType(typeof(string), typeof(IFormatProvider), type);
+                parseDelegate = parseMethod.CreateDelegate(parseFuncType);
+
+                FormattedTypeParseDelegateDictionary.TryAdd(type, parseDelegate);
+            }
+
+            return (Func<string, IFormatProvider, T>)parseDelegate;
+
+        }
+
+        /// <summary>
+        /// Gets the Parse static method of a Type as a func.
+        /// </summary>
         /// <param name="type"></param>
         /// <returns></returns>
         public static Func<string, object> GetParseFuncForType(Type type)
         {
             if (type == null) throw new ArgumentNullException(nameof(type));
-            Func<string, object> parseFunc;
-            if (!TypeParseFuncDictionary.TryGetValue(type, out parseFunc))
+            if (!TypeParseFuncDictionary.TryGetValue(type, out var parseFunc))
             {
                 try
                 {
@@ -90,6 +134,42 @@ namespace Lime.Protocol.Serialization
         }
 
         /// <summary>
+        /// Gets the Parse static method of a Type as a func.
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        public static Func<string, IFormatProvider, object> GetFormattedParseFuncForType(Type type)
+        {
+            if (type == null) throw new ArgumentNullException(nameof(type));
+            if (!FormattedTypeParseFuncDictionary.TryGetValue(type, out var formattedParseFunc))
+            {
+                try
+                {
+                    var getFormattedParseFuncMethod = typeof(TypeUtilEx)
+                        .GetTypeInfo()
+                        .GetMethod(nameof(GetFormattedParseFunc), BindingFlags.Static | BindingFlags.Public)
+                        .MakeGenericMethod(type);
+
+                    var genericFormattedGetParseFunc = getFormattedParseFuncMethod.Invoke(null, null);
+
+                    var formattedParseFuncAdapterMethod = typeof(TypeUtilEx)
+                        .GetTypeInfo()
+                        .GetMethod(nameof(FormattedParseFuncAdapter), BindingFlags.Static | BindingFlags.NonPublic)
+                        .MakeGenericMethod(type);
+
+                    formattedParseFunc = (Func<string, IFormatProvider, object>)formattedParseFuncAdapterMethod.Invoke(null, new[] { genericFormattedGetParseFunc });
+                    FormattedTypeParseFuncDictionary.TryAdd(type, formattedParseFunc);
+                }
+                catch (TargetInvocationException ex)
+                {
+                    throw ex.InnerException;
+                }
+            }
+
+            return formattedParseFunc;
+        }
+
+        /// <summary>
         /// Utility function to adapt a typed Func to a object one.
         /// </summary>
         /// <typeparam name="T"></typeparam>
@@ -101,18 +181,29 @@ namespace Lime.Protocol.Serialization
         }
 
         /// <summary>
+        /// Utility function to adapt a typed Func to a object one.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="parseFunc">The parse function.</param>
+        /// <returns></returns>
+        private static Func<string, IFormatProvider, object> FormattedParseFuncAdapter<T>(Func<string, IFormatProvider, T> parseFunc)
+        {
+            return (s, f) => (object)parseFunc(s, f);
+        }
+
+        /// <summary>
         /// Try parses the string to a object of the specified type.
         /// </summary>
         /// <param name="value"></param>
         /// <param name="type"></param>
         /// <param name="result"></param>
+        /// <param name="formatProvider"></param>
         /// <returns></returns>
-        public static bool TryParseString(string value, Type type, out object result)
+        public static bool TryParseString(string value, Type type, out object result, IFormatProvider formatProvider = null)
         {
             if (value == null) throw new ArgumentNullException(nameof(value));
             if (type == null) throw new ArgumentNullException(nameof(type));
             
-
             if (type.GetTypeInfo().IsGenericType &&
                 type.GetGenericTypeDefinition() == typeof(Nullable<>))
             {
@@ -124,7 +215,8 @@ namespace Lime.Protocol.Serialization
                 result = value;
                 return true;
             }
-            else if (type.IsArray)
+
+            if (type.IsArray)
             {
                 var elementType = type.GetElementType();
                 var arrayValues = value.Split(';');
@@ -134,9 +226,8 @@ namespace Lime.Protocol.Serialization
                 for (int i = 0; i < arrayValues.Length; i++)
                 {
                     var arrayValue = arrayValues[i];
-                    object resultArrayElement;
 
-                    if (TryParseString(arrayValue, elementType, out resultArrayElement))
+                    if (TryParseString(arrayValue, elementType, out var resultArrayElement))
                     {
                         resultArray.SetValue(resultArrayElement, i);
                     }
@@ -150,7 +241,7 @@ namespace Lime.Protocol.Serialization
                 result = resultArray;
                 return true;
             }
-            else if (type.GetTypeInfo().IsEnum)
+            if (type.GetTypeInfo().IsEnum)
             {
                 try
                 {
@@ -163,19 +254,26 @@ namespace Lime.Protocol.Serialization
                     return false;
                 }
             }
-            else
+
+            try
             {
-                try
+                if (formatProvider != null)
+                {
+                    var parseFunc = GetFormattedParseFuncForType(type);
+                    result = parseFunc(value, formatProvider);
+                }
+                else
                 {
                     var parseFunc = GetParseFuncForType(type);
                     result = parseFunc(value);
-                    return true;
                 }
-                catch
-                {
-                    result = null;
-                    return false;
-                }
+
+                return true;
+            }
+            catch
+            {
+                result = null;
+                return false;
             }
         }
 
