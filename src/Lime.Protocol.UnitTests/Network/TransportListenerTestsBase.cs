@@ -12,7 +12,7 @@ using Lime.Protocol.UnitTests;
 using Moq;
 using NUnit.Framework;
 using Shouldly;
-using Xunit;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Lime.Protocol.Server;
 using System.Net.Sockets;
 
@@ -47,7 +47,7 @@ namespace Lime.Protocol.UnitTests.Network
 
         public CancellationToken CancellationToken { get; private set; }
 
-        [Fact]
+        [TestMethod]
         public void ListenerUris_ValidHostAndPort_GetsRegisteredUris()
         {
             // Act
@@ -59,7 +59,7 @@ namespace Lime.Protocol.UnitTests.Network
             listenerUris[0].ShouldBe(ListenerUri);
         }
 
-        [Fact]
+        [TestMethod]
         public async Task StartAsync_ValidHostAndPort_ServerStarted()
         {
             // Act
@@ -71,7 +71,7 @@ namespace Lime.Protocol.UnitTests.Network
             await clientTransport.OpenAsync(ListenerUri, CancellationToken);
         }
 
-        [Fact]
+        [TestMethod]
         public async Task AcceptTransportAsync_NewConnection_RetunsTransport()
         {
             // Arrange
@@ -88,7 +88,7 @@ namespace Lime.Protocol.UnitTests.Network
             transport.ShouldNotBeNull();
         }
 
-        [Fact]
+        [TestMethod]
         public async Task AcceptTransportAsync_MultipleConnections_RetunsTransports()
         {
             // Arrange
@@ -119,14 +119,14 @@ namespace Lime.Protocol.UnitTests.Network
             actualTransports.Count.ShouldBe(clientTransports.Count);
         }
 
-        [Fact]
+        [TestMethod]
         public async Task AcceptTransportAsync_ListenerNotStarted_ThrowsInvalidOperationException()
         {
             // Act
             var transport = await Target.AcceptTransportAsync(CancellationToken).ShouldThrowAsync<InvalidOperationException>();
         }
 
-        [Fact]
+        [TestMethod]
         public async Task StopAsync_ActiveListener_StopsListening()
         {
             // Arrange

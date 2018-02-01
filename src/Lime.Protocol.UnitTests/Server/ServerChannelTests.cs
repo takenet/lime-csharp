@@ -1,5 +1,5 @@
 ﻿using System;
-using Xunit;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Lime.Protocol.Network;
 using Lime.Protocol.Server;
@@ -56,8 +56,8 @@ namespace Lime.Protocol.UnitTests.Server
 
         #region ReceiveNewSessionAsync
 
-        [Fact]
-        [Trait("Category", "ReceiveNewSessionAsync")]
+        [TestMethod]
+        [TestCategory("ReceiveNewSessionAsync")]
         public async Task ReceiveNewSessionAsync_NewState_ReadsTransport()
         {
             var target = GetTarget(SessionState.New);
@@ -72,12 +72,12 @@ namespace Lime.Protocol.UnitTests.Server
 
             var actual = await target.ReceiveNewSessionAsync(cancellationToken);
 
-            Assert.Equal(session, actual);
+            Assert.AreEqual(session, actual);
             _transport.Verify();
         }
 
-        [Fact]
-        [Trait("Category", "ReceiveNewSessionAsync")]
+        [TestMethod]
+        [TestCategory("ReceiveNewSessionAsync")]
         public async Task ReceiveNewSessionAsync_NotNewState_ThrowsInvalidOperationException()
         {
             // Arrange
@@ -92,8 +92,8 @@ namespace Lime.Protocol.UnitTests.Server
 
         #region NegotiateSessionAsync
 
-        [Fact]
-        [Trait("Category", "NegotiateSessionAsync")]
+        [TestMethod]
+        [TestCategory("NegotiateSessionAsync")]
         public async Task NegotiateSessionAsync_NewStateValidOptions_CallsTransportAndReadsFromBuffer()
         {
             var session = Dummy.CreateSession(SessionState.Negotiating);
@@ -130,12 +130,12 @@ namespace Lime.Protocol.UnitTests.Server
                     It.IsAny<CancellationToken>()),
                     Times.Once());
 
-            Assert.Equal(SessionState.Negotiating, target.State);
-            Assert.Equal(session, actual);
+            Assert.AreEqual(SessionState.Negotiating, target.State);
+            Assert.AreEqual(session, actual);
         }
 
-        [Fact]
-        [Trait("Category", "NegotiateSessionAsync")]
+        [TestMethod]
+        [TestCategory("NegotiateSessionAsync")]
         public async Task NegotiateSessionAsync_InvalidStateValidOptions_ThrowsInvalidOperationException()
         {
             // Arrange
@@ -151,8 +151,8 @@ namespace Lime.Protocol.UnitTests.Server
                         .ShouldThrowAsync<InvalidOperationException>();
         }
 
-        [Fact]
-        [Trait("Category", "NegotiateSessionAsync")]
+        [TestMethod]
+        [TestCategory("NegotiateSessionAsync")]
         public async Task NegotiateSessionAsync_NullCompressionOptions_ThrowsArgumentNullException()
         {
             var target = GetTarget();
@@ -166,8 +166,8 @@ namespace Lime.Protocol.UnitTests.Server
                         .ShouldThrowAsync<ArgumentNullException>();
         }
 
-        [Fact]
-        [Trait("Category", "NegotiateSessionAsync")]
+        [TestMethod]
+        [TestCategory("NegotiateSessionAsync")]
         public async Task NegotiateSessionAsync_EmptyCompressionOptions_ThrowsArgumentNullException()
         {
             var target = GetTarget();
@@ -181,8 +181,8 @@ namespace Lime.Protocol.UnitTests.Server
                         .ShouldThrowAsync<ArgumentException>();
         }
 
-        [Fact]
-        [Trait("Category", "NegotiateSessionAsync")]
+        [TestMethod]
+        [TestCategory("NegotiateSessionAsync")]
         public async Task NegotiateSessionAsync_NullEncryptionOptions_ThrowsArgumentNullException()
         {
             var target = GetTarget();
@@ -196,8 +196,8 @@ namespace Lime.Protocol.UnitTests.Server
                         .ShouldThrowAsync<ArgumentNullException>();
         }
 
-        [Fact]
-        [Trait("Category", "NegotiateSessionAsync")]
+        [TestMethod]
+        [TestCategory("NegotiateSessionAsync")]
         public async Task NegotiateSessionAsync_EmptyEncryptionOptions_ThrowsArgumentException()
         {
             var target = GetTarget();
@@ -215,8 +215,8 @@ namespace Lime.Protocol.UnitTests.Server
 
         #region SendNegotiatingSessionAsync
 
-        [Fact]
-        [Trait("Category", "SendNegotiatingSessionAsync")]
+        [TestMethod]
+        [TestCategory("SendNegotiatingSessionAsync")]
         public async Task SendNegotiatingSessionAsync_NegotiatingState_CallsTransport()
         {
             var target = GetTarget(SessionState.Negotiating);
@@ -247,8 +247,8 @@ namespace Lime.Protocol.UnitTests.Server
 
         #region AuthenticateSessionAsync
 
-        [Fact]
-        [Trait("Category", "AuthenticateSessionAsync")]
+        [TestMethod]
+        [TestCategory("AuthenticateSessionAsync")]
         public async Task AuthenticateSessionAsync_NegotiatingStateValidOptions_CallsTransportAndReadsFromBuffer()
         {
             var session = Dummy.CreateSession(SessionState.Authenticating);
@@ -283,12 +283,12 @@ namespace Lime.Protocol.UnitTests.Server
                     It.IsAny<CancellationToken>()),
                     Times.Once());
 
-            Assert.Equal(SessionState.Authenticating, target.State);
-            Assert.Equal(session, actual);
+            Assert.AreEqual(SessionState.Authenticating, target.State);
+            Assert.AreEqual(session, actual);
         }
 
-        [Fact]
-        [Trait("Category", "AuthenticateSessionAsync")]
+        [TestMethod]
+        [TestCategory("AuthenticateSessionAsync")]
         public async Task AuthenticateSessionAsync_InvalidStateValidOptions_ThrowsInvalidOperationException()
         {
             var target = GetTarget(SessionState.Established);
@@ -301,8 +301,8 @@ namespace Lime.Protocol.UnitTests.Server
                         .ShouldThrowAsync<InvalidOperationException>();
         }
 
-        [Fact]
-        [Trait("Category", "AuthenticateSessionAsync")]
+        [TestMethod]
+        [TestCategory("AuthenticateSessionAsync")]
         public async Task AuthenticateSessionAsync_NullOptions_ThrowsArgumentNullException()
         {
             var target = GetTarget(SessionState.Negotiating);
@@ -315,8 +315,8 @@ namespace Lime.Protocol.UnitTests.Server
                         .ShouldThrowAsync<ArgumentNullException>();
         }
 
-        [Fact]
-        [Trait("Category", "AuthenticateSessionAsync")]
+        [TestMethod]
+        [TestCategory("AuthenticateSessionAsync")]
         public async Task AuthenticateSessionAsync_EmptyOptions_ThrowsArgumentException()
         {
             var target = GetTarget(SessionState.Negotiating);
@@ -329,8 +329,8 @@ namespace Lime.Protocol.UnitTests.Server
                         .ShouldThrowAsync<ArgumentException>();
         }
 
-        [Fact]
-        [Trait("Category", "AuthenticateSessionAsync")]
+        [TestMethod]
+        [TestCategory("AuthenticateSessionAsync")]
         public async Task AuthenticateSessionAsync_AuthenticatingStateValidRoundtrip_CallsTransportAndReadsFromBuffer()
         {
             var session = Dummy.CreateSession(SessionState.Authenticating);
@@ -365,12 +365,12 @@ namespace Lime.Protocol.UnitTests.Server
                     It.IsAny<CancellationToken>()),
                     Times.Once());
 
-            Assert.Equal(SessionState.Authenticating, target.State);
-            Assert.Equal(session, actual);
+            Assert.AreEqual(SessionState.Authenticating, target.State);
+            Assert.AreEqual(session, actual);
         }
 
-        [Fact]
-        [Trait("Category", "AuthenticateSessionAsync")]
+        [TestMethod]
+        [TestCategory("AuthenticateSessionAsync")]
         public async Task AuthenticateSessionAsync_AuthenticatingStateNullRoundtrip_ThrowsArgumentNullException()
         {
             var target = GetTarget(SessionState.Authenticating);
@@ -383,8 +383,8 @@ namespace Lime.Protocol.UnitTests.Server
                         .ShouldThrowAsync<ArgumentNullException>();
         }
 
-        [Fact]
-        [Trait("Category", "AuthenticateSessionAsync")]
+        [TestMethod]
+        [TestCategory("AuthenticateSessionAsync")]
         public async Task AuthenticateSessionAsync_InvalidStateValidRoundtrip_ThrowsInvalidOperationException()
         {
             var target = GetTarget(SessionState.New);
@@ -401,8 +401,8 @@ namespace Lime.Protocol.UnitTests.Server
 
         #region SendEstablishedSessionAsync
 
-        [Fact]
-        [Trait("Category", "SendEstablishedSessionAsync")]
+        [TestMethod]
+        [TestCategory("SendEstablishedSessionAsync")]
         public async Task SendEstablishedSessionAsync_ValidArgumentsAuthenticatingState_CallsTransport()
         {
             var target = GetTarget(SessionState.Authenticating);
@@ -426,12 +426,12 @@ namespace Lime.Protocol.UnitTests.Server
                     It.IsAny<CancellationToken>()),
                     Times.Once());
 
-            Assert.Equal(target.State, SessionState.Established);
-            Assert.Equal(target.RemoteNode, node);
+            Assert.AreEqual(target.State, SessionState.Established);
+            Assert.AreEqual(target.RemoteNode, node);
         }
 
-        [Fact]
-        [Trait("Category", "SendEstablishedSessionAsync")]
+        [TestMethod]
+        [TestCategory("SendEstablishedSessionAsync")]
         public async Task SendEstablishedSessionAsync_ValidArgumentsNewState_CallsTransport()
         {
             var target = GetTarget();
@@ -454,12 +454,12 @@ namespace Lime.Protocol.UnitTests.Server
                     It.IsAny<CancellationToken>()),
                     Times.Once());
 
-            Assert.Equal(target.State, SessionState.Established);
-            Assert.Equal(target.RemoteNode, node);
+            Assert.AreEqual(target.State, SessionState.Established);
+            Assert.AreEqual(target.RemoteNode, node);
         }        
 
-        [Fact]
-        [Trait("Category", "SendEstablishedSessionAsync")]
+        [TestMethod]
+        [TestCategory("SendEstablishedSessionAsync")]
         public void SendEstablishedSessionAsync_NullNodeAuthenticatingState_ThrowsArgumentNullException()
         {
             var target = GetTarget(SessionState.Authenticating);
@@ -473,8 +473,8 @@ namespace Lime.Protocol.UnitTests.Server
 
         #region ReceiveFinishingSessionAsync
 
-        [Fact]
-        [Trait("Category", "ReceiveFinishingSessionAsync")]
+        [TestMethod]
+        [TestCategory("ReceiveFinishingSessionAsync")]
         public async Task ReceiveFinishingSessionAsync_EstablishedState_ReadsTransport()
         {            
             var session = Dummy.CreateSession(SessionState.Finishing);
@@ -493,12 +493,12 @@ namespace Lime.Protocol.UnitTests.Server
 
             var actual = await target.ReceiveFinishingSessionAsync(cancellationToken);
 
-            Assert.Equal(session, actual);
+            Assert.AreEqual(session, actual);
             _transport.Verify();
         }
 
-        [Fact]
-        [Trait("Category", "ReceiveFinishingSessionAsync")]
+        [TestMethod]
+        [TestCategory("ReceiveFinishingSessionAsync")]
         public async Task ReceiveFinishingSessionAsync_InvalidState_ThrowsInvalidOperationException()
         {
             var target = GetTarget(SessionState.Authenticating);
@@ -511,8 +511,8 @@ namespace Lime.Protocol.UnitTests.Server
 
         #region SendFinishedSessionAsync
 
-        [Fact]
-        [Trait("Category", "SendFinishedSessionAsync")]
+        [TestMethod]
+        [TestCategory("SendFinishedSessionAsync")]
         public async Task SendFinishedSessionAsync_EstablishedState_CallsAndClosesTransport()
         {
             var remoteNode = Dummy.CreateNode();
@@ -540,11 +540,11 @@ namespace Lime.Protocol.UnitTests.Server
                 t => t.CloseAsync(
                     It.IsAny<CancellationToken>()));
 
-            Assert.Equal(target.State, SessionState.Finished);
+            Assert.AreEqual(target.State, SessionState.Finished);
         }
 
-        [Fact]
-        [Trait("Category", "SendFinishedSessionAsync")]
+        [TestMethod]
+        [TestCategory("SendFinishedSessionAsync")]
         public async Task SendFinishedSessionAsync_NewState_ClosesTransport()
         {
             var target = GetTarget();
@@ -554,7 +554,7 @@ namespace Lime.Protocol.UnitTests.Server
                 t => t.CloseAsync(
                     It.IsAny<CancellationToken>()));
 
-            Assert.Equal(target.State, SessionState.Finished);
+            Assert.AreEqual(target.State, SessionState.Finished);
 
         }
 
@@ -562,8 +562,8 @@ namespace Lime.Protocol.UnitTests.Server
 
         #region SendFailedSessionAsync
 
-        [Fact]
-        [Trait("Category", "SendFailedSessionAsync")]
+        [TestMethod]
+        [TestCategory("SendFailedSessionAsync")]
         public async Task SendFailedSessionAsync_EstablishedState_CallsAndClosesTransport()
         {
             var remoteNode = Dummy.CreateNode();
@@ -593,11 +593,11 @@ namespace Lime.Protocol.UnitTests.Server
                 t => t.CloseAsync(
                     It.IsAny<CancellationToken>()));
 
-            Assert.Equal(target.State, SessionState.Failed);
+            Assert.AreEqual(target.State, SessionState.Failed);
         }
 
-        [Fact]
-        [Trait("Category", "SendFailedSessionAsync")]
+        [TestMethod]
+        [TestCategory("SendFailedSessionAsync")]
         public async Task SendFailedSessionAsync_NullReason_ThrowsArgumentNullException()
         {
             var target = GetTarget();
@@ -609,8 +609,8 @@ namespace Lime.Protocol.UnitTests.Server
         #endregion
 
         #region OnRemoteIdleAsync
-        [Fact]
-        [Trait("Category", "OnRemoteIdleAsync")]
+        [TestMethod]
+        [TestCategory("OnRemoteIdleAsync")]
         public async Task OnRemoteIdleAsync_EstablishedState_CallsSendSessionFinishedAndClosesTransport()
         {
             // Arrange            

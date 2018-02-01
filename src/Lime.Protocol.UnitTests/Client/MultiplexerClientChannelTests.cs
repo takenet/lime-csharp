@@ -10,12 +10,12 @@ using Lime.Protocol.Client;
 using Lime.Protocol.Network;
 using Lime.Protocol.Security;
 using Moq;
-using Xunit;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
 namespace Lime.Protocol.UnitTests.Client
 {
-    
+    [TestClass]
     public class MultiplexerClientChannelTests
     {
         private TimeSpan _sendTimeout;
@@ -132,7 +132,7 @@ namespace Lime.Protocol.UnitTests.Client
             return channel;
         }
 
-        [Fact]
+        [TestMethod]
         public async Task ReceiveCommandAsync_ResponseWithourPendingRequest_ShouldSucceed()
         {
             // Arrange
@@ -149,7 +149,7 @@ namespace Lime.Protocol.UnitTests.Client
             actual.ShouldBe(responseCommand);
         }
 
-        [Fact]
+        [TestMethod]
         public async Task ProcessCommandAsync_ResponseReceivedFromSameChannel_ShouldSucceed()
         {
             // Arrange
@@ -171,7 +171,7 @@ namespace Lime.Protocol.UnitTests.Client
             actual.ShouldBe(responseCommand);
         }
 
-        [Fact]
+        [TestMethod]
         public async Task ProcessCommandAsync_ResponseReceivedFromDifferentChannel_ShouldSucceed()
         {
             // Arrange

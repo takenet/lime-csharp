@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Linq;
-using Xunit;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Lime.Protocol.Network;
 using System.Threading.Tasks;
 using System.Threading;
@@ -9,7 +9,7 @@ using Shouldly;
 
 namespace Lime.Protocol.UnitTests.Network
 {
-    
+    [TestClass]
     public class TransportBaseTests
     {
         private TestTransportBase GetTarget()
@@ -17,8 +17,8 @@ namespace Lime.Protocol.UnitTests.Network
             return new TestTransportBase();
         }
 
-        [Fact]
-        [Trait("Category", "CloseAsync")]
+        [TestMethod]
+        [TestCategory("CloseAsync")]
         public async Task CloseAsync_Default_RaisesClosingAndCallsPerformCloseAndRaisesClosed()
         {
             var closingRaised = false;
@@ -32,28 +32,28 @@ namespace Lime.Protocol.UnitTests.Network
             var cancellationToken = CancellationToken.None;
             await target.CloseAsync(cancellationToken);
 
-            Assert.True(closingRaised);
-            Assert.True(target.PerformCloseAsyncInvoked);
-            Assert.True(target.PerformCloseAsynCancellationToken == cancellationToken);
-            Assert.True(closedRaised);
+            Assert.IsTrue(closingRaised);
+            Assert.IsTrue(target.PerformCloseAsyncInvoked);
+            Assert.IsTrue(target.PerformCloseAsynCancellationToken == cancellationToken);
+            Assert.IsTrue(closedRaised);
         }
 
-        [Fact]
-        [Trait("Category", "GetSupportedCompression")]
+        [TestMethod]
+        [TestCategory("GetSupportedCompression")]
         public void GetSupportedCompression_Default_GetsSessionCompressionNone()
         {
             var target = GetTarget();
 
             var supportedCompression = target.GetSupportedCompression();
 
-            Assert.True(supportedCompression.Length == 1);
-            Assert.True(supportedCompression.Contains(SessionCompression.None));
+            Assert.IsTrue(supportedCompression.Length == 1);
+            Assert.IsTrue(supportedCompression.Contains(SessionCompression.None));
         }
 
         #region SetCompressionAsync
 
-        [Fact]
-        [Trait("Category", "SetCompressionAsync")]
+        [TestMethod]
+        [TestCategory("SetCompressionAsync")]
         public async Task SetCompressionAsync_NoneCompression_SetsProperty()
         {
             var target = GetTarget();
@@ -63,11 +63,11 @@ namespace Lime.Protocol.UnitTests.Network
 
             await target.SetCompressionAsync(compression, cancellationToken);
 
-            Assert.True(target.Compression == compression);
+            Assert.IsTrue(target.Compression == compression);
         }
 
-        [Fact]
-        [Trait("Category", "SetCompressionAsync")]
+        [TestMethod]
+        [TestCategory("SetCompressionAsync")]
         public void SetCompressionAsync_GZipCompression_ThrowsNotSupportedException()
         {
             // Arrange
@@ -82,22 +82,22 @@ namespace Lime.Protocol.UnitTests.Network
         #endregion
 
 
-        [Fact]
-        [Trait("Category", "GetSupportedEncryption")]
+        [TestMethod]
+        [TestCategory("GetSupportedEncryption")]
         public void GetSupportedEncryption_Default_GetsSessionEncryptionNone()
         {
             var target = GetTarget();
 
             var supportedEncryption = target.GetSupportedEncryption();
 
-            Assert.True(supportedEncryption.Length == 1);
-            Assert.True(supportedEncryption.Contains(SessionEncryption.None));
+            Assert.IsTrue(supportedEncryption.Length == 1);
+            Assert.IsTrue(supportedEncryption.Contains(SessionEncryption.None));
         }
 
         #region SetEncryptionAsync
 
-        [Fact]
-        [Trait("Category", "SetEncryptionAsync")]
+        [TestMethod]
+        [TestCategory("SetEncryptionAsync")]
         public async Task SetEncryptionAsync_NoneEncryption_SetsProperty()
         {
             var target = GetTarget();
@@ -107,11 +107,11 @@ namespace Lime.Protocol.UnitTests.Network
 
             await target.SetEncryptionAsync(encryption, cancellationToken);
 
-            Assert.True(target.Encryption == encryption);
+            Assert.IsTrue(target.Encryption == encryption);
         }
 
-        [Fact]
-        [Trait("Category", "SetEncryptionAsync")]
+        [TestMethod]
+        [TestCategory("SetEncryptionAsync")]
         public void SetEncryptionAsync_TLSEncryption_ThrowsNotSupportedException()
         {
             // Arrange
@@ -128,8 +128,8 @@ namespace Lime.Protocol.UnitTests.Network
 
         #region OnClosingAsync
 
-        [Fact]
-        [Trait("Category", "OnClosingAsync")]
+        [TestMethod]
+        [TestCategory("OnClosingAsync")]
         public async Task OnClosingAsync_AnyException_RaisesClosing()
         {
             var target = GetTarget();
@@ -139,11 +139,11 @@ namespace Lime.Protocol.UnitTests.Network
 
             await target.CallsOnClosingAsync();
 
-            Assert.True(closingRaised);
+            Assert.IsTrue(closingRaised);
         }
 
-        [Fact]
-        [Trait("Category", "OnClosingAsync")]
+        [TestMethod]
+        [TestCategory("OnClosingAsync")]
         public async Task OnClosingAsync_MultipleSubscribersOnClosingEvent_AwaitsForDeferral()
         {
             var target = GetTarget();
@@ -171,16 +171,16 @@ namespace Lime.Protocol.UnitTests.Network
 
             await target.CallsOnClosingAsync();
 
-            Assert.True(closingSubscriber1Raised);
-            Assert.True(closingSubscriber2Raised);
+            Assert.IsTrue(closingSubscriber1Raised);
+            Assert.IsTrue(closingSubscriber2Raised);
         }
 
         #endregion
 
         #region OnClosedAsync
 
-        [Fact]
-        [Trait("Category", "OnClosed")]
+        [TestMethod]
+        [TestCategory("OnClosed")]
         public void OnClosed_AnyException_RaisesClosed()
         {
             var target = GetTarget();
@@ -190,7 +190,7 @@ namespace Lime.Protocol.UnitTests.Network
 
             target.CallsOnClosed();
 
-            Assert.True(closedRaised);
+            Assert.IsTrue(closedRaised);
         }
 
         #endregion

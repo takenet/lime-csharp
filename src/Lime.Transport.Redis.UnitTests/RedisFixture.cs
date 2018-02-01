@@ -16,11 +16,10 @@ using Moq;
 using NUnit.Framework;
 using Shouldly;
 using Lime.Messaging;
-using Xunit;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Lime.Transport.Redis.UnitTests
 {
-
     public class RedisFixture : IDisposable
     {
         public RedisFixture()

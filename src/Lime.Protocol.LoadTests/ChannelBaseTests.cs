@@ -13,7 +13,7 @@ using Lime.Protocol.Server;
 using Lime.Protocol.UnitTests;
 using NUnit.Framework;
 using Shouldly;
-using Xunit;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Lime.Protocol.LoadTests
 {
@@ -78,7 +78,7 @@ namespace Lime.Protocol.LoadTests
         }
 
 
-        [Fact]
+        [TestMethod]
         public async Task Send10000EnvelopesAsync()
         {
             // Arrange

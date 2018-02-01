@@ -1,4 +1,4 @@
-﻿using Xunit;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,13 +8,13 @@ using Shouldly;
 
 namespace Lime.Protocol.UnitTests
 {
-    
+    [TestClass]
     public class NodeTests
     {
         #region Equals
 
-        [Fact]
-        [Trait("Category", "Equals")]
+        [TestMethod]
+        [TestCategory("Equals")]
         public void Equals_EqualsNodes_ReturnsTrue()
         {
             var node1 = new Node
@@ -32,14 +32,14 @@ namespace Lime.Protocol.UnitTests
             };
 
 
-            Assert.True(node1.Equals(node2));
-            Assert.True(node2.Equals(node1));
-            Assert.True(node1 == node2);
-            Assert.True(node2 == node1);
+            Assert.IsTrue(node1.Equals(node2));
+            Assert.IsTrue(node2.Equals(node1));
+            Assert.IsTrue(node1 == node2);
+            Assert.IsTrue(node2 == node1);
         }
 
-        [Fact]
-        [Trait("Category", "Equals")]
+        [TestMethod]
+        [TestCategory("Equals")]
         public void Equals_NodeEqualsNull_ReturnsFalse()
         {
             var node1 = new Node
@@ -51,17 +51,17 @@ namespace Lime.Protocol.UnitTests
 
             Node node2 = null;
 
-            Assert.False(node1.Equals(node2));
-            Assert.False(node1 == node2);
-            Assert.False(node2 == node1);
+            Assert.IsFalse(node1.Equals(node2));
+            Assert.IsFalse(node1 == node2);
+            Assert.IsFalse(node2 == node1);
         }
 
         #endregion
 
         #region NotEquals
 
-        [Fact]
-        [Trait("Category", "NotEquals")]
+        [TestMethod]
+        [TestCategory("NotEquals")]
         public void NotEquals_NodeNotEqualsNull_ReturnsTrue()
         {
             var node1 = new Node
@@ -73,17 +73,17 @@ namespace Lime.Protocol.UnitTests
 
             Node node2 = null;
             
-            Assert.True(!node1.Equals(node2));
-            Assert.True(node1 != node2);
-            Assert.True(node2 != node1);
+            Assert.IsTrue(!node1.Equals(node2));
+            Assert.IsTrue(node1 != node2);
+            Assert.IsTrue(node2 != node1);
         }
 
         #endregion
 
         #region Parse
 
-        [Fact]
-        [Trait("Category", "Parse")]
+        [TestMethod]
+        [TestCategory("Parse")]
         public void Parse_CompleteString_ReturnsValidNode()
         {
             var name = Dummy.CreateRandomString(10);
@@ -94,13 +94,13 @@ namespace Lime.Protocol.UnitTests
 
             var node = Node.Parse(nodeString);
 
-            Assert.Equal(name, node.Name);
-            Assert.Equal(domain, node.Domain);
-            Assert.Equal(instance, node.Instance);
+            Assert.AreEqual(name, node.Name);
+            Assert.AreEqual(domain, node.Domain);
+            Assert.AreEqual(instance, node.Instance);
         }
 
-        [Fact]
-        [Trait("Category", "Parse")]
+        [TestMethod]
+        [TestCategory("Parse")]
         public void Parse_WithoutInstance_ReturnsValidNode()
         {
             var name = Dummy.CreateRandomString(10);
@@ -110,13 +110,13 @@ namespace Lime.Protocol.UnitTests
 
             var node = Node.Parse(nodeString);
 
-            Assert.Equal(name, node.Name);
-            Assert.Equal(domain, node.Domain);
-            Assert.Null(node.Instance);
+            Assert.AreEqual(name, node.Name);
+            Assert.AreEqual(domain, node.Domain);
+            Assert.IsNull(node.Instance);
         }
 
-        [Fact]
-        [Trait("Category", "Parse")]
+        [TestMethod]
+        [TestCategory("Parse")]
         public void Parse_WithEmptyInstance_ReturnsValidNode()
         {
             var name = Dummy.CreateRandomString(10);
@@ -126,17 +126,17 @@ namespace Lime.Protocol.UnitTests
 
             var node = Node.Parse(nodeString);
 
-            Assert.Equal(name, node.Name);
-            Assert.Equal(domain, node.Domain);
-            Assert.Equal(string.Empty, node.Instance);
+            Assert.AreEqual(name, node.Name);
+            Assert.AreEqual(domain, node.Domain);
+            Assert.AreEqual(string.Empty, node.Instance);
         }
 
         #endregion Parse
 
         #region Conversion
 
-        [Fact]
-        [Trait("Category", "Conversion")]
+        [TestMethod]
+        [TestCategory("Conversion")]
         public void Conversion_FromString_ReturnsValidNode()
         {
             // Act
@@ -148,8 +148,8 @@ namespace Lime.Protocol.UnitTests
             node.Instance.ShouldBe("instance");
         }
 
-        [Fact]
-        [Trait("Category", "Conversion")]
+        [TestMethod]
+        [TestCategory("Conversion")]
         public void Conversion_ToString_ReturnsValidNode()
         {
             // Act

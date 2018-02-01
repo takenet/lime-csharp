@@ -7,13 +7,13 @@ using System;
 using System.Buffers;
 using System.Reflection;
 using System.Threading.Tasks;
-using Xunit;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Lime.Transport.Tcp.UnitTests
 {
     /// <summary>
     /// Tests for <see cref="TcpTransport"/> class using real TCP connections.
-    /// </summary>
+    /// </summary>    
     public class ServerTcpTransportTests : ServerTransportTestsBase<TcpTransport, TcpTransport, TcpTransportListener>
     {
         public ServerTcpTransportTests()
@@ -37,7 +37,7 @@ namespace Lime.Transport.Tcp.UnitTests
             return new TcpTransportListener(ListenerUri, null, EnvelopeSerializer, BufferSize, MaxBufferSize, ArrayPool, traceWriter: TraceWriter.Object);
         }
 
-        [Fact]
+        [TestMethod]
         public async Task ReceiveAsync_BiggerThanBufferSizeMessageEnvelope_ServerShouldReceive()
         {
             // Arrange
@@ -59,7 +59,7 @@ namespace Lime.Transport.Tcp.UnitTests
 
         }
 
-        [Fact]
+        [TestMethod]
         public async Task ReceiveAsync_MultipleBiggerThanBufferSizeMessageEnvelope_ServerShouldReceive()
         {
             // Arrange            
@@ -98,7 +98,7 @@ namespace Lime.Transport.Tcp.UnitTests
         }
 
 
-        [Fact]
+        [TestMethod]
         public async Task ReceiveAsync_DoubleWritesAndReads_ServerShouldReceive()
         {
             // Arrange            
@@ -138,7 +138,7 @@ namespace Lime.Transport.Tcp.UnitTests
             jsonBuffer.Buffer.Length.ShouldBe(BufferSize);
         }
 
-        [Fact]
+        [TestMethod]
         public async Task ReceiveAsync_InterleavedWritesAndReads_ServerShouldReceive()
         {
             // Arrange            
@@ -185,7 +185,7 @@ namespace Lime.Transport.Tcp.UnitTests
             jsonBuffer.Buffer.Length.ShouldBe(BufferSize);
         }
 
-        [Fact]
+        [TestMethod]
         public async Task ReceiveAsync_BiggerThanMaxBufferSizeMessageEnvelope_ServerShouldThrowBufferOverflowException()
         {
             // Arrange

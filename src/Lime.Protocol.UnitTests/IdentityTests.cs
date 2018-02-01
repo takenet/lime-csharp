@@ -1,17 +1,17 @@
 ﻿using System;
 using System.Linq;
-using Xunit;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
 namespace Lime.Protocol.UnitTests
 {
-    
+    [TestClass]
     public class IdentityTests
     {
         #region Equals
 
-        [Fact]
-        [Trait("Category", "Equals")]
+        [TestMethod]
+        [TestCategory("Equals")]
         public void Equals_EqualsIdentities_ReturnsTrue()
         {
             var identity1 = new Identity()
@@ -27,12 +27,12 @@ namespace Lime.Protocol.UnitTests
             };
 
 
-            Assert.Equal(identity1, identity2);
-            Assert.Equal(identity2, identity1);
+            Assert.AreEqual(identity1, identity2);
+            Assert.AreEqual(identity2, identity1);
         }
 
-        [Fact]
-        [Trait("Category", "Equals")]
+        [TestMethod]
+        [TestCategory("Equals")]
         public void Equals_EqualsIdentitiesDifferentCasing_ReturnsTrue()
         {
             var identity1 = new Identity()
@@ -47,13 +47,13 @@ namespace Lime.Protocol.UnitTests
                 Domain = identity1.Domain.ToLower()
             };
 
-            Assert.Equal(identity1, identity2);
-            Assert.Equal(identity2, identity1);
+            Assert.AreEqual(identity1, identity2);
+            Assert.AreEqual(identity2, identity1);
 
         }
 
-        [Fact]
-        [Trait("Category", "Equals")]
+        [TestMethod]
+        [TestCategory("Equals")]
         public void Equals_EqualsIdentitiesNullDomain_ReturnsTrue()
         {
             var identity1 = new Identity()
@@ -68,12 +68,12 @@ namespace Lime.Protocol.UnitTests
                 Domain = null
             };
 
-            Assert.Equal(identity1, identity2);
-            Assert.Equal(identity2, identity1);
+            Assert.AreEqual(identity1, identity2);
+            Assert.AreEqual(identity2, identity1);
         }
 
-        [Fact]
-        [Trait("Category", "Equals")]
+        [TestMethod]
+        [TestCategory("Equals")]
         public void Equals_EqualsIdentitiesNullName_ReturnsTrue()
         {
             var identity1 = new Identity()
@@ -89,12 +89,12 @@ namespace Lime.Protocol.UnitTests
             };
 
 
-            Assert.Equal(identity1, identity2);
-            Assert.Equal(identity2, identity1);
+            Assert.AreEqual(identity1, identity2);
+            Assert.AreEqual(identity2, identity1);
         }
 
-        [Fact]
-        [Trait("Category", "Equals")]
+        [TestMethod]
+        [TestCategory("Equals")]
         public void Equals_NotEqualsIdentities_ReturnsFalse()
         {
             var identity1 = new Identity()
@@ -110,12 +110,12 @@ namespace Lime.Protocol.UnitTests
             };
 
 
-            Assert.NotEqual(identity1, identity2);
-            Assert.NotEqual(identity2, identity1);
+            Assert.AreNotEqual(identity1, identity2);
+            Assert.AreNotEqual(identity2, identity1);
         }
 
-        [Fact]
-        [Trait("Category", "Equals")]
+        [TestMethod]
+        [TestCategory("Equals")]
         public void Equals_NotEqualsIdentitiesNullName_ReturnsFalse()
         {
             var identity1 = new Identity()
@@ -131,12 +131,12 @@ namespace Lime.Protocol.UnitTests
             };
 
 
-            Assert.NotEqual(identity1, identity2);
-            Assert.NotEqual(identity2, identity1);
+            Assert.AreNotEqual(identity1, identity2);
+            Assert.AreNotEqual(identity2, identity1);
         }
 
-        [Fact]
-        [Trait("Category", "Equals")]
+        [TestMethod]
+        [TestCategory("Equals")]
         public void Equals_NotEqualsIdentitiesNullDomain_ReturnsFalse()
         {
             var identity1 = new Identity()
@@ -152,12 +152,12 @@ namespace Lime.Protocol.UnitTests
             };
 
 
-            Assert.NotEqual(identity1, identity2);
-            Assert.NotEqual(identity2, identity1);
+            Assert.AreNotEqual(identity1, identity2);
+            Assert.AreNotEqual(identity2, identity1);
         }
 
-        [Fact]
-        [Trait("Category", "Equals")]
+        [TestMethod]
+        [TestCategory("Equals")]
         public void Equals_NotEqualsIdentitiesNullProperties_ReturnsFalse()
         {
             var identity1 = new Identity()
@@ -173,16 +173,16 @@ namespace Lime.Protocol.UnitTests
             };
 
 
-            Assert.NotEqual(identity1, identity2);
-            Assert.NotEqual(identity2, identity1);
+            Assert.AreNotEqual(identity1, identity2);
+            Assert.AreNotEqual(identity2, identity1);
         }
 
         #endregion
 
         #region GetHashCode
 
-        [Fact]
-        [Trait("Category", "GetHashCode")]
+        [TestMethod]
+        [TestCategory("GetHashCode")]
         public void GetHashCode_EqualsIdentities_ReturnsSameHash()
         {
             var identity1 = new Identity()
@@ -198,11 +198,11 @@ namespace Lime.Protocol.UnitTests
             };
 
 
-            Assert.Equal(identity1.GetHashCode(), identity2.GetHashCode());
+            Assert.AreEqual(identity1.GetHashCode(), identity2.GetHashCode());
         }
 
-        [Fact]
-        [Trait("Category", "GetHashCode")]
+        [TestMethod]
+        [TestCategory("GetHashCode")]
         public void GetHashCode_EqualsIdentitiesDifferentCasing_ReturnsSameHash()
         {
             var identity1 = new Identity()
@@ -218,11 +218,11 @@ namespace Lime.Protocol.UnitTests
             };
 
 
-            Assert.Equal(identity1.GetHashCode(), identity2.GetHashCode());
+            Assert.AreEqual(identity1.GetHashCode(), identity2.GetHashCode());
         }
 
-        [Fact]
-        [Trait("Category", "GetHashCode")]
+        [TestMethod]
+        [TestCategory("GetHashCode")]
         public void GetHashCode_NotEqualsIdentities_ReturnsDifferentHash()
         {
             var identity1 = new Identity()
@@ -238,7 +238,7 @@ namespace Lime.Protocol.UnitTests
             };
 
 
-            Assert.NotEqual(identity1.GetHashCode(), identity2.GetHashCode());
+            Assert.AreNotEqual(identity1.GetHashCode(), identity2.GetHashCode());
         }
 
 
@@ -246,8 +246,8 @@ namespace Lime.Protocol.UnitTests
 
         #region ToString
 
-        [Fact]
-        [Trait("Category", "ToString")]
+        [TestMethod]
+        [TestCategory("ToString")]
         public void ToString_CompleteIdentity_ReturnsValidString()
         {
             var name = Dummy.CreateRandomString(10);
@@ -261,11 +261,11 @@ namespace Lime.Protocol.UnitTests
 
             var expectedResult = string.Format("{0}@{1}", name, domain);
 
-            Assert.Equal(identity1.ToString(), expectedResult);
+            Assert.AreEqual(identity1.ToString(), expectedResult);
         }
 
-        [Fact]
-        [Trait("Category", "ToString")]
+        [TestMethod]
+        [TestCategory("ToString")]
         public void ToString_OnlyNameIdentity_ReturnsValidString()
         {
             var name = Dummy.CreateRandomString(10);
@@ -279,11 +279,11 @@ namespace Lime.Protocol.UnitTests
 
             var expectedResult = name;
 
-            Assert.Equal(identity1.ToString(), expectedResult);
+            Assert.AreEqual(identity1.ToString(), expectedResult);
         }
 
-        [Fact]
-        [Trait("Category", "ToString")]
+        [TestMethod]
+        [TestCategory("ToString")]
         public void ToString_OnlyDomainIdentity_ReturnsValidString()
         {
             string name = null;
@@ -297,15 +297,15 @@ namespace Lime.Protocol.UnitTests
 
             var expectedResult = string.Format("@{0}", domain);
 
-            Assert.Equal(identity1.ToString(), expectedResult);
+            Assert.AreEqual(identity1.ToString(), expectedResult);
         }
 
         #endregion
 
         #region Parse
 
-        [Fact]
-        [Trait("Category", "Parse")]
+        [TestMethod]
+        [TestCategory("Parse")]
         public void Parse_CompleteString_ReturnsValidIdentity()
         {
             var name = Dummy.CreateRandomString(10);
@@ -316,12 +316,12 @@ namespace Lime.Protocol.UnitTests
 
             var identity = Identity.Parse(identityString);
 
-            Assert.Equal(name, identity.Name);
-            Assert.Equal(domain, identity.Domain);
+            Assert.AreEqual(name, identity.Name);
+            Assert.AreEqual(domain, identity.Domain);
         }
 
-        [Fact]
-        [Trait("Category", "Parse")]
+        [TestMethod]
+        [TestCategory("Parse")]
         public void Parse_CompleteWithInstanceString_ReturnsValidIdentity()
         {
             var name = Dummy.CreateRandomString(10);
@@ -332,24 +332,24 @@ namespace Lime.Protocol.UnitTests
 
             var identity = Identity.Parse(identityString);
 
-            Assert.Equal(name, identity.Name);
-            Assert.Equal(domain, identity.Domain);
+            Assert.AreEqual(name, identity.Name);
+            Assert.AreEqual(domain, identity.Domain);
         }
 
-        [Fact]
-        [Trait("Category", "Parse")]
+        [TestMethod]
+        [TestCategory("Parse")]
         public void Parse_OnlyNameString_ReturnsValidIdentity()
         {
             var name = Dummy.CreateRandomString(10);
 
             var identity = Identity.Parse(name);
 
-            Assert.Equal(name, identity.Name);
-            Assert.Null(identity.Domain);
+            Assert.AreEqual(name, identity.Name);
+            Assert.IsNull(identity.Domain);
         }
 
-        [Fact]
-        [Trait("Category", "Parse")]
+        [TestMethod]
+        [TestCategory("Parse")]
         public void Parse_OnlyDomain_ReturnsValidIdentity()
         {
             var domain = Dummy.CreateRandomString(10);
@@ -358,24 +358,24 @@ namespace Lime.Protocol.UnitTests
 
             var identity = Identity.Parse(identityString);
 
-            Assert.Equal(domain, identity.Domain);
-            Assert.Null(identity.Name);
+            Assert.AreEqual(domain, identity.Domain);
+            Assert.IsNull(identity.Name);
         }
 
-        [Fact]
-        [Trait("Category", "Parse")]
+        [TestMethod]
+        [TestCategory("Parse")]
         public void Parse_OnlyAt_ReturnsValidIdentity()
         {
             var identityString = "@";
 
             var identity = Identity.Parse(identityString);
 
-            Assert.Null(identity.Name);
-            Assert.Null(identity.Domain);
+            Assert.IsNull(identity.Name);
+            Assert.IsNull(identity.Domain);
         }
 
-        [Fact]
-        [Trait("Category", "Parse")]
+        [TestMethod]
+        [TestCategory("Parse")]
         public void Parse_NullString_ThrowsArgumentNullException()
         {
             string identityString = null;
@@ -384,8 +384,8 @@ namespace Lime.Protocol.UnitTests
             action.ShouldThrow<ArgumentNullException>();
         }
 
-        [Fact]
-        [Trait("Category", "Parse")]
+        [TestMethod]
+        [TestCategory("Parse")]
         public void Parse_EmptyString_ThrowsArgumentException()
         {
             string identityString = string.Empty;
@@ -398,8 +398,8 @@ namespace Lime.Protocol.UnitTests
 
         #region Conversion
 
-        [Fact]
-        [Trait("Category", "Conversion")]
+        [TestMethod]
+        [TestCategory("Conversion")]
         public void Conversion_FromString_ReturnsValidIdentity()
         {
             // Act
@@ -410,8 +410,8 @@ namespace Lime.Protocol.UnitTests
             identity.Domain.ShouldBe("domain.com");
         }
 
-        [Fact]
-        [Trait("Category", "Conversion")]
+        [TestMethod]
+        [TestCategory("Conversion")]
         public void Conversion_ToString_ReturnsValidIdentity()
         {
             // Act

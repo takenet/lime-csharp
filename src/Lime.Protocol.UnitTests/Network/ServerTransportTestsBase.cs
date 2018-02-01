@@ -13,7 +13,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Xunit;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Lime.Protocol.Network.UnitTests
 {
@@ -64,7 +64,7 @@ namespace Lime.Protocol.Network.UnitTests
 
         public TClientTransport Client { get; set; }
 
-        [Fact]
+        [TestMethod]
         public async Task SendAsync_EstablishedSessionEnvelope_ClientShouldReceive()
         {
             // Arrange            
@@ -95,7 +95,7 @@ namespace Lime.Protocol.Network.UnitTests
             actualSession.Metadata.ShouldBe(session.Metadata);
         }
 
-        [Fact]
+        [TestMethod]
         public async Task SendAsync_FullSessionEnvelope_ClientShouldReceive()
         {
             // Arrange            
@@ -136,7 +136,7 @@ namespace Lime.Protocol.Network.UnitTests
             actualSession.Metadata.ShouldBe(session.Metadata);
         }
 
-        [Fact]
+        [TestMethod]
         public async Task SendAsync_ConsumedNotification_ClientShouldReceive()
         {
             // Arrange            
@@ -160,7 +160,7 @@ namespace Lime.Protocol.Network.UnitTests
             actualNotification.Metadata.ShouldBe(notification.Metadata);
         }
 
-        [Fact]
+        [TestMethod]
         public async Task SendAsync_MultipleParallelNotifications_ClientShouldReceive()
         {
             // Arrange            
@@ -212,7 +212,7 @@ namespace Lime.Protocol.Network.UnitTests
         }
 
 
-        [Fact]
+        [TestMethod]
         public async Task ReceiveAsync_NewSessionEnvelope_ServerShouldReceive()
         {
             // Arrange            
@@ -243,7 +243,7 @@ namespace Lime.Protocol.Network.UnitTests
             actualSession.Metadata.ShouldBe(session.Metadata);
         }
 
-        [Fact]
+        [TestMethod]
         public async Task ReceiveAsync_FullSessionEnvelope_ServerShouldReceive()
         {
             // Arrange            
@@ -284,7 +284,7 @@ namespace Lime.Protocol.Network.UnitTests
             actualSession.Metadata.ShouldBe(session.Metadata);
         }
 
-        [Fact]
+        [TestMethod]
         public async Task CloseAsync_ConnectedTransport_PerformClose()
         {
             // Arrange

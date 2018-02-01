@@ -10,7 +10,7 @@ using Lime.Protocol.Serialization.Newtonsoft;
 using Lime.Protocol.UnitTests;
 using Lime.Transport.Tcp;
 using Shouldly;
-using Xunit;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Lime.Protocol.LoadTests.Tcp
 {
@@ -48,8 +48,7 @@ namespace Lime.Protocol.LoadTests.Tcp
         }
 
 
-        [Fact]
-        [Trait("tcp", "Receive10kEnvelopes")]
+        [TestMethod]
         public async Task Send10000EnvelopesAsync()
         {
             // Arrange
@@ -77,8 +76,7 @@ namespace Lime.Protocol.LoadTests.Tcp
             sw.ElapsedMilliseconds.ShouldBeLessThan(count * 2);
         }
 
-        [Fact]
-        [Trait("tcp", "Send200EnvelopesWithoutReceive")]
+        [TestMethod]
         public async Task Send200EnvelopesWithoutReceiveAsync()
         {
             // Arrange
