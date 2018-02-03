@@ -23,6 +23,8 @@ namespace Lime.Messaging.Resources
         public const string CULTURE_KEY = "culture";
         public const string EXTRAS_KEY = "extras";
         public const string SOURCE_KEY = "source";
+        public const string FIRST_NAME_KEY = "firstName";
+        public const string LAST_NAME_KEY = "lastName";
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ContactDocument"/> class.
@@ -99,6 +101,18 @@ namespace Lime.Messaging.Resources
         /// </summary>
         [DataMember(Name = SOURCE_KEY)]
         public string Source { get; set; }
+
+        /// <summary>
+        /// The contact first name.
+        /// </summary>
+        [DataMember(Name = FIRST_NAME_KEY)]
+        public string FirstName { get; set; }
+
+        /// <summary>
+        /// The contact last name.
+        /// </summary>
+        [DataMember(Name = LAST_NAME_KEY)]
+        public string LastName { get; set; }
     }
 
     /// <summary>
