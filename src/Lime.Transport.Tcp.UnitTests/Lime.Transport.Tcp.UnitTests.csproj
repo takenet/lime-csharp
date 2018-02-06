@@ -23,7 +23,7 @@
     <ProjectReference Include="..\Lime.Protocol\Lime.Protocol.csproj" />
     <ProjectReference Include="..\Lime.Transport.Tcp\Lime.Transport.Tcp.csproj" />
     <ProjectReference Include="..\Lime.Protocol.Serialization\Lime.Protocol.Serialization.csproj" />
-    <ProjectReference Include="..\Lime.Protocol.UnitTests\Lime.Protocol.UnitTests.csproj" />
+    <ProjectReference Include="..\Lime.Protocol.UnitTests.Common\Lime.Protocol.UnitTests.Common.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -34,7 +34,7 @@
   </ItemGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'net461' ">
-    <PackageReference Include="Moq" Version="4.7.1" />
+    <PackageReference Include="Moq" Version="4.8.1" />
     <PackageReference Include="Pluralsight.Crypto" Version="1.1.0" />
     <PackageReference Include="Shouldly" Version="2.8.2" />
     <Reference Include="System.Runtime.Serialization" />

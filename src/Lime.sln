@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26730.3
+VisualStudioVersion = 15.0.27130.2027
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Samples", "Samples", "{967A83B8-5E7F-47F1-91A0-B4415587E783}"
 EndProject
@@ -40,7 +40,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lime.Transport.WebSocket", 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lime.Transport.WebSocket.UnitTests", "Lime.Transport.WebSocket.UnitTests\Lime.Transport.WebSocket.UnitTests.csproj", "{FA70C038-FADD-4C79-BC43-61492D667E98}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lime.Protocol.ConsoleTests", "Lime.Protocol.ConsoleTests\Lime.Protocol.ConsoleTests.csproj", "{53601EB2-EDF0-4FE8-AAB7-E3C9F4DEC572}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lime.Protocol.ConsoleTests", "Lime.Protocol.ConsoleTests\Lime.Protocol.ConsoleTests.csproj", "{53601EB2-EDF0-4FE8-AAB7-E3C9F4DEC572}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lime.Protocol.UnitTests.Common", "Lime.Protocol.UnitTests.Common\Lime.Protocol.UnitTests.Common.csproj", "{8C3CA680-1C8D-4734-9BA8-F6F22A7FAA13}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -104,6 +106,10 @@ Global
 		{53601EB2-EDF0-4FE8-AAB7-E3C9F4DEC572}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{53601EB2-EDF0-4FE8-AAB7-E3C9F4DEC572}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{53601EB2-EDF0-4FE8-AAB7-E3C9F4DEC572}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8C3CA680-1C8D-4734-9BA8-F6F22A7FAA13}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8C3CA680-1C8D-4734-9BA8-F6F22A7FAA13}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8C3CA680-1C8D-4734-9BA8-F6F22A7FAA13}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8C3CA680-1C8D-4734-9BA8-F6F22A7FAA13}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
