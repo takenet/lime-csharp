@@ -1,4 +1,4 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,13 +8,13 @@ using Shouldly;
 
 namespace Lime.Protocol.UnitTests
 {
-    [TestClass]
+    [TestFixture]
     public class NodeTests
     {
         #region Equals
 
-        [TestMethod]
-        [TestCategory("Equals")]
+        [Test]
+        [Category("Equals")]
         public void Equals_EqualsNodes_ReturnsTrue()
         {
             var node1 = new Node
@@ -38,8 +38,8 @@ namespace Lime.Protocol.UnitTests
             Assert.IsTrue(node2 == node1);
         }
 
-        [TestMethod]
-        [TestCategory("Equals")]
+        [Test]
+        [Category("Equals")]
         public void Equals_NodeEqualsNull_ReturnsFalse()
         {
             var node1 = new Node
@@ -60,8 +60,8 @@ namespace Lime.Protocol.UnitTests
 
         #region NotEquals
 
-        [TestMethod]
-        [TestCategory("NotEquals")]
+        [Test]
+        [Category("NotEquals")]
         public void NotEquals_NodeNotEqualsNull_ReturnsTrue()
         {
             var node1 = new Node
@@ -82,8 +82,8 @@ namespace Lime.Protocol.UnitTests
 
         #region Parse
 
-        [TestMethod]
-        [TestCategory("Parse")]
+        [Test]
+        [Category("Parse")]
         public void Parse_CompleteString_ReturnsValidNode()
         {
             var name = Dummy.CreateRandomString(10);
@@ -99,8 +99,8 @@ namespace Lime.Protocol.UnitTests
             Assert.AreEqual(instance, node.Instance);
         }
 
-        [TestMethod]
-        [TestCategory("Parse")]
+        [Test]
+        [Category("Parse")]
         public void Parse_WithoutInstance_ReturnsValidNode()
         {
             var name = Dummy.CreateRandomString(10);
@@ -115,8 +115,8 @@ namespace Lime.Protocol.UnitTests
             Assert.IsNull(node.Instance);
         }
 
-        [TestMethod]
-        [TestCategory("Parse")]
+        [Test]
+        [Category("Parse")]
         public void Parse_WithEmptyInstance_ReturnsValidNode()
         {
             var name = Dummy.CreateRandomString(10);
@@ -135,8 +135,8 @@ namespace Lime.Protocol.UnitTests
 
         #region Conversion
 
-        [TestMethod]
-        [TestCategory("Conversion")]
+        [Test]
+        [Category("Conversion")]
         public void Conversion_FromString_ReturnsValidNode()
         {
             // Act
@@ -148,8 +148,8 @@ namespace Lime.Protocol.UnitTests
             node.Instance.ShouldBe("instance");
         }
 
-        [TestMethod]
-        [TestCategory("Conversion")]
+        [Test]
+        [Category("Conversion")]
         public void Conversion_ToString_ReturnsValidNode()
         {
             // Act

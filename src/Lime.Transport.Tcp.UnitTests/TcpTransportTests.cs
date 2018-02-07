@@ -16,15 +16,13 @@ using Lime.Protocol.UnitTests;
 using Moq;
 using Shouldly;
 using System.Reflection;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NUnit.Framework;
 
 namespace Lime.Transport.Tcp.UnitTests
 {
-    [TestClass]
-    public class TcpTransportTests : IDisposable
+    [TestFixture]
+    public class TcpTransportTests
     {
-        #region Private Fields
-
         private Mock<ITcpClient> _tcpClient;
         private Mock<IEnvelopeSerializer> _envelopeSerializer;
         private Mock<ITraceWriter> _traceWriter;
@@ -36,11 +34,8 @@ namespace Lime.Transport.Tcp.UnitTests
         private X509Certificate2 _serverCertificate;
         private TcpTransportListener _tcpListener;
 
-        #endregion
-
-        #region Constructor
-
-        public TcpTransportTests()
+        [SetUp]
+        public async Task SetUp()
         {
             _stream = new Mock<Stream>();
             _tcpClient = new Mock<ITcpClient>();
@@ -64,10 +59,15 @@ namespace Lime.Transport.Tcp.UnitTests
                     {
                         return true;
                     });
-            _tcpListener.StartAsync(_cancellationToken).Wait();
+            await _tcpListener.StartAsync(_cancellationToken);
         }
 
-        #endregion
+        [TearDown]
+        public async Task TearDown()
+        {
+            await _tcpListener.StopAsync(_cancellationToken);
+            _tcpListener.DisposeIfDisposable();
+        }
 
         #region Private methods
 
@@ -113,8 +113,8 @@ namespace Lime.Transport.Tcp.UnitTests
 
         #region OpenAsync
 
-        [TestMethod]
-        [TestCategory("OpenAsync")]
+        [Test]
+        [Category("OpenAsync")]
         public async Task OpenAsync_NotConnectedValidUri_ConnectsClientAndCallsGetStream()
         {
             var uri = Dummy.CreateUri(Uri.UriSchemeNetTcp);
@@ -146,8 +146,8 @@ namespace Lime.Transport.Tcp.UnitTests
                 Times.Once());
         }
 
-        [TestMethod]
-        [TestCategory("OpenAsync")]        
+        [Test]
+        [Category("OpenAsync")]        
         public async Task OpenAsync_NotConnectedInvalidUriScheme_ThrowsArgumentException()
         {
             var uri = Dummy.CreateUri(Uri.UriSchemeHttp);
@@ -163,8 +163,8 @@ namespace Lime.Transport.Tcp.UnitTests
             Should.Throw<ArgumentException>(() => target.OpenAsync(uri, cancellationToken));
         }
 
-        [TestMethod]
-        [TestCategory("OpenAsync")]
+        [Test]
+        [Category("OpenAsync")]
         public async Task OpenAsync_AlreadyConnectedValidUri_CallsGetStream()
         {
             var uri = Dummy.CreateUri(Uri.UriSchemeNetTcp);
@@ -200,8 +200,8 @@ namespace Lime.Transport.Tcp.UnitTests
 
         #region SendAsync
 
-        [TestMethod]
-        [TestCategory("SendAsync")]
+        [Test]
+        [Category("SendAsync")]
         public async Task SendAsync_ValidArgumentsAndOpenStreamAndTraceEnabled_CallsWriteAsyncAndTraces()
         {
             var target = await this.GetAndOpenTargetAsync();
@@ -255,8 +255,8 @@ namespace Lime.Transport.Tcp.UnitTests
                 Times.Once());
         }
 
-        [TestMethod]
-        [TestCategory("SendAsync")]
+        [Test]
+        [Category("SendAsync")]
         public async Task SendAsync_NullEnvelope_ThrowsArgumentNullException()
         {
             var target = this.GetTarget();
@@ -268,8 +268,8 @@ namespace Lime.Transport.Tcp.UnitTests
             Should.Throw<ArgumentNullException>(() => target.SendAsync(message, cancellationToken));
         }
 
-        [TestMethod]
-        [TestCategory("SendAsync")]
+        [Test]
+        [Category("SendAsync")]
         public async Task SendAsync_ClosedTransport_ThrowsInvalidOperationException()
         {
             var target = this.GetTarget();
@@ -282,8 +282,8 @@ namespace Lime.Transport.Tcp.UnitTests
             Should.Throw<InvalidOperationException>(() => target.SendAsync(message, cancellationToken));
         }
 
-        [TestMethod]
-        [TestCategory("SendAsync")]
+        [Test]
+        [Category("SendAsync")]
         public async Task SendAsync_IOException_ThrowsIOExceptionAndCallsCloseAsync()
         {
             var target = await this.GetAndOpenTargetAsync();
@@ -330,8 +330,8 @@ namespace Lime.Transport.Tcp.UnitTests
 
         #region ReceiveAsync
 
-        [TestMethod]
-        [TestCategory("ReceiveAsync")]
+        [Test]
+        [Category("ReceiveAsync")]
         public async Task ReceiveAsync_OneRead_ReadEnvelopeJsonFromStream()
         {
             var content = Dummy.CreateTextContent();
@@ -361,8 +361,8 @@ namespace Lime.Transport.Tcp.UnitTests
             Assert.AreEqual(1, stream.ReadCount);
         }
 
-        [TestMethod]
-        [TestCategory("ReceiveAsync")]
+        [Test]
+        [Category("ReceiveAsync")]
         
         public async Task ReceiveAsync_NotStarted_ThrowsInvalidOperationException()
         {
@@ -372,8 +372,8 @@ namespace Lime.Transport.Tcp.UnitTests
             Should.Throw<InvalidOperationException>(() => target.ReceiveAsync(cancelationToken));
         }
 
-        [TestMethod]
-        [TestCategory("ReceiveAsync")]
+        [Test]
+        [Category("ReceiveAsync")]
         public async Task ReceiveAsync_MultipleReads_ReadEnvelopeJsonFromStream()
         {
             var content = Dummy.CreateTextContent();
@@ -405,8 +405,8 @@ namespace Lime.Transport.Tcp.UnitTests
             Assert.AreEqual(messageBufferParts.Length, stream.ReadCount);
         }
 
-        [TestMethod]
-        [TestCategory("ReceiveAsync")]
+        [Test]
+        [Category("ReceiveAsync")]
         public async Task ReceiveAsync_MultipleReadsWithExactBufferSize_ReadEnvelopeJsonFromStream()
         {
             var content = Dummy.CreateTextContent();
@@ -439,8 +439,8 @@ namespace Lime.Transport.Tcp.UnitTests
         }
         
 
-        [TestMethod]
-        [TestCategory("ReceiveAsync")]
+        [Test]
+        [Category("ReceiveAsync")]
         public async Task ReceiveAsync_MultipleReadsMultipleEnvelopes_ReadEnvelopesJsonFromStream()
         {
             var content = Dummy.CreateTextContent();
@@ -501,8 +501,8 @@ namespace Lime.Transport.Tcp.UnitTests
         }
         
 
-        [TestMethod]
-        [TestCategory("ReceiveAsync")]
+        [Test]
+        [Category("ReceiveAsync")]
         public async Task ReceiveAsync_MultipleReadsMultipleEnvelopesWithInvalidCharsBetween_ReadEnvelopeJsonFromStream()
         {
             var content = Dummy.CreateTextContent();
@@ -563,8 +563,8 @@ namespace Lime.Transport.Tcp.UnitTests
         }
 
 
-        [TestMethod]
-        [TestCategory("ReceiveAsync")]
+        [Test]
+        [Category("ReceiveAsync")]
         public async Task ReceiveAsync_SingleReadBiggerThenBuffer_ClosesStreamAndThrowsBufferOverflowException()
         {
             var content = Dummy.CreateTextContent();
@@ -599,8 +599,8 @@ namespace Lime.Transport.Tcp.UnitTests
 
         }
 
-        [TestMethod]
-        [TestCategory("ReceiveAsync")]
+        [Test]
+        [Category("ReceiveAsync")]
         public async Task ReceiveAsync_MultipleReadsBiggerThenBuffer_ClosesTheTransportAndThrowsBufferOverflowException()
         {
             var content = Dummy.CreateTextContent();
@@ -630,8 +630,8 @@ namespace Lime.Transport.Tcp.UnitTests
             }            
         }
 
-        [TestMethod]
-        [TestCategory("ReceiveAsync")]
+        [Test]
+        [Category("ReceiveAsync")]
         public async Task ReceiveAsync_MultipleReadsBiggerThenBuffer_IncreasesBuffer()
         {
             var content = Dummy.CreateTextContent();
@@ -692,8 +692,8 @@ namespace Lime.Transport.Tcp.UnitTests
 
         #region PerformCloseAsync
 
-        [TestMethod]
-        [TestCategory("PerformCloseAsync")]
+        [Test]
+        [Category("PerformCloseAsync")]
         public async Task PerformCloseAsync_StreamOpened_ClosesStreamAndClient()
         {
             var cancellationToken = CancellationToken.None;
@@ -715,8 +715,8 @@ namespace Lime.Transport.Tcp.UnitTests
 
         }
 
-        [TestMethod]
-        [TestCategory("PerformCloseAsync")]
+        [Test]
+        [Category("PerformCloseAsync")]
         public async Task PerformCloseAsync_NoStream_ClosesClient()
         {
             var cancellationToken = CancellationToken.None;
@@ -732,8 +732,8 @@ namespace Lime.Transport.Tcp.UnitTests
             _tcpClient.Verify();
         }
 
-        [TestMethod]
-        [TestCategory("PerformCloseAsync")]
+        [Test]
+        [Category("PerformCloseAsync")]
         public async Task PerformCloseAsync_AlreadyClosed_ClosesClient()
         {
             var cancellationToken = CancellationToken.None;
@@ -755,7 +755,7 @@ namespace Lime.Transport.Tcp.UnitTests
 
         #region GetSupportedEncryption
         
-        [TestCategory("GetSupportedEncryption")]
+        [Category("GetSupportedEncryption")]
         public void GetSupportedEncryption_Default_ReturnsNoneAndTLS()
         {
             var target = GetTarget();
@@ -772,8 +772,8 @@ namespace Lime.Transport.Tcp.UnitTests
 
         #region AuthenticateAsync
 
-        [TestMethod]
-        [TestCategory("AuthenticateAsync")]
+        [Test]
+        [Category("AuthenticateAsync")]
         public async Task AuthenticateAsync_ValidClientMemberCertificate_ReturnsMember()
         {
             // Arrange
@@ -801,8 +801,8 @@ namespace Lime.Transport.Tcp.UnitTests
             actual.ShouldBe(DomainRole.Member);
         }
 
-        [TestMethod]
-        [TestCategory("AuthenticateAsync")]
+        [Test]
+        [Category("AuthenticateAsync")]
         public async Task AuthenticateAsync_InvalidClientMemberCertificate_ReturnsUnknown()
         {
             // Arrange
@@ -832,8 +832,8 @@ namespace Lime.Transport.Tcp.UnitTests
             actual.ShouldBe(DomainRole.Unknown);
         }
 
-        [TestMethod]
-        [TestCategory("AuthenticateAsync")]
+        [Test]
+        [Category("AuthenticateAsync")]
         public async Task AuthenticateAsync_ValidClientAuthorityCertificate_ReturnsAuthority()
         {
             // Arrange
@@ -861,8 +861,8 @@ namespace Lime.Transport.Tcp.UnitTests
             actual.ShouldBe(DomainRole.Authority);
         }
 
-        [TestMethod]
-        [TestCategory("AuthenticateAsync")]
+        [Test]
+        [Category("AuthenticateAsync")]
         public async Task AuthenticateAsync_ValidClientRootAuthorityCertificate_ReturnsRootAuthority()
         {
             // Arrange
@@ -890,8 +890,8 @@ namespace Lime.Transport.Tcp.UnitTests
             actual.ShouldBe(DomainRole.RootAuthority);
         }
 
-        [TestMethod]
-        [TestCategory("AuthenticateAsync")]
+        [Test]
+        [Category("AuthenticateAsync")]
         public async Task AuthenticateAsync_ValidClientRootAuthorityCertificateWithSubdomain_ReturnsAuthority()
         {
             // Arrange
@@ -949,13 +949,6 @@ namespace Lime.Transport.Tcp.UnitTests
                 Path.GetDirectoryName(
                     new Uri(Assembly.GetExecutingAssembly().CodeBase).AbsolutePath), 
                 filename));
-        }
-
-        public void Dispose()
-        {
-            _tcpListener.StopAsync(_cancellationToken).Wait();
-            _tcpListener.DisposeIfDisposable();
-
         }
 
         #endregion

@@ -1,14 +1,14 @@
 ﻿using System.Globalization;
 using Lime.Protocol.Serialization;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NUnit.Framework;
 using Shouldly;
 
 namespace Lime.Protocol.UnitTests.Serialization
 {
-    [TestClass]
+    [TestFixture]
     public class TypeUtilTests
     {
-        [TestMethod]
+        [Test]
         public void GetGenericFormatterParseFunc_DoubleInvariantCulture_ReturnValidParser()
         {
             // Act
@@ -19,7 +19,7 @@ namespace Lime.Protocol.UnitTests.Serialization
             result.ShouldBe(100);
         }
 
-        [TestMethod]
+        [Test]
         public void GetGenericFormatterParseFunc_DoubleSpecificCulture_ReturnValidParser()
         {
             // Act
@@ -30,7 +30,7 @@ namespace Lime.Protocol.UnitTests.Serialization
             result.ShouldBe(100_000);
         }
 
-        [TestMethod]
+        [Test]
         public void GetFormatterParseFunc_DoubleInvariantCulture_ReturnValidParser()
         {
             // Act
@@ -41,7 +41,7 @@ namespace Lime.Protocol.UnitTests.Serialization
             result.ShouldBe(100);
         }
 
-        [TestMethod]
+        [Test]
         public void GetFormatterParseFunc_DoubleSpecificCulture_ReturnValidParser()
         {
             // Act

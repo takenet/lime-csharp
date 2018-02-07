@@ -1,16 +1,16 @@
 ﻿using System;
 using Lime.Protocol.Network.UnitTests;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NUnit.Framework;
 
 namespace Lime.Transport.WebSocket.UnitTests
 {
-    [TestClass]
+    [TestFixture]
     public class ServerWebSocketTransportTests : ServerTransportTestsBase<ServerWebSocketTransport, ClientWebSocketTransport, WebSocketTransportListener>
     {
-        public ServerWebSocketTransportTests()
-            : base(new Uri("ws://localhost:8081"))
+        [SetUp]
+        public void SetUp()
         {
-
+            SetUp(new Uri("ws://localhost:8081"));
         }
 
         protected override ClientWebSocketTransport CreateClientTransport()

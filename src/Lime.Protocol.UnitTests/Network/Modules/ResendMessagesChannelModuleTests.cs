@@ -8,24 +8,25 @@ using Lime.Protocol.Network;
 using Lime.Protocol.Network.Modules;
 using Lime.Protocol.Network.Modules.Resend;
 using Moq;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NUnit.Framework;
 using Shouldly;
 
 namespace Lime.Protocol.UnitTests.Network.Modules
 {
-    [TestClass]
-    public class ResendMessagesChannelModuleTests : IDisposable
+    [TestFixture]
+    public class ResendMessagesChannelModuleTests
     {
-        private readonly Mock<ITransport> _transport;
-        private readonly Mock<IChannel> _channel;
+        private Mock<ITransport> _transport;
+        private Mock<IChannel> _channel;
         private int _resendMessageTryCount;
-        private readonly TimeSpan _resendMessageInterval;
+        private TimeSpan _resendMessageInterval;
         private TimeSpan _resendMessageIntervalWithSafeMargin;
         private bool _filterByDestination;
-        private readonly CancellationToken _cancellationToken;
-        private readonly List<ResendMessagesChannelModule> _targets;
+        private CancellationToken _cancellationToken;
+        private List<ResendMessagesChannelModule> _targets;
 
-        public ResendMessagesChannelModuleTests()
+        [SetUp]
+        public void SetUp()
         {
             _transport = new Mock<ITransport>();
             _transport.Setup(t => t.IsConnected).Returns(true);
@@ -36,6 +37,12 @@ namespace Lime.Protocol.UnitTests.Network.Modules
             _cancellationToken = CancellationToken.None;
             _filterByDestination = false;
             _targets = new List<ResendMessagesChannelModule>();
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            _targets.ForEach(t => t.Dispose());
         }
 
         private TimeSpan ResendLimit => TimeSpan.FromTicks(
@@ -77,7 +84,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
             return target;
         }
 
-        [TestMethod]
+        [Test]
         public async Task OnSending_MessageWithoutNotification_ShouldResendAfterInterval()
         {
             // Arrange
@@ -95,7 +102,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
             _channel.Verify(c => c.SendMessageAsync(message, It.IsAny<CancellationToken>()), Times.Exactly(1));            
         }
 
-        [TestMethod]
+        [Test]
         public async Task OnSending_MultipleMessagesWithoutNotification_ShouldResendAfterInterval()
         {
             // Arrange
@@ -126,7 +133,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
             }
         }
 
-        [TestMethod]
+        [Test]
         public async Task OnSending_MessageWithoutNotification_ShouldResendUntilLimit()
         {
             // Arrange
@@ -145,7 +152,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
             deadMessageHandler.Verify(h => h.HandleDeadMessageAsync(message, It.IsAny<IChannelInformation>(), It.IsAny<CancellationToken>()), Times.Once());
         }
 
-        [TestMethod]
+        [Test]
         public async Task OnSending_MessageWithNotificationFromDifferentEvent_ShouldResendUntilLimit()
         {
             // Arrange
@@ -168,7 +175,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
             deadMessageHandler.Verify(h => h.HandleDeadMessageAsync(message, It.IsAny<IChannelInformation>(), It.IsAny<CancellationToken>()), Times.Once());
         }
 
-        [TestMethod]
+        [Test]
         public async Task OnSending_MultipleMessagesWithoutNotification_ShouldResendUntilLimit()
         {
             // Arrange
@@ -198,7 +205,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
             }
         }
 
-        [TestMethod]
+        [Test]
         public async Task OnSending_ReceivedNotificationAfterSend_ShouldNotResend()
         {
             // Arrange
@@ -220,7 +227,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
             _channel.Verify(c => c.SendMessageAsync(message, CancellationToken.None), Times.Never);
         }
 
-        [TestMethod]
+        [Test]
         public async Task OnSending_ReceivedNotificationAfterFirstResend_ShouldNotResendAgain()
         {
             // Arrange
@@ -243,7 +250,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
             _channel.Verify(c => c.SendMessageAsync(message, It.IsAny<CancellationToken>()), Times.Exactly(1));
         }
 
-        [TestMethod]
+        [Test]
         public async Task OnSending_ReceivedNotificationAFromDifferentSenderWhenFilteringByDestination_ShouldResendUntilLimit()
         {
             // Arrange
@@ -267,7 +274,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
         }
 
 
-        [TestMethod]
+        [Test]
         public async Task OnSending_ReceivedNotificationAfterSecondResend_ShouldNotResendAgain()
         {
             // Arrange
@@ -301,7 +308,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
             channel.Verify(c => c.SendMessageAsync(message, It.IsAny<CancellationToken>()), Times.Exactly(2));
         }
 
-        [TestMethod]
+        [Test]
         public async Task OnStateChanged_EstablishedToFinished_ShouldNotResend()
         {
             // Arrange
@@ -320,7 +327,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
         }
 
 
-        [TestMethod]
+        [Test]
         public async Task OnStateChanged_EstablishedToFinishedAfterSecondResend_ShouldNotResendAgain()
         {
             // Arrange
@@ -339,7 +346,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
             _channel.Verify(c => c.SendMessageAsync(message, It.IsAny<CancellationToken>()), Times.Exactly(2));
         }
 
-        [TestMethod]
+        [Test]
         public async Task OnStateChanged_EstablishedToFailed_ShouldNotResend()
         {
             // Arrange
@@ -357,7 +364,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
             _channel.Verify(c => c.SendMessageAsync(message, It.IsAny<CancellationToken>()), Times.Never);
         }
 
-        [TestMethod]
+        [Test]
         public async Task OnStateChanged_EstablishedToFailedAfterSecondResend_ShouldNotResendAgain()
         {
             // Arrange
@@ -376,7 +383,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
             _channel.Verify(c => c.SendMessageAsync(message, It.IsAny<CancellationToken>()), Times.Exactly(2));
         }
 
-        [TestMethod]
+        [Test]
         public async Task OnStateChanged_PendingMessageAndRegisteredToNewChannel_SendsToNewChannel()
         {
             // Arrange
@@ -398,7 +405,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
             channel2Mock.Verify(c => c.SendMessageAsync(message, It.IsAny<CancellationToken>()), Times.Once);
         }
 
-        [TestMethod]
+        [Test]
         public async Task OnStateChanged_MultiplePendingMessagesAndRegisteredToNewChannel_SendsToNewChannel()
         {
             // Arrange
@@ -431,11 +438,6 @@ namespace Lime.Protocol.UnitTests.Network.Modules
                 _channel.Verify(c => c.SendMessageAsync(message, It.IsAny<CancellationToken>()), Times.Never);
                 channel2Mock.Verify(c => c.SendMessageAsync(message, It.IsAny<CancellationToken>()), Times.Once);
             }
-        }
-
-        public void Dispose()
-        {
-            _targets.ForEach(t => t.Dispose());
         }
     }
 }

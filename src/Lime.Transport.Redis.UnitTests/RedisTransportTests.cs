@@ -12,12 +12,12 @@ using Lime.Protocol.Serialization.Newtonsoft;
 using Lime.Protocol.UnitTests;
 using Moq;
 using Shouldly;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NUnit.Framework;
 
 namespace Lime.Transport.Redis.UnitTests
 {
-    [TestClass]
-    [TestCategory(nameof(Redis))]
+    [TestFixture]
+    [Category(nameof(Redis))]
     public class RedisTransportTests
     {
         private  RedisFixture _redisFixture;
@@ -27,27 +27,25 @@ namespace Lime.Transport.Redis.UnitTests
             Registrator.RegisterDocuments();
         }
 
-        public RedisTransportTests()
-        {            
+        [SetUp]
+        public async Task Start()
+        {
             ChannelNamespace = EnvelopeId.NewId();
             ListenerUri = new Uri("redis://localhost");
             EnvelopeSerializer = new JsonNetSerializer();
             TraceWriter = new Mock<ITraceWriter>();
-            Listener = new RedisTransportListener(ListenerUri, EnvelopeSerializer, TraceWriter.Object, channelNamespace: ChannelNamespace);            
+            Listener = new RedisTransportListener(ListenerUri, EnvelopeSerializer, TraceWriter.Object, channelNamespace: ChannelNamespace);
             CancellationToken = TimeSpan.FromSeconds(5).ToCancellationToken();
-            Listener.StartAsync(CancellationToken).Wait();
-        }
-
-        [TestInitialize]
-        public void Start()
-        {
             _redisFixture =  new RedisFixture();
+            await Listener.StartAsync(CancellationToken);
         }
 
-        [TestCleanup]
-        public void Stop()
+        [TearDown]
+        public async Task Stop()
         {
             _redisFixture.Dispose();
+            await Listener.StopAsync(TimeSpan.FromSeconds(5).ToCancellationToken());
+            Listener.DisposeIfDisposable();
         }
 
         public Uri ListenerUri { get; private set; }
@@ -61,8 +59,6 @@ namespace Lime.Transport.Redis.UnitTests
         public CancellationToken CancellationToken { get; private set; }
 
         public ITransport ServerTransport { get; private set; }
-
-        public Process RedisProccess { get; private set; }
 
         public Session EstablishedSession { get; private set; }
 
@@ -97,7 +93,7 @@ namespace Lime.Transport.Redis.UnitTests
         }
 
 
-        [TestMethod]
+        [Test]
         public async Task SendAsync_NewSessionEnvelope_ServerShouldReceive()
         {
             // Arrange
@@ -115,7 +111,7 @@ namespace Lime.Transport.Redis.UnitTests
             receivedSession.State.ShouldBe(SessionState.New);
         }
 
-        [TestMethod]
+        [Test]
         public async Task SendAsync_FinishingSessionEnvelope_ServerShouldReceive()
         {
             // Arrange            
@@ -132,7 +128,7 @@ namespace Lime.Transport.Redis.UnitTests
             actualSession.State.ShouldBe(SessionState.Finishing);
         }
 
-        [TestMethod]
+        [Test]
         public async Task SendAsync_MessageEnvelope_ServerShouldReceive()
         {
             // Arrange
@@ -153,7 +149,7 @@ namespace Lime.Transport.Redis.UnitTests
             actualContent.Text.ShouldBe(content.Text);
         }
 
-        [TestMethod]
+        [Test]
         public async Task SendAsync_NotificationEnvelope_ServerShouldReceive()
         {
             // Arrange            
@@ -172,7 +168,7 @@ namespace Lime.Transport.Redis.UnitTests
             actual.Event.ShouldBe(notification.Event);
         }
 
-        [TestMethod]
+        [Test]
         public async Task SendAsync_CommandEnvelope_ServerShouldReceive()
         {
             // Arrange
@@ -196,7 +192,7 @@ namespace Lime.Transport.Redis.UnitTests
             actualResource.Priority.ShouldBe(presence.Priority);
         }
 
-        [TestMethod]
+        [Test]
         public async Task ReceiveAsync_MessageEnvelope_ClientShouldReceive()
         {
             // Arrange
@@ -217,7 +213,7 @@ namespace Lime.Transport.Redis.UnitTests
             actualContent.Text.ShouldBe(content.Text);
         }
 
-        [TestMethod]
+        [Test]
         public async Task ReceiveAsync_NotificationEnvelope_ClientShouldReceive()
         {
             // Arrange            
@@ -236,7 +232,7 @@ namespace Lime.Transport.Redis.UnitTests
             actual.Event.ShouldBe(notification.Event);
         }
 
-        [TestMethod]
+        [Test]
         public async Task ReceiveAsync_CommandEnvelope_ClientShouldReceive()
         {
             // Arrange

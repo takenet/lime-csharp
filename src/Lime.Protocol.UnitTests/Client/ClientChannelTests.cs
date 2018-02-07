@@ -1,6 +1,6 @@
 ﻿using System;
 using Lime.Messaging.Resources;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NUnit.Framework;
 using System.Threading.Tasks;
 using Lime.Protocol.Client;
 using Lime.Protocol.Network;
@@ -12,13 +12,14 @@ using Lime.Protocol.Util;
 
 namespace Lime.Protocol.UnitTests.Client
 {
-    [TestClass]
+    [TestFixture]
     public class ClientChannelTests
     {
         private Mock<TransportBase> _transport;
         private TimeSpan _sendTimeout;
 
-        public ClientChannelTests()
+        [SetUp]
+        public void SetUp()
         {
             _transport = new Mock<TransportBase>();
             _transport
@@ -46,8 +47,8 @@ namespace Lime.Protocol.UnitTests.Client
 
         #region StartNewSessionAsync
 
-        [TestMethod]
-        [TestCategory("StartNewSessionAsync")]
+        [Test]
+        [Category("StartNewSessionAsync")]
         public async Task StartNewSessionAsync_NewState_CallsTransportAndReadsFromBuffer()
         {
             var target = GetTarget();            
@@ -70,8 +71,8 @@ namespace Lime.Protocol.UnitTests.Client
             Assert.AreEqual(session, actualSession);
         }
 
-        [TestMethod]
-        [TestCategory("SendNewSessionAsync")]
+        [Test]
+        [Category("SendNewSessionAsync")]
         public async Task StartNewSessionAsync_InvalidState_ThrowsInvalidOperationException()
         {
             var tcs = new TaskCompletionSource<Envelope>();
@@ -90,8 +91,8 @@ namespace Lime.Protocol.UnitTests.Client
 
         #region NegotiateSessionAsync
 
-        [TestMethod]
-        [TestCategory("NegotiateSessionAsync")]
+        [Test]
+        [Category("NegotiateSessionAsync")]
         public async Task NegotiateSessionAsync_NegotiatingState_CallsTransportAndReadsFromBuffer()
         {
             var target = GetTarget(EnvelopeId.NewId(), state: SessionState.Negotiating);
@@ -122,8 +123,8 @@ namespace Lime.Protocol.UnitTests.Client
             Assert.AreEqual(session, actualSession);
         }
 
-        [TestMethod]
-        [TestCategory("NegotiateSessionAsync")]
+        [Test]
+        [Category("NegotiateSessionAsync")]
         public async Task NegotiateSessionAsync_InvalidState_ThrowsInvalidOperationException()
         {
             var target = GetTarget(state: SessionState.New);
@@ -139,8 +140,8 @@ namespace Lime.Protocol.UnitTests.Client
 
         #region AuthenticateSessionAsync
 
-        [TestMethod]
-        [TestCategory("AuthenticateSessionAsync")]
+        [Test]
+        [Category("AuthenticateSessionAsync")]
         public async Task AuthenticateSessionAsync_AuthenticatingState_CallsTransportAndReadsFromTransport()
         {
             var target = GetTarget(sessionId: EnvelopeId.NewId(), state: SessionState.Authenticating);
@@ -175,8 +176,8 @@ namespace Lime.Protocol.UnitTests.Client
             Assert.AreEqual(session, actualSession);
         }
 
-        [TestMethod]
-        [TestCategory("AuthenticateSessionAsync")]
+        [Test]
+        [Category("AuthenticateSessionAsync")]
         public async Task AuthenticateSessionAsync_InvalidState_ThrowsInvalidOperationException()
         {
             // Arrange
@@ -196,8 +197,8 @@ namespace Lime.Protocol.UnitTests.Client
                 .ShouldThrowAsync<InvalidOperationException>();
         }
 
-        [TestMethod]
-        [TestCategory("AuthenticateSessionAsync")]
+        [Test]
+        [Category("AuthenticateSessionAsync")]
         public async Task AuthenticateSessionAsync_NullIdentity_ThrowsArgumentNullException()
         {
             // Arrange
@@ -213,8 +214,8 @@ namespace Lime.Protocol.UnitTests.Client
                 .ShouldThrowAsync<ArgumentNullException>();
         }
 
-        [TestMethod]
-        [TestCategory("AuthenticateSessionAsync")]
+        [Test]
+        [Category("AuthenticateSessionAsync")]
         public async Task AuthenticateSessionAsync_NullAuthentication_ThrowsArgumentNullException()
         {
             // Arrange
@@ -235,8 +236,8 @@ namespace Lime.Protocol.UnitTests.Client
 
         #region SendReceivedNotificationAsync
 
-        [TestMethod]
-        [TestCategory("SendReceivedNotificationAsync")]
+        [Test]
+        [Category("SendReceivedNotificationAsync")]
         public async Task SendReceivedNotificationAsync_EstablishedState_CallsTransport()
         {
             var tcs = new TaskCompletionSource<Envelope>();
@@ -260,8 +261,8 @@ namespace Lime.Protocol.UnitTests.Client
                     Times.Once());
         }
 
-        [TestMethod]
-        [TestCategory("SendReceivedNotificationAsync")]
+        [Test]
+        [Category("SendReceivedNotificationAsync")]
         public void SendReceivedNotificationAsync_NullTo_ThrowsArgumentNullException()
         {
             // Arrange
@@ -280,8 +281,8 @@ namespace Lime.Protocol.UnitTests.Client
 
         #region SendFinishingSessionAsync
 
-        [TestMethod]
-        [TestCategory("SendFinishingSessionAsync")]
+        [Test]
+        [Category("SendFinishingSessionAsync")]
         public async Task SendFinishingSessionAsync_EstablishedState_CallsTransport()
         {
             var tcs = new TaskCompletionSource<Envelope>();
@@ -301,8 +302,8 @@ namespace Lime.Protocol.UnitTests.Client
                     Times.Once());
         }
 
-        [TestMethod]
-        [TestCategory("SendFinishingSessionAsync")]
+        [Test]
+        [Category("SendFinishingSessionAsync")]
         public void SendFinishingSessionAsync_NewState_ThrowsInvalidOperationException()
         {
             // Arrange
@@ -317,8 +318,8 @@ namespace Lime.Protocol.UnitTests.Client
 
         #region ReceiveSessionFinishedAsync
 
-        [TestMethod]
-        [TestCategory("ReceiveFinishedSessionAsync")]
+        [Test]
+        [Category("ReceiveFinishedSessionAsync")]
         public async Task ReceiveFinishedSessionAsync_EstablishedState_ReadsTransport()
         {            
             var session = Dummy.CreateSession(SessionState.Finished);            
@@ -339,8 +340,8 @@ namespace Lime.Protocol.UnitTests.Client
             _transport.Verify();
         }
 
-        [TestMethod]
-        [TestCategory("ReceiveFinishedSessionAsync")]
+        [Test]
+        [Category("ReceiveFinishedSessionAsync")]
         public void ReceiveFinishedSessionAsync_InvalidState_ThrowsInvalidOperationException()
         {
             var target = GetTarget(state: SessionState.Finished);
@@ -357,8 +358,8 @@ namespace Lime.Protocol.UnitTests.Client
 
         #region SendMessageAsync
 
-        [TestMethod]
-        [TestCategory("SendMessageAsync")]
+        [Test]
+        [Category("SendMessageAsync")]
         public async Task SendMessageAsync_DelegateMessage_FillsFromTheSession()
         {
             var content = Dummy.CreateTextContent();
@@ -399,8 +400,8 @@ namespace Lime.Protocol.UnitTests.Client
                     Times.Once());
         }
 
-        [TestMethod]
-        [TestCategory("SendMessageAsync")]
+        [Test]
+        [Category("SendMessageAsync")]
         public async Task SendMessageAsync_DelegateMessageWithPpAndEmptyDomain_FillsFromTheSession()
         {
             var content = Dummy.CreateTextContent();
@@ -447,8 +448,8 @@ namespace Lime.Protocol.UnitTests.Client
 
         #region ReceiveMessageAsync
 
-        [TestMethod]
-        [TestCategory("ReceiveMessageAsync")]
+        [Test]
+        [Category("ReceiveMessageAsync")]
         public async Task ReceiveMessageAsync_MessageReceivedAndAutoNotifyReceiptTrue_SendsNotificationToTransport()
         {
             // Arrange
@@ -476,8 +477,8 @@ namespace Lime.Protocol.UnitTests.Client
                     Times.Once());
         }
 
-        [TestMethod]
-        [TestCategory("ReceiveMessageAsync")]
+        [Test]
+        [Category("ReceiveMessageAsync")]
         public async Task ReceiveMessageAsync_MessageReceivedToIdentityAndAutoNotifyReceiptTrue_SendsNotificationToTransport()
         {
             // Arrange
@@ -507,8 +508,8 @@ namespace Lime.Protocol.UnitTests.Client
         }
 
 
-        [TestMethod]
-        [TestCategory("ReceiveMessageAsync")]
+        [Test]
+        [Category("ReceiveMessageAsync")]
         public async Task ReceiveMessageAsync_MessageReceivedToNullDestinationAndAutoNotifyReceiptTrue_SendsNotificationToTransport()
         {
             // Arrange
@@ -537,8 +538,8 @@ namespace Lime.Protocol.UnitTests.Client
                     Times.Once());
         }
 
-        [TestMethod]
-        [TestCategory("ReceiveMessageAsync")]
+        [Test]
+        [Category("ReceiveMessageAsync")]
         public async Task ReceiveMessageAsync_MessageReceivedToOtherDestinationAndAutoNotifyReceiptTrue_DoNotSendsNotificationToTransport()
         {
             // Arrange
@@ -566,8 +567,8 @@ namespace Lime.Protocol.UnitTests.Client
                     Times.Never());
         }
 
-        [TestMethod]
-        [TestCategory("ReceiveMessageAsync")]
+        [Test]
+        [Category("ReceiveMessageAsync")]
         public async Task ReceiveMessageAsync_MessageReceivedAndAutoNotifyReceiptFalse_DoNotSendsNotificationToTransport()
         {            
             var content = Dummy.CreateTextContent();
@@ -592,8 +593,8 @@ namespace Lime.Protocol.UnitTests.Client
                     Times.Never());
         }
 
-        [TestMethod]
-        [TestCategory("ReceiveMessageAsync")]
+        [Test]
+        [Category("ReceiveMessageAsync")]
         public async Task ReceiveMessageAsync_FireAndForgetMessageReceivedAndAutoNotifyReceiptTrue_DoNotSendsNotificationToTransport()
         {            
             var content = Dummy.CreateTextContent();
@@ -625,8 +626,8 @@ namespace Lime.Protocol.UnitTests.Client
 
         #region ReceiveCommandAsync
 
-        [TestMethod]
-        [TestCategory("ReceiveCommandAsync")]
+        [Test]
+        [Category("ReceiveCommandAsync")]
         public async Task ReceiveCommandAsync_PingCommandReceivedAndAutoReplyPingsTrue_SendsPingCommandToTransport()
         {           
             var ping = Dummy.CreatePing();
@@ -655,8 +656,8 @@ namespace Lime.Protocol.UnitTests.Client
                     Times.Once());
         }
 
-        [TestMethod]
-        [TestCategory("ReceiveCommandAsync")]
+        [Test]
+        [Category("ReceiveCommandAsync")]
         public async Task ReceiveCommandAsync_PingCommandAbsoluteUriReceivedAndAutoReplyPingsTrue_SendsPingCommandToTransport()
         {
             var ping = Dummy.CreatePing();
@@ -685,8 +686,8 @@ namespace Lime.Protocol.UnitTests.Client
                     Times.Once());
         }
 
-        [TestMethod]
-        [TestCategory("ReceiveCommandAsync")]
+        [Test]
+        [Category("ReceiveCommandAsync")]
         public async Task ReceiveCommandAsync_PingCommandReceivedAndAutoReplyPingsFalse_DoNotSendsPingCommandToTransport()
         {           
             var ping = Dummy.CreatePing();
@@ -716,8 +717,8 @@ namespace Lime.Protocol.UnitTests.Client
                     Times.Never());
         }
 
-        [TestMethod]
-        [TestCategory("ReceiveCommandAsync")]
+        [Test]
+        [Category("ReceiveCommandAsync")]
         public async Task ReceiveCommandAsync_PingResponseCommandReceivedAndAutoReplyPingsTrue_DoNotSendsPingCommandToTransport()
         {            
             var ping = Dummy.CreatePing();
@@ -747,8 +748,8 @@ namespace Lime.Protocol.UnitTests.Client
 
         #region OnSessionReceivedAsync
 
-        [TestMethod]
-        [TestCategory("AuthenticateSessionAsync")]
+        [Test]
+        [Category("AuthenticateSessionAsync")]
         public async Task AuthenticateSessionAsync_AuthenticatingStateEstablishedSessionReceived_SetsStateAndNodeProperties()
         {
 
@@ -770,8 +771,8 @@ namespace Lime.Protocol.UnitTests.Client
             Assert.IsTrue(target.RemoteNode.Equals(session.From));
         }
 
-        [TestMethod]
-        [TestCategory("ReceiveFinishedSessionAsync")]
+        [Test]
+        [Category("ReceiveFinishedSessionAsync")]
         public async Task ReceiveFinishedSessionAsync_EstablishedStateFinishedSessionReceived_SetsStateAndClosesTransport()
         {                                    
             var session = Dummy.CreateSession(SessionState.Finished);
@@ -795,8 +796,8 @@ namespace Lime.Protocol.UnitTests.Client
                     Times.Once());
         }
 
-        [TestMethod]
-        [TestCategory("ReceiveFinishedSessionAsync")]
+        [Test]
+        [Category("ReceiveFinishedSessionAsync")]
         public async Task ReceiveFinishedSessionAsync_EstablishedStateFailedSessionReceived_SetsStateAndClosesTransport()
         {
             
@@ -822,8 +823,8 @@ namespace Lime.Protocol.UnitTests.Client
                     Times.Once());
         }
 
-        [TestMethod]
-        [TestCategory("AuthenticateSessionAsync")]
+        [Test]
+        [Category("AuthenticateSessionAsync")]
         public async Task AuthenticateSessionAsync_AuthenticatingStateFailedSessionReceived_SetsStateAndClosesTransport()
         {            
             var authentication = Dummy.CreateAuthentication(AuthenticationScheme.Plain);
@@ -848,8 +849,8 @@ namespace Lime.Protocol.UnitTests.Client
         }
 
 
-        [TestMethod]
-        [TestCategory("OnRemoteIdleAsync")]
+        [Test]
+        [Category("OnRemoteIdleAsync")]
         public async Task OnRemoteIdleAsync_EstablishedState_CallsSendFinishingAndReceiveFinishedSessionAndClosesTransport()
         {
             // Arrange

@@ -7,19 +7,20 @@ using System;
 using System.Buffers;
 using System.Reflection;
 using System.Threading.Tasks;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NUnit.Framework;
 
 namespace Lime.Transport.Tcp.UnitTests
 {
     /// <summary>
     /// Tests for <see cref="TcpTransport"/> class using real TCP connections.
     /// </summary>    
-    [TestClass]
+    [TestFixture]    
     public class ServerTcpTransportTests : ServerTransportTestsBase<TcpTransport, TcpTransport, TcpTransportListener>
     {
-        public ServerTcpTransportTests()
-            : base(new Uri("net.tcp://localhost:55322"))
+        [SetUp]
+        public void SetUp()
         {
+            SetUp(new Uri("net.tcp://localhost:55322"));
         }
 
         public int BufferSize { get; set; } = TcpTransport.DEFAULT_BUFFER_SIZE;
@@ -38,7 +39,7 @@ namespace Lime.Transport.Tcp.UnitTests
             return new TcpTransportListener(ListenerUri, null, EnvelopeSerializer, BufferSize, MaxBufferSize, ArrayPool, traceWriter: TraceWriter.Object);
         }
 
-        [TestMethod]
+        [Test]
         public async Task ReceiveAsync_BiggerThanBufferSizeMessageEnvelope_ServerShouldReceive()
         {
             // Arrange
@@ -60,7 +61,7 @@ namespace Lime.Transport.Tcp.UnitTests
 
         }
 
-        [TestMethod]
+        [Test]
         public async Task ReceiveAsync_MultipleBiggerThanBufferSizeMessageEnvelope_ServerShouldReceive()
         {
             // Arrange            
@@ -99,7 +100,7 @@ namespace Lime.Transport.Tcp.UnitTests
         }
 
 
-        [TestMethod]
+        [Test]
         public async Task ReceiveAsync_DoubleWritesAndReads_ServerShouldReceive()
         {
             // Arrange            
@@ -139,7 +140,7 @@ namespace Lime.Transport.Tcp.UnitTests
             jsonBuffer.Buffer.Length.ShouldBe(BufferSize);
         }
 
-        [TestMethod]
+        [Test]
         public async Task ReceiveAsync_InterleavedWritesAndReads_ServerShouldReceive()
         {
             // Arrange            
@@ -186,7 +187,7 @@ namespace Lime.Transport.Tcp.UnitTests
             jsonBuffer.Buffer.Length.ShouldBe(BufferSize);
         }
 
-        [TestMethod]
+        [Test]
         public async Task ReceiveAsync_BiggerThanMaxBufferSizeMessageEnvelope_ServerShouldThrowBufferOverflowException()
         {
             // Arrange

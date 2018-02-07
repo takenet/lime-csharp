@@ -16,7 +16,7 @@ using Moq;
 using NUnit.Framework;
 using Shouldly;
 using Lime.Messaging;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NUnit.Framework;
 
 namespace Lime.Transport.Redis.UnitTests
 {

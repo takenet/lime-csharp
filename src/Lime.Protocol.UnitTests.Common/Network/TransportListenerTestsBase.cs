@@ -4,40 +4,47 @@ using System.Linq;
 using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
-using Lime.Protocol;
 using Lime.Protocol.Network;
 using Lime.Protocol.Serialization;
 using Lime.Protocol.Serialization.Newtonsoft;
-using Lime.Protocol.UnitTests;
 using Moq;
 using NUnit.Framework;
 using Shouldly;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Lime.Protocol.Server;
 using System.Net.Sockets;
 
 namespace Lime.Protocol.UnitTests.Network
 {
-
-    public abstract class TransportListenerTestsBase<TClientTransport, TTransportListener> : IDisposable
+    public abstract class TransportListenerTestsBase<TClientTransport, TTransportListener>
         where TClientTransport : class, ITransport
         where TTransportListener : class, ITransportListener
     {
-        public TransportListenerTestsBase(Uri listenerUri)
+        protected void SetUp(Uri listenerUri)
         {
             ListenerUri = listenerUri;
             EnvelopeSerializer = new JsonNetSerializer();
             TraceWriter = new Mock<ITraceWriter>();           
             CancellationToken = TimeSpan.FromSeconds(5).ToCancellationToken();
-
             Target = CreateTransportListener();
+        }
+
+        [TearDown]
+        public async Task TearDown()
+        {
+            try
+            {
+                await Target.StopAsync(CancellationToken);
+            }
+            catch (InvalidOperationException) { }
+            Target.DisposeIfDisposable();
+            Target = null;
         }
 
         protected abstract TTransportListener CreateTransportListener();
 
         protected abstract TClientTransport CreateClientTransport();
 
-        public TTransportListener Target { get; }
+        public TTransportListener Target { get; private set; }
 
         public Uri ListenerUri { get; private set; }        
 
@@ -47,7 +54,7 @@ namespace Lime.Protocol.UnitTests.Network
 
         public CancellationToken CancellationToken { get; private set; }
 
-        [TestMethod]
+        [Test]
         public void ListenerUris_ValidHostAndPort_GetsRegisteredUris()
         {
             // Act
@@ -59,7 +66,7 @@ namespace Lime.Protocol.UnitTests.Network
             listenerUris[0].ShouldBe(ListenerUri);
         }
 
-        [TestMethod]
+        [Test]
         public async Task StartAsync_ValidHostAndPort_ServerStarted()
         {
             // Act
@@ -71,7 +78,7 @@ namespace Lime.Protocol.UnitTests.Network
             await clientTransport.OpenAsync(ListenerUri, CancellationToken);
         }
 
-        [TestMethod]
+        [Test]
         public async Task AcceptTransportAsync_NewConnection_RetunsTransport()
         {
             // Arrange
@@ -88,7 +95,7 @@ namespace Lime.Protocol.UnitTests.Network
             transport.ShouldNotBeNull();
         }
 
-        [TestMethod]
+        [Test]
         public async Task AcceptTransportAsync_MultipleConnections_RetunsTransports()
         {
             // Arrange
@@ -119,14 +126,14 @@ namespace Lime.Protocol.UnitTests.Network
             actualTransports.Count.ShouldBe(clientTransports.Count);
         }
 
-        [TestMethod]
+        [Test]
         public async Task AcceptTransportAsync_ListenerNotStarted_ThrowsInvalidOperationException()
         {
             // Act
             var transport = await Target.AcceptTransportAsync(CancellationToken).ShouldThrowAsync<InvalidOperationException>();
         }
 
-        [TestMethod]
+        [Test]
         public async Task StopAsync_ActiveListener_StopsListening()
         {
             // Arrange
@@ -150,15 +157,6 @@ namespace Lime.Protocol.UnitTests.Network
             {
                 ex.ErrorCode.ShouldBe(10061);
             }
-        }
-
-        public void Dispose()
-        {
-            try
-            {
-                Target.StopAsync(CancellationToken).Wait();
-            }
-            catch (AggregateException) { }
         }
     }
 }

@@ -13,11 +13,11 @@ using Lime.Protocol.Server;
 using Lime.Protocol.UnitTests;
 using NUnit.Framework;
 using Shouldly;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NUnit.Framework;
 
 namespace Lime.Protocol.LoadTests
 {
-    [TestClass]
+    [TestFixture]
     public class ChannelBaseTests : IDisposable
     {
         private CancellationToken _cancellationToken;
@@ -79,7 +79,7 @@ namespace Lime.Protocol.LoadTests
         }
 
 
-        [TestMethod]
+        [Test]
         public async Task Send10000EnvelopesAsync()
         {
             // Arrange

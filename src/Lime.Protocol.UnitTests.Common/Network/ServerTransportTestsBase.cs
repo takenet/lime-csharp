@@ -13,21 +13,30 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NUnit.Framework;
 
 namespace Lime.Protocol.Network.UnitTests
 {
-    public abstract class ServerTransportTestsBase<TServerTransport, TClientTransport, TTransportListener> : IDisposable
+    public abstract class ServerTransportTestsBase<TServerTransport, TClientTransport, TTransportListener>
         where TServerTransport : class, ITransport
         where TClientTransport : class, ITransport
         where TTransportListener : class, ITransportListener
     {
-        public ServerTransportTestsBase(Uri listenerUri)
+        protected void SetUp(Uri listenerUri)
         {
             ListenerUri = listenerUri;
             EnvelopeSerializer = new JsonNetSerializer();
             TraceWriter = new Mock<ITraceWriter>();
             CancellationToken = TimeSpan.FromSeconds(30).ToCancellationToken();
+        }
+
+        [TearDown]
+        public virtual async Task TearDown()
+        {
+            await (Listener?.StopAsync(CancellationToken) ?? Task.CompletedTask);
+            Listener = null;
+            Client?.DisposeIfDisposable();
+            Client = null;
         }
 
         public async Task<TServerTransport> GetTargetAsync()
@@ -64,7 +73,7 @@ namespace Lime.Protocol.Network.UnitTests
 
         public TClientTransport Client { get; set; }
 
-        [TestMethod]
+        [Test]
         public async Task SendAsync_EstablishedSessionEnvelope_ClientShouldReceive()
         {
             // Arrange            
@@ -95,7 +104,7 @@ namespace Lime.Protocol.Network.UnitTests
             actualSession.Metadata.ShouldBe(session.Metadata);
         }
 
-        [TestMethod]
+        [Test]
         public async Task SendAsync_FullSessionEnvelope_ClientShouldReceive()
         {
             // Arrange            
@@ -136,7 +145,7 @@ namespace Lime.Protocol.Network.UnitTests
             actualSession.Metadata.ShouldBe(session.Metadata);
         }
 
-        [TestMethod]
+        [Test]
         public async Task SendAsync_ConsumedNotification_ClientShouldReceive()
         {
             // Arrange            
@@ -160,7 +169,7 @@ namespace Lime.Protocol.Network.UnitTests
             actualNotification.Metadata.ShouldBe(notification.Metadata);
         }
 
-        [TestMethod]
+        [Test]
         public async Task SendAsync_MultipleParallelNotifications_ClientShouldReceive()
         {
             // Arrange            
@@ -212,7 +221,7 @@ namespace Lime.Protocol.Network.UnitTests
         }
 
 
-        [TestMethod]
+        [Test]
         public async Task ReceiveAsync_NewSessionEnvelope_ServerShouldReceive()
         {
             // Arrange            
@@ -243,7 +252,7 @@ namespace Lime.Protocol.Network.UnitTests
             actualSession.Metadata.ShouldBe(session.Metadata);
         }
 
-        [TestMethod]
+        [Test]
         public async Task ReceiveAsync_FullSessionEnvelope_ServerShouldReceive()
         {
             // Arrange            
@@ -284,7 +293,7 @@ namespace Lime.Protocol.Network.UnitTests
             actualSession.Metadata.ShouldBe(session.Metadata);
         }
 
-        [TestMethod]
+        [Test]
         public async Task CloseAsync_ConnectedTransport_PerformClose()
         {
             // Arrange
@@ -310,13 +319,5 @@ namespace Lime.Protocol.Network.UnitTests
             }
         }
 
-        public void Dispose()
-        {
-            try
-            {
-                Listener?.StopAsync(CancellationToken).Wait();
-            }
-            catch (AggregateException) { }
-        }
     }
 }

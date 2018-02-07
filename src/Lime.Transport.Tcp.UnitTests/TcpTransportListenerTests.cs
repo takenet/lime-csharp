@@ -4,16 +4,17 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NUnit.Framework;
 
 namespace Lime.Transport.Tcp.UnitTests
 {
-    [TestClass]
+    [TestFixture]
     public class TcpTransportListenerTests : TransportListenerTestsBase<TcpTransport, TcpTransportListener>
     {
-        public TcpTransportListenerTests()
-            : base(new Uri("net.tcp://localhost:55323"))
+        [SetUp]
+        public void SetUp()
         {
+            SetUp(new Uri("net.tcp://localhost:55323"));
         }
 
         protected override TcpTransport CreateClientTransport()

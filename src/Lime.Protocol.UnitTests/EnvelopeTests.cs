@@ -1,14 +1,14 @@
 ﻿using Lime.Protocol.Security;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NUnit.Framework;
 using Shouldly;
 
 namespace Lime.Protocol.UnitTests
 {
-    [TestClass]
+    [TestFixture]
     public class EnvelopeTests
     {
-        [TestMethod]
-        [TestCategory("ShallowCopy")]
+        [Test]
+        [Category("ShallowCopy")]
         public void ShallowCopy_PresenceRequestCommand_ReturnsClone()
         {
             // Arrange
@@ -33,8 +33,8 @@ namespace Lime.Protocol.UnitTests
             actual.Uri.ShouldBe(command.Uri);
         }
 
-        [TestMethod]
-        [TestCategory("ShallowCopy")]
+        [Test]
+        [Category("ShallowCopy")]
         public void ShallowCopy_FailedResponseCommand_ReturnsClone()
         {
             // Arrange
@@ -60,8 +60,8 @@ namespace Lime.Protocol.UnitTests
         }
 
 
-        [TestMethod]
-        [TestCategory("ShallowCopy")]
+        [Test]
+        [Category("ShallowCopy")]
         public void ShallowCopy_TextMessage_ReturnsClone()
         {
             // Arrange
@@ -81,8 +81,8 @@ namespace Lime.Protocol.UnitTests
             actual.Type.ShouldBe(message.Type);
         }
 
-        [TestMethod]
-        [TestCategory("ShallowCopy")]
+        [Test]
+        [Category("ShallowCopy")]
         public void ShallowCopy_DispatchedNotification_ReturnsClone()
         {
             // Arrange
@@ -100,8 +100,8 @@ namespace Lime.Protocol.UnitTests
             actual.Metadata.ShouldBe(notification.Metadata);
             actual.Event.ShouldBe(notification.Event);
         }
-        [TestMethod]
-        [TestCategory("ShallowCopy")]
+        [Test]
+        [Category("ShallowCopy")]
         public void ShallowCopy_NegotiatingSession_ReturnsClone()
         {
             // Arrange
