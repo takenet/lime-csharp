@@ -46,6 +46,7 @@ namespace Lime.Transport.Redis.UnitTests
             _redisFixture.Dispose();
             await Listener.StopAsync(TimeSpan.FromSeconds(5).ToCancellationToken());
             Listener.DisposeIfDisposable();
+            Listener = null;
         }
 
         public Uri ListenerUri { get; private set; }
