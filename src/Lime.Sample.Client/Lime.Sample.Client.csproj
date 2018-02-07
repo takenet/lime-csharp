@@ -15,7 +15,6 @@
   <ItemGroup>
     <ProjectReference Include="..\Lime.Messaging\Lime.Messaging.csproj" />
     <ProjectReference Include="..\Lime.Protocol\Lime.Protocol.csproj" />
-    <ProjectReference Include="..\Lime.Protocol.Serialization\Lime.Protocol.Serialization.csproj" />
     <ProjectReference Include="..\Lime.Transport.Tcp\Lime.Transport.Tcp.csproj" />
   </ItemGroup>
 

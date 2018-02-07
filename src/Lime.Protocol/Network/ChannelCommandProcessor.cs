@@ -38,24 +38,14 @@ namespace Lime.Protocol.Network
                 throw new ArgumentException("Invalid command id", nameof(requestCommand));
             }
 
-#if NETSTANDARD1_1
-            // TODO: Without the TaskCreationOptions.RunContinuationsAsynchronously, there may occurs deadlock on command results.
-            var tcs = new TaskCompletionSource<Command>();
-#else
             var tcs = new TaskCompletionSource<Command>(TaskCreationOptions.RunContinuationsAsynchronously);
-#endif
-
             if (!_pendingCommandsDictionary.TryAdd(requestCommand.Id, tcs))
             {
                 throw new InvalidOperationException("Could not register the pending command request. The command id is already in use.");
             }
             try
             {
-#if NETSTANDARD1_1
-                using (cancellationToken.Register(() => tcs.TrySetCanceled()))
-#else
                 using (cancellationToken.Register(() => tcs.TrySetCanceled(cancellationToken)))
-#endif
                 {
                     await commandSenderChannel.SendCommandAsync(requestCommand, cancellationToken).ConfigureAwait(false);
                     var result = await tcs.Task.ConfigureAwait(false);

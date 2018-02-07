@@ -20,8 +20,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lime.Messaging", "Lime.Mess
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lime.Transport.Tcp", "Lime.Transport.Tcp\Lime.Transport.Tcp.csproj", "{27142C06-D423-43CA-B027-DE01035FAA5F}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lime.Protocol.Serialization", "Lime.Protocol.Serialization\Lime.Protocol.Serialization.csproj", "{3E25EB12-76F9-4C8F-8D25-F07EEC70C7F7}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lime.Sample.Client", "Lime.Sample.Client\Lime.Sample.Client.csproj", "{60122D39-7BBD-4985-B99B-49736D8B1709}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lime.Protocol.UnitTests", "Lime.Protocol.UnitTests\Lime.Protocol.UnitTests.csproj", "{68264F2D-11EB-4EB0-91B0-8E4B248A7965}"
@@ -42,7 +40,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lime.Transport.WebSocket.Un
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lime.Protocol.ConsoleTests", "Lime.Protocol.ConsoleTests\Lime.Protocol.ConsoleTests.csproj", "{53601EB2-EDF0-4FE8-AAB7-E3C9F4DEC572}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lime.Protocol.UnitTests.Common", "Lime.Protocol.UnitTests.Common\Lime.Protocol.UnitTests.Common.csproj", "{8C3CA680-1C8D-4734-9BA8-F6F22A7FAA13}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lime.Protocol.UnitTests.Common", "Lime.Protocol.UnitTests.Common\Lime.Protocol.UnitTests.Common.csproj", "{8C3CA680-1C8D-4734-9BA8-F6F22A7FAA13}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -62,10 +60,6 @@ Global
 		{27142C06-D423-43CA-B027-DE01035FAA5F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{27142C06-D423-43CA-B027-DE01035FAA5F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{27142C06-D423-43CA-B027-DE01035FAA5F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{3E25EB12-76F9-4C8F-8D25-F07EEC70C7F7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{3E25EB12-76F9-4C8F-8D25-F07EEC70C7F7}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{3E25EB12-76F9-4C8F-8D25-F07EEC70C7F7}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{3E25EB12-76F9-4C8F-8D25-F07EEC70C7F7}.Release|Any CPU.Build.0 = Release|Any CPU
 		{60122D39-7BBD-4985-B99B-49736D8B1709}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{60122D39-7BBD-4985-B99B-49736D8B1709}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{60122D39-7BBD-4985-B99B-49736D8B1709}.Release|Any CPU.ActiveCfg = Release|Any CPU

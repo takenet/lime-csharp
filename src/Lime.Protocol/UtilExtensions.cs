@@ -10,12 +10,9 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Lime.Protocol.Network;
-
-#if !NETSTANDARD1_1
 using System.Text.RegularExpressions;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
-#endif
 
 namespace Lime.Protocol
 {
@@ -171,7 +168,6 @@ namespace Lime.Protocol
             return cts.Token;
         }
 
-#if !NETSTANDARD1_1
         /// <summary>
         /// Gets the identity value from the certificate subject.
         /// </summary>
@@ -194,7 +190,6 @@ namespace Lime.Protocol
 
             return identity;
         }
-#endif
 
         /// <summary>
         /// Gets the identity
@@ -233,7 +228,6 @@ namespace Lime.Protocol
             return values.Aggregate((a, b) => string.Format("{0},{1}", a, b)).TrimEnd(',');
         }
 
-#if !NETSTANDARD1_1
         /// <summary>
         /// Gets a SHA1 hash for the specified string.
         /// </summary>
@@ -260,7 +254,6 @@ namespace Lime.Protocol
 
             return sb.ToString();
         }
-#endif
 
         /// <summary>
         /// Creates a completed task.

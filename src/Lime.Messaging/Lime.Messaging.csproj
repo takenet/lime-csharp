@@ -6,13 +6,11 @@
     <AssemblyTitle>Lime.Messaging</AssemblyTitle>
     <VersionPrefix></VersionPrefix>
     <Authors>takenet;andrebires</Authors>
-    <TargetFrameworks>netstandard1.1;net461</TargetFrameworks>
+    <TargetFrameworks>netstandard1.6;net461</TargetFrameworks>
     <AssemblyName>Lime.Messaging</AssemblyName>
     <PackageId>Lime.Messaging</PackageId>
     <PackageTags>lime</PackageTags>
     <PackageProjectUrl>http://limeprotocol.org</PackageProjectUrl>
-    <PackageTargetFallback Condition=" '$(TargetFramework)' == 'netstandard1.1' ">$(PackageTargetFallback);dnxcore50</PackageTargetFallback>
-    <NetStandardImplicitPackageVersion Condition=" '$(TargetFramework)' == 'netstandard1.1' ">1.6.1</NetStandardImplicitPackageVersion>
     <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
     <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
     <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>

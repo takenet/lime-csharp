@@ -23,19 +23,14 @@ namespace Lime.Protocol.Client
         /// </exception>
         public EstablishedClientChannelBuilder(IClientChannelBuilder clientChannelBuilder)
         {
-            if (clientChannelBuilder == null) throw new ArgumentNullException(nameof(clientChannelBuilder));
-            ChannelBuilder = clientChannelBuilder;
+            ChannelBuilder = clientChannelBuilder ?? throw new ArgumentNullException(nameof(clientChannelBuilder));
             _establishedHandlers = new List<Func<IClientChannel, CancellationToken, Task>>();
             CompressionSelector = options => options.First();
             EncryptionSelector = options => options.First();
             Authenticator = (options, roundtrip) => new GuestAuthentication();
             EstablishmentTimeout = TimeSpan.FromSeconds(30);
             Identity = new Identity(EnvelopeId.NewId(), clientChannelBuilder.ServerUri.Host);
-#if NETSTANDARD1_1
-            Instance = "default";
-#else
             Instance = Environment.MachineName;
-#endif
         }
 
         /// <summary>
@@ -76,13 +71,7 @@ namespace Lime.Protocol.Client
         /// <summary>
         /// Gets the established handlers.
         /// </summary>
-        public IEnumerable<Func<IClientChannel, CancellationToken, Task>> EstablishedHandlers =>
-#if NETSTANDARD1_1
-            new List<Func<IClientChannel, CancellationToken, Task>>(_establishedHandlers);
-            
-#else
-            _establishedHandlers.AsReadOnly();
-#endif
+        public IEnumerable<Func<IClientChannel, CancellationToken, Task>> EstablishedHandlers => _establishedHandlers.AsReadOnly();
 
         /// <summary>
         /// Sets the timeout to Build and establish a new session

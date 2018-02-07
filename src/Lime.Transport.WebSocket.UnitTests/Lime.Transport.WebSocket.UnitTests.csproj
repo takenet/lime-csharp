@@ -12,7 +12,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Lime.Protocol\Lime.Protocol.csproj" />
-    <ProjectReference Include="..\Lime.Protocol.Serialization\Lime.Protocol.Serialization.csproj" />
     <ProjectReference Include="..\Lime.Transport.Tcp\Lime.Transport.Tcp.csproj" />
     <ProjectReference Include="..\Lime.Transport.WebSocket\Lime.Transport.WebSocket.csproj" />
     <ProjectReference Include="..\Lime.Protocol.UnitTests.Common\Lime.Protocol.UnitTests.Common.csproj" />

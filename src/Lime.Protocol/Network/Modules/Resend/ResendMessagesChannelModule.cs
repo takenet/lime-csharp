@@ -210,9 +210,8 @@ namespace Lime.Protocol.Network.Modules.Resend
                 }
                 catch (Exception ex)
                 {
-#if !NETSTANDARD1_1
                     Trace.TraceError(ex.ToString());
-#endif
+
                     if (_channel.State != SessionState.Established || !_channel.Transport.IsConnected) break;                    
                     throw;
                 }
