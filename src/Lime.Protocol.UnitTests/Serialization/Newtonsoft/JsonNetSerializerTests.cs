@@ -1266,6 +1266,48 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             Assert.AreEqual(text, textContent.Text);
         }
 
+
+        [Test]
+        [Category("Deserialize")]
+        public void Deserialize_TextMessageWithNullFromTo_ReturnsValidInstance()
+        {
+            var target = GetTarget();
+
+            var id = EnvelopeId.NewId();
+            Node from = null;
+            Node pp = Dummy.CreateNode();
+            Node to = null;
+
+            string randomKey1 = "randomString1";
+            string randomKey2 = "randomString2";
+            string randomString1 = Dummy.CreateRandomStringExtended(50);
+            string randomString2 = Dummy.CreateRandomStringExtended(50);
+
+            var text = Dummy.CreateRandomStringExtended(50);
+
+            string json =
+                $"{{\"type\":\"text/plain\",\"content\":\"{text.Escape()}\",\"id\":\"{id}\",\"from\":null,\"pp\":\"{pp}\",\"to\":null,\"metadata\":{{\"{randomKey1}\":\"{randomString1.Escape()}\",\"{randomKey2}\":\"{randomString2.Escape()}\"}}}}";
+
+            var envelope = target.Deserialize(json);
+
+            var message = envelope.ShouldBeOfType<Message>();
+            Assert.AreEqual(id, message.Id);
+            Assert.AreEqual(from, message.From);
+            Assert.AreEqual(pp, message.Pp);
+            Assert.AreEqual(to, message.To);
+            Assert.IsNotNull(message.Metadata);
+            Assert.IsTrue(message.Metadata.ContainsKey(randomKey1));
+            Assert.AreEqual(message.Metadata[randomKey1], randomString1);
+            Assert.IsTrue(message.Metadata.ContainsKey(randomKey2));
+            Assert.AreEqual(message.Metadata[randomKey2], randomString2);
+
+            message.Content.ShouldBeOfType<PlainText>();
+
+            var textContent = (PlainText)message.Content;
+            Assert.AreEqual(text, textContent.Text);
+        }
+
+
         [Test]
         [Category("Deserialize")]
         public void Deserialize_ChatStateMessage_ReturnsValidInstance()
@@ -2014,6 +2056,51 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             var webLink = actualMessage.Content.ShouldBeOfType<WebLink>();
             webLink.Uri.ShouldNotBeNull();
             webLink.Uri.OriginalString.ShouldBe("http://fake.domain.com:5678?email=anyone%40gmail.com&address=https%3A%2F%2Fgoogle.com%3Fq%3Dbanana%2520azul");
+        }
+
+        [Test]
+        [Category("Deserialize")]
+        public void Deserialize_SelectMessage_ReturnsValidInstance()
+        {
+            // Arrange
+            var json =
+                "{\"type\":\"application/vnd.lime.select+json\",\"content\":{\"text\":\"Select an option:\",\"options\":[{\"text\":\"Option 1\"}]},\"id\":\"25058656-ea3e-4f2a-9b27-fe14d1470796\",\"from\":\"6fjghzjm@3j9saev4nj.com/gtax0\",\"to\":\"cghusdgu@f0m512bqfb.com/jjjak\"}";
+            var target = GetTarget();
+
+            // Act
+            var actual = target.Deserialize(json);
+
+            // Assert
+            var actualMessage = actual.ShouldBeOfType<Message>();
+            var select = actualMessage.Content.ShouldBeOfType<Select>();
+            select.Text.ShouldBe("Select an option:");
+            select.Options.ShouldNotBeNull();
+            select.Options.Length.ShouldBe(1);
+            select.Options[0].Text.ShouldBe("Option 1");
+        }
+
+
+        [Test]
+        [Category("Deserialize")]
+        public void Deserialize_SelectWithOptionWithNullType_ReturnsValidInstance()
+        {
+            // Arrange
+            var json =
+                "{\"type\":\"application/vnd.lime.select+json\",\"content\":{\"text\":\"Select an option:\",\"options\":[{\"text\":\"Option 1\",\"value\":null,\"type\":null}]},\"id\":\"25058656-ea3e-4f2a-9b27-fe14d1470796\",\"from\":\"6fjghzjm@3j9saev4nj.com/gtax0\",\"to\":\"cghusdgu@f0m512bqfb.com/jjjak\"}";
+            var target = GetTarget();
+
+            // Act
+            var actual = target.Deserialize(json);
+
+            // Assert
+            var actualMessage = actual.ShouldBeOfType<Message>();
+            var select = actualMessage.Content.ShouldBeOfType<Select>();
+            select.Text.ShouldBe("Select an option:");
+            select.Options.ShouldNotBeNull();
+            select.Options.Length.ShouldBe(1);
+            select.Options[0].Text.ShouldBe("Option 1");
+            select.Options[0].Type.ShouldBeNull();
+            select.Options[0].Value.ShouldBeNull();
         }
 
         #endregion

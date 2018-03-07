@@ -56,7 +56,8 @@ namespace Lime.Protocol.Serialization.Newtonsoft.Converters
                 
                 // Check if the 'type' property is present to the JSON
                 JToken mediaTypeJToken;
-                if (jObject.TryGetValue(DocumentContainer.TYPE_KEY, out mediaTypeJToken))
+                if (jObject.TryGetValue(DocumentContainer.TYPE_KEY, out mediaTypeJToken) &&
+                    mediaTypeJToken.Type != JTokenType.Null)
                 {
                     // Find the document property
                     var documentProperty =
