@@ -18,7 +18,7 @@ namespace Lime.Transport.WebSocket
 
         private readonly IEnvelopeSerializer _envelopeSerializer;
         private readonly ITraceWriter _traceWriter;
-        private readonly JsonBuffer _jsonBuffer;
+        private readonly byte[] _jsonBuffer;
         private readonly SemaphoreSlim _sendSemaphore;
         private readonly BufferBlock<Envelope> _receivedEnvelopeBufferBlock;
 
@@ -34,12 +34,12 @@ namespace Lime.Transport.WebSocket
             IEnvelopeSerializer envelopeSerializer,
             ITraceWriter traceWriter = null,
             int bufferSize = 8192,
-            int receiveBoundedCapacity = 5)
+            int receiveBoundedCapacity = -1)
         {
             WebSocket = webSocket;
             _envelopeSerializer = envelopeSerializer;
             _traceWriter = traceWriter;
-            _jsonBuffer = new JsonBuffer(bufferSize);
+            _jsonBuffer = new byte[bufferSize];
             _sendSemaphore = new SemaphoreSlim(1);
             CloseStatus = WebSocketCloseStatus.NormalClosure;
             CloseStatusDescription = string.Empty;
@@ -119,7 +119,7 @@ namespace Lime.Transport.WebSocket
                 {
                     try
                     {
-                        var buffer = new ArraySegment<byte>(_jsonBuffer.Buffer);
+                        var buffer = new ArraySegment<byte>(_jsonBuffer);
                         while (true)
                         {
                             var receiveResult =
@@ -136,24 +136,19 @@ namespace Lime.Transport.WebSocket
                                 CloseStatusDescription = "An unsupported message type was received";
                                 throw new InvalidOperationException(CloseStatusDescription);
                             }
-
-                            _jsonBuffer.BufferCurPos += receiveResult.Count;
+                            
                             if (receiveResult.EndOfMessage) break;
                         }
 
-                        byte[] jsonBytes;
-                        if (_jsonBuffer.TryExtractJsonFromBuffer(out jsonBytes))
-                        {
-                            var envelopeJson = Encoding.UTF8.GetString(jsonBytes);
+                        var envelopeJson = Encoding.UTF8.GetString(buffer.Array);
 
-                            if (_traceWriter != null &&
-                                _traceWriter.IsEnabled)
-                            {
-                                await _traceWriter.TraceAsync(envelopeJson, DataOperation.Receive).ConfigureAwait(false);
-                            }
-                            var envelope = _envelopeSerializer.Deserialize(envelopeJson);
-                            await _receivedEnvelopeBufferBlock.SendAsync(envelope, cancellationToken);
+                        if (_traceWriter != null &&
+                            _traceWriter.IsEnabled)
+                        {
+                            await _traceWriter.TraceAsync(envelopeJson, DataOperation.Receive).ConfigureAwait(false);
                         }
+                        var envelope = _envelopeSerializer.Deserialize(envelopeJson);
+                        await _receivedEnvelopeBufferBlock.SendAsync(envelope, cancellationToken);
                     }
                     catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
                     {
@@ -282,7 +277,6 @@ namespace Lime.Transport.WebSocket
         {
             if (disposing)
             {
-                _jsonBuffer.Dispose();
                 WebSocket.Dispose();
                 _sendSemaphore.Dispose();
                 _listenerCts?.Dispose();
