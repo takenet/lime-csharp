@@ -8,7 +8,9 @@ using Lime.Protocol;
 using Lime.Protocol.Network;
 using Lime.Protocol.Serialization;
 using Lime.Protocol.Server;
+#if net461
 using SslCertBinding.Net;
+#endif
 
 namespace Lime.Transport.WebSocket
 {
@@ -23,7 +25,7 @@ namespace Lime.Transport.WebSocket
         public static readonly Guid DefaultApplicationId = Guid.Parse("46754fc2-d8e2-4b41-a3f0-ed1878c77e59");
         public static readonly TimeSpan StopTimeout = TimeSpan.FromSeconds(30);
 
-        private readonly X509CertificateInfo _tlsCertificate; 
+        private readonly X509CertificateInfo _tlsCertificate;
         private readonly IEnvelopeSerializer _envelopeSerializer;
         private readonly ITraceWriter _traceWriter;
         private readonly int _bufferSize;
@@ -55,7 +57,7 @@ namespace Lime.Transport.WebSocket
         public WebSocketTransportListener(
             Uri listenerUri,
             X509CertificateInfo tlsCertificate,
-            IEnvelopeSerializer envelopeSerializer, 
+            IEnvelopeSerializer envelopeSerializer,
             ITraceWriter traceWriter = null,
             int bufferSize = 16384,
             TimeSpan? keepAliveInterval = null,
@@ -86,7 +88,7 @@ namespace Lime.Transport.WebSocket
             _applicationId = applicationId ?? DefaultApplicationId;
             _keepAliveInterval = keepAliveInterval ?? System.Net.WebSockets.WebSocket.DefaultKeepAliveInterval;
             _httpListener = new HttpListener();
-            
+
             var boundedCapacity = new ExecutionDataflowBlockOptions()
             {
                 BoundedCapacity = acceptTransportBoundedCapacity
@@ -123,10 +125,12 @@ namespace Lime.Transport.WebSocket
                 listenerUri.Scheme.Equals(UriSchemeWebSocketSecure))
             {
                 var ipPort = new IPEndPoint(IPAddress.Parse("0.0.0.0"), listenerUri.Port);
+#if net461
                 var config = new CertificateBindingConfiguration();
                 config.Bind(
                     new CertificateBinding(
                         _tlsCertificate.Thumbprint, _tlsCertificate.Store, ipPort, _applicationId));
+#endif
             }
 
             _httpListener.Start();
