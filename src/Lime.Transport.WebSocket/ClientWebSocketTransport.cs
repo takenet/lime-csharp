@@ -13,8 +13,9 @@ namespace Lime.Transport.WebSocket
         public ClientWebSocketTransport(
             IEnvelopeSerializer envelopeSerializer, 
             ITraceWriter traceWriter = null, 
-            int bufferSize = 8192)
-            : base(new ClientWebSocket(), envelopeSerializer, traceWriter, bufferSize)
+            int bufferSize = 8192,
+            WebSocketMessageType webSocketMessageType = WebSocketMessageType.Text)
+            : base(new ClientWebSocket(), envelopeSerializer, traceWriter, bufferSize, -1, webSocketMessageType)
         {
 
         }

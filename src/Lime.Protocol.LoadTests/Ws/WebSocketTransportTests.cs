@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -12,6 +13,7 @@ using Lime.Protocol.Server;
 using Lime.Protocol.UnitTests;
 using Lime.Transport.Tcp;
 using Lime.Transport.WebSocket;
+using Newtonsoft.Json;
 using NUnit.Framework;
 using Shouldly;
 
@@ -33,12 +35,12 @@ namespace Lime.Protocol.LoadTests.WebSocket
             _uri = new Uri("ws://localhost:8081");
             _cancellationToken = TimeSpan.FromSeconds(30).ToCancellationToken();
             _envelopeSerializer = new FakeEnvelopeSerializer(10);
-            _transportListener = new WebSocketTransportListener(_uri, null, _envelopeSerializer, trace);
+            _transportListener = new WebSocketTransportListener(_uri, null, _envelopeSerializer, trace, webSocketMessageType: System.Net.WebSockets.WebSocketMessageType.Text);
             _transportListener.StartAsync(_cancellationToken).Wait();
 
             var serverTcpTransportTask = _transportListener.AcceptTransportAsync(_cancellationToken);
 
-            _clientTransport = new ClientWebSocketTransport(_envelopeSerializer, trace, 16 * 1024);
+            _clientTransport = new ClientWebSocketTransport(_envelopeSerializer, trace, 16384, System.Net.WebSockets.WebSocketMessageType.Text);
             _clientTransport.OpenAsync(_uri, _cancellationToken).Wait();
 
             _serverTransport = (WebSocketTransport)serverTcpTransportTask.Result;
@@ -58,6 +60,34 @@ namespace Lime.Protocol.LoadTests.WebSocket
         {
             // Arrange
             var count = 10000;
+            var envelopes = Enumerable
+                .Range(0, count)
+                .Select(i => Dummy.CreateMessage(Dummy.CreateTextContent()));
+
+            var receivedEnvelopes = Enumerable
+                .Range(0, count)
+                .Select(i => _serverTransport.ReceiveAsync(_cancellationToken))
+                .ToArray();
+
+            // Act
+            var sw = Stopwatch.StartNew();
+            foreach (var envelope in envelopes)
+            {
+                await _clientTransport.SendAsync(envelope, _cancellationToken);
+            }
+
+            await Task.WhenAll(receivedEnvelopes);
+            sw.Stop();
+
+            // Assert
+            sw.ElapsedMilliseconds.ShouldBeLessThan(count * 2);
+        }
+
+        [Test]
+        public async Task Send100000EnvelopesAsync()
+        {
+            // Arrange
+            var count = 100000;
             var envelopes = Enumerable
                 .Range(0, count)
                 .Select(i => Dummy.CreateMessage(Dummy.CreateTextContent()));
@@ -135,6 +165,24 @@ namespace Lime.Protocol.LoadTests.WebSocket
 
             // Assert
             sw.ElapsedMilliseconds.ShouldBeLessThan(count * 2);
+        }
+
+        [Test]
+        public async Task SendHugeEnvelope()
+        {
+            // Act
+            var sw = Stopwatch.StartNew();
+
+            var path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory);
+            var content = File.ReadAllLines(Path.Combine(path, "huge-json.txt"));
+            var envelope = JsonConvert.DeserializeObject<Command>(string.Join("", content));
+
+            await _clientTransport.SendAsync(envelope, _cancellationToken);
+            await _serverTransport.ReceiveAsync(_cancellationToken);
+            sw.Stop();
+
+            // Assert
+            sw.ElapsedMilliseconds.ShouldBeLessThan(100);
         }
     }
 }

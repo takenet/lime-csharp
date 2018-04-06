@@ -26,4 +26,10 @@
     <PackageReference Include="Shouldly" Version="3.0.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="huge-json.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>
