@@ -164,21 +164,14 @@ namespace Lime.Protocol.LoadTests.Tcp
         [Test]
         public async Task SendHugeEnvelope()
         {
-            // Act
             var sw = Stopwatch.StartNew();
 
-            var path = System.IO.Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory);
+            var path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory);
             var content = File.ReadAllLines(Path.Combine(path, "huge-json.txt"));
             var envelope = JsonConvert.DeserializeObject<Command>(string.Join("", content));
 
             await _clientTransport.SendAsync(envelope, _cancellationToken);
-
-            var receivedEnvelopes = Enumerable
-                .Range(0, 1)
-                .Select(i => _serverTransport.ReceiveAsync(_cancellationToken))
-                .ToArray();
-
-            await Task.WhenAll(receivedEnvelopes);
+            await _serverTransport.ReceiveAsync(_cancellationToken);
             sw.Stop();
 
             // Assert
