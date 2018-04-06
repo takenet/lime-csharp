@@ -137,7 +137,7 @@ namespace Lime.Protocol.Network
             var increasedBuffer = _arrayPool.Rent(_buffer.Length + _bufferSize);
             System.Buffer.BlockCopy(currentBuffer, 0, increasedBuffer, 0, currentBuffer.Length);
             _buffer = increasedBuffer;
-            _arrayPool.Return(currentBuffer);
+            _arrayPool.Return(currentBuffer, true);
         }
 
         private void Reset()

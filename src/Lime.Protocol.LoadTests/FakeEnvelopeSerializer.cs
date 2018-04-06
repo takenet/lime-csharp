@@ -26,7 +26,7 @@ namespace Lime.Protocol.LoadTests
                 {
                     if (i % 5 == 0)
                     {
-                        return Dummy.CreateNotification(Event.Received);
+                        return Dummy.CreateMessage(Dummy.CreateTextContent()); 
                     }
                     if (i % 3 == 0)
                     {
@@ -34,7 +34,7 @@ namespace Lime.Protocol.LoadTests
                     }
                     if (i % 2 == 0)
                     {
-                        return Dummy.CreateMessage(Dummy.CreateTextContent());
+                        return Dummy.CreateNotification(Event.Received);
                     }
                     return Dummy.CreateMessage(Dummy.CreateSelect());
                 })

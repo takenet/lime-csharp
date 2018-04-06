@@ -20,7 +20,7 @@ using Shouldly;
 namespace Lime.Protocol.LoadTests.WebSocket
 {
 
-    public class WebSocketTests : IDisposable
+    public class WebSocketTransportBinaryTests : IDisposable
     {
         private Uri _uri;
         private CancellationToken _cancellationToken;
@@ -29,18 +29,18 @@ namespace Lime.Protocol.LoadTests.WebSocket
         private ITransport _clientTransport;
         private ITransport _serverTransport;
 
-        public WebSocketTests()
+        public WebSocketTransportBinaryTests()
         {
             var trace = new CustomTraceWriter();
             _uri = new Uri("ws://localhost:8081");
             _cancellationToken = TimeSpan.FromSeconds(30).ToCancellationToken();
             _envelopeSerializer = new FakeEnvelopeSerializer(10);
-            _transportListener = new WebSocketTransportListener(_uri, null, _envelopeSerializer, trace, webSocketMessageType: System.Net.WebSockets.WebSocketMessageType.Text);
+            _transportListener = new WebSocketTransportListener(_uri, null, _envelopeSerializer, trace, webSocketMessageType: System.Net.WebSockets.WebSocketMessageType.Binary);
             _transportListener.StartAsync(_cancellationToken).Wait();
 
             var serverTcpTransportTask = _transportListener.AcceptTransportAsync(_cancellationToken);
 
-            _clientTransport = new ClientWebSocketTransport(_envelopeSerializer, trace, 16384, System.Net.WebSockets.WebSocketMessageType.Text);
+            _clientTransport = new ClientWebSocketTransport(_envelopeSerializer, trace, 16384, System.Net.WebSockets.WebSocketMessageType.Binary);
             _clientTransport.OpenAsync(_uri, _cancellationToken).Wait();
 
             _serverTransport = (WebSocketTransport)serverTcpTransportTask.Result;
@@ -54,12 +54,11 @@ namespace Lime.Protocol.LoadTests.WebSocket
             _transportListener.StopAsync(_cancellationToken).Wait();
         }
 
-
         [Test]
-        public async Task Send10000EnvelopesAsync()
+        public async Task Send100000EnvelopesAsync()
         {
             // Arrange
-            var count = 10000;
+            var count = 100000;
             var envelopes = Enumerable
                 .Range(0, count)
                 .Select(i => Dummy.CreateMessage(Dummy.CreateTextContent()));
@@ -84,10 +83,10 @@ namespace Lime.Protocol.LoadTests.WebSocket
         }
 
         [Test]
-        public async Task Send100000EnvelopesAsync()
+        public async Task Send10000EnvelopesAsync()
         {
             // Arrange
-            var count = 100000;
+            var count = 10000;
             var envelopes = Enumerable
                 .Range(0, count)
                 .Select(i => Dummy.CreateMessage(Dummy.CreateTextContent()));

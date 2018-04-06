@@ -16,8 +16,9 @@ namespace Lime.Transport.WebSocket
             HttpListenerWebSocketContext context, 
             IEnvelopeSerializer envelopeSerializer, 
             ITraceWriter traceWriter = null, 
-            int bufferSize = 8192)
-            : base(context.WebSocket, envelopeSerializer, traceWriter, bufferSize)
+            int bufferSize = 8192,
+            WebSocketMessageType webSocketMessageType = WebSocketMessageType.Text)
+            : base(context.WebSocket, envelopeSerializer, traceWriter, bufferSize, -1, webSocketMessageType)
         {
             _context = context;
         }

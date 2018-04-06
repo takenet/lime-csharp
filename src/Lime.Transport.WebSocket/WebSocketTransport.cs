@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.WebSockets;
@@ -14,13 +15,19 @@ namespace Lime.Transport.WebSocket
 {
     public abstract class WebSocketTransport : TransportBase, IDisposable
     {
+        public const int DEFAULT_BUFFER_SIZE = 8192;
+        public const int DEFAULT_MAX_BUFFER_SIZE = DEFAULT_BUFFER_SIZE * 1024;
+
         private static readonly TimeSpan CloseTimeout = TimeSpan.FromSeconds(5);
 
         private readonly IEnvelopeSerializer _envelopeSerializer;
         private readonly ITraceWriter _traceWriter;
-        private readonly byte[] _jsonBuffer;
+        private readonly ArrayPool<byte> _arrayPool;
+        private readonly int _bufferSize;
+        private readonly JsonBuffer _jsonBuffer;
         private readonly SemaphoreSlim _sendSemaphore;
         private readonly BufferBlock<Envelope> _receivedEnvelopeBufferBlock;
+        private readonly WebSocketMessageType _webSocketMessageType;
 
         private CancellationTokenSource _listenerCts;
         private Task _listenerTask;
@@ -33,13 +40,17 @@ namespace Lime.Transport.WebSocket
             System.Net.WebSockets.WebSocket webSocket,
             IEnvelopeSerializer envelopeSerializer,
             ITraceWriter traceWriter = null,
-            int bufferSize = 8192,
-            int receiveBoundedCapacity = -1)
+            int bufferSize = DEFAULT_BUFFER_SIZE,
+            int receiveBoundedCapacity = -1,
+            WebSocketMessageType webSocketMessageType = WebSocketMessageType.Text)
         {
             WebSocket = webSocket;
             _envelopeSerializer = envelopeSerializer;
             _traceWriter = traceWriter;
-            _jsonBuffer = new byte[bufferSize];
+            _arrayPool = ArrayPool<byte>.Shared;
+            _bufferSize = bufferSize;
+            _jsonBuffer = new JsonBuffer(bufferSize, DEFAULT_MAX_BUFFER_SIZE, _arrayPool);
+            _webSocketMessageType = webSocketMessageType;
             _sendSemaphore = new SemaphoreSlim(1);
             CloseStatus = WebSocketCloseStatus.NormalClosure;
             CloseStatusDescription = string.Empty;
@@ -75,7 +86,7 @@ namespace Lime.Transport.WebSocket
 
             try
             {
-                await WebSocket.SendAsync(new ArraySegment<byte>(jsonBytes), WebSocketMessageType.Text, true,
+                await WebSocket.SendAsync(new ArraySegment<byte>(jsonBytes), _webSocketMessageType, true,
                     cancellationToken).ConfigureAwait(false);
             }
             catch (WebSocketException)
@@ -119,9 +130,9 @@ namespace Lime.Transport.WebSocket
                 {
                     try
                     {
-                        var buffer = new ArraySegment<byte>(_jsonBuffer);
                         while (true)
                         {
+                            var buffer = new ArraySegment<byte>(_arrayPool.Rent(_bufferSize));
                             var receiveResult =
                                 await WebSocket.ReceiveAsync(buffer, cancellationToken).ConfigureAwait(false);
                             if (receiveResult.MessageType == WebSocketMessageType.Close)
@@ -130,29 +141,46 @@ namespace Lime.Transport.WebSocket
                                 break;
                             }
 
-                            if (receiveResult.MessageType != WebSocketMessageType.Text)
+                            if (receiveResult.MessageType != _webSocketMessageType)
                             {
                                 CloseStatus = WebSocketCloseStatus.InvalidMessageType;
                                 CloseStatusDescription = "An unsupported message type was received";
                                 throw new InvalidOperationException(CloseStatusDescription);
                             }
 
+                            if (_jsonBuffer.Buffer.Length < receiveResult.Count + _jsonBuffer.BufferCurPos)
+                            {
+                                _jsonBuffer.IncreaseBuffer();
+                            }
+
+                            Buffer.BlockCopy(buffer.Array, 0, _jsonBuffer.Buffer, _jsonBuffer.BufferCurPos, receiveResult.Count);
+                            _arrayPool.Return(buffer.Array, true);
+
+                            _jsonBuffer.BufferCurPos += receiveResult.Count;
                             if (receiveResult.EndOfMessage) break;
                         }
 
-                        var envelopeJson = Encoding.UTF8.GetString(buffer.Array);
-
-                        if (_traceWriter != null &&
-                            _traceWriter.IsEnabled)
+                        byte[] jsonBytes;
+                        if (_jsonBuffer.TryExtractJsonFromBuffer(out jsonBytes))
                         {
-                            await _traceWriter.TraceAsync(envelopeJson, DataOperation.Receive).ConfigureAwait(false);
+                            var envelopeJson = Encoding.UTF8.GetString(jsonBytes);
+
+                            if (_traceWriter != null &&
+                                _traceWriter.IsEnabled)
+                            {
+                                await _traceWriter.TraceAsync(envelopeJson, DataOperation.Receive).ConfigureAwait(false);
+                            }
+                            var envelope = _envelopeSerializer.Deserialize(envelopeJson);
+                            await _receivedEnvelopeBufferBlock.SendAsync(envelope, cancellationToken);
                         }
-                        var envelope = _envelopeSerializer.Deserialize(envelopeJson);
-                        await _receivedEnvelopeBufferBlock.SendAsync(envelope, cancellationToken);
                     }
                     catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
                     {
                         break;
+                    }
+                    catch (Exception ex)
+                    {
+
                     }
                 }
             }
