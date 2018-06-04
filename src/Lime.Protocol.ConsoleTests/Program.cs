@@ -18,6 +18,7 @@ namespace Lime.Protocol.ConsoleTests
     {
         private static DateTime _startDateTime;
         private static int _counter;
+        private static double _maxAverage;
 
         static void Main(string[] args) => MainAsync(args).GetAwaiter().GetResult();
 
@@ -75,12 +76,12 @@ namespace Lime.Protocol.ConsoleTests
 
                 WriteLine("Client started.");
 
-                
                 var reportTask = Task.Run(() => DoReport(cts.Token), cts.Token);
 
                 while (true)
                 {
                     SetCursorPosition(0, 5);
+                    Write("                                                 ");
                     Write("                                                 ");
                     Write("                                                 ");
                     Write("                                                 ");
@@ -156,6 +157,7 @@ namespace Lime.Protocol.ConsoleTests
         {
             _startDateTime = DateTime.UtcNow;
             _counter = 0;
+            _maxAverage = 0;
         }
 
         private static void Report()
@@ -174,6 +176,11 @@ namespace Lime.Protocol.ConsoleTests
                 average = _counter / elapsed.TotalSeconds;
             }
             WriteLine($"Average: {average:N3} messages/second           ");
+            if (average > _maxAverage)
+            {
+                _maxAverage = average;
+            }
+            WriteLine($"Max average: {_maxAverage:N3} messages/second           ");
 
             SetCursorPosition(cursorLeft, cursorTop);
         }

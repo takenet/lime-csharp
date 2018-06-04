@@ -21,13 +21,15 @@ namespace Lime.Protocol.Client
         private readonly IOnDemandClientChannel[] _channels;
         private readonly IChannelListener[] _listeners;
         private readonly SemaphoreSlim _semaphore;
-        private readonly BufferBlock<Envelope> _outputBufferBlock;
-        private readonly ActionBlock<Envelope>[] _outputActionBlocks;
+        private readonly BufferBlock<BufferedEnvelope> _outputBufferBlock;
+        private readonly ActionBlock<BufferedEnvelope>[] _outputActionBlocks;
         private readonly BufferBlock<Message> _inputMessageBufferBlock;
         private readonly BufferBlock<Notification> _inputNotificationBufferBlock;
         private readonly TransformBlock<Command, Command> _processCommandTransformBlock;
         private readonly BufferBlock<Command> _inputCommandBufferBlock;
         private readonly IChannelCommandProcessor _channelCommandProcessor;
+
+        private long _outputCounter;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MultiplexerClientChannel"/> class.
@@ -82,13 +84,13 @@ namespace Lime.Protocol.Client
             _processCommandTransformBlock.LinkTo(DataflowBlock.NullTarget<Command>(), c => c == null);
             
             // The global output buffer
-            _outputBufferBlock = new BufferBlock<Envelope>(new DataflowBlockOptions()
+            _outputBufferBlock = new BufferBlock<BufferedEnvelope>(new DataflowBlockOptions()
             {
                 BoundedCapacity = outputBufferSize
             });
 
             // An output action block per channel
-            _outputActionBlocks = new ActionBlock<Envelope>[count];
+            _outputActionBlocks = new ActionBlock<BufferedEnvelope>[count];
             _channels = new IOnDemandClientChannel[count];
             _listeners = new IChannelListener[count];
 
@@ -113,9 +115,15 @@ namespace Lime.Protocol.Client
                     _processCommandTransformBlock);
 
                 // Create a single bounded action block for each channel
-                _outputActionBlocks[i] = new ActionBlock<Envelope>(async e => await SendToChannelAsync(channel, e).ConfigureAwait(false),
-                new ExecutionDataflowBlockOptions() { BoundedCapacity = 1, MaxDegreeOfParallelism = 1});
-                _outputBufferBlock.LinkTo(_outputActionBlocks[i], new DataflowLinkOptions() { PropagateCompletion = true});
+                _outputActionBlocks[i] = new ActionBlock<BufferedEnvelope>(
+                    async e => await SendToChannelAsync(channel, e.Envelope).ConfigureAwait(false),
+                    new ExecutionDataflowBlockOptions() { BoundedCapacity = 1, MaxDegreeOfParallelism = 1 });
+
+                var channelId = i;
+                _outputBufferBlock.LinkTo(
+                    _outputActionBlocks[i],
+                    new DataflowLinkOptions() { PropagateCompletion = true},
+                    e => e.ChannelId == channelId);
 
                 _channels[i] = channel;
             }
@@ -244,7 +252,10 @@ namespace Lime.Protocol.Client
         private async Task SendToBufferAsync(Envelope envelope, CancellationToken cancellationToken)
         {
             if (envelope == null) throw new ArgumentNullException(nameof(envelope));
-            if (!await _outputBufferBlock.SendAsync(envelope, cancellationToken).ConfigureAwait(false))
+            var channelId = Interlocked.Increment(ref _outputCounter) % _channels.Length;
+
+            var bufferedEnvelope = new BufferedEnvelope(envelope, channelId);
+            if (!await _outputBufferBlock.SendAsync(bufferedEnvelope, cancellationToken).ConfigureAwait(false))
             {
                 throw new InvalidOperationException("The channel pipeline is complete");
             }
@@ -283,6 +294,19 @@ namespace Lime.Protocol.Client
             {
                 channel.DisposeIfDisposable();
             }
+        }
+
+        private class BufferedEnvelope
+        {
+            public BufferedEnvelope(Envelope envelope, long channelId)
+            {
+                Envelope = envelope;
+                ChannelId = channelId;
+            }
+
+            public Envelope Envelope { get; }
+
+            public long ChannelId { get; }
         }
         
     }
