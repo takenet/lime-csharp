@@ -8,7 +8,9 @@ using Lime.Protocol;
 using Lime.Protocol.Network;
 using Lime.Protocol.Serialization;
 using Lime.Protocol.Server;
+#if net461
 using SslCertBinding.Net;
+#endif
 
 namespace Lime.Transport.WebSocket
 {
@@ -23,7 +25,7 @@ namespace Lime.Transport.WebSocket
         public static readonly Guid DefaultApplicationId = Guid.Parse("46754fc2-d8e2-4b41-a3f0-ed1878c77e59");
         public static readonly TimeSpan StopTimeout = TimeSpan.FromSeconds(30);
 
-        private readonly X509CertificateInfo _tlsCertificate; 
+        private readonly X509CertificateInfo _tlsCertificate;
         private readonly IEnvelopeSerializer _envelopeSerializer;
         private readonly ITraceWriter _traceWriter;
         private readonly int _bufferSize;
@@ -35,6 +37,7 @@ namespace Lime.Transport.WebSocket
         private readonly TransformBlock<HttpListenerContext, ITransport> _httpListenerWebSocketContextTransformBlock;
         private readonly BufferBlock<ITransport> _transportBufferBufferBlock;
         private readonly ITargetBlock<ITransport> _nullTargetBlock;
+        private readonly WebSocketMessageType _webSocketMessageType;
         private CancellationTokenSource _acceptTransportCts;
         private Task _acceptTransportTask;
 
@@ -50,18 +53,20 @@ namespace Lime.Transport.WebSocket
         /// <param name="bindCertificateToPort">if set to <c>true</c> indicates that the provided certificate should be bound to the listener IP address.</param>
         /// <param name="applicationId">The application id for binding the certificate to the listene port.</param>
         /// <param name="acceptTransportBoundedCapacity">The number of concurrent transport connections that can be accepted in parallel.</param>
+        /// <param name="webSocketMessageType">Indicates the message type</param>
         /// <exception cref="ArgumentNullException">
         /// </exception>
         public WebSocketTransportListener(
             Uri listenerUri,
             X509CertificateInfo tlsCertificate,
-            IEnvelopeSerializer envelopeSerializer, 
+            IEnvelopeSerializer envelopeSerializer,
             ITraceWriter traceWriter = null,
             int bufferSize = 16384,
             TimeSpan? keepAliveInterval = null,
             bool bindCertificateToPort = true,
             Guid? applicationId = null,
-            int acceptTransportBoundedCapacity = 10)
+            int acceptTransportBoundedCapacity = 10,
+            WebSocketMessageType webSocketMessageType = WebSocketMessageType.Text)
         {
             if (listenerUri == null) throw new ArgumentNullException(nameof(listenerUri));
 
@@ -86,7 +91,7 @@ namespace Lime.Transport.WebSocket
             _applicationId = applicationId ?? DefaultApplicationId;
             _keepAliveInterval = keepAliveInterval ?? System.Net.WebSockets.WebSocket.DefaultKeepAliveInterval;
             _httpListener = new HttpListener();
-            
+
             var boundedCapacity = new ExecutionDataflowBlockOptions()
             {
                 BoundedCapacity = acceptTransportBoundedCapacity
@@ -103,6 +108,7 @@ namespace Lime.Transport.WebSocket
             _httpListenerContextBufferBlock.LinkTo(_httpListenerWebSocketContextTransformBlock);
             _httpListenerWebSocketContextTransformBlock.LinkTo(_transportBufferBufferBlock, t => t != null);
             _httpListenerWebSocketContextTransformBlock.LinkTo(_nullTargetBlock, t => t == null);
+            _webSocketMessageType = webSocketMessageType;
         }
 
         public Uri[] ListenerUris { get; }
@@ -123,10 +129,12 @@ namespace Lime.Transport.WebSocket
                 listenerUri.Scheme.Equals(UriSchemeWebSocketSecure))
             {
                 var ipPort = new IPEndPoint(IPAddress.Parse("0.0.0.0"), listenerUri.Port);
+#if net461
                 var config = new CertificateBindingConfiguration();
                 config.Bind(
                     new CertificateBinding(
                         _tlsCertificate.Thumbprint, _tlsCertificate.Store, ipPort, _applicationId));
+#endif
             }
 
             _httpListener.Start();
@@ -227,7 +235,7 @@ namespace Lime.Transport.WebSocket
                     .WithCancellation(_acceptTransportCts.Token)
                     .ConfigureAwait(false);
 
-                return new ServerWebSocketTransport(context, _envelopeSerializer, _traceWriter, _bufferSize);
+                return new ServerWebSocketTransport(context, _envelopeSerializer, _traceWriter, _bufferSize, _webSocketMessageType);
             }
             catch (OperationCanceledException) when (_acceptTransportCts.IsCancellationRequested) { }
             catch (Exception ex)

@@ -1,25 +1,26 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Lime.Protocol.Network;
 using Lime.Protocol.Serialization;
 using Lime.Protocol.Serialization.Newtonsoft;
+using Lime.Protocol.Server;
 using Lime.Protocol.UnitTests;
 using Lime.Transport.Tcp;
-using Shouldly;
-using NUnit.Framework;
-using System.IO;
+using Lime.Transport.WebSocket;
 using Newtonsoft.Json;
-using Lime.Protocol.Network;
-using Lime.Protocol.Server;
+using NUnit.Framework;
+using Shouldly;
 
-namespace Lime.Protocol.LoadTests.Tcp
+namespace Lime.Protocol.LoadTests.WebSocket
 {
 
-    public class TcpTransportTests : IDisposable
+    public class WebSocketTests : IDisposable
     {
         private Uri _uri;
         private CancellationToken _cancellationToken;
@@ -28,32 +29,37 @@ namespace Lime.Protocol.LoadTests.Tcp
         private ITransport _clientTransport;
         private ITransport _serverTransport;
 
-        public TcpTransportTests()
+        public WebSocketTests()
         {
-            _uri = new Uri("net.tcp://localhost:55321");
+            var trace = new CustomTraceWriter();
+            _uri = new Uri("ws://localhost:8081");
             _cancellationToken = TimeSpan.FromSeconds(30).ToCancellationToken();
             _envelopeSerializer = new FakeEnvelopeSerializer(10);
-            _transportListener = new TcpTransportListener(_uri, null, _envelopeSerializer);
+            _transportListener = new WebSocketTransportListener(_uri, null, _envelopeSerializer, trace, webSocketMessageType: System.Net.WebSockets.WebSocketMessageType.Text);
             _transportListener.StartAsync(_cancellationToken).Wait();
+
             var serverTcpTransportTask = _transportListener.AcceptTransportAsync(_cancellationToken);
-            _clientTransport = new TcpTransport(_envelopeSerializer);
+
+            _clientTransport = new ClientWebSocketTransport(_envelopeSerializer, trace, 16384, System.Net.WebSockets.WebSocketMessageType.Text);
             _clientTransport.OpenAsync(_uri, _cancellationToken).Wait();
-            _serverTransport = (TcpTransport)serverTcpTransportTask.Result;
+
+            _serverTransport = (WebSocketTransport)serverTcpTransportTask.Result;
             _serverTransport.OpenAsync(_uri, _cancellationToken).Wait();
         }
 
         public void Dispose()
         {
-            _clientTransport.CloseAsync(CancellationToken.None).Wait();
-            _serverTransport.CloseAsync(CancellationToken.None).Wait();
+            _clientTransport.CloseAsync(CancellationToken.None);
+            _serverTransport.CloseAsync(CancellationToken.None);
             _transportListener.StopAsync(_cancellationToken).Wait();
         }
 
+
         [Test]
-        public async Task Send100000EnvelopesAsync()
+        public async Task Send10000EnvelopesAsync()
         {
             // Arrange
-            var count = 100000;
+            var count = 10000;
             var envelopes = Enumerable
                 .Range(0, count)
                 .Select(i => Dummy.CreateMessage(Dummy.CreateTextContent()));
@@ -78,10 +84,10 @@ namespace Lime.Protocol.LoadTests.Tcp
         }
 
         [Test]
-        public async Task Send10000EnvelopesAsync()
+        public async Task Send100000EnvelopesAsync()
         {
             // Arrange
-            var count = 10000;
+            var count = 100000;
             var envelopes = Enumerable
                 .Range(0, count)
                 .Select(i => Dummy.CreateMessage(Dummy.CreateTextContent()));
@@ -114,17 +120,17 @@ namespace Lime.Protocol.LoadTests.Tcp
                 .Range(0, count)
                 .Select(i => Dummy.CreateMessage(Dummy.CreateTextContent()));
 
-            var receivedEnvelopes = Enumerable
-                .Range(0, count)
-                .Select(i => _serverTransport.ReceiveAsync(_cancellationToken))
-                .ToArray();
-
             // Act
             var sw = Stopwatch.StartNew();
             foreach (var envelope in envelopes)
             {
                 await _clientTransport.SendAsync(envelope, _cancellationToken);
             }
+
+            var receivedEnvelopes = Enumerable
+                .Range(0, count)
+                .Select(i => _serverTransport.ReceiveAsync(_cancellationToken))
+                .ToArray();
 
             await Task.WhenAll(receivedEnvelopes);
             sw.Stop();
@@ -164,6 +170,7 @@ namespace Lime.Protocol.LoadTests.Tcp
         [Test]
         public async Task SendHugeEnvelope()
         {
+            // Act
             var sw = Stopwatch.StartNew();
 
             var path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory);
