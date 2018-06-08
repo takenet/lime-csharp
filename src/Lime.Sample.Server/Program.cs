@@ -288,7 +288,7 @@ namespace Lime.Sample.Server
                     var responseCommand = new Command()
                     {
                         Id = command.Id,
-                        Status = CommandStatus.Failure,
+                        Status = Lime.Protocol.CommandStatus.Failure,
                         Reason = new Reason()
                         {
                             Code = ReasonCodes.COMMAND_RESOURCE_NOT_SUPPORTED,
@@ -312,7 +312,7 @@ namespace Lime.Sample.Server
                     var responseCommand = new Command()
                     {
                         Id = command.Id,
-                        Status = CommandStatus.Failure,
+                        Status = Lime.Protocol.CommandStatus.Failure,
                         Reason = new Reason()
                         {
                             Code = ReasonCodes.ROUTING_DESTINATION_NOT_FOUND,
