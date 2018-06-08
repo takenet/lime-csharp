@@ -57,7 +57,7 @@ namespace Lime.Protocol.Serialization.Newtonsoft
                                 new JsonSerializerSettings
                                 {
                                     NullValueHandling = NullValueHandling.Ignore,
-                                    ReferenceLoopHandling = ReferenceLoopHandling.Serialize,                                    
+                                    ReferenceLoopHandling = ReferenceLoopHandling.Serialize,
                                     Converters = converters.ToList()
                                 }));
 

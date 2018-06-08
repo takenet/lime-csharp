@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Runtime.Serialization;
+using Newtonsoft.Json;
 
 namespace Lime.Protocol
 {
@@ -30,6 +31,7 @@ namespace Lime.Protocol
         /// Initializes a new instance of the <see cref="Command"/> class.
         /// </summary>
         /// <param name="id">The command identifier.</param>
+        [JsonConstructor]
         public Command(string id)
             : base(id)
         {

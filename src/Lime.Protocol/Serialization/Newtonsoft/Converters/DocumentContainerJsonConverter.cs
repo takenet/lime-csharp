@@ -50,7 +50,7 @@ namespace Lime.Protocol.Serialization.Newtonsoft.Converters
             if (reader.TokenType != JsonToken.Null)
             {
                 // Initialize and populate the initial object
-                target = Activator.CreateInstance(objectType);
+                target = CreateInstance(objectType);
                 var jObject = JObject.Load(reader);
                 serializer.Populate(jObject.CreateReader(), target);
                 
@@ -77,6 +77,8 @@ namespace Lime.Protocol.Serialization.Newtonsoft.Converters
             return target;
         }
 
+
+
         public override void WriteJson(JsonWriter writer, object value, global::Newtonsoft.Json.JsonSerializer serializer)
         {
             // The container should be always a JSON
@@ -97,10 +99,9 @@ namespace Lime.Protocol.Serialization.Newtonsoft.Converters
                     continue;
                 }
 
-                writer.WritePropertyName(property.PropertyName);                
+                writer.WritePropertyName(property.PropertyName);
 
-                var document = propertyValue as Document;
-                if (document != null && !document.GetMediaType().IsJson)
+                if (propertyValue is Document document && !document.GetMediaType().IsJson)
                 {
                     writer.WriteValue(document.ToString());
                 }
@@ -111,6 +112,13 @@ namespace Lime.Protocol.Serialization.Newtonsoft.Converters
             }
 
             if (shouldStartObject) writer.WriteEndObject();
+        }
+
+        private static object CreateInstance(Type objectType)
+        {
+            if (objectType == typeof(Message)) return new Message();
+            if (objectType == typeof(Command)) return new Command(null);
+            return Activator.CreateInstance(objectType);
         }
     }
 }
