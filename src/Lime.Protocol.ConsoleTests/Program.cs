@@ -24,7 +24,6 @@ namespace Lime.Protocol.ConsoleTests
 
         static async Task MainAsync(string[] args)
         {
-
             WriteLine("Starting the server...");
 
             var messageBufferBlock = new BufferBlock<Message>(
@@ -37,7 +36,8 @@ namespace Lime.Protocol.ConsoleTests
                 ReceiveMessageAsync,
                 new ExecutionDataflowBlockOptions
                 {
-                    MaxDegreeOfParallelism = DataflowBlockOptions.Unbounded
+                    MaxDegreeOfParallelism = DataflowBlockOptions.Unbounded,
+                    EnsureOrdered = false
                 });
 
             messageBufferBlock.LinkTo(messageActionBlock);
@@ -47,8 +47,8 @@ namespace Lime.Protocol.ConsoleTests
             var server = new ServerBuilder(
                     "postmaster@msging.net/default",
                     new TcpTransportListener(uri, null, new JsonNetSerializer()))
-                .WithChannelConsumers(m => messageBufferBlock.SendAsync(m), n => TaskUtil.TrueCompletedTask,
-                    c => TaskUtil.TrueCompletedTask)
+                .WithChannelConsumers(m => messageBufferBlock.SendAsync(m), n => TaskUtil.TrueCompletedTask, c => TaskUtil.TrueCompletedTask)
+                .WithEnabledEncryptionOptions(new SessionEncryption[] { SessionEncryption.TLS })
                 .WithExceptionHandler(e =>
                 {
                     ForegroundColor = ConsoleColor.Red;
@@ -69,10 +69,18 @@ namespace Lime.Protocol.ConsoleTests
                 WriteLine("Starting the client...");
 
 
-                var client = await ClientChannelBuilder
+                
+
+                var channelBuilder =  ClientChannelBuilder
                     .Create(() => new TcpTransport(new JsonNetSerializer()), uri)
                     .CreateEstablishedClientChannelBuilder()
-                    .BuildAndEstablishAsync(CancellationToken.None);
+                    .WithEncryption(SessionEncryption.TLS);
+                
+                
+                var client = new MultiplexerClientChannel(channelBuilder);
+                await client.EstablishAsync(CancellationToken.None);
+
+                //var client = await channelBuilder.BuildAndEstablishAsync(CancellationToken.None);
 
                 WriteLine("Client started.");
 

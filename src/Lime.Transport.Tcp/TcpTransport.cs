@@ -214,7 +214,7 @@ namespace Lime.Transport.Tcp
             
             try
             {
-                await _stream.WriteAsync(jsonBytes, 0, jsonBytes.Length, cancellationToken).WithCancellation(cancellationToken).ConfigureAwait(false);
+                await _stream.WriteAsync(jsonBytes, 0, jsonBytes.Length, cancellationToken).ConfigureAwait(false);
             }
             catch (IOException)
             {

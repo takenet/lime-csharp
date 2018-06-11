@@ -11,8 +11,7 @@ namespace Lime.Transport.Tcp
 
         public TcpClientAdapter(TcpClient tcpClient)
         {
-            if (tcpClient == null) throw new ArgumentNullException(nameof(tcpClient));            
-            _tcpClient = tcpClient;
+            _tcpClient = tcpClient ?? throw new ArgumentNullException(nameof(tcpClient));
         }
 
         /// <summary>
