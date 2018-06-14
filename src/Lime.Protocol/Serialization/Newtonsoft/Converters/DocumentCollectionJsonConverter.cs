@@ -1,21 +1,24 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
-using System.Collections.Generic;
-using System.Diagnostics.Tracing;
-using System.Linq;
-using System.Text;
 
 namespace Lime.Protocol.Serialization.Newtonsoft.Converters
 {
     public class DocumentCollectionJsonConverter : JsonConverter
     {
+        private readonly IDocumentTypeResolver _documentTypeResolver;
+
+        public DocumentCollectionJsonConverter(IDocumentTypeResolver documentTypeResolver)
+        {
+            _documentTypeResolver = documentTypeResolver;
+        }
+
         public override bool CanConvert(Type objectType)
         {
             return objectType == typeof(DocumentCollection);
         }
 
-        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, global::Newtonsoft.Json.JsonSerializer serializer)
+        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
             var instance = new DocumentCollection();
             var jObject = JObject.Load(reader);
@@ -32,8 +35,8 @@ namespace Lime.Protocol.Serialization.Newtonsoft.Converters
                     var itemsArray = (JArray)items;
                     instance.Items = new Document[itemsArray.Count];
                     for (var i = 0; i < itemsArray.Count; i++)
-                    {                                                                       
-                        instance.Items[i] = itemsArray[i].ToDocument(instance.ItemType, serializer);
+                    {
+                        instance.Items[i] = itemsArray[i].ToDocument(instance.ItemType, serializer, _documentTypeResolver);
                     }
                 }
             }

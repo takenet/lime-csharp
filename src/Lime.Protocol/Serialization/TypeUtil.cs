@@ -14,30 +14,16 @@ namespace Lime.Protocol.Serialization
     /// </summary>
     public static class TypeUtil
     {
-        private static readonly ConcurrentDictionary<MediaType, Type> _documentMediaTypeDictionary;
         private static readonly ConcurrentDictionary<AuthenticationScheme, Type> _authenticationSchemeDictionary;
         private static readonly ConcurrentDictionary<Type, IDictionary<string, object>> _enumTypeValueDictionary;        
         private static readonly HashSet<Type> _dataContractTypes;
 
         static TypeUtil()
         {
-            _documentMediaTypeDictionary = new ConcurrentDictionary<MediaType, Type>();
             _authenticationSchemeDictionary = new ConcurrentDictionary<AuthenticationScheme, Type>();
             _enumTypeValueDictionary = new ConcurrentDictionary<Type, IDictionary<string, object>>();
             _dataContractTypes = new HashSet<Type>();
             RegisterInternalTypes();
-        }        
-        
-        /// <summary>
-        /// Tries to get the registered type for
-        /// the specified media type.
-        /// </summary>
-        /// <param name="mediaType"></param>
-        /// <param name="type"></param>
-        /// <returns></returns>
-        public static bool TryGetTypeForMediaType(MediaType mediaType, out Type type)
-        {
-            return _documentMediaTypeDictionary.TryGetValue(mediaType, out type);            
         }
 
         public static bool TryGetTypeForAuthenticationScheme(AuthenticationScheme scheme, out Type type)
@@ -137,36 +123,6 @@ namespace Lime.Protocol.Serialization
         }
 
         /// <summary>
-        /// Create and register a document type for serialization support.
-        /// </summary>
-        /// <typeparam name="TDocument"></typeparam>
-        public static void RegisterDocument<TDocument>() 
-            where TDocument : Document, new()
-        {
-            RegisterType(typeof(TDocument));
-        }
-
-        /// <summary>
-        /// Registers the documents types for an assembly.
-        /// </summary>
-        /// <param name="assembly">The assembly.</param>
-        /// <exception cref="ArgumentNullException"></exception>
-        public static void RegisterDocuments(Assembly assembly)
-        {
-            if (assembly == null) throw new ArgumentNullException(nameof(assembly));
-            var registerDocumentMethod = typeof(TypeUtil).GetRuntimeMethods().First(m => m.Name == nameof(RegisterDocument));
-
-            var documentTypes = assembly
-                .DefinedTypes
-                .Where(t => !t.IsAbstract && typeof(Document).GetTypeInfo().IsAssignableFrom(t));
-
-            foreach (var type in documentTypes)
-            {
-                registerDocumentMethod.MakeGenericMethod(type.AsType()).Invoke(null, null);
-            }
-        }
-
-        /// <summary>
         /// Gets the default value for 
         /// the Type
         /// </summary>
@@ -198,12 +154,7 @@ namespace Lime.Protocol.Serialization
         }
 
         private static void RegisterInternalTypes()
-        {
-            RegisterDocument<DocumentCollection>();
-            RegisterDocument<DocumentContainer>();
-            RegisterDocument<IdentityDocument>();
-            RegisterDocument<JsonDocument>();
-
+        {        
             RegisterType(typeof(GuestAuthentication));
             RegisterType(typeof(KeyAuthentication));
             RegisterType(typeof(PlainAuthentication));
@@ -213,6 +164,7 @@ namespace Lime.Protocol.Serialization
 
         private static void RegisterType(Type type)
         {
+            if (type == null) throw new ArgumentNullException(nameof(type));
             if (type.GetTypeInfo().GetCustomAttribute<DataContractAttribute>() != null)
             {
                 _dataContractTypes.Add(type);
@@ -220,21 +172,10 @@ namespace Lime.Protocol.Serialization
 
             if (!type.GetTypeInfo().IsAbstract)
             {
-                // Caches the documents (contents and resources)
-                if (typeof(Document).GetTypeInfo().IsAssignableFrom(type.GetTypeInfo()))
-                {
-                    var document = Activator.CreateInstance(type) as Document;
-                    if (document != null)
-                    {
-                        _documentMediaTypeDictionary[document.GetMediaType()] = type;
-                    }
-                }
-
                 // Caches the Authentication schemes
                 if (typeof(Authentication).GetTypeInfo().IsAssignableFrom(type.GetTypeInfo()))
                 {
-                    var authentication = Activator.CreateInstance(type) as Authentication;
-                    if (authentication != null)
+                    if (Activator.CreateInstance(type) is Authentication authentication)
                     {
                         _authenticationSchemeDictionary[authentication.GetAuthenticationScheme()] = type;
                     }

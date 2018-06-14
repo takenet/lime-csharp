@@ -30,10 +30,14 @@ namespace Lime.Protocol.Serialization.Newtonsoft.Converters
             throw new ArgumentException("Unknown token type");
         }
 
-        public static Document ToDocument(this JToken jToken, MediaType mediaType, global::Newtonsoft.Json.JsonSerializer serializer)
+        public static Document ToDocument(
+            this JToken jToken, 
+            MediaType mediaType, 
+            JsonSerializer serializer, 
+            IDocumentTypeResolver documentTypeResolver)
         {
             Document document;
-            if (TypeUtil.TryGetTypeForMediaType(mediaType, out var documentType))
+            if (documentTypeResolver.TryGetTypeForMediaType(mediaType, out var documentType))
             {
                 try
                 {

@@ -8,7 +8,16 @@ namespace Lime.Protocol.Serialization
 {
     public sealed class DocumentSerializer : IDocumentSerializer
     {
-        public static readonly JsonSerializer JsonSerializer = JsonSerializer.Create(JsonNetSerializer.Settings);
+        private readonly IDocumentTypeResolver _documentTypeResolver;
+        private readonly JsonSerializer _jsonSerializer;
+        private readonly JsonSerializerSettings _settings;
+
+        public DocumentSerializer(IDocumentTypeResolver documentTypeResolver)
+        {
+            _documentTypeResolver = documentTypeResolver;
+            _settings = EnvelopeSerializer.CreateSettings(documentTypeResolver);
+            _jsonSerializer = JsonSerializer.Create(_settings);
+        }
 
         public Document Deserialize(string value, MediaType mediaType)
         {
@@ -19,15 +28,15 @@ namespace Lime.Protocol.Serialization
             if (mediaType.IsJson)
             {
                 var jsonObject = JObject.Parse(value);
-                if (TypeUtil.TryGetTypeForMediaType(mediaType, out documentType))
+                if (_documentTypeResolver.TryGetTypeForMediaType(mediaType, out documentType))
                 {
-                    return (Document)jsonObject.ToObject(documentType, JsonSerializer);
+                    return (Document)jsonObject.ToObject(documentType, _jsonSerializer);
                 }
-                var dictionary = jsonObject.ToObject<Dictionary<string, object>>(JsonSerializer);
+                var dictionary = jsonObject.ToObject<Dictionary<string, object>>(_jsonSerializer);
                 return new JsonDocument(dictionary, mediaType);
             }
 
-            if (TypeUtil.TryGetTypeForMediaType(mediaType, out documentType))
+            if (_documentTypeResolver.TryGetTypeForMediaType(mediaType, out documentType))
             {
                 var parseFunc = TypeUtilEx.GetParseFuncForType(documentType);
                 return parseFunc(value) as Document;
@@ -41,8 +50,8 @@ namespace Lime.Protocol.Serialization
 
             if (!document.GetMediaType().IsJson) return document.ToString();
 
-            var jsonObject = JObject.FromObject(document, JsonSerializer);
-            return JsonConvert.SerializeObject(jsonObject, Formatting.None, JsonNetSerializer.Settings);
+            var jsonObject = JObject.FromObject(document, _jsonSerializer);
+            return JsonConvert.SerializeObject(jsonObject, Formatting.None, _settings);
         }
     }
 }

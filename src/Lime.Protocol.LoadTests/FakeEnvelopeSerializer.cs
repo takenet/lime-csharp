@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Lime.Messaging;
 
 namespace Lime.Protocol.LoadTests
 {
@@ -40,7 +41,7 @@ namespace Lime.Protocol.LoadTests
                 })
                 .ToArray();
 
-            var jsonSerializer = new JsonNetSerializer();
+            var jsonSerializer = new EnvelopeSerializer(new DocumentTypeResolver().WithMessagingDocuments());
             _serializedEnvelopes = _envelopes.Select(e => jsonSerializer.Serialize(e)).ToArray();
         }
 

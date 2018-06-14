@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using Lime.Protocol.Client;
+using Lime.Protocol.Serialization;
 using Lime.Protocol.Serialization.Newtonsoft;
 using Lime.Protocol.Server;
 using Lime.Protocol.Util;
@@ -46,7 +47,7 @@ namespace Lime.Protocol.ConsoleTests
 
             var server = new ServerBuilder(
                     "postmaster@msging.net/default",
-                    new TcpTransportListener(uri, null, new JsonNetSerializer()))
+                    new TcpTransportListener(uri, null, new EnvelopeSerializer(new DocumentTypeResolver())))
                 .WithChannelConsumers(m => messageBufferBlock.SendAsync(m), n => TaskUtil.TrueCompletedTask, c => TaskUtil.TrueCompletedTask)
                 .WithEnabledEncryptionOptions(new SessionEncryption[] { SessionEncryption.TLS })
                 .WithExceptionHandler(e =>
@@ -58,8 +59,7 @@ namespace Lime.Protocol.ConsoleTests
                 })
                 .Build();
 
-
-
+            
             await server.StartAsync(CancellationToken.None);
 
             using (var cts = new CancellationTokenSource())
@@ -68,11 +68,8 @@ namespace Lime.Protocol.ConsoleTests
                 WriteLine("Server started.");
                 WriteLine("Starting the client...");
 
-
-                
-
                 var channelBuilder =  ClientChannelBuilder
-                    .Create(() => new TcpTransport(new JsonNetSerializer()), uri)
+                    .Create(() => new TcpTransport(new EnvelopeSerializer(new DocumentTypeResolver())), uri)
                     .CreateEstablishedClientChannelBuilder()
                     .WithEncryption(SessionEncryption.TLS);
                 

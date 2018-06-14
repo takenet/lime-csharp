@@ -20,12 +20,12 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
     [TestFixture]
     public class JsonNetSerializerTests
     {
-        private static readonly JsonSerializer JsonSerializer = global::Newtonsoft.Json.JsonSerializer.Create(JsonNetSerializer.Settings);
+        public IDocumentTypeResolver DocumentTypeResolver;
 
-        private IEnvelopeSerializer GetTarget()
+        private EnvelopeSerializer GetTarget()
         {
-            Registrator.RegisterDocuments();
-            return new JsonNetSerializer();
+            DocumentTypeResolver = new DocumentTypeResolver().WithMessagingDocuments();
+            return new EnvelopeSerializer(DocumentTypeResolver);
         }
 
         #region Serialize
@@ -730,7 +730,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             var resultString = target.Serialize(message);
 
             // Assert
-            var dictionary = JsonConvert.DeserializeObject<Dictionary<string, object>>(resultString, JsonNetSerializer.Settings);
+            var dictionary = JsonConvert.DeserializeObject<Dictionary<string, object>>(resultString, target.Settings);
             var selectJson = dictionary[Message.CONTENT_KEY].ShouldBeAssignableTo<JObject>();            
             Assert.IsTrue(resultString.HasValidJsonStackedBrackets());
             Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.ID_KEY, message.Id));
@@ -898,7 +898,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
                 Uri = new LimeUri("/scheduler")
             };
 
-            var serializer = new JsonNetSerializer();
+            var serializer = new EnvelopeSerializer(new DocumentTypeResolver().WithMessagingDocuments());
             var json = serializer.Serialize(command);
             var deserializedCommand = (Command)serializer.Deserialize(json);
         }
@@ -1870,7 +1870,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             var target = GetTarget();
             var method = CommandMethod.Set;
             var id = EnvelopeId.NewId();
-            TypeUtil.RegisterDocument<TestDocument>();
+            DocumentTypeResolver.RegisterDocument<TestDocument>();
 
             string json =
                 $"{{\"type\":\"application/vnd.takenet.testdocument+json\",\"resource\":{{\"double\":10.1, \"NullableDouble\": 10.2}},\"method\":\"{method.ToString().ToCamelCase()}\",\"id\":\"{id}\"}}";
@@ -1984,8 +1984,8 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             var actualCommand = actual.ShouldBeOfType<Command>();
             actualCommand.Resource.ShouldNotBeNull();
             var jsonDocument = actualCommand.Resource.ShouldBeOfType<JsonDocument>();
-            var jObject = JObject.FromObject(jsonDocument, JsonSerializer);
-            var message = jObject.ToObject(typeof(Message), JsonSerializer).ShouldBeOfType<Message>();
+            var jObject = JObject.FromObject(jsonDocument, target.Serializer);
+            var message = jObject.ToObject(typeof(Message), target.Serializer).ShouldBeOfType<Message>();
         }
 
         

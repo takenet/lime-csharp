@@ -22,17 +22,12 @@ namespace Lime.Transport.Redis.UnitTests
     {
         private  RedisFixture _redisFixture;
 
-        static RedisTransportTests()
-        {
-            Registrator.RegisterDocuments();
-        }
-
         [SetUp]
         public async Task Start()
         {
             ChannelNamespace = EnvelopeId.NewId();
             ListenerUri = new Uri("redis://localhost");
-            EnvelopeSerializer = new JsonNetSerializer();
+            EnvelopeSerializer = new EnvelopeSerializer(new DocumentTypeResolver().WithMessagingDocuments());
             TraceWriter = new Mock<ITraceWriter>();
             Listener = new RedisTransportListener(ListenerUri, EnvelopeSerializer, TraceWriter.Object, channelNamespace: ChannelNamespace);
             CancellationToken = TimeSpan.FromSeconds(5).ToCancellationToken();
@@ -70,7 +65,7 @@ namespace Lime.Transport.Redis.UnitTests
         {
             return new RedisTransport(
                 ListenerUri,
-                new JsonNetSerializer(),
+                new EnvelopeSerializer(new DocumentTypeResolver().WithMessagingDocuments()),
                 channelNamespace: ChannelNamespace);
         }
 

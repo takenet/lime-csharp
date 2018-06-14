@@ -64,7 +64,7 @@ namespace Lime.Transport.Tcp
             ITraceWriter traceWriter = null,
             RemoteCertificateValidationCallback serverCertificateValidationCallback = null,
             bool ignoreDeserializationErrors = false)
-            : this(new JsonNetSerializer(), clientCertificate, bufferSize, maxBufferSize, traceWriter, serverCertificateValidationCallback, ignoreDeserializationErrors)
+            : this(new EnvelopeSerializer(new DocumentTypeResolver()), clientCertificate, bufferSize, maxBufferSize, traceWriter, serverCertificateValidationCallback, ignoreDeserializationErrors)
         {
         }
 

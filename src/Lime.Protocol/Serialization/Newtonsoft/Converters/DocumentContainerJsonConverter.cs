@@ -13,6 +13,12 @@ namespace Lime.Protocol.Serialization.Newtonsoft.Converters
     {
         private static readonly Dictionary<Type, bool> CanConvertDictionary = new Dictionary<Type, bool>();
         private static readonly object SyncRoot = new object();
+        private readonly IDocumentTypeResolver _documentTypeResolver;
+
+        public DocumentContainerJsonConverter(IDocumentTypeResolver documentTypeResolver)
+        {
+            _documentTypeResolver = documentTypeResolver;
+        }
 
         public override bool CanRead => true;
 
@@ -44,7 +50,7 @@ namespace Lime.Protocol.Serialization.Newtonsoft.Converters
             return canConvert;
         }
         
-        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, global::Newtonsoft.Json.JsonSerializer serializer)
+        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
             object target = null;
             if (reader.TokenType != JsonToken.Null)
@@ -55,8 +61,7 @@ namespace Lime.Protocol.Serialization.Newtonsoft.Converters
                 serializer.Populate(jObject.CreateReader(), target);
                 
                 // Check if the 'type' property is present to the JSON
-                JToken mediaTypeJToken;
-                if (jObject.TryGetValue(DocumentContainer.TYPE_KEY, out mediaTypeJToken) &&
+                if (jObject.TryGetValue(DocumentContainer.TYPE_KEY, out var mediaTypeJToken) &&
                     mediaTypeJToken.Type != JTokenType.Null)
                 {
                     // Find the document property
@@ -69,7 +74,7 @@ namespace Lime.Protocol.Serialization.Newtonsoft.Converters
                     var mediaType = mediaTypeJToken.ToObject<MediaType>();
 
                     // Create the document instance                    
-                    var document = jObject[documentPropertyName].ToDocument(mediaType, serializer);                    
+                    var document = jObject[documentPropertyName].ToDocument(mediaType, serializer, _documentTypeResolver);
                     documentProperty.SetValue(target, document);
                 }
             }

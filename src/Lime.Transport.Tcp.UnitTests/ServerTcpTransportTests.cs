@@ -1,12 +1,12 @@
 ﻿using Lime.Protocol;
 using Lime.Protocol.Network;
-using Lime.Protocol.Network.UnitTests;
 using Lime.Protocol.UnitTests;
 using Shouldly;
 using System;
 using System.Buffers;
 using System.Reflection;
 using System.Threading.Tasks;
+using Lime.Protocol.UnitTests.Common.Network;
 using NUnit.Framework;
 
 namespace Lime.Transport.Tcp.UnitTests

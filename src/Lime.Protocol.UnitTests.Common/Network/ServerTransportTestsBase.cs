@@ -1,21 +1,19 @@
-﻿using Lime.Protocol;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using Lime.Messaging;
 using Lime.Protocol.Network;
 using Lime.Protocol.Security;
 using Lime.Protocol.Serialization;
 using Lime.Protocol.Serialization.Newtonsoft;
 using Lime.Protocol.Server;
-using Lime.Protocol.UnitTests;
 using Moq;
-using Shouldly;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using NUnit.Framework;
+using Shouldly;
 
-namespace Lime.Protocol.Network.UnitTests
+namespace Lime.Protocol.UnitTests.Common.Network
 {
     public abstract class ServerTransportTestsBase<TServerTransport, TClientTransport, TTransportListener>
         where TServerTransport : class, ITransport
@@ -25,7 +23,7 @@ namespace Lime.Protocol.Network.UnitTests
         protected void SetUp(Uri listenerUri)
         {
             ListenerUri = listenerUri;
-            EnvelopeSerializer = new JsonNetSerializer();
+            EnvelopeSerializer = new EnvelopeSerializer(new DocumentTypeResolver().WithMessagingDocuments());
             TraceWriter = new Mock<ITraceWriter>();
             CancellationToken = TimeSpan.FromSeconds(30).ToCancellationToken();
         }

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
+using Lime.Messaging;
 using Lime.Messaging.Contents;
 using Lime.Messaging.Resources;
 using Lime.Protocol;
@@ -13,6 +14,7 @@ using Lime.Protocol.Network;
 using Lime.Protocol.Network.Modules;
 using Lime.Transport.Tcp;
 using Lime.Protocol.Security;
+using Lime.Protocol.Serialization;
 using Lime.Protocol.Serialization.Newtonsoft;
 using Lime.Protocol.Util;
 
@@ -218,12 +220,12 @@ namespace Lime.Sample.Client
             switch (uri.Scheme)
             {
                 case "net.tcp":
-                    return new TcpTransport(new JsonNetSerializer(), bufferSize: 1024, traceWriter: new DebugTraceWriter());
+                    return new TcpTransport(new EnvelopeSerializer(new DocumentTypeResolver().WithMessagingDocuments()), bufferSize: 1024, traceWriter: new DebugTraceWriter());
                 //case "ws":
                 //case "wss":
-                //    return new ClientWebSocketTransport(new JsonNetSerializer(), new DebugTraceWriter());
+                //    return new ClientWebSocketTransport(new EnvelopeSerializer(), new DebugTraceWriter());
                 //case "redis":
-                //    return new RedisTransport(uri, new JsonNetSerializer());
+                //    return new RedisTransport(uri, new EnvelopeSerializer());
 
                 default:
                     throw new NotSupportedException($"Unsupported URI scheme '{uri.Scheme}'");

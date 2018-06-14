@@ -53,7 +53,7 @@ namespace Lime.Transport.Redis
         {
             if (redisConfiguration == null) throw new ArgumentNullException(nameof(redisConfiguration));
             _redisConfiguration = redisConfiguration;
-            _envelopeSerializer = envelopeSerializer ?? new JsonNetSerializer();
+            _envelopeSerializer = envelopeSerializer ?? new EnvelopeSerializer(new DocumentTypeResolver());
             _traceWriter = traceWriter;
             _channelNamespace = channelNamespace ?? RedisTransport.DefaultChannelNamespace;
             _connectionMultiplexerFactory = connectionMultiplexerFactory ?? new ConnectionMultiplexerFactory();

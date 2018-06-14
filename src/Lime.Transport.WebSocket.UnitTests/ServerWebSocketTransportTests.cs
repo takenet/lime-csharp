@@ -1,5 +1,5 @@
 ﻿using System;
-using Lime.Protocol.Network.UnitTests;
+using Lime.Protocol.UnitTests.Common.Network;
 using NUnit.Framework;
 
 namespace Lime.Transport.WebSocket.UnitTests

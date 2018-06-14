@@ -12,6 +12,7 @@ using NUnit.Framework;
 using Shouldly;
 using Lime.Protocol.Server;
 using System.Net.Sockets;
+using Lime.Messaging;
 
 namespace Lime.Protocol.UnitTests.Network
 {
@@ -22,7 +23,7 @@ namespace Lime.Protocol.UnitTests.Network
         protected void SetUp(Uri listenerUri)
         {
             ListenerUri = listenerUri;
-            EnvelopeSerializer = new JsonNetSerializer();
+            EnvelopeSerializer = new EnvelopeSerializer(new DocumentTypeResolver().WithMessagingDocuments());
             TraceWriter = new Mock<ITraceWriter>();           
             CancellationToken = TimeSpan.FromSeconds(5).ToCancellationToken();
             Target = CreateTransportListener();

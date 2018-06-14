@@ -84,7 +84,7 @@ namespace Lime.Transport.Redis
             _channelNamespace = channelNamespace ?? DefaultChannelNamespace;
             _sendChannelPrefix = sendChannelPrefix;
             _receiveChannelPrefix = receiveChannelPrefix;
-            _envelopeSerializer = envelopeSerializer ?? new JsonNetSerializer();
+            _envelopeSerializer = envelopeSerializer ?? new EnvelopeSerializer(new DocumentTypeResolver());
             ReceivedEnvelopesBufferBlock = new BufferBlock<Envelope>(
                 new DataflowBlockOptions() {BoundedCapacity = DataflowBlockOptions.Unbounded});
             _semaphore = new SemaphoreSlim(1, 1);

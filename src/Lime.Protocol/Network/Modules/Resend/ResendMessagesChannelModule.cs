@@ -100,7 +100,7 @@ namespace Lime.Protocol.Network.Modules.Resend
             => envelope.AsCompletedTask();
 
         /// <summary>
-        /// Register the module to the specified channel.
+        /// RegisterDocument the module to the specified channel.
         /// </summary>
         /// <param name="channel"></param>
         public virtual void RegisterTo(IChannel channel)

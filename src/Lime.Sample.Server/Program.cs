@@ -7,6 +7,7 @@ using Lime.Protocol;
 using Lime.Protocol.Server;
 using Lime.Transport.Tcp;
 using Lime.Protocol.Security;
+using Lime.Protocol.Serialization;
 using Lime.Protocol.Serialization.Newtonsoft;
 //using Lime.Transport.Redis;
 //using Lime.Transport.WebSocket;
@@ -66,7 +67,7 @@ namespace Lime.Sample.Server
 
         static ITransportListener GetTransportListenerForUri(Uri uri)
         {
-            var serializer = new JsonNetSerializer();
+            var serializer = new EnvelopeSerializer(new DocumentTypeResolver());
 
             switch (uri.Scheme)
             {
