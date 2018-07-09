@@ -16,6 +16,7 @@ namespace Lime.Messaging.Resources
         public const string MIME_TYPE = "application/vnd.lime.account+json";
         public static readonly MediaType MediaType = MediaType.Parse(MIME_TYPE);
 
+        public const string IDENTITY_KEY = "identity";
         public const string FULL_NAME_KEY = "fullName"; 
         public const string IS_TEMPORARY_KEY = "isTemporary";
         public const string PASSWORD_KEY = "password";
@@ -29,7 +30,6 @@ namespace Lime.Messaging.Resources
         public const string ALTERNATIVE_ACCOUNT_KEY = "alternativeAccount";
         public const string PUBLISH_TO_DIRECTORY_KEY = "publishToDirectory";
 
-
         /// <summary>
         /// Initializes a new instance of the <see cref="Account"/> class.
         /// </summary>
@@ -40,10 +40,16 @@ namespace Lime.Messaging.Resources
         }
 
         /// <summary>
+        /// The account identity.
+        /// </summary>
+        [DataMember(Name = IDENTITY_KEY)]
+        public Identity Identity { get; set; }
+
+        /// <summary>
         /// The user full name.
         /// </summary>
         [DataMember(Name = FULL_NAME_KEY)]
-        public string FullName { get; set; }        
+        public string FullName { get; set; }
 
         /// <summary>
         /// Indicates that the account is temporary is valid only in the current session.
