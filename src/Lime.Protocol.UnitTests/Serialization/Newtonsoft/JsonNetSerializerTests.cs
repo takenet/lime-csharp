@@ -902,7 +902,6 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             var json = serializer.Serialize(command);
             var deserializedCommand = (Command)serializer.Deserialize(json);
         }
-        
 
         #endregion
 
@@ -2124,6 +2123,53 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             select.Options[0].Value.ShouldBeNull();
         }
 
+        [Test]
+        [Category("Deserialize")]
+        public void Deserialize_RawJsonMessage_ReturnsJsonDocument()
+        {
+            // Arrange
+            var json =
+                "{\"id\":\"1\",\"to\":\"destination@limeprotocol.org\",\"type\":\"application\\/json\",\"content\":{\"expectUserResponse\":true,\"expectedInputs\":[{\"inputPrompt\":{\"richInitialPrompt\":{\"items\":[{\"simpleResponse\":{\"textToSpeech\":\"Which of these looks good?\"}}]}},\"possibleIntents\":[{\"intent\":\"actions.intent.OPTION\",\"inputValueData\":{\"@type\":\"type.googleapis.com\\/google.actions.v2.OptionValueSpec\",\"listSelect\":{\"items\":[{\"optionInfo\":{\"key\":\"first\",\"synonyms\":[\"synonym of KEY_ONE 1\",\"synonym of KEY_ONE 2\"]},\"description\":\"y\",\"title\":\"Number one\"},{\"optionInfo\":{\"key\":\"second\",\"synonyms\":[\"synonym of KEY_TWO 1\",\"synonym of KEY_TWO 2\"]},\"description\":\"x\",\"title\":\"Number two\"},{\"optionInfo\":{\"key\":\"third\",\"synonyms\":[\"synonym of KEY_THREE 1\",\"synonym of KEY_THREE 3\"]},\"description\":\"x\",\"title\":\"Number three\"}]}}}]}],\"conversationToken\":\"{\\\"data\\\":{}}\",\"userStorage\":\"{\\\"data\\\":{}}\"}}";
+            var target = GetTarget();
+
+            // Act
+            var actual = target.Deserialize(json);
+
+            // Assert
+            var actualMessage = actual.ShouldBeOfType<Message>();
+            var jsonDocument = actualMessage.Content.ShouldBeOfType<JsonDocument>();            
+            var expectUserResponse = jsonDocument["expectUserResponse"].ShouldBeOfType<bool>();
+            expectUserResponse.ShouldBeTrue();
+            var array = jsonDocument["expectedInputs"].ShouldBeAssignableTo<JArray>();
+            array.Count.ShouldBe(1);
+            var jObject = array[0];
+            jObject["inputPrompt"].ShouldBeOfType<JObject>();
+        }
+
         #endregion
+
+        [Test]
+        [Category("Serialize")]
+        [Category("Deserialize")]
+        public void DeserializeAndSerialize_JsonDocument_ShouldReturnValidDocument()
+        {
+            // Arrange
+            var json =
+                "{\"id\":\"1\",\"to\":\"destination@limeprotocol.org\",\"type\":\"application\\/json\",\"content\":{\"expectUserResponse\":true,\"expectedInputs\":[{\"inputPrompt\":{\"richInitialPrompt\":{\"items\":[{\"simpleResponse\":{\"textToSpeech\":\"Which of these looks good?\"}}]}},\"possibleIntents\":[{\"intent\":\"actions.intent.OPTION\",\"inputValueData\":{\"@type\":\"type.googleapis.com\\/google.actions.v2.OptionValueSpec\",\"listSelect\":{\"items\":[{\"optionInfo\":{\"key\":\"first\",\"synonyms\":[\"synonym of KEY_ONE 1\",\"synonym of KEY_ONE 2\"]},\"description\":\"y\",\"title\":\"Number one\"},{\"optionInfo\":{\"key\":\"second\",\"synonyms\":[\"synonym of KEY_TWO 1\",\"synonym of KEY_TWO 2\"]},\"description\":\"x\",\"title\":\"Number two\"},{\"optionInfo\":{\"key\":\"third\",\"synonyms\":[\"synonym of KEY_THREE 1\",\"synonym of KEY_THREE 3\"]},\"description\":\"x\",\"title\":\"Number three\"}]}}}]}],\"conversationToken\":\"{\\\"data\\\":{}}\",\"userStorage\":\"{\\\"data\\\":{}}\"}}";
+            var target = GetTarget();
+
+            // Act
+            var actualDocument = target.Deserialize(target.Serialize(target.Deserialize(json)));
+            
+            // Assert
+            var actualMessage = actualDocument.ShouldBeOfType<Message>();
+            var jsonDocument = actualMessage.Content.ShouldBeOfType<JsonDocument>();
+            var expectUserResponse = jsonDocument["expectUserResponse"].ShouldBeOfType<bool>();
+            expectUserResponse.ShouldBeTrue();
+            var array = jsonDocument["expectedInputs"].ShouldBeAssignableTo<JArray>();
+            array.Count.ShouldBe(1);
+            var jObject = array[0];
+            jObject["inputPrompt"].ShouldBeOfType<JObject>();
+        }
     }
 }
