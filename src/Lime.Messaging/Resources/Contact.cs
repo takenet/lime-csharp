@@ -13,7 +13,7 @@ namespace Lime.Messaging.Resources
         public const string MIME_TYPE = "application/vnd.lime.contact+json";
         public static readonly MediaType MediaType = MediaType.Parse(MIME_TYPE);
 
-        public const string IDENTITY_KEY = "identity";
+        
         public const string NAME_KEY = "name";
         public const string IS_PENDING_KEY = "isPending";
         public const string SHARE_PRESENCE_KEY = "sharePresence";
@@ -29,13 +29,6 @@ namespace Lime.Messaging.Resources
         {
 
         }
-
-        /// <summary>
-        /// The identity of the contact, 
-        /// in the name@domain format.
-        /// </summary>
-        [DataMember(Name = IDENTITY_KEY)]
-        public Identity Identity { get; set; }
 
         /// <summary>
         /// The name of the contact. 

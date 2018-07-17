@@ -29,7 +29,6 @@ namespace Lime.Messaging.Resources
         public const string ALTERNATIVE_ACCOUNT_KEY = "alternativeAccount";
         public const string PUBLISH_TO_DIRECTORY_KEY = "publishToDirectory";
 
-
         /// <summary>
         /// Initializes a new instance of the <see cref="Account"/> class.
         /// </summary>
@@ -43,7 +42,7 @@ namespace Lime.Messaging.Resources
         /// The user full name.
         /// </summary>
         [DataMember(Name = FULL_NAME_KEY)]
-        public string FullName { get; set; }        
+        public string FullName { get; set; }
 
         /// <summary>
         /// Indicates that the account is temporary is valid only in the current session.

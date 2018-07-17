@@ -12,6 +12,7 @@ namespace Lime.Messaging.Resources
     [DataContract(Namespace = "http://limeprotocol.org/2014")]
     public abstract class ContactDocument : Document
     {
+        public const string IDENTITY_KEY = "identity";
         public const string ADDRESS_KEY = "address";
         public const string CITY_KEY = "city";
         public const string EMAIL_KEY = "email";
@@ -34,6 +35,13 @@ namespace Lime.Messaging.Resources
             : base(mediaType)
         {
         }
+
+        /// <summary>
+        /// The user identity, 
+        /// in the name@domain format.
+        /// </summary>
+        [DataMember(Name = IDENTITY_KEY)]
+        public Identity Identity { get; set; }
 
         /// <summary>
         /// The user street address.
