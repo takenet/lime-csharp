@@ -12,7 +12,7 @@ namespace Lime.Protocol.Listeners
     /// </summary>
     /// <seealso cref="System.IDisposable" />
     public sealed class ChannelListener : IChannelListener, IDisposable
-    {        
+    {
         private readonly Func<Message, Task<bool>> _messageConsumer;
         private readonly Func<Notification, Task<bool>> _notificationConsumer;
         private readonly Func<Command, Task<bool>> _commandConsumer;

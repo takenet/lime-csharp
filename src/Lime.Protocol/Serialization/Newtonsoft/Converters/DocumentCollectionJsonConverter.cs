@@ -49,7 +49,7 @@ namespace Lime.Protocol.Serialization.Newtonsoft.Converters
             return instance;
         }
 
-        public override void WriteJson(JsonWriter writer, object value, global::Newtonsoft.Json.JsonSerializer serializer)
+        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
             var collection = (DocumentCollection)value;
             var jsonCollection = new JsonDocumentCollection(collection);

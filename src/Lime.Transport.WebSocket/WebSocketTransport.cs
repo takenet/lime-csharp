@@ -178,10 +178,6 @@ namespace Lime.Transport.WebSocket
                     {
                         break;
                     }
-                    catch (Exception ex)
-                    {
-
-                    }
                 }
             }
             finally
