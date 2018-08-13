@@ -48,8 +48,8 @@ namespace Lime.Protocol.Listeners
                 if (MessageListenerTask == null)
                 {
                     MessageListenerTask = CreateListenerTask(
-                            channel.ReceiveMessageAsync,
-                            _messageConsumer);
+                        channel.ReceiveMessageAsync,
+                        _messageConsumer);
                 }
 
                 if (NotificationListenerTask == null)

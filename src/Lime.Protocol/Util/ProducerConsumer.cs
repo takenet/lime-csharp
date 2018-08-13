@@ -51,7 +51,7 @@ namespace Lime.Protocol.Util
                 }
             },
             cancellationToken,
-            taskCreationOptions, 
+            taskCreationOptions,
             taskScheduler)
             .Unwrap();
         }

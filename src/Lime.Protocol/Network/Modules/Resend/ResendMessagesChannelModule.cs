@@ -22,6 +22,7 @@ namespace Lime.Protocol.Network.Modules.Resend
         private readonly TimeSpan _resendWindow;
         private readonly Event[] _eventsToRemovePendingMessage;
         private readonly object _syncRoot = new object();
+        private readonly Func<Exception, IChannel, Message, Task> _resendExceptionHandler;
 
         private string _channelKey;
         private Task _resendTask;
@@ -34,7 +35,8 @@ namespace Lime.Protocol.Network.Modules.Resend
             IDeadMessageHandler deadMessageHandler,
             int maxResendCount, 
             TimeSpan resendWindow,
-            Event[] eventsToRemovePendingMessage = null)
+            Event[] eventsToRemovePendingMessage = null,
+            Func<Exception, IChannel, Message, Task> resendExceptionHandler = null)
         {
             _channel = channel ?? throw new ArgumentNullException(nameof(channel));
             _messageStorage = messageStorage ?? throw new ArgumentNullException(nameof(messageStorage));
@@ -47,6 +49,7 @@ namespace Lime.Protocol.Network.Modules.Resend
                 throw new ArgumentException("At least one event must be provided", nameof(eventsToRemovePendingMessage));
             }
             _eventsToRemovePendingMessage = eventsToRemovePendingMessage;
+            _resendExceptionHandler = resendExceptionHandler;
         }
 
         public virtual void OnStateChanged(SessionState state)
@@ -181,8 +184,14 @@ namespace Lime.Protocol.Network.Modules.Resend
                             {
                                 await _channel.SendMessageAsync(expiredMessage, cancellationToken);
                             }
-                            catch
+                            catch (Exception ex)
                             {
+                                Trace.TraceError("Error resending a message with id {0} on channel {1}: {2}", expiredMessage.Id, _channel.SessionId, ex.ToString());
+                                if (_resendExceptionHandler != null)
+                                {
+                                    await _resendExceptionHandler(ex, _channel, expiredMessage);
+                                }
+
                                 // Create a new CTS because the exception can be caused by the cancellation of the method token
                                 using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5)))
                                 {
@@ -191,7 +200,7 @@ namespace Lime.Protocol.Network.Modules.Resend
                                         // If any error occurs when resending the message, put the expired message
                                         // back into the storage before throwing the exception.
                                         await _messageStorage.AddAsync(_channelKey, expiredMessageKey, expiredMessage,
-                                            DateTimeOffset.UtcNow, cts.Token);
+                                            DateTimeOffset.UtcNow.Add(_resendWindow), cts.Token);
                                     }
                                     catch (OperationCanceledException) { }
                                     throw;
@@ -210,10 +219,13 @@ namespace Lime.Protocol.Network.Modules.Resend
                 }
                 catch (Exception ex)
                 {
-                    Trace.TraceError(ex.ToString());
+                    Trace.TraceError("An unhandled exception occurred on ResendMessagesChannelModule on channel {0}: {1}", _channel.SessionId, ex.ToString());
+                    if (_resendExceptionHandler != null)
+                    {
+                        await _resendExceptionHandler(ex, _channel, null);
+                    }
 
-                    if (_channel.State != SessionState.Established || !_channel.Transport.IsConnected) break;                    
-                    throw;
+                    if (_channel.State != SessionState.Established || !_channel.Transport.IsConnected) break;
                 }
             }
         }
