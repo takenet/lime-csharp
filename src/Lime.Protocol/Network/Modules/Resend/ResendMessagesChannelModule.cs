@@ -224,8 +224,6 @@ namespace Lime.Protocol.Network.Modules.Resend
                     {
                         await _resendExceptionHandler(ex, _channel, null);
                     }
-
-                    if (_channel.State != SessionState.Established || !_channel.Transport.IsConnected) break;
                 }
             }
         }
