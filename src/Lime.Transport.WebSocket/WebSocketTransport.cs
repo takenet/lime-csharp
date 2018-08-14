@@ -26,12 +26,8 @@ namespace Lime.Transport.WebSocket
         private readonly int _bufferSize;
         private readonly JsonBuffer _jsonBuffer;
         private readonly SemaphoreSlim _sendSemaphore;
-        private readonly BufferBlock<Envelope> _receivedEnvelopeBufferBlock;
+        private readonly SemaphoreSlim _receiveSemaphore;
         private readonly WebSocketMessageType _webSocketMessageType;
-
-        private CancellationTokenSource _listenerCts;
-        private Task _listenerTask;
-        private TaskCompletionSource<WebSocketReceiveResult> _closeFrameTcs;
 
         protected WebSocketCloseStatus CloseStatus;
         protected string CloseStatusDescription;
@@ -41,7 +37,6 @@ namespace Lime.Transport.WebSocket
             IEnvelopeSerializer envelopeSerializer,
             ITraceWriter traceWriter = null,
             int bufferSize = DEFAULT_BUFFER_SIZE,
-            int receiveBoundedCapacity = -1,
             WebSocketMessageType webSocketMessageType = WebSocketMessageType.Text)
         {
             WebSocket = webSocket;
@@ -52,10 +47,9 @@ namespace Lime.Transport.WebSocket
             _jsonBuffer = new JsonBuffer(bufferSize, DEFAULT_MAX_BUFFER_SIZE, _arrayPool);
             _webSocketMessageType = webSocketMessageType;
             _sendSemaphore = new SemaphoreSlim(1);
+            _receiveSemaphore = new SemaphoreSlim(1);
             CloseStatus = WebSocketCloseStatus.NormalClosure;
             CloseStatusDescription = string.Empty;
-            _receivedEnvelopeBufferBlock = new BufferBlock<Envelope>(
-                new DataflowBlockOptions() { BoundedCapacity = receiveBoundedCapacity });
         }
 
         protected System.Net.WebSockets.WebSocket WebSocket { get; }
@@ -65,7 +59,7 @@ namespace Lime.Transport.WebSocket
             if (envelope == null) throw new ArgumentNullException(nameof(envelope));
             if (WebSocket.State != WebSocketState.Open)
             {
-                throw new InvalidOperationException("Could not send envelope: websocket is not open");
+                throw new InvalidOperationException("Could not send envelope: Websocket is not open");
             }
 
             var envelopeJson = _envelopeSerializer.Serialize(envelope);
@@ -81,7 +75,7 @@ namespace Lime.Transport.WebSocket
 
             if (WebSocket.State != WebSocketState.Open)
             {
-                throw new InvalidOperationException("Could not send envelope: websocket is not open");
+                throw new InvalidOperationException("Could not send envelope: Websocket is not open");
             }
 
             try
@@ -102,99 +96,68 @@ namespace Lime.Transport.WebSocket
 
         public override async Task<Envelope> ReceiveAsync(CancellationToken cancellationToken)
         {
-            if (WebSocket.State != WebSocketState.Open || _listenerTask == null)
+            if (WebSocket.State != WebSocketState.Open)
             {
                 throw new InvalidOperationException("The connection was not initialized. Call OpenAsync first.");
             }
 
-            if (_listenerTask.IsCompleted)
-            {
-                // Awaits the listener task to throw any exception to the caller
-                await _listenerTask.WithCancellation(cancellationToken).ConfigureAwait(false);
-                throw new InvalidOperationException("The listener task is completed");
-            }
+            await _receiveSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
 
-            using (
-                var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken,
-                    _listenerCts.Token))
-            {
-                return await _receivedEnvelopeBufferBlock.ReceiveAsync(linkedCts.Token).ConfigureAwait(false);
-            }
-        }
-
-        private async Task ListenAsync(CancellationToken cancellationToken)
-        {
             try
             {
-                while (!cancellationToken.IsCancellationRequested && WebSocket.State == WebSocketState.Open)
+                while (true)
                 {
-                    try
+                    cancellationToken.ThrowIfCancellationRequested();
+
+                    var buffer = new ArraySegment<byte>(_arrayPool.Rent(_bufferSize));
+                    var receiveResult =
+                        await WebSocket.ReceiveAsync(buffer, cancellationToken).ConfigureAwait(false);
+
+                    if (receiveResult.MessageType == WebSocketMessageType.Close)
                     {
-                        while (true)
-                        {
-                            var buffer = new ArraySegment<byte>(_arrayPool.Rent(_bufferSize));
-                            var receiveResult =
-                                await WebSocket.ReceiveAsync(buffer, cancellationToken).ConfigureAwait(false);
-                            if (receiveResult.MessageType == WebSocketMessageType.Close)
-                            {
-                                await HandleCloseMessageAsync(receiveResult);
-                                break;
-                            }
-
-                            if (receiveResult.MessageType != _webSocketMessageType)
-                            {
-                                CloseStatus = WebSocketCloseStatus.InvalidMessageType;
-                                CloseStatusDescription = "An unsupported message type was received";
-                                throw new InvalidOperationException(CloseStatusDescription);
-                            }
-
-                            if (_jsonBuffer.Buffer.Length < receiveResult.Count + _jsonBuffer.BufferCurPos)
-                            {
-                                _jsonBuffer.IncreaseBuffer();
-                            }
-
-                            Buffer.BlockCopy(buffer.Array, 0, _jsonBuffer.Buffer, _jsonBuffer.BufferCurPos, receiveResult.Count);
-                            _arrayPool.Return(buffer.Array, true);
-
-                            _jsonBuffer.BufferCurPos += receiveResult.Count;
-                            if (receiveResult.EndOfMessage) break;
-                        }
-
-                        byte[] jsonBytes;
-                        if (_jsonBuffer.TryExtractJsonFromBuffer(out jsonBytes))
-                        {
-                            var envelopeJson = Encoding.UTF8.GetString(jsonBytes);
-
-                            if (_traceWriter != null &&
-                                _traceWriter.IsEnabled)
-                            {
-                                await _traceWriter.TraceAsync(envelopeJson, DataOperation.Receive).ConfigureAwait(false);
-                            }
-                            var envelope = _envelopeSerializer.Deserialize(envelopeJson);
-                            await _receivedEnvelopeBufferBlock.SendAsync(envelope, cancellationToken);
-                        }
-                    }
-                    catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-                    {
+                        await HandleCloseMessageAsync(receiveResult, cancellationToken);
                         break;
                     }
+
+                    if (receiveResult.MessageType != _webSocketMessageType)
+                    {
+                        CloseStatus = WebSocketCloseStatus.InvalidMessageType;
+                        CloseStatusDescription = "An unsupported message type was received";
+                        throw new InvalidOperationException(CloseStatusDescription);
+                    }
+
+                    if (_jsonBuffer.Buffer.Length < receiveResult.Count + _jsonBuffer.BufferCurPos)
+                    {
+                        _jsonBuffer.IncreaseBuffer();
+                    }
+
+                    Buffer.BlockCopy(buffer.Array, 0, _jsonBuffer.Buffer, _jsonBuffer.BufferCurPos, receiveResult.Count);
+                    _arrayPool.Return(buffer.Array, true);
+
+                    _jsonBuffer.BufferCurPos += receiveResult.Count;
+                    if (receiveResult.EndOfMessage) break;
                 }
+
+                byte[] jsonBytes;
+                if (!_jsonBuffer.TryExtractJsonFromBuffer(out jsonBytes))
+                {
+                    // A no JSON message was received
+                    return null;
+                }
+
+                var envelopeJson = Encoding.UTF8.GetString(jsonBytes);
+
+                if (_traceWriter != null &&
+                    _traceWriter.IsEnabled)
+                {
+                    await _traceWriter.TraceAsync(envelopeJson, DataOperation.Receive).ConfigureAwait(false);
+                }
+                return _envelopeSerializer.Deserialize(envelopeJson);
             }
             finally
             {
-                StopListenerTask();
+                _receiveSemaphore.Release();
             }
-        }
-
-        protected override Task PerformOpenAsync(Uri uri, CancellationToken cancellationToken)
-        {
-
-            if (_listenerTask != null) throw new InvalidOperationException("The listener is already active");
-            _listenerCts?.Dispose();
-            _listenerCts = new CancellationTokenSource();
-            _closeFrameTcs = new TaskCompletionSource<WebSocketReceiveResult>();
-            _listenerTask = Task.Run(() => ListenAsync(_listenerCts.Token));
-            return Task.CompletedTask;
         }
 
         /// <summary>
@@ -205,78 +168,33 @@ namespace Lime.Transport.WebSocket
         /// <exception cref="InvalidOperationException">The listener is not active</exception>
         protected override async Task PerformCloseAsync(CancellationToken cancellationToken)
         {
-            if (_listenerTask == null) throw new InvalidOperationException("The listener is not active");
-            if (WebSocket.State == WebSocketState.Open)
+            // Awaits for the client to send the close connection frame.
+            // If the session was clearly closed, the client should received the finished envelope and is closing the connection.
+            using (var cts = new CancellationTokenSource(CloseTimeout))
+            using (var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, cts.Token))
             {
-                // Awaits for the client to send the close connection frame.
-                // If the session was clearly closed, the client should received the finished envelope and is closing the connection.
-                try
+                if (WebSocket.State == WebSocketState.Open)
                 {
-                    using (var cts = new CancellationTokenSource(CloseTimeout))
-                    using (var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, cts.Token))
-                    {
-                        try
-                        {
-                            using (linkedCts.Token.Register(() => _closeFrameTcs.TrySetCanceled()))
-                            {
-                                await _closeFrameTcs.Task.ConfigureAwait(false);
-                            }
-                        }
-                        catch (OperationCanceledException) when (cts.IsCancellationRequested)
-                        {
-                            // Otherwise, closes in the fire and forget mode.
-                            await WebSocket
-                                .CloseOutputAsync(CloseStatus, CloseStatusDescription, cancellationToken)
-                                .ConfigureAwait(false);
-                            return;
-                        }
-                    }
+                    await
+                        WebSocket.CloseAsync(CloseStatus, CloseStatusDescription, cancellationToken)
+                            .ConfigureAwait(false); 
                 }
-                finally
+                else if (WebSocket.State == WebSocketState.CloseReceived)
                 {
-                    StopListenerTask();
+                    await
+                        WebSocket.CloseOutputAsync(CloseStatus, CloseStatusDescription, cancellationToken)
+                            .ConfigureAwait(false);
                 }
             }
-
-            await CloseWebSocketAsync(cancellationToken).ConfigureAwait(false);
         }
 
-        protected void StopListenerTask()
+        private async Task HandleCloseMessageAsync(WebSocketReceiveResult receiveResult, CancellationToken cancellationToken)
         {
-            if (_listenerCts != null &&
-                !_listenerCts.IsCancellationRequested)
-            {
-                _listenerCts.Cancel();
-            }
-        }
-
-        protected async Task CloseWebSocketAsync(CancellationToken cancellationToken)
-        {
-            if (WebSocket.State == WebSocketState.Open ||
-                WebSocket.State == WebSocketState.CloseReceived)
-            {
-                await
-                    WebSocket.CloseAsync(CloseStatus, CloseStatusDescription, cancellationToken)
-                        .ConfigureAwait(false);
-            }
-        }
-
-        private async Task HandleCloseMessageAsync(WebSocketReceiveResult receiveResult)
-        {
-            if (_traceWriter != null &&
-                _traceWriter.IsEnabled &&
-                receiveResult.CloseStatus != null &&
-                receiveResult.CloseStatus.Value != WebSocketCloseStatus.Empty &&
-                receiveResult.CloseStatus.Value != WebSocketCloseStatus.NormalClosure)
-            {
-                await
-                    _traceWriter.TraceAsync(
-                        $"{receiveResult.CloseStatus.Value}: {receiveResult.CloseStatusDescription}",
-                        DataOperation.Error);
-            }
+            await
+                WebSocket.CloseOutputAsync(CloseStatus, CloseStatusDescription, cancellationToken)
+                    .ConfigureAwait(false);
 
             CloseStatus = WebSocketCloseStatus.NormalClosure;
-            _closeFrameTcs.TrySetResult(receiveResult);
         }
 
         public override bool IsConnected => WebSocket.State
@@ -303,7 +221,6 @@ namespace Lime.Transport.WebSocket
             {
                 WebSocket.Dispose();
                 _sendSemaphore.Dispose();
-                _listenerCts?.Dispose();
             }
         }
 

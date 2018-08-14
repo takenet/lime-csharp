@@ -10,8 +10,8 @@ using Lime.Protocol.Security;
 using Lime.Protocol.Serialization;
 using Lime.Protocol.Serialization.Newtonsoft;
 //using Lime.Transport.Redis;
-//using Lime.Transport.WebSocket;
 using StackExchange.Redis;
+using Lime.Transport.WebSocket;
 
 namespace Lime.Sample.Server
 {
@@ -79,13 +79,13 @@ namespace Lime.Sample.Server
                         serializer,
                         1024,
                         2048);
-                //case "ws":
-                //case "wss":
-                //    return new WebSocketTransportListener(
-                //        uri,
-                //        null,
-                //        serializer);
-                //
+                case "ws":
+                case "wss":
+                    return new WebSocketTransportListener(
+                        uri,
+                        null,
+                        serializer);
+
                 //case "redis":
                 //    return new RedisTransportListener(uri, serializer);
 

@@ -1,5 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Net.WebSockets;
+using System.Threading;
+using System.Threading.Tasks;
 using Lime.Protocol.Network;
 using Lime.Protocol.Serialization;
 
@@ -15,7 +18,7 @@ namespace Lime.Transport.WebSocket
             ITraceWriter traceWriter = null, 
             int bufferSize = 8192,
             WebSocketMessageType webSocketMessageType = WebSocketMessageType.Text)
-            : base(context.WebSocket, envelopeSerializer, traceWriter, bufferSize, -1, webSocketMessageType)
+            : base(context.WebSocket, envelopeSerializer, traceWriter, bufferSize, webSocketMessageType)
         {
             _context = context;
         }
@@ -34,5 +37,7 @@ namespace Lime.Transport.WebSocket
                 return options;                
             }
         }
+
+        protected override Task PerformOpenAsync(Uri uri, CancellationToken cancellationToken) => Task.CompletedTask;
     }
 }

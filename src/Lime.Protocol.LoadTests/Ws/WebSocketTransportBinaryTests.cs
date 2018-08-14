@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Lime.Messaging;
 using Lime.Protocol.Network;
 using Lime.Protocol.Serialization;
 using Lime.Protocol.Serialization.Newtonsoft;
@@ -173,7 +174,8 @@ namespace Lime.Protocol.LoadTests.WebSocket
 
             var path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory);
             var content = File.ReadAllLines(Path.Combine(path, "huge-json.txt"));
-            var envelope = JsonConvert.DeserializeObject<Command>(string.Join("", content));
+            var envelopeSerializer = new EnvelopeSerializer(new DocumentTypeResolver().WithMessagingDocuments());
+            var envelope = envelopeSerializer.Deserialize(string.Join("", content));
 
             await _clientTransport.SendAsync(envelope, _cancellationToken);
             await _serverTransport.ReceiveAsync(_cancellationToken);

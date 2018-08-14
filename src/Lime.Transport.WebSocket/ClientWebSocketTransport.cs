@@ -15,7 +15,7 @@ namespace Lime.Transport.WebSocket
             ITraceWriter traceWriter = null, 
             int bufferSize = 8192,
             WebSocketMessageType webSocketMessageType = WebSocketMessageType.Text)
-            : base(new ClientWebSocket(), envelopeSerializer, traceWriter, bufferSize, -1, webSocketMessageType)
+            : base(new ClientWebSocket(), envelopeSerializer, traceWriter, bufferSize,  webSocketMessageType)
         {
 
         }
@@ -24,20 +24,7 @@ namespace Lime.Transport.WebSocket
         {
             var clientWebSocket = ((ClientWebSocket) WebSocket);
             clientWebSocket.Options.AddSubProtocol(LimeUri.LIME_URI_SCHEME);
-            await clientWebSocket.ConnectAsync(uri, cancellationToken).ConfigureAwait(false);
-            await base.PerformOpenAsync(uri, cancellationToken);
-        }
-
-        protected override async Task PerformCloseAsync(CancellationToken cancellationToken)
-        {
-            try
-            {
-                await CloseWebSocketAsync(cancellationToken).ConfigureAwait(false);
-            }
-            finally
-            {
-                StopListenerTask();
-            }
+            await clientWebSocket.ConnectAsync(uri, cancellationToken).ConfigureAwait(false);            
         }
     }
 }
