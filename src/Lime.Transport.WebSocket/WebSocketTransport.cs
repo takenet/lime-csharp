@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Buffers;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Threading.Tasks.Dataflow;
 using Lime.Protocol;
 using Lime.Protocol.Network;
 using Lime.Protocol.Serialization;
@@ -16,7 +14,7 @@ namespace Lime.Transport.WebSocket
     public abstract class WebSocketTransport : TransportBase, IDisposable
     {
         public const int DEFAULT_BUFFER_SIZE = 8192;
-        public const int DEFAULT_MAX_BUFFER_SIZE = DEFAULT_BUFFER_SIZE * 1024;
+        public const int DEFAULT_MAX_BUFFER_COUNT = 1024;
 
         private static readonly TimeSpan CloseTimeout = TimeSpan.FromSeconds(5);
 
@@ -24,7 +22,6 @@ namespace Lime.Transport.WebSocket
         private readonly ITraceWriter _traceWriter;
         private readonly ArrayPool<byte> _arrayPool;
         private readonly int _bufferSize;
-        private readonly JsonBuffer _jsonBuffer;
         private readonly SemaphoreSlim _sendSemaphore;
         private readonly SemaphoreSlim _receiveSemaphore;
         private readonly WebSocketMessageType _webSocketMessageType;
@@ -37,14 +34,14 @@ namespace Lime.Transport.WebSocket
             IEnvelopeSerializer envelopeSerializer,
             ITraceWriter traceWriter = null,
             int bufferSize = DEFAULT_BUFFER_SIZE,
-            WebSocketMessageType webSocketMessageType = WebSocketMessageType.Text)
+            WebSocketMessageType webSocketMessageType = WebSocketMessageType.Text,
+            ArrayPool<byte> arrayPool = null)
         {
             WebSocket = webSocket;
             _envelopeSerializer = envelopeSerializer;
             _traceWriter = traceWriter;
-            _arrayPool = ArrayPool<byte>.Shared;
+            _arrayPool = arrayPool ?? ArrayPool<byte>.Shared;
             _bufferSize = bufferSize;
-            _jsonBuffer = new JsonBuffer(bufferSize, DEFAULT_MAX_BUFFER_SIZE, _arrayPool);
             _webSocketMessageType = webSocketMessageType;
             _sendSemaphore = new SemaphoreSlim(1);
             _receiveSemaphore = new SemaphoreSlim(1);
@@ -62,15 +59,15 @@ namespace Lime.Transport.WebSocket
                 throw new InvalidOperationException("Could not send envelope: Websocket is not open");
             }
 
-            var envelopeJson = _envelopeSerializer.Serialize(envelope);
+            var serializedEnvelope = _envelopeSerializer.Serialize(envelope);
 
             if (_traceWriter != null &&
                 _traceWriter.IsEnabled)
             {
-                await _traceWriter.TraceAsync(envelopeJson, DataOperation.Send).ConfigureAwait(false);
+                await _traceWriter.TraceAsync(serializedEnvelope, DataOperation.Send).ConfigureAwait(false);
             }
-
-            var jsonBytes = Encoding.UTF8.GetBytes(envelopeJson);
+            
+            var buffer = Encoding.UTF8.GetBytes(serializedEnvelope);
             await _sendSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
 
             if (WebSocket.State != WebSocketState.Open)
@@ -80,7 +77,7 @@ namespace Lime.Transport.WebSocket
 
             try
             {
-                await WebSocket.SendAsync(new ArraySegment<byte>(jsonBytes), _webSocketMessageType, true,
+                await WebSocket.SendAsync(new ArraySegment<byte>(buffer), _webSocketMessageType, true,
                     cancellationToken).ConfigureAwait(false);
             }
             catch (WebSocketException)
@@ -103,15 +100,21 @@ namespace Lime.Transport.WebSocket
 
             await _receiveSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
 
+            var buffers = new List<byte[]>();
+
             try
             {
                 while (true)
                 {
                     cancellationToken.ThrowIfCancellationRequested();
 
-                    var buffer = new ArraySegment<byte>(_arrayPool.Rent(_bufferSize));
+                    var buffer = _arrayPool.Rent(_bufferSize);
+
                     var receiveResult =
-                        await WebSocket.ReceiveAsync(buffer, cancellationToken).ConfigureAwait(false);
+                        await WebSocket.ReceiveAsync(
+                            new ArraySegment<byte>(buffer), 
+                            cancellationToken)
+                        .ConfigureAwait(false);
 
                     if (receiveResult.MessageType == WebSocketMessageType.Close)
                     {
@@ -125,39 +128,47 @@ namespace Lime.Transport.WebSocket
                         CloseStatusDescription = "An unsupported message type was received";
                         throw new InvalidOperationException(CloseStatusDescription);
                     }
-
-                    if (_jsonBuffer.Buffer.Length < receiveResult.Count + _jsonBuffer.BufferCurPos)
-                    {
-                        _jsonBuffer.IncreaseBuffer();
-                    }
-
-                    Buffer.BlockCopy(buffer.Array, 0, _jsonBuffer.Buffer, _jsonBuffer.BufferCurPos, receiveResult.Count);
-                    _arrayPool.Return(buffer.Array, true);
-
-                    _jsonBuffer.BufferCurPos += receiveResult.Count;
+                    
                     if (receiveResult.EndOfMessage) break;
-                }
 
-                byte[] jsonBytes;
-                if (!_jsonBuffer.TryExtractJsonFromBuffer(out jsonBytes))
+                    if (buffers.Count + 1 > DEFAULT_MAX_BUFFER_COUNT)
+                    {
+                        throw new BufferOverflowException("Maximum buffer size reached");
+                    }
+                }
+            }
+            catch
+            {
+                foreach (var buffer in buffers)
                 {
-                    // A no JSON message was received
-                    return null;
+                    _arrayPool.Return(buffer);
                 }
 
-                var envelopeJson = Encoding.UTF8.GetString(jsonBytes);
-
-                if (_traceWriter != null &&
-                    _traceWriter.IsEnabled)
-                {
-                    await _traceWriter.TraceAsync(envelopeJson, DataOperation.Receive).ConfigureAwait(false);
-                }
-                return _envelopeSerializer.Deserialize(envelopeJson);
+                await CloseWithTimeoutAsync().ConfigureAwait(false);
+                throw;
             }
             finally
             {
                 _receiveSemaphore.Release();
             }
+
+            // Build the serialized envelope using the buffers
+            var serializedEnvelopeBuilder = new StringBuilder();
+
+            foreach (var buffer in buffers)
+            {
+                serializedEnvelopeBuilder.Append(Encoding.UTF8.GetString(buffer));
+                _arrayPool.Return(buffer);
+            }
+
+            var serializedEnvelope = serializedEnvelopeBuilder.ToString();
+
+            if (_traceWriter != null &&
+                _traceWriter.IsEnabled)
+            {
+                await _traceWriter.TraceAsync(serializedEnvelope, DataOperation.Receive).ConfigureAwait(false);
+            }
+            return _envelopeSerializer.Deserialize(serializedEnvelope);
         }
 
         /// <summary>

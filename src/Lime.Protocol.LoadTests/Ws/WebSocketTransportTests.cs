@@ -122,16 +122,16 @@ namespace Lime.Protocol.LoadTests.WebSocket
                 .Select(i => Dummy.CreateMessage(Dummy.CreateTextContent()));
 
             // Act
+            var receivedEnvelopes = Enumerable
+                .Range(0, count)
+                .Select(i => _serverTransport.ReceiveAsync(_cancellationToken))
+                .ToArray();
+
             var sw = Stopwatch.StartNew();
             foreach (var envelope in envelopes)
             {
                 await _clientTransport.SendAsync(envelope, _cancellationToken);
             }
-
-            var receivedEnvelopes = Enumerable
-                .Range(0, count)
-                .Select(i => _serverTransport.ReceiveAsync(_cancellationToken))
-                .ToArray();
 
             await Task.WhenAll(receivedEnvelopes);
             sw.Stop();
@@ -150,16 +150,18 @@ namespace Lime.Protocol.LoadTests.WebSocket
                 .Select(i => Dummy.CreateMessage(Dummy.CreateTextContent()));
 
             // Act
+            var receivedEnvelopes = Enumerable
+                .Range(0, count)
+                .Select(i => _serverTransport.ReceiveAsync(_cancellationToken))
+                .ToArray();
+
+
             var sw = Stopwatch.StartNew();
             foreach (var envelope in envelopes)
             {
                 await _clientTransport.SendAsync(envelope, _cancellationToken);
             }
 
-            var receivedEnvelopes = Enumerable
-                .Range(0, count)
-                .Select(i => _serverTransport.ReceiveAsync(_cancellationToken))
-                .ToArray();
 
             await Task.WhenAll(receivedEnvelopes);
             sw.Stop();
