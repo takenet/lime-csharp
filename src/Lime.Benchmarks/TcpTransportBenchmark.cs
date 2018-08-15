@@ -6,7 +6,7 @@ using Lime.Protocol.Serialization;
 using Lime.Protocol.Serialization.Newtonsoft;
 using Lime.Protocol.Server;
 using Lime.Protocol.UnitTests;
-using Lime.Transport.WebSocket;
+using Lime.Transport.Tcp;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -14,7 +14,7 @@ using System.Threading.Tasks;
 namespace Lime.Benchmarks
 {
     [CoreJob]
-    public class WebSocketTransportBenchmark
+    public class TcpTransportBenchmark
     {
         private Uri _uri;
         private CancellationToken _cancellationToken;
@@ -25,12 +25,12 @@ namespace Lime.Benchmarks
 
         private Message _message;
 
-        public WebSocketTransportBenchmark()
+        public TcpTransportBenchmark()
         {
-            _uri = new Uri("ws://localhost:8081");
+            _uri = new Uri("net.tcp://localhost:55321");
             _cancellationToken = TimeSpan.FromSeconds(60).ToCancellationToken();
             _envelopeSerializer = new EnvelopeSerializer(new DocumentTypeResolver().WithMessagingDocuments());
-            _transportListener = new WebSocketTransportListener(_uri, null, _envelopeSerializer, null, webSocketMessageType: System.Net.WebSockets.WebSocketMessageType.Text);
+            _transportListener = new TcpTransportListener(_uri, null, _envelopeSerializer);
         }
 
         [GlobalSetup]
@@ -46,10 +46,10 @@ namespace Lime.Benchmarks
 
             var serverTcpTransportTask = _transportListener.AcceptTransportAsync(_cancellationToken);
 
-            _clientTransport = new ClientWebSocketTransport(_envelopeSerializer, null, webSocketMessageType: System.Net.WebSockets.WebSocketMessageType.Text);
+            _clientTransport = new TcpTransport(_envelopeSerializer, null);
             await _clientTransport.OpenAsync(_uri, _cancellationToken);
 
-            _serverTransport = (WebSocketTransport)await serverTcpTransportTask;
+            _serverTransport = (TcpTransport)await serverTcpTransportTask;
             await _serverTransport.OpenAsync(_uri, _cancellationToken);
 
             _message = Dummy.CreateMessage(Dummy.CreateTextContent());
