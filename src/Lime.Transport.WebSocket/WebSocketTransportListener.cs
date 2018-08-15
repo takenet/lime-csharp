@@ -61,7 +61,7 @@ namespace Lime.Transport.WebSocket
             X509CertificateInfo tlsCertificate,
             IEnvelopeSerializer envelopeSerializer,
             ITraceWriter traceWriter = null,
-            int bufferSize = 16384,
+            int bufferSize = WebSocketTransport.DEFAULT_BUFFER_SIZE,
             TimeSpan? keepAliveInterval = null,
             bool bindCertificateToPort = true,
             Guid? applicationId = null,

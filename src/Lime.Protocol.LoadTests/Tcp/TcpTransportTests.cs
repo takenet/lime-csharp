@@ -33,7 +33,7 @@ namespace Lime.Protocol.LoadTests.Tcp
         {
             _uri = new Uri("net.tcp://localhost:55321");
             _cancellationToken = TimeSpan.FromSeconds(30).ToCancellationToken();
-            _envelopeSerializer = new FakeEnvelopeSerializer(10);
+            _envelopeSerializer = new EnvelopeSerializer(new DocumentTypeResolver().WithMessagingDocuments());
             _transportListener = new TcpTransportListener(_uri, null, _envelopeSerializer);
             _transportListener.StartAsync(_cancellationToken).Wait();
             var serverTcpTransportTask = _transportListener.AcceptTransportAsync(_cancellationToken);

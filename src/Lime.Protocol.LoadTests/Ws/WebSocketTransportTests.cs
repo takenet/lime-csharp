@@ -35,13 +35,13 @@ namespace Lime.Protocol.LoadTests.WebSocket
             var trace = new CustomTraceWriter();
             _uri = new Uri("ws://localhost:8081");
             _cancellationToken = TimeSpan.FromSeconds(30).ToCancellationToken();
-            _envelopeSerializer = new FakeEnvelopeSerializer(10);
+            _envelopeSerializer = new EnvelopeSerializer(new DocumentTypeResolver().WithMessagingDocuments());
             _transportListener = new WebSocketTransportListener(_uri, null, _envelopeSerializer, trace, webSocketMessageType: System.Net.WebSockets.WebSocketMessageType.Text);
             _transportListener.StartAsync(_cancellationToken).Wait();
 
             var serverTcpTransportTask = _transportListener.AcceptTransportAsync(_cancellationToken);
 
-            _clientTransport = new ClientWebSocketTransport(_envelopeSerializer, trace, 16384, System.Net.WebSockets.WebSocketMessageType.Text);
+            _clientTransport = new ClientWebSocketTransport(_envelopeSerializer, trace, webSocketMessageType: System.Net.WebSockets.WebSocketMessageType.Text);
             _clientTransport.OpenAsync(_uri, _cancellationToken).Wait();
 
             _serverTransport = (WebSocketTransport)serverTcpTransportTask.Result;
@@ -178,8 +178,8 @@ namespace Lime.Protocol.LoadTests.WebSocket
 
             var path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory);
             var content = File.ReadAllLines(Path.Combine(path, "huge-json.txt"));            
-            var envelopeSerializer = new EnvelopeSerializer(new DocumentTypeResolver().WithMessagingDocuments());
-            var envelope = envelopeSerializer.Deserialize(string.Join("", content));
+            
+            var envelope = _envelopeSerializer.Deserialize(string.Join("", content));
 
             await _clientTransport.SendAsync(envelope, _cancellationToken);
             await _serverTransport.ReceiveAsync(_cancellationToken);

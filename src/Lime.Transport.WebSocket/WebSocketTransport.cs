@@ -66,7 +66,7 @@ namespace Lime.Transport.WebSocket
             {
                 await _traceWriter.TraceAsync(serializedEnvelope, DataOperation.Send).ConfigureAwait(false);
             }
-            
+
             var buffer = Encoding.UTF8.GetBytes(serializedEnvelope);
             await _sendSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
 
@@ -91,6 +91,15 @@ namespace Lime.Transport.WebSocket
             }
         }
 
+        private class BufferSegment
+        {
+            public byte[] Buffer;
+
+            public int Count;
+
+            ///public int Remaining => Buffer.Length - Count;
+        }
+
         public override async Task<Envelope> ReceiveAsync(CancellationToken cancellationToken)
         {
             if (WebSocket.State != WebSocketState.Open)
@@ -100,21 +109,27 @@ namespace Lime.Transport.WebSocket
 
             await _receiveSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
 
-            var buffers = new List<byte[]>();
+            var segments = new List<BufferSegment>();
 
             try
             {
                 while (true)
                 {
                     cancellationToken.ThrowIfCancellationRequested();
-
-                    var buffer = _arrayPool.Rent(_bufferSize);
+                    
+                    var segment = new BufferSegment
+                    {
+                        Buffer = _arrayPool.Rent(_bufferSize)
+                    };
+                    segments.Add(segment);
 
                     var receiveResult =
                         await WebSocket.ReceiveAsync(
-                            new ArraySegment<byte>(buffer), 
+                            new ArraySegment<byte>(segment.Buffer),
                             cancellationToken)
                         .ConfigureAwait(false);
+
+                    segment.Count = receiveResult.Count;
 
                     if (receiveResult.MessageType == WebSocketMessageType.Close)
                     {
@@ -128,10 +143,10 @@ namespace Lime.Transport.WebSocket
                         CloseStatusDescription = "An unsupported message type was received";
                         throw new InvalidOperationException(CloseStatusDescription);
                     }
-                    
+
                     if (receiveResult.EndOfMessage) break;
 
-                    if (buffers.Count + 1 > DEFAULT_MAX_BUFFER_COUNT)
+                    if (segments.Count + 1 > DEFAULT_MAX_BUFFER_COUNT)
                     {
                         throw new BufferOverflowException("Maximum buffer size reached");
                     }
@@ -139,9 +154,9 @@ namespace Lime.Transport.WebSocket
             }
             catch
             {
-                foreach (var buffer in buffers)
+                foreach (var segment in segments)
                 {
-                    _arrayPool.Return(buffer);
+                    _arrayPool.Return(segment.Buffer);
                 }
 
                 await CloseWithTimeoutAsync().ConfigureAwait(false);
@@ -155,10 +170,10 @@ namespace Lime.Transport.WebSocket
             // Build the serialized envelope using the buffers
             var serializedEnvelopeBuilder = new StringBuilder();
 
-            foreach (var buffer in buffers)
+            foreach (var segment in segments)
             {
-                serializedEnvelopeBuilder.Append(Encoding.UTF8.GetString(buffer));
-                _arrayPool.Return(buffer);
+                serializedEnvelopeBuilder.Append(Encoding.UTF8.GetString(segment.Buffer, 0, segment.Count));
+                _arrayPool.Return(segment.Buffer);
             }
 
             var serializedEnvelope = serializedEnvelopeBuilder.ToString();
@@ -188,7 +203,7 @@ namespace Lime.Transport.WebSocket
                 {
                     await
                         WebSocket.CloseAsync(CloseStatus, CloseStatusDescription, cancellationToken)
-                            .ConfigureAwait(false); 
+                            .ConfigureAwait(false);
                 }
                 else if (WebSocket.State == WebSocketState.CloseReceived)
                 {
