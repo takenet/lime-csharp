@@ -25,12 +25,9 @@
 
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
-    <PackageReference Include="System.IO.Pipelines" Version="4.5.0" />
-    <PackageReference Include="System.Memory" Version="4.5.1" />
   </ItemGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'net461' ">
-    <PackageReference Include="Microsoft.Tpl.Dataflow" Version="4.5.24" />
     <PackageReference Include="SslCertBinding.Net" Version="1.0.2" />
     <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Web" />
