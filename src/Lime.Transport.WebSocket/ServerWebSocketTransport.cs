@@ -42,7 +42,8 @@ namespace Lime.Transport.WebSocket
 
         protected override async Task PerformCloseAsync(CancellationToken cancellationToken)
         {
-            if (WebSocket.State != WebSocketState.Closed)
+            if (WebSocket.State >= WebSocketState.Open &&
+                WebSocket.State <= WebSocketState.CloseSent)
             {
                 // Give a little delay to give time to the "finished" session reach the client.
                 // Sometimes the websocket doesn't flush the sent data.
