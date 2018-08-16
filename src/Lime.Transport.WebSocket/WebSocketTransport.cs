@@ -152,7 +152,7 @@ namespace Lime.Transport.WebSocket
                 await CloseWithTimeoutAsync().ConfigureAwait(false);
                 throw;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 foreach (var segment in segments)
                 {
