@@ -97,7 +97,7 @@ namespace Lime.Transport.WebSocket
 
             public int Count;
 
-            ///public int Remaining => Buffer.Length - Count;
+            public int Remaining => Buffer.Length - Count;
         }
 
         public override async Task<Envelope> ReceiveAsync(CancellationToken cancellationToken)
@@ -183,6 +183,9 @@ namespace Lime.Transport.WebSocket
             {
                 await _traceWriter.TraceAsync(serializedEnvelope, DataOperation.Receive).ConfigureAwait(false);
             }
+
+            if (string.IsNullOrWhiteSpace(serializedEnvelope)) return null;
+
             return _envelopeSerializer.Deserialize(serializedEnvelope);
         }
 
