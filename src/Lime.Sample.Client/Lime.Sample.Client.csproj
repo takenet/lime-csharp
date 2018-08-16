@@ -11,4 +11,8 @@
     <ProjectReference Include="..\Lime.Transport.Tcp\Lime.Transport.Tcp.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Properties\" />
+  </ItemGroup>
+
 </Project>
