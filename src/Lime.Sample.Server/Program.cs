@@ -364,5 +364,10 @@ namespace Lime.Sample.Server
         {
             return task.ContinueWith(t => t, TaskContinuationOptions.OnlyOnCanceled);
         }
+
+        public static Task<T> WithPassiveCancellation<T>(this Task<T> task)
+        {
+            return task.ContinueWith(t => default(T), TaskContinuationOptions.OnlyOnCanceled);
+        }
     }
 }
