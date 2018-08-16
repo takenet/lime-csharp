@@ -34,22 +34,8 @@ namespace Lime.Transport.WebSocket
                 options.Add(nameof(HttpListenerWebSocketContext.Origin), _context.Origin);
                 options.Add(nameof(HttpListenerWebSocketContext.SecWebSocketKey), _context.SecWebSocketKey);
                 options.Add(nameof(HttpListenerWebSocketContext.SecWebSocketVersion), _context.SecWebSocketVersion);
-                return options;                
+                return options;
             }
-        }
-
-        protected override Task PerformOpenAsync(Uri uri, CancellationToken cancellationToken) => Task.CompletedTask;
-
-        protected override async Task PerformCloseAsync(CancellationToken cancellationToken)
-        {
-            if (WebSocket.State == WebSocketState.Open ||
-                WebSocket.State == WebSocketState.CloseSent)
-            {
-                // Give a little delay to give time to the "finished" session reach the client.
-                // Sometimes the websocket doesn't flush the sent data.
-                await Task.Delay(250, cancellationToken).ConfigureAwait(false);
-            }
-            await base.PerformCloseAsync(cancellationToken).ConfigureAwait(false);
         }
     }
 }

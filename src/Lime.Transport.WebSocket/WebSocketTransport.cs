@@ -24,7 +24,10 @@ namespace Lime.Transport.WebSocket
         private readonly int _bufferSize;
         private readonly SemaphoreSlim _sendSemaphore;
         private readonly SemaphoreSlim _receiveSemaphore;
+        private readonly SemaphoreSlim _closeSemaphore;
         private readonly WebSocketMessageType _webSocketMessageType;
+        private TaskCompletionSource<WebSocketReceiveResult> _closeFrameTcs;
+
 
         protected WebSocketCloseStatus CloseStatus;
         protected string CloseStatusDescription;
@@ -45,6 +48,7 @@ namespace Lime.Transport.WebSocket
             _webSocketMessageType = webSocketMessageType;
             _sendSemaphore = new SemaphoreSlim(1);
             _receiveSemaphore = new SemaphoreSlim(1);
+            _closeSemaphore = new SemaphoreSlim(1);
             CloseStatus = WebSocketCloseStatus.NormalClosure;
             CloseStatusDescription = string.Empty;
         }
@@ -54,10 +58,7 @@ namespace Lime.Transport.WebSocket
         public override async Task SendAsync(Envelope envelope, CancellationToken cancellationToken)
         {
             if (envelope == null) throw new ArgumentNullException(nameof(envelope));
-            if (WebSocket.State != WebSocketState.Open)
-            {
-                throw new InvalidOperationException("Could not send envelope: Websocket is not open");
-            }
+            EnsureOpen("send");
 
             var serializedEnvelope = _envelopeSerializer.Serialize(envelope);
 
@@ -68,15 +69,14 @@ namespace Lime.Transport.WebSocket
             }
 
             var buffer = Encoding.UTF8.GetBytes(serializedEnvelope);
-            await _sendSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+            
 
-            if (WebSocket.State != WebSocketState.Open)
-            {
-                throw new InvalidOperationException("Could not send envelope: Websocket is not open");
-            }
+            await _sendSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
 
             try
             {
+                EnsureOpen("send");
+
                 await WebSocket.SendAsync(new ArraySegment<byte>(buffer), _webSocketMessageType, true,
                     cancellationToken).ConfigureAwait(false);
             }
@@ -91,32 +91,22 @@ namespace Lime.Transport.WebSocket
             }
         }
 
-        private class BufferSegment
-        {
-            public byte[] Buffer;
-
-            public int Count;
-
-            public int Remaining => Buffer.Length - Count;
-        }
-
         public override async Task<Envelope> ReceiveAsync(CancellationToken cancellationToken)
         {
-            if (WebSocket.State != WebSocketState.Open)
-            {
-                throw new InvalidOperationException("The connection was not initialized. Call OpenAsync first.");
-            }
-
-            await _receiveSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+            EnsureOpen("receive");
 
             var segments = new List<BufferSegment>();
 
+            await _receiveSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+
             try
             {
+                EnsureOpen("receive");
+
                 while (true)
                 {
                     cancellationToken.ThrowIfCancellationRequested();
-                    
+
                     var segment = new BufferSegment
                     {
                         Buffer = _arrayPool.Rent(_bufferSize)
@@ -152,7 +142,7 @@ namespace Lime.Transport.WebSocket
                     }
                 }
             }
-            catch
+            catch (WebSocketException)
             {
                 foreach (var segment in segments)
                 {
@@ -160,6 +150,15 @@ namespace Lime.Transport.WebSocket
                 }
 
                 await CloseWithTimeoutAsync().ConfigureAwait(false);
+                throw;
+            }
+            catch (Exception ex)
+            {
+                foreach (var segment in segments)
+                {
+                    _arrayPool.Return(segment.Buffer);
+                }
+
                 throw;
             }
             finally
@@ -189,6 +188,12 @@ namespace Lime.Transport.WebSocket
             return _envelopeSerializer.Deserialize(serializedEnvelope);
         }
 
+        protected override Task PerformOpenAsync(Uri uri, CancellationToken cancellationToken)
+        {
+            _closeFrameTcs = new TaskCompletionSource<WebSocketReceiveResult>();
+            return Task.CompletedTask;
+        }
+
         /// <summary>
         /// Closes the transport, implementing the websocket close handshake.
         /// </summary>
@@ -197,38 +202,60 @@ namespace Lime.Transport.WebSocket
         /// <exception cref="InvalidOperationException">The listener is not active</exception>
         protected override async Task PerformCloseAsync(CancellationToken cancellationToken)
         {
-            // Awaits for the client to send the close connection frame.
-            // If the session was clearly closed, the client should received the finished envelope and is closing the connection.
-            using (var cts = new CancellationTokenSource(CloseTimeout))
-            using (var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, cts.Token))
+            await _closeSemaphore.WaitAsync(cancellationToken);
+            try
             {
-                if (WebSocket.State == WebSocketState.Open)
+                // Awaits for the client to send the close connection frame.
+                // If the session was clearly closed, the client should received the finished envelope and is closing the connection.
+                using (var cts = new CancellationTokenSource(CloseTimeout))
+                using (var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, cts.Token))
                 {
-                    await
-                        WebSocket.CloseAsync(CloseStatus, CloseStatusDescription, cancellationToken)
-                            .ConfigureAwait(false);
-                }
-                else if (WebSocket.State == WebSocketState.CloseReceived)
-                {
-                    await
-                        WebSocket.CloseOutputAsync(CloseStatus, CloseStatusDescription, cancellationToken)
-                            .ConfigureAwait(false);
+                    if (WebSocket.State == WebSocketState.Open)
+                    {
+                        await
+                            WebSocket.CloseAsync(CloseStatus, CloseStatusDescription, linkedCts.Token)
+                                .ConfigureAwait(false);
+
+                        Task receiveTask;
+
+                        if (_receiveSemaphore.CurrentCount == 1 &&
+                            !_closeFrameTcs.Task.IsCompleted)
+                        {
+                            receiveTask = ReceiveAsync(cts.Token);
+                        }
+                        else
+                        {
+                            // There's already an active receive task
+                            receiveTask = Task.CompletedTask;
+                        }
+
+                        try
+                        {
+                            await Task.WhenAny(_closeFrameTcs.Task.WithCancellation(linkedCts.Token), receiveTask);
+ 
+                        }
+                        catch
+                        {
+                            await WebSocket.CloseOutputAsync(
+                                CloseStatus, CloseStatusDescription, CancellationToken.None).ConfigureAwait(false);
+                        }
+                    }
+                    else if (WebSocket.State == WebSocketState.CloseReceived)
+                    {
+                        await
+                            WebSocket.CloseOutputAsync(
+                                CloseStatus, CloseStatusDescription, linkedCts.Token).ConfigureAwait(false);
+                    }
                 }
             }
-        }
-
-        private async Task HandleCloseMessageAsync(WebSocketReceiveResult receiveResult, CancellationToken cancellationToken)
-        {
-            await
-                WebSocket.CloseOutputAsync(CloseStatus, CloseStatusDescription, cancellationToken)
-                    .ConfigureAwait(false);
-
-            CloseStatus = WebSocketCloseStatus.NormalClosure;
+            finally
+            {
+                _closeSemaphore.Release();
+            }
         }
 
         public override bool IsConnected => WebSocket.State
             >= WebSocketState.Open && WebSocket.State <= WebSocketState.CloseReceived; // We need to consider the Close status here to make the channel call the CloseAsync method.
-
 
         public override IReadOnlyDictionary<string, object> Options => new Dictionary<string, object>()
         {
@@ -250,7 +277,23 @@ namespace Lime.Transport.WebSocket
             {
                 WebSocket.Dispose();
                 _sendSemaphore.Dispose();
+                _receiveSemaphore.Dispose();
+                _closeSemaphore.Dispose();
             }
+        }
+
+        private void EnsureOpen(string operation)
+        {
+            if (WebSocket.State != WebSocketState.Open)
+            {
+                throw new InvalidOperationException($"Cannot {operation} in the websocket connection state '{WebSocket.State}'");
+            }
+        }
+
+        private async Task HandleCloseMessageAsync(WebSocketReceiveResult receiveResult, CancellationToken cancellationToken)
+        {
+            CloseStatus = WebSocketCloseStatus.NormalClosure;
+            _closeFrameTcs.TrySetResult(receiveResult);
         }
 
         private Task CloseWithTimeoutAsync()
@@ -259,6 +302,15 @@ namespace Lime.Transport.WebSocket
             {
                 return CloseAsync(cts.Token);
             }
+        }
+
+        private class BufferSegment
+        {
+            public byte[] Buffer;
+
+            public int Count;
+
+            public int Remaining => Buffer.Length - Count;
         }
     }
 }
