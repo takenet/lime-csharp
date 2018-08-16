@@ -206,6 +206,10 @@ namespace Lime.Sample.Server
             {
 
             }
+            catch (Exception ex)
+            {
+                Console.WriteLine("The consumer failed with an error: {0}", ex);
+            }
             finally
             {
                 if (serverChannel.RemoteNode != null)

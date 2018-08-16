@@ -26,9 +26,9 @@ namespace Lime.Transport.WebSocket
         private readonly SemaphoreSlim _receiveSemaphore;
         private readonly SemaphoreSlim _closeSemaphore;
         private readonly WebSocketMessageType _webSocketMessageType;
-        private WebSocketReceiveResult _closeFrame;
+        private readonly CancellationTokenSource _receiveCts;
 
-
+        private WebSocketReceiveResult _closeFrame;        
         protected WebSocketCloseStatus CloseStatus;
         protected string CloseStatusDescription;
 
@@ -49,6 +49,7 @@ namespace Lime.Transport.WebSocket
             _sendSemaphore = new SemaphoreSlim(1);
             _receiveSemaphore = new SemaphoreSlim(1);
             _closeSemaphore = new SemaphoreSlim(1);
+            _receiveCts = new CancellationTokenSource();
             CloseStatus = WebSocketCloseStatus.NormalClosure;
             CloseStatusDescription = string.Empty;
         }
@@ -113,11 +114,20 @@ namespace Lime.Transport.WebSocket
                     };
                     segments.Add(segment);
 
-                    var receiveResult =
-                        await WebSocket.ReceiveAsync(
-                            new ArraySegment<byte>(segment.Buffer),
-                            cancellationToken)
-                        .ConfigureAwait(false);
+                    // The websocket class go to the 'Aborted' state if the receiveasync operation is cancelled.
+                    // In this case, we are unable to close the connection clearly when required.
+                    var receiveTask = WebSocket.ReceiveAsync(new ArraySegment<byte>(segment.Buffer), _receiveCts.Token);
+                    var cancellationTask = cancellationToken.AsTask();
+
+                    // If the token is cancelled
+                    var completedTask = await Task.WhenAny(receiveTask, cancellationTask).ConfigureAwait(false);
+                    if (completedTask != receiveTask)
+                    {
+                        // The task above will thrown a TaskCancelledException, but just in case...
+                        cancellationToken.ThrowIfCancellationRequested();
+                    }
+
+                    var receiveResult = receiveTask.Result;
 
                     segment.Count = receiveResult.Count;
 
@@ -204,18 +214,18 @@ namespace Lime.Transport.WebSocket
                 using (var cts = new CancellationTokenSource(CloseTimeout))
                 using (var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, cts.Token))
                 {
-                    if (WebSocket.State == WebSocketState.Open)
+                    if (WebSocket.State == WebSocketState.Open ||
+                        WebSocket.State == WebSocketState.CloseReceived)
                     {
                         await
                             WebSocket.CloseAsync(CloseStatus, CloseStatusDescription, linkedCts.Token)
                                 .ConfigureAwait(false);
                     }
-                    else if (WebSocket.State == WebSocketState.CloseReceived)
-                    {
-                        await
-                            WebSocket.CloseOutputAsync(
-                                CloseStatus, CloseStatusDescription, linkedCts.Token).ConfigureAwait(false);
-                    }
+                }
+
+                if (!_receiveCts.IsCancellationRequested)
+                {
+                    _receiveCts.Cancel();
                 }
             }
             finally
@@ -249,6 +259,7 @@ namespace Lime.Transport.WebSocket
                 _sendSemaphore.Dispose();
                 _receiveSemaphore.Dispose();
                 _closeSemaphore.Dispose();
+                _receiveCts.Dispose();
             }
         }
 

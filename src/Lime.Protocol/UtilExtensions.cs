@@ -279,5 +279,18 @@ namespace Lime.Protocol
                 Description = exception.Message
             };
         }
+
+        /// <summary>
+        /// Creates a tasks that completes after the passed cancellation token is cancelled.
+        /// http://stackoverflow.com/questions/18670111/task-from-cancellation-token
+        /// </summary>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns></returns>
+        public static async Task AsTask(this CancellationToken cancellationToken)
+        {
+            var tcs = new TaskCompletionSource<bool>();
+            using (cancellationToken.Register(() => tcs.TrySetCanceled(), useSynchronizationContext: false))
+                await tcs.Task;
+        }
     }
 }
