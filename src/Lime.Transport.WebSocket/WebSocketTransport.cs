@@ -231,8 +231,7 @@ namespace Lime.Transport.WebSocket
 
                         try
                         {
-                            await Task.WhenAny(_closeFrameTcs.Task.WithCancellation(linkedCts.Token), receiveTask);
- 
+                            await Task.WhenAll(_closeFrameTcs.Task.WithCancellation(linkedCts.Token), receiveTask);
                         }
                         catch
                         {
