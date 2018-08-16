@@ -104,7 +104,7 @@ namespace Lime.Transport.WebSocket
             {
                 EnsureOpen("receive");
 
-                while (true)
+                while (!_receiveCts.IsCancellationRequested)
                 {
                     cancellationToken.ThrowIfCancellationRequested();
 
@@ -120,7 +120,7 @@ namespace Lime.Transport.WebSocket
                         .ReceiveAsync(new ArraySegment<byte>(segment.Buffer), _receiveCts.Token)
                         .ContinueWith(t =>
                         {
-                            if (t.IsCanceled) return default;
+                            if (t.IsCanceled) return null;
                             return t.Result;
                         });
                     var cancellationTask = cancellationToken.AsTask();
@@ -134,6 +134,7 @@ namespace Lime.Transport.WebSocket
                     }
 
                     var receiveResult = receiveTask.Result;
+                    if (receiveResult == null) continue;
 
                     segment.Count = receiveResult.Count;
 
