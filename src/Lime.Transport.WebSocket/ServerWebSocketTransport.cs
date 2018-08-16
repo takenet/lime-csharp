@@ -37,5 +37,7 @@ namespace Lime.Transport.WebSocket
                 return options;
             }
         }
+
+        protected override Task PerformOpenAsync(Uri uri, CancellationToken cancellationToken) => Task.CompletedTask;
     }
 }

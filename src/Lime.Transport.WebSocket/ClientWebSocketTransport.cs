@@ -24,7 +24,7 @@ namespace Lime.Transport.WebSocket
         {
             var clientWebSocket = ((ClientWebSocket) WebSocket);
             clientWebSocket.Options.AddSubProtocol(LimeUri.LIME_URI_SCHEME);
-            await clientWebSocket.ConnectAsync(uri, cancellationToken).ConfigureAwait(false);            
+            await clientWebSocket.ConnectAsync(uri, cancellationToken).ConfigureAwait(false);
         }
     }
 }

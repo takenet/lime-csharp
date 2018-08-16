@@ -26,7 +26,7 @@ namespace Lime.Transport.WebSocket
         private readonly SemaphoreSlim _receiveSemaphore;
         private readonly SemaphoreSlim _closeSemaphore;
         private readonly WebSocketMessageType _webSocketMessageType;
-        private TaskCompletionSource<WebSocketReceiveResult> _closeFrameTcs;
+        private WebSocketReceiveResult _closeFrame;
 
 
         protected WebSocketCloseStatus CloseStatus;
@@ -123,7 +123,7 @@ namespace Lime.Transport.WebSocket
 
                     if (receiveResult.MessageType == WebSocketMessageType.Close)
                     {
-                        await HandleCloseMessageAsync(receiveResult, cancellationToken);
+                        HandleCloseMessage(receiveResult);
                         break;
                     }
 
@@ -188,12 +188,6 @@ namespace Lime.Transport.WebSocket
             return _envelopeSerializer.Deserialize(serializedEnvelope);
         }
 
-        protected override Task PerformOpenAsync(Uri uri, CancellationToken cancellationToken)
-        {
-            _closeFrameTcs = new TaskCompletionSource<WebSocketReceiveResult>();
-            return Task.CompletedTask;
-        }
-
         /// <summary>
         /// Closes the transport, implementing the websocket close handshake.
         /// </summary>
@@ -215,29 +209,6 @@ namespace Lime.Transport.WebSocket
                         await
                             WebSocket.CloseAsync(CloseStatus, CloseStatusDescription, linkedCts.Token)
                                 .ConfigureAwait(false);
-
-                        Task receiveTask;
-
-                        if (_receiveSemaphore.CurrentCount == 1 &&
-                            !_closeFrameTcs.Task.IsCompleted)
-                        {
-                            receiveTask = ReceiveAsync(cts.Token);
-                        }
-                        else
-                        {
-                            // There's already an active receive task
-                            receiveTask = Task.CompletedTask;
-                        }
-
-                        try
-                        {
-                            await Task.WhenAll(_closeFrameTcs.Task.WithCancellation(linkedCts.Token), receiveTask);
-                        }
-                        catch
-                        {
-                            await WebSocket.CloseOutputAsync(
-                                CloseStatus, CloseStatusDescription, CancellationToken.None).ConfigureAwait(false);
-                        }
                     }
                     else if (WebSocket.State == WebSocketState.CloseReceived)
                     {
@@ -289,10 +260,10 @@ namespace Lime.Transport.WebSocket
             }
         }
 
-        private async Task HandleCloseMessageAsync(WebSocketReceiveResult receiveResult, CancellationToken cancellationToken)
+        private void HandleCloseMessage(WebSocketReceiveResult receiveResult)
         {
             CloseStatus = WebSocketCloseStatus.NormalClosure;
-            _closeFrameTcs.TrySetResult(receiveResult);
+            _closeFrame = receiveResult;
         }
 
         private Task CloseWithTimeoutAsync()
