@@ -116,13 +116,7 @@ namespace Lime.Transport.WebSocket
 
                     // The websocket class go to the 'Aborted' state if the receiveasync operation is cancelled.
                     // In this case, we are unable to close the connection clearly when required.
-                    var receiveTask = WebSocket
-                        .ReceiveAsync(new ArraySegment<byte>(segment.Buffer), _receiveCts.Token)
-                        .ContinueWith(t =>
-                        {
-                            if (t.IsCanceled) return null;
-                            return t.Result;
-                        });
+                    var receiveTask = WebSocket.ReceiveAsync(new ArraySegment<byte>(segment.Buffer), _receiveCts.Token);
                     var cancellationTask = cancellationToken.AsTask();
 
                     // If the token is cancelled
@@ -133,7 +127,7 @@ namespace Lime.Transport.WebSocket
                         cancellationToken.ThrowIfCancellationRequested();
                     }
 
-                    var receiveResult = receiveTask.Result;
+                    var receiveResult = await receiveTask;
                     if (receiveResult == null) continue;
 
                     segment.Count = receiveResult.Count;
