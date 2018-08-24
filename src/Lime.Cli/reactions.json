@@ -1,0 +1,25 @@
+{
+    "reactions": [
+        {
+            "trigger": {
+                "type": "MessageReceived",
+                "filters": [
+                    {
+                        "type": {
+                            "comparison": "equals",
+                            "value": "text/plain"
+                        }
+                    }
+                ],
+                "action": {
+                    "id": "send-text-message",
+                    "configuration": {
+                        "to": "${trigger.message.from}",
+                        "type": "text/plain",
+                        "content": "Hello world!"
+                    }
+                }
+            }
+        }
+    ]
+}

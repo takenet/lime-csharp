@@ -42,7 +42,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lime.Protocol.ConsoleTests"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lime.Protocol.UnitTests.Common", "Lime.Protocol.UnitTests.Common\Lime.Protocol.UnitTests.Common.csproj", "{8C3CA680-1C8D-4734-9BA8-F6F22A7FAA13}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lime.Benchmarks", "Lime.Benchmarks\Lime.Benchmarks.csproj", "{1BDBEAE2-2A33-457B-8344-B7AB0B34D8C9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lime.Benchmarks", "Lime.Benchmarks\Lime.Benchmarks.csproj", "{1BDBEAE2-2A33-457B-8344-B7AB0B34D8C9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lime.Cli", "Lime.Cli\Lime.Cli.csproj", "{F9B4105D-788D-4235-A9E8-3C682E548014}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -110,6 +112,10 @@ Global
 		{1BDBEAE2-2A33-457B-8344-B7AB0B34D8C9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1BDBEAE2-2A33-457B-8344-B7AB0B34D8C9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1BDBEAE2-2A33-457B-8344-B7AB0B34D8C9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F9B4105D-788D-4235-A9E8-3C682E548014}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F9B4105D-788D-4235-A9E8-3C682E548014}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F9B4105D-788D-4235-A9E8-3C682E548014}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F9B4105D-788D-4235-A9E8-3C682E548014}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

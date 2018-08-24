@@ -1,0 +1,31 @@
+{
+    "actions": [
+        {
+            "id": "send-text-message",
+            "type": "SendMessageAction",
+            "configurationSchema": {
+                "id": {
+                    "type": "text",
+                    "required": false,
+                    "default": "1"
+                },
+                "to": {
+                    "type": "text",
+                    "required": false
+                },
+                "type": {
+                    "type": "text",
+                    "required": true
+                },
+                "content": {
+                    "type": "text",
+                    "required": true
+                }
+            }
+        },
+        {
+            "id": "help",
+            "type": "HelpAction"
+        }
+    ]
+}

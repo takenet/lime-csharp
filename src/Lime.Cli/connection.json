@@ -1,0 +1,12 @@
+{
+    "identity": "andreb@msging.net",
+    "password": "123456",
+    "serverUri": "net.tcp://msging.net:55321",
+    "presence": {
+        "status": "available",
+        "routingRule": "identity"
+    },
+    "receipt": {
+        "events": ["received", "consumed"]
+    }
+}
