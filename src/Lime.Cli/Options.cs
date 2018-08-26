@@ -32,5 +32,8 @@ namespace Lime.Cli
 
         [Option("receipt.events")]
         public string ReceiptEvents { get; set; }
+
+        [Option(HelpText = "The timeout for channel operations, in seconds", Default = 30)]
+        public int Timeout { get; set; }
     }
 }

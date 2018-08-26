@@ -23,18 +23,49 @@ namespace Lime.Cli
     {
         static async Task Main(string[] args)
         {
-            var parsedArgs = Parser.Default.ParseArguments<Options>(args);
+            var parsedArgsResult = Parser.Default.ParseArguments<Options>(args);
 
-            if (parsedArgs.Tag == ParserResultType.NotParsed)
+            if (parsedArgsResult.Tag == ParserResultType.NotParsed)
             {
-                HelpText.AutoBuild(parsedArgs);
+                HelpText.AutoBuild(parsedArgsResult);
                 return;
             }
 
-            Console.WriteLine("Hello World!");
+            Console.WriteLine("Welcome to LIME");
+
+            var options = ((Parsed<Options>)parsedArgsResult).Value;
+
+            IOnDemandClientChannel channel;
+
+            using (var cts = CreateCancellationTokenSource(options.Timeout))
+            {
+                channel = await ConnectAsync(options.ToConnectionInformation(), cts.Token);
+            }
+
+            Console.WriteLine("Connected to the server");
+
+            while (true)
+            {
+                Console.Write("> ");
+                var input = Console.ReadLine();
+
+                if (string.IsNullOrEmpty(input)) break;
+            }
+
+            using (var cts = CreateCancellationTokenSource(options.Timeout))
+            {
+                await channel.FinishAsync(cts.Token);
+            }
+
+            Console.WriteLine("Bye!");
         }
 
-        private static async Task<IEstablishedChannel> ConnectAsync(ConnectionInformation connectionInformation, CancellationToken cancellationToken)
+        private static CancellationTokenSource CreateCancellationTokenSource(int timeout)
+        {
+            return new CancellationTokenSource(TimeSpan.FromSeconds(timeout));
+        }
+
+        private static async Task<IOnDemandClientChannel> ConnectAsync(ConnectionInformation connectionInformation, CancellationToken cancellationToken)
         {
             ITransport transportFactory() => CreateTransportForUri(connectionInformation.ServerUri);
 
@@ -76,6 +107,8 @@ namespace Lime.Cli
             }
 
             var clientChannel = new OnDemandClientChannel(builder);
+
+            //var clientChannel2 = new MultiplexerClientChannel()
 
             clientChannel.ChannelCreationFailedHandlers.Add(information =>
             {
