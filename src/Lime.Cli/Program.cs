@@ -1,6 +1,8 @@
 ﻿using CommandLine;
 using CommandLine.Text;
+using Lime.Cli.Actions;
 using Lime.Messaging;
+using Lime.Messaging.Contents;
 using Lime.Messaging.Resources;
 using Lime.Protocol;
 using Lime.Protocol.Client;
@@ -13,7 +15,11 @@ using Lime.Protocol.Serialization.Newtonsoft;
 using Lime.Protocol.Util;
 using Lime.Transport.Tcp;
 using Lime.Transport.WebSocket;
+using SimpleInjector;
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -39,17 +45,61 @@ namespace Lime.Cli
 
             using (var cts = CreateCancellationTokenSource(options.Timeout))
             {
-                channel = await ConnectAsync(options.ToConnectionInformation(), cts.Token);
+                channel = await EstablishChannelAsync(options.ToConnectionInformation(), cts.Token);
             }
 
-            Console.WriteLine("Connected to the server");
+            Console.WriteLine("Channel established");
 
-            while (true)
+            var container = new Container();
+            container.Collection.Register(typeof(IAction), Assembly.GetExecutingAssembly());
+            container.RegisterSingleton<IDocumentSerializer, DocumentSerializer>();
+            container.RegisterInstance(new DocumentTypeResolver().WithMessagingDocuments());
+
+            var actionsDictionary = container
+                .GetAllInstances<IAction>()
+                .ToDictionary(t => t.OptionsType, t => t);
+
+            var actionsOptionsTypes = actionsDictionary
+                .Values
+                .Select(a => a.OptionsType)
+                .ToArray();
+
+            while (channel.IsEstablished)
             {
                 Console.Write("> ");
                 var input = Console.ReadLine();
 
-                if (string.IsNullOrEmpty(input)) break;
+                if (string.IsNullOrEmpty(input) || 
+                    input.Equals("exit", StringComparison.OrdinalIgnoreCase))
+                {
+                    break;
+                }
+
+                if (!channel.IsEstablished)
+                {
+                    Console.WriteLine("Channel is not established");
+                    break;
+                }
+
+                var parsedCommandResult = Parser.Default.ParseArguments(input.Split(' '), actionsOptionsTypes);
+                if (parsedCommandResult.Tag == ParserResultType.NotParsed)
+                {
+                    Console.WriteLine("Unknown command");
+                    continue;
+                }
+
+                if (!actionsDictionary.TryGetValue(parsedCommandResult.TypeInfo.Current, out var action))
+                {
+                    Console.WriteLine("Action type not found");
+                    continue;
+                }
+
+                var actionOptions = ((Parsed<object>)parsedCommandResult).Value;
+
+                using (var cts = CreateCancellationTokenSource(options.Timeout))
+                {
+                    await action.ExecuteAsync(actionOptions, channel, cts.Token);
+                }
             }
 
             using (var cts = CreateCancellationTokenSource(options.Timeout))
@@ -65,7 +115,7 @@ namespace Lime.Cli
             return new CancellationTokenSource(TimeSpan.FromSeconds(timeout));
         }
 
-        private static async Task<IOnDemandClientChannel> ConnectAsync(ConnectionInformation connectionInformation, CancellationToken cancellationToken)
+        private static async Task<IOnDemandClientChannel> EstablishChannelAsync(ConnectionInformation connectionInformation, CancellationToken cancellationToken)
         {
             ITransport transportFactory() => CreateTransportForUri(connectionInformation.ServerUri);
 

@@ -4,10 +4,14 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp2.1</TargetFramework>
     <LangVersion>7.3</LangVersion>
+    <Company>LIME</Company>
+    <Product>LIME Protocol</Product>
+    <Authors>andreb</Authors>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="CommandLineParser" Version="2.3.0" />
+    <PackageReference Include="SimpleInjector" Version="4.3.0" />
   </ItemGroup>
 
   <ItemGroup>
