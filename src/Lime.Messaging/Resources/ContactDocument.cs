@@ -20,7 +20,8 @@ namespace Lime.Messaging.Resources
         public const string PHOTO_URI_KEY = "photoUri";
         public const string CELL_PHONE_NUMBER_KEY = "cellPhoneNumber";
         public const string GENDER_KEY = "gender";
-        public const string TIMEZONE_KEY = "timezone";
+        public const string TIME_ZONE_KEY = "timeZone";
+        public const string OFFSET_KEY = "offset";
         public const string CULTURE_KEY = "culture";
         public const string EXTRAS_KEY = "extras";
         public const string SOURCE_KEY = "source";
@@ -86,10 +87,16 @@ namespace Lime.Messaging.Resources
         public Gender? Gender { get; set; }
 
         /// <summary>
-        /// Represents the account timezone relative to GMT.
+        /// Represents the account time zone name.
         /// </summary>
-        [DataMember(Name = TIMEZONE_KEY)]
-        public int? Timezone { get; set; }
+        [DataMember(Name = TIME_ZONE_KEY)]
+        public string Timezone { get; set; }
+
+        /// <summary>
+        /// Represents the account offset relative to UTC.
+        /// </summary>
+        [DataMember(Name = OFFSET_KEY)]
+        public double? Offset { get; set; }
 
         /// <summary>
         /// Represents the person account culture info, in the IETF language tag format.
