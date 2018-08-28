@@ -90,7 +90,7 @@ namespace Lime.Messaging.Resources
         /// Represents the account time zone name.
         /// </summary>
         [DataMember(Name = TIME_ZONE_KEY)]
-        public string Timezone { get; set; }
+        public string TimeZone { get; set; }
 
         /// <summary>
         /// Represents the account offset relative to UTC.
