@@ -20,7 +20,7 @@ namespace Lime.Messaging.Resources
         public const string PHOTO_URI_KEY = "photoUri";
         public const string CELL_PHONE_NUMBER_KEY = "cellPhoneNumber";
         public const string GENDER_KEY = "gender";
-        public const string TIME_ZONE_KEY = "timeZone";
+        public const string TIME_ZONE_NAME_KEY = "timeZoneName";
         public const string OFFSET_KEY = "offset";
         public const string CULTURE_KEY = "culture";
         public const string EXTRAS_KEY = "extras";
@@ -89,8 +89,8 @@ namespace Lime.Messaging.Resources
         /// <summary>
         /// Represents the account time zone name.
         /// </summary>
-        [DataMember(Name = TIME_ZONE_KEY)]
-        public string TimeZone { get; set; }
+        [DataMember(Name = TIME_ZONE_NAME_KEY)]
+        public string TimeZoneName { get; set; }
 
         /// <summary>
         /// Represents the account offset relative to UTC.
