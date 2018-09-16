@@ -2,7 +2,6 @@
 using CommandLine.Text;
 using Lime.Cli.Actions;
 using Lime.Messaging;
-using Lime.Messaging.Contents;
 using Lime.Messaging.Resources;
 using Lime.Protocol;
 using Lime.Protocol.Client;
@@ -17,7 +16,6 @@ using Lime.Transport.Tcp;
 using Lime.Transport.WebSocket;
 using SimpleInjector;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
@@ -37,7 +35,7 @@ namespace Lime.Cli
                 return;
             }
 
-            Console.WriteLine("Welcome to LIME");
+            WriteInfo("Welcome to LIME");
 
             var options = ((Parsed<Options>)parsedArgsResult).Value;
 
@@ -48,7 +46,7 @@ namespace Lime.Cli
                 channel = await EstablishChannelAsync(options.ToConnectionInformation(), cts.Token);
             }
 
-            Console.WriteLine("Channel established");
+            WriteInfo("Channel established");
 
             var container = new Container();
             container.Collection.Register(typeof(IAction), Assembly.GetExecutingAssembly());
@@ -69,7 +67,7 @@ namespace Lime.Cli
                 Console.Write("> ");
                 var input = Console.ReadLine();
 
-                if (string.IsNullOrEmpty(input) || 
+                if (string.IsNullOrEmpty(input) ||
                     input.Equals("exit", StringComparison.OrdinalIgnoreCase))
                 {
                     break;
@@ -77,20 +75,20 @@ namespace Lime.Cli
 
                 if (!channel.IsEstablished)
                 {
-                    Console.WriteLine("Channel is not established");
+                    WriteInfo("Channel is not established");
                     break;
                 }
 
                 var parsedCommandResult = Parser.Default.ParseArguments(input.Split(' '), actionsOptionsTypes);
                 if (parsedCommandResult.Tag == ParserResultType.NotParsed)
                 {
-                    Console.WriteLine("Unknown command");
+                    WriteInfo("Unknown command");
                     continue;
                 }
 
                 if (!actionsDictionary.TryGetValue(parsedCommandResult.TypeInfo.Current, out var action))
                 {
-                    Console.WriteLine("Action type not found");
+                    WriteInfo("Action type not found");
                     continue;
                 }
 
@@ -98,7 +96,14 @@ namespace Lime.Cli
 
                 using (var cts = CreateCancellationTokenSource(options.Timeout))
                 {
-                    await action.ExecuteAsync(actionOptions, channel, cts.Token);
+                    try
+                    {
+                        await action.ExecuteAsync(actionOptions, channel, cts.Token);
+                    }
+                    catch (Exception ex)
+                    {
+                        WriteError(ex.Message);
+                    }
                 }
             }
 
@@ -107,7 +112,7 @@ namespace Lime.Cli
                 await channel.FinishAsync(cts.Token);
             }
 
-            Console.WriteLine("Bye!");
+            WriteInfo("Bye!");
         }
 
         private static CancellationTokenSource CreateCancellationTokenSource(int timeout)
@@ -162,33 +167,24 @@ namespace Lime.Cli
 
             clientChannel.ChannelCreationFailedHandlers.Add(information =>
             {
-                Console.Write("Could not establish the session: {0}", information.Exception.Message);
-                Console.WriteLine();
+                WriteError("Could not establish the session: {0}", information.Exception.Message);
                 return TaskUtil.FalseCompletedTask;
             });
 
 
             var channelListener = new ChannelListener(message =>
-            {
-                Console.ForegroundColor = ConsoleColor.DarkRed;
-                Console.WriteLine("Message with id '{0}' received from '{1}': {2}", message.Id, message.GetSender(),
-                    message.Content);
-                Console.ResetColor();
-                return TaskUtil.TrueCompletedTask;
-            },
+                {
+                    WriteInfo("Message with id '{0}' received from '{1}': {2}", message.Id, message.GetSender(), message.Content);
+                    return TaskUtil.TrueCompletedTask;
+                },
                 notification =>
                 {
-                    Console.ForegroundColor = ConsoleColor.DarkBlue;
-                    Console.WriteLine("Notification with id {0} received from '{1}' - Event: {2}",
-                        notification.Id, notification.GetSender(), notification.Event);
-                    Console.ResetColor();
+                    WriteInfo("Notification with id {0} received from '{1}' - Event: {2}", notification.Id, notification.GetSender(), notification.Event);
                     return TaskUtil.TrueCompletedTask;
                 },
                 command =>
                 {
-                    Console.ForegroundColor = ConsoleColor.DarkGreen;
-                    Console.WriteLine("Command with id '{0}' received from '{1}' - Method: {2} - URI: {3}", command.Id, command.GetSender(), command.Method, command.Uri);
-                    Console.ResetColor();
+                    WriteInfo("Command with id '{0}' received from '{1}' - Method: {2} - URI: {3}", command.Id, command.GetSender(), command.Method, command.Uri);                    
                     return TaskUtil.TrueCompletedTask;
                 });
 
@@ -216,6 +212,28 @@ namespace Lime.Cli
                 default:
                     throw new NotSupportedException($"Unsupported URI scheme '{uri.Scheme}'");
             }
+        }
+
+        private static void WriteInfo(string format, params object[] args)
+        {
+            WriteLine(format, ConsoleColor.Gray, args);
+        }
+
+        private static void WriteWarning(string format, params object[] args)
+        {
+            WriteLine(format, ConsoleColor.DarkYellow, args);
+        }
+
+        private static void WriteError(string format, params object[] args)
+        {
+            WriteLine(format, ConsoleColor.DarkRed, args);
+        }
+
+        private static void WriteLine(string format, ConsoleColor consoleColor, params object[] args)
+        {
+            Console.ForegroundColor = consoleColor;
+            Console.WriteLine(format, args);
+            Console.ResetColor();
         }
     }
 }

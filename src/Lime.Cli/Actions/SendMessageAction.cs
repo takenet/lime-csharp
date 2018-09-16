@@ -27,9 +27,6 @@ namespace Lime.Cli.Actions
                     Content = content
                 },
                 cancellationToken);
-
         }
     }
-
-
 }
