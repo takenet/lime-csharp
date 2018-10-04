@@ -253,33 +253,30 @@ namespace Lime.Cli
 
             var clientChannel = new OnDemandClientChannel(builder);
 
-            //var clientChannel2 = new MultiplexerClientChannel()
-
             clientChannel.ChannelCreationFailedHandlers.Add(information =>
             {
-                WriteError("Could not establish the session: {0}", information.Exception.Message);
+                //WriteError("Could not establish the session: {0}", information.Exception.Message);
                 return TaskUtil.FalseCompletedTask;
             });
 
-
             var channelListener = new ChannelListener(message =>
                 {
-                    WriteInfo("Message with id '{0}' received from '{1}': {2}", message.Id, message.GetSender(), message.Content);
+                    //WriteInfo("Message with id '{0}' received from '{1}': {2}", message.Id, message.GetSender(), message.Content);
                     return TaskUtil.TrueCompletedTask;
                 },
                 notification =>
                 {
-                    WriteInfo("Notification with id {0} received from '{1}' - Event: {2}", notification.Id, notification.GetSender(), notification.Event);
+                    //WriteInfo("Notification with id {0} received from '{1}' - Event: {2}", notification.Id, notification.GetSender(), notification.Event);
                     return TaskUtil.TrueCompletedTask;
                 },
                 command =>
                 {
-                    WriteInfo("Command with id '{0}' received from '{1}' - Method: {2} - URI: {3}", command.Id, command.GetSender(), command.Method, command.Uri);                    
+                    //WriteInfo("Command with id '{0}' received from '{1}' - Method: {2} - URI: {3}", command.Id, command.GetSender(), command.Method, command.Uri);                    
                     return TaskUtil.TrueCompletedTask;
                 });
 
 
-            await clientChannel.EstablishAsync(CancellationToken.None);
+            await clientChannel.EstablishAsync(cancellationToken);
             channelListener.Start(clientChannel);
 
             return clientChannel;
