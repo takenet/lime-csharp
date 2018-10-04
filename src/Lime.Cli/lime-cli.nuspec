@@ -1,13 +1,15 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
   <metadata>
-    <!-- Required elements-->
     <id>lime-cli</id>
     <title>LIME command line interface</title>
     <version>0.1.0</version>
     <description>Helper CLI to connect to LIME servers and send envelope</description>
     <authors>take,andreb</authors>
-    <projectUrl>http://limeprotocol.org/</projectUrl>
+    <projectUrl>https://github.com/takenet/lime-csharp/tree/master/src/Lime.Cli</projectUrl>
+    <releaseNotes>
+      * 0.1.0 - First CLI release, with basic support for sending messages, notifications and sending/processing commands.
+    </releaseNotes>
   </metadata>
 
 </package>
