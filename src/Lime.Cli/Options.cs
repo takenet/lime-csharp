@@ -6,9 +6,6 @@ namespace Lime.Cli
 {
     public class Options : IOptions
     {
-        [Option(HelpText = "Run in interactive mode", Default = true)]
-        public bool Interactive { get; set; }
-
         [Option(HelpText = "The identity for connection")]
         public string Identity { get; set; }
 
@@ -21,8 +18,8 @@ namespace Lime.Cli
         [Option(HelpText = "The session instance name")]
         public string Instance { get; set; }
 
-        [Option]
-        public Uri ServerUri { get; set; }
+        [Option(HelpText = "The address of the server to connect to", Required = true)]
+        public Uri Uri { get; set; }
 
         [Option("presence.status")]
         public string PresenceStatus { get; set; }
@@ -35,5 +32,8 @@ namespace Lime.Cli
 
         [Option(HelpText = "The timeout for channel operations, in seconds", Default = 30)]
         public int Timeout { get; set; }
+
+        [Option(HelpText = "The action to be executed in the non-interactive mode")]
+        public string Action { get; set; }
     }
 }

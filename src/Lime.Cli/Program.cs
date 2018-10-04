@@ -16,6 +16,7 @@ using Lime.Transport.Tcp;
 using Lime.Transport.WebSocket;
 using SimpleInjector;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
@@ -25,43 +26,105 @@ namespace Lime.Cli
 {
     class Program
     {
-        static async Task Main(string[] args)
+        private static readonly Parser Parser = new Parser((settings) =>
         {
-            var parsedArgsResult = Parser.Default.ParseArguments<Options>(args);
+            settings.IgnoreUnknownArguments = true;
+            settings.CaseInsensitiveEnumValues = true;
+        });
 
+        static async Task<int> Main(string[] args)
+        {
+            var parsedArgsResult = Parser.ParseArguments<Options>(args);
             if (parsedArgsResult.Tag == ParserResultType.NotParsed)
             {
-                HelpText.AutoBuild(parsedArgsResult);
-                return;
+                var helpText = HelpText.AutoBuild(parsedArgsResult);
+                WriteInfo(helpText.ToString());
+                return -1;
             }
 
-            WriteInfo("Welcome to LIME");
-
             var options = ((Parsed<Options>)parsedArgsResult).Value;
+            var interactive = string.IsNullOrWhiteSpace(options.Action);
+
+            string[] actionArgs = null;
+            if (!interactive)
+            {
+                // Action mode
+                actionArgs = GetActionArgs(options.Action, args);
+            }
+
+            if (interactive)
+            {
+                WriteInfo("Welcome to LIME");
+            }
 
             IOnDemandClientChannel channel;
 
             using (var cts = CreateCancellationTokenSource(options.Timeout))
             {
-                channel = await EstablishChannelAsync(options.ToConnectionInformation(), cts.Token);
+                try
+                {
+                    channel = await EstablishChannelAsync(options.ToConnectionInformation(), cts.Token);
+                }
+                catch (Exception ex)
+                {
+                    WriteError(ex.Message);
+                    return -1;
+                }
             }
 
-            WriteInfo("Channel established");
+            if (interactive)
+            {
+                WriteInfo("Channel established");
+            }
 
+            var actionsDictionary = GetActions();
+
+            var resultStatus = 0;
+
+            if (interactive)
+            {
+                await ExecuteInteractiveModeAsync(options, channel, actionsDictionary);
+            }
+            else if (!await ExecuteActionAsync(actionArgs, channel, actionsDictionary, options.Timeout))
+            {
+                resultStatus = -1;
+            }
+
+            using (var cts = CreateCancellationTokenSource(options.Timeout))
+            {
+                try
+                {
+                    await channel.FinishAsync(cts.Token);
+                }
+                catch (Exception ex)
+                {
+                    WriteError(ex.Message);
+                    return -1;
+                }
+            }
+
+            if (interactive)
+            {
+                WriteInfo("Bye!");
+            }
+
+            return resultStatus;
+        }
+
+        private static Dictionary<Type, IAction> GetActions()
+        {
             var container = new Container();
             container.Collection.Register(typeof(IAction), Assembly.GetExecutingAssembly());
             container.RegisterSingleton<IDocumentSerializer, DocumentSerializer>();
             container.RegisterInstance(new DocumentTypeResolver().WithMessagingDocuments());
 
-            var actionsDictionary = container
+            return container
                 .GetAllInstances<IAction>()
                 .ToDictionary(t => t.OptionsType, t => t);
+        }
 
-            var actionsOptionsTypes = actionsDictionary
-                .Values
-                .Select(a => a.OptionsType)
-                .ToArray();
-
+        private static async Task ExecuteInteractiveModeAsync(Options options, IOnDemandClientChannel channel, Dictionary<Type, IAction> actionsDictionary)
+        {
             while (channel.IsEstablished)
             {
                 Console.Write("> ");
@@ -79,40 +142,67 @@ namespace Lime.Cli
                     break;
                 }
 
-                var parsedCommandResult = Parser.Default.ParseArguments(input.Split(' '), actionsOptionsTypes);
-                if (parsedCommandResult.Tag == ParserResultType.NotParsed)
-                {
-                    WriteInfo("Unknown command");
-                    continue;
-                }
-
-                if (!actionsDictionary.TryGetValue(parsedCommandResult.TypeInfo.Current, out var action))
-                {
-                    WriteInfo("Action type not found");
-                    continue;
-                }
-
-                var actionOptions = ((Parsed<object>)parsedCommandResult).Value;
-
-                using (var cts = CreateCancellationTokenSource(options.Timeout))
-                {
-                    try
-                    {
-                        await action.ExecuteAsync(actionOptions, channel, cts.Token);
-                    }
-                    catch (Exception ex)
-                    {
-                        WriteError(ex.Message);
-                    }
-                }
+                await ExecuteActionAsync(input.Split(' '), channel, actionsDictionary, options.Timeout);
             }
+        }
 
-            using (var cts = CreateCancellationTokenSource(options.Timeout))
+        private static async Task<bool> ExecuteActionAsync(string[] args, IOnDemandClientChannel channel, Dictionary<Type, IAction> actionsDictionary, int timeout)
+        {
+            var parsedCommandResult = Parser.ParseArguments(args, actionsDictionary.Values.Select(v => v.OptionsType).ToArray());
+            if (parsedCommandResult.Tag == ParserResultType.NotParsed)
             {
-                await channel.FinishAsync(cts.Token);
+                WriteInfo("Invalid action or invalid arguments");
+                return false;
             }
 
-            WriteInfo("Bye!");
+            if (!actionsDictionary.TryGetValue(parsedCommandResult.TypeInfo.Current, out var action))
+            {
+                WriteInfo("Action type not found");
+                return false;
+            }
+
+            var actionOptions = ((Parsed<object>)parsedCommandResult).Value;
+
+            using (var cts = CreateCancellationTokenSource(timeout))
+            {
+                try
+                {
+                    await action.ExecuteAsync(actionOptions, channel, cts.Token);
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    WriteError(ex.Message);
+                    return false;
+                }
+            }
+        }
+
+        private static string[] GetActionArgs(string actionName, string[] args)
+        {
+            var actionArgsList = new List<string>() { actionName };
+            var lastWasActionArg = false;
+
+            for (int i = 0; i < args.Length; i++)
+            {
+                var arg = args[i];
+
+                if (arg.StartsWith("--action.", StringComparison.OrdinalIgnoreCase))
+                {
+                    actionArgsList.Add(arg.Replace("--action.", "--"));
+                    lastWasActionArg = true;
+                    continue;
+                }
+
+                if (lastWasActionArg && !arg.StartsWith("--"))
+                {
+                    actionArgsList.Add(arg);
+                }
+
+                lastWasActionArg = false;
+            }
+
+            return actionArgsList.ToArray();
         }
 
         private static CancellationTokenSource CreateCancellationTokenSource(int timeout)
@@ -221,12 +311,12 @@ namespace Lime.Cli
 
         private static void WriteWarning(string format, params object[] args)
         {
-            WriteLine(format, ConsoleColor.DarkYellow, args);
+            WriteLine(format, ConsoleColor.Yellow, args);
         }
 
         private static void WriteError(string format, params object[] args)
         {
-            WriteLine(format, ConsoleColor.DarkRed, args);
+            WriteLine(format, ConsoleColor.Red, args);
         }
 
         private static void WriteLine(string format, ConsoleColor consoleColor, params object[] args)

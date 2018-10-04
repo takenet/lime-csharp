@@ -15,7 +15,7 @@ namespace Lime.Cli
         
         string Instance { get; }
         
-        Uri ServerUri { get; }
+        Uri Uri { get; }
         
         string PresenceStatus { get; }
         
@@ -32,7 +32,7 @@ namespace Lime.Cli
             {
                 Identity = options.Identity,
                 Password = options.Password,
-                ServerUri = options.ServerUri,
+                ServerUri = options.Uri,
                 Instance = options.Instance ?? $"{Environment.MachineName.ToLowerInvariant()}-cli",
                 Presence = new Presence
                 {

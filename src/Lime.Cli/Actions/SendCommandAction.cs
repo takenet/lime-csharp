@@ -31,6 +31,4 @@ namespace Lime.Cli.Actions
                 cancellationToken);
         }
     }
-
-
 }

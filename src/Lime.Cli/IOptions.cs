@@ -2,6 +2,5 @@
 {
     public interface IOptions : IConnectionOptions
     {
-        bool Interactive { get; }
     }
 }

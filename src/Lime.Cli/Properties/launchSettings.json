@@ -1,8 +1,7 @@
 {
   "profiles": {
     "Lime.Cli": {
-      "commandName": "Project",
-      "commandLineArgs": "--identity andreb@msging.net --password 123456 --serveruri net.tcp://tcp.msging.net:443 --presence.status available --presence.routingrule identity --interactive"
+      "commandName": "Project"
     }
   }
 }
