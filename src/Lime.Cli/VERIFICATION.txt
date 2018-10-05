@@ -1,0 +1,10 @@
+﻿VERIFICATION
+Verification is intended to assist the Chocolatey moderators and community
+in verifying that this package's contents are trustworthy.
+ 
+VERIFICATION
+Verification is intended to assist the Chocolatey moderators and community
+in verifying that this package's contents are trustworthy.
+ 
+This package is published by the Take and BLiP, the LIME protocol maintainers itself (https://limeprotocol.org/about.html)
+The binaries are identical to other package types published by the project.

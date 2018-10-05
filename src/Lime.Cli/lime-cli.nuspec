@@ -4,12 +4,16 @@
     <id>lime-cli</id>
     <title>LIME command line interface</title>
     <version>0.1.0</version>
-    <description>Helper CLI to connect to LIME servers and send envelope</description>
+    <description>Helper CLI to connect to LIME servers and send envelopes</description>
+    <summary>Helper CLI to connect to LIME servers and send envelopes</summary>
     <authors>take,andreb</authors>
-    <projectUrl>https://github.com/takenet/lime-csharp/tree/master/src/Lime.Cli</projectUrl>
+    <projectUrl>https://limeprotocol.org</projectUrl>
+    <licenseUrl>https://github.com/takenet/lime-csharp/blob/master/LICENSE</licenseUrl>
+    <projectSourceUrl>https://github.com/takenet/lime-csharp</projectSourceUrl>
+    <packageSourceUrl>https://github.com/takenet/lime-csharp/tree/master/src/Lime.Cli</packageSourceUrl>
     <releaseNotes>
       * 0.1.0 - First CLI release, with basic support for sending messages, notifications and sending/processing commands.
     </releaseNotes>
+    <tags>lime cli messaging blip</tags>
   </metadata>
-
 </package>

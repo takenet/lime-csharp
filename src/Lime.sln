@@ -11,6 +11,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 	ProjectSection(SolutionItems) = preProject
 		..\.gitignore = ..\.gitignore
 		..\appveyor.yml = ..\appveyor.yml
+		..\LICENSE = ..\LICENSE
 		..\README.md = ..\README.md
 	EndProjectSection
 EndProject
@@ -44,7 +45,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lime.Protocol.UnitTests.Com
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lime.Benchmarks", "Lime.Benchmarks\Lime.Benchmarks.csproj", "{1BDBEAE2-2A33-457B-8344-B7AB0B34D8C9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lime.Cli", "Lime.Cli\Lime.Cli.csproj", "{F9B4105D-788D-4235-A9E8-3C682E548014}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lime.Cli", "Lime.Cli\Lime.Cli.csproj", "{F9B4105D-788D-4235-A9E8-3C682E548014}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
