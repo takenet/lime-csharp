@@ -26,6 +26,7 @@ namespace Lime.Messaging.Resources
         public const string FILTER_BY_DISTANCE_KEY = "filterByDistance";
         public const string ROUND_ROBIN_KEY = "roundRobin";
         public const string ECHO_KEY = "echo";
+        public const string PROMISCUOUS_KEY = "promiscuous";
         public const string INSTANCES_KEY = "instances";
 
         /// <summary>
@@ -88,6 +89,12 @@ namespace Lime.Messaging.Resources
         public bool? Echo { get; set; }
 
         /// <summary>
+        /// If true, indicates that the instance should be ignored in the routing rules.
+        /// </summary>
+        [DataMember(Name = PROMISCUOUS_KEY, EmitDefaultValue = false)]
+        public bool? Promiscuous { get; set; }
+
+        /// <summary>
         /// Present instances for a identity.
         /// </summary>
         [DataMember(Name = INSTANCES_KEY)]
@@ -105,22 +112,27 @@ namespace Lime.Messaging.Resources
         /// </summary>
         [EnumMember(Value = "instance")]
         Instance,
+
         /// <summary>
         /// Deliver envelopes addressed to the current session instance (name@domain/instance) and to the identity (name@domain).
         /// </summary>
         [EnumMember(Value = "identity")]
         Identity,
+
         /// <summary>
         /// Deliver any envelopes addressed to the identity name@domain, including the envelopes addressed to any specific instance.
         /// </summary>
         [EnumMember(Value = "promiscuous")]
+        [Obsolete("Use 'promiscuous' property from presence with 'identity' routing rule")]
         Promiscuous,
+
         /// <summary>
         /// Deliver envelopes addressed to the current session instance (name@domain/instance) and to the node domain.
         /// This rule is intended to be used only by sessions authenticated as <see cref="DomainRole.Authority"/>.
         /// </summary>
         [EnumMember(Value = "domain")]
         Domain,
+
         /// <summary>
         /// Deliver envelopes addressed to the current session instance (name@domain/instance), to the node domain and all its sub domains.
         /// This rule is intended to be used only by sessions authenticated as <see cref="DomainRole.RootAuthority"/>.
