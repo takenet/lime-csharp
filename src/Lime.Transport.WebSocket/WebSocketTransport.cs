@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Buffers;
 using System.Collections.Generic;
+using System.IO;
 using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
@@ -28,7 +29,7 @@ namespace Lime.Transport.WebSocket
         private readonly WebSocketMessageType _webSocketMessageType;
         private readonly CancellationTokenSource _receiveCts;
 
-        private WebSocketReceiveResult _closeFrame;        
+        private WebSocketReceiveResult _closeFrame;
         protected WebSocketCloseStatus CloseStatus;
         protected string CloseStatusDescription;
 
@@ -70,7 +71,7 @@ namespace Lime.Transport.WebSocket
             }
 
             var buffer = Encoding.UTF8.GetBytes(serializedEnvelope);
-            
+
 
             await _sendSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
 
@@ -177,16 +178,19 @@ namespace Lime.Transport.WebSocket
                 _receiveSemaphore.Release();
             }
 
+            string serializedEnvelope = null;
             // Build the serialized envelope using the buffers
-            var serializedEnvelopeBuilder = new StringBuilder();
-
-            foreach (var segment in segments)
+            using (var stream = new MemoryStream())
             {
-                serializedEnvelopeBuilder.Append(Encoding.UTF8.GetString(segment.Buffer, 0, segment.Count));
-                _arrayPool.Return(segment.Buffer);
-            }
+                foreach (var segment in segments)
+                {
+                    stream.Write(segment.Buffer, 0, segment.Count);
+                    _arrayPool.Return(segment.Buffer);
+                }
 
-            var serializedEnvelope = serializedEnvelopeBuilder.ToString();
+                var buffer = stream.ToArray();
+                serializedEnvelope = Encoding.UTF8.GetString(buffer, 0, buffer.Length);
+            }
 
             if (_traceWriter != null &&
                 _traceWriter.IsEnabled)

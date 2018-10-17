@@ -177,8 +177,8 @@ namespace Lime.Protocol.LoadTests.WebSocket
             var sw = Stopwatch.StartNew();
 
             var path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory);
-            var content = File.ReadAllLines(Path.Combine(path, "huge-json.txt"));            
-            
+            var content = File.ReadAllLines(Path.Combine(path, "huge-json.txt"));
+
             var envelope = _envelopeSerializer.Deserialize(string.Join("", content));
 
             await _clientTransport.SendAsync(envelope, _cancellationToken);
@@ -186,7 +186,34 @@ namespace Lime.Protocol.LoadTests.WebSocket
             sw.Stop();
 
             // Assert
-            sw.ElapsedMilliseconds.ShouldBeLessThan(100);
+            sw.ElapsedMilliseconds.ShouldBeLessThan(250);
+        }
+
+        [Test]
+        public async Task ReceiveHugeEnvelopeWithoutCorruptingChars()
+        {
+            var path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory);
+            var content = File.ReadAllLines(Path.Combine(path, "builder.txt"));
+            var serializer = new DocumentSerializer(new DocumentTypeResolver().WithMessagingDocuments());
+            var envelope = serializer.Deserialize(string.Join("", content), MediaType.ApplicationJson);
+
+            var count = 50;
+            Parallel.For(0, count, async (x) =>
+            {
+                await _clientTransport.SendAsync(new Command
+                {
+                    Id = x.ToString(),
+                    Resource = envelope,
+                    To = "postmaster@msging.net"
+                }, _cancellationToken);
+            });
+
+            for (int i = 0; i < count; i++)
+            {
+                var response = await _serverTransport.ReceiveAsync(_cancellationToken);
+                var json = JsonConvert.SerializeObject(((Command)response).Resource);
+                json.ShouldNotContain("�");
+            }
         }
     }
 }
