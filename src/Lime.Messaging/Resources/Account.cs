@@ -107,6 +107,12 @@ namespace Lime.Messaging.Resources
         public Identity AlternativeAccount { get; set; }
 
         /// <summary>
+        /// Indicates if the account info should be published to the domain directory.
+        /// </summary>
+        [DataMember(Name = PUBLISH_TO_DIRECTORY_KEY)]
+        public bool? PublishToDirectory { get; set; }
+
+        /// <summary>
         /// Indicates when the account was created.
         /// </summary>
         [DataMember(Name = CREATED_DATE_KEY)]
