@@ -16,7 +16,7 @@ namespace Lime.Messaging.Resources
         public const string MIME_TYPE = "application/vnd.lime.account+json";
         public static readonly MediaType MediaType = MediaType.Parse(MIME_TYPE);
 
-        public const string FULL_NAME_KEY = "fullName"; 
+        public const string FULL_NAME_KEY = "fullName";
         public const string IS_TEMPORARY_KEY = "isTemporary";
         public const string PASSWORD_KEY = "password";
         public const string OLD_PASSWORD_KEY = "oldPassword";
@@ -28,6 +28,7 @@ namespace Lime.Messaging.Resources
         public const string ACCESS_KEY_KEY = "accessKey";
         public const string ALTERNATIVE_ACCOUNT_KEY = "alternativeAccount";
         public const string PUBLISH_TO_DIRECTORY_KEY = "publishToDirectory";
+        public const string CREATED_DATE_KEY = "createdDate";
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Account"/> class.
@@ -35,7 +36,6 @@ namespace Lime.Messaging.Resources
         public Account()
             : base(MediaType)
         {
-
         }
 
         /// <summary>
@@ -57,7 +57,7 @@ namespace Lime.Messaging.Resources
         public string Password { get; set; }
 
         /// <summary>
-        /// Base64 representation of the account password. 
+        /// Base64 representation of the account password.
         /// Mandatory in case of updating account password.
         /// </summary>
         [DataMember(Name = OLD_PASSWORD_KEY)]
@@ -88,14 +88,14 @@ namespace Lime.Messaging.Resources
         public bool? AllowUnknownSender { get; set; }
 
         /// <summary>
-        /// Indicates if the content of messages from this account should be stored in the server. 
+        /// Indicates if the content of messages from this account should be stored in the server.
         /// Note that for offline messages, this will always happens.
         /// </summary>
         [DataMember(Name = STORE_MESSAGE_CONTENT_KEY, EmitDefaultValue = false)]
         public bool? StoreMessageContent { get; set; }
 
         /// <summary>
-        /// Indicates if the content of messages from this account should be encrypted in the server. 
+        /// Indicates if the content of messages from this account should be encrypted in the server.
         /// </summary>
         [DataMember(Name = ENCRYPT_MESSAGE_CONTENT_KEY, EmitDefaultValue = false)]
         public bool? EncryptMessageContent { get; set; }
@@ -107,9 +107,9 @@ namespace Lime.Messaging.Resources
         public Identity AlternativeAccount { get; set; }
 
         /// <summary>
-        /// Indicates if the account info should be published to the domain directory.
+        /// Indicates when the account was created.
         /// </summary>
-        [DataMember(Name = PUBLISH_TO_DIRECTORY_KEY)]
-        public bool? PublishToDirectory { get; set; }
+        [DataMember(Name = CREATED_DATE_KEY)]
+        public DateTimeOffset CreatedDate { get; set; }
     }
 }
