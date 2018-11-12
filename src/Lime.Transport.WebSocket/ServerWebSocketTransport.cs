@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.WebSockets;
 using System.Reflection;
@@ -42,7 +43,7 @@ namespace Lime.Transport.WebSocket
                     _context.Headers.Count > 0)
                 {
                     var headersBuilder = new StringBuilder();
-                    foreach (var key in _context.Headers.AllKeys)
+                    foreach (var key in _context.Headers.AllKeys.Where(o => !options.ContainsKey(o)))
                     {
                         headersBuilder.AppendFormat("{0}={1};", key, _context.Headers[key]);
                     }

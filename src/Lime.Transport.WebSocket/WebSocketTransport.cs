@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using Lime.Protocol;
 using Lime.Protocol.Network;
 using Lime.Protocol.Serialization;
+using ReflectionMagic;
 
 namespace Lime.Transport.WebSocket
 {
@@ -59,7 +60,11 @@ namespace Lime.Transport.WebSocket
 
         public override async Task SendAsync(Envelope envelope, CancellationToken cancellationToken)
         {
-            if (envelope == null) throw new ArgumentNullException(nameof(envelope));
+            if (envelope == null)
+            {
+                throw new ArgumentNullException(nameof(envelope));
+            }
+
             EnsureOpen("send");
 
             var serializedEnvelope = _envelopeSerializer.Serialize(envelope);
@@ -71,7 +76,6 @@ namespace Lime.Transport.WebSocket
             }
 
             var buffer = Encoding.UTF8.GetBytes(serializedEnvelope);
-
 
             await _sendSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
 
@@ -129,7 +133,10 @@ namespace Lime.Transport.WebSocket
                     }
 
                     var receiveResult = await receiveTask;
-                    if (receiveResult == null) continue;
+                    if (receiveResult == null)
+                    {
+                        continue;
+                    }
 
                     segment.Count = receiveResult.Count;
 
@@ -146,7 +153,10 @@ namespace Lime.Transport.WebSocket
                         throw new InvalidOperationException(CloseStatusDescription);
                     }
 
-                    if (receiveResult.EndOfMessage) break;
+                    if (receiveResult.EndOfMessage)
+                    {
+                        break;
+                    }
 
                     if (segments.Count + 1 > DEFAULT_MAX_BUFFER_COUNT)
                     {
@@ -198,7 +208,10 @@ namespace Lime.Transport.WebSocket
                 await _traceWriter.TraceAsync(serializedEnvelope, DataOperation.Receive).ConfigureAwait(false);
             }
 
-            if (string.IsNullOrWhiteSpace(serializedEnvelope)) return null;
+            if (string.IsNullOrWhiteSpace(serializedEnvelope))
+            {
+                return null;
+            }
 
             return _envelopeSerializer.Deserialize(serializedEnvelope);
         }
@@ -241,6 +254,41 @@ namespace Lime.Transport.WebSocket
 
         public override bool IsConnected => WebSocket.State
             >= WebSocketState.Open && WebSocket.State <= WebSocketState.CloseReceived; // We need to consider the Close status here to make the channel call the CloseAsync method.
+
+        public override string LocalEndPoint
+        {
+            get
+            {
+#if NETSTANDARD2_0
+                var endpoint = WebSocket.AsDynamic()._innerStream?._context?.Request?.LocalEndPoint;
+                return endpoint?.ToString();
+#elif NET461
+
+                var endpoint = WebSocket.AsDynamic().m_InnerStream?.m_Context?.Request?.LocalEndPoint;
+                return endpoint?.ToString();
+#else
+
+                return base.LocalEndPoint;
+#endif
+            }
+        }
+
+        public override string RemoteEndPoint
+        {
+            get
+            {
+#if NETSTANDARD2_0
+                var endpoint = WebSocket.AsDynamic()._innerStream?._context?.Request?.RemoteEndPoint;
+                return endpoint?.ToString();
+#elif NET461
+                var endpoint = WebSocket.AsDynamic().m_InnerStream?.m_Context?.Request?.RemoteEndPoint;
+                return endpoint?.ToString();
+#else
+
+                return base.RemoteEndPoint;
+#endif
+            }
+        }
 
         public override IReadOnlyDictionary<string, object> Options => new Dictionary<string, object>()
         {

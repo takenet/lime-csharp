@@ -8,6 +8,7 @@ using Lime.Protocol;
 using Lime.Protocol.Network;
 using Lime.Protocol.Serialization;
 using Lime.Protocol.Server;
+
 #if net461
 using SslCertBinding.Net;
 #endif
@@ -68,7 +69,10 @@ namespace Lime.Transport.WebSocket
             int acceptTransportBoundedCapacity = 10,
             WebSocketMessageType webSocketMessageType = WebSocketMessageType.Text)
         {
-            if (listenerUri == null) throw new ArgumentNullException(nameof(listenerUri));
+            if (listenerUri == null)
+            {
+                throw new ArgumentNullException(nameof(listenerUri));
+            }
 
             if (listenerUri.Scheme != UriSchemeWebSocket &&
                 listenerUri.Scheme != UriSchemeWebSocketSecure)
@@ -115,7 +119,11 @@ namespace Lime.Transport.WebSocket
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
-            if (_httpListener.IsListening) throw new InvalidOperationException("The listener is already active");
+            if (_httpListener.IsListening)
+            {
+                throw new InvalidOperationException("The listener is already active");
+            }
+
             var listenerUri = ListenerUris[0];
             var prefix = listenerUri.ToString();
             prefix = prefix
@@ -146,7 +154,11 @@ namespace Lime.Transport.WebSocket
 
         public async Task<ITransport> AcceptTransportAsync(CancellationToken cancellationToken)
         {
-            if (_acceptTransportTask == null) throw new InvalidOperationException("The listener is not active");
+            if (_acceptTransportTask == null)
+            {
+                throw new InvalidOperationException("The listener is not active");
+            }
+
             if (_acceptTransportTask.IsCompleted)
             {
                 await _acceptTransportTask.WithCancellation(cancellationToken).ConfigureAwait(false);
@@ -163,7 +175,11 @@ namespace Lime.Transport.WebSocket
 
         public async Task StopAsync(CancellationToken cancellationToken)
         {
-            if (_acceptTransportTask == null) throw new InvalidOperationException("The listener is not active");
+            if (_acceptTransportTask == null)
+            {
+                throw new InvalidOperationException("The listener is not active");
+            }
+
             _acceptTransportCts.Cancel();
             using (var cts = new CancellationTokenSource(StopTimeout))
             using (var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cts.Token, cancellationToken))
