@@ -1,25 +1,17 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
-using System.Reflection;
-using System.Runtime.InteropServices;
-using System.Security;
+using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Lime.Protocol.Network;
-using System.Text.RegularExpressions;
-using System.Security.Cryptography;
-using System.Security.Cryptography.X509Certificates;
 
 namespace Lime.Protocol
 {
     public static class UtilExtensions
     {
         public const string PING_URI_TEMPLATE = "/ping";
-
 
         /// <summary>
         /// Indicates if a command is
@@ -29,7 +21,10 @@ namespace Lime.Protocol
         /// <returns></returns>
         public static bool IsPingRequest(this Command command)
         {
-            if (command == null) throw new ArgumentNullException(nameof(command));
+            if (command == null)
+            {
+                throw new ArgumentNullException(nameof(command));
+            }
 
             if (command.Method == CommandMethod.Get &&
                 command.Status == CommandStatus.Pending &&
@@ -73,9 +68,8 @@ namespace Lime.Protocol
             else
             {
                 return command.Uri.ToUri();
-            }            
+            }
         }
-
 
         /// <summary>
         /// Disposes an object if it is not null
@@ -101,7 +95,9 @@ namespace Lime.Protocol
         public static void RaiseEvent(this EventHandler @event, object sender, EventArgs e)
         {
             if (@event != null)
+            {
                 @event(sender, e);
+            }
         }
 
         /// <summary>
@@ -116,11 +112,13 @@ namespace Lime.Protocol
             where T : EventArgs
         {
             if (@event != null)
+            {
                 @event(sender, e);
+            }
         }
 
         /// <summary>
-        /// Allow cancellation of non-cancellable tasks        
+        /// Allow cancellation of non-cancellable tasks
         /// </summary>
         /// <a href="http://blogs.msdn.com/b/pfxteam/archive/2012/10/05/how-do-i-cancel-non-cancelable-async-operations.aspx"/>
         /// <typeparam name="T"></typeparam>
@@ -129,16 +127,21 @@ namespace Lime.Protocol
         /// <returns></returns>
         public static async Task<T> WithCancellation<T>(this Task<T> task, CancellationToken cancellationToken)
         {
-            var tcs = new TaskCompletionSource<bool>();
+            var tcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
             using (cancellationToken.Register(
                         s => ((TaskCompletionSource<bool>)s).TrySetResult(true), tcs))
+            {
                 if (task != await Task.WhenAny(task, tcs.Task))
+                {
                     throw new OperationCanceledException(cancellationToken);
+                }
+            }
+
             return await task;
         }
 
         /// <summary>
-        /// Allow cancellation of non-cancellable tasks        
+        /// Allow cancellation of non-cancellable tasks
         /// </summary>
         /// <a href="http://blogs.msdn.com/b/pfxteam/archive/2012/10/05/how-do-i-cancel-non-cancelable-async-operations.aspx"/>
         /// <typeparam name="T"></typeparam>
@@ -147,11 +150,16 @@ namespace Lime.Protocol
         /// <returns></returns>
         public static async Task WithCancellation(this Task task, CancellationToken cancellationToken)
         {
-            var tcs = new TaskCompletionSource<bool>();
+            var tcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
             using (cancellationToken.Register(
                         s => ((TaskCompletionSource<bool>)s).TrySetResult(true), tcs))
+            {
                 if (task != await Task.WhenAny(task, tcs.Task))
+                {
                     throw new OperationCanceledException(cancellationToken);
+                }
+            }
+
             await task;
         }
 
@@ -175,10 +183,13 @@ namespace Lime.Protocol
         /// <returns></returns>
         public static Identity GetIdentity(this X509Certificate2 certificate)
         {
-            if (certificate == null) throw new ArgumentNullException(nameof(certificate));
-            
+            if (certificate == null)
+            {
+                throw new ArgumentNullException(nameof(certificate));
+            }
+
             var identityName = certificate.GetNameInfo(
-                X509NameType.SimpleName, 
+                X509NameType.SimpleName,
                 false);
 
             Identity identity = null;
@@ -193,7 +204,7 @@ namespace Lime.Protocol
 
         /// <summary>
         /// Gets the identity
-        /// associated to the URI 
+        /// associated to the URI
         /// authority
         /// </summary>
         /// <param name="uri"></param>
@@ -238,7 +249,7 @@ namespace Lime.Protocol
             using (var algorithm = SHA1.Create())
             {
                 return algorithm.ComputeHash(Encoding.UTF8.GetBytes(inputString));
-            }                
+            }
         }
 
         /// <summary>
@@ -250,7 +261,9 @@ namespace Lime.Protocol
         {
             var sb = new StringBuilder();
             foreach (byte b in ToSHA1Hash(inputString))
+            {
                 sb.Append(b.ToString("X2"));
+            }
 
             return sb.ToString();
         }
@@ -290,7 +303,9 @@ namespace Lime.Protocol
         {
             var tcs = new TaskCompletionSource<bool>();
             using (cancellationToken.Register(() => tcs.TrySetCanceled(), useSynchronizationContext: false))
+            {
                 await tcs.Task;
+            }
         }
     }
 }
