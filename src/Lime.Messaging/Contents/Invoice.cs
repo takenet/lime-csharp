@@ -21,7 +21,7 @@ namespace Lime.Messaging.Contents
         public const string TAXES_KEY = "taxes";
         public const string TOTAL_KEY = "total";
         public const string ITEMS_KEY = "items";
-        public const string BILLED_TO_KEY = "billedTo";
+        public const string BILL_TO_KEY = "billTo";
 
         public static readonly MediaType MediaType = MediaType.Parse(MIME_TYPE);
 
