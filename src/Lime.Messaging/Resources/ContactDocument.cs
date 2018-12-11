@@ -135,7 +135,7 @@ namespace Lime.Messaging.Resources
         /// The contact birth date following ISO 8601.
         /// </summary>
         [DataMember(Name = BIRTH_DATE_KEY)]
-        public string BirthDate { get; set; }
+        public DateTime? BirthDate { get; set; }
 
         /// <summary>
         /// The contact tax document (CPF, CNPJ, social security number and others).
