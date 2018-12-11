@@ -1,7 +1,7 @@
-﻿using System;
+﻿using Lime.Protocol;
+using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
-using Lime.Protocol;
 
 namespace Lime.Messaging.Resources
 {
@@ -27,18 +27,20 @@ namespace Lime.Messaging.Resources
         public const string SOURCE_KEY = "source";
         public const string FIRST_NAME_KEY = "firstName";
         public const string LAST_NAME_KEY = "lastName";
+        public const string BIRTH_DATE_KEY = "birthDate";
+        public const string TAX_DOCUMENT_KEY = "taxDocument";
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ContactDocument"/> class.
         /// </summary>
         /// <param name="mediaType">Type of the media.</param>
-        protected ContactDocument(MediaType mediaType) 
+        protected ContactDocument(MediaType mediaType)
             : base(mediaType)
         {
         }
 
         /// <summary>
-        /// The user identity, 
+        /// The user identity,
         /// in the name@domain format.
         /// </summary>
         [DataMember(Name = IDENTITY_KEY)]
@@ -107,7 +109,7 @@ namespace Lime.Messaging.Resources
 
         /// <summary>
         /// Gets or sets the contact extra information.
-        /// </summary>        
+        /// </summary>
         [DataMember(Name = EXTRAS_KEY)]
         public IDictionary<string, string> Extras { get; set; }
 
@@ -128,6 +130,18 @@ namespace Lime.Messaging.Resources
         /// </summary>
         [DataMember(Name = LAST_NAME_KEY)]
         public string LastName { get; set; }
+
+        /// <summary>
+        /// The contact birth date following ISO 8601.
+        /// </summary>
+        [DataMember(Name = BIRTH_DATE_KEY)]
+        public string BirthDate { get; set; }
+
+        /// <summary>
+        /// The contact tax document (CPF, CNPJ, social security number and others).
+        /// </summary>
+        [DataMember(Name = TAX_DOCUMENT_KEY)]
+        public string TaxDocument { get; set; }
     }
 
     /// <summary>
@@ -141,6 +155,7 @@ namespace Lime.Messaging.Resources
         /// </summary>
         [EnumMember(Value = "male")]
         Male,
+
         /// <summary>
         /// The female gender
         /// </summary>

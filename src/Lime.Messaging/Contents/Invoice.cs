@@ -1,6 +1,7 @@
-﻿using System;
-using System.Runtime.Serialization;
+﻿using Lime.Messaging.Resources;
 using Lime.Protocol;
+using System;
+using System.Runtime.Serialization;
 
 namespace Lime.Messaging.Contents
 {
@@ -17,15 +18,16 @@ namespace Lime.Messaging.Contents
         public const string DUE_TO_KEY = "dueTo";
         public const string CURRENCY_KEY = "currency";
         public const string TAXES_KEY = "taxes";
-        public const string TOTAL_KEY = "total";        
+        public const string TOTAL_KEY = "total";
         public const string ITEMS_KEY = "items";
+        public const string BILLED_TO_KEY = "billedTo";
 
         public static readonly MediaType MediaType = MediaType.Parse(MIME_TYPE);
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Invoice"/> class.
         /// </summary>
-        public Invoice() 
+        public Invoice()
             : base(MediaType)
         {
         }
@@ -92,5 +94,14 @@ namespace Lime.Messaging.Contents
         /// </value>
         [DataMember(Name = ITEMS_KEY)]
         public InvoiceItem[] Items { get; set; }
+
+        /// <summary>
+        /// Get or sets the invoice customer billed.
+        /// </summary>
+        /// <value>
+        /// The contact billed to
+        /// </value>
+        [DataMember(Name = BILLED_TO_KEY)]
+        public Contact BilledTo { get; set; }
     }
 }
