@@ -13,6 +13,7 @@ namespace Lime.Messaging.Contents
     public class Invoice : Document
     {
         public const string MIME_TYPE = "application/vnd.lime.invoice+json";
+        public const string TITLE_KEY = "title";
         public const string CREATED_KEY = "created";
         public const string METHODS_KEY = "methods";
         public const string DUE_TO_KEY = "dueTo";
@@ -31,6 +32,15 @@ namespace Lime.Messaging.Contents
             : base(MediaType)
         {
         }
+
+        /// <summary>
+        /// Gets or sets the invoice title.
+        /// </summary>
+        /// <value>
+        /// The title of the invoice.
+        /// </value>
+        [DataMember(Name = TITLE_KEY)]
+        public string Title { get; set; }
 
         /// <summary>
         /// Gets or sets the invoice creation date.
@@ -96,7 +106,7 @@ namespace Lime.Messaging.Contents
         public InvoiceItem[] Items { get; set; }
 
         /// <summary>
-        /// Get or sets the invoice customer billed.
+        /// Get or sets the invoice customer to be billed.
         /// </summary>
         /// <value>
         /// The contact billed to
