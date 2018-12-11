@@ -111,7 +111,7 @@ namespace Lime.Messaging.Contents
         /// <value>
         /// The contact billed to
         /// </value>
-        [DataMember(Name = BILLED_TO_KEY)]
+        [DataMember(Name = BILL_TO_KEY)]
         public Contact BillTo { get; set; }
     }
 }
