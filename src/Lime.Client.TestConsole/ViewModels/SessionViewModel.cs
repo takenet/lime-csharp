@@ -1,12 +1,4 @@
-﻿using GalaSoft.MvvmLight;
-using GalaSoft.MvvmLight.Command;
-using Lime.Client.TestConsole.Macros;
-using Lime.Client.TestConsole.Mvvm;
-using Lime.Client.TestConsole.Properties;
-using Lime.Protocol;
-using Lime.Protocol.Network;
-using Lime.Protocol.Serialization;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
@@ -23,8 +15,15 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Data;
 using System.Windows.Threading;
-using Lime.Transport.Tcp;
+using GalaSoft.MvvmLight;
+using GalaSoft.MvvmLight.Command;
+using Lime.Client.TestConsole.Macros;
+using Lime.Client.TestConsole.Mvvm;
+using Lime.Client.TestConsole.Properties;
+using Lime.Protocol;
+using Lime.Protocol.Network;
 using Lime.Protocol.Serialization.Newtonsoft;
+using Lime.Transport.Tcp;
 using Lime.Transport.WebSocket;
 using Newtonsoft.Json.Linq;
 
@@ -61,6 +60,8 @@ namespace Lime.Client.TestConsole.ViewModels
             ClearAfterSent = true;
             ParseBeforeSend = true;
             IgnoreParsingErrors = false;
+            Repeat = false;
+            RepeatTimes = 1;
 
             if (!IsInDesignMode)
             {
@@ -69,12 +70,12 @@ namespace Lime.Client.TestConsole.ViewModels
                 LoadTemplates();
                 LoadMacros();
             }
-            
+
             ServicePointManager.ServerCertificateValidationCallback = (sender, certificate, chain, errors) =>
             {
                 if (errors != SslPolicyErrors.None)
                 {
-                    Application.Current.Dispatcher.Invoke(() => 
+                    Application.Current.Dispatcher.Invoke(() =>
                     AddStatusMessage($"TLS server certificate validation errors: {errors}", true));
                 }
                 return true;
@@ -86,8 +87,8 @@ namespace Lime.Client.TestConsole.ViewModels
         public ITcpClient TcpClient
         {
             get { return _tcpClient; }
-            set 
-            { 
+            set
+            {
                 _tcpClient = value;
                 RaisePropertyChanged(() => TcpClient);
             }
@@ -98,20 +99,20 @@ namespace Lime.Client.TestConsole.ViewModels
         public ITransport Transport
         {
             get { return _transport; }
-            set 
-            { 
+            set
+            {
                 _transport = value;
                 RaisePropertyChanged(() => Transport);
             }
         }
 
-
         private bool _isBusy;
+
         public bool IsBusy
         {
             get { return _isBusy; }
-            set 
-            { 
+            set
+            {
                 _isBusy = value;
                 RaisePropertyChanged(() => IsBusy);
 
@@ -126,8 +127,8 @@ namespace Lime.Client.TestConsole.ViewModels
         public string StatusMessage
         {
             get { return _statusMessage; }
-            set 
-            { 
+            set
+            {
                 _statusMessage = value;
                 RaisePropertyChanged(() => StatusMessage);
             }
@@ -138,8 +139,8 @@ namespace Lime.Client.TestConsole.ViewModels
         public ObservableCollectionEx<StatusMessageViewModel> StatusMessages
         {
             get { return _statusMessages; }
-            set 
-            { 
+            set
+            {
                 _statusMessages = value;
                 RaisePropertyChanged(() => StatusMessages);
             }
@@ -150,8 +151,8 @@ namespace Lime.Client.TestConsole.ViewModels
         public string ClientCertificateThumbprint
         {
             get { return _clientCertificateThumbprint; }
-            set 
-            { 
+            set
+            {
                 _clientCertificateThumbprint = value;
                 Settings.Default.LastCertificateThumbprint = value;
                 RaisePropertyChanged(() => ClientCertificateThumbprint);
@@ -163,19 +164,20 @@ namespace Lime.Client.TestConsole.ViewModels
         public SessionState LastSessionState
         {
             get { return _lastSessionState; }
-            set 
-            { 
+            set
+            {
                 _lastSessionState = value;
                 RaisePropertyChanged(() => LastSessionState);
             }
         }
 
         private Node _localNode;
+
         public Node LocalNode
         {
             get { return _localNode; }
-            set 
-            { 
+            set
+            {
                 _localNode = value;
                 RaisePropertyChanged(() => LocalNode);
             }
@@ -186,27 +188,24 @@ namespace Lime.Client.TestConsole.ViewModels
         public Node RemoteNode
         {
             get { return _remoteNode; }
-            set 
-            { 
+            set
+            {
                 _remoteNode = value;
                 RaisePropertyChanged(() => RemoteNode);
             }
         }
-
-
 
         private Event? _lastNotificationEvent;
 
         public Event? LastNotificationEvent
         {
             get { return _lastNotificationEvent; }
-            set 
-            { 
+            set
+            {
                 _lastNotificationEvent = value;
                 RaisePropertyChanged(() => LastNotificationEvent);
             }
         }
-
 
         private string _inputJson;
 
@@ -241,14 +240,13 @@ namespace Lime.Client.TestConsole.ViewModels
             }
         }
 
-
         private bool _isConnected;
 
         public bool IsConnected
         {
             get { return _isConnected; }
-            set 
-            { 
+            set
+            {
                 _isConnected = value;
                 RaisePropertyChanged(() => IsConnected);
 
@@ -287,21 +285,20 @@ namespace Lime.Client.TestConsole.ViewModels
         public ICollectionView EnvelopesView
         {
             get { return _envelopesView; }
-            set 
-            { 
+            set
+            {
                 _envelopesView = value;
                 RaisePropertyChanged(() => EnvelopesView);
             }
         }
-
 
         private bool _showRawValues;
 
         public bool ShowRawValues
         {
             get { return _showRawValues; }
-            set 
-            { 
+            set
+            {
                 _showRawValues = value;
                 RaisePropertyChanged(() => ShowRawValues);
 
@@ -329,8 +326,8 @@ namespace Lime.Client.TestConsole.ViewModels
         public bool CanSendAsRaw
         {
             get { return _canSendAsRaw; }
-            set 
-            { 
+            set
+            {
                 _canSendAsRaw = value;
                 RaisePropertyChanged(() => CanSendAsRaw);
             }
@@ -341,8 +338,8 @@ namespace Lime.Client.TestConsole.ViewModels
         public bool ParseBeforeSend
         {
             get { return _parseBeforeSend; }
-            set 
-            { 
+            set
+            {
                 _parseBeforeSend = value;
                 RaisePropertyChanged(() => ParseBeforeSend);
             }
@@ -353,8 +350,8 @@ namespace Lime.Client.TestConsole.ViewModels
         public bool ClearAfterSent
         {
             get { return _clearAfterSent; }
-            set 
-            { 
+            set
+            {
                 _clearAfterSent = value;
                 RaisePropertyChanged(() => ClearAfterSent);
             }
@@ -372,22 +369,47 @@ namespace Lime.Client.TestConsole.ViewModels
             }
         }
 
+        private bool _repeat;
+
+        public bool Repeat
+        {
+            get { return _repeat; }
+            set
+            {
+                _repeat = value;
+                RaisePropertyChanged(() => Repeat);
+                ClearAfterSent = false;
+            }
+        }
+
+        private int _repeatTimes;
+
+        public int RepeatTimes
+        {
+            get { return _repeatTimes; }
+            set
+            {
+                _repeatTimes = value;
+                RaisePropertyChanged(() => RepeatTimes);
+            }
+        }
+
         private ObservableCollectionEx<VariableViewModel> _variables;
 
         public ObservableCollectionEx<VariableViewModel> Variables
         {
             get { return _variables; }
-            set 
-            { 
+            set
+            {
                 _variables = value;
                 RaisePropertyChanged(() => Variables);
             }
         }
 
-
         private string _templatesFilter;
 
-        public string TemplatesFilter {
+        public string TemplatesFilter
+        {
             get { return _templatesFilter; }
             set
             {
@@ -403,43 +425,39 @@ namespace Lime.Client.TestConsole.ViewModels
                     TemplatesView.Filter = null;
                 }
                 RaisePropertyChanged(() => TemplatesView);
-
             }
         }
-
 
         private ObservableCollectionEx<TemplateViewModel> _templates;
 
         public ObservableCollectionEx<TemplateViewModel> Templates
         {
             get { return _templates; }
-            set 
-            { 
+            set
+            {
                 _templates = value;
                 RaisePropertyChanged(() => Templates);
 
                 if (_templates != null)
                 {
-                    TemplatesView = CollectionViewSource.GetDefaultView(_templates);                    
+                    TemplatesView = CollectionViewSource.GetDefaultView(_templates);
                     TemplatesView.GroupDescriptions.Add(new PropertyGroupDescription("Category"));
                     TemplatesView.SortDescriptions.Add(new SortDescription("SortOrder", ListSortDirection.Ascending));
 
-
-                    RaisePropertyChanged(() => TemplatesView);                    
+                    RaisePropertyChanged(() => TemplatesView);
                 }
             }
         }
 
         public ICollectionView TemplatesView { get; private set; }
 
-
         private TemplateViewModel _selectedTemplate;
 
         public TemplateViewModel SelectedTemplate
         {
             get { return _selectedTemplate; }
-            set 
-            { 
+            set
+            {
                 _selectedTemplate = value;
                 RaisePropertyChanged(() => SelectedTemplate);
 
@@ -447,14 +465,13 @@ namespace Lime.Client.TestConsole.ViewModels
             }
         }
 
-
         private ObservableCollectionEx<MacroViewModel> _macros;
 
         public ObservableCollectionEx<MacroViewModel> Macros
         {
             get { return _macros; }
-            set 
-            { 
+            set
+            {
                 _macros = value;
                 RaisePropertyChanged(() => Macros);
 
@@ -471,14 +488,13 @@ namespace Lime.Client.TestConsole.ViewModels
 
         public ICollectionView MacrosView { get; private set; }
 
-
         private MacroViewModel _selectedMacro;
 
         public MacroViewModel SelectedMacro
         {
             get { return _selectedMacro; }
-            set 
-            { 
+            set
+            {
                 _selectedMacro = value;
                 RaisePropertyChanged(() => SelectedMacro);
             }
@@ -531,7 +547,6 @@ namespace Lime.Client.TestConsole.ViewModels
 
                                     fromVariableViewModel.Value = identity.ToString();
                                 }
-
                             }
                             else
                             {
@@ -541,7 +556,7 @@ namespace Lime.Client.TestConsole.ViewModels
                         finally
                         {
                             store.Close();
-                        }                        
+                        }
                     }
 
                     if (_hostUri.Scheme == WebSocketTransportListener.UriSchemeWebSocket ||
@@ -567,13 +582,13 @@ namespace Lime.Client.TestConsole.ViewModels
                     _connectionCts = new CancellationTokenSource();
 
                     var dispatcher = Dispatcher.CurrentDispatcher;
-                    
+
                     _receiveTask = ReceiveAsync(
                         Transport,
                         (e) => ReceiveEnvelopeAsync(e, dispatcher),
                         _connectionCts.Token)
                     .WithCancellation(_connectionCts.Token)
-                    .ContinueWith(t => 
+                    .ContinueWith(t =>
                     {
                         IsConnected = false;
 
@@ -585,20 +600,18 @@ namespace Lime.Client.TestConsole.ViewModels
                         {
                             AddStatusMessage("Disconnected");
                         }
-
                     }, TaskScheduler.FromCurrentSynchronizationContext());
 
                     IsConnected = true;
                     CanSendAsRaw = true;
 
                     AddStatusMessage("Connected");
-
                 });
         }
 
         private bool CanOpenTransport()
         {
-            return 
+            return
                 !IsBusy &&
                 !IsConnected &&
                 Uri.TryCreate(_host, UriKind.Absolute, out _hostUri);
@@ -614,24 +627,23 @@ namespace Lime.Client.TestConsole.ViewModels
 
                     var timeoutCancellationToken = _operationTimeout.ToCancellationToken();
 
-                    _connectionCts.Cancel();                    
+                    _connectionCts.Cancel();
 
                     // Closes the transport
                     await Transport.CloseAsync(timeoutCancellationToken);
                     await _receiveTask.WithCancellation(timeoutCancellationToken);
-                    
+
                     Transport.DisposeIfDisposable();
-                    Transport = null;                    
+                    Transport = null;
                 });
         }
 
         private bool CanCloseTransport()
         {
-            return 
-                !IsBusy && 
+            return
+                !IsBusy &&
                 IsConnected;
         }
-
 
         public RelayCommand IndentCommand { get; private set; }
 
@@ -647,7 +659,6 @@ namespace Lime.Client.TestConsole.ViewModels
         {
             return !string.IsNullOrWhiteSpace(InputJson);
         }
-
 
         public RelayCommand ValidateCommand { get; private set; }
 
@@ -691,7 +702,7 @@ namespace Lime.Client.TestConsole.ViewModels
                     AddStatusMessage("The input is a invalid or empty JSON document", true);
                 }
             }
-            catch 
+            catch
             {
                 AddStatusMessage("The input is a invalid JSON document", true);
             }
@@ -711,7 +722,7 @@ namespace Lime.Client.TestConsole.ViewModels
                     InputJson = ParseInput(InputJson, Variables);
                 });
         }
-      
+
         private bool CanParse()
         {
             return !string.IsNullOrWhiteSpace(InputJson);
@@ -719,22 +730,39 @@ namespace Lime.Client.TestConsole.ViewModels
 
         public AsyncCommand SendCommand { get; private set; }
 
-
         private async Task SendAsync()
         {
-            await ExecuteAsync(async () =>
+            var times = 0;
+
+            var repeatCountVariable = Variables.FirstOrDefault(v => v.Name == "repeatCount");
+            if (repeatCountVariable == null)
+            {
+                repeatCountVariable = new VariableViewModel()
+                {
+                    Name = "repeatCount"
+                };
+                Variables.Add(repeatCountVariable);
+            }
+
+            do
+            {
+                repeatCountVariable.Value = (times + 1).ToString();
+
+                await ExecuteAsync(async () =>
                 {
                     AddStatusMessage("Sending...");
 
+                    var inputJson = InputJson;
+
                     if (ParseBeforeSend)
                     {
-                        this.InputJson = ParseInput(this.InputJson, this.Variables);
+                        inputJson = ParseInput(InputJson, Variables);
                     }
 
                     var timeoutCancellationToken = _operationTimeout.ToCancellationToken();
 
                     var envelopeViewModel = new EnvelopeViewModel(false);
-                    envelopeViewModel.Json = InputJson;
+                    envelopeViewModel.Json = inputJson;
                     var envelope = envelopeViewModel.Envelope;
                     envelopeViewModel.Direction = DataOperation.Send;
 
@@ -751,32 +779,32 @@ namespace Lime.Client.TestConsole.ViewModels
                         envelopeViewModel.IndentJson();
                     }
 
-                    this.Envelopes.Add(envelopeViewModel);
+                    Envelopes.Add(envelopeViewModel);
 
-                    if (this.ClearAfterSent)
+                    if (ClearAfterSent)
                     {
-                        this.InputJson = string.Empty;
+                        InputJson = string.Empty;
                     }
 
                     AddStatusMessage(string.Format("{0} envelope sent", envelope.GetType().Name));
                 });
+            } while (Repeat && RepeatTimes > ++times);
         }
 
         private bool CanSend()
         {
-            return 
+            return
                 !IsBusy &&
-                IsConnected && 
+                IsConnected &&
                 !string.IsNullOrWhiteSpace(InputJson);
         }
 
         public RelayCommand ClearTraceCommand { get; private set; }
-        
+
         private void ClearTrace()
         {
             this.Envelopes.Clear();
         }
-
 
         public RelayCommand LoadTemplateCommand { get; private set; }
 
@@ -846,7 +874,7 @@ namespace Lime.Client.TestConsole.ViewModels
                     await processFunc(envelope);
                 }
             }
-            catch (OperationCanceledException) { }            
+            catch (OperationCanceledException) { }
         }
 
         public const string HOST_FILE_NAME = "Host.txt";
@@ -886,7 +914,6 @@ namespace Lime.Client.TestConsole.ViewModels
                     this.Templates.Add(templateViewModel);
                 }
             }
-
         }
 
         public const string VARIABLES_FILE_NAME = "Variables.txt";
@@ -911,15 +938,14 @@ namespace Lime.Client.TestConsole.ViewModels
 
         private void SaveVariables()
         {
-            var lineValues = Variables.Select(v => new [] {v.Name, v.Value}).ToArray();
+            var lineValues = Variables.Select(v => new[] { v.Name, v.Value }).ToArray();
             FileUtil.SaveFile(lineValues, VARIABLES_FILE_NAME, VARIABLES_FILE_SEPARATOR);
-
         }
 
         private string ParseInput(string input, IEnumerable<VariableViewModel> variables)
         {
             var variableValues = variables.ToDictionary(t => t.Name, t => t.Value);
-            
+
             try
             {
                 return input.ReplaceVariables(variableValues);
@@ -975,11 +1001,11 @@ namespace Lime.Client.TestConsole.ViewModels
         {
             var envelopeViewModel = new EnvelopeViewModel
             {
-                Envelope = envelope, 
+                Envelope = envelope,
                 Direction = DataOperation.Receive
             };
 
-            await await dispatcher.InvokeAsync(async () => 
+            await await dispatcher.InvokeAsync(async () =>
                 {
                     Envelopes.Add(envelopeViewModel);
 
@@ -998,7 +1024,7 @@ namespace Lime.Client.TestConsole.ViewModels
             {
                 Timestamp = DateTimeOffset.Now,
                 Message = message,
-                IsError  = isError
+                IsError = isError
             };
 
             StatusMessages.Add(statusMessageViewModel);
@@ -1030,16 +1056,14 @@ namespace Lime.Client.TestConsole.ViewModels
                 SaveMacros();
             }
         }
-
     }
 
     public static class VariablesExtensions
     {
         private static Regex _variablesRegex = new Regex(@"(?<=%)(\w+)", RegexOptions.Compiled);
-        private static string _variablePatternFormat = @"\B%{0}\b";
-        private static string _guidVariableName = "newGuid";
+        private static readonly string _variablePatternFormat = @"\B%{0}\b";
+        private static readonly string _guidVariableName = "newGuid";
         private static Regex _guidRegex = new Regex(string.Format(_variablePatternFormat, _guidVariableName));
-
 
         public static IEnumerable<string> GetVariables(this string input)
         {
@@ -1109,7 +1133,7 @@ namespace Lime.Client.TestConsole.ViewModels
                 }
 
                 var variableRegex = new Regex(string.Format(_variablePatternFormat, variableName));
-                input = variableRegex.Replace(input, variableValue);                
+                input = variableRegex.Replace(input, variableValue);
             }
 
             return input;
