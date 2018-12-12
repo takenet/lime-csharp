@@ -22,6 +22,7 @@ using Lime.Client.TestConsole.Mvvm;
 using Lime.Client.TestConsole.Properties;
 using Lime.Protocol;
 using Lime.Protocol.Network;
+using Lime.Protocol.Serialization;
 using Lime.Protocol.Serialization.Newtonsoft;
 using Lime.Transport.Tcp;
 using Lime.Transport.WebSocket;
@@ -563,7 +564,7 @@ namespace Lime.Client.TestConsole.ViewModels
                         _hostUri.Scheme == WebSocketTransportListener.UriSchemeWebSocketSecure)
                     {
                         Transport = new ClientWebSocketTransport(
-                            new JsonNetSerializer(),
+                            new EnvelopeSerializer(new DocumentTypeResolver()),
                             this);
                     }
                     else
@@ -571,7 +572,7 @@ namespace Lime.Client.TestConsole.ViewModels
                         TcpClient = new TcpClientAdapter(new TcpClient());
                         Transport = new TcpTransport(
                             TcpClient,
-                            new JsonNetSerializer(),
+                            new EnvelopeSerializer(new DocumentTypeResolver()),
                             _hostUri.Host,
                             clientCertificate,
                             traceWriter: this);

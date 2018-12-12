@@ -2,11 +2,6 @@
 using Lime.Protocol;
 using Lime.Protocol.Network;
 using Lime.Protocol.Serialization;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Lime.Protocol.Serialization.Newtonsoft;
 
 namespace Lime.Client.TestConsole.ViewModels
@@ -14,42 +9,36 @@ namespace Lime.Client.TestConsole.ViewModels
     public class EnvelopeViewModel : ViewModelBase
     {
         private static IEnvelopeSerializer _serializer;
-        private bool _shouldIndendJson;
+        private readonly bool _shouldIndendJson;
 
         static EnvelopeViewModel()
         {
-            _serializer = new JsonNetSerializer();
+            _serializer = new EnvelopeSerializer(new DocumentTypeResolver());
         }
-
 
         public EnvelopeViewModel()
             : this(true)
         {
-
         }
 
         public EnvelopeViewModel(bool shouldIndendJson)
         {
             _shouldIndendJson = shouldIndendJson;
-        }        
-
-
+        }
 
         #region Data Properties
-
 
         public void IndentJson()
         {
             Json = Json.IndentJson();
         }
 
-        
         private string _json;
         private bool _isSettingJson;
 
         public string Json
         {
-            get  { return _json; }
+            get { return _json; }
             set
             {
                 _isSettingJson = true;
@@ -58,7 +47,6 @@ namespace Lime.Client.TestConsole.ViewModels
                 {
                     if (_shouldIndendJson)
                     {
-
                         // Json indentation
                         try
                         {
@@ -84,7 +72,7 @@ namespace Lime.Client.TestConsole.ViewModels
                         {
                             Envelope = _serializer.Deserialize(_json);
                         }
-                        catch 
+                        catch
                         {
                             Envelope = null;
                         }
@@ -102,8 +90,8 @@ namespace Lime.Client.TestConsole.ViewModels
 
         public Envelope Envelope
         {
-            get { return _envelope;  }
-            set 
+            get { return _envelope; }
+            set
             {
                 _isSettingEnvelope = true;
 
@@ -145,11 +133,10 @@ namespace Lime.Client.TestConsole.ViewModels
             }
         }
 
-
         private bool _isRaw;
 
         /// <summary>
-        /// Indicates if the data 
+        /// Indicates if the data
         /// was collected directly from
         /// the transport trace writer
         /// </summary>
@@ -163,9 +150,6 @@ namespace Lime.Client.TestConsole.ViewModels
             }
         }
 
-        #endregion
-
-
-
+        #endregion Data Properties
     }
 }
