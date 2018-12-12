@@ -23,9 +23,8 @@ namespace Lime.Protocol
         {
             if (string.IsNullOrWhiteSpace(uriPath)) throw new ArgumentNullException(nameof(uriPath));
 
-            if (Uri.IsWellFormedUriString(uriPath, UriKind.Absolute))
+            if (Uri.TryCreate(uriPath, UriKind.Absolute, out _absoluteUri))
             {
-                _absoluteUri = new Uri(uriPath);
                 if (!_absoluteUri.Scheme.Equals(LIME_URI_SCHEME))
                 {
                     throw new ArgumentException($"Invalid URI scheme. Expected is '{LIME_URI_SCHEME}'");

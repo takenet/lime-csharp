@@ -1,12 +1,12 @@
-﻿using System;
-using NUnit.Framework;
+﻿using NUnit.Framework;
 using Shouldly;
+using System;
 
 namespace Lime.Protocol.UnitTests
 {
     [TestFixture]
     public class LimeUriTests
-    {        
+    {
         [Test]
         public void Parse_ValidRelativeString_ReturnsInstance()
         {
@@ -33,6 +33,19 @@ namespace Lime.Protocol.UnitTests
         }
 
         [Test]
+        public void Parse_ValidEncodedAbsoluteString_ReturnsInstance()
+        {
+            var identity = "teste_it%C3%A1vel%3Axx@teste.net";
+            var resourceName = Dummy.CreateRandomString(10);
+            var absolutePath = string.Format("{0}://{1}/{2}", LimeUri.LIME_URI_SCHEME, identity, resourceName);
+            var actual = LimeUri.Parse(absolutePath);
+
+            actual.Path.ShouldNotBe(null);
+            actual.Path.ShouldBe(absolutePath);
+            actual.IsRelative.ShouldBe(false);
+        }
+
+        [Test]
         public void Parse_NullString_ThrowsArgumentNullException()
         {
             string path = null;
@@ -44,10 +57,9 @@ namespace Lime.Protocol.UnitTests
         public void Parse_InvalidRelativeString_ThrowsArgumentException()
         {
             var resourceName = Dummy.CreateRandomString(10);
-            var invalidPath = string.Format("\\{0}", resourceName);            
+            var invalidPath = string.Format("\\{0}", resourceName);
             Action action = () => LimeUri.Parse(invalidPath);
             action.ShouldThrow<ArgumentException>();
-
         }
 
         [Test]
@@ -65,7 +77,7 @@ namespace Lime.Protocol.UnitTests
             var resourceName = Dummy.CreateRandomString(10);
             var absolutePath = string.Format("{0}://{1}/{2}", LimeUri.LIME_URI_SCHEME, identity, resourceName);
             var limeUri = LimeUri.Parse(absolutePath);
-            
+
             // Act
             var uri = limeUri.ToUri();
 
@@ -120,6 +132,5 @@ namespace Lime.Protocol.UnitTests
             Action action = () => limeUri.ToUri(identity);
             action.ShouldThrow<InvalidOperationException>();
         }
-
     }
 }
