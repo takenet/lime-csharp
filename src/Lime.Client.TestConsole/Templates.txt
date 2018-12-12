@@ -43,17 +43,17 @@ Subscribe own account	Command	{"id":"%commandId","method":"subscribe","uri":"/ac
 Subscribe account	Command	{"id":"%commandId","method":"subscribe","uri":"lime://%accountIdentity/presence"}
 Set receipts all events	Command	{"id":"%commandId","method":"set","type":"application/vnd.lime.receipt+json","uri":"/receipt","resource":{"events":["failed","accepted","validated","authorized","dispatched","received","consumed"]}}
 Set receipts destination events	Command	{"id":"%commandId","method":"set","type":"application/vnd.lime.receipt+json","uri":"/receipt","resource":{"events":["failed","received","consumed"]}}
-Get groups	Command	{"id":"%commandId","method":"get","type":"application/vnd.lime.group+json","uri": "/groups"}
-Get group	Command	{"id":"%commandId","method":"get","type":"application/vnd.lime.group+json","uri": "/groups/%groupIdentity"}
+Get groups	Command	{"id":"%commandId","method":"get","uri": "/groups"}
+Get group	Command	{"id":"%commandId","method":"get","uri": "/groups/%groupIdentity"}
 Set group	Command	{"id":"%commandId","method":"set","type":"application/vnd.lime.group+json","uri": "/groups","resource":{"identity":"%groupIdentity","name":"%groupName","type":"public"}}
 Get group members	Command	{"id":"%commandId","method":"get","uri": "/groups/%groupIdentity/members"}
-Set group member	Command	{"id":"%commandId","method":"set","type":"application/vnd.lime.groupmember+json","uri": "/groups/%groupIdentity/members","resource":{"address":"%groupMemberAddress","role":"%groupMemberRole"}}
+Set group member	Command	{"id":"%commandId","method":"set","uri": "/groups/%groupIdentity/members","resource":{"address":"%groupMemberAddress","role":"%groupMemberRole"}}
 Get contacts	Command	{"id":"%commandId","method":"get","uri": "/contacts"}
 Set contact	Command	{"id":"%commandId","method":"set","type":"application/vnd.lime.contact+json","uri":"/contacts","resource":{"identity":"%contactIdentity","name":"%contactName","email","%contactEmail","sharePresence":true,"shareAccountInfo":true}}
 Merge contact	Command	{"id":"%commandId","method":"merge","type":"application/vnd.lime.contact+json","uri":"/contacts","resource":{"identity":"%contactIdentity","name":"%contactName"}}
 Delete contact	Command	{"id":"%commandId","method":"delete","uri": "/contacts/%contactIdentity"}
 Set location	Command	{"id":  "%commandId","to":"postmaster@location.take.io","method":"set","type":"application/vnd.lime.location+json","uri":"/location","resource":{"latitude":10.1,"longitude":10.2}}
-Get location	Command	{"id":  "%commandId","to":"postmaster@location.take.io","method":"get","type":"application/vnd.lime.location+json","uri":"/location"}
+Get location	Command	{"id":  "%commandId","to":"postmaster@location.take.io","method":"get","uri":"/location"}
 Set delegation	Command	{"id":"%commandId","method":"set","type":"application/vnd.lime.delegation+json","uri":"/delegations","resource":{"target":"%targetIdentity"}}
 Delete delegation	Command	{"id":"%commandId","method":"delete","type":"application/vnd.lime.delegation+json","uri":"/delegations/%targetIdentity"}
 Set distribution list	Command	{"id": "%commandId","to":"postmaster@broadcast.%domain","method":"set","type":"application/vnd.iris.distribution-list+json","uri":"/lists","resource":{"identity": "%distributionListIdentity"}} 
