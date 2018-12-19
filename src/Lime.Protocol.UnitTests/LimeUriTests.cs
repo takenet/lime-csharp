@@ -33,19 +33,6 @@ namespace Lime.Protocol.UnitTests
         }
 
         [Test]
-        public void Parse_ValidEncodedAbsoluteString_ReturnsInstance()
-        {
-            var identity = "teste_it%C3%A1vel%3Axx@teste.net";
-            var resourceName = Dummy.CreateRandomString(10);
-            var absolutePath = string.Format("{0}://{1}/{2}", LimeUri.LIME_URI_SCHEME, identity, resourceName);
-            var actual = LimeUri.Parse(absolutePath);
-
-            actual.Path.ShouldNotBe(null);
-            actual.Path.ShouldBe(absolutePath);
-            actual.IsRelative.ShouldBe(false);
-        }
-
-        [Test]
         public void Parse_NullString_ThrowsArgumentNullException()
         {
             string path = null;
