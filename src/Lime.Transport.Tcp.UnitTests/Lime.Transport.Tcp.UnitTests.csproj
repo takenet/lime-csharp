@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <TargetFramework>net461</TargetFramework>
     <AssemblyName>Lime.Transport.Tcp.UnitTests</AssemblyName>
     <PackageId>Lime.Transport.Tcp.UnitTests</PackageId>
     <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
@@ -32,6 +32,7 @@
   </ItemGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'net461' ">
+    <PackageReference Include="Pluralsight.Crypto" Version="1.1.0" />    
     <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System" />
     <Reference Include="Microsoft.CSharp" />

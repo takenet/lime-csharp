@@ -6,7 +6,7 @@
     <AssemblyTitle>Lime.Transport.Redis</AssemblyTitle>
     <VersionPrefix></VersionPrefix>
     <Authors>takenet;andrebires</Authors>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>net461</TargetFramework>
     <AssemblyName>Lime.Transport.Redis</AssemblyName>
     <PackageId>Lime.Transport.Redis</PackageId>
     <PackageTags>lime</PackageTags>

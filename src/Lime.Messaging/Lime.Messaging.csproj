@@ -6,7 +6,7 @@
     <AssemblyTitle>Lime.Messaging</AssemblyTitle>
     <VersionPrefix></VersionPrefix>
     <Authors>takenet;andrebires</Authors>
-    <TargetFrameworks>netstandard2.0</TargetFrameworks>
+    <TargetFrameworks>netstandard1.6;net461</TargetFrameworks>
     <AssemblyName>Lime.Messaging</AssemblyName>
     <PackageId>Lime.Messaging</PackageId>
     <PackageTags>lime</PackageTags>
