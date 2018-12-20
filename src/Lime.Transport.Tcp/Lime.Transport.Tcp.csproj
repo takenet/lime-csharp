@@ -6,7 +6,7 @@
     <AssemblyTitle>Lime.Transport.Tcp</AssemblyTitle>
     <VersionPrefix></VersionPrefix>
     <Authors>takenet;andrebires</Authors>
-    <TargetFrameworks>netstandard1.6;net461</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0</TargetFrameworks>
     <AssemblyName>Lime.Transport.Tcp</AssemblyName>
     <PackageId>Lime.Transport.Tcp</PackageId>
     <PackageTags>lime</PackageTags>
