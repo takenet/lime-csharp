@@ -20,6 +20,8 @@ namespace Lime.Protocol.Network
             Node pp = null,
             IDictionary<string, string> metadata = null)
         {
+            if (uri == null) throw new ArgumentNullException(nameof(uri));
+            
             return ProcessCommandOrThrowAsync(
                 channel,
                 new Command()
