@@ -19,6 +19,9 @@ namespace Lime.Transport.WebSocket.Kestrel
 {
     public class KestrelWebSocketTransportListener : ITransportListener
     {
+        public static readonly string UriSchemeWebSocket = "ws";
+        public static readonly string UriSchemeWebSocketSecure = "wss";
+        
         private readonly IEnvelopeSerializer _envelopeSerializer;
         private readonly ITraceWriter _traceWriter;
         private readonly int _acceptCapacity;
@@ -39,13 +42,13 @@ namespace Lime.Transport.WebSocket.Kestrel
             {
                 throw new ArgumentException("At least one listener URI should be provided.", nameof(listenerUris));
             }
-            if (listenerUris.Any(u => u.Scheme != "ws" && u.Scheme != "wss"))
+            if (listenerUris.Any(u => u.Scheme != UriSchemeWebSocket && u.Scheme != UriSchemeWebSocketSecure))
             {
-                throw new ArgumentException("Invalid URI scheme. Should be 'ws' or 'wss'.", nameof(listenerUris));
+                throw new ArgumentException($"Invalid URI scheme. Should be '{UriSchemeWebSocket}' or '{UriSchemeWebSocketSecure}'.", nameof(listenerUris));
             }
-            if (tlsCertificate == null && listenerUris.Any(u => u.Scheme == "wss"))            
+            if (tlsCertificate == null && listenerUris.Any(u => u.Scheme == UriSchemeWebSocketSecure))            
             {
-                throw new ArgumentException("The certificate should be provided when listening to a 'wss' URI.", nameof(listenerUris));
+                throw new ArgumentException($"The certificate should be provided when listening to a '{UriSchemeWebSocketSecure}' URI.", nameof(listenerUris));
             }
 
             ListenerUris = listenerUris;
@@ -67,7 +70,7 @@ namespace Lime.Transport.WebSocket.Kestrel
                         {                                                        
                             listenOptions.Protocols = HttpProtocols.Http1AndHttp2;
 
-                            if (listenerUri.Scheme == "wss")
+                            if (listenerUri.Scheme == UriSchemeWebSocketSecure)
                             {                                                                
                                 listenOptions.UseHttps(tlsCertificate, httpsOptions =>
                                 {
