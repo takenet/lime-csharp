@@ -12,6 +12,7 @@ using Lime.Protocol.Serialization.Newtonsoft;
 //using Lime.Transport.Redis;
 using StackExchange.Redis;
 using Lime.Transport.WebSocket;
+using Lime.Transport.WebSocket.Kestrel;
 
 namespace Lime.Sample.Server
 {
@@ -81,9 +82,8 @@ namespace Lime.Sample.Server
                         2048);
                 case "ws":
                 case "wss":
-                    return new WebSocketTransportListener(
-                        uri,
-                        null,
+                    return new KestrelWebSocketTransportListener(
+                        new[] { uri },                        
                         serializer);
 
                 //case "redis":

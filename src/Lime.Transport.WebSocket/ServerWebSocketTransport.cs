@@ -69,15 +69,4 @@ namespace Lime.Transport.WebSocket
 
         protected override Task PerformOpenAsync(Uri uri, CancellationToken cancellationToken) => Task.CompletedTask;
     }
-
-    internal static class ReflectionExtensions
-    {
-        public static object GetFieldValue(this object obj, string name)
-        {
-            // Set the flags so that private and public fields from instances will be found
-            var bindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.FlattenHierarchy;
-            var field = obj.GetType().GetField(name, bindingFlags);
-            return field?.GetValue(obj);
-        }
-    }
 }
