@@ -42,7 +42,7 @@ namespace Lime.Transport.WebSocket
             WebSocketMessageType webSocketMessageType = WebSocketMessageType.Text,
             ArrayPool<byte> arrayPool = null)
         {
-            WebSocket = webSocket;
+            WebSocket = webSocket ?? throw new ArgumentNullException(nameof(webSocket));
             _envelopeSerializer = envelopeSerializer;
             _traceWriter = traceWriter;
             _arrayPool = arrayPool ?? ArrayPool<byte>.Shared;

@@ -18,6 +18,10 @@ using SimpleInjector;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
+using System.Net.Mime;
+using System.Net.Security;
+using System.Net.WebSockets;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
@@ -33,7 +37,7 @@ namespace Lime.Cli
         });
 
         static async Task<int> Main(string[] args)
-        {
+        {                      
             var parsedArgsResult = Parser.ParseArguments<Options>(args);
             if (parsedArgsResult.Tag == ParserResultType.NotParsed)
             {
@@ -255,23 +259,23 @@ namespace Lime.Cli
 
             clientChannel.ChannelCreationFailedHandlers.Add(information =>
             {
-                //WriteError("Could not establish the session: {0}", information.Exception.Message);
+                WriteError("Could not establish the session: {0}", information.Exception.Message);
                 return TaskUtil.FalseCompletedTask;
             });
 
             var channelListener = new ChannelListener(message =>
                 {
-                    //WriteInfo("Message with id '{0}' received from '{1}': {2}", message.Id, message.GetSender(), message.Content);
+                    WriteInfo("Message with id '{0}' received from '{1}': {2}", message.Id, message.GetSender(), message.Content);
                     return TaskUtil.TrueCompletedTask;
                 },
                 notification =>
                 {
-                    //WriteInfo("Notification with id {0} received from '{1}' - Event: {2}", notification.Id, notification.GetSender(), notification.Event);
+                    WriteInfo("Notification with id {0} received from '{1}' - Event: {2}", notification.Id, notification.GetSender(), notification.Event);
                     return TaskUtil.TrueCompletedTask;
                 },
                 command =>
                 {
-                    //WriteInfo("Command with id '{0}' received from '{1}' - Method: {2} - URI: {3}", command.Id, command.GetSender(), command.Method, command.Uri);                    
+                    WriteInfo("Command with id '{0}' received from '{1}' - Method: {2} - URI: {3}", command.Id, command.GetSender(), command.Method, command.Uri);                    
                     return TaskUtil.TrueCompletedTask;
                 });
 
@@ -283,7 +287,7 @@ namespace Lime.Cli
         }
 
         private static ITransport CreateTransportForUri(Uri uri)
-        {
+        {                        
             switch (uri.Scheme)
             {
                 case "net.tcp":
@@ -292,9 +296,20 @@ namespace Lime.Cli
                             new DocumentTypeResolver().WithMessagingDocuments()));
                 case "ws":
                 case "wss":
+                    var webSocket = new ClientWebSocket();
+                    webSocket.Options.RemoteCertificateValidationCallback = (sender, certificate, chain, errors) =>
+                    {
+                        if (errors != SslPolicyErrors.None)
+                        {
+                            WriteError($"TLS server certificate validation errors: {errors}");
+                        }
+                        return true;
+                    };
+
                     return new ClientWebSocketTransport(
                         new EnvelopeSerializer(
-                            new DocumentTypeResolver().WithMessagingDocuments()));
+                            new DocumentTypeResolver().WithMessagingDocuments()),
+                            webSocket: webSocket);
 
                 default:
                     throw new NotSupportedException($"Unsupported URI scheme '{uri.Scheme}'");

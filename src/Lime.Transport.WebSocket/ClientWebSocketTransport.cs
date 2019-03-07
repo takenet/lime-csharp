@@ -14,11 +14,12 @@ namespace Lime.Transport.WebSocket
             IEnvelopeSerializer envelopeSerializer, 
             ITraceWriter traceWriter = null, 
             int bufferSize = WebSocketTransport.DEFAULT_BUFFER_SIZE,
-            WebSocketMessageType webSocketMessageType = WebSocketMessageType.Text)
-            : base(new ClientWebSocket(), envelopeSerializer, traceWriter, bufferSize,  webSocketMessageType)
+            WebSocketMessageType webSocketMessageType = WebSocketMessageType.Text,
+            ClientWebSocket webSocket = null)
+            : base(webSocket ?? new ClientWebSocket(), envelopeSerializer, traceWriter, bufferSize,  webSocketMessageType)
         {
 
-        }
+        }        
 
         protected override async Task PerformOpenAsync(Uri uri, CancellationToken cancellationToken)
         {
