@@ -35,7 +35,9 @@ namespace Lime.Transport.WebSocket.Kestrel
             ITraceWriter traceWriter = null,
             int bufferSize = WebSocketTransport.DEFAULT_BUFFER_SIZE,
             TimeSpan? keepAliveInterval = null,
-            int acceptCapacity = -1)
+            int acceptCapacity = -1,
+            HttpProtocols httpProtocols = HttpProtocols.Http1AndHttp2,
+            SslProtocols sslProtocols = SslProtocols.Tls11 | SslProtocols.Tls12)
         {
             if (listenerUris == null) throw new ArgumentNullException(nameof(listenerUris));
             if (listenerUris.Length == 0)
@@ -68,13 +70,13 @@ namespace Lime.Transport.WebSocket.Kestrel
                         var endPoint = new IPEndPoint(ipAddress, listenerUri.Port);                        
                         serverOptions.Listen(endPoint, listenOptions =>
                         {                                                        
-                            listenOptions.Protocols = HttpProtocols.Http1AndHttp2;
+                            listenOptions.Protocols = httpProtocols;
 
                             if (listenerUri.Scheme == UriSchemeWebSocketSecure)
                             {                                                                
                                 listenOptions.UseHttps(tlsCertificate, httpsOptions =>
                                 {
-                                    httpsOptions.SslProtocols = SslProtocols.Tls11 | SslProtocols.Tls12;
+                                    httpsOptions.SslProtocols = sslProtocols;
                                 });
                             }
                         });
