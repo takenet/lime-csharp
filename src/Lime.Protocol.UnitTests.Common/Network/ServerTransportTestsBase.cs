@@ -317,5 +317,43 @@ namespace Lime.Protocol.UnitTests.Common.Network
             }
         }
 
+        [Test]
+        public async Task RemoteEndPoint_ConnectedTransport_ShouldEqualsClientLocalEndPoint()
+        {
+            // Arrange
+            var target = await GetTargetAsync();
+
+            // Act
+            var actual = target.RemoteEndPoint;
+            
+            // Assert
+            actual.ShouldBe(Client.LocalEndPoint);
+        }
+        
+        [Test]
+        public async Task LocalEndPoint_ConnectedTransport_ShouldEqualsClientRemoteEndPoint()
+        {
+            // Arrange
+            var target = await GetTargetAsync();
+
+            // Act
+            var actual = target.LocalEndPoint;
+            
+            // Assert
+            actual.ShouldBe(Client.RemoteEndPoint);
+        }
+        
+        [Test]
+        public async Task Options_ConnectedTransport_ReturnsValue()
+        {
+            // Arrange
+            var target = await GetTargetAsync();
+
+            // Act
+            var actual = target.Options;
+            
+            // Assert
+            actual.ShouldNotBeNull();
+        }
     }
 }

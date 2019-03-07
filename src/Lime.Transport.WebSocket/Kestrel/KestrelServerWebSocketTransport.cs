@@ -13,8 +13,7 @@ namespace Lime.Transport.WebSocket.Kestrel
     public class KestrelServerWebSocketTransport : WebSocketTransport
     {
         private readonly HttpContext _context;
-
-        private readonly TaskCompletionSource<object> _executionTaskCompletionSource;
+        private readonly TaskCompletionSource<object> _openTcs;
 
         internal KestrelServerWebSocketTransport(
             HttpContext context,
@@ -26,7 +25,7 @@ namespace Lime.Transport.WebSocket.Kestrel
             : base(webSocket, envelopeSerializer, traceWriter, bufferSize, webSocketMessageType)
         {
             _context = context;
-            _executionTaskCompletionSource = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
+            _openTcs = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
         }
 
         public override IReadOnlyDictionary<string, object> Options
@@ -35,10 +34,6 @@ namespace Lime.Transport.WebSocket.Kestrel
             {
                 var options = (Dictionary<string, object>)base.Options;
                 options["Connection.Id"] = _context.Connection.Id;
-                options["Connection.LocalPort"] = _context.Connection.LocalPort;
-                options["Connection.RemotePort"] = _context.Connection.RemotePort;
-                options["Connection.LocalIpAddress"] = _context.Connection.LocalIpAddress;
-                options["Connection.RemoteIpAddress"] = _context.Connection.RemoteIpAddress;
 
                 if (_context.Request.Headers != null)
                 {
@@ -62,7 +57,10 @@ namespace Lime.Transport.WebSocket.Kestrel
 
         protected override Task PerformOpenAsync(Uri uri, CancellationToken cancellationToken) => Task.CompletedTask;
 
-        internal Task Execution => _executionTaskCompletionSource.Task;
+        /// <summary>
+        /// Gets a task that is complete only when the transport is closed.
+        /// </summary>
+        internal Task OpenTask => _openTcs.Task;
 
         protected override async Task PerformCloseAsync(CancellationToken cancellationToken)
         {
@@ -72,15 +70,19 @@ namespace Lime.Transport.WebSocket.Kestrel
             }
             finally
             {
-                _executionTaskCompletionSource.TrySetResult(null);                
+                _openTcs.TrySetResult(null);                
             }                        
         }
+
+        public override string LocalEndPoint => $"{_context.Connection.LocalIpAddress}:{_context.Connection.LocalPort}";
+
+        public override string RemoteEndPoint => $"{_context.Connection.RemoteIpAddress}:{_context.Connection.RemotePort}";
 
         protected override void Dispose(bool disposing)
         {            
             if (disposing)
             {
-                _executionTaskCompletionSource.TrySetResult(null);
+                _openTcs.TrySetResult(null);
             }
             
             base.Dispose(disposing);

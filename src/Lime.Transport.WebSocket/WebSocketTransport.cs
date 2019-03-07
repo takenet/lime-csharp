@@ -259,17 +259,25 @@ namespace Lime.Transport.WebSocket
         {
             get
             {
+                try
+                {
 #if NETSTANDARD2_0
-                var endpoint = WebSocket.AsDynamic()._innerStream?._context?.Request?.LocalEndPoint;
-                return endpoint?.ToString();
+                    try
+                    {
+                        return WebSocket.AsDynamic()._innerStream?._context?.Request?.LocalEndPoint?.ToString();
+                    }
+                    catch
+                    {
+                        return WebSocket.AsDynamic()._stream?.Socket?.LocalEndPoint?.ToString();
+                    }
 #elif NET461
-
-                var endpoint = WebSocket.AsDynamic().m_InnerStream?.m_Context?.Request?.LocalEndPoint;
-                return endpoint?.ToString();
-#else
-
-                return base.LocalEndPoint;
+                    return WebSocket.AsDynamic().m_InnerStream?.m_Context?.Request?.LocalEndPoint?.ToString();
 #endif
+                }
+                catch
+                {
+                    return base.LocalEndPoint;                    
+                }
             }
         }
 
@@ -277,16 +285,25 @@ namespace Lime.Transport.WebSocket
         {
             get
             {
+                try
+                {
 #if NETSTANDARD2_0
-                var endpoint = WebSocket.AsDynamic()._innerStream?._context?.Request?.RemoteEndPoint;
-                return endpoint?.ToString();
+                    try
+                    {
+                        return WebSocket.AsDynamic()._innerStream?._context?.Request?.RemoteEndPoint?.ToString();
+                    }
+                    catch
+                    {
+                        return WebSocket.AsDynamic()._stream?.Socket?.RemoteEndPoint?.ToString();
+                    }
 #elif NET461
-                var endpoint = WebSocket.AsDynamic().m_InnerStream?.m_Context?.Request?.RemoteEndPoint;
-                return endpoint?.ToString();
-#else
-
-                return base.RemoteEndPoint;
+                    return WebSocket.AsDynamic().m_InnerStream?.m_Context?.Request?.RemoteEndPoint?.ToString();
 #endif
+                }
+                catch
+                {
+                    return base.RemoteEndPoint;                    
+                }                
             }
         }
 

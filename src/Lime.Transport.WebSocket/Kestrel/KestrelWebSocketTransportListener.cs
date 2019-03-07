@@ -148,7 +148,7 @@ namespace Lime.Transport.WebSocket.Kestrel
             await _transportChannel.Writer.WriteAsync(transport);
 
             // We should await here until the websocket is being used
-            await transport.Execution;
+            await transport.OpenTask;
         }
     }
 }

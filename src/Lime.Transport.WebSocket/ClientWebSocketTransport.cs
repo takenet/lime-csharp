@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Lime.Protocol;
 using Lime.Protocol.Network;
 using Lime.Protocol.Serialization;
+using ReflectionMagic;
 
 namespace Lime.Transport.WebSocket
 {
@@ -26,6 +27,39 @@ namespace Lime.Transport.WebSocket
             var clientWebSocket = ((ClientWebSocket) WebSocket);
             clientWebSocket.Options.AddSubProtocol(LimeUri.LIME_URI_SCHEME);
             await clientWebSocket.ConnectAsync(uri, cancellationToken).ConfigureAwait(false);
+        }
+
+
+        public override string LocalEndPoint
+        {
+            get
+            {
+                try
+                {
+                    // netcoreapp2.1
+                    return WebSocket.AsDynamic()._innerWebSocket?._webSocket?._stream?._connection?._socket?.LocalEndPoint?.ToString();
+                }
+                catch
+                {
+                    return base.LocalEndPoint;
+                }
+            }
+        }
+        
+        public override string RemoteEndPoint
+        {
+            get
+            {
+                try
+                {
+                    // netcoreapp2.1
+                    return WebSocket.AsDynamic()._innerWebSocket?._webSocket?._stream?._connection?._socket?.RemoteEndPoint?.ToString();
+                }
+                catch
+                {
+                    return base.RemoteEndPoint;
+                }
+            }
         }
     }
 }
