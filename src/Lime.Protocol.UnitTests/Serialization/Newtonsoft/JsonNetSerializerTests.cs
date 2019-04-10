@@ -1220,8 +1220,8 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             DateTimeOffset creationDate1 = new DateTime(2019, 03, 15);
             DateTimeOffset creationDate2 = new DateTime(2019, 04, 15);
 
-            string creationDateTime1 = creationDate1.ToString("o");//"2019-02-15T00:00:00Z";
-            string creationDateTime2 = creationDate2.ToString("o");// "2019-03-15T00:00:00Z";
+            string creationDateTime1 = creationDate1.ToString("o");
+            string creationDateTime2 = creationDate2.ToString("o");
 
             string json =
                 $"{{\"type\":\"application/vnd.lime.collection+json\",\"resource\":{{\"itemType\":\"application/vnd.lime.contact+json\",\"total\":3,\"items\":[{{\"identity\":\"{identity1}\",\"name\":\"{name1.Escape()}\",\"creationDate\":\"{creationDateTime1}\",\"isPending\":true,\"shareAccountInfo\":false}},{{\"identity\":\"{identity2}\",\"name\":\"{name2.Escape()}\",\"creationDate\":\"{creationDateTime2}\",\"sharePresence\":false}},{{\"identity\":\"{identity3}\",\"name\":\"{name3.Escape()}\",\"isPending\":true,\"sharePresence\":false}}]}},\"method\":\"get\",\"status\":\"success\",\"id\":\"{id}\",\"from\":\"{@from}\",\"pp\":\"{pp}\",\"to\":\"{to}\",\"metadata\":{{\"{randomKey1}\":\"{randomString1.Escape()}\",\"{randomKey2}\":\"{randomString2.Escape()}\"}}}}";
