@@ -1217,8 +1217,11 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             string randomString1 = Dummy.CreateRandomStringExtended(50);
             string randomString2 = Dummy.CreateRandomStringExtended(50);
 
-            string creationDateTime1 = "2019-02-15T00:00:00Z";
-            string creationDateTime2 = "2019-03-15T00:00:00Z";
+            DateTimeOffset creationDate1 = new DateTime(2019, 03, 15);
+            DateTimeOffset creationDate2 = new DateTime(2019, 04, 15);
+
+            string creationDateTime1 = creationDate1.ToString("o");//"2019-02-15T00:00:00Z";
+            string creationDateTime2 = creationDate2.ToString("o");// "2019-03-15T00:00:00Z";
 
             string json =
                 $"{{\"type\":\"application/vnd.lime.collection+json\",\"resource\":{{\"itemType\":\"application/vnd.lime.contact+json\",\"total\":3,\"items\":[{{\"identity\":\"{identity1}\",\"name\":\"{name1.Escape()}\",\"creationDate\":\"{creationDateTime1}\",\"isPending\":true,\"shareAccountInfo\":false}},{{\"identity\":\"{identity2}\",\"name\":\"{name2.Escape()}\",\"creationDate\":\"{creationDateTime2}\",\"sharePresence\":false}},{{\"identity\":\"{identity3}\",\"name\":\"{name3.Escape()}\",\"isPending\":true,\"sharePresence\":false}}]}},\"method\":\"get\",\"status\":\"success\",\"id\":\"{id}\",\"from\":\"{@from}\",\"pp\":\"{pp}\",\"to\":\"{to}\",\"metadata\":{{\"{randomKey1}\":\"{randomString1.Escape()}\",\"{randomKey2}\":\"{randomString2.Escape()}\"}}}}";
@@ -1269,6 +1272,9 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 
             Assert.IsTrue(contacts[0].CreationDate.HasValue);
             Assert.IsTrue(contacts[1].CreationDate.HasValue);
+            Assert.IsTrue(contacts[0].CreationDate.Equals(creationDate1));
+            Assert.IsTrue(contacts[1].CreationDate.Equals(creationDate2));
+
             Assert.IsFalse(contacts[2].CreationDate.HasValue);
         }
 
