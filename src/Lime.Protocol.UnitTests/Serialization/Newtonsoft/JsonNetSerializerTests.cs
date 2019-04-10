@@ -1193,6 +1193,93 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 
         [Test]
         [Category("Deserialize")]
+        public void Deserialize_ContactCollectionResponseCommand_ReturnsValidInstanceWithCreationDate()
+        {
+            var target = GetTarget();
+
+            var identity1 = Dummy.CreateIdentity();
+            var name1 = Dummy.CreateRandomStringExtended(50);
+            var identity2 = Dummy.CreateIdentity();
+            var name2 = Dummy.CreateRandomStringExtended(50);
+            var identity3 = Dummy.CreateIdentity();
+            var name3 = Dummy.CreateRandomStringExtended(50);
+
+            var method = CommandMethod.Get;
+
+            var id = EnvelopeId.NewId();
+
+            var from = Dummy.CreateNode();
+            var pp = Dummy.CreateNode();
+            var to = Dummy.CreateNode();
+
+            string randomKey1 = "randomString1";
+            string randomKey2 = "randomString2";
+            string randomString1 = Dummy.CreateRandomStringExtended(50);
+            string randomString2 = Dummy.CreateRandomStringExtended(50);
+
+            DateTimeOffset creationDate1 = new DateTime(2019, 03, 15);
+            DateTimeOffset creationDate2 = new DateTime(2019, 04, 15);
+
+            string creationDateTime1 = creationDate1.ToString("o");
+            string creationDateTime2 = creationDate2.ToString("o");
+
+            string json =
+                $"{{\"type\":\"application/vnd.lime.collection+json\",\"resource\":{{\"itemType\":\"application/vnd.lime.contact+json\",\"total\":3,\"items\":[{{\"identity\":\"{identity1}\",\"name\":\"{name1.Escape()}\",\"creationDate\":\"{creationDateTime1}\",\"isPending\":true,\"shareAccountInfo\":false}},{{\"identity\":\"{identity2}\",\"name\":\"{name2.Escape()}\",\"creationDate\":\"{creationDateTime2}\",\"sharePresence\":false}},{{\"identity\":\"{identity3}\",\"name\":\"{name3.Escape()}\",\"isPending\":true,\"sharePresence\":false}}]}},\"method\":\"get\",\"status\":\"success\",\"id\":\"{id}\",\"from\":\"{@from}\",\"pp\":\"{pp}\",\"to\":\"{to}\",\"metadata\":{{\"{randomKey1}\":\"{randomString1.Escape()}\",\"{randomKey2}\":\"{randomString2.Escape()}\"}}}}";
+
+            var envelope = target.Deserialize(json);
+
+            var command = envelope.ShouldBeOfType<Command>();
+            Assert.AreEqual(id, command.Id);
+            Assert.AreEqual(from, command.From);
+            Assert.AreEqual(pp, command.Pp);
+            Assert.AreEqual(to, command.To);
+
+            Assert.AreEqual(method, command.Method);
+            Assert.IsNotNull(command.Metadata);
+            Assert.IsTrue(command.Metadata.ContainsKey(randomKey1));
+            Assert.AreEqual(command.Metadata[randomKey1], randomString1);
+            Assert.IsTrue(command.Metadata.ContainsKey(randomKey2));
+            Assert.AreEqual(command.Metadata[randomKey2], randomString2);
+
+            var documents = command.Resource.ShouldBeOfType<DocumentCollection>();
+            Assert.IsNotNull(documents.Items);
+            Assert.AreEqual(documents.Items.Length, 3);
+
+            var contacts = documents.Cast<Contact>().ToArray();
+
+            Assert.IsTrue(contacts[0].Identity.Equals(identity1));
+            Assert.IsTrue(contacts[0].Name.Equals(name1));
+            Assert.IsTrue(contacts[0].IsPending.HasValue);
+            Assert.IsTrue(contacts[0].IsPending.Value);
+            Assert.IsTrue(contacts[0].ShareAccountInfo.HasValue);
+            Assert.IsFalse(contacts[0].ShareAccountInfo.Value);
+            Assert.IsFalse(contacts[0].SharePresence.HasValue);
+
+            Assert.IsTrue(contacts[1].Identity.Equals(identity2));
+            Assert.IsTrue(contacts[1].Name.Equals(name2));
+            Assert.IsFalse(contacts[1].IsPending.HasValue);
+            Assert.IsFalse(contacts[1].ShareAccountInfo.HasValue);
+            Assert.IsTrue(contacts[1].SharePresence.HasValue);
+            Assert.IsFalse(contacts[1].SharePresence.Value);
+
+            Assert.IsTrue(contacts[2].Identity.Equals(identity3));
+            Assert.IsTrue(contacts[2].Name.Equals(name3));
+            Assert.IsTrue(contacts[2].IsPending.HasValue);
+            Assert.IsTrue(contacts[2].IsPending.Value);
+            Assert.IsFalse(contacts[2].ShareAccountInfo.HasValue);
+            Assert.IsTrue(contacts[2].SharePresence.HasValue);
+            Assert.IsFalse(contacts[2].SharePresence.Value);
+
+            Assert.IsTrue(contacts[0].CreationDate.HasValue);
+            Assert.IsTrue(contacts[1].CreationDate.HasValue);
+            Assert.IsTrue(contacts[0].CreationDate.Equals(creationDate1));
+            Assert.IsTrue(contacts[1].CreationDate.Equals(creationDate2));
+
+            Assert.IsFalse(contacts[2].CreationDate.HasValue);
+        }
+
+        [Test]
+        [Category("Deserialize")]
         public void Deserialize_FailureCapabilityResponseCommand_ReturnsValidInstance()
         {
             var target = GetTarget();

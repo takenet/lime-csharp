@@ -28,7 +28,6 @@ namespace Lime.Messaging.Resources
         public const string ACCESS_KEY_KEY = "accessKey";
         public const string ALTERNATIVE_ACCOUNT_KEY = "alternativeAccount";
         public const string PUBLISH_TO_DIRECTORY_KEY = "publishToDirectory";
-        public const string CREATION_DATE_KEY = "creationDate";
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Account"/> class.
@@ -111,11 +110,5 @@ namespace Lime.Messaging.Resources
         /// </summary>
         [DataMember(Name = PUBLISH_TO_DIRECTORY_KEY)]
         public bool? PublishToDirectory { get; set; }
-
-        /// <summary>
-        /// Indicates when the account was created.
-        /// </summary>
-        [DataMember(Name = CREATION_DATE_KEY)]
-        public DateTimeOffset? CreationDate { get; set; }
     }
 }
