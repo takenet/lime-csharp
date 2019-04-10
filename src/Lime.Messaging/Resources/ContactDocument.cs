@@ -29,6 +29,8 @@ namespace Lime.Messaging.Resources
         public const string LAST_NAME_KEY = "lastName";
         public const string BIRTH_DATE_KEY = "birthDate";
         public const string TAX_DOCUMENT_KEY = "taxDocument";
+        public const string CREATION_DATE_KEY = "creationDate";
+
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ContactDocument"/> class.
@@ -142,6 +144,12 @@ namespace Lime.Messaging.Resources
         /// </summary>
         [DataMember(Name = TAX_DOCUMENT_KEY)]
         public string TaxDocument { get; set; }
+
+        /// <summary>
+        /// Indicates when the account was created.
+        /// </summary>
+        [DataMember(Name = CREATION_DATE_KEY)]
+        public DateTimeOffset? CreationDate { get; set; }
     }
 
     /// <summary>

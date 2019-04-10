@@ -1193,7 +1193,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 
         [Test]
         [Category("Deserialize")]
-        public void Deserialize_ContactCollectionResponseCommand_ReturnsValidInstanceWithStorageDate()
+        public void Deserialize_ContactCollectionResponseCommand_ReturnsValidInstanceWithCreationDate()
         {
             var target = GetTarget();
 
@@ -1217,11 +1217,11 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             string randomString1 = Dummy.CreateRandomStringExtended(50);
             string randomString2 = Dummy.CreateRandomStringExtended(50);
 
-            string storageDateTime1 = "2019-02-15T00:00:00Z";
-            string storageDateTime2 = "2019-03-15T00:00:00Z";
+            string creationDateTime1 = "2019-02-15T00:00:00Z";
+            string creationDateTime2 = "2019-03-15T00:00:00Z";
 
             string json =
-                $"{{\"type\":\"application/vnd.lime.collection+json\",\"resource\":{{\"itemType\":\"application/vnd.lime.contact+json\",\"total\":3,\"items\":[{{\"identity\":\"{identity1}\",\"name\":\"{name1.Escape()}\",\"storageDate\":\"{storageDateTime1}\",\"isPending\":true,\"shareAccountInfo\":false}},{{\"identity\":\"{identity2}\",\"name\":\"{name2.Escape()}\",\"storageDate\":\"{storageDateTime2}\",\"sharePresence\":false}},{{\"identity\":\"{identity3}\",\"name\":\"{name3.Escape()}\",\"isPending\":true,\"sharePresence\":false}}]}},\"method\":\"get\",\"status\":\"success\",\"id\":\"{id}\",\"from\":\"{@from}\",\"pp\":\"{pp}\",\"to\":\"{to}\",\"metadata\":{{\"{randomKey1}\":\"{randomString1.Escape()}\",\"{randomKey2}\":\"{randomString2.Escape()}\"}}}}";
+                $"{{\"type\":\"application/vnd.lime.collection+json\",\"resource\":{{\"itemType\":\"application/vnd.lime.contact+json\",\"total\":3,\"items\":[{{\"identity\":\"{identity1}\",\"name\":\"{name1.Escape()}\",\"creationDate\":\"{creationDateTime1}\",\"isPending\":true,\"shareAccountInfo\":false}},{{\"identity\":\"{identity2}\",\"name\":\"{name2.Escape()}\",\"creationDate\":\"{creationDateTime2}\",\"sharePresence\":false}},{{\"identity\":\"{identity3}\",\"name\":\"{name3.Escape()}\",\"isPending\":true,\"sharePresence\":false}}]}},\"method\":\"get\",\"status\":\"success\",\"id\":\"{id}\",\"from\":\"{@from}\",\"pp\":\"{pp}\",\"to\":\"{to}\",\"metadata\":{{\"{randomKey1}\":\"{randomString1.Escape()}\",\"{randomKey2}\":\"{randomString2.Escape()}\"}}}}";
 
             var envelope = target.Deserialize(json);
 
@@ -1267,9 +1267,9 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             Assert.IsTrue(contacts[2].SharePresence.HasValue);
             Assert.IsFalse(contacts[2].SharePresence.Value);
 
-            Assert.IsTrue(contacts[0].StorageDate.HasValue);
-            Assert.IsTrue(contacts[1].StorageDate.HasValue);
-            Assert.IsFalse(contacts[2].StorageDate.HasValue);
+            Assert.IsTrue(contacts[0].CreationDate.HasValue);
+            Assert.IsTrue(contacts[1].CreationDate.HasValue);
+            Assert.IsFalse(contacts[2].CreationDate.HasValue);
         }
 
         [Test]

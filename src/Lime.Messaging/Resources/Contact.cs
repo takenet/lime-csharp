@@ -19,7 +19,6 @@ namespace Lime.Messaging.Resources
         public const string SHARE_ACCOUNT_INFO_KEY = "shareAccountInfo";
         public const string PRIORITY_KEY = "priority";
         public const string GROUP_KEY = "group";
-        public const string STORAGE_DATE_KEY = "storageDate";
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Contact"/> class.
@@ -58,12 +57,6 @@ namespace Lime.Messaging.Resources
         /// </summary>
         [DataMember(Name = SHARE_ACCOUNT_INFO_KEY, EmitDefaultValue = false)]
         public bool? ShareAccountInfo { get; set; }
-
-        /// <summary>
-        /// Indicates the storage date of the contact
-        /// </summary>
-        [DataMember(Name = STORAGE_DATE_KEY, EmitDefaultValue = false)]
-        public DateTimeOffset? StorageDate { get; set; }
 
         /// <summary>
         /// Indicates the contact priority.
