@@ -40,12 +40,12 @@ namespace Lime.Protocol.Util
         /// <summary>
         /// Number of occurrences allowed per unit of time.
         /// </summary>
-        public int Occurrences { get; private set; }
+        public int Occurrences { get; }
 
         /// <summary>
         /// The length of the time unit, in milliseconds.
         /// </summary>
-        public int TimeUnitMilliseconds { get; private set; }
+        public int TimeUnitMilliseconds { get; }
 
         /// <summary>
         /// Initializes a <see cref="RateGate"/> with a rate of <paramref name="occurrences"/> 
@@ -59,12 +59,9 @@ namespace Lime.Protocol.Util
         public RateGate(int occurrences, TimeSpan timeUnit)
         {
             // Check the arguments.
-            if (occurrences <= 0)
-                throw new ArgumentOutOfRangeException(nameof(occurrences), "Number of occurrences must be a positive integer");
-            if (timeUnit != timeUnit.Duration())
-                throw new ArgumentOutOfRangeException(nameof(timeUnit), "Time unit must be a positive span of time");
-            if (timeUnit >= TimeSpan.FromMilliseconds(UInt32.MaxValue))
-                throw new ArgumentOutOfRangeException(nameof(timeUnit), "Time unit must be less than 2^32 milliseconds");
+            if (occurrences <= 0) throw new ArgumentOutOfRangeException(nameof(occurrences), "Number of occurrences must be a positive integer");
+            if (timeUnit != timeUnit.Duration()) throw new ArgumentOutOfRangeException(nameof(timeUnit), "Time unit must be a positive span of time");
+            if (timeUnit >= TimeSpan.FromMilliseconds(UInt32.MaxValue)) throw new ArgumentOutOfRangeException(nameof(timeUnit), "Time unit must be less than 2^32 milliseconds");
 
             Occurrences = occurrences;
             TimeUnitMilliseconds = (int)timeUnit.TotalMilliseconds;
@@ -93,9 +90,11 @@ namespace Lime.Protocol.Util
             {
                 // While there are exit times that are passed due still in the queue,
                 // exit the semaphore and dequeue the exit time.
+                var tickCount = Environment.TickCount;
+                
                 int exitTime;
-                while (_exitTimes.TryPeek(out exitTime)
-                        && unchecked(exitTime - Environment.TickCount) <= 0)
+                while (_exitTimes.TryPeek(out exitTime) && 
+                       unchecked(exitTime - tickCount) <= 0)
                 {
                     _semaphore.Release();
                     _exitTimes.TryDequeue(out exitTime);
@@ -107,9 +106,13 @@ namespace Lime.Protocol.Util
                 // one time unit has passed.
                 int timeUntilNextCheck;
                 if (_exitTimes.TryPeek(out exitTime))
-                    timeUntilNextCheck = unchecked(exitTime - Environment.TickCount);
+                {
+                    timeUntilNextCheck = unchecked(exitTime - tickCount);
+                }
                 else
+                {
                     timeUntilNextCheck = TimeUnitMilliseconds;
+                }
 
                 // Set the timer.
                 _exitTimer.Change(timeUntilNextCheck, -1);
