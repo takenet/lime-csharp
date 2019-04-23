@@ -620,7 +620,7 @@ namespace Lime.Protocol.UnitTests.Server
                 .Returns(TaskUtil.CompletedTask);
             var target = GetTarget(                
                 SessionState.Established,                
-                remotePingInterval: TimeSpan.FromMilliseconds(500),
+                remotePingInterval: TimeSpan.FromMilliseconds(150),
                 remoteIdleTimeout: TimeSpan.FromMilliseconds(150));
 
             // Act
@@ -631,11 +631,20 @@ namespace Lime.Protocol.UnitTests.Server
                 .Verify(t => t.SendAsync(
                     It.IsAny<Envelope>(), 
                     It.IsAny<CancellationToken>()), 
-                    Times.Once());
+                    Times.Exactly(2));
+            
+            _transport
+                .Verify(t => t.SendAsync(
+                        It.Is<Envelope>(e => e is Command), It.IsAny<CancellationToken>()), 
+                    Times.Once());            
 
             _transport
                 .Verify(t => t.SendAsync(
-                    It.Is<Envelope>(e => e is Session && ((Session)e).State == SessionState.Finished && ((Session)e).Id == target.SessionId), It.IsAny<CancellationToken>()), Times.Once());
+                    It.Is<Envelope>(e => 
+                        e is Session && 
+                        ((Session)e).State == SessionState.Finished && 
+                        ((Session)e).Id == target.SessionId), It.IsAny<CancellationToken>()), 
+                    Times.Once());
 
             _transport
                 .Verify(t =>
