@@ -24,6 +24,7 @@ namespace Lime.Protocol.Network.Modules
        
         private Task _pingRemoteTask;
         private string _lastPingCommandRequestId;
+        private bool _hasPendingPingRequest;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="RemotePingChannelModule"/> class.
@@ -39,9 +40,14 @@ namespace Lime.Protocol.Network.Modules
             TimeSpan? remoteIdleTimeout = null, 
             TimeSpan? finishChannelTimeout = null)
         {
-            if (channel == null) throw new ArgumentNullException(nameof(channel));
-            _channel = channel;
+            _channel = channel ?? throw new ArgumentNullException(nameof(channel));
             _remotePingInterval = remotePingInterval;
+            if (remoteIdleTimeout != null &&
+                remoteIdleTimeout.Value != TimeSpan.Zero &&
+                remoteIdleTimeout.Value < remotePingInterval)
+            {
+                throw new ArgumentException("Remote idle timeout cannot be smaller than remote ping interval", nameof(remoteIdleTimeout));
+            }
             _remoteIdleTimeout = remoteIdleTimeout ?? TimeSpan.Zero;
             _finishChannelTimeout = finishChannelTimeout ?? DefaultFinishChannelTimeout;
             _cancellationTokenSource = new CancellationTokenSource();
@@ -83,6 +89,7 @@ namespace Lime.Protocol.Network.Modules
                 envelope.Id != null &&
                 envelope.Id.Equals(_lastPingCommandRequestId))
             {
+                _hasPendingPingRequest = false;
                 // Suppress the receiving of a ping response command
                 return Task.FromResult<Command>(null);
             }
@@ -127,18 +134,20 @@ namespace Lime.Protocol.Network.Modules
                     if (_channel.State != SessionState.Established || !_channel.Transport.IsConnected) continue;
 
                     var idleTime = DateTimeOffset.UtcNow - LastReceivedEnvelope;
-                    if (_remoteIdleTimeout > TimeSpan.Zero &&
+                    if (_hasPendingPingRequest && 
+                        _remoteIdleTimeout > TimeSpan.Zero && 
                         idleTime >= _remoteIdleTimeout)
                     {
                         using (var cts = new CancellationTokenSource(_finishChannelTimeout))
                         {
-                            if (_channel is IClientChannel)
+                            switch (_channel)
                             {
-                                await FinishAsync((IClientChannel)_channel, cts.Token).ConfigureAwait(false);
-                            }
-                            else if (_channel is IServerChannel)
-                            {
-                                await FinishAsync((IServerChannel)_channel, cts.Token).ConfigureAwait(false);
+                                case IClientChannel clientChannel:
+                                    await FinishAsync(clientChannel, cts.Token).ConfigureAwait(false);
+                                    break;
+                                case IServerChannel serverChannel:
+                                    await FinishAsync(serverChannel, cts.Token).ConfigureAwait(false);
+                                    break;
                             }
                         }
                     }
@@ -151,6 +160,8 @@ namespace Lime.Protocol.Network.Modules
                             Method = CommandMethod.Get,
                             Uri = new LimeUri(PING_URI)
                         };
+
+                        _hasPendingPingRequest = true;
 
                         using (var cts = new CancellationTokenSource(_remotePingInterval))
                         {
