@@ -7,7 +7,8 @@ namespace Lime.Protocol
     public static class DocumentExtensions
     {
         /// <summary>
-        /// Creates a <c>DocumentContainer</c> with <paramref name="document"/> as its <c>Value</c>
+        /// Creates a <c>DocumentContainer</c> with 
+        /// <paramref name="document"/> as its <c>Value</c>
         /// </summary>
         /// <returns>The document container.</returns>
         /// <param name="document">Document to set as <c>Value</c></param>
