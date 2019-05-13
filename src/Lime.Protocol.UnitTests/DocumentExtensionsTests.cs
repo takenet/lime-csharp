@@ -6,10 +6,10 @@ using Shouldly;
 namespace Lime.Protocol.UnitTests
 {
     [TestFixture]
+    [Category("ToDocumentContainer")]
     public class DocumentExtensionsTests
     {
         [Test]
-        [Category("ToDocumentContainer")]
         public void Select_ToContainer()
         {
             // Arrange
@@ -24,7 +24,6 @@ namespace Lime.Protocol.UnitTests
         }
 
         [Test]
-        [Category("ToDocumentContainer")]
         public void Collection_ToContainer()
         {
             // Arrange
@@ -55,7 +54,6 @@ namespace Lime.Protocol.UnitTests
         }
 
         [Test]
-        [Category("ToDocumentContainer")]
         public void DocumentSelect_ToContainer()
         {
             // Arrange
@@ -82,7 +80,6 @@ namespace Lime.Protocol.UnitTests
         }
 
         [Test]
-        [Category("ToDocumentContainer")]
         public void PlainText_ToContainer()
         {
             // Arrange
@@ -97,7 +94,6 @@ namespace Lime.Protocol.UnitTests
         }
 
         [Test]
-        [Category("ToDocumentContainer")]
         public void MediaLink_ToContainer()
         {
             // Arrange
