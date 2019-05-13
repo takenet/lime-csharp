@@ -8,10 +8,10 @@ using Shouldly;
 namespace Lime.Protocol.UnitTests
 {
     [TestFixture]
+    [Category("ToDocumentCollection")]
     public class IEnumerableExtensionsTests
     {
         [Test]
-        [Category("ToDocumentCollection")]
         public void List_ToDocumentCollection_ReturnsDocumentCollection()
         {
             // Arrange
@@ -41,7 +41,6 @@ namespace Lime.Protocol.UnitTests
         }
 
         [Test]
-        [Category("ToDocumentCollection")]
         public void Array_ToDocumentCollection_ReturnsDocumentCollection()
         {
             // Arrange
