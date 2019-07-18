@@ -13,7 +13,7 @@ namespace Lime.Protocol
     /// interactions.
     /// </summary>
     [DataContract(Namespace = "http://limeprotocol.org/2014")]
-    public partial class Reason
+    public class Reason
     {
         public const string CODE_KEY = "code";
         public const string DESCRIPTION_KEY = "description";
