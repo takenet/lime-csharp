@@ -23,12 +23,6 @@ namespace Lime.Protocol
 
         }
 
-        public Notification(Guid id)
-            : this(id.ToString())
-        {
-
-        }
-
         public Notification(string id)
             : base(id)
         {
