@@ -59,7 +59,7 @@ namespace Lime.Protocol
         /// </returns>
         public override int GetHashCode()
         {
-            return ToString().ToLower().GetHashCode();
+            return ToString().ToLowerInvariant().GetHashCode();
         }
 
         /// <summary>

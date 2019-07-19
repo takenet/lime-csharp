@@ -7,21 +7,17 @@ using System.Threading.Tasks;
 namespace Lime.Protocol
 {
     /// <summary>
-    /// Base interface for identities,
-    /// that represents an element 
-    /// in a network
+    /// Represents an identity in a domain.
     /// </summary>
     public interface IIdentity
     {
         /// <summary>
-        /// Identity unique name 
-        /// on his domain
+        /// Identity unique name on his domain.
         /// </summary>
         string Name { get; }
 
         /// <summary>
-        /// Network domain name 
-        /// of the identity
+        /// Network domain name of the identity.
         /// </summary>
         string Domain { get; }
     }

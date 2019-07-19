@@ -5,7 +5,7 @@ namespace Lime.Protocol
     /// <summary>
     /// Represents an element of a network.
     /// </summary>
-    public class Node : Identity
+    public class Node : Identity, INode
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="Node"/> class.
@@ -41,10 +41,13 @@ namespace Lime.Protocol
         /// </returns>
         public override string ToString()
         {
-            return $"{base.ToString()}/{Instance}".TrimEnd('/');
+            if (Instance == null)
+            {
+                return base.ToString();
+            }
+            
+            return $"{base.ToString()}/{Instance}";
         }
-
-
 
         /// <summary>
         /// Determines whether the specified <see cref="object" }, is equal to this instance.
