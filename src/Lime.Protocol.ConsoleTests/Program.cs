@@ -189,6 +189,7 @@ namespace Lime.Protocol.ConsoleTests
 
             SetCursorPosition(cursorLeft, cursorTop);
         }
-
     }
+    
+    
 }

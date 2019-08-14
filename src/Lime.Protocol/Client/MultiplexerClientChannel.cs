@@ -65,7 +65,8 @@ namespace Lime.Protocol.Client
             var inputOptions = new ExecutionDataflowBlockOptions()
             {
                 BoundedCapacity = inputBufferSize,
-                MaxDegreeOfParallelism = DataflowBlockOptions.Unbounded
+                MaxDegreeOfParallelism = DataflowBlockOptions.Unbounded,
+                EnsureOrdered = false
             };
             _inputMessageBufferBlock = new BufferBlock<Message>(inputOptions);
             _inputNotificationBufferBlock = new BufferBlock<Notification>(inputOptions);
@@ -86,7 +87,8 @@ namespace Lime.Protocol.Client
             // The global output buffer
             _outputBufferBlock = new BufferBlock<BufferedEnvelope>(new DataflowBlockOptions()
             {
-                BoundedCapacity = outputBufferSize
+                BoundedCapacity = outputBufferSize,
+                EnsureOrdered = false
             });
 
             // An output action block per channel

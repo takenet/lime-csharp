@@ -14,7 +14,6 @@ namespace Lime.Protocol.Network
     /// </summary>
     public abstract class ChannelBase : IChannel, IDisposable
     {
-        private static readonly ExecutionDataflowBlockOptions SingleBoundedCapacityBlockOptions = new ExecutionDataflowBlockOptions() { BoundedCapacity = 1 };
         private static readonly DataflowLinkOptions PropagateCompletionLinkOptions = new DataflowLinkOptions() { PropagateCompletion = true };
 
         private readonly TimeSpan _sendTimeout;
@@ -75,8 +74,10 @@ namespace Lime.Protocol.Network
             if (sendTimeout == default(TimeSpan)) throw new ArgumentException("Invalid send timeout", nameof(sendTimeout));
             if (consumeTimeout != null && consumeTimeout.Value == default(TimeSpan)) throw new ArgumentException("Invalid consume timeout", nameof(consumeTimeout));
             if (closeTimeout == default(TimeSpan)) throw new ArgumentException("Invalid close timeout", nameof(closeTimeout));
-            if (envelopeBufferSize <= 0) throw new ArgumentOutOfRangeException(nameof(envelopeBufferSize));
-
+            if (envelopeBufferSize <= 0)
+            {
+                envelopeBufferSize = DataflowBlockOptions.Unbounded;
+            }
             Transport = transport ?? throw new ArgumentNullException(nameof(transport));
             Transport.Closing += Transport_Closing;
             _sendTimeout = sendTimeout;
@@ -84,16 +85,21 @@ namespace Lime.Protocol.Network
             _closeTimeout = closeTimeout;
             _consumerCts = new CancellationTokenSource();
             _syncRoot = new object();
-            _transportBuffer = new BufferBlock<Envelope>(SingleBoundedCapacityBlockOptions);        
-            _messageConsumerBlock = new TransformBlock<Envelope, Message>(e => ConsumeMessageAsync(e), SingleBoundedCapacityBlockOptions);
-            _commandConsumerBlock = new TransformBlock<Envelope, Command>(e => ConsumeCommandAsync(e), SingleBoundedCapacityBlockOptions);
-            _notificationConsumerBlock = new TransformBlock<Envelope, Notification>(e => ConsumeNotificationAsync(e), SingleBoundedCapacityBlockOptions);
-            _sessionConsumerBlock = new TransformBlock<Envelope, Session>(e => ConsumeSession(e), SingleBoundedCapacityBlockOptions);
-            var options = new DataflowBlockOptions() { BoundedCapacity = envelopeBufferSize };
-            _messageBuffer = new BufferBlock<Message>(options);
-            _commandBuffer = new BufferBlock<Command>(options);
-            _notificationBuffer = new BufferBlock<Notification>(options);
-            _sessionBuffer = new BufferBlock<Session>(SingleBoundedCapacityBlockOptions);
+            var dataflowBlockOptions = new ExecutionDataflowBlockOptions()
+            {
+                BoundedCapacity = envelopeBufferSize,
+                MaxDegreeOfParallelism = DataflowBlockOptions.Unbounded,
+                EnsureOrdered = false
+            };
+            _transportBuffer = new BufferBlock<Envelope>(dataflowBlockOptions);        
+            _messageConsumerBlock = new TransformBlock<Envelope, Message>(e => ConsumeMessageAsync(e), dataflowBlockOptions);
+            _commandConsumerBlock = new TransformBlock<Envelope, Command>(e => ConsumeCommandAsync(e), dataflowBlockOptions);
+            _notificationConsumerBlock = new TransformBlock<Envelope, Notification>(e => ConsumeNotificationAsync(e), dataflowBlockOptions);
+            _sessionConsumerBlock = new TransformBlock<Envelope, Session>(e => ConsumeSession(e), dataflowBlockOptions);
+            _messageBuffer = new BufferBlock<Message>(dataflowBlockOptions);
+            _commandBuffer = new BufferBlock<Command>(dataflowBlockOptions);
+            _notificationBuffer = new BufferBlock<Notification>(dataflowBlockOptions);
+            _sessionBuffer = new BufferBlock<Session>(dataflowBlockOptions);
             _drainEnvelopeBlock = DataflowBlock.NullTarget<Envelope>();
             _transportBuffer.LinkTo(_messageConsumerBlock, PropagateCompletionLinkOptions, e => e is Message);
             _transportBuffer.LinkTo(_commandConsumerBlock, PropagateCompletionLinkOptions, e => e is Command);
@@ -402,8 +408,6 @@ namespace Lime.Protocol.Network
 
             if (_consumerTransportException != null) throw _consumerTransportException;
         }
-
-
 
         private Task<Message> ConsumeMessageAsync(Envelope envelope) => OnReceivingAsync((Message)envelope, MessageModules, _consumerCts.Token);
 

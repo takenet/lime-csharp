@@ -27,7 +27,8 @@ namespace Lime.Protocol.Listeners
             if (notificationTargetBlock == null) throw new ArgumentNullException(nameof(notificationTargetBlock));
             if (commandTargetBlock == null) throw new ArgumentNullException(nameof(commandTargetBlock));
 
-            _channelListener = new ChannelListener(messageTargetBlock.SendAsync,
+            _channelListener = new ChannelListener(
+                messageTargetBlock.SendAsync,
                 notificationTargetBlock.SendAsync,
                 commandTargetBlock.SendAsync);
         }
