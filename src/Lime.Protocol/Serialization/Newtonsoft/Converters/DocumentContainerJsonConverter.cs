@@ -82,9 +82,7 @@ namespace Lime.Protocol.Serialization.Newtonsoft.Converters
             return target;
         }
 
-
-
-        public override void WriteJson(JsonWriter writer, object value, global::Newtonsoft.Json.JsonSerializer serializer)
+        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
             // The container should be always a JSON
             var contract = serializer.ContractResolver.ResolveContract(value.GetType()) as JsonObjectContract;

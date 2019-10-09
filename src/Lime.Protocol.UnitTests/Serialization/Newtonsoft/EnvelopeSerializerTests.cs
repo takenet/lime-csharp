@@ -18,7 +18,7 @@ using Lime.Messaging;
 namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 {
     [TestFixture]
-    public class JsonNetSerializerTests
+    public class EnvelopeSerializerTests
     {
         public IDocumentTypeResolver DocumentTypeResolver;
 
@@ -995,8 +995,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             var account = command.Resource.ShouldBeOfType<Account>();
             account.PhotoUri.ShouldBe(photoUri);
         }
-
-
+        
         [Test]
         [Category("Deserialize")]
         public void Deserialize_PresenceRequestCommand_ReturnsValidInstance()
@@ -1351,8 +1350,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             var textContent = (PlainText)message.Content;
             Assert.AreEqual(text, textContent.Text);
         }
-
-
+        
         [Test]
         [Category("Deserialize")]
         public void Deserialize_TextMessageWithNullFromTo_ReturnsValidInstance()
@@ -1392,8 +1390,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             var textContent = (PlainText)message.Content;
             Assert.AreEqual(text, textContent.Text);
         }
-
-
+        
         [Test]
         [Category("Deserialize")]
         public void Deserialize_ChatStateMessage_ReturnsValidInstance()
@@ -1529,8 +1526,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             Assert.AreEqual(identityDocument.Value, content.Value);
 
         }
-
-
+        
         [Test]
         [Category("Deserialize")]
         public void Deserialize_UnknownJsonContentMessage_ReturnsValidInstance()
@@ -1909,8 +1905,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             var plainAuthentication = session.Authentication.ShouldBeOfType<PlainAuthentication>();
             plainAuthentication.Password.ShouldNotBeEmpty();
         }
-
-
+        
         [Test]
         [Category("Deserialize")]
         public void Deserialize_SessionAuthenticatingWithExternalAuthentication_ReturnsValidInstance()
@@ -1929,8 +1924,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             plainAuthentication.Token.ShouldBe("dFJZMTRXOE03NHBtcmZRNGY3NFo=");
             plainAuthentication.Issuer.ShouldBe("take.net");
         }
-
-
+        
         [Test]
         [Category("Deserialize")]
         public void Deserialize_SessionAuthenticatingWithGuestAuthentication_ReturnsValidInstance()
@@ -2073,7 +2067,6 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             var jObject = JObject.FromObject(jsonDocument, target.Serializer);
             var message = jObject.ToObject(typeof(Message), target.Serializer).ShouldBeOfType<Message>();
         }
-
         
         [Test]
         [Category("Deserialize")]
@@ -2143,8 +2136,29 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             jsonDocument["previewType"].ShouldNotBeNull();
             jsonDocument["previewType"].ToString().ShouldBe("image/jpeg");
             jsonDocument["text"].ShouldBe("b9s38pra6s7w7b4w1jca6lzf9zp8927ciy4lwdsa3y1gc2ekiw");
-
         }
+        
+        [Test]
+        [Category("Deserialize")]
+        public void Deserialize_LocationMessage_ReturnsJsonDocument()
+        {
+            // Arrange
+            var json =
+                "{\"type\":\"application/vnd.lime.location+json\",\"content\":{\"latitude\":\"*\",\"longitude\":\"*\",\"altitude\":853,\"text\":\"*\"},\"id\":\"321fd00b-92c5-492f-8e68-dadb0d1905b0\",\"from\":\"leaseplanhmg@msging.net/az-iris2\",\"to\":\"8425b013-793c-468a-a77f-8ce5ce553868.leaseplanhmg@0mn.io/default\",\"metadata\":{\"#stateName\":\"Y.1.1 - Detalhes do agendamento\",\"#stateId\":\"120f4b27-0bd5-41c6-a103-fa6d7b1066ad\",\"#messageId\":\"c520e0f1-990e-432d-b803-7d342779fc6b\",\"$originator\":\"leaseplanhmg@msging.net\",\"$claims\":\"Node=leaseplanhmg@msging.net/az-iris2;Identity=leaseplanhmg@msging.net;DomainRole=Member;AuthenticationScheme=Transport\"}}";
+                
+            var target = GetTarget();
+
+            // Act
+            var actual = target.Deserialize(json);
+
+            // Assert
+            var actualMessage = actual.ShouldBeOfType<Message>();
+            var jsonDocument = actualMessage.Content.ShouldBeOfType<JsonDocument>();
+            jsonDocument["latitude"].ShouldBe("*");
+            jsonDocument["longitude"].ShouldBe("*");
+            jsonDocument["altitude"].ShouldBe(853);
+            jsonDocument["text"].ShouldBe("*");
+        }        
 
         [Test]
         [Category("Deserialize")]

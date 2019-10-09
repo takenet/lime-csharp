@@ -57,7 +57,7 @@ namespace Lime.Protocol.Serialization.Newtonsoft.Converters
 
                     return document;
                 }
-                catch (JsonSerializationException) { }
+                catch (JsonException) { }
                 catch (ArgumentException) { }
                 catch (TypeLoadException)
                 {
