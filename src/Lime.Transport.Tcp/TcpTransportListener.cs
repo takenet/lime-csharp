@@ -21,8 +21,10 @@ namespace Lime.Transport.Tcp
         private readonly int _bufferSize;
         private readonly int _maxBufferSize;
         private readonly ArrayPool<byte> _arrayPool;
+        private readonly MemoryPool<byte> _memoryPool;
         private readonly ITraceWriter _traceWriter;
         private readonly RemoteCertificateValidationCallback _clientCertificateValidationCallback;
+        private readonly bool _usePipeTcpTransport;
         private readonly SemaphoreSlim _semaphore;
         private TcpListener _tcpListener;
 
@@ -37,6 +39,8 @@ namespace Lime.Transport.Tcp
         /// <param name="arrayPool">The array pool for reusing <see cref="byte[]"/> instances.</param>
         /// <param name="traceWriter"></param>
         /// <param name="clientCertificateValidationCallback"></param>
+        /// <param name="usePipeTcpTransport"></param>
+        /// <param name="memoryPool"></param>
         public TcpTransportListener(
             Uri listenerUri,
             X509Certificate2 serverCertificate,
@@ -45,7 +49,9 @@ namespace Lime.Transport.Tcp
             int maxBufferSize = TcpTransport.DEFAULT_MAX_BUFFER_SIZE,
             ArrayPool<byte> arrayPool = null,
             ITraceWriter traceWriter = null,
-            RemoteCertificateValidationCallback clientCertificateValidationCallback = null)
+            RemoteCertificateValidationCallback clientCertificateValidationCallback = null,
+            bool usePipeTcpTransport = false,
+            MemoryPool<byte> memoryPool = null)
         {
             if (listenerUri == null) throw new ArgumentNullException(nameof(listenerUri));
             if (listenerUri.Scheme != TcpTransport.UriSchemeNetTcp)
@@ -64,8 +70,11 @@ namespace Lime.Transport.Tcp
             _maxBufferSize = maxBufferSize;
             // https://github.com/dotnet/corefx/blob/master/src/System.Buffers/src/System/Buffers/DefaultArrayPool.cs
             _arrayPool = arrayPool ?? ArrayPool<byte>.Create(_maxBufferSize, 50);
+            _memoryPool = memoryPool ?? MemoryPool<byte>.Shared;
+
             _traceWriter = traceWriter;
             _clientCertificateValidationCallback = clientCertificateValidationCallback;
+            _usePipeTcpTransport = usePipeTcpTransport;
             _semaphore = new SemaphoreSlim(1);
         }
 
@@ -154,15 +163,30 @@ namespace Lime.Transport.Tcp
                 .WithCancellation(cancellationToken)
                 .ConfigureAwait(false);
 
-            return new TcpTransport(
-                new TcpClientAdapter(tcpClient),
-                _envelopeSerializer,
-                _serverCertificate,
-                _bufferSize,
-                _maxBufferSize,
-                _arrayPool,
-                _traceWriter,
-                _clientCertificateValidationCallback);
+            if (_usePipeTcpTransport)
+            {
+                return new PipeTcpTransport(
+                    new TcpClientAdapter(tcpClient),
+                    _envelopeSerializer,
+                    _serverCertificate,
+                    _bufferSize,
+                    _maxBufferSize,
+                    _memoryPool,
+                    _traceWriter,
+                    _clientCertificateValidationCallback);
+            }
+            else
+            {
+                return new TcpTransport(
+                    new TcpClientAdapter(tcpClient),
+                    _envelopeSerializer,
+                    _serverCertificate,
+                    _bufferSize,
+                    _maxBufferSize,
+                    _arrayPool,
+                    _traceWriter,
+                    _clientCertificateValidationCallback);
+            }
         }
 
         /// <summary>

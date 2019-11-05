@@ -70,7 +70,7 @@ namespace Lime.Protocol.ConsoleTests
                 WriteLine("Starting the client...");
 
                 var channelBuilder =  ClientChannelBuilder
-                    .Create(() => new TcpTransport(new EnvelopeSerializer(new DocumentTypeResolver())), uri)
+                    .Create(() => new PipeTcpTransport(new EnvelopeSerializer(new DocumentTypeResolver())), uri)
                     .CreateEstablishedClientChannelBuilder()
                     .WithEncryption(SessionEncryption.TLS);
                 

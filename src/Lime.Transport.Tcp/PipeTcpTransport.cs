@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -17,13 +17,16 @@ using Lime.Protocol.Security;
 using Lime.Protocol.Serialization;
 using Lime.Protocol.Serialization.Newtonsoft;
 using System.Buffers;
+using System.IO.Pipelines;
+using System.Threading.Channels;
+using System.Threading.Tasks.Dataflow;
 
 namespace Lime.Transport.Tcp
 {
     /// <summary>
     /// Provides the messaging protocol transport for TCP connections.
     /// </summary>
-    public class TcpTransport : TransportBase, ITransport, IAuthenticatableTransport, IDisposable
+    public class PipeTcpTransport : TransportBase, ITransport, IAuthenticatableTransport, IDisposable
     {
         public const int DEFAULT_BUFFER_SIZE = 8192;
         public const int DEFAULT_MAX_BUFFER_SIZE = DEFAULT_BUFFER_SIZE * 1024;
@@ -41,11 +44,16 @@ namespace Lime.Transport.Tcp
         private readonly RemoteCertificateValidationCallback _clientCertificateValidationCallback;
         private readonly X509Certificate2 _serverCertificate;
         private readonly X509Certificate2 _clientCertificate;
-        private readonly JsonBuffer _jsonBuffer;
 
+        private readonly Pipe _receivePipe;
+        private readonly Channel<Envelope> _receiveChannel;
+        private readonly CancellationTokenSource _receiveCts;
+        private Task _receiveTask;
+        
         private Stream _stream;
         private string _hostName;
         private bool _disposed;
+        
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TcpTransport"/> class.
@@ -55,7 +63,7 @@ namespace Lime.Transport.Tcp
         /// <param name="maxBufferSize">Max size of the buffer for increasing.</param>
         /// <param name="traceWriter">The trace writer.</param>
         /// <param name="serverCertificateValidationCallback">A callback to validate the server certificate in the TLS authentication process.</param>
-        public TcpTransport(
+        public PipeTcpTransport(
             X509Certificate2 clientCertificate = null,
             int bufferSize = DEFAULT_BUFFER_SIZE,
             int maxBufferSize = DEFAULT_MAX_BUFFER_SIZE,
@@ -74,7 +82,7 @@ namespace Lime.Transport.Tcp
         /// <param name="maxBufferSize">Max size of the buffer for increasing.</param>
         /// <param name="traceWriter">The trace writer.</param>
         /// <param name="serverCertificateValidationCallback">A callback to validate the server certificate in the TLS authentication process.</param>
-        public TcpTransport(
+        public PipeTcpTransport(
             IEnvelopeSerializer envelopeSerializer,
             X509Certificate2 clientCertificate = null,
             int bufferSize = DEFAULT_BUFFER_SIZE,
@@ -96,7 +104,7 @@ namespace Lime.Transport.Tcp
         /// <param name="maxBufferSize">Max size of the buffer for increasing.</param>
         /// <param name="traceWriter">The trace writer.</param>
         /// <param name="serverCertificateValidationCallback">A callback to validate the server certificate in the TLS authentication process.</param>
-        public TcpTransport(
+        public PipeTcpTransport(
             ITcpClient tcpClient,
             IEnvelopeSerializer envelopeSerializer,
             string hostName,
@@ -119,20 +127,20 @@ namespace Lime.Transport.Tcp
         /// <param name="serverCertificate">The server certificate.</param>
         /// <param name="bufferSize">Size of the buffer.</param>
         /// <param name="maxBufferSize">Max size of the buffer for increasing.</param>
-        /// <param name="arrayPool">The array pool instance, to allow reusing the created buffers.</param>
+        /// <param name="memoryPool">The array pool instance, to allow reusing the created buffers.</param>
         /// <param name="traceWriter">The trace writer.</param>
         /// <param name="clientCertificateValidationCallback">A callback to validate the client certificate in the TLS authentication process.</param>
         /// <param name="ignoreDeserializationErrors">if set to <c>true</c> the deserialization on received envelopes will be ignored; otherwise, any deserialization error will be throw to the caller.</param>
-        internal TcpTransport(
+        internal PipeTcpTransport(
             ITcpClient tcpClient,
             IEnvelopeSerializer envelopeSerializer,
             X509Certificate2 serverCertificate,
             int bufferSize = DEFAULT_BUFFER_SIZE,
             int maxBufferSize = DEFAULT_MAX_BUFFER_SIZE,
-            ArrayPool<byte> arrayPool = null,
+            MemoryPool<byte> memoryPool = null,
             ITraceWriter traceWriter = null,
             RemoteCertificateValidationCallback clientCertificateValidationCallback = null)
-            : this(tcpClient, envelopeSerializer, serverCertificate, null, null, bufferSize, maxBufferSize, arrayPool, traceWriter, null, clientCertificateValidationCallback)
+            : this(tcpClient, envelopeSerializer, serverCertificate, null, null, bufferSize, maxBufferSize, memoryPool, traceWriter, null, clientCertificateValidationCallback)
         {
         }
 
@@ -146,7 +154,7 @@ namespace Lime.Transport.Tcp
         /// <param name="hostName">Name of the host.</param>
         /// <param name="bufferSize">Size of the buffer.</param>
         /// <param name="maxBufferSize">Max size of the buffer.</param>
-        /// <param name="arrayPool">The array pool instance, to allow reusing the created buffers.</param>
+        /// <param name="memoryPool">The array pool instance, to allow reusing the created buffers.</param>
         /// <param name="traceWriter">The trace writer.</param>
         /// <param name="serverCertificateValidationCallback">The server certificate validation callback.</param>
         /// <param name="clientCertificateValidationCallback">The client certificate validation callback.</param>
@@ -155,7 +163,7 @@ namespace Lime.Transport.Tcp
         /// or
         /// envelopeSerializer
         /// </exception>
-        private TcpTransport(
+        private PipeTcpTransport(
             ITcpClient tcpClient,
             IEnvelopeSerializer envelopeSerializer,
             X509Certificate2 serverCertificate,
@@ -163,7 +171,7 @@ namespace Lime.Transport.Tcp
             string hostName,
             int bufferSize,
             int maxBufferSize,
-            ArrayPool<byte> arrayPool,
+            MemoryPool<byte> memoryPool,
             ITraceWriter traceWriter,
             RemoteCertificateValidationCallback serverCertificateValidationCallback,
             RemoteCertificateValidationCallback clientCertificateValidationCallback)
@@ -177,7 +185,11 @@ namespace Lime.Transport.Tcp
             _serverCertificateValidationCallback = serverCertificateValidationCallback ?? ValidateServerCertificate;
             _clientCertificateValidationCallback = clientCertificateValidationCallback ?? ValidateClientCertificate;
 
-            _jsonBuffer = new JsonBuffer(bufferSize, maxBufferSize, arrayPool);
+            // TODO: Define a bound
+            _receiveChannel = Channel.CreateUnbounded<Envelope>();
+            _receivePipe = new Pipe(new PipeOptions(memoryPool ?? MemoryPool<byte>.Shared));
+            _receiveCts = new CancellationTokenSource();
+            
             _receiveSemaphore = new SemaphoreSlim(1);
             _sendSemaphore = new SemaphoreSlim(1);
         }
@@ -221,82 +233,13 @@ namespace Lime.Transport.Tcp
         /// </summary>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public override async Task<Envelope> ReceiveAsync(CancellationToken cancellationToken)
+        public override Task<Envelope> ReceiveAsync(CancellationToken cancellationToken)
         {
-            if (_stream == null) throw new InvalidOperationException("The stream was not initialized. Call OpenAsync first.");
+            if (_stream == null)
+                throw new InvalidOperationException("The stream was not initialized. Call OpenAsync first.");
             if (!_stream.CanRead) throw new InvalidOperationException("Invalid stream state");
 
-            await _receiveSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
-
-            try
-            {
-                Envelope envelope = null;
-
-                while (envelope == null)
-                {
-                    cancellationToken.ThrowIfCancellationRequested();
-                    envelope = await GetEnvelopeFromBufferAsync().ConfigureAwait(false);
-
-                    if (envelope == null && CanRead)
-                    {
-                        // The NetworkStream ReceiveAsync method doesn't supports cancellation
-                        // http://stackoverflow.com/questions/21468137/async-network-operations-never-finish
-                        // http://referencesource.microsoft.com/#mscorlib/system/io/stream.cs,421
-                        var readTask = _stream
-                            .ReadAsync(
-                                _jsonBuffer.Buffer,
-                                _jsonBuffer.BufferCurPos,
-                                _jsonBuffer.Buffer.Length - _jsonBuffer.BufferCurPos,
-                                cancellationToken);
-
-                        while (!readTask.IsCompleted && CanRead)
-                        {
-                            cancellationToken.ThrowIfCancellationRequested();
-
-                            await Task
-                                .WhenAny(
-                                    readTask,
-                                    Task.Delay(ReadTimeout, cancellationToken))
-                                .ConfigureAwait(false);
-                        }
-
-                        // If is not possible to read, closes the transport and returns
-                        if (!readTask.IsCompleted)
-                        {
-                            await CloseWithTimeoutAsync().ConfigureAwait(false);
-                            break;
-                        }
-
-                        var read = await readTask.ConfigureAwait(false);
-
-                        // https://msdn.microsoft.com/en-us/library/hh193669(v=vs.110).aspx
-                        if (read == 0)
-                        {
-                            await CloseWithTimeoutAsync().ConfigureAwait(false);
-                            break;
-                        }
-
-                        _jsonBuffer.BufferCurPos += read;
-
-                        if (_jsonBuffer.BufferCurPos >= _jsonBuffer.Buffer.Length)
-                        {
-                            _jsonBuffer.IncreaseBuffer();
-                        }
-                    }
-                }
-
-                return envelope;
-            }
-            catch (BufferOverflowException)
-            {
-                await TraceAsync($"{nameof(RemoteEndPoint)}: {RemoteEndPoint} - BufferOverflow: {Encoding.UTF8.GetString(_jsonBuffer.Buffer)}", DataOperation.Error).ConfigureAwait(false);
-                await CloseWithTimeoutAsync().ConfigureAwait(false);
-                throw;
-            }
-            finally
-            {
-                _receiveSemaphore.Release();
-            }
+            return _receiveChannel.Reader.ReadAsync(cancellationToken).AsTask();
         }
 
         /// <summary>
@@ -581,6 +524,9 @@ namespace Lime.Transport.Tcp
             }
 
             _stream = _tcpClient.GetStream();
+
+
+            _receiveTask = ProcessReceivedConnectionAsync(_receiveCts.Token);
         }
 
         /// <summary>
@@ -594,6 +540,7 @@ namespace Lime.Transport.Tcp
             cancellationToken.ThrowIfCancellationRequested();
             _stream?.Close();
             _tcpClient.Close();
+            _receiveCts.Cancel();
             return Task.FromResult<object>(null);
         }
 
@@ -614,26 +561,143 @@ namespace Lime.Transport.Tcp
                     _sendSemaphore.Dispose();
                     _receiveSemaphore.Dispose();
                     _stream?.Dispose();
-                    _jsonBuffer.Dispose();
+                    _receiveCts.Dispose();
                 }
 
                 _disposed = true;
             }
         }
-
-        private async Task<Envelope> GetEnvelopeFromBufferAsync()
+        
+        private async Task ProcessReceivedConnectionAsync(CancellationToken cancellationToken)
         {
-            Envelope envelope = null;
+            var pipe = new Pipe();
 
-            if (_jsonBuffer.TryExtractJsonFromBuffer(out var jsonBytes))
+            var fillPipeTask = FillPipeAsync(pipe.Writer, _stream, cancellationToken);
+            var readPipeTask = ReadPipeAsync(pipe.Reader, cancellationToken);
+
+            try
             {
-                var envelopeJson = Encoding.UTF8.GetString(jsonBytes);
+                await Task.WhenAll(fillPipeTask, readPipeTask);
+            }
+            finally
+            {
+                await CloseWithTimeoutAsync().ConfigureAwait(false);
+            }
+        }
 
-                await TraceAsync(envelopeJson, DataOperation.Receive).ConfigureAwait(false);
-                envelope = _envelopeSerializer.Deserialize(envelopeJson);
+        private async Task FillPipeAsync(PipeWriter writer, Stream stream, CancellationToken cancellationToken)
+        {
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                var memory = writer.GetMemory();
+                var read  = await stream.ReadAsync(memory, cancellationToken);
+                if (read == 0) break;
+                writer.Advance(read);
+                var result = await writer.FlushAsync(cancellationToken);
+
+                if (result.IsCompleted) break;
             }
             
-            return envelope;
+            await writer.CompleteAsync();
+        }
+
+        private async Task ReadPipeAsync(PipeReader reader, CancellationToken cancellationToken)
+        {
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                var result = await reader.ReadAsync(cancellationToken);
+                var buffer = result.Buffer;
+
+                if (result.IsCompleted || buffer.IsEmpty) break;
+                
+                var consumed = buffer.Start;
+                var unexaminedBuffer = buffer;
+                
+                while (!unexaminedBuffer.IsEmpty  &&
+                       TryExtractJsonFromBuffer(unexaminedBuffer, out var json))
+                {
+                    consumed = json.End;
+                    unexaminedBuffer = unexaminedBuffer.Slice(consumed, unexaminedBuffer.End);
+
+                    var envelopeJson = Encoding.UTF8.GetString(json.ToArray());
+                    await TraceAsync(envelopeJson, DataOperation.Receive).ConfigureAwait(false);
+                    var envelope = _envelopeSerializer.Deserialize(envelopeJson);
+                    
+                    await _receiveChannel.Writer.WriteAsync(envelope, cancellationToken);
+                }
+                
+                reader.AdvanceTo(consumed, buffer.End);
+            }
+        }
+        
+        /// <summary>
+        /// Try to extract a JSON document from the buffer, based on the brackets count.
+        /// </summary>
+        private static bool TryExtractJsonFromBuffer(ReadOnlySequence<byte> buffer, out ReadOnlySequence<byte> json)
+        {
+            var jsonLength = 0;
+            var jsonStackedBrackets = 0;
+            var jsonStartPos = 0;
+            var jsonStarted = false;
+            var insideQuotes = false;
+            var isEscaping = false;
+            var i = 0;
+            
+            foreach (var segment in buffer)
+            {
+                foreach (var c in segment.Span)
+                {
+                    if (c == '"' && !isEscaping)
+                    {
+                        insideQuotes = !insideQuotes;
+                    }
+
+                    if (!insideQuotes)
+                    {
+                        if (c == '{')
+                        {
+                            jsonStackedBrackets++;
+                            if (!jsonStarted)
+                            {
+                                jsonStartPos = i;
+                                jsonStarted = true;
+                            }
+                        }
+                        else if (c == '}')
+                        {
+                            jsonStackedBrackets--;
+                        }
+
+                        if (jsonStarted &&
+                            jsonStackedBrackets == 0)
+                        {
+                            jsonLength = i - jsonStartPos + 1;
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        if (isEscaping)
+                        {
+                            isEscaping = false;
+                        }
+                        else if (c == '\\')
+                        {
+                            isEscaping = true;
+                        }
+                    }
+                    i++;
+                }
+            }
+            
+            if (jsonLength > 1)
+            {
+                json = buffer.Slice(jsonStartPos, jsonLength);
+                return true;
+            }
+            
+            json = default;
+            return false;
         }
 
         private bool ValidateServerCertificate(

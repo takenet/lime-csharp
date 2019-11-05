@@ -21,7 +21,7 @@ using NUnit.Framework;
 namespace Lime.Transport.Tcp.UnitTests
 {
     [TestFixture]
-    public class TcpTransportTests
+    public class PipeTcpTransportTests
     {
         private Mock<ITcpClient> _tcpClient;
         private Mock<IEnvelopeSerializer> _envelopeSerializer;
@@ -58,7 +58,8 @@ namespace Lime.Transport.Tcp.UnitTests
                     (object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors) =>
                     {
                         return true;
-                    });
+                    },
+                usePipeTcpTransport: true);
             await _tcpListener.StartAsync(_cancellationToken);
         }
 
@@ -71,9 +72,9 @@ namespace Lime.Transport.Tcp.UnitTests
 
         #region Private methods
 
-        private TcpTransport GetTarget(X509Certificate2 certificate = null, int bufferSize = TcpTransport.DEFAULT_BUFFER_SIZE, int maxBufferSize = 0)
+        private PipeTcpTransport GetTarget(X509Certificate2 certificate = null, int bufferSize = PipeTcpTransport.DEFAULT_BUFFER_SIZE, int maxBufferSize = 0)
         {
-            return new TcpTransport(
+            return new PipeTcpTransport(
                 _tcpClient.Object,
                 _envelopeSerializer.Object, 
                 _serverUri.ToString(),
@@ -82,7 +83,7 @@ namespace Lime.Transport.Tcp.UnitTests
                 maxBufferSize,
                 _traceWriter.Object);
         }
-        private async Task<TcpTransport> GetAndOpenTargetAsync(int bufferSize = TcpTransport.DEFAULT_BUFFER_SIZE, Stream stream = null, int maxBufferSize = 0)
+        private async Task<PipeTcpTransport> GetAndOpenTargetAsync(int bufferSize = PipeTcpTransport.DEFAULT_BUFFER_SIZE, Stream stream = null, int maxBufferSize = 0)
         {
             if (stream == null)
             {
@@ -334,23 +335,23 @@ namespace Lime.Transport.Tcp.UnitTests
         [Category("ReceiveAsync")]
         public async Task ReceiveAsync_OneRead_ReadEnvelopeJsonFromStream()
         {
+            // Arrange
             var content = Dummy.CreateTextContent();
             var message = Dummy.CreateMessage(content);
             var messageJson = Dummy.CreateMessageJson();
             var cancelationToken = Dummy.CreateCancellationToken();
-
-            byte[] messageBuffer = Encoding.UTF8.GetBytes(
-                messageJson);
-
+            byte[] messageBuffer = Encoding.UTF8.GetBytes(messageJson);
             int bufferSize = messageBuffer.Length + Dummy.CreateRandomInt(1000);
             var stream = new TestStream(messageBuffer);
-            var target = await GetAndOpenTargetAsync(bufferSize, stream);
-
             _envelopeSerializer
                 .Setup(e => e.Deserialize(messageJson))
                 .Returns(message)
                 .Verifiable();
+            
+            // Act
+            var target = await GetAndOpenTargetAsync(bufferSize, stream);
 
+            // Assert
             var actual = await target.ReceiveAsync(cancelationToken);
 
             _stream.Verify();
@@ -366,9 +367,11 @@ namespace Lime.Transport.Tcp.UnitTests
         
         public async Task ReceiveAsync_NotStarted_ThrowsInvalidOperationException()
         {
+            // Arrange
             var cancelationToken = Dummy.CreateCancellationToken();
             var target = GetTarget();
 
+            // Act
             Should.Throw<InvalidOperationException>(() => target.ReceiveAsync(cancelationToken));
         }
 
@@ -376,31 +379,27 @@ namespace Lime.Transport.Tcp.UnitTests
         [Category("ReceiveAsync")]
         public async Task ReceiveAsync_MultipleReads_ReadEnvelopeJsonFromStream()
         {
+            // Arrange
             var content = Dummy.CreateTextContent();
             var message = Dummy.CreateMessage(content);
             var messageJson = Dummy.CreateMessageJson();
             var cancelationToken = Dummy.CreateCancellationToken();
-
-            var bufferParts = Dummy.CreateRandomInt(10) + 1;
-
-            byte[] messageBuffer = Encoding.UTF8.GetBytes(
-                messageJson);
-
+            byte[] messageBuffer = Encoding.UTF8.GetBytes(messageJson);
             var messageBufferParts = SplitBuffer(messageBuffer);
             int bufferSize = messageBuffer.Length + Dummy.CreateRandomInt(1000);
             var stream = new TestStream(messageBufferParts);
-            var target = await GetAndOpenTargetAsync(bufferSize, stream);
-
             _envelopeSerializer
                 .Setup(e => e.Deserialize(messageJson))
                 .Returns(message)
                 .Verifiable();
+            var target = await GetAndOpenTargetAsync(bufferSize, stream);
 
+            // Act
             var actual = await target.ReceiveAsync(cancelationToken);            
 
+            // Assert
             _stream.Verify();
             _envelopeSerializer.Verify();
-
             Assert.AreEqual(message, actual);
             Assert.AreEqual(messageBufferParts.Length, stream.ReadCount);
         }
@@ -409,31 +408,28 @@ namespace Lime.Transport.Tcp.UnitTests
         [Category("ReceiveAsync")]
         public async Task ReceiveAsync_MultipleReadsWithExactBufferSize_ReadEnvelopeJsonFromStream()
         {
+            // Arrange
             var content = Dummy.CreateTextContent();
             var message = Dummy.CreateMessage(content);
             var messageJson = Dummy.CreateMessageJson();
             var cancelationToken = Dummy.CreateCancellationToken();
-
-            var bufferParts = Dummy.CreateRandomInt(10) + 1;
-
             byte[] messageBuffer = Encoding.UTF8.GetBytes(
                 messageJson);
-
             var messageBufferParts = SplitBuffer(messageBuffer);
             int bufferSize = messageBuffer.Length;
             var stream = new TestStream(messageBufferParts);
-            var target = await GetAndOpenTargetAsync(bufferSize, stream);
-
             _envelopeSerializer
                 .Setup(e => e.Deserialize(messageJson))
                 .Returns(message)
                 .Verifiable();
-
+            var target = await GetAndOpenTargetAsync(bufferSize, stream);
+            
+            // Act
             var actual = await target.ReceiveAsync(cancelationToken);
 
+            // Assert
             _stream.Verify();
             _envelopeSerializer.Verify();
-
             Assert.AreEqual(message, actual);
             Assert.AreEqual(messageBufferParts.Length, stream.ReadCount);
         }
@@ -443,11 +439,11 @@ namespace Lime.Transport.Tcp.UnitTests
         [Category("ReceiveAsync")]
         public async Task ReceiveAsync_MultipleReadsMultipleEnvelopes_ReadEnvelopesJsonFromStream()
         {
+            // Arrange
             var content = Dummy.CreateTextContent();
             var message = Dummy.CreateMessage(content);
             int messagesCount = Dummy.CreateRandomInt(100) + 1;
             var messageJsonQueue = new Queue<string>();
-
             for (int i = 0; i < messagesCount; i++)
             {
                 string messageJson;
@@ -459,21 +455,20 @@ namespace Lime.Transport.Tcp.UnitTests
               
                 messageJsonQueue.Enqueue(messageJson);
             }
-
             var messagesJsons = string.Join("", messageJsonQueue);                                    
             var cancelationToken = Dummy.CreateCancellationToken();
             byte[] messageBuffer = Encoding.UTF8.GetBytes(messagesJsons);
             var messageBufferParts = SplitBuffer(messageBuffer);         
             int bufferSize = messageBuffer.Length;
             var stream = new TestStream(messageBufferParts);
-            var target = await GetAndOpenTargetAsync(bufferSize, stream);
-
             _envelopeSerializer
                 .Setup(e => e.Deserialize(It.Is<string>(s => messageJsonQueue.Contains(s))))
                 .Returns(message)
                 .Callback(() => messageJsonQueue.Dequeue())
                 .Verifiable();
+            var target = await GetAndOpenTargetAsync(bufferSize, stream);
 
+            // Act
             try
             {
                 for (int i = 0; i < messagesCount; i++)
@@ -505,11 +500,11 @@ namespace Lime.Transport.Tcp.UnitTests
         [Category("ReceiveAsync")]
         public async Task ReceiveAsync_MultipleReadsMultipleEnvelopesWithInvalidCharsBetween_ReadEnvelopeJsonFromStream()
         {
+            // Arrange
             var content = Dummy.CreateTextContent();
             var message = Dummy.CreateMessage(content);
             int messagesCount = Dummy.CreateRandomInt(100) + 1;
             var messageJsonQueue = new Queue<string>();
-
             for (int i = 0; i < messagesCount; i++)
             {
                 string messageJson;
@@ -528,14 +523,14 @@ namespace Lime.Transport.Tcp.UnitTests
             var messageBufferParts = SplitBuffer(messageBuffer);
             int bufferSize = messageBuffer.Length + Dummy.CreateRandomInt(1000);
             var stream = new TestStream(messageBufferParts);
-            var target = await GetAndOpenTargetAsync(bufferSize, stream);
-
             _envelopeSerializer
                 .Setup(e => e.Deserialize(It.Is<string>(s => messageJsonQueue.Contains(s))))
                 .Returns(message)
                 .Callback(() => messageJsonQueue.Dequeue())
                 .Verifiable();
+            var target = await GetAndOpenTargetAsync(bufferSize, stream);
 
+            // Act
             try
             {
                 for (int i = 0; i < messagesCount; i++)
@@ -561,12 +556,12 @@ namespace Lime.Transport.Tcp.UnitTests
                 throw;
             }
         }
-
-
+        
         [Test]
         [Category("ReceiveAsync")]
         public async Task ReceiveAsync_SingleReadBiggerThenBuffer_ClosesStreamAndThrowsBufferOverflowException()
         {
+            // Arrange
             var content = Dummy.CreateTextContent();
             var message = Dummy.CreateMessage(content);
             var messageJson = Dummy.CreateMessageJson();
@@ -574,18 +569,17 @@ namespace Lime.Transport.Tcp.UnitTests
             byte[] messageBuffer = Encoding.UTF8.GetBytes(messageJson);
             int bufferSize = messageBuffer.Length / 2;
             var stream = new TestStream(messageBuffer);
+            _envelopeSerializer
+                .Setup(e => e.Deserialize(messageJson))
+                .Returns(message)
+                .Verifiable();
+            _envelopeSerializer
+                .Setup(e => e.Deserialize(messageJson))
+                .Returns(message)
+                .Verifiable();
             var target = await GetAndOpenTargetAsync(bufferSize, stream);
 
-            _envelopeSerializer
-                .Setup(e => e.Deserialize(messageJson))
-                .Returns(message)
-                .Verifiable();
-
-            _envelopeSerializer
-                .Setup(e => e.Deserialize(messageJson))
-                .Returns(message)
-                .Verifiable();
-
+            // Act
             try
             {
                 var actual = await target.ReceiveAsync(cancelationToken);
@@ -593,6 +587,7 @@ namespace Lime.Transport.Tcp.UnitTests
             }
             catch (Exception ex)
             {
+                // Assert
                 ex.ShouldBeOfType<BufferOverflowException>();
                 stream.CloseInvoked.ShouldBe(true);
             }
@@ -603,6 +598,7 @@ namespace Lime.Transport.Tcp.UnitTests
         [Category("ReceiveAsync")]
         public async Task ReceiveAsync_MultipleReadsBiggerThenBuffer_ClosesTheTransportAndThrowsBufferOverflowException()
         {
+            // Arrange
             var content = Dummy.CreateTextContent();
             var message = Dummy.CreateMessage(content);
             var messageJson = Dummy.CreateMessageJson();
@@ -611,13 +607,13 @@ namespace Lime.Transport.Tcp.UnitTests
             var messageBufferParts = SplitBuffer(messageBuffer);
             int bufferSize = messageBuffer.Length / 2;
             var stream = new TestStream(messageBufferParts);
-            var target = await GetAndOpenTargetAsync(bufferSize, stream);
-
             _envelopeSerializer
                 .Setup(e => e.Deserialize(messageJson))
                 .Returns(message)
                 .Verifiable();
+            var target = await GetAndOpenTargetAsync(bufferSize, stream);
 
+            // Act
             try
             {
                 var actual = await target.ReceiveAsync(cancelationToken);
@@ -625,6 +621,7 @@ namespace Lime.Transport.Tcp.UnitTests
             }
             catch (Exception ex)
             {
+                // Assert
                 ex.ShouldBeOfType<BufferOverflowException>();
                 stream.CloseInvoked.ShouldBe(true);
             }            
@@ -634,6 +631,7 @@ namespace Lime.Transport.Tcp.UnitTests
         [Category("ReceiveAsync")]
         public async Task ReceiveAsync_MultipleReadsBiggerThenBuffer_IncreasesBuffer()
         {
+            // Arrange
             var content = Dummy.CreateTextContent();
             var message = Dummy.CreateMessage(content);
             var messageJson = Dummy.CreateMessageJson();
@@ -642,13 +640,13 @@ namespace Lime.Transport.Tcp.UnitTests
             var messageBufferParts = SplitBuffer(messageBuffer);
             int bufferSize = messageBuffer.Length / 2;
             var stream = new TestStream(messageBufferParts);
-            var target = await GetAndOpenTargetAsync(bufferSize, stream);
-
             _envelopeSerializer
                 .Setup(e => e.Deserialize(messageJson))
                 .Returns(message)
                 .Verifiable();
+            var target = await GetAndOpenTargetAsync(bufferSize, stream);
 
+            // Act
             try
             {
                 var actual = await target.ReceiveAsync(cancelationToken);
@@ -656,12 +654,12 @@ namespace Lime.Transport.Tcp.UnitTests
             }
             catch (Exception ex)
             {
+                // Assert
                 ex.ShouldBeOfType<BufferOverflowException>();
                 stream.CloseInvoked.ShouldBe(true);
             }
         }
-
-
+        
         private static byte[][] SplitBuffer(byte[] messageBuffer)
         {
             var bufferParts = Dummy.CreateRandomInt(100) + 1;

@@ -12,6 +12,12 @@ namespace Lime.Transport.Tcp.UnitTests
     {
         private static readonly ConcurrentDictionary<string, X509Certificate2> CertificateCache = new ConcurrentDictionary<string, X509Certificate2>();
 
+        public static X509Certificate2 GetOrCreateSelfSignedCertificate(params string[] commonNames)
+        {
+            var key = commonNames.Aggregate(string.Empty, (a, b) => $"{a};{b}");
+            return CertificateCache.GetOrAdd(key, k => CreateSelfSignedCertificate(commonNames));
+        }
+        
         /// <summary>
         /// Creates a self-signed certificate
         /// http://stackoverflow.com/questions/13806299/how-to-create-a-self-signed-certificate-using-c
@@ -42,14 +48,6 @@ namespace Lime.Transport.Tcp.UnitTests
 
                 return certificate;
             }
-        }
-
-        public static X509Certificate2 ReadFromFile(string filepath)
-        {
-            var bytes = File.ReadAllBytes(filepath);
-            var certificate = new X509Certificate2();
-            certificate.Import(bytes);
-            return certificate;
         }
     }
 }
