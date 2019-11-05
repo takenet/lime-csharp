@@ -210,7 +210,7 @@ namespace Lime.Transport.Tcp
             await TraceAsync(envelopeJson, DataOperation.Send).ConfigureAwait(false);
             var jsonBytes = Encoding.UTF8.GetBytes(envelopeJson);
 
-            await _sendSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+            //await _sendSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
             
             try
             {
@@ -223,7 +223,7 @@ namespace Lime.Transport.Tcp
             }
             finally
             {
-                _sendSemaphore.Release();
+                //_sendSemaphore.Release();
             }
         }
 
@@ -237,7 +237,7 @@ namespace Lime.Transport.Tcp
             if (_stream == null) throw new InvalidOperationException("The stream was not initialized. Call OpenAsync first.");
             if (!_stream.CanRead) throw new InvalidOperationException("Invalid stream state");
 
-            await _receiveSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+            //await _receiveSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
 
             try
             {
@@ -306,7 +306,7 @@ namespace Lime.Transport.Tcp
             }
             finally
             {
-                _receiveSemaphore.Release();
+                //_receiveSemaphore.Release();
             }
         }
 

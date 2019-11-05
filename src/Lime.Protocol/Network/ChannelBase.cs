@@ -19,6 +19,7 @@ namespace Lime.Protocol.Network
         private readonly TimeSpan _sendTimeout;
         private readonly TimeSpan? _consumeTimeout;
         private readonly TimeSpan _closeTimeout;
+        private readonly ActionBlock<Envelope> _sendEnvelopeActionBlock;
         private readonly BufferBlock<Envelope> _transportBuffer;
         private readonly TransformBlock<Envelope, Message> _messageConsumerBlock;
         private readonly TransformBlock<Envelope, Command> _commandConsumerBlock;
@@ -96,6 +97,12 @@ namespace Lime.Protocol.Network
             _commandConsumerBlock = new TransformBlock<Envelope, Command>(e => ConsumeCommandAsync(e), dataflowBlockOptions);
             _notificationConsumerBlock = new TransformBlock<Envelope, Notification>(e => ConsumeNotificationAsync(e), dataflowBlockOptions);
             _sessionConsumerBlock = new TransformBlock<Envelope, Session>(e => ConsumeSession(e), dataflowBlockOptions);
+            _sendEnvelopeActionBlock = new ActionBlock<Envelope>(e => Transport.SendAsync(e, _consumerCts.Token), new ExecutionDataflowBlockOptions()
+            {
+                BoundedCapacity = DataflowBlockOptions.Unbounded,
+                MaxDegreeOfParallelism = 1,
+                EnsureOrdered = false
+            });
             _messageBuffer = new BufferBlock<Message>(dataflowBlockOptions);
             _commandBuffer = new BufferBlock<Command>(dataflowBlockOptions);
             _notificationBuffer = new BufferBlock<Notification>(dataflowBlockOptions);
@@ -508,7 +515,7 @@ namespace Lime.Protocol.Network
             using (var linkedCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(
                 cancellationToken, timeoutCancellationTokenSource.Token))
             {
-                await Transport.SendAsync(envelope, linkedCancellationTokenSource.Token).ConfigureAwait(false);
+                await _sendEnvelopeActionBlock.SendAsync(envelope, linkedCancellationTokenSource.Token).ConfigureAwait(false);
             }
         }
 
