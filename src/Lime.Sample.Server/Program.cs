@@ -79,7 +79,8 @@ namespace Lime.Sample.Server
                         serverCertificate,
                         serializer,
                         1024,
-                        2048);
+                        2048,
+                        usePipeTcpTransport: true);
                 case "ws":
                 case "wss":
                     return new KestrelWebSocketTransportListener(

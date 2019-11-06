@@ -19,7 +19,6 @@ using Lime.Protocol.Serialization.Newtonsoft;
 using System.Buffers;
 using System.IO.Pipelines;
 using System.Threading.Channels;
-using System.Threading.Tasks.Dataflow;
 
 namespace Lime.Transport.Tcp
 {
@@ -35,8 +34,7 @@ namespace Lime.Transport.Tcp
         public static readonly TimeSpan ReadTimeout = TimeSpan.FromSeconds(5);
         public static readonly TimeSpan CloseTimeout = TimeSpan.FromSeconds(30);
 
-        private readonly SemaphoreSlim _receiveSemaphore;
-        private readonly SemaphoreSlim _sendSemaphore;
+        private readonly SemaphoreSlim _optionsSemaphore;
         private readonly ITcpClient _tcpClient;
         private readonly IEnvelopeSerializer _envelopeSerializer;
         private readonly ITraceWriter _traceWriter;
@@ -45,15 +43,15 @@ namespace Lime.Transport.Tcp
         private readonly X509Certificate2 _serverCertificate;
         private readonly X509Certificate2 _clientCertificate;
 
+        private readonly CancellationTokenSource _cts;
         private readonly Pipe _receivePipe;
-        private readonly Channel<Envelope> _receiveChannel;
-        private readonly CancellationTokenSource _receiveCts;
+        private readonly Pipe _sendPipe;
         private Task _receiveTask;
+        private Task _sendTask;
         
         private Stream _stream;
         private string _hostName;
         private bool _disposed;
-        
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TcpTransport"/> class.
@@ -184,14 +182,12 @@ namespace Lime.Transport.Tcp
             _traceWriter = traceWriter;
             _serverCertificateValidationCallback = serverCertificateValidationCallback ?? ValidateServerCertificate;
             _clientCertificateValidationCallback = clientCertificateValidationCallback ?? ValidateClientCertificate;
-
-            // TODO: Define a bound
-            _receiveChannel = Channel.CreateUnbounded<Envelope>();
-            _receivePipe = new Pipe(new PipeOptions(memoryPool ?? MemoryPool<byte>.Shared));
-            _receiveCts = new CancellationTokenSource();
             
-            _receiveSemaphore = new SemaphoreSlim(1);
-            _sendSemaphore = new SemaphoreSlim(1);
+            var pipeMemoryPool = memoryPool ?? MemoryPool<byte>.Shared;
+            _receivePipe = new Pipe(new PipeOptions(pipeMemoryPool));
+            _sendPipe = new Pipe(new PipeOptions(pipeMemoryPool));
+            _cts = new CancellationTokenSource();
+            _optionsSemaphore = new SemaphoreSlim(1);
         }
 
         /// <summary>
@@ -209,37 +205,65 @@ namespace Lime.Transport.Tcp
 
             var envelopeJson = _envelopeSerializer.Serialize(envelope);
             await TraceAsync(envelopeJson, DataOperation.Send).ConfigureAwait(false);
-            var jsonBytes = Encoding.UTF8.GetBytes(envelopeJson);
 
-            await _sendSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+            var memory = _sendPipe.Writer.GetMemory(envelopeJson.Length);
+            var length = Encoding.UTF8.GetBytes(envelopeJson, memory.Span);
+
+            _sendPipe.Writer.Advance(length);
+            var flushResult = await _sendPipe.Writer.FlushAsync(cancellationToken);
             
-            try
+            if (flushResult.IsCompleted || flushResult.IsCanceled)
             {
-                await _stream.WriteAsync(jsonBytes, 0, jsonBytes.Length, cancellationToken).ConfigureAwait(false);
-            }
-            catch (IOException)
-            {
-                await CloseWithTimeoutAsync().ConfigureAwait(false);
-                throw;
-            }
-            finally
-            {
-                _sendSemaphore.Release();
+                await CloseWithTimeoutAsync();
+                throw new InvalidOperationException("Send pipe is completed");
             }
         }
 
         /// <summary>
-        /// Reads one envelope from the stream.
+        /// Reads one envelope from the pipe.
         /// </summary>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public override Task<Envelope> ReceiveAsync(CancellationToken cancellationToken)
+        public override async Task<Envelope> ReceiveAsync(CancellationToken cancellationToken)
         {
-            if (_stream == null)
-                throw new InvalidOperationException("The stream was not initialized. Call OpenAsync first.");
+            if (_stream == null) throw new InvalidOperationException("The stream was not initialized. Call OpenAsync first.");
             if (!_stream.CanRead) throw new InvalidOperationException("Invalid stream state");
 
-            return _receiveChannel.Reader.ReadAsync(cancellationToken).AsTask();
+            Envelope envelope = null;
+            
+            while (envelope == null &&
+                   !cancellationToken.IsCancellationRequested)
+            {
+                var readResult = await _receivePipe.Reader.ReadAsync(cancellationToken);
+                var buffer = readResult.Buffer;
+                if (readResult.IsCompleted || buffer.IsEmpty)
+                {
+                    await CloseWithTimeoutAsync();
+                    throw new InvalidOperationException("Receive pipe is completed");
+                }
+
+                var consumed = buffer.Start;
+                if (JsonBuffer.TryExtractJsonFromBuffer(buffer, out var json))
+                {
+                    var envelopeJson = Encoding.UTF8.GetString(json.ToArray());
+                    await TraceAsync(envelopeJson, DataOperation.Receive).ConfigureAwait(false);
+                    envelope = _envelopeSerializer.Deserialize(envelopeJson);
+                    consumed = json.End;
+                }
+
+                if (envelope != null)
+                {
+                    // A envelope was found and the buffer may contain another one
+                    _receivePipe.Reader.AdvanceTo(consumed);
+                }
+                else
+                {
+                    // No envelope found after examining the whole buffer, more data is needed
+                    _receivePipe.Reader.AdvanceTo(consumed, buffer.End);
+                }
+            }            
+            
+            return envelope;
         }
 
         /// <summary>
@@ -273,88 +297,79 @@ namespace Lime.Transport.Tcp
         /// <exception cref="System.NotSupportedException"></exception>        
         public override async Task SetEncryptionAsync(SessionEncryption encryption, CancellationToken cancellationToken)
         {
-            await _sendSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+            await _optionsSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
             try
             {
-                await _receiveSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
-                try
+                switch (encryption)
                 {
-                    switch (encryption)
-                    {
-                        case SessionEncryption.None:
-                            _stream = _tcpClient.GetStream();
-                            break;
-                        case SessionEncryption.TLS:
-                            SslStream sslStream;
-                            
-                            if (_serverCertificate != null)
+                    case SessionEncryption.None:
+                        _stream = _tcpClient.GetStream();
+                        break;
+                    case SessionEncryption.TLS:
+                        SslStream sslStream;
+                        
+                        if (_serverCertificate != null)
+                        {
+                            if (_stream == null) throw new InvalidOperationException("The stream was not initialized. Call OpenAsync first.");
+
+                            // Server
+                            sslStream = new SslStream(
+                                _stream,
+                                false,
+                                _clientCertificateValidationCallback,
+                                null,
+                                EncryptionPolicy.RequireEncryption);
+
+                            await sslStream
+                                .AuthenticateAsServerAsync(
+                                    _serverCertificate,
+                                    true,
+                                    SslProtocols.Tls,
+                                    false)
+                                .WithCancellation(cancellationToken)
+                                .ConfigureAwait(false);
+                        }
+                        else
+                        {
+                            // Client
+                            if (string.IsNullOrWhiteSpace(_hostName))
                             {
-                                if (_stream == null) throw new InvalidOperationException("The stream was not initialized. Call OpenAsync first.");
-
-                                // Server
-                                sslStream = new SslStream(
-                                    _stream,
-                                    false,
-                                    _clientCertificateValidationCallback,
-                                    null,
-                                    EncryptionPolicy.RequireEncryption);
-
-                                await sslStream
-                                    .AuthenticateAsServerAsync(
-                                        _serverCertificate,
-                                        true,
-                                        SslProtocols.Tls,
-                                        false)
-                                    .WithCancellation(cancellationToken)
-                                    .ConfigureAwait(false);
+                                throw new InvalidOperationException("The hostname is mandatory for TLS client encryption support");
                             }
-                            else
+
+                            sslStream = new SslStream(
+                                _stream,
+                                false,
+                                 _serverCertificateValidationCallback);
+
+                            X509CertificateCollection clientCertificates = null;
+
+                            if (_clientCertificate != null)
                             {
-                                // Client
-                                if (string.IsNullOrWhiteSpace(_hostName))
-                                {
-                                    throw new InvalidOperationException("The hostname is mandatory for TLS client encryption support");
-                                }
-
-                                sslStream = new SslStream(
-                                    _stream,
-                                    false,
-                                     _serverCertificateValidationCallback);
-
-                                X509CertificateCollection clientCertificates = null;
-
-                                if (_clientCertificate != null)
-                                {
-                                    clientCertificates = new X509CertificateCollection(new X509Certificate[] { _clientCertificate });
-                                }
-
-                                await sslStream
-                                    .AuthenticateAsClientAsync(
-                                        _hostName,
-                                        clientCertificates,
-                                        SslProtocols.Tls,
-                                        false)
-                                    .WithCancellation(cancellationToken)
-                                    .ConfigureAwait(false);
+                                clientCertificates = new X509CertificateCollection(new X509Certificate[] { _clientCertificate });
                             }
-                            _stream = sslStream;
-                            break;
 
-                        default:
-                            throw new NotSupportedException();
-                    }
+                            await sslStream
+                                .AuthenticateAsClientAsync(
+                                    _hostName,
+                                    clientCertificates,
+                                    SslProtocols.Tls,
+                                    false)
+                                .WithCancellation(cancellationToken)
+                                .ConfigureAwait(false);
+                        }
+                        _stream = sslStream;
+                        break;
 
-                    Encryption = encryption;
-                }
-                finally
-                {
-                    _receiveSemaphore.Release();
+                    default:
+                        throw new NotSupportedException();
                 }
 
+                Encryption = encryption;
             }
             finally
             {
-                _sendSemaphore.Release();
+                _optionsSemaphore.Release();
             }
         }
 
@@ -524,11 +539,10 @@ namespace Lime.Transport.Tcp
             }
 
             _stream = _tcpClient.GetStream();
-
-
-            _receiveTask = ProcessReceivedConnectionAsync(_receiveCts.Token);
+            _receiveTask = FillReceivePipeAsync(_receivePipe.Writer, _cts.Token);
+            _sendTask = ReadSendPipeAsync(_sendPipe.Reader, _cts.Token);
         }
-
+        
         /// <summary>
         /// Closes the transport.
         /// </summary>
@@ -538,10 +552,10 @@ namespace Lime.Transport.Tcp
         protected override Task PerformCloseAsync(CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
+            _cts.Cancel();
             _stream?.Close();
             _tcpClient.Close();
-            _receiveCts.Cancel();
-            return Task.FromResult<object>(null);
+            return Task.WhenAll(_receiveTask ?? Task.CompletedTask, _sendTask ?? Task.CompletedTask);
         }
 
         /// <summary>
@@ -558,148 +572,73 @@ namespace Lime.Transport.Tcp
             {
                 if (disposing)
                 {
-                    _sendSemaphore.Dispose();
-                    _receiveSemaphore.Dispose();
+                    _optionsSemaphore.Dispose();
                     _stream?.Dispose();
-                    _receiveCts.Dispose();
+                    _cts.Dispose();
                 }
 
                 _disposed = true;
             }
         }
-        
-        private async Task ProcessReceivedConnectionAsync(CancellationToken cancellationToken)
+
+        private async Task FillReceivePipeAsync(PipeWriter writer, CancellationToken cancellationToken)
         {
-            var pipe = new Pipe();
-
-            var fillPipeTask = FillPipeAsync(pipe.Writer, _stream, cancellationToken);
-            var readPipeTask = ReadPipeAsync(pipe.Reader, cancellationToken);
-
+            Exception exception = null;
+            
             try
             {
-                await Task.WhenAll(fillPipeTask, readPipeTask);
+                while (!cancellationToken.IsCancellationRequested)
+                {
+                    var memory = writer.GetMemory();
+                    var read = await _stream.ReadAsync(memory, cancellationToken);
+                    if (read == 0) break;
+                    writer.Advance(read);
+                    
+                    var flushResult = await writer.FlushAsync(cancellationToken);
+                    if (flushResult.IsCompleted || flushResult.IsCanceled) break;
+                }
+            }
+            catch (Exception ex)
+            {
+                exception = ex;
             }
             finally
             {
-                await CloseWithTimeoutAsync().ConfigureAwait(false);
+                await writer.CompleteAsync(exception);                
             }
         }
 
-        private async Task FillPipeAsync(PipeWriter writer, Stream stream, CancellationToken cancellationToken)
+        private async Task ReadSendPipeAsync(PipeReader reader, CancellationToken cancellationToken)
         {
-            while (!cancellationToken.IsCancellationRequested)
+            Exception exception = null;
+
+            try
             {
-                var memory = writer.GetMemory();
-                var read  = await stream.ReadAsync(memory, cancellationToken);
-                if (read == 0) break;
-                writer.Advance(read);
-                var result = await writer.FlushAsync(cancellationToken);
-
-                if (result.IsCompleted) break;
-            }
-            
-            await writer.CompleteAsync();
-        }
-
-        private async Task ReadPipeAsync(PipeReader reader, CancellationToken cancellationToken)
-        {
-            while (!cancellationToken.IsCancellationRequested)
-            {
-                var result = await reader.ReadAsync(cancellationToken);
-                var buffer = result.Buffer;
-
-                if (result.IsCompleted || buffer.IsEmpty) break;
-                
-                var consumed = buffer.Start;
-                var unexaminedBuffer = buffer;
-                
-                while (!unexaminedBuffer.IsEmpty  &&
-                       TryExtractJsonFromBuffer(unexaminedBuffer, out var json))
+                while (!cancellationToken.IsCancellationRequested)
                 {
-                    consumed = json.End;
-                    unexaminedBuffer = unexaminedBuffer.Slice(consumed, unexaminedBuffer.End);
+                    var result = await reader.ReadAsync(cancellationToken);
+                    var buffer = result.Buffer;
 
-                    var envelopeJson = Encoding.UTF8.GetString(json.ToArray());
-                    await TraceAsync(envelopeJson, DataOperation.Receive).ConfigureAwait(false);
-                    var envelope = _envelopeSerializer.Deserialize(envelopeJson);
-                    
-                    await _receiveChannel.Writer.WriteAsync(envelope, cancellationToken);
+                    if (result.IsCompleted || buffer.IsEmpty) break;
+
+                    foreach (var memory in buffer)
+                    {
+                        await _stream.WriteAsync(memory, cancellationToken);
+                    }
+
+                    reader.AdvanceTo(buffer.End);
                 }
-                
-                reader.AdvanceTo(consumed, buffer.End);
+            }
+            catch (Exception ex)
+            {
+                exception = ex;
+            }
+            finally
+            {
+                await reader.CompleteAsync(exception);
             }
         }
         
-        /// <summary>
-        /// Try to extract a JSON document from the buffer, based on the brackets count.
-        /// </summary>
-        private static bool TryExtractJsonFromBuffer(ReadOnlySequence<byte> buffer, out ReadOnlySequence<byte> json)
-        {
-            var jsonLength = 0;
-            var jsonStackedBrackets = 0;
-            var jsonStartPos = 0;
-            var jsonStarted = false;
-            var insideQuotes = false;
-            var isEscaping = false;
-            var i = 0;
-            
-            foreach (var segment in buffer)
-            {
-                foreach (var c in segment.Span)
-                {
-                    if (c == '"' && !isEscaping)
-                    {
-                        insideQuotes = !insideQuotes;
-                    }
-
-                    if (!insideQuotes)
-                    {
-                        if (c == '{')
-                        {
-                            jsonStackedBrackets++;
-                            if (!jsonStarted)
-                            {
-                                jsonStartPos = i;
-                                jsonStarted = true;
-                            }
-                        }
-                        else if (c == '}')
-                        {
-                            jsonStackedBrackets--;
-                        }
-
-                        if (jsonStarted &&
-                            jsonStackedBrackets == 0)
-                        {
-                            jsonLength = i - jsonStartPos + 1;
-                            break;
-                        }
-                    }
-                    else
-                    {
-                        if (isEscaping)
-                        {
-                            isEscaping = false;
-                        }
-                        else if (c == '\\')
-                        {
-                            isEscaping = true;
-                        }
-                    }
-                    i++;
-                }
-            }
-            
-            if (jsonLength > 1)
-            {
-                json = buffer.Slice(jsonStartPos, jsonLength);
-                return true;
-            }
-            
-            json = default;
-            return false;
-        }
-
         private bool ValidateServerCertificate(
             object sender,
             X509Certificate certificate,

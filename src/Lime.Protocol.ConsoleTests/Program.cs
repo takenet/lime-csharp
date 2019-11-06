@@ -48,7 +48,7 @@ namespace Lime.Protocol.ConsoleTests
 
             var server = new ServerBuilder(
                     "postmaster@msging.net/default",
-                    new TcpTransportListener(uri, null, new EnvelopeSerializer(new DocumentTypeResolver())))
+                    new TcpTransportListener(uri, null, new EnvelopeSerializer(new DocumentTypeResolver()), usePipeTcpTransport: true))
                 .WithChannelConsumers(m => messageBufferBlock.SendAsync(m), n => TaskUtil.TrueCompletedTask, c => TaskUtil.TrueCompletedTask)
                 .WithEnabledEncryptionOptions(new SessionEncryption[] { SessionEncryption.TLS })
                 .WithExceptionHandler(e =>
@@ -72,7 +72,7 @@ namespace Lime.Protocol.ConsoleTests
                 var channelBuilder =  ClientChannelBuilder
                     .Create(() => new PipeTcpTransport(new EnvelopeSerializer(new DocumentTypeResolver())), uri)
                     .CreateEstablishedClientChannelBuilder()
-                    .WithEncryption(SessionEncryption.TLS);
+                    .WithEncryption(SessionEncryption.None);
                 
                 
                 var client = new MultiplexerClientChannel(channelBuilder);

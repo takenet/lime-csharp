@@ -139,6 +139,78 @@ namespace Lime.Protocol.Network
             _buffer = increasedBuffer;
             _arrayPool.Return(currentBuffer, true);
         }
+        
+        /// <summary>
+        /// Try to extract a JSON document from the buffer, based on the brackets count.
+        /// </summary>
+        public static bool TryExtractJsonFromBuffer(ReadOnlySequence<byte> buffer, out ReadOnlySequence<byte> json)
+        {
+            var jsonLength = 0;
+            var jsonStackedBrackets = 0;
+            var jsonStartPos = 0;
+            var jsonStarted = false;
+            var insideQuotes = false;
+            var isEscaping = false;
+            var i = 0;
+            
+            foreach (var segment in buffer)
+            {
+                foreach (var c in segment.Span)
+                {
+                    if (c == '"' && !isEscaping)
+                    {
+                        insideQuotes = !insideQuotes;
+                    }
+
+                    if (!insideQuotes)
+                    {
+                        if (c == '{')
+                        {
+                            jsonStackedBrackets++;
+                            if (!jsonStarted)
+                            {
+                                jsonStartPos = i;
+                                jsonStarted = true;
+                            }
+                        }
+                        else if (c == '}')
+                        {
+                            jsonStackedBrackets--;
+                        }
+
+                        if (jsonStarted &&
+                            jsonStackedBrackets == 0)
+                        {
+                            jsonLength = i - jsonStartPos + 1;
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        if (isEscaping)
+                        {
+                            isEscaping = false;
+                        }
+                        else if (c == '\\')
+                        {
+                            isEscaping = true;
+                        }
+                    }
+
+                    if (jsonLength > 1) break;
+                    i++;
+                }
+            }
+            
+            if (jsonLength > 1)
+            {
+                json = buffer.Slice(jsonStartPos, jsonLength);
+                return true;
+            }
+            
+            json = default;
+            return false;
+        }        
 
         private void Reset()
         {

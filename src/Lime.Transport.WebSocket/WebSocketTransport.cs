@@ -261,7 +261,6 @@ namespace Lime.Transport.WebSocket
             {
                 try
                 {
-#if NETSTANDARD2_0
                     try
                     {
                         return WebSocket.AsDynamic()._innerStream?._context?.Request?.LocalEndPoint?.ToString();
@@ -270,9 +269,6 @@ namespace Lime.Transport.WebSocket
                     {
                         return WebSocket.AsDynamic()._stream?.Socket?.LocalEndPoint?.ToString();
                     }
-#elif NET461
-                    return WebSocket.AsDynamic().m_InnerStream?.m_Context?.Request?.LocalEndPoint?.ToString();
-#endif
                 }
                 catch
                 {
@@ -287,7 +283,6 @@ namespace Lime.Transport.WebSocket
             {
                 try
                 {
-#if NETSTANDARD2_0
                     try
                     {
                         return WebSocket.AsDynamic()._innerStream?._context?.Request?.RemoteEndPoint?.ToString();
@@ -296,9 +291,6 @@ namespace Lime.Transport.WebSocket
                     {
                         return WebSocket.AsDynamic()._stream?.Socket?.RemoteEndPoint?.ToString();
                     }
-#elif NET461
-                    return WebSocket.AsDynamic().m_InnerStream?.m_Context?.Request?.RemoteEndPoint?.ToString();
-#endif
                 }
                 catch
                 {
