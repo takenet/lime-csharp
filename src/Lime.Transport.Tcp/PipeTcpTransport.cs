@@ -183,9 +183,12 @@ namespace Lime.Transport.Tcp
             _serverCertificateValidationCallback = serverCertificateValidationCallback ?? ValidateServerCertificate;
             _clientCertificateValidationCallback = clientCertificateValidationCallback ?? ValidateClientCertificate;
             
-            var pipeMemoryPool = memoryPool ?? MemoryPool<byte>.Shared;
-            _receivePipe = new Pipe(new PipeOptions(pipeMemoryPool));
-            _sendPipe = new Pipe(new PipeOptions(pipeMemoryPool));
+            var pipeOptions = new PipeOptions(
+                pool: memoryPool ?? MemoryPool<byte>.Shared, 
+                pauseWriterThreshold: maxBufferSize);      
+                  
+            _receivePipe = new Pipe(pipeOptions);
+            _sendPipe = new Pipe(pipeOptions);
             _cts = new CancellationTokenSource();
             _optionsSemaphore = new SemaphoreSlim(1);
         }
