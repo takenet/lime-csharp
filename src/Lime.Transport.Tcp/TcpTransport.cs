@@ -45,6 +45,7 @@ namespace Lime.Transport.Tcp
 
         private Stream _stream;
         private string _hostName;
+        private readonly ArrayPool<byte> _arrayPool;
         private bool _disposed;
 
         /// <summary>
@@ -173,11 +174,12 @@ namespace Lime.Transport.Tcp
             _serverCertificate = serverCertificate;
             _clientCertificate = clientCertificate;
             _hostName = hostName;
+            _arrayPool = arrayPool ?? ArrayPool<byte>.Shared;
             _traceWriter = traceWriter;
             _serverCertificateValidationCallback = serverCertificateValidationCallback ?? ValidateServerCertificate;
             _clientCertificateValidationCallback = clientCertificateValidationCallback ?? ValidateClientCertificate;
 
-            _jsonBuffer = new JsonBuffer(bufferSize, maxBufferSize, arrayPool);
+            _jsonBuffer = new JsonBuffer(bufferSize, maxBufferSize, _arrayPool);
             _receiveSemaphore = new SemaphoreSlim(1);
             _sendSemaphore = new SemaphoreSlim(1);
         }
@@ -196,14 +198,17 @@ namespace Lime.Transport.Tcp
             if (!_stream.CanWrite) throw new InvalidOperationException("Invalid stream state");
 
             var envelopeJson = _envelopeSerializer.Serialize(envelope);
+
             await TraceAsync(envelopeJson, DataOperation.Send).ConfigureAwait(false);
-            var jsonBytes = Encoding.UTF8.GetBytes(envelopeJson);
+            
+            var buffer = _arrayPool.Rent(envelopeJson.Length);
+            var length = Encoding.UTF8.GetBytes(envelopeJson, 0, envelopeJson.Length, buffer, 0);
 
             await _sendSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
             
             try
             {
-                await _stream.WriteAsync(jsonBytes, 0, jsonBytes.Length, cancellationToken).ConfigureAwait(false);
+                await _stream.WriteAsync(buffer, 0, length, cancellationToken).ConfigureAwait(false);
             }
             catch (IOException)
             {
@@ -213,6 +218,7 @@ namespace Lime.Transport.Tcp
             finally
             {
                 _sendSemaphore.Release();
+                _arrayPool.Return(buffer);
             }
         }
 
