@@ -203,15 +203,13 @@ namespace Lime.Transport.Tcp
         public override async Task SendAsync(Envelope envelope, CancellationToken cancellationToken)
         {
             if (envelope == null) throw new ArgumentNullException(nameof(envelope));
-            if (_stream == null) throw new InvalidOperationException("The stream was not initialized. Call OpenAsync first.");
-            if (!_stream.CanWrite) throw new InvalidOperationException("Invalid stream state");
+            if (_sendTask == null) throw new InvalidOperationException("The send task was not initialized. Call OpenAsync first.");
+            if (_sendTask.IsCompleted) throw new InvalidOperationException("Send task is completed", _sendTask.Exception?.GetBaseException());
 
             var envelopeJson = _envelopeSerializer.Serialize(envelope);
             await TraceAsync(envelopeJson, DataOperation.Send).ConfigureAwait(false);
-
             var memory = _sendPipe.Writer.GetMemory(envelopeJson.Length);
             var length = Encoding.UTF8.GetBytes(envelopeJson, memory.Span);
-
             _sendPipe.Writer.Advance(length);
             var flushResult = await _sendPipe.Writer.FlushAsync(cancellationToken);
             
@@ -229,8 +227,8 @@ namespace Lime.Transport.Tcp
         /// <returns></returns>
         public override async Task<Envelope> ReceiveAsync(CancellationToken cancellationToken)
         {
-            if (_stream == null) throw new InvalidOperationException("The stream was not initialized. Call OpenAsync first.");
-            if (!_stream.CanRead) throw new InvalidOperationException("Invalid stream state");
+            if (_receiveTask == null) throw new InvalidOperationException("The receive task was not initialized. Call OpenAsync first.");
+            if (_receiveTask.IsCompleted) throw new InvalidOperationException("The receive task is completed", _receiveTask.Exception?.GetBaseException());
 
             Envelope envelope = null;
             
