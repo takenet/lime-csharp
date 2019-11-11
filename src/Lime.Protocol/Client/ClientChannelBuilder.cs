@@ -159,7 +159,6 @@ namespace Lime.Protocol.Client
         /// <exception cref="System.ArgumentOutOfRangeException"></exception>
         public IClientChannelBuilder WithEnvelopeBufferSize(int envelopeBufferSize)
         {
-            if (envelopeBufferSize <= 0) throw new ArgumentOutOfRangeException(nameof(envelopeBufferSize));
             EnvelopeBufferSize = envelopeBufferSize;
             return this;
         }

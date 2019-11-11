@@ -1,20 +1,12 @@
-﻿using System;
+using System;
 
-namespace Lime.Protocol
+namespace Lime.Protocol.Immutable
 {
     /// <summary>
     /// Represents an identity in a domain.
     /// </summary>
     public class Identity : IIdentity
     {
-        /// <summary>
-        /// Initializes a new instance of the <see cref="Identity"/> class.
-        /// </summary>
-        public Identity()
-        {
-
-        }
-
         /// <summary>
         /// Initializes a new instance of the <see cref="Identity"/> class.
         /// </summary>
@@ -29,12 +21,12 @@ namespace Lime.Protocol
         /// <summary>
         /// Identity unique name on his domain.
         /// </summary>
-        public string Name { get; set; }
+        public string Name { get; }
 
         /// <summary>
         /// Network domain name of the identity.
         /// </summary>
-        public string Domain { get; set; }
+        public string Domain { get; }
 
         /// <summary>
         /// Returns a <see cref="string" /> that represents this instance.
@@ -134,11 +126,7 @@ namespace Lime.Protocol
         /// <returns></returns>
         public Node ToNode()
         {
-            return new Node
-            {
-                Name = Name,
-                Domain = Domain
-            };
+            return new Node(Name, Domain, null);
         }
 
         /// <summary>
@@ -155,11 +143,13 @@ namespace Lime.Protocol
 
             var splittedIdentity = s.Split('@');
 
-            return new Identity
-            {
-                Name = !string.IsNullOrWhiteSpace(splittedIdentity[0]) ? splittedIdentity[0] : null,
-                Domain = splittedIdentity.Length > 1 && !string.IsNullOrWhiteSpace(splittedIdentity[1]) ? splittedIdentity[1].Split('/')[0] : null
-            };
+            return new Identity(
+                !string.IsNullOrWhiteSpace(splittedIdentity[0]) ? splittedIdentity[0] : null,
+                splittedIdentity.Length > 1 && !string.IsNullOrWhiteSpace(splittedIdentity[1])
+                    ? splittedIdentity[1]
+                        .Split('/')[0]
+                    : null);
+
         }
 
         /// <summary>
@@ -183,12 +173,23 @@ namespace Lime.Protocol
         }
         
         /// <summary>
-        /// Create a new instance of <see cref="Lime.Protocol.Immutable.Identity"/> which is immutable based on this instance.
+        /// Creates a new object that is a copy of the current instance.
+        /// </summary>
+        /// <returns>
+        /// A new object that is a copy of this instance.
+        /// </returns>
+        public Identity Copy(string name = null, string domain = null)
+        {
+            return new Identity(name ?? Name, domain ?? Domain);
+        }
+
+        /// <summary>
+        /// Create a new instance of <see cref="Lime.Protocol.Identity"/> which is mutable based on this instance.
         /// </summary>
         /// <returns></returns>
-        public Immutable.Identity ToImmutableIdentity()
+        public Lime.Protocol.Identity ToMutableIdentity()
         {
-            return new Immutable.Identity(Name, Domain);
+            return new Lime.Protocol.Identity(Name, Domain);
         }
     }
 }

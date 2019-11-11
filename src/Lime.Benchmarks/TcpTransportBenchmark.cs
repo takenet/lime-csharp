@@ -69,7 +69,6 @@ namespace Lime.Benchmarks
             CleanupAsync().Wait();
         }
 
-        
         public async Task CleanupAsync()
         {
             await _transportListener.StopAsync(_cancellationToken);
@@ -77,6 +76,5 @@ namespace Lime.Benchmarks
             _clientTransport.CloseAsync(_cancellationToken);
             
         }
-
     }
 }

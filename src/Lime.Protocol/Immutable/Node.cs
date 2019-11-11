@@ -1,20 +1,12 @@
-﻿using System;
+using System;
 
-namespace Lime.Protocol
+namespace Lime.Protocol.Immutable
 {
     /// <summary>
     /// Represents an element of a network.
     /// </summary>
     public class Node : Identity, INode
     {
-        /// <summary>
-        /// Initializes a new instance of the <see cref="Node"/> class.
-        /// </summary>
-        public Node()
-        {
-
-        }
-
         /// <summary>
         /// Initializes a new instance of the <see cref="Node"/> class.
         /// </summary>
@@ -31,7 +23,7 @@ namespace Lime.Protocol
         /// <summary>
         /// The name of the instance used by the node to connect to the network.
         /// </summary>
-        public string Instance { get; set; }
+        public string Instance { get; }
 
         /// <summary>
         /// Returns a <see cref="string" /> that represents this instance.
@@ -140,12 +132,10 @@ namespace Lime.Protocol
             var identity = Identity.Parse(s);
             var identityString = identity.ToString();
 
-            return new Node
-            {
-                Name = identity.Name,
-                Domain = identity.Domain,
-                Instance = s.Length > identityString.Length ? s.Remove(0, identityString.Length + 1) : null
-            };
+            return new Node(
+                identity.Name,
+                identity.Domain,
+                s.Length > identityString.Length ? s.Remove(0, identityString.Length + 1) : null);
         }
 
         /// <summary>
@@ -174,11 +164,7 @@ namespace Lime.Protocol
         /// <returns></returns>
         public Identity ToIdentity()
         {
-            return new Identity
-            {
-                Name = Name,
-                Domain = Domain
-            };
+            return new Identity(Name, Domain);
         }
 
         /// <summary>
@@ -195,23 +181,18 @@ namespace Lime.Protocol
         /// <returns>
         /// A new object that is a copy of this instance.
         /// </returns>
-        public Node Copy()
+        public Node Copy(string name = null, string domain = null, string instance = null)
         {
-            return new Node
-            {
-                Name = Name,
-                Domain = Domain,
-                Instance = Instance
-            };
+            return new Node(name ?? Name, domain ?? Domain, instance ?? Instance);
         }
         
         /// <summary>
-        /// Create a new instance of <see cref="Lime.Protocol.Immutable.Node"/> which is immutable based on this instance.
+        /// Create a new instance of <see cref="Lime.Protocol.Node"/> which is mutable based on this instance.
         /// </summary>
         /// <returns></returns>
-        public Immutable.Node ToImmutableNode()
+        public Lime.Protocol.Node ToMutableNode()
         {
-            return new Immutable.Node(Name, Domain, Instance);
+            return new Lime.Protocol.Node(Name, Domain, Instance);
         }
     }
 }

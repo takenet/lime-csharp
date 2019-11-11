@@ -161,8 +161,8 @@ namespace Lime.Transport.Tcp
                 _bufferSize,
                 _maxBufferSize,
                 _arrayPool,
-                clientCertificateValidationCallback: _clientCertificateValidationCallback,
-                traceWriter: _traceWriter);
+                _traceWriter,
+                _clientCertificateValidationCallback);
         }
 
         /// <summary>

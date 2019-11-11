@@ -37,6 +37,7 @@ namespace Lime.Protocol.ConsoleTests
                 ReceiveMessageAsync,
                 new ExecutionDataflowBlockOptions
                 {
+                    BoundedCapacity = DataflowBlockOptions.Unbounded,
                     MaxDegreeOfParallelism = DataflowBlockOptions.Unbounded,
                     EnsureOrdered = false
                 });
@@ -130,7 +131,6 @@ namespace Lime.Protocol.ConsoleTests
                     stopwatch.Stop();
 
                     WriteLine($"Elapsed: {stopwatch.ElapsedMilliseconds} ms             ");
-
                 }
 
                 cts.Cancel();
@@ -189,6 +189,7 @@ namespace Lime.Protocol.ConsoleTests
 
             SetCursorPosition(cursorLeft, cursorTop);
         }
-
     }
+    
+    
 }
