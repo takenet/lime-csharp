@@ -127,7 +127,7 @@ namespace Lime.Protocol.Network
             {
                 BoundedCapacity = envelopeBufferSize,
                 MaxDegreeOfParallelism = 1,
-                EnsureOrdered = false,
+                EnsureOrdered = true,
             });
             
             // Modules
@@ -207,6 +207,24 @@ namespace Lime.Protocol.Network
         public event EventHandler<ExceptionEventArgs> SenderException;
 
         /// <inheritdoc />
+        public async Task FlushAsync(CancellationToken cancellationToken)
+        {
+            if (_sendEnvelopeBlock.InputCount == 0 || 
+                _sendEnvelopeBlock.Completion.IsCompleted)
+            {
+                return;
+            }
+            
+            var sentTcs = new TaskCompletionSource<Envelope>();
+            using (cancellationToken.Register(() => sentTcs.TrySetCanceled(cancellationToken)))
+            {
+                // Sends a "null" message only to force the completion of the tcs by the SendToTransportAsync method.
+                await SendToBufferAsync<Message>(null, cancellationToken, sentTcs);
+                await sentTcs.Task.ConfigureAwait(false);
+            }
+        }
+
+        /// <inheritdoc />
         public virtual Task SendMessageAsync(Message message, CancellationToken cancellationToken)
             => SendAsync(message, cancellationToken, MessageModules);
         
@@ -284,12 +302,8 @@ namespace Lime.Protocol.Network
                 throw new InvalidOperationException($"Cannot send a session in the '{State}' session state");
             }
 
-            var sentTcs = new TaskCompletionSource<Envelope>();
-            using (cancellationToken.Register(() => sentTcs.TrySetCanceled(cancellationToken)))
-            {
-                await SendToBufferAsync(session, cancellationToken, sentTcs);
-                await sentTcs.Task.ConfigureAwait(false);
-            }
+            await SendToBufferAsync(session, cancellationToken);
+            await FlushAsync(cancellationToken).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -536,6 +550,9 @@ namespace Lime.Protocol.Network
         /// <summary>
         /// Sends the envelope to the transport using the envelope buffer.
         /// </summary>
+        /// <param name="envelope">The envelope instance to be sent</param>
+        /// <param name="cancellationToken">The cancellation token</param>
+        /// <param name="sentTcs">A TaskCompletionSource that is completed after the envelope is sent to the transport</param>
         private async Task SendToBufferAsync<T>(T envelope, CancellationToken cancellationToken, TaskCompletionSource<Envelope> sentTcs = null) 
             where T : Envelope, new()
         {
@@ -562,7 +579,11 @@ namespace Lime.Protocol.Network
                 using (var cts = new CancellationTokenSource(_sendTimeout))
                 using (var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(_senderCts.Token, cts.Token))
                 {
-                    await Transport.SendAsync(envelope, linkedCts.Token).ConfigureAwait(false);
+                    if (envelope != null)
+                    {
+                        await Transport.SendAsync(envelope, linkedCts.Token).ConfigureAwait(false);
+                    }
+                    
                     sentTcs?.TrySetResult(envelope);
                 }
             }
@@ -577,10 +598,10 @@ namespace Lime.Protocol.Network
             catch (Exception ex)
             {
                 await RaiseSenderExceptionAsync(ex);
-                await CloseTransportAsync().ConfigureAwait(false);
                 _sendEnvelopeBlock.Complete();
                 if (!_senderCts.IsCancellationRequested) _senderCts.Cancel();
                 sentTcs?.TrySetException(ex);
+                await CloseTransportAsync().ConfigureAwait(false);
                 throw;
             }
         }

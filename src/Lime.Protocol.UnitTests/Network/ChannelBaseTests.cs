@@ -123,7 +123,7 @@ namespace Lime.Protocol.UnitTests.Network
             target.SetState(SessionState.Established);
 
             // Act
-            await target.SendMessageAsync(message, CancellationToken.None);
+            await target.SendMessageAndFlushAsync(message, CancellationToken.None);
 
             // Assert
             moduleMock.Verify(m => m.OnStateChanged(SessionState.Established), Times.Once());
@@ -151,7 +151,7 @@ namespace Lime.Protocol.UnitTests.Network
             target.SetState(SessionState.Established);
 
             // Act
-            await target.SendMessageAsync(message, CancellationToken.None);
+            await target.SendMessageAndFlushAsync(message, CancellationToken.None);
 
             // Assert
             moduleMock.Verify(m => m.OnStateChanged(SessionState.Established), Times.Once());
@@ -186,7 +186,7 @@ namespace Lime.Protocol.UnitTests.Network
             target.SetState(SessionState.Established);
 
             // Act
-            await target.SendMessageAsync(message, CancellationToken.None);
+            await target.SendMessageAndFlushAsync(message, CancellationToken.None);
 
             // Assert
             _transport.Verify(t => t.SendAsync(message, It.IsAny<CancellationToken>()), Times.Once());
@@ -512,7 +512,7 @@ namespace Lime.Protocol.UnitTests.Network
             var resource = Dummy.CreatePing();
             var command = Dummy.CreateCommand(resource);
 
-            await target.SendCommandAsync(command, CancellationToken.None);
+            await target.SendCommandAndFlushAsync(command, CancellationToken.None);
 
             _transport.Verify(
                 t => t.SendAsync(It.Is<Command>(
@@ -540,7 +540,7 @@ namespace Lime.Protocol.UnitTests.Network
             command.Id = null;
             command.Method = CommandMethod.Observe;
 
-            await target.SendCommandAsync(command, CancellationToken.None);
+            await target.SendCommandAndFlushAsync(command, CancellationToken.None);
 
             _transport.Verify(
                 t => t.SendAsync(It.Is<Command>(
@@ -565,7 +565,7 @@ namespace Lime.Protocol.UnitTests.Network
 
             Command command = null;
 
-            await target.SendCommandAsync(command, CancellationToken.None).ShouldThrowAsync<ArgumentNullException>();
+            await target.SendCommandAndFlushAsync(command, CancellationToken.None).ShouldThrowAsync<ArgumentNullException>();
         }
 
         [Test]
@@ -577,7 +577,7 @@ namespace Lime.Protocol.UnitTests.Network
             var content = Dummy.CreateTextContent();
             var command = Dummy.CreateCommand(content);
 
-            await target.SendCommandAsync(command, CancellationToken.None).ShouldThrowAsync<InvalidOperationException>();
+            await target.SendCommandAndFlushAsync(command, CancellationToken.None).ShouldThrowAsync<InvalidOperationException>();
         }
 
         [Test]
@@ -601,7 +601,7 @@ namespace Lime.Protocol.UnitTests.Network
             target.SetState(SessionState.Established);
 
             // Act
-            await target.SendCommandAsync(command, CancellationToken.None);
+            await target.SendCommandAndFlushAsync(command, CancellationToken.None);
 
             // Assert
             moduleMock.Verify(m => m.OnSendingAsync(command, It.IsAny<CancellationToken>()), Times.Once());
@@ -629,7 +629,7 @@ namespace Lime.Protocol.UnitTests.Network
             target.SetState(SessionState.Established);
 
             // Act
-            await target.SendCommandAsync(command, CancellationToken.None);
+            await target.SendCommandAndFlushAsync(command, CancellationToken.None);
 
             // Assert
             _transport.Verify(t => t.SendAsync(command, It.IsAny<CancellationToken>()), Times.Never);
@@ -663,7 +663,7 @@ namespace Lime.Protocol.UnitTests.Network
             target.SetState(SessionState.Established);
 
             // Act
-            await target.SendCommandAsync(command, CancellationToken.None);
+            await target.SendCommandAndFlushAsync(command, CancellationToken.None);
 
             // Assert
             _transport.Verify(t => t.SendAsync(command, It.IsAny<CancellationToken>()), Times.Once());
@@ -1028,7 +1028,7 @@ namespace Lime.Protocol.UnitTests.Network
 
             var notification = Dummy.CreateNotification(Event.Received);
 
-            await target.SendNotificationAsync(notification, CancellationToken.None);
+            await target.SendNotificationAndFlushAsync(notification, CancellationToken.None);
 
             _transport.Verify(
                 t => t.SendAsync(It.Is<Notification>(
@@ -1053,7 +1053,7 @@ namespace Lime.Protocol.UnitTests.Network
 
             Notification notification = null;
 
-            await target.SendNotificationAsync(notification, CancellationToken.None).ShouldThrowAsync<ArgumentNullException>();
+            await target.SendNotificationAndFlushAsync(notification, CancellationToken.None).ShouldThrowAsync<ArgumentNullException>();
         }
 
         [Test]
@@ -1064,7 +1064,7 @@ namespace Lime.Protocol.UnitTests.Network
 
             var notification = Dummy.CreateNotification(Event.Received);
 
-            await target.SendNotificationAsync(notification, CancellationToken.None).ShouldThrowAsync<InvalidOperationException>();
+            await target.SendNotificationAndFlushAsync(notification, CancellationToken.None).ShouldThrowAsync<InvalidOperationException>();
         }
 
         [Test]
@@ -1087,7 +1087,7 @@ namespace Lime.Protocol.UnitTests.Network
             target.SetState(SessionState.Established);
 
             // Act
-            await target.SendNotificationAsync(notification, CancellationToken.None);
+            await target.SendNotificationAndFlushAsync(notification, CancellationToken.None);
 
             // Assert
             _transport.Verify(t => t.SendAsync(moduleNotification, It.IsAny<CancellationToken>()), Times.Once());
@@ -1113,7 +1113,7 @@ namespace Lime.Protocol.UnitTests.Network
             target.SetState(SessionState.Established);
 
             // Act
-            await target.SendNotificationAsync(notification, CancellationToken.None);
+            await target.SendNotificationAndFlushAsync(notification, CancellationToken.None);
 
             // Assert
             _transport.Verify(t => t.SendAsync(notification, It.IsAny<CancellationToken>()), Times.Never);
@@ -1146,7 +1146,7 @@ namespace Lime.Protocol.UnitTests.Network
             target.SetState(SessionState.Established);
 
             // Act
-            await target.SendNotificationAsync(notification, CancellationToken.None);
+            await target.SendNotificationAndFlushAsync(notification, CancellationToken.None);
             await Task.Delay(250);
 
             // Assert
