@@ -24,13 +24,10 @@ namespace Lime.Transport.WebSocket
         private readonly ITraceWriter _traceWriter;
         private readonly ArrayPool<byte> _arrayPool;
         private readonly int _bufferSize;
-        private readonly SemaphoreSlim _sendSemaphore;
-        private readonly SemaphoreSlim _receiveSemaphore;
         private readonly SemaphoreSlim _closeSemaphore;
         private readonly WebSocketMessageType _webSocketMessageType;
         private readonly CancellationTokenSource _receiveCts;
 
-        private WebSocketReceiveResult _closeFrame;
         protected WebSocketCloseStatus CloseStatus;
         protected string CloseStatusDescription;
 
@@ -48,8 +45,6 @@ namespace Lime.Transport.WebSocket
             _arrayPool = arrayPool ?? ArrayPool<byte>.Shared;
             _bufferSize = bufferSize;
             _webSocketMessageType = webSocketMessageType;
-            _sendSemaphore = new SemaphoreSlim(1);
-            _receiveSemaphore = new SemaphoreSlim(1);
             _closeSemaphore = new SemaphoreSlim(1);
             _receiveCts = new CancellationTokenSource();
             CloseStatus = WebSocketCloseStatus.NormalClosure;
@@ -75,11 +70,9 @@ namespace Lime.Transport.WebSocket
                 await _traceWriter.TraceAsync(serializedEnvelope, DataOperation.Send).ConfigureAwait(false);
             }
             
-            var buffer = _arrayPool.Rent(serializedEnvelope.Length);
+            var buffer = _arrayPool.Rent(Encoding.UTF8.GetByteCount(serializedEnvelope));
             var length = Encoding.UTF8.GetBytes(serializedEnvelope, 0, serializedEnvelope.Length, buffer, 0);
-
-            await _sendSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
-
+            
             try
             {
                 EnsureOpen("send");
@@ -94,7 +87,6 @@ namespace Lime.Transport.WebSocket
             }
             finally
             {
-                _sendSemaphore.Release();
                 _arrayPool.Return(buffer);
             }
         }
@@ -104,9 +96,7 @@ namespace Lime.Transport.WebSocket
             EnsureOpen("receive");
 
             var segments = new List<BufferSegment>();
-
-            await _receiveSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
-
+            
             try
             {
                 EnsureOpen("receive");
@@ -184,10 +174,6 @@ namespace Lime.Transport.WebSocket
                 }
 
                 throw;
-            }
-            finally
-            {
-                _receiveSemaphore.Release();
             }
 
             string serializedEnvelope = null;
@@ -320,8 +306,6 @@ namespace Lime.Transport.WebSocket
             if (disposing)
             {
                 WebSocket.Dispose();
-                _sendSemaphore.Dispose();
-                _receiveSemaphore.Dispose();
                 _closeSemaphore.Dispose();
                 _receiveCts.Dispose();
             }
@@ -338,7 +322,6 @@ namespace Lime.Transport.WebSocket
         private void HandleCloseMessage(WebSocketReceiveResult receiveResult)
         {
             CloseStatus = WebSocketCloseStatus.NormalClosure;
-            _closeFrame = receiveResult;
         }
 
         private Task CloseWithTimeoutAsync()

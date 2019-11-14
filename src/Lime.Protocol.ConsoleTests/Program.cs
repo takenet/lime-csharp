@@ -58,6 +58,7 @@ namespace Lime.Protocol.ConsoleTests
                     ResetColor();
                     return Task.CompletedTask;
                 })
+                .WithEnvelopeBufferSize(100)
                 .Build();
 
             
@@ -70,7 +71,8 @@ namespace Lime.Protocol.ConsoleTests
                 WriteLine("Starting the client...");
 
                 var channelBuilder =  ClientChannelBuilder
-                    .Create(() => new PipeTcpTransport(new EnvelopeSerializer(new DocumentTypeResolver())), uri)
+                    .Create(() => new TcpTransport(new EnvelopeSerializer(new DocumentTypeResolver())), uri)
+                    .WithEnvelopeBufferSize(100)
                     .CreateEstablishedClientChannelBuilder()
                     .WithEncryption(SessionEncryption.None);
                 

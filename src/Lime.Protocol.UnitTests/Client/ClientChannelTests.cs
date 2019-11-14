@@ -386,7 +386,7 @@ namespace Lime.Protocol.UnitTests.Client
                 localNode: localNode);
 
 
-            await target.SendMessageAsync(message, CancellationToken.None);
+            await target.SendMessageAndFlushAsync(message, CancellationToken.None);
 
             _transport.Verify(
                 t => t.SendAsync(It.Is<Message>(
@@ -430,7 +430,7 @@ namespace Lime.Protocol.UnitTests.Client
                 localNode: localNode);
 
 
-            await target.SendMessageAsync(message, CancellationToken.None);
+            await target.SendMessageAndFlushAsync(message, CancellationToken.None);
 
             _transport.Verify(
                 t => t.SendAsync(It.Is<Message>(
@@ -466,6 +466,7 @@ namespace Lime.Protocol.UnitTests.Client
 
             // Act
             var actual = await target.ReceiveMessageAsync(cancellationToken);
+            await target.FlushAsync(cancellationToken);
 
             // Assert
             _transport.Verify(

@@ -69,6 +69,9 @@ namespace Lime.Transport.Tcp.UnitTests
             MaxBufferSize = BufferSize * 6;
             var count = Dummy.CreateRandomInt(100);
             var target = await GetTargetAsync();
+            var synchronizedTarget = new SynchronizedTransportDecorator(target);
+            var synchronizedClient = new SynchronizedTransportDecorator(Client);
+            
             var messages = new Message[count];
 
             for (int i = 0; i < count; i++)
@@ -81,8 +84,8 @@ namespace Lime.Transport.Tcp.UnitTests
             // Act
             for (int i = 0; i < count; i++)
             {
-                await Client.SendAsync(messages[i], CancellationToken);
-                actuals[i] = await target.ReceiveAsync(CancellationToken);
+                await synchronizedClient.SendAsync(messages[i], CancellationToken);
+                actuals[i] = await synchronizedTarget.ReceiveAsync(CancellationToken);
             }
 
             // Assert

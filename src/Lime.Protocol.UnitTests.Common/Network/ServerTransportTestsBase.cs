@@ -180,21 +180,21 @@ namespace Lime.Protocol.UnitTests.Common.Network
                     return notification;
                 })
                 .ToList();
-            var serverTransport = new SynchronizedTransportDecorator(await GetTargetAsync());
-            var clientTransport = new SynchronizedTransportDecorator(Client);
+            var target = await GetTargetAsync();
+            var synchronizedTarget = new SynchronizedTransportDecorator(target);
+            var synchronizedClient = new SynchronizedTransportDecorator(Client);
 
             // Act
             Parallel.ForEach(notifications, async notification =>
             {
-                await serverTransport.SendAsync(notification, CancellationToken);
+                await synchronizedTarget.SendAsync(notification, CancellationToken);
             });
-
-
+            
             var receiveTasks = new List<Task<Envelope>>();
             while (count-- > 0)
             {
                 receiveTasks.Add(
-                    Task.Run(async () => await clientTransport.ReceiveAsync(CancellationToken),
+                    Task.Run(async () => await synchronizedClient.ReceiveAsync(CancellationToken),
                     CancellationToken));
             }
 
@@ -218,7 +218,6 @@ namespace Lime.Protocol.UnitTests.Common.Network
                 actualNotification.Metadata.ShouldBe(notification.Metadata);
             }
         }
-
 
         [Test]
         public async Task ReceiveAsync_NewSessionEnvelope_ServerShouldReceive()
