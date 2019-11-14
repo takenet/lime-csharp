@@ -180,12 +180,13 @@ namespace Lime.Protocol.UnitTests.Common.Network
                     return notification;
                 })
                 .ToList();
-            var target = await GetTargetAsync();
+            var serverTransport = new SynchronizedTransportDecorator(await GetTargetAsync());
+            var clientTransport = new SynchronizedTransportDecorator(Client);
 
             // Act
             Parallel.ForEach(notifications, async notification =>
             {
-                await target.SendAsync(notification, CancellationToken);
+                await serverTransport.SendAsync(notification, CancellationToken);
             });
 
 
@@ -193,7 +194,7 @@ namespace Lime.Protocol.UnitTests.Common.Network
             while (count-- > 0)
             {
                 receiveTasks.Add(
-                    Task.Run(async () => await Client.ReceiveAsync(CancellationToken),
+                    Task.Run(async () => await clientTransport.ReceiveAsync(CancellationToken),
                     CancellationToken));
             }
 

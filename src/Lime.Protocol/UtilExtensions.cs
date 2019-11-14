@@ -111,10 +111,7 @@ namespace Lime.Protocol
         public static void RaiseEvent<T>(this EventHandler<T> @event, object sender, T e)
             where T : EventArgs
         {
-            if (@event != null)
-            {
-                @event(sender, e);
-            }
+            @event?.Invoke(sender, e);
         }
 
         /// <summary>

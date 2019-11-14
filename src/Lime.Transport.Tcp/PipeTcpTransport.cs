@@ -43,7 +43,7 @@ namespace Lime.Transport.Tcp
         private readonly X509Certificate2 _serverCertificate;
         private readonly X509Certificate2 _clientCertificate;
 
-        private readonly CancellationTokenSource _cts;
+        private readonly CancellationTokenSource _pipeCts;
         private readonly Pipe _receivePipe;
         private readonly Pipe _sendPipe;
         private Task _receiveTask;
@@ -189,7 +189,7 @@ namespace Lime.Transport.Tcp
                   
             _receivePipe = new Pipe(pipeOptions);
             _sendPipe = new Pipe(pipeOptions);
-            _cts = new CancellationTokenSource();
+            _pipeCts = new CancellationTokenSource();
             _optionsSemaphore = new SemaphoreSlim(1);
         }
 
@@ -211,11 +211,11 @@ namespace Lime.Transport.Tcp
             var memory = _sendPipe.Writer.GetMemory(envelopeJson.Length);
             var length = Encoding.UTF8.GetBytes(envelopeJson, memory.Span);
             _sendPipe.Writer.Advance(length);
-            var flushResult = await _sendPipe.Writer.FlushAsync(cancellationToken);
+            var flushResult = await _sendPipe.Writer.FlushAsync(cancellationToken).ConfigureAwait(false);
             
             if (flushResult.IsCompleted || flushResult.IsCanceled)
             {
-                await CloseWithTimeoutAsync();
+                await CloseWithTimeoutAsync().ConfigureAwait(false);
                 throw new InvalidOperationException("Send pipe is completed");
             }
         }
@@ -235,11 +235,11 @@ namespace Lime.Transport.Tcp
             while (envelope == null &&
                    !cancellationToken.IsCancellationRequested)
             {
-                var readResult = await _receivePipe.Reader.ReadAsync(cancellationToken);
+                var readResult = await _receivePipe.Reader.ReadAsync(cancellationToken).ConfigureAwait(false);
                 var buffer = readResult.Buffer;
                 if (readResult.IsCompleted || buffer.IsEmpty)
                 {
-                    await CloseWithTimeoutAsync();
+                    await CloseWithTimeoutAsync().ConfigureAwait(false);
                     throw new InvalidOperationException("Receive pipe is completed");
                 }
 
@@ -465,8 +465,7 @@ namespace Lime.Transport.Tcp
 
             var role = DomainRole.Unknown;
 
-            var sslStream = _stream as SslStream;
-            if (sslStream != null &&
+            if (_stream is SslStream sslStream &&
                 sslStream.IsAuthenticated &&
                 sslStream.RemoteCertificate != null)
             {                
@@ -482,7 +481,9 @@ namespace Lime.Transport.Tcp
                             DN = c[0].Trim(' '),
                             Subject = c[1].Trim(' ')
                         })
-                        .Where(s => s.DN.Equals("CN"));
+                        .Where(s => s.DN.Equals("CN"))
+                        .ToArray();
+
                     Identity certificateIdentity;
                     if (
                         commonNames.Any(
@@ -521,8 +522,8 @@ namespace Lime.Transport.Tcp
         /// <exception cref="System.NotImplementedException"></exception>
         protected override async Task PerformOpenAsync(Uri uri, CancellationToken cancellationToken)
         {
-            cancellationToken.ThrowIfCancellationRequested();
-
+            // TODO: It is required to call OpenAsync in a server transport, which doesn't make much sense. The server transport is passive and it will be always be open after its creation.
+            // We should refactor the transports to remove this need on the server side.
             if (!_tcpClient.Connected)
             {                
                 if (uri == null) throw new ArgumentNullException(nameof(uri), "The uri is mandatory for a not connected TCP client");
@@ -540,8 +541,8 @@ namespace Lime.Transport.Tcp
             }
 
             _stream = _tcpClient.GetStream();
-            _receiveTask = FillReceivePipeAsync(_receivePipe.Writer, _cts.Token);
-            _sendTask = ReadSendPipeAsync(_sendPipe.Reader, _cts.Token);
+            _receiveTask = FillReceivePipeAsync(_receivePipe.Writer, _pipeCts.Token);
+            _sendTask = ReadSendPipeAsync(_sendPipe.Reader, _pipeCts.Token);
         }
         
         /// <summary>
@@ -553,7 +554,7 @@ namespace Lime.Transport.Tcp
         protected override Task PerformCloseAsync(CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            _cts.Cancel();
+            _pipeCts.Cancel();
             _stream?.Close();
             _tcpClient.Close();
             return Task.WhenAll(_receiveTask ?? Task.CompletedTask, _sendTask ?? Task.CompletedTask);
@@ -575,7 +576,7 @@ namespace Lime.Transport.Tcp
                 {
                     _optionsSemaphore.Dispose();
                     _stream?.Dispose();
-                    _cts.Dispose();
+                    _pipeCts.Dispose();
                 }
 
                 _disposed = true;
