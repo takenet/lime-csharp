@@ -197,12 +197,12 @@ namespace Lime.Transport.Tcp
             if (_stream == null) throw new InvalidOperationException("The stream was not initialized. Call OpenAsync first.");
             if (!_stream.CanWrite) throw new InvalidOperationException("Invalid stream state");
 
-            var envelopeJson = _envelopeSerializer.Serialize(envelope);
+            var serializedEnvelope = _envelopeSerializer.Serialize(envelope);
 
-            await TraceAsync(envelopeJson, DataOperation.Send).ConfigureAwait(false);
+            await TraceAsync(serializedEnvelope, DataOperation.Send).ConfigureAwait(false);
             
-            var buffer = _arrayPool.Rent(envelopeJson.Length);
-            var length = Encoding.UTF8.GetBytes(envelopeJson, 0, envelopeJson.Length, buffer, 0);
+            var buffer = _arrayPool.Rent(Encoding.UTF8.GetByteCount(serializedEnvelope));
+            var length = Encoding.UTF8.GetBytes(serializedEnvelope, 0, serializedEnvelope.Length, buffer, 0);
 
             await _sendSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
             

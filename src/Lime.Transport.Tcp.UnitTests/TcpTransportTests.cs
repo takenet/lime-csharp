@@ -243,7 +243,7 @@ namespace Lime.Transport.Tcp.UnitTests
             _stream
                 .Verify(s =>
                     s.WriteAsync(
-                        It.Is<byte[]>(b => b.SequenceEqual(serializedMessageBytes)),
+                        It.Is<byte[]>(b => b.Take(serializedMessageBytes.Length).SequenceEqual(serializedMessageBytes)),
                         It.Is<int>(o => o == 0),
                         It.Is<int>(l => l == serializedMessageBytes.Length),
                         cancellationToken),

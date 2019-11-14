@@ -75,7 +75,7 @@ namespace Lime.Transport.WebSocket
                 await _traceWriter.TraceAsync(serializedEnvelope, DataOperation.Send).ConfigureAwait(false);
             }
             
-            var buffer = _arrayPool.Rent(serializedEnvelope.Length);
+            var buffer = _arrayPool.Rent(Encoding.UTF8.GetByteCount(serializedEnvelope));
             var length = Encoding.UTF8.GetBytes(serializedEnvelope, 0, serializedEnvelope.Length, buffer, 0);
 
             await _sendSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
