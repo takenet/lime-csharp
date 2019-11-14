@@ -1147,6 +1147,7 @@ namespace Lime.Protocol.UnitTests.Network
 
             // Act
             await target.SendNotificationAsync(notification, CancellationToken.None);
+            await Task.Delay(250);
 
             // Assert
             _transport.Verify(t => t.SendAsync(notification, It.IsAny<CancellationToken>()), Times.Once());

@@ -4,9 +4,8 @@
     <Description>C# LIME protocol stack implementation.</Description>
     <Copyright>Copyright 2014 Curupira S/A</Copyright>
     <AssemblyTitle>Lime.Protocol</AssemblyTitle>
-    <VersionPrefix></VersionPrefix>
     <Authors>takenet;andrebires</Authors>
-    <TargetFrameworks>netstandard1.6;net461</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;net461</TargetFrameworks>
     <AssemblyName>Lime.Protocol</AssemblyName>
     <PackageId>Lime.Protocol</PackageId>
     <PackageTags>lime</PackageTags>
