@@ -51,8 +51,6 @@ namespace Lime.Protocol
         /// </summary>
         public bool IsRelative => _absoluteUri == null;
 
-        #region Public Methods
-
         /// <summary>
         /// Convert the current
         /// absolute path to a Uri.
@@ -138,7 +136,5 @@ namespace Lime.Protocol
         {
             return new Uri($"{LIME_URI_SCHEME}://{authority}/");
         }
-
-        #endregion
     }
 }
