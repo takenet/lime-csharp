@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using Lime.Messaging;
@@ -327,7 +328,12 @@ namespace Lime.Protocol.UnitTests.Common.Network
             var actual = target.RemoteEndPoint;
             
             // Assert
-            actual.ShouldBe(Client.LocalEndPoint);
+            var actualIPEndPoint = IPEndPoint.Parse(actual);
+            var expectedIPEndPoint = IPEndPoint.Parse(Client.LocalEndPoint);
+            actualIPEndPoint.Port.ShouldBe(expectedIPEndPoint.Port);
+            var actualAddress = actualIPEndPoint.Address.MapToIPv4();
+            var expectedAddress = expectedIPEndPoint.Address.MapToIPv4();
+            actualAddress.ShouldBe(expectedAddress);
         }
         
         [Test]
@@ -338,9 +344,14 @@ namespace Lime.Protocol.UnitTests.Common.Network
 
             // Act
             var actual = target.LocalEndPoint;
-            
+
             // Assert
-            actual.ShouldBe(Client.RemoteEndPoint);
+            var actualIPEndPoint = IPEndPoint.Parse(actual);
+            var expectedIPEndPoint = IPEndPoint.Parse(Client.RemoteEndPoint);
+            actualIPEndPoint.Port.ShouldBe(expectedIPEndPoint.Port);
+            var actualAddress = actualIPEndPoint.Address.MapToIPv4();
+            var expectedAddress = expectedIPEndPoint.Address.MapToIPv4();
+            actualAddress.ShouldBe(expectedAddress);
         }
         
         [Test]
