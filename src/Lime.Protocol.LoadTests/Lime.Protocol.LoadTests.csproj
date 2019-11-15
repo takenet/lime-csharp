@@ -12,9 +12,9 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Lime.Messaging\Lime.Messaging.csproj" />
+    <ProjectReference Include="..\Lime.Protocol.UnitTests.Common\Lime.Protocol.UnitTests.Common.csproj" />
     <ProjectReference Include="..\Lime.Protocol\Lime.Protocol.csproj" />
     <ProjectReference Include="..\Lime.Transport.Tcp\Lime.Transport.Tcp.csproj" />
-    <ProjectReference Include="..\Lime.Protocol.UnitTests\Lime.Protocol.UnitTests.csproj" />
     <ProjectReference Include="..\Lime.Transport.WebSocket\Lime.Transport.WebSocket.csproj" />
   </ItemGroup>
 
@@ -27,8 +27,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="huge-json.txt">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    <None Update="huge.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="builder.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
 

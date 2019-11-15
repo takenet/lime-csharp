@@ -18,7 +18,7 @@ using NUnit.Framework;
 namespace Lime.Protocol.LoadTests
 {
     [TestFixture]
-    public class ChannelBaseTests : IDisposable
+    public class ChannelBaseLoadTests : IDisposable
     {
         private CancellationToken _cancellationToken;
 
@@ -29,7 +29,7 @@ namespace Lime.Protocol.LoadTests
         private ClientChannel _clientChannel;
         private ServerChannel _serverChannel;
 
-        public ChannelBaseTests()
+        public ChannelBaseLoadTests()
         {
             SetupAsync().Wait();
         }
@@ -129,7 +129,6 @@ namespace Lime.Protocol.LoadTests
             // Assert
             sw.ElapsedMilliseconds.ShouldBeLessThan(count * 2);
         }
-
         
     }
 
