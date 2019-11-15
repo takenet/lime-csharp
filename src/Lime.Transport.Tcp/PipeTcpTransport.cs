@@ -207,11 +207,17 @@ namespace Lime.Transport.Tcp
 
             var envelopeJson = _envelopeSerializer.Serialize(envelope);
             await TraceAsync(envelopeJson, DataOperation.Send).ConfigureAwait(false);
-            var memory = _sendPipe.Writer.GetMemory(envelopeJson.Length);
+            
+            // Gets memory from the pipe to write the encoded string.
+            // .NET string are UTF16 and the length to UTF8 is usually larger.
+            // We can use Encoding.UTF8.GetBytes instead to get the precise length but here this is just a hint and the impact is irrelevant, 
+            // so we can avoid the overhead.
+            var memory = _sendPipe.Writer.GetMemory(envelopeJson.Length); 
             var length = Encoding.UTF8.GetBytes(envelopeJson, memory.Span);
+            
+            // Signals the pipe that the data is ready.
             _sendPipe.Writer.Advance(length);
             var flushResult = await _sendPipe.Writer.FlushAsync(cancellationToken).ConfigureAwait(false);
-            
             if (flushResult.IsCompleted || flushResult.IsCanceled)
             {
                 await CloseWithTimeoutAsync().ConfigureAwait(false);

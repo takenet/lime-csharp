@@ -6,6 +6,8 @@ using System;
 using System.Buffers;
 using System.Reflection;
 using System.Threading.Tasks;
+using Lime.Protocol.Serialization;
+using Lime.Protocol.Server;
 using Lime.Protocol.UnitTests.Common.Network;
 using NUnit.Framework;
 
@@ -15,29 +17,20 @@ namespace Lime.Transport.Tcp.UnitTests
     /// Tests for <see cref="TcpTransport"/> class using real TCP connections.
     /// </summary>    
     [TestFixture]    
-    public class ServerTcpTransportTests : ServerTransportTestsBase<TcpTransport, TcpTransport, TcpTransportListener>
+    public class ServerTcpTransportTests : ServerTransportTestsBase
     {
-        [SetUp]
-        public void SetUp()
-        {
-            SetUp(new Uri("net.tcp://localhost:55322"));
-        }
-
         public int BufferSize { get; set; } = TcpTransport.DEFAULT_BUFFER_SIZE;
 
         public int MaxBufferSize { get; set; } = TcpTransport.DEFAULT_MAX_BUFFER_SIZE;
 
         public ArrayPool<byte> ArrayPool { get; set; } 
+        
+        protected override Uri CreateListenerUri() => new Uri("net.tcp://localhost:55322");
 
-        protected override TcpTransport CreateClientTransport()
-        {
-            return new TcpTransport(EnvelopeSerializer);
-        }
+        protected override ITransportListener CreateTransportListener(Uri uri, IEnvelopeSerializer envelopeSerializer) 
+            => new TcpTransportListener(uri, null, envelopeSerializer, BufferSize, MaxBufferSize, ArrayPool, traceWriter: TraceWriter.Object);
 
-        protected override TcpTransportListener CreateTransportListener()
-        {
-            return new TcpTransportListener(ListenerUri, null, EnvelopeSerializer, BufferSize, MaxBufferSize, ArrayPool, traceWriter: TraceWriter.Object);
-        }
+        protected override ITransport CreateClientTransport(IEnvelopeSerializer envelopeSerializer) => new TcpTransport(envelopeSerializer, null, BufferSize, MaxBufferSize);
 
         [Test]
         public async Task ReceiveAsync_BiggerThanBufferSizeMessageEnvelope_ServerShouldReceive()
@@ -49,7 +42,7 @@ namespace Lime.Transport.Tcp.UnitTests
             var target = await GetTargetAsync();
 
             // Act
-            await Client.SendAsync(message, CancellationToken);
+            await ClientTransport.SendAsync(message, CancellationToken);
             var actual = await target.ReceiveAsync(CancellationToken);
 
             // Assert
@@ -58,7 +51,6 @@ namespace Lime.Transport.Tcp.UnitTests
             CompareMessages(message, actualMessage);
             var jsonBuffer = GetJsonBuffer(target);
             jsonBuffer.Buffer.Length.ShouldBe(BufferSize);
-
         }
 
         [Test]
@@ -70,7 +62,7 @@ namespace Lime.Transport.Tcp.UnitTests
             var count = Dummy.CreateRandomInt(100);
             var target = await GetTargetAsync();
             var synchronizedTarget = new SynchronizedTransportDecorator(target);
-            var synchronizedClient = new SynchronizedTransportDecorator(Client);
+            var synchronizedClient = new SynchronizedTransportDecorator(ClientTransport);
             
             var messages = new Message[count];
 
@@ -123,8 +115,8 @@ namespace Lime.Transport.Tcp.UnitTests
             // Act
             for (int i = 0; i < count; i += 2)
             {
-                await Client.SendAsync(messages[i], CancellationToken);
-                await Client.SendAsync(messages[i + 1], CancellationToken);
+                await ClientTransport.SendAsync(messages[i], CancellationToken);
+                await ClientTransport.SendAsync(messages[i + 1], CancellationToken);
                 actuals[i] = await target.ReceiveAsync(CancellationToken);
                 actuals[i + 1] = await target.ReceiveAsync(CancellationToken);
             }
@@ -164,14 +156,14 @@ namespace Lime.Transport.Tcp.UnitTests
             // Act
             for (int i = 0; i < count; i += pageSize)
             {
-                await Client.SendAsync(messages[i], CancellationToken);
-                await Client.SendAsync(messages[i + 1], CancellationToken);
-                await Client.SendAsync(messages[i + 2], CancellationToken);
+                await ClientTransport.SendAsync(messages[i], CancellationToken);
+                await ClientTransport.SendAsync(messages[i + 1], CancellationToken);
+                await ClientTransport.SendAsync(messages[i + 2], CancellationToken);
                 actuals[i] = await target.ReceiveAsync(CancellationToken);
                 actuals[i + 1] = await target.ReceiveAsync(CancellationToken);
-                await Client.SendAsync(messages[i + 3], CancellationToken);
+                await ClientTransport.SendAsync(messages[i + 3], CancellationToken);
                 actuals[i + 2] = await target.ReceiveAsync(CancellationToken);
-                await Client.SendAsync(messages[i + 4], CancellationToken);
+                await ClientTransport.SendAsync(messages[i + 4], CancellationToken);
                 actuals[i + 3] = await target.ReceiveAsync(CancellationToken);
                 actuals[i + 4] = await target.ReceiveAsync(CancellationToken);
             }
@@ -200,7 +192,7 @@ namespace Lime.Transport.Tcp.UnitTests
             var target = await GetTargetAsync();
 
             // Act
-            await Client.SendAsync(message, CancellationToken);
+            await ClientTransport.SendAsync(message, CancellationToken);
             try
             {
                 var actual = await target.ReceiveAsync(CancellationToken);
@@ -224,9 +216,16 @@ namespace Lime.Transport.Tcp.UnitTests
             actualMessage.Metadata.ShouldBe(message.Metadata);
         }
 
-        private static JsonBuffer GetJsonBuffer(TcpTransport target)
+        private static JsonBuffer GetJsonBuffer(ITransport target)
         {
-            return (JsonBuffer)target.GetType().GetField("_jsonBuffer", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(target);
+            var transport = target;
+            if (transport is SynchronizedTransportDecorator)
+            {
+                transport = (ITransport)typeof(SynchronizedTransportDecorator)
+                    .GetField("_transport", BindingFlags.Instance | BindingFlags.NonPublic)?.GetValue(transport);
+            }
+            
+            return (JsonBuffer)transport.GetType().GetField("_jsonBuffer", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(transport);
         }
     }
 }

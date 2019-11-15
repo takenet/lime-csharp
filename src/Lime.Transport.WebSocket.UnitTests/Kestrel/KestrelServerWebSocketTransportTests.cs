@@ -1,27 +1,27 @@
 ﻿using System;
+using Lime.Protocol.Serialization;
+using Lime.Protocol.Server;
 using Lime.Protocol.UnitTests.Common.Network;
 using Lime.Transport.WebSocket.Kestrel;
+using Microsoft.AspNetCore.Server.Kestrel.Transport.Abstractions.Internal;
 using NUnit.Framework;
+using ITransport = Lime.Protocol.Network.ITransport;
 
 namespace Lime.Transport.WebSocket.UnitTests.Kestrel
 {
     [TestFixture]
-    public class KestrelServerWebSocketTransportTests : ServerTransportTestsBase<KestrelServerWebSocketTransport, ClientWebSocketTransport, KestrelWebSocketTransportListener>
+    public class KestrelServerWebSocketTransportTests : ServerTransportTestsBase
     {
-        [SetUp]
-        public void SetUp()
+        protected override Uri CreateListenerUri() => new Uri("ws://localhost:8081");
+
+        protected override ITransportListener CreateTransportListener(Uri uri, IEnvelopeSerializer envelopeSerializer)
         {
-            SetUp(new Uri("ws://localhost:8081"));
+            return new KestrelWebSocketTransportListener(new[] { uri }, envelopeSerializer, null, TraceWriter.Object);
         }
 
-        protected override ClientWebSocketTransport CreateClientTransport()
+        protected override ITransport CreateClientTransport(IEnvelopeSerializer envelopeSerializer)
         {
-            return new ClientWebSocketTransport(EnvelopeSerializer);
-        }
-
-        protected override KestrelWebSocketTransportListener CreateTransportListener()
-        {
-            return new KestrelWebSocketTransportListener(new[] { ListenerUri }, EnvelopeSerializer, null, TraceWriter.Object);
+            return new ClientWebSocketTransport(envelopeSerializer);
         }
     }
 }

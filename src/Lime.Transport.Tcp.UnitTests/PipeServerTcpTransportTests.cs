@@ -6,6 +6,8 @@ using System;
 using System.Buffers;
 using System.Reflection;
 using System.Threading.Tasks;
+using Lime.Protocol.Serialization;
+using Lime.Protocol.Server;
 using Lime.Protocol.UnitTests.Common.Network;
 using NUnit.Framework;
 
@@ -15,29 +17,25 @@ namespace Lime.Transport.Tcp.UnitTests
     /// Tests for <see cref="TcpTransport"/> class using real TCP connections.
     /// </summary>    
     [TestFixture]    
-    public class PipeServerTcpTransportTests : ServerTransportTestsBase<PipeTcpTransport, PipeTcpTransport, PipeTcpTransportListener>
+    public class PipeServerTcpTransportTests : ServerTransportTestsBase
     {
-        [SetUp]
-        public void SetUp()
-        {
-            SetUp(new Uri("net.tcp://localhost:55322"));
-        }
-
         public int BufferSize { get; set; } = TcpTransport.DEFAULT_BUFFER_SIZE;
 
         public int MaxBufferSize { get; set; } = TcpTransport.DEFAULT_MAX_BUFFER_SIZE;
 
-        public MemoryPool<byte> MemoryPool { get; set; } 
+        public MemoryPool<byte> MemoryPool { get; set; } = MemoryPool<byte>.Shared;
+     
+        protected override Uri CreateListenerUri() => new Uri("net.tcp://localhost:55323");
 
-        protected override PipeTcpTransport CreateClientTransport()
+        protected override ITransportListener CreateTransportListener(Uri uri, IEnvelopeSerializer envelopeSerializer)
         {
-            return new PipeTcpTransport(EnvelopeSerializer);
+            return new PipeTcpTransportListener(uri, null, envelopeSerializer, BufferSize, MaxBufferSize, MemoryPool, TraceWriter.Object);
         }
 
-        protected override PipeTcpTransportListener CreateTransportListener()
+        protected override ITransport CreateClientTransport(IEnvelopeSerializer envelopeSerializer)
         {
-            return new PipeTcpTransportListener(ListenerUri, null, EnvelopeSerializer, BufferSize, MaxBufferSize, MemoryPool, traceWriter: TraceWriter.Object);
-        }
+            return new PipeTcpTransport(envelopeSerializer);
+        }        
 
         [Test]
         public async Task ReceiveAsync_BiggerThanBufferSizeMessageEnvelope_ServerShouldReceive()
@@ -49,7 +47,7 @@ namespace Lime.Transport.Tcp.UnitTests
             var target = await GetTargetAsync();
 
             // Act
-            await Client.SendAsync(message, CancellationToken);
+            await ClientTransport.SendAsync(message, CancellationToken);
             var actual = await target.ReceiveAsync(CancellationToken);
 
             // Assert
@@ -81,7 +79,7 @@ namespace Lime.Transport.Tcp.UnitTests
             // Act
             for (int i = 0; i < count; i++)
             {
-                await Client.SendAsync(messages[i], CancellationToken);
+                await ClientTransport.SendAsync(messages[i], CancellationToken);
                 actuals[i] = await target.ReceiveAsync(CancellationToken);
             }
 
@@ -120,8 +118,8 @@ namespace Lime.Transport.Tcp.UnitTests
             // Act
             for (int i = 0; i < count; i += 2)
             {
-                await Client.SendAsync(messages[i], CancellationToken);
-                await Client.SendAsync(messages[i + 1], CancellationToken);
+                await ClientTransport.SendAsync(messages[i], CancellationToken);
+                await ClientTransport.SendAsync(messages[i + 1], CancellationToken);
                 actuals[i] = await target.ReceiveAsync(CancellationToken);
                 actuals[i + 1] = await target.ReceiveAsync(CancellationToken);
             }
@@ -161,14 +159,14 @@ namespace Lime.Transport.Tcp.UnitTests
             // Act
             for (int i = 0; i < count; i += pageSize)
             {
-                await Client.SendAsync(messages[i], CancellationToken);
-                await Client.SendAsync(messages[i + 1], CancellationToken);
-                await Client.SendAsync(messages[i + 2], CancellationToken);
+                await ClientTransport.SendAsync(messages[i], CancellationToken);
+                await ClientTransport.SendAsync(messages[i + 1], CancellationToken);
+                await ClientTransport.SendAsync(messages[i + 2], CancellationToken);
                 actuals[i] = await target.ReceiveAsync(CancellationToken);
                 actuals[i + 1] = await target.ReceiveAsync(CancellationToken);
-                await Client.SendAsync(messages[i + 3], CancellationToken);
+                await ClientTransport.SendAsync(messages[i + 3], CancellationToken);
                 actuals[i + 2] = await target.ReceiveAsync(CancellationToken);
-                await Client.SendAsync(messages[i + 4], CancellationToken);
+                await ClientTransport.SendAsync(messages[i + 4], CancellationToken);
                 actuals[i + 3] = await target.ReceiveAsync(CancellationToken);
                 actuals[i + 4] = await target.ReceiveAsync(CancellationToken);
             }
@@ -197,7 +195,7 @@ namespace Lime.Transport.Tcp.UnitTests
             var target = await GetTargetAsync();
 
             // Act
-            await Client.SendAsync(message, CancellationToken);
+            await ClientTransport.SendAsync(message, CancellationToken);
             try
             {
                 var actual = await target.ReceiveAsync(CancellationToken);
