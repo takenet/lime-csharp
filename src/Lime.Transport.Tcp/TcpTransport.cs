@@ -29,7 +29,6 @@ namespace Lime.Transport.Tcp
         public const int DEFAULT_MAX_BUFFER_SIZE = DEFAULT_BUFFER_SIZE * 1024;
 
         public static readonly string UriSchemeNetTcp = "net.tcp";
-        public static readonly TimeSpan ReadTimeout = TimeSpan.FromSeconds(5);
         public static readonly TimeSpan CloseTimeout = TimeSpan.FromSeconds(30);
 
         private readonly SemaphoreSlim _optionsSemaphore;
@@ -238,35 +237,21 @@ namespace Lime.Transport.Tcp
 
                     if (envelope == null && CanRead)
                     {
-                        // The NetworkStream ReceiveAsync method doesn't supports cancellation
+                        // The NetworkStream ReadAsync method doesn't supports cancellation
                         // http://stackoverflow.com/questions/21468137/async-network-operations-never-finish
                         // http://referencesource.microsoft.com/#mscorlib/system/io/stream.cs,421
-                        var readTask = _stream
+                        
+                        // This is no longer true for .NET Core 3.0
+                        // https://github.com/dotnet/corefx/pull/36516
+                        // The problem persists only with ConnectAsync operations:
+                        // https://github.com/dotnet/corefx/issues/37118
+                        var read = await _stream
                             .ReadAsync(
                                 _jsonBuffer.Buffer,
                                 _jsonBuffer.BufferCurPos,
                                 _jsonBuffer.Buffer.Length - _jsonBuffer.BufferCurPos,
-                                cancellationToken);
-
-                        while (!readTask.IsCompleted && CanRead)
-                        {
-                            cancellationToken.ThrowIfCancellationRequested();
-
-                            await Task
-                                .WhenAny(
-                                    readTask,
-                                    Task.Delay(ReadTimeout, cancellationToken))
-                                .ConfigureAwait(false);
-                        }
-
-                        // If is not possible to read, closes the transport and returns
-                        if (!readTask.IsCompleted)
-                        {
-                            await CloseWithTimeoutAsync().ConfigureAwait(false);
-                            break;
-                        }
-
-                        var read = await readTask.ConfigureAwait(false);
+                                cancellationToken)
+                            .ConfigureAwait(false);
 
                         // https://msdn.microsoft.com/en-us/library/hh193669(v=vs.110).aspx
                         if (read == 0)

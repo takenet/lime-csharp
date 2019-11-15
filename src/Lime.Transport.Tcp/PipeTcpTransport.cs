@@ -31,7 +31,6 @@ namespace Lime.Transport.Tcp
         public const int DEFAULT_MAX_BUFFER_SIZE = DEFAULT_BUFFER_SIZE * 1024;
 
         public static readonly string UriSchemeNetTcp = "net.tcp";
-        public static readonly TimeSpan ReadTimeout = TimeSpan.FromSeconds(5);
         public static readonly TimeSpan CloseTimeout = TimeSpan.FromSeconds(30);
 
         private readonly SemaphoreSlim _optionsSemaphore;
