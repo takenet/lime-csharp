@@ -49,6 +49,7 @@ namespace Lime.Transport.Tcp
         
         private Stream _stream;
         private string _hostName;
+        private readonly int _pauseWriterThreshold;
         private bool _disposed;
 
         /// <summary>
@@ -166,12 +167,13 @@ namespace Lime.Transport.Tcp
             _serverCertificate = serverCertificate;
             _clientCertificate = clientCertificate;
             _hostName = hostName;
+            _pauseWriterThreshold = pauseWriterThreshold > 0 ? pauseWriterThreshold : -1;
             _traceWriter = traceWriter;
             _serverCertificateValidationCallback = serverCertificateValidationCallback ?? ValidateServerCertificate;
             _clientCertificateValidationCallback = clientCertificateValidationCallback ?? ValidateClientCertificate;
             var pipeOptions = new PipeOptions(
                 pool: memoryPool ?? MemoryPool<byte>.Shared,
-                pauseWriterThreshold: pauseWriterThreshold);
+                pauseWriterThreshold: _pauseWriterThreshold);
             
             _receivePipe = new Pipe(pipeOptions);
             _sendPipe = new Pipe(pipeOptions);
@@ -201,9 +203,17 @@ namespace Lime.Transport.Tcp
             // so we can avoid the overhead.
             var memory = _sendPipe.Writer.GetMemory(envelopeJson.Length); 
             var length = Encoding.UTF8.GetBytes(envelopeJson, memory.Span);
+
+            if (_pauseWriterThreshold > 0 && 
+                length >= _pauseWriterThreshold)
+            {
+                await CloseWithTimeoutAsync().ConfigureAwait(false);
+                throw new ArgumentException("Serialized envelope size is larger than pauseWriterThreshold and cannot be sent", nameof(envelope));
+            }
             
             // Signals the pipe that the data is ready.
             _sendPipe.Writer.Advance(length);
+            
             var flushResult = await _sendPipe.Writer.FlushAsync(cancellationToken).ConfigureAwait(false);
             if (flushResult.IsCompleted || flushResult.IsCanceled)
             {

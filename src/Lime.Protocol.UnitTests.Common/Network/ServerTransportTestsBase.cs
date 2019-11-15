@@ -62,11 +62,7 @@ namespace Lime.Protocol.UnitTests.Common.Network
         protected abstract ITransportListener CreateTransportListener(Uri uri, IEnvelopeSerializer envelopeSerializer);
 
         protected abstract ITransport CreateClientTransport(IEnvelopeSerializer envelopeSerializer);
-
-        public Task ServerListenerTask { get; private set; }
-
-        public Task ClientListenerTask { get; private set; }
-
+        
         public Uri ListenerUri { get; private set; }
 
         public ITransportListener Listener { get; private set; }
@@ -374,6 +370,60 @@ namespace Lime.Protocol.UnitTests.Common.Network
             
             // Assert
             actual.ShouldNotBeNull();
+        }
+        
+        [Test]
+        public async Task ReceiveAsync_InterleavedWritesAndReads_ServerShouldReceive()
+        {
+            // Arrange            
+            var pageSize = 5;
+            var count = 9 * pageSize;
+            var target = await GetTargetAsync();
+            var messages = new Message[count];
+
+            for (int i = 0; i < count; i++)
+            {
+                messages[i] = Dummy.CreateMessage(Dummy.CreateRandomString(64 * 3));
+            }
+            var actuals = new Envelope[count];
+
+
+            // Act
+            for (int i = 0; i < count; i += pageSize)
+            {
+                await ClientTransport.SendAsync(messages[i], CancellationToken);
+                await ClientTransport.SendAsync(messages[i + 1], CancellationToken);
+                await ClientTransport.SendAsync(messages[i + 2], CancellationToken);
+                actuals[i] = await target.ReceiveAsync(CancellationToken);
+                actuals[i + 1] = await target.ReceiveAsync(CancellationToken);
+                await ClientTransport.SendAsync(messages[i + 3], CancellationToken);
+                actuals[i + 2] = await target.ReceiveAsync(CancellationToken);
+                await ClientTransport.SendAsync(messages[i + 4], CancellationToken);
+                actuals[i + 3] = await target.ReceiveAsync(CancellationToken);
+                actuals[i + 4] = await target.ReceiveAsync(CancellationToken);
+            }
+
+            // Assert
+            for (int i = 0; i < count; i++)
+            {
+                var actual = actuals[i];
+                var message = messages[i];
+                actual.ShouldNotBeNull();
+                var actualMessage = actual.ShouldBeOfType<Message>();
+                CompareMessages(message, actualMessage);
+            }
+        }
+        
+        protected static void CompareMessages(Message message, Message actualMessage)
+        {
+            actualMessage.Id.ShouldBe(message.Id);
+            actualMessage.From.ShouldBe(message.From);
+            actualMessage.To.ShouldBe(message.To);
+            actualMessage.Pp.ShouldBe(message.Pp);
+            actualMessage.Metadata.ShouldBe(message.Metadata);
+            actualMessage.Type.ShouldBe(message.Type);
+            actualMessage.Content.ToString().ShouldBe(message.Content.ToString());
+            actualMessage.Metadata.ShouldBe(message.Metadata);
         }
     }
 }
