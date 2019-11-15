@@ -19,11 +19,19 @@ namespace Lime.Transport.Tcp.UnitTests
     [TestFixture]    
     public class ServerTcpTransportTests : ServerTransportTestsBase
     {
-        public int BufferSize { get; set; } = TcpTransport.DEFAULT_BUFFER_SIZE;
+        public int BufferSize { get; set; }
 
-        public int MaxBufferSize { get; set; } = TcpTransport.DEFAULT_MAX_BUFFER_SIZE;
+        public int MaxBufferSize { get; set; }
 
         public ArrayPool<byte> ArrayPool { get; set; } 
+        
+        protected override Task SetUpImpl()
+        {
+            BufferSize = TcpTransport.DEFAULT_BUFFER_SIZE;
+            MaxBufferSize = TcpTransport.DEFAULT_MAX_BUFFER_SIZE;
+            
+            return base.SetUpImpl();
+        }
         
         protected override Uri CreateListenerUri() => new Uri("net.tcp://localhost:55322");
 

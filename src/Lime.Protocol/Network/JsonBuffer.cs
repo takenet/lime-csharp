@@ -127,10 +127,10 @@ namespace Lime.Protocol.Network
         /// </summary>
         public void IncreaseBuffer()
         {
-            if (_maxBufferSize == 0 
-                || _buffer.Length + _bufferSize > _maxBufferSize)
+            if (_maxBufferSize == 0 || 
+                _buffer.Length + _bufferSize > _maxBufferSize)
             {
-                throw new BufferOverflowException("Maximum buffer size reached");
+                throw new BufferOverflowException($"Maximum buffer size reached. The current buffer size is {_buffer.Length} and the buffer segment size is {_bufferSize}.");
             }
 
             var currentBuffer = _buffer;

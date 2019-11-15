@@ -24,14 +24,23 @@ namespace Lime.Protocol.UnitTests.Common.Network
             ListenerUri = CreateListenerUri();
             EnvelopeSerializer = new EnvelopeSerializer(new DocumentTypeResolver().WithMessagingDocuments());
             TraceWriter = new Mock<ITraceWriter>();
-            CancellationToken = TimeSpan.FromSeconds(30).ToCancellationToken();
+            CancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+            await SetUpImpl();
         }
+
+        protected virtual Task SetUpImpl() => Task.CompletedTask;
 
         [TearDown]
         public async Task TearDown()
         {
-            await (Listener?.StopAsync(CancellationToken) ?? Task.CompletedTask);
+            using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5)))
+            {
+                await (Listener?.StopAsync(cts.Token) ?? Task.CompletedTask);
+            }
+
             ClientTransport?.DisposeIfDisposable();
+            Listener?.DisposeIfDisposable();
+            CancellationTokenSource.Dispose();
         }
 
         protected async Task<ITransport> GetTargetAsync()
@@ -66,7 +75,9 @@ namespace Lime.Protocol.UnitTests.Common.Network
 
         public Mock<ITraceWriter> TraceWriter { get; private set; }
 
-        public CancellationToken CancellationToken { get; set; }
+        public CancellationTokenSource CancellationTokenSource { get; set; }
+        
+        public CancellationToken CancellationToken => CancellationTokenSource.Token;
 
         public ITransport ClientTransport { get; set; }
 
