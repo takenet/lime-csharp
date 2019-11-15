@@ -16,7 +16,7 @@ namespace Lime.Benchmarks
     [CoreJob]
     [MemoryDiagnoser]
     [ThreadingDiagnoser]
-    public class TcpTransportBenchmark
+    public class PipeTcpTransportBenchmark
     {
         private Uri _uri;
         private CancellationToken _cancellationToken;
@@ -27,12 +27,12 @@ namespace Lime.Benchmarks
 
         private Message _message;
 
-        public TcpTransportBenchmark()
+        public PipeTcpTransportBenchmark()
         {
             _uri = new Uri("net.tcp://localhost:55321");
             _cancellationToken = TimeSpan.FromSeconds(60).ToCancellationToken();
             _envelopeSerializer = new EnvelopeSerializer(new DocumentTypeResolver().WithMessagingDocuments());
-            _transportListener = new TcpTransportListener(_uri, null, _envelopeSerializer);
+            _transportListener = new TcpTransportListener(_uri, null, _envelopeSerializer, usePipeTcpTransport: true);
         }
 
         [GlobalSetup]
@@ -48,10 +48,10 @@ namespace Lime.Benchmarks
 
             var serverTcpTransportTask = _transportListener.AcceptTransportAsync(_cancellationToken);
 
-            _clientTransport = new TcpTransport(_envelopeSerializer, null);
+            _clientTransport = new PipeTcpTransport(_envelopeSerializer, null);
             await _clientTransport.OpenAsync(_uri, _cancellationToken);
 
-            _serverTransport = (TcpTransport)await serverTcpTransportTask;
+            _serverTransport = (PipeTcpTransport)await serverTcpTransportTask;
             await _serverTransport.OpenAsync(_uri, _cancellationToken);
 
             _message = Dummy.CreateMessage(Dummy.CreateTextContent());
