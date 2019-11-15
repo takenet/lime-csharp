@@ -720,7 +720,7 @@ namespace Lime.Transport.Tcp.UnitTests
 
         [Test]
         [Category("PerformCloseAsync")]
-        public async Task PerformCloseAsync_NoStream_ClosesClient()
+        public async Task PerformCloseAsync_NoStream_ThrowsInvalidOperationException()
         {
             var cancellationToken = CancellationToken.None;
 
@@ -729,15 +729,12 @@ namespace Lime.Transport.Tcp.UnitTests
                 .Verifiable();
 
             var target = GetTarget();
-
-            await target.CloseAsync(cancellationToken);
-
-            _tcpClient.Verify();
+            await target.CloseAsync(cancellationToken).ShouldThrowAsync<InvalidOperationException>();
         }
 
         [Test]
         [Category("PerformCloseAsync")]
-        public async Task PerformCloseAsync_AlreadyClosed_ClosesClient()
+        public async Task PerformCloseAsync_AlreadyClosed_ThrowsInvalidOperationException()
         {
             var cancellationToken = CancellationToken.None;
 
@@ -747,9 +744,9 @@ namespace Lime.Transport.Tcp.UnitTests
 
             var target = GetTarget();
 
+            await target.OpenAsync(_serverUri, cancellationToken);
             await target.CloseAsync(cancellationToken);
-
-            await target.CloseAsync(cancellationToken);
+            await target.CloseAsync(cancellationToken).ShouldThrowAsync<InvalidOperationException>();
 
             _tcpClient.Verify();
         }
@@ -870,7 +867,7 @@ namespace Lime.Transport.Tcp.UnitTests
         {
             // Arrange
             var clientIdentity = GetClientIdentity();
-            var clientCertificate = GetWildcardDomainCertificate(clientIdentity);
+            var clientCertificate = GetWildcardDomainCertificate(clientIdentity, false);
             var clientTransport = new TcpTransport(
                 _envelopeSerializer.Object,
                 clientCertificate,
@@ -936,9 +933,13 @@ namespace Lime.Transport.Tcp.UnitTests
         {
             return CertificateUtil.GetOrCreateSelfSignedCertificate(identity.ToString());
         }
-        private X509Certificate2 GetWildcardDomainCertificate(Identity identity)
+        private X509Certificate2 GetWildcardDomainCertificate(Identity identity, bool trimDomainLabel = true)
         {
-            return CertificateUtil.GetOrCreateSelfSignedCertificate($"*.{identity.Domain.TrimFirstDomainLabel()}");
+            var domain = trimDomainLabel 
+                ? identity.Domain.TrimFirstDomainLabel() 
+                : identity.Domain;
+            
+            return CertificateUtil.GetOrCreateSelfSignedCertificate($"*.{domain} " );
         }
 
         private X509Certificate2 GetDomainCertificate(Identity identity)
