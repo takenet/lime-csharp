@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -10,77 +10,61 @@ using Lime.Protocol.Serialization;
 using Lime.Protocol.Serialization.Newtonsoft;
 using Lime.Protocol.Server;
 using Lime.Protocol.UnitTests;
-using Lime.Transport.WebSocket;
-using Lime.Transport.WebSocket.Kestrel;
 using Newtonsoft.Json;
 using NUnit.Framework;
 using Shouldly;
 
-namespace Lime.Protocol.LoadTests.WebSocket
+namespace Lime.Protocol.LoadTests
 {
-    public class KestrelWebSocketTests : IDisposable
+    public abstract class TransportLoadTestsBase
     {
         private Uri _uri;
-        private CancellationToken _cancellationToken;
         private IEnvelopeSerializer _envelopeSerializer;
         private ITransportListener _transportListener;
         private ITransport _clientTransport;
         private ITransport _serverTransport;
+        private CancellationToken _cancellationToken;
+        private CancellationTokenSource _cts;
 
-        public KestrelWebSocketTests()
+        [SetUp]
+        public async Task SetUp()
         {
-            var trace = new CustomTraceWriter();
-            _uri = new Uri("ws://localhost:8081");
-            _cancellationToken = TimeSpan.FromSeconds(30).ToCancellationToken();
+            _uri = CreateUri();
+            _cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            _cancellationToken = _cts.Token;
             _envelopeSerializer = new EnvelopeSerializer(new DocumentTypeResolver().WithMessagingDocuments());
-            _transportListener = new KestrelWebSocketTransportListener(
-                new[] { _uri }, _envelopeSerializer, null, trace);
-            _transportListener.StartAsync(_cancellationToken).Wait();
-
+            _transportListener = CreateTransportListener(_uri, _envelopeSerializer);
+            await _transportListener.StartAsync(_cancellationToken);
             var serverTcpTransportTask = _transportListener.AcceptTransportAsync(_cancellationToken);
-
-            _clientTransport = new ClientWebSocketTransport(_envelopeSerializer, trace, webSocketMessageType: System.Net.WebSockets.WebSocketMessageType.Text);
-            _clientTransport.OpenAsync(_uri, _cancellationToken).Wait();
-
-            _serverTransport = (WebSocketTransport)serverTcpTransportTask.Result;
-            _serverTransport.OpenAsync(_uri, _cancellationToken).Wait();
+            _clientTransport = new SynchronizedTransportDecorator(CreateClientTransport(_envelopeSerializer));
+            await _clientTransport.OpenAsync(_uri, _cancellationToken);
+            _serverTransport = new SynchronizedTransportDecorator(await serverTcpTransportTask);
+            await _serverTransport.OpenAsync(_uri, _cancellationToken);
         }
 
-        public void Dispose()
+        [TearDown]
+        public async Task TearDown()
         {
-            _clientTransport.CloseAsync(CancellationToken.None);
-            _serverTransport.CloseAsync(CancellationToken.None);
-            _transportListener.StopAsync(_cancellationToken).Wait();
-        }
-
-
-        [Test]
-        public async Task Send10000EnvelopesAsync()
-        {
-            // Arrange
-            var count = 10000;
-            var envelopes = Enumerable
-                .Range(0, count)
-                .Select(i => Dummy.CreateMessage(Dummy.CreateTextContent()));
-
-            var receivedEnvelopes = Enumerable
-                .Range(0, count)
-                .Select(i => _serverTransport.ReceiveAsync(_cancellationToken))
-                .ToArray();
-
-            // Act
-            var sw = Stopwatch.StartNew();
-            foreach (var envelope in envelopes)
+            _cts.Dispose();
+            using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5)))
             {
-                await _clientTransport.SendAsync(envelope, _cancellationToken);
+                await Task.WhenAll(
+                    _serverTransport.CloseAsync(cts.Token),
+                    _clientTransport.CloseAsync(cts.Token));
+
+                await _transportListener.StopAsync(cts.Token);
             }
-
-            await Task.WhenAll(receivedEnvelopes);
-            sw.Stop();
-
-            // Assert
-            sw.ElapsedMilliseconds.ShouldBeLessThan(count * 2);
+            
+            _clientTransport.DisposeIfDisposable();
+            _serverTransport.DisposeIfDisposable();
+            _transportListener.DisposeIfDisposable();
         }
+
+        protected abstract Uri CreateUri();
+
+        protected abstract ITransportListener CreateTransportListener(Uri uri, IEnvelopeSerializer envelopeSerializer);
+
+        protected abstract ITransport CreateClientTransport(IEnvelopeSerializer envelopeSerializer);
 
         [Test]
         public async Task Send100000EnvelopesAsync()
@@ -111,6 +95,35 @@ namespace Lime.Protocol.LoadTests.WebSocket
         }
 
         [Test]
+        public async Task Send10000EnvelopesAsync()
+        {
+            // Arrange
+            var count = 10000;
+            var envelopes = Enumerable
+                .Range(0, count)
+                .Select(i => Dummy.CreateMessage(Dummy.CreateTextContent()));
+
+
+            // Act
+            var receivedEnvelopes = Enumerable
+                .Range(0, count)
+                .Select(i => _serverTransport.ReceiveAsync(_cancellationToken))
+                .ToArray();
+
+            var sw = Stopwatch.StartNew();
+            foreach (var envelope in envelopes)
+            {
+                await _clientTransport.SendAsync(envelope, _cancellationToken);
+            }
+
+            await Task.WhenAll(receivedEnvelopes);
+            sw.Stop();
+
+            // Assert
+            sw.ElapsedMilliseconds.ShouldBeLessThan(count * 2);
+        }
+
+        [Test]
         public async Task Send500EnvelopesAsync()
         {
             // Arrange
@@ -119,12 +132,12 @@ namespace Lime.Protocol.LoadTests.WebSocket
                 .Range(0, count)
                 .Select(i => Dummy.CreateMessage(Dummy.CreateTextContent()));
 
-            // Act
             var receivedEnvelopes = Enumerable
                 .Range(0, count)
                 .Select(i => _serverTransport.ReceiveAsync(_cancellationToken))
                 .ToArray();
 
+            // Act
             var sw = Stopwatch.StartNew();
             foreach (var envelope in envelopes)
             {
@@ -153,13 +166,11 @@ namespace Lime.Protocol.LoadTests.WebSocket
                 .Select(i => _serverTransport.ReceiveAsync(_cancellationToken))
                 .ToArray();
 
-
             var sw = Stopwatch.StartNew();
             foreach (var envelope in envelopes)
             {
                 await _clientTransport.SendAsync(envelope, _cancellationToken);
             }
-
 
             await Task.WhenAll(receivedEnvelopes);
             sw.Stop();
@@ -171,27 +182,34 @@ namespace Lime.Protocol.LoadTests.WebSocket
         [Test]
         public async Task SendHugeEnvelope()
         {
-            // Act
-            var sw = Stopwatch.StartNew();
+            try
+            {
+                var sw = Stopwatch.StartNew();
 
-            var path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory);
-            var content = File.ReadAllLines(Path.Combine(path, "huge-json.txt"));
+                var serializer = new EnvelopeSerializer(new DocumentTypeResolver().WithMessagingDocuments());
 
-            var envelope = _envelopeSerializer.Deserialize(string.Join("", content));
+                var path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory);
+                var content = File.ReadAllLines(Path.Combine(path, "huge.json"));
+                var envelope = serializer.Deserialize(string.Join("", content));
 
-            await _clientTransport.SendAsync(envelope, _cancellationToken);
-            await _serverTransport.ReceiveAsync(_cancellationToken);
-            sw.Stop();
+                await _clientTransport.SendAsync(envelope, _cancellationToken);
+                await _serverTransport.ReceiveAsync(_cancellationToken);
+                sw.Stop();
 
-            // Assert
-            sw.ElapsedMilliseconds.ShouldBeLessThan(250);
+                // Assert
+                sw.ElapsedMilliseconds.ShouldBeLessThan(100);
+            }
+            catch (Exception ex)
+            {
+                Trace.TraceError(ex.ToString());
+            }
         }
-
+        
         [Test]
         public async Task ReceiveHugeEnvelopeWithoutCorruptingChars()
         {
             var path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory);
-            var content = File.ReadAllLines(Path.Combine(path, "builder.txt"));
+            var content = File.ReadAllLines(Path.Combine(path, "builder.json"));
             var serializer = new DocumentSerializer(new DocumentTypeResolver().WithMessagingDocuments());
             var envelope = serializer.Deserialize(string.Join("", content), MediaType.ApplicationJson);
 
