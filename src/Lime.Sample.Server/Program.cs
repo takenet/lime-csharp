@@ -78,7 +78,6 @@ namespace Lime.Sample.Server
                         uri,
                         serverCertificate,
                         serializer,
-                        1024,
                         2048);
                 case "ws":
                 case "wss":

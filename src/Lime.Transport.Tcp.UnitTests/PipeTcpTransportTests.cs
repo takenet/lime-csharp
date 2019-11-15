@@ -35,8 +35,7 @@ namespace Lime.Transport.Tcp.UnitTests
             ClientCertificate = CertificateUtil.CreateSelfSignedCertificate(ClientIdentity);
             ServerCertificate = CertificateUtil.GetOrCreateSelfSignedCertificate(ListenerUri.Host);
             CancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(60));
-            BufferSize = PipeTcpTransport.DEFAULT_BUFFER_SIZE;
-            MaxBufferSize = PipeTcpTransport.DEFAULT_MAX_BUFFER_SIZE;
+            MaxBufferSize = PipeTcpTransport.DEFAULT_PAUSE_WRITER_THRESHOLD;
         }
         
         [TearDown]
@@ -62,9 +61,7 @@ namespace Lime.Transport.Tcp.UnitTests
         public CancellationTokenSource CancellationTokenSource { get; set; }
 
         public CancellationToken CancellationToken => CancellationTokenSource.Token;
-
-        public int BufferSize { get; set; }
-
+        
         public int MaxBufferSize { get; set; }
 
         public ITraceWriter TraceWriter { get; set; }
@@ -75,9 +72,9 @@ namespace Lime.Transport.Tcp.UnitTests
         
         private async Task<(PipeTcpTransport ClientTransport, PipeTcpTransport ServerTransport)> GetAndOpenTargets()
         {
-            TransportListener = new PipeTcpTransportListener(ListenerUri, ServerCertificate, EnvelopeSerializer, BufferSize, MaxBufferSize, null, TraceWriter, ClientCertificateValidationCallback);
+            TransportListener = new PipeTcpTransportListener(ListenerUri, ServerCertificate, EnvelopeSerializer, MaxBufferSize, null, TraceWriter, ClientCertificateValidationCallback);
             await TransportListener.StartAsync(CancellationToken);
-            var clientTransport = new PipeTcpTransport(EnvelopeSerializer, ClientCertificate, BufferSize, MaxBufferSize, TraceWriter, ServerCertificateValidationCallback);
+            var clientTransport = new PipeTcpTransport(EnvelopeSerializer, ClientCertificate, MaxBufferSize, TraceWriter, ServerCertificateValidationCallback);
             var serverTransportTask = TransportListener.AcceptTransportAsync(CancellationToken);
             await clientTransport.OpenAsync(ListenerUri, CancellationToken);
             var serverTransport = await serverTransportTask;

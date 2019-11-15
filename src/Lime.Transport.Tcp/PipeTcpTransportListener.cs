@@ -18,8 +18,7 @@ namespace Lime.Transport.Tcp
     {
         private readonly X509Certificate2 _serverCertificate;
         private readonly IEnvelopeSerializer _envelopeSerializer;
-        private readonly int _bufferSize;
-        private readonly int _maxBufferSize;
+        private readonly int _pauseWriterThreshold;
         private readonly MemoryPool<byte> _memoryPool;
         private readonly ITraceWriter _traceWriter;
         private readonly RemoteCertificateValidationCallback _clientCertificateValidationCallback;
@@ -33,18 +32,15 @@ namespace Lime.Transport.Tcp
         /// <param name="listenerUri">The URI for listening new connections.</param>
         /// <param name="serverCertificate">The certificate to encrypt the connections with TLS.</param>
         /// <param name="envelopeSerializer">The serializer for envelopes.</param>
-        /// <param name="bufferSize">The initial size of the buffer for each created transport.</param>
-        /// <param name="maxBufferSize">The max size of the buffer for each created transport, when increased.</param>
-        /// <param name="arrayPool">The array pool for reusing <see cref="byte[]"/> instances.</param>
+        /// <param name="pauseWriterThreshold">Number of buffered bytes in the pipe which can lead the write task to pause.</param>
+        /// <param name="memoryPool">The memory pool instance which allow the pipe to reuse buffers.</param>
         /// <param name="traceWriter"></param>
         /// <param name="clientCertificateValidationCallback"></param>
-        /// <param name="memoryPool"></param>
         public PipeTcpTransportListener(
             Uri listenerUri,
             X509Certificate2 serverCertificate,
             IEnvelopeSerializer envelopeSerializer,
-            int bufferSize = TcpTransport.DEFAULT_BUFFER_SIZE,
-            int maxBufferSize = TcpTransport.DEFAULT_MAX_BUFFER_SIZE,
+            int pauseWriterThreshold = PipeTcpTransport.DEFAULT_PAUSE_WRITER_THRESHOLD,
             MemoryPool<byte> memoryPool = null,
             ITraceWriter traceWriter = null,
             RemoteCertificateValidationCallback clientCertificateValidationCallback = null)
@@ -62,8 +58,7 @@ namespace Lime.Transport.Tcp
             }
             _serverCertificate = serverCertificate;
             _envelopeSerializer = envelopeSerializer ?? throw new ArgumentNullException(nameof(envelopeSerializer));
-            _bufferSize = bufferSize;
-            _maxBufferSize = maxBufferSize;
+            _pauseWriterThreshold = pauseWriterThreshold;
             _memoryPool = memoryPool ?? MemoryPool<byte>.Shared;
             _traceWriter = traceWriter;
             _clientCertificateValidationCallback = clientCertificateValidationCallback;
@@ -159,8 +154,7 @@ namespace Lime.Transport.Tcp
                 new TcpClientAdapter(tcpClient),
                 _envelopeSerializer,
                 _serverCertificate,
-                _bufferSize,
-                _maxBufferSize,
+                _pauseWriterThreshold,
                 _memoryPool,
                 _traceWriter,
                 _clientCertificateValidationCallback);

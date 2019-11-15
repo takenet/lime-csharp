@@ -230,7 +230,7 @@ namespace Lime.Sample.Client
             switch (uri.Scheme)
             {
                 case "net.tcp":
-                    return new PipeTcpTransport(new EnvelopeSerializer(new DocumentTypeResolver().WithMessagingDocuments()), bufferSize: 1024, traceWriter: new DebugTraceWriter());
+                    return new PipeTcpTransport(new EnvelopeSerializer(new DocumentTypeResolver().WithMessagingDocuments()), traceWriter: new DebugTraceWriter());
                 //case "ws":
                 //case "wss":
                 //    return new ClientWebSocketTransport(new EnvelopeSerializer(), new DebugTraceWriter());

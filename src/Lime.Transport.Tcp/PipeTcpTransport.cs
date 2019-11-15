@@ -27,8 +27,7 @@ namespace Lime.Transport.Tcp
     /// </summary>
     public class PipeTcpTransport : TransportBase, ITransport, IAuthenticatableTransport, IDisposable
     {
-        public const int DEFAULT_BUFFER_SIZE = 8192;
-        public const int DEFAULT_MAX_BUFFER_SIZE = DEFAULT_BUFFER_SIZE * 1024;
+        public const int DEFAULT_PAUSE_WRITER_THRESHOLD = 8192 * 1024;
 
         public static readonly string UriSchemeNetTcp = "net.tcp";
         public static readonly TimeSpan CloseTimeout = TimeSpan.FromSeconds(30);
@@ -56,17 +55,15 @@ namespace Lime.Transport.Tcp
         /// Initializes a new instance of the <see cref="TcpTransport"/> class.
         /// </summary>
         /// <param name="clientCertificate"></param>
-        /// <param name="bufferSize">Size of the buffer.</param>
-        /// <param name="maxBufferSize">Max size of the buffer for increasing.</param>
+        /// <param name="pauseWriterThreshold">Number of buffered bytes in the pipe which can lead the write task to pause.</param>
         /// <param name="traceWriter">The trace writer.</param>
         /// <param name="serverCertificateValidationCallback">A callback to validate the server certificate in the TLS authentication process.</param>
         public PipeTcpTransport(
             X509Certificate2 clientCertificate = null,
-            int bufferSize = DEFAULT_BUFFER_SIZE,
-            int maxBufferSize = DEFAULT_MAX_BUFFER_SIZE,
+            int pauseWriterThreshold = DEFAULT_PAUSE_WRITER_THRESHOLD,
             ITraceWriter traceWriter = null,
             RemoteCertificateValidationCallback serverCertificateValidationCallback = null)
-            : this(new EnvelopeSerializer(new DocumentTypeResolver()), clientCertificate, bufferSize, maxBufferSize, traceWriter, serverCertificateValidationCallback)
+            : this(new EnvelopeSerializer(new DocumentTypeResolver()), clientCertificate, pauseWriterThreshold, traceWriter, serverCertificateValidationCallback)
         {
         }
 
@@ -75,18 +72,16 @@ namespace Lime.Transport.Tcp
         /// </summary>
         /// <param name="envelopeSerializer">The envelope serializer.</param>
         /// <param name="clientCertificate">The client certificate.</param>
-        /// <param name="bufferSize">Size of the buffer.</param>
-        /// <param name="maxBufferSize">Max size of the buffer for increasing.</param>
+        /// <param name="pauseWriterThreshold">Number of buffered bytes in the pipe which can lead the write task to pause.</param>
         /// <param name="traceWriter">The trace writer.</param>
         /// <param name="serverCertificateValidationCallback">A callback to validate the server certificate in the TLS authentication process.</param>
         public PipeTcpTransport(
             IEnvelopeSerializer envelopeSerializer,
             X509Certificate2 clientCertificate = null,
-            int bufferSize = DEFAULT_BUFFER_SIZE,
-            int maxBufferSize = DEFAULT_MAX_BUFFER_SIZE,
+            int pauseWriterThreshold = DEFAULT_PAUSE_WRITER_THRESHOLD,
             ITraceWriter traceWriter = null,
             RemoteCertificateValidationCallback serverCertificateValidationCallback = null)
-            : this(new TcpClientAdapter(new TcpClient()), envelopeSerializer, null, clientCertificate, null, bufferSize, maxBufferSize, null, traceWriter, serverCertificateValidationCallback, null)
+            : this(new TcpClientAdapter(new TcpClient()), envelopeSerializer, null, clientCertificate, null, pauseWriterThreshold, null, traceWriter, serverCertificateValidationCallback, null)
         {
         }
 
@@ -97,8 +92,7 @@ namespace Lime.Transport.Tcp
         /// <param name="envelopeSerializer">The envelope serializer.</param>
         /// <param name="hostName">Name of the host.</param>
         /// <param name="clientCertificate">The client certificate.</param>
-        /// <param name="bufferSize">Size of the buffer.</param>
-        /// <param name="maxBufferSize">Max size of the buffer for increasing.</param>
+        /// <param name="pauseWriterThreshold">Number of buffered bytes in the pipe which can lead the write task to pause.</param>
         /// <param name="traceWriter">The trace writer.</param>
         /// <param name="serverCertificateValidationCallback">A callback to validate the server certificate in the TLS authentication process.</param>
         public PipeTcpTransport(
@@ -106,11 +100,10 @@ namespace Lime.Transport.Tcp
             IEnvelopeSerializer envelopeSerializer,
             string hostName,
             X509Certificate2 clientCertificate = null,
-            int bufferSize = DEFAULT_BUFFER_SIZE,
-            int maxBufferSize = DEFAULT_MAX_BUFFER_SIZE,
+            int pauseWriterThreshold = DEFAULT_PAUSE_WRITER_THRESHOLD,
             ITraceWriter traceWriter = null,
             RemoteCertificateValidationCallback serverCertificateValidationCallback = null)
-            : this(tcpClient, envelopeSerializer, null, clientCertificate, hostName, bufferSize, maxBufferSize, null, traceWriter, serverCertificateValidationCallback, null)
+            : this(tcpClient, envelopeSerializer, null, clientCertificate, hostName, pauseWriterThreshold, null, traceWriter, serverCertificateValidationCallback, null)
 
         {
         }
@@ -122,22 +115,19 @@ namespace Lime.Transport.Tcp
         /// <param name="tcpClient">The TCP client.</param>
         /// <param name="envelopeSerializer">The envelope serializer.</param>
         /// <param name="serverCertificate">The server certificate.</param>
-        /// <param name="bufferSize">Size of the buffer.</param>
-        /// <param name="maxBufferSize">Max size of the buffer for increasing.</param>
-        /// <param name="memoryPool">The array pool instance, to allow reusing the created buffers.</param>
+        /// <param name="pauseWriterThreshold">Number of buffered bytes in the pipe which can lead the write task to pause.</param>
+        /// <param name="memoryPool">The memory pool instance which allow the pipe to reuse buffers.</param>
         /// <param name="traceWriter">The trace writer.</param>
         /// <param name="clientCertificateValidationCallback">A callback to validate the client certificate in the TLS authentication process.</param>
-        /// <param name="ignoreDeserializationErrors">if set to <c>true</c> the deserialization on received envelopes will be ignored; otherwise, any deserialization error will be throw to the caller.</param>
         internal PipeTcpTransport(
             ITcpClient tcpClient,
             IEnvelopeSerializer envelopeSerializer,
             X509Certificate2 serverCertificate,
-            int bufferSize = DEFAULT_BUFFER_SIZE,
-            int maxBufferSize = DEFAULT_MAX_BUFFER_SIZE,
+            int pauseWriterThreshold = DEFAULT_PAUSE_WRITER_THRESHOLD,
             MemoryPool<byte> memoryPool = null,
             ITraceWriter traceWriter = null,
             RemoteCertificateValidationCallback clientCertificateValidationCallback = null)
-            : this(tcpClient, envelopeSerializer, serverCertificate, null, null, bufferSize, maxBufferSize, memoryPool, traceWriter, null, clientCertificateValidationCallback)
+            : this(tcpClient, envelopeSerializer, serverCertificate, null, null, pauseWriterThreshold, memoryPool, traceWriter, null, clientCertificateValidationCallback)
         {
         }
 
@@ -149,9 +139,8 @@ namespace Lime.Transport.Tcp
         /// <param name="serverCertificate">The server certificate.</param>
         /// <param name="clientCertificate">The client certificate.</param>
         /// <param name="hostName">Name of the host.</param>
-        /// <param name="bufferSize">Size of the buffer.</param>
-        /// <param name="maxBufferSize">Max size of the buffer.</param>
-        /// <param name="memoryPool">The array pool instance, to allow reusing the created buffers.</param>
+        /// <param name="pauseWriterThreshold">Number of buffered bytes in the pipe which can lead the write task to pause.</param>
+        /// <param name="memoryPool">The memory pool instance which allow the pipe to reuse buffers.</param>
         /// <param name="traceWriter">The trace writer.</param>
         /// <param name="serverCertificateValidationCallback">The server certificate validation callback.</param>
         /// <param name="clientCertificateValidationCallback">The client certificate validation callback.</param>
@@ -166,8 +155,7 @@ namespace Lime.Transport.Tcp
             X509Certificate2 serverCertificate,
             X509Certificate2 clientCertificate,
             string hostName,
-            int bufferSize,
-            int maxBufferSize,
+            int pauseWriterThreshold,
             MemoryPool<byte> memoryPool,
             ITraceWriter traceWriter,
             RemoteCertificateValidationCallback serverCertificateValidationCallback,
@@ -181,11 +169,10 @@ namespace Lime.Transport.Tcp
             _traceWriter = traceWriter;
             _serverCertificateValidationCallback = serverCertificateValidationCallback ?? ValidateServerCertificate;
             _clientCertificateValidationCallback = clientCertificateValidationCallback ?? ValidateClientCertificate;
-            
             var pipeOptions = new PipeOptions(
-                pool: memoryPool ?? MemoryPool<byte>.Shared, 
-                pauseWriterThreshold: maxBufferSize);      
-                  
+                pool: memoryPool ?? MemoryPool<byte>.Shared,
+                pauseWriterThreshold: pauseWriterThreshold);
+            
             _receivePipe = new Pipe(pipeOptions);
             _sendPipe = new Pipe(pipeOptions);
             _pipeCts = new CancellationTokenSource();

@@ -37,7 +37,7 @@ namespace Lime.Transport.Tcp.UnitTests
 
         protected override ITransportListener CreateTransportListener(Uri uri, IEnvelopeSerializer envelopeSerializer)
         {
-            return new PipeTcpTransportListener(uri, null, envelopeSerializer, BufferSize, MaxBufferSize, MemoryPool, TraceWriter.Object);
+            return new PipeTcpTransportListener(uri, null, envelopeSerializer, MaxBufferSize, MemoryPool, TraceWriter.Object);
         }
 
         protected override ITransport CreateClientTransport(IEnvelopeSerializer envelopeSerializer)
