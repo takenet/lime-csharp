@@ -32,7 +32,7 @@ namespace Lime.Benchmarks
             _uri = new Uri("net.tcp://localhost:55321");
             _cancellationToken = TimeSpan.FromSeconds(60).ToCancellationToken();
             _envelopeSerializer = new EnvelopeSerializer(new DocumentTypeResolver().WithMessagingDocuments());
-            _transportListener = new TcpTransportListener(_uri, null, _envelopeSerializer, usePipeTcpTransport: true);
+            _transportListener = new PipeTcpTransportListener(_uri, null, _envelopeSerializer);
         }
 
         [GlobalSetup]

@@ -57,7 +57,7 @@ namespace Lime.Transport.Tcp.UnitTests
 
         public Uri ListenerUri { get; set; }
         
-        public TcpTransportListener TransportListener { get; set; }
+        public PipeTcpTransportListener TransportListener { get; set; }
 
         public CancellationTokenSource CancellationTokenSource { get; set; }
 
@@ -75,7 +75,7 @@ namespace Lime.Transport.Tcp.UnitTests
         
         private async Task<(PipeTcpTransport ClientTransport, PipeTcpTransport ServerTransport)> GetAndOpenTargets()
         {
-            TransportListener = new TcpTransportListener(ListenerUri, ServerCertificate, EnvelopeSerializer, BufferSize, MaxBufferSize, null, TraceWriter, ClientCertificateValidationCallback, true);
+            TransportListener = new PipeTcpTransportListener(ListenerUri, ServerCertificate, EnvelopeSerializer, BufferSize, MaxBufferSize, null, TraceWriter, ClientCertificateValidationCallback);
             await TransportListener.StartAsync(CancellationToken);
             var clientTransport = new PipeTcpTransport(EnvelopeSerializer, ClientCertificate, BufferSize, MaxBufferSize, TraceWriter, ServerCertificateValidationCallback);
             var serverTransportTask = TransportListener.AcceptTransportAsync(CancellationToken);

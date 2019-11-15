@@ -74,13 +74,12 @@ namespace Lime.Sample.Server
             {
                 case "net.tcp":
                     X509Certificate2 serverCertificate = null;  // You should provide a certificate for TLS
-                    return new TcpTransportListener(
+                    return new PipeTcpTransportListener(
                         uri,
                         serverCertificate,
                         serializer,
                         1024,
-                        2048,
-                        usePipeTcpTransport: true);
+                        2048);
                 case "ws":
                 case "wss":
                     return new KestrelWebSocketTransportListener(

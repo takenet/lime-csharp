@@ -48,7 +48,7 @@ namespace Lime.Protocol.ConsoleTests
 
             var server = new ServerBuilder(
                     "postmaster@msging.net/default",
-                    new TcpTransportListener(uri, null, new EnvelopeSerializer(new DocumentTypeResolver()), usePipeTcpTransport: true))
+                    new PipeTcpTransportListener(uri, null, new EnvelopeSerializer(new DocumentTypeResolver())))
                 .WithChannelConsumers(m => messageBufferBlock.SendAsync(m), n => TaskUtil.TrueCompletedTask, c => TaskUtil.TrueCompletedTask)
                 .WithEnabledEncryptionOptions(new SessionEncryption[] { SessionEncryption.TLS })
                 .WithExceptionHandler(e =>

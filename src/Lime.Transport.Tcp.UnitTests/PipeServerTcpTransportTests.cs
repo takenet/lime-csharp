@@ -15,7 +15,7 @@ namespace Lime.Transport.Tcp.UnitTests
     /// Tests for <see cref="TcpTransport"/> class using real TCP connections.
     /// </summary>    
     [TestFixture]    
-    public class PipeServerTcpTransportTests : ServerTransportTestsBase<PipeTcpTransport, PipeTcpTransport, TcpTransportListener>
+    public class PipeServerTcpTransportTests : ServerTransportTestsBase<PipeTcpTransport, PipeTcpTransport, PipeTcpTransportListener>
     {
         [SetUp]
         public void SetUp()
@@ -27,16 +27,16 @@ namespace Lime.Transport.Tcp.UnitTests
 
         public int MaxBufferSize { get; set; } = TcpTransport.DEFAULT_MAX_BUFFER_SIZE;
 
-        public ArrayPool<byte> ArrayPool { get; set; } 
+        public MemoryPool<byte> MemoryPool { get; set; } 
 
         protected override PipeTcpTransport CreateClientTransport()
         {
             return new PipeTcpTransport(EnvelopeSerializer);
         }
 
-        protected override TcpTransportListener CreateTransportListener()
+        protected override PipeTcpTransportListener CreateTransportListener()
         {
-            return new TcpTransportListener(ListenerUri, null, EnvelopeSerializer, BufferSize, MaxBufferSize, ArrayPool, traceWriter: TraceWriter.Object, usePipeTcpTransport: true);
+            return new PipeTcpTransportListener(ListenerUri, null, EnvelopeSerializer, BufferSize, MaxBufferSize, MemoryPool, traceWriter: TraceWriter.Object);
         }
 
         [Test]
