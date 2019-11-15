@@ -86,8 +86,7 @@ namespace Lime.Protocol.LoadTests.Tcp
             var envelopes = Enumerable
                 .Range(0, count)
                 .Select(i => Dummy.CreateMessage(Dummy.CreateTextContent()));
-
-
+            
             // Act
             var receivedEnvelopes = Enumerable
                 .Range(0, count)
