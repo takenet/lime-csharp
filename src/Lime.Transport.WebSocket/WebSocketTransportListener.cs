@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.Net;
 using System.Net.WebSockets;
 using System.Threading;
@@ -39,6 +40,8 @@ namespace Lime.Transport.WebSocket
         private readonly BufferBlock<ITransport> _transportBufferBufferBlock;
         private readonly ITargetBlock<ITransport> _nullTargetBlock;
         private readonly WebSocketMessageType _webSocketMessageType;
+        private readonly ArrayPool<byte> _arrayPool;
+        private readonly bool _closeGracefully;
         private CancellationTokenSource _acceptTransportCts;
         private Task _acceptTransportTask;
 
@@ -67,7 +70,9 @@ namespace Lime.Transport.WebSocket
             bool bindCertificateToPort = true,
             Guid? applicationId = null,
             int acceptTransportBoundedCapacity = 10,
-            WebSocketMessageType webSocketMessageType = WebSocketMessageType.Text)
+            WebSocketMessageType webSocketMessageType = WebSocketMessageType.Text,
+            ArrayPool<byte> arrayPool = null,
+            bool closeGracefully  = true)
         {
             if (listenerUri == null)
             {
@@ -113,6 +118,8 @@ namespace Lime.Transport.WebSocket
             _httpListenerWebSocketContextTransformBlock.LinkTo(_transportBufferBufferBlock, t => t != null);
             _httpListenerWebSocketContextTransformBlock.LinkTo(_nullTargetBlock, t => t == null);
             _webSocketMessageType = webSocketMessageType;
+            _arrayPool = arrayPool;
+            _closeGracefully = closeGracefully;
         }
 
         public Uri[] ListenerUris { get; }
@@ -251,7 +258,7 @@ namespace Lime.Transport.WebSocket
                     .WithCancellation(_acceptTransportCts.Token)
                     .ConfigureAwait(false);
 
-                return new ServerWebSocketTransport(context, _envelopeSerializer, _traceWriter, _bufferSize, _webSocketMessageType);
+                return new ServerWebSocketTransport(context, _envelopeSerializer, _traceWriter, _bufferSize, _webSocketMessageType, _arrayPool, _closeGracefully);
             }
             catch (OperationCanceledException) when (_acceptTransportCts.IsCancellationRequested) { }
             catch (Exception ex)

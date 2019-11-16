@@ -16,12 +16,12 @@ namespace Lime.Transport.WebSocket.UnitTests.Kestrel
 
         protected override ITransportListener CreateTransportListener(Uri uri, IEnvelopeSerializer envelopeSerializer)
         {
-            return new KestrelWebSocketTransportListener(new[] { uri }, envelopeSerializer, null, TraceWriter.Object);
+            return new KestrelWebSocketTransportListener(new[] { uri }, envelopeSerializer, null, TraceWriter, closeGracefully: false);
         }
 
         protected override ITransport CreateClientTransport(IEnvelopeSerializer envelopeSerializer)
         {
-            return new ClientWebSocketTransport(envelopeSerializer);
+            return new ClientWebSocketTransport(envelopeSerializer, closeGracefully: false);
         }
     }
 }

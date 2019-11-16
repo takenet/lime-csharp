@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
@@ -14,10 +15,12 @@ namespace Lime.Transport.WebSocket
         public ClientWebSocketTransport(
             IEnvelopeSerializer envelopeSerializer, 
             ITraceWriter traceWriter = null, 
-            int bufferSize = WebSocketTransport.DEFAULT_BUFFER_SIZE,
+            int bufferSize = DEFAULT_BUFFER_SIZE,
             WebSocketMessageType webSocketMessageType = WebSocketMessageType.Text,
-            ClientWebSocket webSocket = null)
-            : base(webSocket ?? new ClientWebSocket(), envelopeSerializer, traceWriter, bufferSize,  webSocketMessageType)
+            ClientWebSocket webSocket = null,
+            ArrayPool<byte> arrayPool = null,
+            bool closeGracefully = true)
+            : base(webSocket ?? new ClientWebSocket(), envelopeSerializer, traceWriter, bufferSize,  webSocketMessageType, arrayPool, closeGracefully)
         {
 
         }        

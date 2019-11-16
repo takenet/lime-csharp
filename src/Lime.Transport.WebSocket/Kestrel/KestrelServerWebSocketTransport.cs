@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.WebSockets;
@@ -21,8 +22,10 @@ namespace Lime.Transport.WebSocket.Kestrel
             IEnvelopeSerializer envelopeSerializer,
             ITraceWriter traceWriter = null,
             int bufferSize = 8192,
-            WebSocketMessageType webSocketMessageType = WebSocketMessageType.Text)
-            : base(webSocket, envelopeSerializer, traceWriter, bufferSize, webSocketMessageType)
+            WebSocketMessageType webSocketMessageType = WebSocketMessageType.Text,
+            ArrayPool<byte> arrayPool = null,
+            bool closeGracefully = true)
+            : base(webSocket, envelopeSerializer, traceWriter, bufferSize, webSocketMessageType, arrayPool, closeGracefully)
         {
             _context = context;
             _openTcs = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);

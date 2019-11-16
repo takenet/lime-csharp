@@ -1,6 +1,8 @@
 using System;
+using System.Buffers;
 using System.Linq;
 using System.Net;
+using System.Net.WebSockets;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
@@ -24,7 +26,11 @@ namespace Lime.Transport.WebSocket.Kestrel
         
         private readonly IEnvelopeSerializer _envelopeSerializer;
         private readonly ITraceWriter _traceWriter;
+        private readonly int _bufferSize;
         private readonly int _acceptCapacity;
+        private readonly WebSocketMessageType _webSocketMessageType;
+        private readonly ArrayPool<byte> _arrayPool;
+        private readonly bool _closeGracefully;
         private readonly IWebHost _webHost;
         private Channel<ITransport> _transportChannel;
 
@@ -37,7 +43,10 @@ namespace Lime.Transport.WebSocket.Kestrel
             TimeSpan? keepAliveInterval = null,
             int acceptCapacity = -1,
             HttpProtocols httpProtocols = HttpProtocols.Http1AndHttp2,
-            SslProtocols sslProtocols = SslProtocols.Tls11 | SslProtocols.Tls12)
+            SslProtocols sslProtocols = SslProtocols.Tls11 | SslProtocols.Tls12,
+            WebSocketMessageType webSocketMessageType = WebSocketMessageType.Text,
+            ArrayPool<byte> arrayPool = null,
+            bool closeGracefully = true)
         {
             if (listenerUris == null) throw new ArgumentNullException(nameof(listenerUris));
             if (listenerUris.Length == 0)
@@ -56,7 +65,11 @@ namespace Lime.Transport.WebSocket.Kestrel
             ListenerUris = listenerUris;
             _envelopeSerializer = envelopeSerializer;
             _traceWriter = traceWriter;
-            _acceptCapacity = acceptCapacity;           
+            _bufferSize = bufferSize;
+            _acceptCapacity = acceptCapacity;
+            _webSocketMessageType = webSocketMessageType;
+            _arrayPool = arrayPool;
+            _closeGracefully = closeGracefully;
             _webHost = new WebHostBuilder()
                 .UseKestrel(serverOptions =>
                 {                    
@@ -145,7 +158,7 @@ namespace Lime.Transport.WebSocket.Kestrel
 
             var webSocket = await context.WebSockets.AcceptWebSocketAsync(LimeUri.LIME_URI_SCHEME);
             var transport = new KestrelServerWebSocketTransport(
-                context, webSocket, _envelopeSerializer, _traceWriter);
+                context, webSocket, _envelopeSerializer, _traceWriter, _bufferSize, _webSocketMessageType,_arrayPool, _closeGracefully);
 
             await _transportChannel.Writer.WriteAsync(transport);
 

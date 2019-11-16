@@ -23,7 +23,6 @@ namespace Lime.Protocol.UnitTests.Common.Network
         {
             ListenerUri = CreateListenerUri();
             EnvelopeSerializer = new EnvelopeSerializer(new DocumentTypeResolver().WithMessagingDocuments());
-            TraceWriter = new Mock<ITraceWriter>();
             CancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(15));
             await SetUpImpl();
         }
@@ -40,6 +39,9 @@ namespace Lime.Protocol.UnitTests.Common.Network
 
             TransportListener?.DisposeIfDisposable();
             CancellationTokenSource.Dispose();
+            
+            // Setting null is required because this instance may be reused by NUnit
+            TransportListener = null;
         }
         
         protected async Task<(ITransport ClientTransport, ITransport ServerTransport)> GetAndOpenTargetsAsync()
@@ -66,7 +68,7 @@ namespace Lime.Protocol.UnitTests.Common.Network
 
         public IEnvelopeSerializer EnvelopeSerializer { get; private set; }
 
-        public Mock<ITraceWriter> TraceWriter { get; private set; }
+        public ITraceWriter TraceWriter { get; private set; }
 
         public CancellationTokenSource CancellationTokenSource { get; set; }
         
@@ -82,6 +84,18 @@ namespace Lime.Protocol.UnitTests.Common.Network
             // Assert
             clientTransport.IsConnected.ShouldBeTrue();
             serverTransport.IsConnected.ShouldBeTrue();
+        }
+
+        [Test]
+        [Category("OpenAsync")]
+        public async Task OpenAsync_NotConnectedClientInvalidUriScheme_ThrowsArgumentException()
+        {
+            // Arrange
+            var uri = new Uri("invalid://");
+            var clientTransport = CreateClientTransport(EnvelopeSerializer);
+            
+            // Act
+            await clientTransport.OpenAsync(uri, CancellationToken).ShouldThrowAsync<ArgumentException>();
         }
         
         [Test]
@@ -104,7 +118,7 @@ namespace Lime.Protocol.UnitTests.Common.Network
         
         [Test]
         [Category("SendAsync")]
-        public async Task SendAsync_SessionEnvelopeFromClient_ShouldBeReceivedByServer()
+        public async Task SendAsync_NewSessionEnvelope_ServerShouldReceive()
         {
             // Arrange
             var session = Dummy.CreateSession();
@@ -112,9 +126,9 @@ namespace Lime.Protocol.UnitTests.Common.Network
             
             // Act
             await clientTransport.SendAsync(session, CancellationToken);
+            var actual = await serverTransport.ReceiveAsync(CancellationToken);
             
             // Assert
-            var actual = await serverTransport.ReceiveAsync(CancellationToken);
             actual.ShouldNotBeNull();
             var actualSession = actual.ShouldBeOfType<Session>();
             actualSession.Id.ShouldBe(session.Id);
@@ -199,27 +213,99 @@ namespace Lime.Protocol.UnitTests.Common.Network
 
         [Test]
         [Category("SendAsync")]
-        public async Task SendAsync_ConsumedNotification_ClientShouldReceive()
+        public async Task SendAsync_RequestCommand_ServerShouldReceive()
         {
             // Arrange            
-            var notification = Dummy.CreateNotification(Event.Consumed);
+            var command = Dummy.CreateCommand(Dummy.CreatePlainDocument(), CommandMethod.Set);
             var (clientTransport, serverTransport) = await GetAndOpenTargetsAsync();
 
             // Act
-            await serverTransport.SendAsync(notification, CancellationToken);
-            var actual = await clientTransport.ReceiveAsync(CancellationToken);
+            await clientTransport.SendAsync(command, CancellationToken);
+            var actual = await serverTransport.ReceiveAsync(CancellationToken);
 
             // Assert
             actual.ShouldNotBeNull();
-            var actualNotification = actual.ShouldBeOfType<Notification>();
-            actualNotification.Id.ShouldBe(notification.Id);
-            actualNotification.From.ShouldBe(notification.From);
-            actualNotification.To.ShouldBe(notification.To);
-            actualNotification.Pp.ShouldBe(notification.Pp);
-            actualNotification.Metadata.ShouldBe(notification.Metadata);
-            actualNotification.Event.ShouldBe(notification.Event);
-            actualNotification.Reason.ShouldBe(notification.Reason);
-            actualNotification.Metadata.ShouldBe(notification.Metadata);
+            var actualCommand = actual.ShouldBeOfType<Command>();
+            actualCommand.Id.ShouldBe(command.Id);
+            actualCommand.From.ShouldBe(command.From);
+            actualCommand.To.ShouldBe(command.To);
+            actualCommand.Pp.ShouldBe(command.Pp);
+            actualCommand.Metadata.ShouldBe(command.Metadata);
+            actualCommand.Method.ShouldBe(command.Method);
+            actualCommand.Uri.ShouldBe(command.Uri);
+            actualCommand.Type.ShouldBe(command.Type);
+            actualCommand.Resource.ToString().ShouldBe(command.Resource.ToString());
+            actualCommand.Reason.ShouldBe(command.Reason);
+            actualCommand.Metadata.ShouldBe(command.Metadata);
+        }
+        
+        [Test]
+        [Category("SendAsync")]
+        public async Task SendAsync_PlainMessage_ServerShouldReceive()
+        {
+            // Arrange            
+            var message = Dummy.CreateMessage(Dummy.CreatePlainDocument());
+            var (clientTransport, serverTransport) = await GetAndOpenTargetsAsync();
+
+            // Act
+            await clientTransport.SendAsync(message, CancellationToken);
+            var actual = await serverTransport.ReceiveAsync(CancellationToken);
+
+            // Assert
+            actual.ShouldNotBeNull();
+            
+            var actualMessage = actual.ShouldBeOfType<Message>();
+            CompareMessages(message, actualMessage);
+        }
+        
+        [Test]
+        [Category("SendAsync")]
+        public async Task SendAsync_NullEnvelope_ThrowsArgumentNullException()
+        {
+            // Arrange            
+            Envelope envelope = null;
+            var (clientTransport, serverTransport) = await GetAndOpenTargetsAsync();
+
+            // Act
+            await clientTransport.SendAsync(envelope, CancellationToken).ShouldThrowAsync<ArgumentNullException>();
+        }
+        
+        [Test]
+        [Category("SendAsync")]
+        public async Task SendAsync_NotOpenTransport_ThrowsInvalidOperationException()
+        {
+            // Arrange            
+            var message = Dummy.CreateMessage(Dummy.CreateTextContent());
+            var clientTransport = CreateClientTransport(EnvelopeSerializer);
+            
+            // Act
+            await clientTransport.SendAsync(message, CancellationToken).ShouldThrowAsync<InvalidOperationException>();
+        }
+        
+        [Test]
+        [Category("SendAsync")]
+        public async Task SendAsync_ClosedClientTransport_ThrowsInvalidOperationException()
+        {
+            // Arrange            
+            var message = Dummy.CreateMessage(Dummy.CreateTextContent());
+            var (clientTransport, serverTransport) = await GetAndOpenTargetsAsync();
+            await clientTransport.CloseAsync(CancellationToken);
+
+            // Act
+            await clientTransport.SendAsync(message, CancellationToken).ShouldThrowAsync<InvalidOperationException>();
+        }
+        
+        [Test]
+        [Category("SendAsync")]
+        public async Task SendAsync_ClosedServerTransport_ThrowsInvalidOperationException()
+        {
+            // Arrange            
+            var message = Dummy.CreateMessage(Dummy.CreateTextContent());
+            var (clientTransport, serverTransport) = await GetAndOpenTargetsAsync();
+            await serverTransport.CloseAsync(CancellationToken);
+
+            // Act
+            await serverTransport.SendAsync(message, CancellationToken).ShouldThrowAsync<InvalidOperationException>();
         }
 
         [Test]
@@ -274,7 +360,7 @@ namespace Lime.Protocol.UnitTests.Common.Network
                 actualNotification.Metadata.ShouldBe(notification.Metadata);
             }
         }
-
+        
         [Test]
         [Category("ReceiveAsync")]
         public async Task ReceiveAsync_NewSessionEnvelope_ServerShouldReceive()

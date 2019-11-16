@@ -23,7 +23,7 @@ namespace Lime.Transport.Tcp.UnitTests
 
         public int MaxBufferSize { get; set; }
 
-        public ArrayPool<byte> ArrayPool { get; set; } 
+        public ArrayPool<byte> ArrayPool { get; } = ArrayPool<byte>.Shared;
         
         protected override Task SetUpImpl()
         {
@@ -36,7 +36,7 @@ namespace Lime.Transport.Tcp.UnitTests
         protected override Uri CreateListenerUri() => new Uri("net.tcp://localhost:55322");
 
         protected override ITransportListener CreateTransportListener(Uri uri, IEnvelopeSerializer envelopeSerializer) 
-            => new TcpTransportListener(uri, null, envelopeSerializer, BufferSize, MaxBufferSize, ArrayPool, traceWriter: TraceWriter.Object);
+            => new TcpTransportListener(uri, null, envelopeSerializer, BufferSize, MaxBufferSize, ArrayPool, TraceWriter);
 
         protected override ITransport CreateClientTransport(IEnvelopeSerializer envelopeSerializer) => new TcpTransport(envelopeSerializer, null, BufferSize, MaxBufferSize);
 

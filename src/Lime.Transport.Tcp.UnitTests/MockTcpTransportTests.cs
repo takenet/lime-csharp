@@ -254,34 +254,7 @@ namespace Lime.Transport.Tcp.UnitTests
                     t.TraceAsync(serializedMessage, DataOperation.Send),
                 Times.Once());
         }
-
-        [Test]
-        [Category("SendAsync")]
-        public async Task SendAsync_NullEnvelope_ThrowsArgumentNullException()
-        {
-            var target = this.GetTarget();
-            
-            Envelope message = null;
-
-            var cancellationToken = CancellationToken.None;
-
-            Should.Throw<ArgumentNullException>(() => target.SendAsync(message, cancellationToken));
-        }
-
-        [Test]
-        [Category("SendAsync")]
-        public async Task SendAsync_ClosedTransport_ThrowsInvalidOperationException()
-        {
-            var target = this.GetTarget();
-
-            var content = Dummy.CreateTextContent();
-            var message = Dummy.CreateMessage(content);
-
-            var cancellationToken = CancellationToken.None;
-
-            Should.Throw<InvalidOperationException>(() => target.SendAsync(message, cancellationToken));
-        }
-
+        
         [Test]
         [Category("SendAsync")]
         public async Task SendAsync_IOException_ThrowsIOExceptionAndCallsCloseAsync()

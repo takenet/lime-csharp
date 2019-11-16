@@ -26,6 +26,7 @@ namespace Lime.Transport.WebSocket
         private readonly int _bufferSize;
         private readonly SemaphoreSlim _closeSemaphore;
         private readonly WebSocketMessageType _webSocketMessageType;
+        private readonly bool _closeGracefully;
         private readonly CancellationTokenSource _receiveCts;
 
         protected WebSocketCloseStatus CloseStatus;
@@ -37,7 +38,8 @@ namespace Lime.Transport.WebSocket
             ITraceWriter traceWriter = null,
             int bufferSize = DEFAULT_BUFFER_SIZE,
             WebSocketMessageType webSocketMessageType = WebSocketMessageType.Text,
-            ArrayPool<byte> arrayPool = null)
+            ArrayPool<byte> arrayPool = null,
+            bool closeGracefully = true)
         {
             WebSocket = webSocket ?? throw new ArgumentNullException(nameof(webSocket));
             _envelopeSerializer = envelopeSerializer;
@@ -45,6 +47,7 @@ namespace Lime.Transport.WebSocket
             _arrayPool = arrayPool ?? ArrayPool<byte>.Shared;
             _bufferSize = bufferSize;
             _webSocketMessageType = webSocketMessageType;
+            _closeGracefully = closeGracefully;
             _closeSemaphore = new SemaphoreSlim(1);
             _receiveCts = new CancellationTokenSource();
             CloseStatus = WebSocketCloseStatus.NormalClosure;
@@ -223,9 +226,18 @@ namespace Lime.Transport.WebSocket
                     if (WebSocket.State == WebSocketState.Open ||
                         WebSocket.State == WebSocketState.CloseReceived)
                     {
-                        await
-                            WebSocket.CloseAsync(CloseStatus, CloseStatusDescription, linkedCts.Token)
-                                .ConfigureAwait(false);
+                        if (_closeGracefully)
+                        {
+                            await
+                                WebSocket.CloseAsync(CloseStatus, CloseStatusDescription, linkedCts.Token)
+                                    .ConfigureAwait(false);
+                        }
+                        else
+                        {
+                            await
+                                WebSocket.CloseOutputAsync(CloseStatus, CloseStatusDescription, linkedCts.Token)
+                                    .ConfigureAwait(false);
+                        }
                     }
                 }
 
