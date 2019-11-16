@@ -8,7 +8,7 @@ using NUnit.Framework;
 namespace Lime.Transport.WebSocket.UnitTests
 {
     [TestFixture]
-    public class ServerWebSocketTransportTests : ServerTransportTestsBase
+    public class WebSocketTransportTests : TransportTestsBase
     {
         protected override Uri CreateListenerUri() => new Uri("ws://localhost:8081");
 

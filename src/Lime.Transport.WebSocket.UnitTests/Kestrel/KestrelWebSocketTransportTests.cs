@@ -10,7 +10,7 @@ using ITransport = Lime.Protocol.Network.ITransport;
 namespace Lime.Transport.WebSocket.UnitTests.Kestrel
 {
     [TestFixture]
-    public class KestrelServerWebSocketTransportTests : ServerTransportTestsBase
+    public class KestrelWebSocketTransportTests : TransportTestsBase
     {
         protected override Uri CreateListenerUri() => new Uri("ws://localhost:8081");
 

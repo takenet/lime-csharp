@@ -16,7 +16,7 @@ using Shouldly;
 
 namespace Lime.Protocol.UnitTests.Common.Network
 {
-    public abstract class ServerTransportTestsBase
+    public abstract class TransportTestsBase
     {
         [SetUp]
         public async Task SetUp()
@@ -35,26 +35,23 @@ namespace Lime.Protocol.UnitTests.Common.Network
         {
             using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5)))
             {
-                await (Listener?.StopAsync(cts.Token) ?? Task.CompletedTask);
+                await (TransportListener?.StopAsync(cts.Token) ?? Task.CompletedTask);
             }
 
-            ClientTransport?.DisposeIfDisposable();
-            Listener?.DisposeIfDisposable();
+            TransportListener?.DisposeIfDisposable();
             CancellationTokenSource.Dispose();
         }
-
-        protected async Task<ITransport> GetTargetAsync()
+        
+        protected async Task<(ITransport ClientTransport, ITransport ServerTransport)> GetAndOpenTargetsAsync()
         {
-            Listener = CreateTransportListener(ListenerUri, EnvelopeSerializer);
-            await Listener.StartAsync(CancellationToken);
-            
-            ClientTransport = new SynchronizedTransportDecorator(CreateClientTransport(EnvelopeSerializer));
-
-            var listenerTask = Listener.AcceptTransportAsync(CancellationToken);
-            await ClientTransport.OpenAsync(ListenerUri, CancellationToken);
-            var serverTransport = new SynchronizedTransportDecorator(await listenerTask);
+            TransportListener = CreateTransportListener(ListenerUri, EnvelopeSerializer);
+            await TransportListener.StartAsync(CancellationToken);
+            var clientTransport = new SynchronizedTransportDecorator(CreateClientTransport(EnvelopeSerializer));
+            var serverTransportTask = TransportListener.AcceptTransportAsync(CancellationToken);
+            await clientTransport.OpenAsync(ListenerUri, CancellationToken);
+            var serverTransport = await serverTransportTask;
             await serverTransport.OpenAsync(ListenerUri, CancellationToken);
-            return serverTransport;
+            return (clientTransport, serverTransport);
         }
 
         protected abstract Uri CreateListenerUri();
@@ -65,7 +62,7 @@ namespace Lime.Protocol.UnitTests.Common.Network
         
         public Uri ListenerUri { get; private set; }
 
-        public ITransportListener Listener { get; private set; }
+        public ITransportListener TransportListener { get; private set; }
 
         public IEnvelopeSerializer EnvelopeSerializer { get; private set; }
 
@@ -75,18 +72,88 @@ namespace Lime.Protocol.UnitTests.Common.Network
         
         public CancellationToken CancellationToken => CancellationTokenSource.Token;
 
-        public ITransport ClientTransport { get; set; }
+        [Test]
+        [Category("OpenAsync")]
+        public async Task OpenAsync_NotConnected_ShouldConnect()
+        {
+            // Act
+            var (clientTransport, serverTransport) = await GetAndOpenTargetsAsync();
+            
+            // Assert
+            clientTransport.IsConnected.ShouldBeTrue();
+            serverTransport.IsConnected.ShouldBeTrue();
+        }
+        
+        [Test]
+        [Category("OpenAsync")]
+        public async Task OpenAsync_AlreadyConnectedClient_ThrowsInvalidOperationException()
+        {
+            // Act
+            var (clientTransport, _) = await GetAndOpenTargetsAsync();
+            await clientTransport.OpenAsync(ListenerUri, CancellationToken).ShouldThrowAsync<InvalidOperationException>();
+        }
+        
+        [Test]
+        [Category("OpenAsync")]
+        public async Task OpenAsync_AlreadyConnectedServer_ThrowsInvalidOperationException()
+        {
+            // Act
+            var (_, serverTransport) = await GetAndOpenTargetsAsync();
+            await serverTransport.OpenAsync(ListenerUri, CancellationToken).ShouldThrowAsync<InvalidOperationException>();
+        }
+        
+        [Test]
+        [Category("SendAsync")]
+        public async Task SendAsync_SessionEnvelopeFromClient_ShouldBeReceivedByServer()
+        {
+            // Arrange
+            var session = Dummy.CreateSession();
+            var (clientTransport, serverTransport) = await GetAndOpenTargetsAsync();
+            
+            // Act
+            await clientTransport.SendAsync(session, CancellationToken);
+            
+            // Assert
+            var actual = await serverTransport.ReceiveAsync(CancellationToken);
+            actual.ShouldNotBeNull();
+            var actualSession = actual.ShouldBeOfType<Session>();
+            actualSession.Id.ShouldBe(session.Id);
+            actualSession.From.ShouldBe(session.From);
+            actualSession.To.ShouldBe(session.To);
+            actualSession.State.ShouldBe(session.State);
+        }
+        
+        [Test]
+        [Category("ReceiveAsync")]
+        public async Task ReceiveAsync_SessionEnvelopeFromServer_ShouldBeReceivedByClient()
+        {
+            // Arrange
+            var session = Dummy.CreateSession(SessionState.Established);
+            var (clientTransport, serverTransport) = await GetAndOpenTargetsAsync();
+            await serverTransport.SendAsync(session, CancellationToken);
+            
+            // Act
+            var actual = await clientTransport.ReceiveAsync(CancellationToken);
+            
+            // Assert
+            actual.ShouldNotBeNull();
+            var actualSession = actual.ShouldBeOfType<Session>();
+            actualSession.Id.ShouldBe(session.Id);
+            actualSession.From.ShouldBe(session.From);
+            actualSession.To.ShouldBe(session.To);
+            actualSession.State.ShouldBe(session.State);
+        }        
 
         [Test]
         public async Task SendAsync_EstablishedSessionEnvelope_ClientShouldReceive()
         {
             // Arrange            
             var session = Dummy.CreateSession(SessionState.Established);
-            var target = await GetTargetAsync();
+            var (clientTransport, serverTransport) = await GetAndOpenTargetsAsync();
 
             // Act
-            await target.SendAsync(session, CancellationToken);
-            var actual = await ClientTransport.ReceiveAsync(CancellationToken);
+            await serverTransport.SendAsync(session, CancellationToken);
+            var actual = await clientTransport.ReceiveAsync(CancellationToken);
 
             // Assert
             actual.ShouldNotBeNull();
@@ -121,11 +188,11 @@ namespace Lime.Protocol.UnitTests.Common.Network
             session.EncryptionOptions = new[] { SessionEncryption.TLS, SessionEncryption.None };
             session.Reason = Dummy.CreateReason();
             session.Metadata = Dummy.CreateStringStringDictionary();
-            var target = await GetTargetAsync();
+            var (clientTransport, serverTransport) = await GetAndOpenTargetsAsync();
 
             // Act
-            await target.SendAsync(session, CancellationToken);
-            var actual = await ClientTransport.ReceiveAsync(CancellationToken);
+            await serverTransport.SendAsync(session, CancellationToken);
+            var actual = await clientTransport.ReceiveAsync(CancellationToken);
 
             // Assert
             actual.ShouldNotBeNull();
@@ -154,11 +221,11 @@ namespace Lime.Protocol.UnitTests.Common.Network
         {
             // Arrange            
             var notification = Dummy.CreateNotification(Event.Consumed);
-            var target = await GetTargetAsync();
+            var (clientTransport, serverTransport) = await GetAndOpenTargetsAsync();
 
             // Act
-            await target.SendAsync(notification, CancellationToken);
-            var actual = await ClientTransport.ReceiveAsync(CancellationToken);
+            await serverTransport.SendAsync(notification, CancellationToken);
+            var actual = await clientTransport.ReceiveAsync(CancellationToken);
 
             // Assert
             actual.ShouldNotBeNull();
@@ -186,25 +253,25 @@ namespace Lime.Protocol.UnitTests.Common.Network
                     return notification;
                 })
                 .ToList();
-            var target = await GetTargetAsync();
-            var synchronizedTarget = new SynchronizedTransportDecorator(target);
-            var synchronizedClient = new SynchronizedTransportDecorator(ClientTransport);
-
-            // Act
-            Parallel.ForEach(notifications, async notification =>
-            {
-                await synchronizedTarget.SendAsync(notification, CancellationToken);
-            });
+            var (clientTransport, serverTransport) = await GetAndOpenTargetsAsync();
             
+            // Act
+            var sendTasks = new List<Task>();
+            foreach (var notification in notifications)
+            {
+                sendTasks.Add(
+                    serverTransport.SendAsync(notification, CancellationToken));
+            }
+
             var receiveTasks = new List<Task<Envelope>>();
             while (count-- > 0)
             {
                 receiveTasks.Add(
-                    Task.Run(async () => await synchronizedClient.ReceiveAsync(CancellationToken),
+                    Task.Run(async () => await clientTransport.ReceiveAsync(CancellationToken),
                     CancellationToken));
             }
 
-            await Task.WhenAll(receiveTasks);
+            await Task.WhenAll(sendTasks.Concat(receiveTasks));
             var actuals = receiveTasks.Select(t => t.Result).ToList();
 
             // Assert
@@ -230,11 +297,11 @@ namespace Lime.Protocol.UnitTests.Common.Network
         {
             // Arrange            
             var session = Dummy.CreateSession(SessionState.New);
-            var target = await GetTargetAsync();
+            var (clientTransport, serverTransport) = await GetAndOpenTargetsAsync();
 
             // Act
-            await ClientTransport.SendAsync(session, CancellationToken);
-            var actual = await target.ReceiveAsync(CancellationToken);
+            await clientTransport.SendAsync(session, CancellationToken);
+            var actual = await serverTransport.ReceiveAsync(CancellationToken);
 
             // Assert
             actual.ShouldNotBeNull();
@@ -269,11 +336,11 @@ namespace Lime.Protocol.UnitTests.Common.Network
             session.EncryptionOptions = new[] { SessionEncryption.TLS, SessionEncryption.None };
             session.Reason = Dummy.CreateReason();
             session.Metadata = Dummy.CreateStringStringDictionary();
-            var target = await GetTargetAsync();
+            var (clientTransport, serverTransport) = await GetAndOpenTargetsAsync();
 
             // Act
-            await ClientTransport.SendAsync(session, CancellationToken);
-            var actual = await target.ReceiveAsync(CancellationToken);
+            await clientTransport.SendAsync(session, CancellationToken);
+            var actual = await serverTransport.ReceiveAsync(CancellationToken);
 
             // Assert
             actual.ShouldNotBeNull();
@@ -301,20 +368,20 @@ namespace Lime.Protocol.UnitTests.Common.Network
         public async Task CloseAsync_ConnectedTransport_PerformClose()
         {
             // Arrange
-            var target = await GetTargetAsync();
+            var (clientTransport, serverTransport) = await GetAndOpenTargetsAsync();
             var session = Dummy.CreateSession(SessionState.Negotiating);
-            await target.SendAsync(session, CancellationToken); // Send something to assert is connected
-            var received = await ClientTransport.ReceiveAsync(CancellationToken);
+            await serverTransport.SendAsync(session, CancellationToken); // Send something to assert is connected
+            var received = await clientTransport.ReceiveAsync(CancellationToken);
 
             // Act
             await Task.WhenAll(
-                ClientTransport.CloseAsync(CancellationToken),
-                target.CloseAsync(CancellationToken));
+                clientTransport.CloseAsync(CancellationToken),
+                serverTransport.CloseAsync(CancellationToken));
 
             // Assert
             try
             {
-                await target.SendAsync(session, CancellationToken); // Send something to assert is connected
+                await serverTransport.SendAsync(session, CancellationToken); // Send something to assert is connected
                 throw new Exception("Send was succeeded but an exception was expected");
             }
             catch (Exception ex)
@@ -327,14 +394,14 @@ namespace Lime.Protocol.UnitTests.Common.Network
         public async Task RemoteEndPoint_ConnectedTransport_ShouldEqualsClientLocalEndPoint()
         {
             // Arrange
-            var target = await GetTargetAsync();
+            var (clientTransport, serverTransport) = await GetAndOpenTargetsAsync();
 
             // Act
-            var actual = target.RemoteEndPoint;
+            var actual = serverTransport.RemoteEndPoint;
             
             // Assert
             var actualIPEndPoint = IPEndPoint.Parse(actual);
-            var expectedIPEndPoint = IPEndPoint.Parse(ClientTransport.LocalEndPoint);
+            var expectedIPEndPoint = IPEndPoint.Parse(clientTransport.LocalEndPoint);
             actualIPEndPoint.Port.ShouldBe(expectedIPEndPoint.Port);
             var actualAddress = actualIPEndPoint.Address.MapToIPv4();
             var expectedAddress = expectedIPEndPoint.Address.MapToIPv4();
@@ -345,14 +412,14 @@ namespace Lime.Protocol.UnitTests.Common.Network
         public async Task LocalEndPoint_ConnectedTransport_ShouldEqualsClientRemoteEndPoint()
         {
             // Arrange
-            var target = await GetTargetAsync();
+            var (clientTransport, serverTransport) = await GetAndOpenTargetsAsync();
 
             // Act
-            var actual = target.LocalEndPoint;
+            var actual = serverTransport.LocalEndPoint;
 
             // Assert
             var actualIPEndPoint = IPEndPoint.Parse(actual);
-            var expectedIPEndPoint = IPEndPoint.Parse(ClientTransport.RemoteEndPoint);
+            var expectedIPEndPoint = IPEndPoint.Parse(clientTransport.RemoteEndPoint);
             actualIPEndPoint.Port.ShouldBe(expectedIPEndPoint.Port);
             var actualAddress = actualIPEndPoint.Address.MapToIPv4();
             var expectedAddress = expectedIPEndPoint.Address.MapToIPv4();
@@ -363,10 +430,10 @@ namespace Lime.Protocol.UnitTests.Common.Network
         public async Task Options_ConnectedTransport_ReturnsValue()
         {
             // Arrange
-            var target = await GetTargetAsync();
+            var (clientTransport, serverTransport) = await GetAndOpenTargetsAsync();
 
             // Act
-            var actual = target.Options;
+            var actual = serverTransport.Options;
             
             // Assert
             actual.ShouldNotBeNull();
@@ -378,7 +445,7 @@ namespace Lime.Protocol.UnitTests.Common.Network
             // Arrange            
             var pageSize = 5;
             var count = 9 * pageSize;
-            var target = await GetTargetAsync();
+            var (clientTransport, serverTransport) = await GetAndOpenTargetsAsync();
             var messages = new Message[count];
 
             for (int i = 0; i < count; i++)
@@ -391,16 +458,16 @@ namespace Lime.Protocol.UnitTests.Common.Network
             // Act
             for (int i = 0; i < count; i += pageSize)
             {
-                await ClientTransport.SendAsync(messages[i], CancellationToken);
-                await ClientTransport.SendAsync(messages[i + 1], CancellationToken);
-                await ClientTransport.SendAsync(messages[i + 2], CancellationToken);
-                actuals[i] = await target.ReceiveAsync(CancellationToken);
-                actuals[i + 1] = await target.ReceiveAsync(CancellationToken);
-                await ClientTransport.SendAsync(messages[i + 3], CancellationToken);
-                actuals[i + 2] = await target.ReceiveAsync(CancellationToken);
-                await ClientTransport.SendAsync(messages[i + 4], CancellationToken);
-                actuals[i + 3] = await target.ReceiveAsync(CancellationToken);
-                actuals[i + 4] = await target.ReceiveAsync(CancellationToken);
+                await clientTransport.SendAsync(messages[i], CancellationToken);
+                await clientTransport.SendAsync(messages[i + 1], CancellationToken);
+                await clientTransport.SendAsync(messages[i + 2], CancellationToken);
+                actuals[i] = await serverTransport.ReceiveAsync(CancellationToken);
+                actuals[i + 1] = await serverTransport.ReceiveAsync(CancellationToken);
+                await clientTransport.SendAsync(messages[i + 3], CancellationToken);
+                actuals[i + 2] = await serverTransport.ReceiveAsync(CancellationToken);
+                await clientTransport.SendAsync(messages[i + 4], CancellationToken);
+                actuals[i + 3] = await serverTransport.ReceiveAsync(CancellationToken);
+                actuals[i + 4] = await serverTransport.ReceiveAsync(CancellationToken);
             }
 
             // Assert
