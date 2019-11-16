@@ -26,7 +26,7 @@ namespace Lime.Transport.Tcp.UnitTests
         
         protected override Task SetUpImpl()
         {
-            PauseWriterThreshold = PipeTcpTransport.DEFAULT_PAUSE_WRITER_THRESHOLD;
+            PauseWriterThreshold = EnvelopePipe.DEFAULT_PAUSE_WRITER_THRESHOLD;
             
             return base.SetUpImpl();
         }
@@ -58,8 +58,7 @@ namespace Lime.Transport.Tcp.UnitTests
             }
             catch (Exception ex)
             {
-                var argumentException = ex.ShouldBeOfType<ArgumentException>();
-                argumentException.ParamName.ShouldBe("envelope");
+                ex.ShouldBeOfType<InvalidOperationException>();
                 serverTransport.IsConnected.ShouldBeFalse();
             }
         }

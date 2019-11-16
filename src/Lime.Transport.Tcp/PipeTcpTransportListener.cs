@@ -22,7 +22,6 @@ namespace Lime.Transport.Tcp
         private readonly MemoryPool<byte> _memoryPool;
         private readonly ITraceWriter _traceWriter;
         private readonly RemoteCertificateValidationCallback _clientCertificateValidationCallback;
-        private readonly bool _usePipeTcpTransport;
         private readonly SemaphoreSlim _semaphore;
         private TcpListener _tcpListener;
 
@@ -40,7 +39,7 @@ namespace Lime.Transport.Tcp
             Uri listenerUri,
             X509Certificate2 serverCertificate,
             IEnvelopeSerializer envelopeSerializer,
-            int pauseWriterThreshold = PipeTcpTransport.DEFAULT_PAUSE_WRITER_THRESHOLD,
+            int pauseWriterThreshold = EnvelopePipe.DEFAULT_PAUSE_WRITER_THRESHOLD,
             MemoryPool<byte> memoryPool = null,
             ITraceWriter traceWriter = null,
             RemoteCertificateValidationCallback clientCertificateValidationCallback = null)

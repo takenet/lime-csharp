@@ -2,13 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Net.Security;
 using System.Net.Sockets;
-using System.Reflection;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Lime.Protocol;
@@ -17,8 +14,6 @@ using Lime.Protocol.Security;
 using Lime.Protocol.Serialization;
 using Lime.Protocol.Serialization.Newtonsoft;
 using System.Buffers;
-using System.IO.Pipelines;
-using System.Threading.Channels;
 
 namespace Lime.Transport.Tcp
 {
@@ -27,29 +22,19 @@ namespace Lime.Transport.Tcp
     /// </summary>
     public class PipeTcpTransport : TransportBase, ITransport, IAuthenticatableTransport, IDisposable
     {
-        public const int DEFAULT_PAUSE_WRITER_THRESHOLD = 8192 * 1024;
-
         public static readonly string UriSchemeNetTcp = "net.tcp";
         public static readonly TimeSpan CloseTimeout = TimeSpan.FromSeconds(30);
 
         private readonly SemaphoreSlim _optionsSemaphore;
         private readonly ITcpClient _tcpClient;
-        private readonly IEnvelopeSerializer _envelopeSerializer;
-        private readonly ITraceWriter _traceWriter;
         private readonly RemoteCertificateValidationCallback _serverCertificateValidationCallback;
         private readonly RemoteCertificateValidationCallback _clientCertificateValidationCallback;
         private readonly X509Certificate2 _serverCertificate;
         private readonly X509Certificate2 _clientCertificate;
-
-        private readonly CancellationTokenSource _pipeCts;
-        private readonly Pipe _receivePipe;
-        private readonly Pipe _sendPipe;
-        private Task _receiveTask;
-        private Task _sendTask;
-        
+        private readonly EnvelopePipe _envelopePipe;
         private Stream _stream;
         private string _hostName;
-        private readonly int _pauseWriterThreshold;
+
         private bool _disposed;
 
         /// <summary>
@@ -61,7 +46,7 @@ namespace Lime.Transport.Tcp
         /// <param name="serverCertificateValidationCallback">A callback to validate the server certificate in the TLS authentication process.</param>
         public PipeTcpTransport(
             X509Certificate2 clientCertificate = null,
-            int pauseWriterThreshold = DEFAULT_PAUSE_WRITER_THRESHOLD,
+            int pauseWriterThreshold = EnvelopePipe.DEFAULT_PAUSE_WRITER_THRESHOLD,
             ITraceWriter traceWriter = null,
             RemoteCertificateValidationCallback serverCertificateValidationCallback = null)
             : this(new EnvelopeSerializer(new DocumentTypeResolver()), clientCertificate, pauseWriterThreshold, traceWriter, serverCertificateValidationCallback)
@@ -79,7 +64,7 @@ namespace Lime.Transport.Tcp
         public PipeTcpTransport(
             IEnvelopeSerializer envelopeSerializer,
             X509Certificate2 clientCertificate = null,
-            int pauseWriterThreshold = DEFAULT_PAUSE_WRITER_THRESHOLD,
+            int pauseWriterThreshold = EnvelopePipe.DEFAULT_PAUSE_WRITER_THRESHOLD,
             ITraceWriter traceWriter = null,
             RemoteCertificateValidationCallback serverCertificateValidationCallback = null)
             : this(new TcpClientAdapter(new TcpClient()), envelopeSerializer, null, clientCertificate, null, pauseWriterThreshold, null, traceWriter, serverCertificateValidationCallback, null)
@@ -101,7 +86,7 @@ namespace Lime.Transport.Tcp
             IEnvelopeSerializer envelopeSerializer,
             string hostName,
             X509Certificate2 clientCertificate = null,
-            int pauseWriterThreshold = DEFAULT_PAUSE_WRITER_THRESHOLD,
+            int pauseWriterThreshold = EnvelopePipe.DEFAULT_PAUSE_WRITER_THRESHOLD,
             ITraceWriter traceWriter = null,
             RemoteCertificateValidationCallback serverCertificateValidationCallback = null)
             : this(tcpClient, envelopeSerializer, null, clientCertificate, hostName, pauseWriterThreshold, null, traceWriter, serverCertificateValidationCallback, null)
@@ -124,7 +109,7 @@ namespace Lime.Transport.Tcp
             ITcpClient tcpClient,
             IEnvelopeSerializer envelopeSerializer,
             X509Certificate2 serverCertificate,
-            int pauseWriterThreshold = DEFAULT_PAUSE_WRITER_THRESHOLD,
+            int pauseWriterThreshold = EnvelopePipe.DEFAULT_PAUSE_WRITER_THRESHOLD,
             MemoryPool<byte> memoryPool = null,
             ITraceWriter traceWriter = null,
             RemoteCertificateValidationCallback clientCertificateValidationCallback = null)
@@ -163,21 +148,12 @@ namespace Lime.Transport.Tcp
             RemoteCertificateValidationCallback clientCertificateValidationCallback)
         {
             _tcpClient = tcpClient ?? throw new ArgumentNullException(nameof(tcpClient));
-            _envelopeSerializer = envelopeSerializer ?? throw new ArgumentNullException(nameof(envelopeSerializer));
             _serverCertificate = serverCertificate;
             _clientCertificate = clientCertificate;
             _hostName = hostName;
-            _pauseWriterThreshold = pauseWriterThreshold > 0 ? pauseWriterThreshold : -1;
-            _traceWriter = traceWriter;
             _serverCertificateValidationCallback = serverCertificateValidationCallback ?? ValidateServerCertificate;
             _clientCertificateValidationCallback = clientCertificateValidationCallback ?? ValidateClientCertificate;
-            var pipeOptions = new PipeOptions(
-                pool: memoryPool ?? MemoryPool<byte>.Shared,
-                pauseWriterThreshold: _pauseWriterThreshold);
-            
-            _receivePipe = new Pipe(pipeOptions);
-            _sendPipe = new Pipe(pipeOptions);
-            _pipeCts = new CancellationTokenSource();
+            _envelopePipe = new EnvelopePipe(ReceiveFromPipeAsync, SendToPipeAsync, envelopeSerializer, traceWriter, pauseWriterThreshold, memoryPool);
             _optionsSemaphore = new SemaphoreSlim(1);
         }
 
@@ -190,35 +166,14 @@ namespace Lime.Transport.Tcp
         /// <exception cref="System.NotImplementedException"></exception>
         public override async Task SendAsync(Envelope envelope, CancellationToken cancellationToken)
         {
-            if (envelope == null) throw new ArgumentNullException(nameof(envelope));
-            if (_sendTask == null) throw new InvalidOperationException("The send task was not initialized. Call OpenAsync first.");
-            if (_sendTask.IsCompleted) throw new InvalidOperationException("Send task is completed", _sendTask.Exception?.GetBaseException());
-
-            var envelopeJson = _envelopeSerializer.Serialize(envelope);
-            await TraceAsync(envelopeJson, DataOperation.Send).ConfigureAwait(false);
-            
-            // Gets memory from the pipe to write the encoded string.
-            // .NET string are UTF16 and the length to UTF8 is usually larger.
-            // We can use Encoding.UTF8.GetBytes instead to get the precise length but here this is just a hint and the impact is irrelevant, 
-            // so we can avoid the overhead.
-            var memory = _sendPipe.Writer.GetMemory(envelopeJson.Length); 
-            var length = Encoding.UTF8.GetBytes(envelopeJson, memory.Span);
-
-            if (_pauseWriterThreshold > 0 && 
-                length >= _pauseWriterThreshold)
+            try
             {
-                await CloseWithTimeoutAsync().ConfigureAwait(false);
-                throw new ArgumentException("Serialized envelope size is larger than pauseWriterThreshold and cannot be sent", nameof(envelope));
+                await _envelopePipe.SendAsync(envelope, cancellationToken);
             }
-            
-            // Signals the pipe that the data is ready.
-            _sendPipe.Writer.Advance(length);
-            
-            var flushResult = await _sendPipe.Writer.FlushAsync(cancellationToken).ConfigureAwait(false);
-            if (flushResult.IsCompleted || flushResult.IsCanceled)
+            catch (InvalidOperationException)
             {
-                await CloseWithTimeoutAsync().ConfigureAwait(false);
-                throw new InvalidOperationException("Send pipe is completed");
+                await CloseWithTimeoutAsync();
+                throw;
             }
         }
 
@@ -229,44 +184,15 @@ namespace Lime.Transport.Tcp
         /// <returns></returns>
         public override async Task<Envelope> ReceiveAsync(CancellationToken cancellationToken)
         {
-            if (_receiveTask == null) throw new InvalidOperationException("The receive task was not initialized. Call OpenAsync first.");
-            if (_receiveTask.IsCompleted) throw new InvalidOperationException("The receive task is completed", _receiveTask.Exception?.GetBaseException());
-
-            Envelope envelope = null;
-            
-            while (envelope == null &&
-                   !cancellationToken.IsCancellationRequested)
+            try
             {
-                var readResult = await _receivePipe.Reader.ReadAsync(cancellationToken).ConfigureAwait(false);
-                var buffer = readResult.Buffer;
-                if (readResult.IsCompleted || buffer.IsEmpty)
-                {
-                    await CloseWithTimeoutAsync().ConfigureAwait(false);
-                    throw new InvalidOperationException("Receive pipe is completed");
-                }
-
-                var consumed = buffer.Start;
-                if (JsonBuffer.TryExtractJsonFromBuffer(buffer, out var json))
-                {
-                    var envelopeJson = Encoding.UTF8.GetString(json.ToArray());
-                    await TraceAsync(envelopeJson, DataOperation.Receive).ConfigureAwait(false);
-                    envelope = _envelopeSerializer.Deserialize(envelopeJson);
-                    consumed = json.End;
-                }
-
-                if (envelope != null)
-                {
-                    // A envelope was found and the buffer may contain another one
-                    _receivePipe.Reader.AdvanceTo(consumed);
-                }
-                else
-                {
-                    // No envelope found after examining the whole buffer, more data is needed
-                    _receivePipe.Reader.AdvanceTo(consumed, buffer.End);
-                }
-            }            
-            
-            return envelope;
+                return await _envelopePipe.ReceiveAsync(cancellationToken);
+            }
+            catch (InvalidOperationException)
+            {
+                await CloseWithTimeoutAsync();
+                throw;
+            }
         }
 
         /// <summary>
@@ -543,8 +469,7 @@ namespace Lime.Transport.Tcp
             }
 
             _stream = _tcpClient.GetStream();
-            _receiveTask = FillReceivePipeAsync(_receivePipe.Writer, _pipeCts.Token);
-            _sendTask = ReadSendPipeAsync(_sendPipe.Reader, _pipeCts.Token);
+            await _envelopePipe.StartAsync(cancellationToken);
         }
         
         /// <summary>
@@ -556,10 +481,9 @@ namespace Lime.Transport.Tcp
         protected override Task PerformCloseAsync(CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            _pipeCts.Cancel();
             _stream?.Close();
             _tcpClient.Close();
-            return Task.WhenAll(_receiveTask ?? Task.CompletedTask, _sendTask ?? Task.CompletedTask);
+            return _envelopePipe.StopAsync(cancellationToken);
         }
 
         /// <summary>
@@ -578,71 +502,19 @@ namespace Lime.Transport.Tcp
                 {
                     _optionsSemaphore.Dispose();
                     _stream?.Dispose();
-                    _pipeCts.Dispose();
+                    _envelopePipe.Dispose();
                 }
 
                 _disposed = true;
             }
         }
 
-        private async Task FillReceivePipeAsync(PipeWriter writer, CancellationToken cancellationToken)
-        {
-            Exception exception = null;
-            
-            try
-            {
-                while (!cancellationToken.IsCancellationRequested)
-                {
-                    var memory = writer.GetMemory();
-                    var read = await _stream.ReadAsync(memory, cancellationToken);
-                    if (read == 0) break;
-                    writer.Advance(read);
-                    
-                    var flushResult = await writer.FlushAsync(cancellationToken);
-                    if (flushResult.IsCompleted || flushResult.IsCanceled) break;
-                }
-            }
-            catch (Exception ex)
-            {
-                exception = ex;
-            }
-            finally
-            {
-                await writer.CompleteAsync(exception);                
-            }
-        }
+        private ValueTask SendToPipeAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken) 
+            => _stream.WriteAsync(buffer, cancellationToken);
 
-        private async Task ReadSendPipeAsync(PipeReader reader, CancellationToken cancellationToken)
-        {
-            Exception exception = null;
+        private ValueTask<int> ReceiveFromPipeAsync(Memory<byte> buffer, CancellationToken cancellationToken) 
+            => _stream.ReadAsync(buffer, cancellationToken);
 
-            try
-            {
-                while (!cancellationToken.IsCancellationRequested)
-                {
-                    var result = await reader.ReadAsync(cancellationToken);
-                    var buffer = result.Buffer;
-
-                    if (result.IsCompleted || buffer.IsEmpty) break;
-
-                    foreach (var memory in buffer)
-                    {
-                        await _stream.WriteAsync(memory, cancellationToken);
-                    }
-
-                    reader.AdvanceTo(buffer.End);
-                }
-            }
-            catch (Exception ex)
-            {
-                exception = ex;
-            }
-            finally
-            {
-                await reader.CompleteAsync(exception);
-            }
-        }
-        
         private bool ValidateServerCertificate(
             object sender,
             X509Certificate certificate,
@@ -669,20 +541,12 @@ namespace Lime.Transport.Tcp
             return sslPolicyErrors == SslPolicyErrors.None;
         }
 
-        private bool CanRead => _stream != null && _stream.CanRead && _tcpClient.Connected;
-
         private Task CloseWithTimeoutAsync()
         {
             using (var cts = new CancellationTokenSource(CloseTimeout))
             {
                 return CloseAsync(cts.Token);
             }
-        }
-
-        private Task TraceAsync(string data, DataOperation operation)
-        {
-            if (_traceWriter == null || !_traceWriter.IsEnabled) return Task.CompletedTask;
-            return _traceWriter.TraceAsync(data, operation);
         }
     }
 }

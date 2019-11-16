@@ -14,12 +14,12 @@ namespace Lime.Protocol.LoadTests.Tcp
 
         protected override ITransportListener CreateTransportListener(Uri uri, IEnvelopeSerializer envelopeSerializer)
         {
-            return new PipeTcpTransportListener(uri, null, envelopeSerializer, PipeTcpTransport.DEFAULT_PAUSE_WRITER_THRESHOLD * 2);
+            return new PipeTcpTransportListener(uri, null, envelopeSerializer, EnvelopePipe.DEFAULT_PAUSE_WRITER_THRESHOLD * 2);
         }
 
         protected override ITransport CreateClientTransport(IEnvelopeSerializer envelopeSerializer)
         {
-            return new PipeTcpTransport(envelopeSerializer, pauseWriterThreshold: PipeTcpTransport.DEFAULT_PAUSE_WRITER_THRESHOLD * 2);
+            return new PipeTcpTransport(envelopeSerializer, pauseWriterThreshold: EnvelopePipe.DEFAULT_PAUSE_WRITER_THRESHOLD * 2);
         }
     }
 }
