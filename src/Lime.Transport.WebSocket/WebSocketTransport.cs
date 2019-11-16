@@ -252,8 +252,8 @@ namespace Lime.Transport.WebSocket
             }
         }
 
-        public override bool IsConnected => WebSocket.State
-            >= WebSocketState.Open && WebSocket.State <= WebSocketState.CloseReceived; // We need to consider the Close status here to make the channel call the CloseAsync method.
+        public override bool IsConnected => WebSocket.State == WebSocketState.Open ||
+                                            WebSocket.State == WebSocketState.CloseReceived; // We need to consider the CloseReceived status here to make the channel call the CloseAsync method.
 
         public override string LocalEndPoint
         {

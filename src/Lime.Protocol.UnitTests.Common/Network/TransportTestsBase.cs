@@ -500,6 +500,44 @@ namespace Lime.Protocol.UnitTests.Common.Network
         }
         
         [Test]
+        [Category("ReceiveAsync")]
+        public async Task ReceiveAsync_NotOpenTransport_ThrowsInvalidOperationException()
+        {
+            // Arrange            
+            var message = Dummy.CreateMessage(Dummy.CreateTextContent());
+            var clientTransport = CreateClientTransport(EnvelopeSerializer);
+            
+            // Act
+            await clientTransport.ReceiveAsync(CancellationToken).ShouldThrowAsync<InvalidOperationException>();
+        }
+        
+        [Test]
+        [Category("ReceiveAsync")]
+        public async Task ReceiveAsync_ClosedClientTransport_ThrowsInvalidOperationException()
+        {
+            // Arrange            
+            var message = Dummy.CreateMessage(Dummy.CreateTextContent());
+            var (clientTransport, serverTransport) = await GetAndOpenTargetsAsync();
+            await clientTransport.CloseAsync(CancellationToken);
+
+            // Act
+            await clientTransport.ReceiveAsync(CancellationToken).ShouldThrowAsync<InvalidOperationException>();
+        }
+        
+        [Test]
+        [Category("ReceiveAsync")]
+        public async Task ReceiveAsync_ClosedServerTransport_ThrowsInvalidOperationException()
+        {
+            // Arrange            
+            var message = Dummy.CreateMessage(Dummy.CreateTextContent());
+            var (clientTransport, serverTransport) = await GetAndOpenTargetsAsync();
+            await serverTransport.CloseAsync(CancellationToken);
+
+            // Act
+            await serverTransport.ReceiveAsync(CancellationToken).ShouldThrowAsync<InvalidOperationException>();
+        }
+
+        [Test]
         [Category("CloseAsync")]
         public async Task CloseAsync_ConnectedTransport_PerformClose()
         {
@@ -526,6 +564,48 @@ namespace Lime.Protocol.UnitTests.Common.Network
             }
         }
 
+        [Test]
+        [Category("CloseAsync")]
+        public async Task CloseAsync_NotOpenTransport_ThrowsInvalidOperationException()
+        {
+            // Arrange            
+            var message = Dummy.CreateMessage(Dummy.CreateTextContent());
+            var clientTransport = CreateClientTransport(EnvelopeSerializer);
+            
+            // Act
+            clientTransport.IsConnected.ShouldBeFalse();
+            await clientTransport.CloseAsync(CancellationToken).ShouldThrowAsync<InvalidOperationException>();
+        }        
+        
+        [Test]
+        [Category("CloseAsync")]
+        public async Task CloseAsync_ClosedClientTransport_ThrowsInvalidOperationException()
+        {
+            // Arrange            
+            var message = Dummy.CreateMessage(Dummy.CreateTextContent());
+            var (clientTransport, serverTransport) = await GetAndOpenTargetsAsync();
+            await clientTransport.CloseAsync(CancellationToken);
+
+            // Act
+            clientTransport.IsConnected.ShouldBeFalse();
+            await clientTransport.CloseAsync(CancellationToken).ShouldThrowAsync<InvalidOperationException>();
+            
+        }
+        
+        [Test]
+        [Category("CloseAsync")]
+        public async Task CloseAsync_ClosedServerTransport_ThrowsInvalidOperationException()
+        {
+            // Arrange            
+            var message = Dummy.CreateMessage(Dummy.CreateTextContent());
+            var (clientTransport, serverTransport) = await GetAndOpenTargetsAsync();
+            await serverTransport.CloseAsync(CancellationToken);
+
+            // Act
+            serverTransport.IsConnected.ShouldBeFalse();
+            await serverTransport.CloseAsync(CancellationToken).ShouldThrowAsync<InvalidOperationException>();
+        }
+        
         [Test]
         [Category("RemoteEndPoint")]
         public async Task RemoteEndPoint_ConnectedTransport_ShouldEqualsClientLocalEndPoint()
