@@ -170,11 +170,11 @@ namespace Lime.Protocol.Network
                 while (!cancellationToken.IsCancellationRequested)
                 {
                     var memory = writer.GetMemory();
-                    var read = await _receiveFunc(memory, cancellationToken);
+                    var read = await _receiveFunc(memory, cancellationToken).ConfigureAwait(false);
                     if (read == 0) break;
                     writer.Advance(read);
                     
-                    var flushResult = await writer.FlushAsync(cancellationToken);
+                    var flushResult = await writer.FlushAsync(cancellationToken).ConfigureAwait(false);
                     if (flushResult.IsCompleted || flushResult.IsCanceled) break;
                 }
             }
@@ -184,7 +184,7 @@ namespace Lime.Protocol.Network
             }
             finally
             {
-                await writer.CompleteAsync(exception);                
+                await writer.CompleteAsync(exception).ConfigureAwait(false);                
             }
         }
 
@@ -196,7 +196,7 @@ namespace Lime.Protocol.Network
             {
                 while (!cancellationToken.IsCancellationRequested)
                 {
-                    var result = await reader.ReadAsync(cancellationToken);
+                    var result = await reader.ReadAsync(cancellationToken).ConfigureAwait(false);
                     var buffer = result.Buffer;
 
                     if (result.IsCompleted || buffer.IsEmpty) break;
@@ -215,7 +215,7 @@ namespace Lime.Protocol.Network
             }
             finally
             {
-                await reader.CompleteAsync(exception);
+                await reader.CompleteAsync(exception).ConfigureAwait(false);
             }
         }
 

@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Buffers;
 using System.Collections.Generic;
-using System.IO;
 using System.Net.WebSockets;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Lime.Protocol;
@@ -15,15 +13,11 @@ namespace Lime.Transport.WebSocket
 {
     public abstract class PipeWebSocketTransport : TransportBase, IDisposable
     {
-        public const int DEFAULT_BUFFER_SIZE = 8192;
-        public const int DEFAULT_MAX_BUFFER_COUNT = 1024;
-
         private static readonly TimeSpan CloseTimeout = TimeSpan.FromSeconds(5);
         
         private readonly SemaphoreSlim _closeSemaphore;
         private readonly WebSocketMessageType _webSocketMessageType;
         private readonly bool _closeGracefully;
-        private readonly CancellationTokenSource _receiveCts;
         private readonly EnvelopePipe _envelopePipe;
         
         protected WebSocketCloseStatus CloseStatus;
@@ -33,44 +27,18 @@ namespace Lime.Transport.WebSocket
             System.Net.WebSockets.WebSocket webSocket,
             IEnvelopeSerializer envelopeSerializer,
             ITraceWriter traceWriter = null,
-            int bufferSize = DEFAULT_BUFFER_SIZE,
             WebSocketMessageType webSocketMessageType = WebSocketMessageType.Text,
-            ArrayPool<byte> arrayPool = null,
-            bool closeGracefully = true)
+            bool closeGracefully = true,
+            int pauseWriterThreshold = EnvelopePipe.DEFAULT_PAUSE_WRITER_THRESHOLD,
+            MemoryPool<byte> memoryPool = null)
         {
             WebSocket = webSocket ?? throw new ArgumentNullException(nameof(webSocket));
             _webSocketMessageType = webSocketMessageType;
             _closeGracefully = closeGracefully;
             _closeSemaphore = new SemaphoreSlim(1);
-            _receiveCts = new CancellationTokenSource();
             CloseStatus = WebSocketCloseStatus.NormalClosure;
             CloseStatusDescription = string.Empty;
-            _envelopePipe = new EnvelopePipe(ReceiveFromPipeAsync, SendToPipeAsync, envelopeSerializer, traceWriter);
-        }
-
-        private ValueTask SendToPipeAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken)
-        {
-            return WebSocket.SendAsync(buffer, _webSocketMessageType, true, cancellationToken);
-        }
-
-        private async ValueTask<int> ReceiveFromPipeAsync(Memory<byte> buffer, CancellationToken cancellationToken)
-        {
-            var receiveResult = await WebSocket.ReceiveAsync(buffer, cancellationToken);
-            
-            if (receiveResult.MessageType == WebSocketMessageType.Close)
-            {
-                HandleCloseMessage(receiveResult);
-                return 0;
-            }
-
-            if (receiveResult.MessageType != _webSocketMessageType)
-            {
-                CloseStatus = WebSocketCloseStatus.InvalidMessageType;
-                CloseStatusDescription = "An unsupported message type was received";
-                throw new InvalidOperationException(CloseStatusDescription);
-            }
-            
-            return receiveResult.Count;
+            _envelopePipe = new EnvelopePipe(ReceiveFromPipeAsync, SendToPipeAsync, envelopeSerializer, traceWriter, pauseWriterThreshold, memoryPool);
         }
 
         protected System.Net.WebSockets.WebSocket WebSocket { get; }
@@ -107,6 +75,11 @@ namespace Lime.Transport.WebSocket
             }
         }
 
+        protected override Task PerformOpenAsync(Uri uri, CancellationToken cancellationToken)
+        {
+            return _envelopePipe.StartAsync(cancellationToken);
+        }
+
         /// <summary>
         /// Closes the transport, implementing the websocket close handshake.
         /// </summary>
@@ -118,6 +91,8 @@ namespace Lime.Transport.WebSocket
             await _closeSemaphore.WaitAsync(cancellationToken);
             try
             {
+                await _envelopePipe.StopAsync(cancellationToken);
+                
                 // Awaits for the client to send the close connection frame.
                 // If the session was clearly closed, the client should received the finished envelope and is closing the connection.
                 using (var cts = new CancellationTokenSource(CloseTimeout))
@@ -139,11 +114,6 @@ namespace Lime.Transport.WebSocket
                                     .ConfigureAwait(false);
                         }
                     }
-                }
-
-                if (!_receiveCts.IsCancellationRequested)
-                {
-                    _receiveCts.Cancel();
                 }
             }
             finally
@@ -218,8 +188,8 @@ namespace Lime.Transport.WebSocket
             if (disposing)
             {
                 WebSocket.Dispose();
+                _envelopePipe.Dispose();
                 _closeSemaphore.Dispose();
-                _receiveCts.Dispose();
             }
         }
 
@@ -229,6 +199,40 @@ namespace Lime.Transport.WebSocket
             {
                 throw new InvalidOperationException($"Cannot {operation} in the websocket connection state '{WebSocket.State}'");
             }
+        }
+        
+        
+        private ValueTask SendToPipeAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken) 
+            => WebSocket.SendAsync(buffer, _webSocketMessageType, true, cancellationToken);
+
+        private async ValueTask<int> ReceiveFromPipeAsync(Memory<byte> buffer, CancellationToken cancellationToken)
+        {
+            // The WebSocket ReceiveAsync method doesn't support cancellation 
+            var receiveTask = WebSocket.ReceiveAsync(buffer, cancellationToken).AsTask();
+            var cancellationTask = cancellationToken.AsTask();
+
+            var completedTask = await Task.WhenAny(receiveTask, cancellationTask).ConfigureAwait(false);
+            if (completedTask != receiveTask)
+            {
+                // The task above will thrown a TaskCancelledException, but just in case...
+                cancellationToken.ThrowIfCancellationRequested();
+            }
+            
+            var receiveResult = await receiveTask;
+            if (receiveResult.MessageType == WebSocketMessageType.Close)
+            {
+                HandleCloseMessage(receiveResult);
+                return 0;
+            }
+
+            if (receiveResult.MessageType != _webSocketMessageType)
+            {
+                CloseStatus = WebSocketCloseStatus.InvalidMessageType;
+                CloseStatusDescription = "An unsupported message type was received";
+                throw new InvalidOperationException(CloseStatusDescription);
+            }
+            
+            return receiveResult.Count;
         }
 
         private void HandleCloseMessage(ValueWebSocketReceiveResult receiveResult)
@@ -242,15 +246,6 @@ namespace Lime.Transport.WebSocket
             {
                 return CloseAsync(cts.Token);
             }
-        }
-
-        private class BufferSegment
-        {
-            public byte[] Buffer;
-
-            public int Count;
-
-            public int Remaining => Buffer.Length - Count;
         }
     }
 }
