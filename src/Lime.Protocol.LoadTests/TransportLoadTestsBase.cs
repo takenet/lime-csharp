@@ -58,6 +58,11 @@ namespace Lime.Protocol.LoadTests
             _clientTransport.DisposeIfDisposable();
             _serverTransport.DisposeIfDisposable();
             _transportListener.DisposeIfDisposable();
+            
+            // Set null to avoid issues with NUnit reusing the test class instance
+            _clientTransport = null;
+            _serverTransport = null;
+            _transportListener = null;
         }
 
         protected abstract Uri CreateUri();
@@ -67,7 +72,7 @@ namespace Lime.Protocol.LoadTests
         protected abstract ITransport CreateClientTransport(IEnvelopeSerializer envelopeSerializer);
 
         [Test]
-        public async Task Send100000EnvelopesAsync()
+        public async Task Send100000MessagesAsync()
         {
             // Arrange
             var count = 100000;
@@ -95,7 +100,7 @@ namespace Lime.Protocol.LoadTests
         }
 
         [Test]
-        public async Task Send10000EnvelopesAsync()
+        public async Task Send10000MessagesAsync()
         {
             // Arrange
             var count = 10000;
@@ -124,7 +129,7 @@ namespace Lime.Protocol.LoadTests
         }
 
         [Test]
-        public async Task Send500EnvelopesAsync()
+        public async Task Send500MessagesAsync()
         {
             // Arrange
             var count = 500;
@@ -152,7 +157,7 @@ namespace Lime.Protocol.LoadTests
         }
 
         [Test]
-        public async Task Send200EnvelopesAsync()
+        public async Task Send200MessagesAsync()
         {
             // Arrange
             var count = 200;
@@ -178,7 +183,7 @@ namespace Lime.Protocol.LoadTests
             // Assert
             sw.ElapsedMilliseconds.ShouldBeLessThan(count * 2);
         }
-
+        
         [Test]
         public async Task SendHugeEnvelope()
         {
@@ -203,6 +208,93 @@ namespace Lime.Protocol.LoadTests
             {
                 Trace.TraceError(ex.ToString());
             }
+        }
+        
+        [Test]
+        public async Task Send100HugeEnvelopesAsync()
+        {
+            // Arrange
+            var count = 100;
+            
+            var serializer = new EnvelopeSerializer(new DocumentTypeResolver().WithMessagingDocuments());
+            var path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory);
+            var content = File.ReadAllLines(Path.Combine(path, "huge.json"));
+            var hugeEnvelope = (Command)serializer.Deserialize(string.Join("", content));            
+            
+            var envelopes = Enumerable
+                .Range(0, count)
+                .Select(i =>
+                {
+                    var command = hugeEnvelope.ShallowCopy();
+                    command.Id = $"envelope_{i}";
+                    return command;
+                });
+
+            var receivedEnvelopes = Enumerable
+                .Range(0, count)
+                .Select(i => _serverTransport.ReceiveAsync(_cancellationToken))
+                .ToArray();
+
+            // Act
+            var sw = Stopwatch.StartNew();
+            foreach (var envelope in envelopes)
+            {
+                await _clientTransport.SendAsync(envelope, _cancellationToken);
+            }
+
+            await Task.WhenAll(receivedEnvelopes);
+            sw.Stop();
+
+            // Assert
+            sw.ElapsedMilliseconds.ShouldBeLessThan(count * 100);
+        }        
+        
+        [Test]
+        public async Task Send100000IntercalatedEnvelopesAsync()
+        {
+            // Arrange
+            var count = 100000;
+            var envelopes = Enumerable
+                .Range(0, count)
+                .Select<int, Envelope>(i =>
+                {
+                    switch (i % 4)
+                    {
+                        case 0:
+                            return Dummy.CreateMessage(Dummy.CreateTextContent());
+                        
+                        case 1:
+                            return Dummy.CreateNotification(Event.Accepted);
+                        
+                        case 2:
+                            return Dummy.CreateCommand(Dummy.CreateJsonDocument(), CommandMethod.Set,
+                                CommandStatus.Pending, Dummy.CreateRelativeLimeUri());
+                        default:
+                            return Dummy.CreateSession(SessionState.New);
+                    }
+                });
+
+            var receivedEnvelopes = Enumerable
+                .Range(0, count)
+                .Select(i => _serverTransport.ReceiveAsync(_cancellationToken))
+                .ToArray();
+
+            // Act
+            var sw = Stopwatch.StartNew();
+            foreach (var envelope in envelopes)
+            {
+                await _clientTransport.SendAsync(envelope, _cancellationToken);
+            }
+
+            await Task.WhenAll(receivedEnvelopes);
+            sw.Stop();
+
+            // Assert
+            sw.ElapsedMilliseconds.ShouldBeLessThan(count * 2);
+            receivedEnvelopes.Select(e => e.Result is Message).Count().ShouldBe(envelopes.Select(e => e is Message).Count());
+            receivedEnvelopes.Select(e => e.Result is Notification).Count().ShouldBe(envelopes.Select(e => e is Notification).Count());
+            receivedEnvelopes.Select(e => e.Result is Command).Count().ShouldBe(envelopes.Select(e => e is Command).Count());
+            receivedEnvelopes.Select(e => e.Result is Session).Count().ShouldBe(envelopes.Select(e => e is Session).Count());
         }
         
         [Test]
