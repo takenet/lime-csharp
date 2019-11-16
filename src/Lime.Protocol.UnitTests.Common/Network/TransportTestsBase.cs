@@ -122,29 +122,9 @@ namespace Lime.Protocol.UnitTests.Common.Network
             actualSession.To.ShouldBe(session.To);
             actualSession.State.ShouldBe(session.State);
         }
-        
-        [Test]
-        [Category("ReceiveAsync")]
-        public async Task ReceiveAsync_SessionEnvelopeFromServer_ShouldBeReceivedByClient()
-        {
-            // Arrange
-            var session = Dummy.CreateSession(SessionState.Established);
-            var (clientTransport, serverTransport) = await GetAndOpenTargetsAsync();
-            await serverTransport.SendAsync(session, CancellationToken);
-            
-            // Act
-            var actual = await clientTransport.ReceiveAsync(CancellationToken);
-            
-            // Assert
-            actual.ShouldNotBeNull();
-            var actualSession = actual.ShouldBeOfType<Session>();
-            actualSession.Id.ShouldBe(session.Id);
-            actualSession.From.ShouldBe(session.From);
-            actualSession.To.ShouldBe(session.To);
-            actualSession.State.ShouldBe(session.State);
-        }        
 
         [Test]
+        [Category("SendAsync")]
         public async Task SendAsync_EstablishedSessionEnvelope_ClientShouldReceive()
         {
             // Arrange            
@@ -176,6 +156,7 @@ namespace Lime.Protocol.UnitTests.Common.Network
         }
 
         [Test]
+        [Category("SendAsync")]
         public async Task SendAsync_FullSessionEnvelope_ClientShouldReceive()
         {
             // Arrange            
@@ -217,6 +198,7 @@ namespace Lime.Protocol.UnitTests.Common.Network
         }
 
         [Test]
+        [Category("SendAsync")]
         public async Task SendAsync_ConsumedNotification_ClientShouldReceive()
         {
             // Arrange            
@@ -241,6 +223,7 @@ namespace Lime.Protocol.UnitTests.Common.Network
         }
 
         [Test]
+        [Category("ReceiveAsync")]
         public async Task SendAsync_MultipleParallelNotifications_ClientShouldReceive()
         {
             // Arrange            
@@ -293,6 +276,7 @@ namespace Lime.Protocol.UnitTests.Common.Network
         }
 
         [Test]
+        [Category("ReceiveAsync")]
         public async Task ReceiveAsync_NewSessionEnvelope_ServerShouldReceive()
         {
             // Arrange            
@@ -324,6 +308,7 @@ namespace Lime.Protocol.UnitTests.Common.Network
         }
 
         [Test]
+        [Category("ReceiveAsync")]
         public async Task ReceiveAsync_FullSessionEnvelope_ServerShouldReceive()
         {
             // Arrange            
@@ -365,81 +350,28 @@ namespace Lime.Protocol.UnitTests.Common.Network
         }
 
         [Test]
-        public async Task CloseAsync_ConnectedTransport_PerformClose()
+        [Category("ReceiveAsync")]
+        public async Task ReceiveAsync_SessionEnvelopeFromServer_ShouldBeReceivedByClient()
         {
             // Arrange
+            var session = Dummy.CreateSession(SessionState.Established);
             var (clientTransport, serverTransport) = await GetAndOpenTargetsAsync();
-            var session = Dummy.CreateSession(SessionState.Negotiating);
-            await serverTransport.SendAsync(session, CancellationToken); // Send something to assert is connected
-            var received = await clientTransport.ReceiveAsync(CancellationToken);
-
-            // Act
-            await Task.WhenAll(
-                clientTransport.CloseAsync(CancellationToken),
-                serverTransport.CloseAsync(CancellationToken));
-
-            // Assert
-            try
-            {
-                await serverTransport.SendAsync(session, CancellationToken); // Send something to assert is connected
-                throw new Exception("Send was succeeded but an exception was expected");
-            }
-            catch (Exception ex)
-            {
-                ex.ShouldBeOfType<InvalidOperationException>();
-            }
-        }
-
-        [Test]
-        public async Task RemoteEndPoint_ConnectedTransport_ShouldEqualsClientLocalEndPoint()
-        {
-            // Arrange
-            var (clientTransport, serverTransport) = await GetAndOpenTargetsAsync();
-
-            // Act
-            var actual = serverTransport.RemoteEndPoint;
+            await serverTransport.SendAsync(session, CancellationToken);
             
-            // Assert
-            var actualIPEndPoint = IPEndPoint.Parse(actual);
-            var expectedIPEndPoint = IPEndPoint.Parse(clientTransport.LocalEndPoint);
-            actualIPEndPoint.Port.ShouldBe(expectedIPEndPoint.Port);
-            var actualAddress = actualIPEndPoint.Address.MapToIPv4();
-            var expectedAddress = expectedIPEndPoint.Address.MapToIPv4();
-            actualAddress.ShouldBe(expectedAddress);
-        }
-        
-        [Test]
-        public async Task LocalEndPoint_ConnectedTransport_ShouldEqualsClientRemoteEndPoint()
-        {
-            // Arrange
-            var (clientTransport, serverTransport) = await GetAndOpenTargetsAsync();
-
             // Act
-            var actual = serverTransport.LocalEndPoint;
-
-            // Assert
-            var actualIPEndPoint = IPEndPoint.Parse(actual);
-            var expectedIPEndPoint = IPEndPoint.Parse(clientTransport.RemoteEndPoint);
-            actualIPEndPoint.Port.ShouldBe(expectedIPEndPoint.Port);
-            var actualAddress = actualIPEndPoint.Address.MapToIPv4();
-            var expectedAddress = expectedIPEndPoint.Address.MapToIPv4();
-            actualAddress.ShouldBe(expectedAddress);
-        }
-        
-        [Test]
-        public async Task Options_ConnectedTransport_ReturnsValue()
-        {
-            // Arrange
-            var (clientTransport, serverTransport) = await GetAndOpenTargetsAsync();
-
-            // Act
-            var actual = serverTransport.Options;
+            var actual = await clientTransport.ReceiveAsync(CancellationToken);
             
             // Assert
             actual.ShouldNotBeNull();
-        }
+            var actualSession = actual.ShouldBeOfType<Session>();
+            actualSession.Id.ShouldBe(session.Id);
+            actualSession.From.ShouldBe(session.From);
+            actualSession.To.ShouldBe(session.To);
+            actualSession.State.ShouldBe(session.State);
+        }        
         
         [Test]
+        [Category("ReceiveAsync")]
         public async Task ReceiveAsync_InterleavedWritesAndReads_ServerShouldReceive()
         {
             // Arrange            
@@ -481,6 +413,85 @@ namespace Lime.Protocol.UnitTests.Common.Network
             }
         }
         
+        [Test]
+        [Category("CloseAsync")]
+        public async Task CloseAsync_ConnectedTransport_PerformClose()
+        {
+            // Arrange
+            var (clientTransport, serverTransport) = await GetAndOpenTargetsAsync();
+            var session = Dummy.CreateSession(SessionState.Negotiating);
+            await serverTransport.SendAsync(session, CancellationToken); // Send something to assert is connected
+            var received = await clientTransport.ReceiveAsync(CancellationToken);
+
+            // Act
+            await Task.WhenAll(
+                clientTransport.CloseAsync(CancellationToken),
+                serverTransport.CloseAsync(CancellationToken));
+
+            // Assert
+            try
+            {
+                await serverTransport.SendAsync(session, CancellationToken); // Send something to assert is connected
+                throw new Exception("Send was succeeded but an exception was expected");
+            }
+            catch (Exception ex)
+            {
+                ex.ShouldBeOfType<InvalidOperationException>();
+            }
+        }
+
+        [Test]
+        [Category("RemoteEndPoint")]
+        public async Task RemoteEndPoint_ConnectedTransport_ShouldEqualsClientLocalEndPoint()
+        {
+            // Arrange
+            var (clientTransport, serverTransport) = await GetAndOpenTargetsAsync();
+
+            // Act
+            var actual = serverTransport.RemoteEndPoint;
+            
+            // Assert
+            var actualIPEndPoint = IPEndPoint.Parse(actual);
+            var expectedIPEndPoint = IPEndPoint.Parse(clientTransport.LocalEndPoint);
+            actualIPEndPoint.Port.ShouldBe(expectedIPEndPoint.Port);
+            var actualAddress = actualIPEndPoint.Address.MapToIPv4();
+            var expectedAddress = expectedIPEndPoint.Address.MapToIPv4();
+            actualAddress.ShouldBe(expectedAddress);
+        }
+        
+        [Test]
+        [Category("LocalEndPoint")]
+        public async Task LocalEndPoint_ConnectedTransport_ShouldEqualsClientRemoteEndPoint()
+        {
+            // Arrange
+            var (clientTransport, serverTransport) = await GetAndOpenTargetsAsync();
+
+            // Act
+            var actual = serverTransport.LocalEndPoint;
+
+            // Assert
+            var actualIPEndPoint = IPEndPoint.Parse(actual);
+            var expectedIPEndPoint = IPEndPoint.Parse(clientTransport.RemoteEndPoint);
+            actualIPEndPoint.Port.ShouldBe(expectedIPEndPoint.Port);
+            var actualAddress = actualIPEndPoint.Address.MapToIPv4();
+            var expectedAddress = expectedIPEndPoint.Address.MapToIPv4();
+            actualAddress.ShouldBe(expectedAddress);
+        }
+        
+        [Test]
+        [Category("Options")]
+        public async Task Options_ConnectedTransport_ReturnsValue()
+        {
+            // Arrange
+            var (clientTransport, serverTransport) = await GetAndOpenTargetsAsync();
+
+            // Act
+            var actual = serverTransport.Options;
+            
+            // Assert
+            actual.ShouldNotBeNull();
+        }
+
         protected static void CompareMessages(Message message, Message actualMessage)
         {
             actualMessage.Id.ShouldBe(message.Id);
