@@ -30,7 +30,7 @@ namespace Lime.Benchmarks
             _uri = new Uri("ws://localhost:8081");
             _cancellationToken = TimeSpan.FromSeconds(60).ToCancellationToken();
             _envelopeSerializer = new EnvelopeSerializer(new DocumentTypeResolver().WithMessagingDocuments());
-            _transportListener = new WebSocketTransportListener(_uri, null, _envelopeSerializer, null, webSocketMessageType: System.Net.WebSockets.WebSocketMessageType.Text);
+            _transportListener = new WebSocketTransportListener(new[] {_uri }, _envelopeSerializer);
         }
 
         [GlobalSetup]

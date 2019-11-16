@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net.WebSockets;
 using Lime.Protocol.Network;
 using Lime.Protocol.Serialization;
 using Lime.Protocol.Server;
@@ -11,7 +12,7 @@ namespace Lime.Protocol.LoadTests.WebSocket
         protected override Uri CreateUri() => new Uri("ws://localhost:8081");
         
         protected override ITransportListener CreateTransportListener(Uri uri, IEnvelopeSerializer envelopeSerializer)
-            => new WebSocketTransportListener(uri, null, envelopeSerializer, webSocketMessageType: System.Net.WebSockets.WebSocketMessageType.Binary);
+            => new WebSocketTransportListener(new[] { uri }, envelopeSerializer, null, webSocketMessageType: WebSocketMessageType.Binary);
 
         protected override ITransport CreateClientTransport(IEnvelopeSerializer envelopeSerializer) =>
             new ClientWebSocketTransport(envelopeSerializer,

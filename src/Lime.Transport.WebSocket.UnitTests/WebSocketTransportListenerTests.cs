@@ -20,7 +20,7 @@ namespace Lime.Transport.WebSocket.UnitTests
 
         protected override WebSocketTransportListener CreateTransportListener()
         {
-            return new WebSocketTransportListener(ListenerUri, null, EnvelopeSerializer, TraceWriter.Object);
+            return new WebSocketTransportListener(new[] { ListenerUri }, EnvelopeSerializer, null, TraceWriter.Object);
         }
     }
 }

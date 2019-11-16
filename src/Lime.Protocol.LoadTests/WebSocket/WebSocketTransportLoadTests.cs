@@ -10,10 +10,10 @@ namespace Lime.Protocol.LoadTests.WebSocket
     [TestFixture]
     public class WebSocketTransportLoadTests : TransportLoadTestsBase
     {
-        protected override Uri CreateUri() => new Uri("ws://localhost:8088");
+        protected override Uri CreateUri() => new Uri("ws://localhost:8081");
 
         protected override ITransportListener CreateTransportListener(Uri uri, IEnvelopeSerializer envelopeSerializer) 
-            => new WebSocketTransportListener(uri, null, envelopeSerializer);
+            => new WebSocketTransportListener(new[] { uri }, envelopeSerializer, null);
 
         protected override ITransport CreateClientTransport(IEnvelopeSerializer envelopeSerializer) 
             => new ClientWebSocketTransport(envelopeSerializer);
