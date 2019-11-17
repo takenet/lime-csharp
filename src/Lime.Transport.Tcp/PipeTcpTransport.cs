@@ -588,8 +588,7 @@ namespace Lime.Transport.Tcp
             X509Chain chain,
             SslPolicyErrors sslPolicyErrors)
         {
-            return sslPolicyErrors == SslPolicyErrors.None ||
-                   sslPolicyErrors == SslPolicyErrors.RemoteCertificateNameMismatch;
+            return sslPolicyErrors == SslPolicyErrors.None;
         }
 
         private bool ValidateClientCertificate(
@@ -599,8 +598,7 @@ namespace Lime.Transport.Tcp
             SslPolicyErrors sslPolicyErrors)
         {
             // TODO: Check key usage
-            // The client certificate can be null 
-            // but if present, must be valid
+            // The client certificate can be null but if present, must be valid
             if (certificate == null)
             {
                 return true;

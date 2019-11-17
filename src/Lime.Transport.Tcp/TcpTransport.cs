@@ -612,8 +612,7 @@ namespace Lime.Transport.Tcp
             X509Chain chain,
             SslPolicyErrors sslPolicyErrors)
         {
-            return sslPolicyErrors == SslPolicyErrors.None ||
-                   sslPolicyErrors == SslPolicyErrors.RemoteCertificateNameMismatch;
+            return sslPolicyErrors == SslPolicyErrors.None;
         }
 
         private bool ValidateClientCertificate(
