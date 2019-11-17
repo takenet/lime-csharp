@@ -12,7 +12,7 @@ namespace Lime.Transport.WebSocket.UnitTests
     [TestFixture]
     public class PipeWebSocketTransportTests : TransportTestsBase
     {
-        protected override Uri CreateListenerUri() => new Uri("ws://localhost:8082");
+        protected override Uri CreateListenerUri() => new Uri("ws://localhost:8091");
 
         protected override ITransportListener CreateTransportListener(Uri uri, IEnvelopeSerializer envelopeSerializer)
         {

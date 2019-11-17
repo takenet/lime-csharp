@@ -11,7 +11,7 @@ namespace Lime.Transport.WebSocket.UnitTests
     {
         protected override ITransport CreateClientTransport() => new ClientWebSocketTransport(EnvelopeSerializer);
 
-        protected override Uri CreateListenerUri() => new Uri("ws://localhost:8081");
+        protected override Uri CreateListenerUri() => new Uri("ws://localhost:8082");
 
         protected override ITransportListener CreateTransportListener() 
             => new WebSocketTransportListener(new[] { ListenerUri }, EnvelopeSerializer, null, TraceWriter.Object);

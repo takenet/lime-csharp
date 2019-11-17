@@ -10,7 +10,6 @@ using Lime.Protocol.Security;
 using Lime.Protocol.Serialization;
 using Lime.Protocol.Serialization.Newtonsoft;
 using Lime.Protocol.Server;
-using Moq;
 using NUnit.Framework;
 using Shouldly;
 
@@ -48,7 +47,7 @@ namespace Lime.Protocol.UnitTests.Common.Network
         {
             TransportListener = CreateTransportListener(ListenerUri, EnvelopeSerializer);
             await TransportListener.StartAsync(CancellationToken);
-            var clientTransport = new SynchronizedTransportDecorator(CreateClientTransport(EnvelopeSerializer));
+            var clientTransport = CreateClientTransport(EnvelopeSerializer);
             var serverTransportTask = TransportListener.AcceptTransportAsync(CancellationToken);
             await clientTransport.OpenAsync(ListenerUri, CancellationToken);
             var serverTransport = await serverTransportTask;
@@ -324,6 +323,33 @@ namespace Lime.Protocol.UnitTests.Common.Network
         
         [Test]
         [Category("SendAsync")]
+        public async Task SendAsync_WhileReceiving_ShouldSucceed()
+        {
+            // Arrange            
+            var message = Dummy.CreateMessage(Dummy.CreatePlainDocument());
+            var notification = Dummy.CreateNotification(Event.Accepted);
+            var (clientTransport, serverTransport) = await GetAndOpenTargetsAsync();
+
+            // Act
+            var clientSendTask = clientTransport.SendAsync(message, CancellationToken);
+            var serverSendTask = serverTransport.SendAsync(notification, CancellationToken);
+            var serverReceiveTask = serverTransport.ReceiveAsync(CancellationToken);
+            var clientReceiveTask = clientTransport.ReceiveAsync(CancellationToken);
+            await Task.WhenAll(clientSendTask, serverSendTask, serverReceiveTask, clientReceiveTask);
+            var serverReceivedEnvelope = await serverReceiveTask;
+            var clientReceivedEnvelope = await clientReceiveTask;
+
+            // Assert
+            serverReceivedEnvelope.ShouldNotBeNull();
+            clientReceivedEnvelope.ShouldNotBeNull();
+            var actualMessage = serverReceivedEnvelope.ShouldBeOfType<Message>();
+            CompareMessages(message, actualMessage);
+            var actualNotification = clientReceivedEnvelope.ShouldBeOfType<Notification>();
+            CompareNotifications(notification, actualNotification);
+        }        
+        
+        [Test]
+        [Category("SendAsync")]
         public async Task SendAsync_NullEnvelope_ThrowsArgumentNullException()
         {
             // Arrange            
@@ -387,21 +413,23 @@ namespace Lime.Protocol.UnitTests.Common.Network
                 })
                 .ToList();
             var (clientTransport, serverTransport) = await GetAndOpenTargetsAsync();
+
+            clientTransport = new SynchronizedTransportDecorator(clientTransport);
+            serverTransport = new SynchronizedTransportDecorator(serverTransport);
             
             // Act
             var sendTasks = new List<Task>();
             foreach (var notification in notifications)
             {
                 sendTasks.Add(
-                    serverTransport.SendAsync(notification, CancellationToken));
+                    Task.Run(() => serverTransport.SendAsync(notification, CancellationToken), CancellationToken));
             }
 
             var receiveTasks = new List<Task<Envelope>>();
             while (count-- > 0)
             {
                 receiveTasks.Add(
-                    Task.Run(async () => await clientTransport.ReceiveAsync(CancellationToken),
-                    CancellationToken));
+                    Task.Run(() => clientTransport.ReceiveAsync(CancellationToken), CancellationToken));
             }
 
             await Task.WhenAll(sendTasks.Concat(receiveTasks));
@@ -414,14 +442,7 @@ namespace Lime.Protocol.UnitTests.Common.Network
                 var actualEnvelope = actuals.FirstOrDefault(e => e.Id == notification.Id);
                 actualEnvelope.ShouldNotBeNull();
                 var actualNotification = actualEnvelope.ShouldBeOfType<Notification>();
-                actualNotification.Id.ShouldBe(notification.Id);
-                actualNotification.From.ShouldBe(notification.From);
-                actualNotification.To.ShouldBe(notification.To);
-                actualNotification.Pp.ShouldBe(notification.Pp);
-                actualNotification.Metadata.ShouldBe(notification.Metadata);
-                actualNotification.Event.ShouldBe(notification.Event);
-                actualNotification.Reason.ShouldBe(notification.Reason);
-                actualNotification.Metadata.ShouldBe(notification.Metadata);
+                CompareNotifications(notification, actualNotification);
             }
         }
         
@@ -653,7 +674,7 @@ namespace Lime.Protocol.UnitTests.Common.Network
             actual.ShouldNotBeNull();
         }
 
-        protected static void CompareMessages(Message message, Message actualMessage)
+        private static void CompareMessages(Message message, Message actualMessage)
         {
             actualMessage.Id.ShouldBe(message.Id);
             actualMessage.From.ShouldBe(message.From);
@@ -663,6 +684,18 @@ namespace Lime.Protocol.UnitTests.Common.Network
             actualMessage.Type.ShouldBe(message.Type);
             actualMessage.Content.ToString().ShouldBe(message.Content.ToString());
             actualMessage.Metadata.ShouldBe(message.Metadata);
+        }
+        
+        private static void CompareNotifications(Notification notification, Notification actualNotification)
+        {
+            actualNotification.Id.ShouldBe(notification.Id);
+            actualNotification.From.ShouldBe(notification.From);
+            actualNotification.To.ShouldBe(notification.To);
+            actualNotification.Pp.ShouldBe(notification.Pp);
+            actualNotification.Metadata.ShouldBe(notification.Metadata);
+            actualNotification.Event.ShouldBe(notification.Event);
+            actualNotification.Reason.ShouldBe(notification.Reason);
+            actualNotification.Metadata.ShouldBe(notification.Metadata);
         }
     }
 }
