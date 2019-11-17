@@ -14,6 +14,7 @@ using Lime.Protocol.Security;
 using Lime.Protocol.Serialization;
 using Lime.Protocol.Serialization.Newtonsoft;
 using System.Buffers;
+using System.Text;
 using System.Threading.Tasks.Dataflow;
 
 namespace Lime.Transport.Tcp
@@ -37,7 +38,8 @@ namespace Lime.Transport.Tcp
         private Stream _stream;
         private string _hostName;
         private bool _disposed;
-        private bool _sessionEstablished;
+        private bool _sessionNegotiated;
+        private bool _readTaskWaiting;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TcpTransport"/> class.
@@ -169,7 +171,7 @@ namespace Lime.Transport.Tcp
         /// <exception cref="System.NotImplementedException"></exception>
         public override async Task SendAsync(Envelope envelope, CancellationToken cancellationToken)
         {
-            UpdateSessionEstablished(envelope);
+            UpdateSessionNegotiated(envelope);
 
             try
             {
@@ -189,7 +191,7 @@ namespace Lime.Transport.Tcp
         /// <returns></returns>
         public override async Task<Envelope> ReceiveAsync(CancellationToken cancellationToken)
         {
-            if (CanBeUpgraded)
+            if (_readTaskWaiting)
             {
                 // Signals the pipe stream read task to proceed
                 await _readSynchronizationQueue.SendAsync(null, cancellationToken).ConfigureAwait(false);
@@ -198,7 +200,7 @@ namespace Lime.Transport.Tcp
             try
             {
                 var envelope = await _envelopePipe.ReceiveAsync(cancellationToken);
-                UpdateSessionEstablished(envelope);
+                UpdateSessionNegotiated(envelope);
                 return envelope;
             }
             catch (InvalidOperationException)
@@ -529,22 +531,32 @@ namespace Lime.Transport.Tcp
         {
             if (CanBeUpgraded)
             {
-                // If the connection can be upgraded to TLS/Gzip, we should wait for ITransport.ReceiveAsync method to be called
-                // to proceed the with the read because the _stream instance can be changed.
-                using var timeoutCts = new CancellationTokenSource(TimeSpan.FromMilliseconds(500));
-                using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
+                _readTaskWaiting = true;
                 try
                 {
-                    await _readSynchronizationQueue.ReceiveAsync(linkedCts.Token).ConfigureAwait(false);
+                    // If the connection can be upgraded to TLS/Gzip, we should wait for ITransport.ReceiveAsync method to be called
+                    // to proceed the with the read because the value of "_stream" field can be changed.
+                    await _readSynchronizationQueue.ReceiveAsync(cancellationToken).ConfigureAwait(false);
                 }
-                catch (OperationCanceledException) when (timeoutCts.IsCancellationRequested) 
+                finally
                 {
-                    // Waits until the timeout to avoid deadlocks.
-                    // This is required for the cases when is required more than 1 stream ReadAsync call for producing 1 envelope.
+                    _readTaskWaiting = false;
                 }
             }
             
-            return await _stream.ReadAsync(buffer, cancellationToken).ConfigureAwait(false);
+            var length = await _stream.ReadAsync(buffer, cancellationToken).ConfigureAwait(false);
+            
+            // Tries to determine if this is a partial read (there's no complete session envelope in the buffer)
+            if (CanBeUpgraded &&
+                length > 0 &&
+                buffer.Span[length - 1] != '}')
+            {
+                // Adds a item to the synchronization queue to allow read the stream again without a new call to ReceiveAsync.
+                // This is required for the cases when is required more than 1 stream ReadAsync call for producing 1 envelope.
+                await _readSynchronizationQueue.SendAsync(null, cancellationToken).ConfigureAwait(false);
+            }
+
+            return length;
         }
         
         /// <summary>
@@ -555,18 +567,18 @@ namespace Lime.Transport.Tcp
         /// <summary>
         /// Indicates if the transport options can be upgraded, which will change the value of the <see cref="_stream"/> field instance.
         /// </summary>
-        private bool CanBeUpgraded => !_sessionEstablished && Encryption == SessionEncryption.None && IsTlsSupported;
+        private bool CanBeUpgraded => !_sessionNegotiated && Encryption == SessionEncryption.None && IsTlsSupported;
         
         /// <summary>
-        /// Sets the value of the <see cref="_sessionEstablished"/> field based on the envelopes that are exchanged.
+        /// Sets the value of the <see cref="_sessionNegotiated"/> field based on the envelopes that are exchanged.
         /// </summary>
         /// <param name="envelope"></param>
-        private void UpdateSessionEstablished(Envelope envelope)
+        private void UpdateSessionNegotiated(Envelope envelope)
         {
-            if (!_sessionEstablished && 
-                (!(envelope is Session) || ((Session)envelope).State == SessionState.Established))
+            if (!_sessionNegotiated && 
+                (!(envelope is Session) || ((Session)envelope).State > SessionState.Negotiating))
             {
-                _sessionEstablished = true;
+                _sessionNegotiated = true;
             }
         }        
         
