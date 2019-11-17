@@ -16,13 +16,12 @@ using Lime.Messaging;
 
 namespace Lime.Protocol.UnitTests.Network
 {
-    public abstract class TransportListenerTestsBase<TClientTransport, TTransportListener>
-        where TClientTransport : class, ITransport
-        where TTransportListener : class, ITransportListener
+    public abstract class TransportListenerTestsBase
     {
-        protected void SetUp(Uri listenerUri)
+        [SetUp]
+        public void SetUp()
         {
-            ListenerUri = listenerUri;
+            ListenerUri = CreateListenerUri();
             EnvelopeSerializer = new EnvelopeSerializer(new DocumentTypeResolver().WithMessagingDocuments());
             TraceWriter = new Mock<ITraceWriter>();           
             CancellationToken = TimeSpan.FromSeconds(5).ToCancellationToken();
@@ -41,11 +40,13 @@ namespace Lime.Protocol.UnitTests.Network
             Target = null;
         }
 
-        protected abstract TTransportListener CreateTransportListener();
+        protected abstract ITransportListener CreateTransportListener();
 
-        protected abstract TClientTransport CreateClientTransport();
+        protected abstract ITransport CreateClientTransport();
 
-        public TTransportListener Target { get; private set; }
+        protected abstract Uri CreateListenerUri();
+
+        public ITransportListener Target { get; private set; }
 
         public Uri ListenerUri { get; private set; }        
 

@@ -4,27 +4,20 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Lime.Protocol.Network;
+using Lime.Protocol.Server;
 using NUnit.Framework;
 
 namespace Lime.Transport.Tcp.UnitTests
 {
     [TestFixture]
-    public class TcpTransportListenerTests : TransportListenerTestsBase<TcpTransport, TcpTransportListener>
+    public class TcpTransportListenerTests : TransportListenerTestsBase
     {
-        [SetUp]
-        public void SetUp()
-        {
-            SetUp(new Uri("net.tcp://localhost:55323"));
-        }
+        protected override ITransport CreateClientTransport() => new TcpTransport(EnvelopeSerializer);
 
-        protected override TcpTransport CreateClientTransport()
-        {
-            return new TcpTransport(EnvelopeSerializer);
-        }
+        protected override Uri CreateListenerUri() => new Uri("net.tcp://localhost:55323");
 
-        protected override TcpTransportListener CreateTransportListener()
-        {
-            return new TcpTransportListener(ListenerUri, null, EnvelopeSerializer, traceWriter: TraceWriter.Object);
-        }
+        protected override ITransportListener CreateTransportListener() 
+            => new TcpTransportListener(ListenerUri, null, EnvelopeSerializer, traceWriter: TraceWriter.Object);
     }
 }
