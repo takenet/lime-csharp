@@ -4,7 +4,6 @@ using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using Pluralsight.Crypto;
-using System.IO;
 
 namespace Lime.Transport.Tcp.UnitTests
 {

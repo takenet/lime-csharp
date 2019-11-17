@@ -14,6 +14,7 @@ using Lime.Protocol.Security;
 using Lime.Protocol.Serialization;
 using Lime.Protocol.Serialization.Newtonsoft;
 using System.Buffers;
+using System.Threading.Tasks.Dataflow;
 
 namespace Lime.Transport.Tcp
 {
@@ -32,10 +33,11 @@ namespace Lime.Transport.Tcp
         private readonly X509Certificate2 _serverCertificate;
         private readonly X509Certificate2 _clientCertificate;
         private readonly EnvelopePipe _envelopePipe;
+        private readonly BufferBlock<object> _readSynchronizationQueue;
         private Stream _stream;
         private string _hostName;
-
         private bool _disposed;
+        private bool _sessionEstablished;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TcpTransport"/> class.
@@ -154,6 +156,7 @@ namespace Lime.Transport.Tcp
             _serverCertificateValidationCallback = serverCertificateValidationCallback ?? ValidateServerCertificate;
             _clientCertificateValidationCallback = clientCertificateValidationCallback ?? ValidateClientCertificate;
             _envelopePipe = new EnvelopePipe(ReceiveFromPipeAsync, SendToPipeAsync, envelopeSerializer, traceWriter, pauseWriterThreshold, memoryPool);
+            _readSynchronizationQueue = new BufferBlock<object>();
             _optionsSemaphore = new SemaphoreSlim(1);
         }
 
@@ -166,6 +169,8 @@ namespace Lime.Transport.Tcp
         /// <exception cref="System.NotImplementedException"></exception>
         public override async Task SendAsync(Envelope envelope, CancellationToken cancellationToken)
         {
+            UpdateSessionEstablished(envelope);
+
             try
             {
                 await _envelopePipe.SendAsync(envelope, cancellationToken);
@@ -176,7 +181,7 @@ namespace Lime.Transport.Tcp
                 throw;
             }
         }
-
+        
         /// <summary>
         /// Reads one envelope from the pipe.
         /// </summary>
@@ -184,9 +189,17 @@ namespace Lime.Transport.Tcp
         /// <returns></returns>
         public override async Task<Envelope> ReceiveAsync(CancellationToken cancellationToken)
         {
+            if (CanBeUpgraded)
+            {
+                // Signals the pipe stream read task to proceed
+                await _readSynchronizationQueue.SendAsync(null, cancellationToken).ConfigureAwait(false);
+            }
+
             try
             {
-                return await _envelopePipe.ReceiveAsync(cancellationToken);
+                var envelope = await _envelopePipe.ReceiveAsync(cancellationToken);
+                UpdateSessionEstablished(envelope);
+                return envelope;
             }
             catch (InvalidOperationException)
             {
@@ -202,8 +215,7 @@ namespace Lime.Transport.Tcp
         public override SessionEncryption[] GetSupportedEncryption()
         {
             // Server or client mode
-            if (_serverCertificate != null ||
-                string.IsNullOrWhiteSpace(_hostName))
+            if (IsTlsSupported)
             {
                 return new[]
                 {
@@ -234,6 +246,7 @@ namespace Lime.Transport.Tcp
                     case SessionEncryption.None:
                         _stream = _tcpClient.GetStream();
                         break;
+
                     case SessionEncryption.TLS:
                         SslStream sslStream;
                         
@@ -512,9 +525,51 @@ namespace Lime.Transport.Tcp
         private ValueTask SendToPipeAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken) 
             => _stream.WriteAsync(buffer, cancellationToken);
 
-        private ValueTask<int> ReceiveFromPipeAsync(Memory<byte> buffer, CancellationToken cancellationToken) 
-            => _stream.ReadAsync(buffer, cancellationToken);
+        private async ValueTask<int> ReceiveFromPipeAsync(Memory<byte> buffer, CancellationToken cancellationToken)
+        {
+            if (CanBeUpgraded)
+            {
+                // If the connection can be upgraded to TLS/Gzip, we should wait for ITransport.ReceiveAsync method to be called
+                // to proceed the with the read because the _stream instance can be changed.
+                using var timeoutCts = new CancellationTokenSource(TimeSpan.FromMilliseconds(500));
+                using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
+                try
+                {
+                    await _readSynchronizationQueue.ReceiveAsync(linkedCts.Token).ConfigureAwait(false);
+                }
+                catch (OperationCanceledException) when (timeoutCts.IsCancellationRequested) 
+                {
+                    // Waits until the timeout to avoid deadlocks.
+                    // This is required for the cases when is required more than 1 stream ReadAsync call for producing 1 envelope.
+                }
+            }
+            
+            return await _stream.ReadAsync(buffer, cancellationToken).ConfigureAwait(false);
+        }
+        
+        /// <summary>
+        /// Indicates if the current transport instance supports TLS.
+        /// </summary>
+        private bool IsTlsSupported => _serverCertificate != null || !string.IsNullOrWhiteSpace(_hostName);
 
+        /// <summary>
+        /// Indicates if the transport options can be upgraded, which will change the value of the <see cref="_stream"/> field instance.
+        /// </summary>
+        private bool CanBeUpgraded => !_sessionEstablished && Encryption == SessionEncryption.None && IsTlsSupported;
+        
+        /// <summary>
+        /// Sets the value of the <see cref="_sessionEstablished"/> field based on the envelopes that are exchanged.
+        /// </summary>
+        /// <param name="envelope"></param>
+        private void UpdateSessionEstablished(Envelope envelope)
+        {
+            if (!_sessionEstablished && 
+                (!(envelope is Session) || ((Session)envelope).State == SessionState.Established))
+            {
+                _sessionEstablished = true;
+            }
+        }        
+        
         private bool ValidateServerCertificate(
             object sender,
             X509Certificate certificate,

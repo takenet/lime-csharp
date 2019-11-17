@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
+using System.Net.Security;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
@@ -11,6 +12,7 @@ using Lime.Protocol.Serialization.Newtonsoft;
 using Lime.Protocol.Server;
 using Lime.Protocol.Util;
 using Lime.Transport.Tcp;
+using Lime.Transport.Tcp.UnitTests;
 using static System.Console;
 
 namespace Lime.Protocol.ConsoleTests
@@ -46,11 +48,14 @@ namespace Lime.Protocol.ConsoleTests
 
             var uri = new Uri("net.tcp://localhost:55321");
 
+            RemoteCertificateValidationCallback certificateValidationCallback =
+                (sender, certificate, chain, errors) => true;
+
             var server = new ServerBuilder(
                     "postmaster@msging.net/default",
-                    new PipeTcpTransportListener(uri, null, new EnvelopeSerializer(new DocumentTypeResolver())))
+                    new PipeTcpTransportListener(uri, CertificateUtil.CreateSelfSignedCertificate("localhost"), new EnvelopeSerializer(new DocumentTypeResolver()), clientCertificateValidationCallback: certificateValidationCallback))
                 .WithChannelConsumers(m => messageBufferBlock.SendAsync(m), n => TaskUtil.TrueCompletedTask, c => TaskUtil.TrueCompletedTask)
-                .WithEnabledEncryptionOptions(new SessionEncryption[] { SessionEncryption.TLS })
+                .WithEnabledEncryptionOptions(new SessionEncryption[] { SessionEncryption.None, SessionEncryption.TLS })
                 .WithExceptionHandler(e =>
                 {
                     ForegroundColor = ConsoleColor.Red;
@@ -71,10 +76,10 @@ namespace Lime.Protocol.ConsoleTests
                 WriteLine("Starting the client...");
 
                 var channelBuilder =  ClientChannelBuilder
-                    .Create(() => new PipeTcpTransport(new EnvelopeSerializer(new DocumentTypeResolver())), uri)
+                    .Create(() => new PipeTcpTransport(new EnvelopeSerializer(new DocumentTypeResolver()), serverCertificateValidationCallback: certificateValidationCallback), uri)
                     .WithEnvelopeBufferSize(100)
                     .CreateEstablishedClientChannelBuilder()
-                    .WithEncryption(SessionEncryption.None);
+                    .WithEncryption(SessionEncryption.TLS);
                 
                 
                 var client = new MultiplexerClientChannel(channelBuilder);

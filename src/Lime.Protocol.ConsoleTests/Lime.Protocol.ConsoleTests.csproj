@@ -11,6 +11,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Lime.Protocol\Lime.Protocol.csproj" />
+    <ProjectReference Include="..\Lime.Transport.Tcp.UnitTests\Lime.Transport.Tcp.UnitTests.csproj" />
     <ProjectReference Include="..\Lime.Transport.Tcp\Lime.Transport.Tcp.csproj" />
   </ItemGroup>
 
