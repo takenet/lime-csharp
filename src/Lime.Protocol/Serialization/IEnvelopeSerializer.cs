@@ -1,4 +1,8 @@
-﻿using System.Buffers;
+﻿using System;
+using System.Buffers;
+using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Lime.Protocol.Serialization
 {
@@ -25,10 +29,10 @@ namespace Lime.Protocol.Serialization
     /// <summary>
     /// Defines a serializer that doesn't requires buffer allocation.  
     /// </summary>
-    public interface IMemoryEnvelopeSerializer
+    public interface IStreamEnvelopeSerializer
     {
-        ReadOnlySequence<byte> Serialize(Envelope envelope);
+        Task SerializeAsync(Envelope envelope, Stream stream, CancellationToken cancellationToken);
 
-        Envelope Deserialize(ReadOnlySequence<byte> envelopeBytes);
+        Task<Envelope> DeserializeAsync(Stream stream, CancellationToken cancellationToken);
     }
 }

@@ -9,7 +9,7 @@ namespace Lime.Benchmarks
         {
             //var summary = BenchmarkRunner.Run<WebSocketTransportBenchmark>();
             //var summary = BenchmarkRunner.Run<TcpTransportBenchmark>();
-            var summary = BenchmarkRunner.Run<PipeTcpTransportBenchmark>();
+            var summary = BenchmarkRunner.Run<EnvelopeSerializerBenchmarks>();
         }
     }
 }
