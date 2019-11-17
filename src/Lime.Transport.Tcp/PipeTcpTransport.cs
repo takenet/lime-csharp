@@ -199,7 +199,7 @@ namespace Lime.Transport.Tcp
 
             try
             {
-                var envelope = await _envelopePipe.ReceiveAsync(cancellationToken);
+                var envelope = await _envelopePipe.ReceiveAsync(cancellationToken).ConfigureAwait(false);
                 UpdateSessionNegotiated(envelope);
                 return envelope;
             }
