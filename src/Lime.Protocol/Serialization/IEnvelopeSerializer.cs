@@ -21,14 +21,4 @@ namespace Lime.Protocol.Serialization
         /// <returns></returns>
         Envelope Deserialize(string envelopeString);
     }
-
-    /// <summary>
-    /// Defines a serializer that doesn't requires buffer allocation.  
-    /// </summary>
-    public interface IMemoryEnvelopeSerializer
-    {
-        ReadOnlySequence<byte> Serialize(Envelope envelope);
-
-        Envelope Deserialize(ReadOnlySequence<byte> envelopeBytes);
-    }
 }
