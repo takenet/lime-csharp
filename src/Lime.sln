@@ -47,8 +47,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lime.Benchmarks", "Lime.Ben
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lime.Cli", "Lime.Cli\Lime.Cli.csproj", "{F9B4105D-788D-4235-A9E8-3C682E548014}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lime.Transport.Http", "Lime.Transport.Http\Lime.Transport.Http.csproj", "{964BFE1F-84D1-42F4-BD38-AC1D7981CFA8}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -119,10 +117,6 @@ Global
 		{F9B4105D-788D-4235-A9E8-3C682E548014}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F9B4105D-788D-4235-A9E8-3C682E548014}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F9B4105D-788D-4235-A9E8-3C682E548014}.Release|Any CPU.Build.0 = Release|Any CPU
-		{964BFE1F-84D1-42F4-BD38-AC1D7981CFA8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{964BFE1F-84D1-42F4-BD38-AC1D7981CFA8}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{964BFE1F-84D1-42F4-BD38-AC1D7981CFA8}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{964BFE1F-84D1-42F4-BD38-AC1D7981CFA8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -136,7 +130,6 @@ Global
 		{355EE108-16FD-4846-AF5F-B633063BF9E9} = {215CAFFF-E0B2-4107-86B4-DFB767339781}
 		{4C50C2D2-4CAB-4FAA-96D6-DE412D2817DA} = {215CAFFF-E0B2-4107-86B4-DFB767339781}
 		{FA70C038-FADD-4C79-BC43-61492D667E98} = {215CAFFF-E0B2-4107-86B4-DFB767339781}
-		{964BFE1F-84D1-42F4-BD38-AC1D7981CFA8} = {215CAFFF-E0B2-4107-86B4-DFB767339781}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {C9C3A8AB-7272-43CC-9C9B-755A217231E1}
