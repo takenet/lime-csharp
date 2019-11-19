@@ -134,7 +134,8 @@ namespace Lime.Protocol.Network
                 var buffer = readResult.Buffer;
                 if (readResult.IsCompleted || buffer.IsEmpty)
                 {
-                    throw new InvalidOperationException("Receive pipe is completed");
+                    // The receiveTask is completing, no need to thrown an exception.
+                    break;
                 }
 
                 var consumed = buffer.Start;
