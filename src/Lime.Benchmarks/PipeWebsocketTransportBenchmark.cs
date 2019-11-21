@@ -15,21 +15,21 @@ namespace Lime.Benchmarks
 {
     [CoreJob]
     [MemoryDiagnoser]
-    public class WebSocketTransportBenchmark : TransportBenchmarkBase
+    public class PipeWebSocketTransportBenchmark : TransportBenchmarkBase
     {
         protected override Uri CreateUri()
         {
-            return new Uri("ws://localhost:8081");
+            return new Uri("ws://localhost:8082");
         }
 
         protected override ITransport CreateClientTransport()
         {
-            return new ClientWebSocketTransport(EnvelopeSerializer);
+            return new PipeClientWebSocketTransport(EnvelopeSerializer);
         }
 
         protected override ITransportListener CreateTransportListener()
         {
-            return new WebSocketTransportListener(new[] { Uri }, EnvelopeSerializer);
+            return new PipeWebSocketTransportListener(new[] { Uri }, EnvelopeSerializer);
         }
     }
 }
