@@ -10,6 +10,9 @@ using ReflectionMagic;
 
 namespace Lime.Transport.WebSocket
 {
+    /// <summary>
+    /// Implements a client websocket connection.
+    /// </summary>
     public class PipeClientWebSocketTransport : PipeWebSocketTransport, ITransport
     {
         public PipeClientWebSocketTransport(
@@ -45,7 +48,6 @@ namespace Lime.Transport.WebSocket
             {
                 try
                 {
-                    // netcoreapp2.1
                     return WebSocket.AsDynamic()._innerWebSocket?._webSocket?._stream?._connection?._socket?.LocalEndPoint?.ToString();
                 }
                 catch
@@ -61,7 +63,6 @@ namespace Lime.Transport.WebSocket
             {
                 try
                 {
-                    // netcoreapp2.1
                     return WebSocket.AsDynamic()._innerWebSocket?._webSocket?._stream?._connection?._socket?.RemoteEndPoint?.ToString();
                 }
                 catch

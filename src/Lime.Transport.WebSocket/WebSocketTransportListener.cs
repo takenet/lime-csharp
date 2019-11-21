@@ -19,6 +19,9 @@ using Microsoft.AspNetCore.Server.Kestrel.Core;
 
 namespace Lime.Transport.WebSocket
 {
+    /// <summary>
+    /// Implements a <see cref="ITransportListener"/> that uses Kestrel for receiving websocket connections.
+    /// </summary>
     public class WebSocketTransportListener : ITransportListener
     {
         public static readonly string UriSchemeWebSocket = "ws";
