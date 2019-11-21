@@ -487,11 +487,11 @@ namespace Lime.Protocol.UnitTests.Client
             var message = Dummy.CreateMessage(content);
             var destination = Dummy.CreateNode();
             message.To = destination.ToIdentity().ToNode();
-            var cts = new TaskCompletionSource<Envelope>();
+            var tcs = new TaskCompletionSource<Envelope>();
             _transport
                 .SetupSequence(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
                 .Returns(Task.FromResult<Envelope>(message))
-                .Returns(cts.Task);
+                .Returns(tcs.Task);
             var target = GetTarget(state: SessionState.Established, localNode: destination, autoNotifyReceipt: true);
             var cancellationToken = Dummy.CreateCancellationToken();
             

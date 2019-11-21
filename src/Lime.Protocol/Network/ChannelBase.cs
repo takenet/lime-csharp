@@ -389,7 +389,23 @@ namespace Lime.Protocol.Network
                         }
                         catch (OperationCanceledException ex) when (timeoutCts.IsCancellationRequested && _consumeTimeout != null)
                         {
-                            throw new TimeoutException($"The transport consumer has timed out after {_consumeTimeout.Value.TotalSeconds} seconds.", ex);
+                            var exceptionMessageBuilder = new StringBuilder($"The transport consumer has timed out after {_consumeTimeout.Value.TotalSeconds} seconds.");
+                            if (_receiveMessageBuffer.Count > 0
+                                || _receiveNotificationBuffer.Count > 0
+                                || _receiveCommandBuffer.Count > 0
+                                || _receiveSessionBuffer.Count > 0)
+                            {
+                                exceptionMessageBuilder.Append(
+                                    $" The receiver buffer has {_receiveMessageBuffer.Count} ({_messageConsumerBlock.InputCount}/{_messageConsumerBlock.OutputCount}) messages,");
+                                exceptionMessageBuilder.Append(
+                                    $" {_receiveNotificationBuffer.Count} ({_notificationConsumerBlock.InputCount}/{_notificationConsumerBlock.OutputCount}) notifications,");
+                                exceptionMessageBuilder.Append(
+                                    $" {_receiveCommandBuffer.Count} ({_commandConsumerBlock.InputCount}/{_commandConsumerBlock.OutputCount}) commands,");
+                                exceptionMessageBuilder.Append(
+                                    $" and {_receiveSessionBuffer.Count} sessions and it may be the cause of the problem. Please ensure that the channel receive methods are being called.");
+                            }
+
+                            throw new TimeoutException(exceptionMessageBuilder.ToString(), ex);
                         }
                     }
                     catch (OperationCanceledException) when (_consumerCts.IsCancellationRequested)

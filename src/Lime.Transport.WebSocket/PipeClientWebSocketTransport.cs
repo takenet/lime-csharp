@@ -36,8 +36,16 @@ namespace Lime.Transport.WebSocket
                 pauseWriterThreshold,
                 memoryPool)
         {
-            ((ClientWebSocket) WebSocket).Options.ClientCertificates = clientCertificates;
-            ((ClientWebSocket) WebSocket).Options.RemoteCertificateValidationCallback = serverCertificateValidationCallback;
+            if (clientCertificates != null)
+            {
+                ((ClientWebSocket) WebSocket).Options.ClientCertificates = clientCertificates;
+            }
+
+            if (serverCertificateValidationCallback != null)
+            {
+                ((ClientWebSocket) WebSocket).Options.RemoteCertificateValidationCallback =
+                    serverCertificateValidationCallback;
+            }
         }
 
         protected override async Task PerformOpenAsync(Uri uri, CancellationToken cancellationToken)
