@@ -32,13 +32,11 @@ namespace Lime.Protocol.Network
         private readonly ITargetBlock<Envelope> _drainEnvelopeBlock;
         private readonly CancellationTokenSource _senderCts;
         private readonly ActionBlock<(Envelope, TaskCompletionSource<Envelope>)> _sendEnvelopeBlock;
-        
         private readonly IChannelCommandProcessor _channelCommandProcessor;
         
         private readonly object _syncRoot;
         private SessionState _state;
         private Task _consumeTransportTask;
-        private Exception _consumerTransportException;
         private bool _isDisposing;
 
         /// <summary>
@@ -123,12 +121,14 @@ namespace Lime.Protocol.Network
             
             // Send pipeline
             _senderCts = new CancellationTokenSource();
-            _sendEnvelopeBlock = new ActionBlock<(Envelope Envelope, TaskCompletionSource<Envelope> SentTcs)>(e => SendToTransportAsync(e.Envelope, e.SentTcs), new ExecutionDataflowBlockOptions()
-            {
-                BoundedCapacity = envelopeBufferSize,
-                MaxDegreeOfParallelism = 1,
-                EnsureOrdered = true,
-            });
+            _sendEnvelopeBlock = new ActionBlock<(Envelope Envelope, TaskCompletionSource<Envelope> SentTcs)>(
+                e => SendToTransportAsync(e.Envelope, e.SentTcs), 
+                new ExecutionDataflowBlockOptions()
+                {
+                    BoundedCapacity = envelopeBufferSize,
+                    MaxDegreeOfParallelism = 1,
+                    EnsureOrdered = true,
+                });
             
             // Modules
             MessageModules = new List<IChannelModule<Message>>();
@@ -318,6 +318,7 @@ namespace Lime.Protocol.Network
             {
                 case SessionState.Finished:
                     throw new InvalidOperationException($"Cannot receive a session in the '{State}' session state");
+
                 case SessionState.Established:
                     return await ReceiveFromBufferAsync(_receiveSessionBuffer, cancellationToken).ConfigureAwait(false);
             }
@@ -333,10 +334,8 @@ namespace Lime.Protocol.Network
         {
             if (Transport.IsConnected)
             {
-                using (var cts = new CancellationTokenSource(_closeTimeout))
-                {
-                    await Transport.CloseAsync(cts.Token).ConfigureAwait(false);
-                }
+                using var cts = new CancellationTokenSource(_closeTimeout);
+                await Transport.CloseAsync(cts.Token).ConfigureAwait(false);
             }
         }
 
@@ -378,36 +377,19 @@ namespace Lime.Protocol.Network
                         var envelope = await ReceiveFromTransportAsync(_consumerCts.Token).ConfigureAwait(false);
                         if (envelope == null) continue;
 
-                        using (var timeoutCts = _consumeTimeout == null ? new CancellationTokenSource() : new CancellationTokenSource(_consumeTimeout.Value))
-                        using (var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(timeoutCts.Token, _consumerCts.Token))
+                        using var timeoutCts = _consumeTimeout == null ? new CancellationTokenSource() : new CancellationTokenSource(_consumeTimeout.Value);
+                        using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(timeoutCts.Token, _consumerCts.Token);
+                        
+                        try
                         {
-                            try
+                            if (!await _receiveEnvelopeBuffer.SendAsync(envelope, linkedCts.Token))
                             {
-                                if (!await _receiveEnvelopeBuffer.SendAsync(envelope, linkedCts.Token))
-                                {
-                                    throw new InvalidOperationException("Transport buffer limit reached");
-                                }
+                                throw new InvalidOperationException("Transport buffer limit reached");
                             }
-                            catch (OperationCanceledException ex) when (timeoutCts.IsCancellationRequested && _consumeTimeout != null)
-                            {
-                                var exceptionMessageBuilder = new StringBuilder($"The transport consumer has timed out after {_consumeTimeout.Value.TotalSeconds} seconds.");
-                                if (_receiveMessageBuffer.Count > 0
-                                    || _receiveNotificationBuffer.Count > 0
-                                    || _receiveCommandBuffer.Count > 0
-                                    || _receiveSessionBuffer.Count > 0)
-                                {
-                                    exceptionMessageBuilder.Append(
-                                        $" The receiver buffer has {_receiveMessageBuffer.Count} ({_messageConsumerBlock.InputCount}/{_messageConsumerBlock.OutputCount}) messages,");
-                                    exceptionMessageBuilder.Append(
-                                        $" {_receiveNotificationBuffer.Count} ({_notificationConsumerBlock.InputCount}/{_notificationConsumerBlock.OutputCount}) notifications,");
-                                    exceptionMessageBuilder.Append(
-                                        $" {_receiveCommandBuffer.Count} ({_commandConsumerBlock.InputCount}/{_commandConsumerBlock.OutputCount}) commands,");
-                                    exceptionMessageBuilder.Append(
-                                        $" and {_receiveSessionBuffer.Count} sessions and it may be the cause of the problem. Please ensure that the channel receive methods are being called.");
-                                }
-
-                                throw new TimeoutException(exceptionMessageBuilder.ToString(), ex);
-                            }
+                        }
+                        catch (OperationCanceledException ex) when (timeoutCts.IsCancellationRequested && _consumeTimeout != null)
+                        {
+                            throw new TimeoutException($"The transport consumer has timed out after {_consumeTimeout.Value.TotalSeconds} seconds.", ex);
                         }
                     }
                     catch (OperationCanceledException) when (_consumerCts.IsCancellationRequested)
@@ -421,9 +403,8 @@ namespace Lime.Protocol.Network
                     catch (Exception ex)
                     {
                         await RaiseConsumerExceptionAsync(ex);
-
                         await CloseTransportAsync().ConfigureAwait(false);
-                        throw;
+                        break;
                     }
                 }
             }
@@ -433,8 +414,6 @@ namespace Lime.Protocol.Network
                 _channelCommandProcessor.CancelAll();
                 if (!_consumerCts.IsCancellationRequested) _consumerCts.Cancel();
             }
-
-            if (_consumerTransportException != null) throw _consumerTransportException;
         }
 
         private Task<Message> ConsumeMessageAsync(Envelope envelope) => OnReceivingAsync((Message)envelope, MessageModules, _consumerCts.Token);
@@ -455,7 +434,6 @@ namespace Lime.Protocol.Network
             catch (Exception ex)
             {
                 await RaiseConsumerExceptionAsync(ex);
-                _consumerTransportException = ex;
                 _consumerCts.Cancel();
             }
             return null;
@@ -483,7 +461,6 @@ namespace Lime.Protocol.Network
             catch (Exception ex)
             {
                 await RaiseConsumerExceptionAsync(ex);
-                _consumerTransportException = ex;
                 _consumerCts.Cancel();
             }
 
@@ -512,12 +489,6 @@ namespace Lime.Protocol.Network
             }
             catch (InvalidOperationException ex) when (buffer.Completion.IsCompleted)
             {
-                if (_consumeTransportTask != null)
-                {
-                    await _consumeTransportTask.ConfigureAwait(false);
-                    _consumeTransportTask = null;
-                }
-
                 throw new InvalidOperationException("The channel listener task is complete and cannot receive envelopes", ex);
             }
         }
@@ -576,16 +547,15 @@ namespace Lime.Protocol.Network
         {
             try
             {
-                using (var cts = new CancellationTokenSource(_sendTimeout))
-                using (var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(_senderCts.Token, cts.Token))
+                using var cts = new CancellationTokenSource(_sendTimeout);
+                using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(_senderCts.Token, cts.Token);
+                
+                if (envelope != null)
                 {
-                    if (envelope != null)
-                    {
-                        await Transport.SendAsync(envelope, linkedCts.Token).ConfigureAwait(false);
-                    }
-                    
-                    sentTcs?.TrySetResult(envelope);
+                    await Transport.SendAsync(envelope, linkedCts.Token).ConfigureAwait(false);
                 }
+                    
+                sentTcs?.TrySetResult(envelope);
             }
             catch (OperationCanceledException) when (_senderCts.IsCancellationRequested)
             {
@@ -602,7 +572,6 @@ namespace Lime.Protocol.Network
                 if (!_senderCts.IsCancellationRequested) _senderCts.Cancel();
                 sentTcs?.TrySetException(ex);
                 await CloseTransportAsync().ConfigureAwait(false);
-                throw;
             }
         }
         
@@ -647,18 +616,10 @@ namespace Lime.Protocol.Network
             {
                 _isDisposing = true;
 
-                if (!_consumerCts.IsCancellationRequested)
-                {
-                    _consumerCts.Cancel();
-                }
-
-                if (!_senderCts.IsCancellationRequested)
-                {
-                    _senderCts.Cancel();
-                }
-
+                if (!_consumerCts.IsCancellationRequested) _consumerCts.Cancel();
+                if (!_senderCts.IsCancellationRequested)  _senderCts.Cancel();
                 _consumerCts.Dispose();
-                _senderCts.Cancel();
+                _senderCts.Dispose();
                 Transport.DisposeIfDisposable();
             }
         }

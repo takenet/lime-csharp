@@ -2,6 +2,7 @@
 using System.Buffers;
 using System.Linq;
 using System.Net;
+using System.Net.Security;
 using System.Net.WebSockets;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
@@ -37,8 +38,7 @@ namespace Lime.Transport.WebSocket
         private readonly IWebHost _webHost;
         private Channel<ITransport> _transportChannel;
 
-        public WebSocketTransportListener(
-            Uri[] listenerUris,            
+        public WebSocketTransportListener(Uri[] listenerUris,
             IEnvelopeSerializer envelopeSerializer,
             X509Certificate2 tlsCertificate = null,
             ITraceWriter traceWriter = null,
@@ -49,7 +49,8 @@ namespace Lime.Transport.WebSocket
             SslProtocols sslProtocols = SslProtocols.Tls11 | SslProtocols.Tls12,
             WebSocketMessageType webSocketMessageType = WebSocketMessageType.Text,
             ArrayPool<byte> arrayPool = null,
-            bool closeGracefully = true)
+            bool closeGracefully = true,
+            Func<X509Certificate2, X509Chain, SslPolicyErrors, bool> clientCertificateValidationCallback = null)
         {
             if (listenerUris == null) throw new ArgumentNullException(nameof(listenerUris));
             if (listenerUris.Length == 0)
@@ -93,6 +94,7 @@ namespace Lime.Transport.WebSocket
                                 listenOptions.UseHttps(tlsCertificate, httpsOptions =>
                                 {
                                     httpsOptions.SslProtocols = sslProtocols;
+                                    httpsOptions.ClientCertificateValidation = clientCertificateValidationCallback;
                                 });
                             }
                         });

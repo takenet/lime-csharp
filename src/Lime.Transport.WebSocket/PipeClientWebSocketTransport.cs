@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Buffers;
+using System.Net.Security;
 using System.Net.WebSockets;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
 using Lime.Protocol;
@@ -22,7 +24,9 @@ namespace Lime.Transport.WebSocket
             ClientWebSocket webSocket = null,
             bool closeGracefully = true,
             int pauseWriterThreshold = EnvelopePipe.DEFAULT_PAUSE_WRITER_THRESHOLD,
-            MemoryPool<byte> memoryPool = null) 
+            MemoryPool<byte> memoryPool = null, 
+            X509CertificateCollection clientCertificates = null, 
+            RemoteCertificateValidationCallback serverCertificateValidationCallback = null) 
             : base(
                 webSocket ?? new ClientWebSocket(),
                 envelopeSerializer,
@@ -32,6 +36,8 @@ namespace Lime.Transport.WebSocket
                 pauseWriterThreshold,
                 memoryPool)
         {
+            ((ClientWebSocket) WebSocket).Options.ClientCertificates = clientCertificates;
+            ((ClientWebSocket) WebSocket).Options.RemoteCertificateValidationCallback = serverCertificateValidationCallback;
         }
 
         protected override async Task PerformOpenAsync(Uri uri, CancellationToken cancellationToken)

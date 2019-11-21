@@ -271,9 +271,9 @@ namespace Lime.Protocol.UnitTests.Network
             Assert.IsNotNull(messageReceived);
             messageReceived = await target.ReceiveMessageAsync(cancellationToken);
             Assert.IsNotNull(messageReceived);
-
+            
             // Assert
-            target.ReceiveMessageAsync(cancellationToken).ShouldThrow<ApplicationException>();
+            await target.ReceiveMessageAsync(cancellationToken).ShouldThrowAsync<InvalidOperationException>();
             actualException.ShouldBe(actualException);
         }
 

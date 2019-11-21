@@ -14,6 +14,7 @@ using Lime.Protocol.Server;
 using Lime.Protocol.Util;
 using Lime.Transport.Tcp;
 using Lime.Transport.Tcp.UnitTests;
+using Lime.Transport.WebSocket;
 using static System.Console;
 
 namespace Lime.Protocol.ConsoleTests
@@ -26,6 +27,71 @@ namespace Lime.Protocol.ConsoleTests
 
         static async Task MainAsync(string[] args)
         {
+            WriteLine("Available transport types:");
+            WriteLine("1 - TcpTransport (default)");
+            WriteLine("2 - PipeTcpTransport");
+            WriteLine("3 - WebSocketTransport");
+            WriteLine("4 - PipeWebSocketTransport");
+            
+            Write("Select type:");
+            if (!int.TryParse(ReadLine(), out var transportType))
+            {
+                transportType = 1;
+            }
+            
+            Func<ITransportListener> transportListenerFactory;
+            Func<ITransport> clientTransportFactory;
+            Uri uri;
+            var envelopeSerializer = new EnvelopeSerializer(new DocumentTypeResolver());
+            RemoteCertificateValidationCallback certificateValidationCallback = (sender, certificate, chain, errors) => true;
+            
+            switch (transportType)
+            {
+                case 2:
+                    uri = new Uri("net.tcp://localhost:55322");
+                    transportListenerFactory = () =>
+                        new PipeTcpTransportListener(
+                            uri, 
+                            CertificateUtil.CreateSelfSignedCertificate("localhost"),
+                            new EnvelopeSerializer(new DocumentTypeResolver()),
+                            clientCertificateValidationCallback: certificateValidationCallback);
+                    clientTransportFactory = () => new PipeTcpTransport(envelopeSerializer, serverCertificateValidationCallback: certificateValidationCallback);
+                    break;
+                
+                case 3:
+                    uri = new Uri("wss://localhost:8081");
+                    transportListenerFactory = () =>
+                        new WebSocketTransportListener(
+                            new[] { uri }, 
+                            envelopeSerializer,
+                            CertificateUtil.CreateSelfSignedCertificate("localhost"),
+                            clientCertificateValidationCallback: (clientCertificate, chain, sslPolicyErrors) => certificateValidationCallback(null, clientCertificate, chain, sslPolicyErrors));
+                    clientTransportFactory = () => new ClientWebSocketTransport(envelopeSerializer, serverCertificateValidationCallback: certificateValidationCallback);                    
+                    break;
+                
+                case 4:
+                    uri = new Uri("wss://localhost:8082");
+                    transportListenerFactory = () =>
+                        new PipeWebSocketTransportListener(
+                            new[] { uri }, 
+                            envelopeSerializer,
+                            CertificateUtil.CreateSelfSignedCertificate("localhost"),
+                            clientCertificateValidationCallback: (clientCertificate, chain, sslPolicyErrors) => certificateValidationCallback(null, clientCertificate, chain, sslPolicyErrors));
+                    clientTransportFactory = () => new PipeClientWebSocketTransport(envelopeSerializer, serverCertificateValidationCallback: certificateValidationCallback);                         
+                    break;
+                
+                default:
+                    uri = new Uri("net.tcp://localhost:55321");
+                    transportListenerFactory = () =>
+                        new TcpTransportListener(
+                            uri, 
+                            CertificateUtil.CreateSelfSignedCertificate("localhost"),
+                            envelopeSerializer,
+                            clientCertificateValidationCallback: certificateValidationCallback);
+                    clientTransportFactory = () => new TcpTransport(envelopeSerializer, serverCertificateValidationCallback: certificateValidationCallback);
+                    break;
+            }
+
             WriteLine("Starting the server...");
             
             var messageActionBlock = new ActionBlock<Message>(
@@ -36,17 +102,8 @@ namespace Lime.Protocol.ConsoleTests
                     MaxDegreeOfParallelism = DataflowBlockOptions.Unbounded,
                     EnsureOrdered = false
                 });
-            
-            var uri = new Uri("net.tcp://localhost:55321");
 
-            RemoteCertificateValidationCallback certificateValidationCallback =
-                (sender, certificate, chain, errors) => true;
-
-            var server = new ServerBuilder(
-                    "postmaster@msging.net/default",
-                    new PipeTcpTransportListener(uri, CertificateUtil.CreateSelfSignedCertificate("localhost"),
-                        new EnvelopeSerializer(new DocumentTypeResolver()),
-                        clientCertificateValidationCallback: certificateValidationCallback))
+            var server = new ServerBuilder("postmaster@msging.net/default", transportListenerFactory())
                 .WithChannelConsumers(m => messageActionBlock.SendAsync(m), n => TaskUtil.TrueCompletedTask,
                     c => TaskUtil.TrueCompletedTask)
                 .WithEnabledEncryptionOptions(new SessionEncryption[] {SessionEncryption.None, SessionEncryption.TLS})
@@ -59,10 +116,8 @@ namespace Lime.Protocol.ConsoleTests
                 })
                 .WithEnvelopeBufferSize(-1)
                 .Build();
-
-
+            
             await server.StartAsync(CancellationToken.None);
-
 
             WriteLine("Server started.");
 
@@ -104,9 +159,7 @@ namespace Lime.Protocol.ConsoleTests
                 WriteLine("Starting the client...");
 
                 var channelBuilder = ClientChannelBuilder
-                    .Create(
-                        () => new PipeTcpTransport(new EnvelopeSerializer(new DocumentTypeResolver()),
-                            serverCertificateValidationCallback: certificateValidationCallback), uri)
+                    .Create(clientTransportFactory, uri)
                     .WithEnvelopeBufferSize(envelopeBufferSize)
                     .CreateEstablishedClientChannelBuilder()
                     .WithEncryption(SessionEncryption.TLS);
@@ -137,7 +190,10 @@ namespace Lime.Protocol.ConsoleTests
                     messagesCount = 1000;
                 }
 
-                _reporter = new Reporter(taskCount * messagesCount, CursorTop + 2);
+                _reporter = new Reporter(
+                    taskCount * messagesCount, 
+                    CursorTop + 2, 
+                    $"Transp {transportType} Ch {channelCount} Buf {envelopeBufferSize} Tasks {taskCount} Msgs {messagesCount}");
                 
                 await Task.WhenAll(
                     Enumerable
@@ -160,16 +216,23 @@ namespace Lime.Protocol.ConsoleTests
                 await _reporter.ReportTask;
                 _reporter = null;
 
-                if (client is IOnDemandClientChannel onDemandClientChannel)
+                try
                 {
-                    await onDemandClientChannel.FinishAsync(default);
+                    if (client is IOnDemandClientChannel onDemandClientChannel)
+                    {
+                        await onDemandClientChannel.FinishAsync(default);
+                    }
+                    else if (client is IClientChannel clientChannel)
+                    {
+                        await clientChannel.SendFinishingSessionAsync(default);
+                        await clientChannel.ReceiveFinishedSessionAsync(default);
+                    }
+
+                    client.DisposeIfDisposable();
                 }
-                else if (client is IClientChannel clientChannel)
+                catch
                 {
-                    await clientChannel.SendFinishingSessionAsync(default);
-                    await clientChannel.ReceiveFinishedSessionAsync(default);
                 }
-                client.DisposeIfDisposable();
             }
             
             await server.StopAsync(CancellationToken.None);
@@ -183,16 +246,18 @@ namespace Lime.Protocol.ConsoleTests
     {
         private readonly int _expectedCount;
         private readonly int _cursorTop;
+        private readonly string _setupDescription;
         private readonly DateTime _startDateTime;
         private readonly Stopwatch _stopwatch;
         private int _counter;
-        private static double _maxAverage;
+        private double _maxAverage;
         private TimeSpan _sendComplete;
         
-        public Reporter(int expectedCount, int cursorTop)
+        public Reporter(int expectedCount, int cursorTop, string setupDescription)
         {
             _expectedCount = expectedCount;
             _cursorTop = cursorTop;
+            _setupDescription = setupDescription;
             _startDateTime = DateTime.UtcNow;
             _stopwatch = Stopwatch.StartNew();
             _counter = 0;
@@ -226,6 +291,7 @@ namespace Lime.Protocol.ConsoleTests
             Write("                                                 ");
             Write("                                                 ");
             Write("                                                 ");
+            Write("                                                 ");
         }
 
         private async Task DoReport()
@@ -240,6 +306,7 @@ namespace Lime.Protocol.ConsoleTests
         private void Report()
         {
             SetCursorPosition(0, _cursorTop);
+            WriteLine($"Setup: {_setupDescription}");
             WriteLine($"Count: {_counter}                               ");
             WriteLine($"Start time: {_startDateTime}                    ");
             WriteLine($"Elapsed: {Elapsed.ToString("g", CultureInfo.InvariantCulture)}                    ");
@@ -263,7 +330,7 @@ namespace Lime.Protocol.ConsoleTests
             }
             else
             {
-                WriteLine("Sending in progress...");
+                WriteLine("Sending in progress...                                ");
             }
         }
     }
