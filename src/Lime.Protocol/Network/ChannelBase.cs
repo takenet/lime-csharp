@@ -338,13 +338,7 @@ namespace Lime.Protocol.Network
                 await Transport.CloseAsync(cts.Token).ConfigureAwait(false);
             }
         }
-
-        private bool IsChannelEstablished()
-            => !_consumerCts.IsCancellationRequested &&
-               !_senderCts.IsCancellationRequested &&
-                State == SessionState.Established &&
-                Transport.IsConnected;
-
+        
         /// <summary>
         /// Cancels the token that is associated to the channel send and receive tasks.
         /// </summary>
@@ -365,6 +359,12 @@ namespace Lime.Protocol.Network
                 }
             }
         }
+
+        private bool IsChannelEstablished()
+            => !_consumerCts.IsCancellationRequested &&
+               !_senderCts.IsCancellationRequested &&
+                State == SessionState.Established &&
+                Transport.IsConnected;
 
         private async Task ConsumeTransportAsync()
         {
@@ -410,6 +410,7 @@ namespace Lime.Protocol.Network
             }
             finally
             {
+                // Complete the receive pipeline to propagate to the envelope specific buffers
                 _receiveEnvelopeBuffer.Complete();
                 _channelCommandProcessor.CancelAll();
                 if (!_consumerCts.IsCancellationRequested) _consumerCts.Cancel();
