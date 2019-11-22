@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Lime.Protocol.Network
 {
@@ -10,7 +8,7 @@ namespace Lime.Protocol.Network
     /// </summary>
     /// <seealso cref="IEstablishedChannel" />
     /// <seealso cref="ISessionChannel" />
-    public interface IChannel : ISenderChannel, IReceiverChannel, IEstablishedChannel, ISessionChannel, IChannelInformation
+    public interface IChannel : ISenderChannel, IReceiverChannel, IEstablishedChannel, ISessionChannel, IChannelInformation, IFlushable
     {
         /// <summary>
         /// Gets the current session transport.
@@ -41,10 +39,5 @@ namespace Lime.Protocol.Network
         /// Occurs when the channel sender task throws an exception.
         /// </summary>
         event EventHandler<ExceptionEventArgs> SenderException;
-
-        /// <summary>
-        /// Flushes the channel send buffer. 
-        /// </summary>
-        Task FlushAsync(CancellationToken cancellationToken);
     }
 }
