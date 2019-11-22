@@ -27,13 +27,14 @@ namespace Lime.Protocol.ConsoleTests
 
         static async Task MainAsync(string[] args)
         {
+            Clear();
             WriteLine("Available transport types:");
             WriteLine("1 - TcpTransport (default)");
             WriteLine("2 - PipeTcpTransport");
             WriteLine("3 - WebSocketTransport");
             WriteLine("4 - PipeWebSocketTransport");
             
-            Write("Select type:");
+            Write("Select type: ");
             if (!int.TryParse(ReadLine(), out var transportType))
             {
                 transportType = 1;
@@ -65,7 +66,8 @@ namespace Lime.Protocol.ConsoleTests
                             new[] { uri }, 
                             envelopeSerializer,
                             CertificateUtil.CreateSelfSignedCertificate("localhost"),
-                            clientCertificateValidationCallback: (clientCertificate, chain, sslPolicyErrors) => certificateValidationCallback(null, clientCertificate, chain, sslPolicyErrors));
+                            clientCertificateValidationCallback: (clientCertificate, chain, sslPolicyErrors) => certificateValidationCallback(null, clientCertificate, chain, sslPolicyErrors),
+                            closeGracefully: false);
                     clientTransportFactory = () => new ClientWebSocketTransport(envelopeSerializer, serverCertificateValidationCallback: certificateValidationCallback);                    
                     break;
                 
@@ -76,7 +78,8 @@ namespace Lime.Protocol.ConsoleTests
                             new[] { uri }, 
                             envelopeSerializer,
                             CertificateUtil.CreateSelfSignedCertificate("localhost"),
-                            clientCertificateValidationCallback: (clientCertificate, chain, sslPolicyErrors) => certificateValidationCallback(null, clientCertificate, chain, sslPolicyErrors));
+                            clientCertificateValidationCallback: (clientCertificate, chain, sslPolicyErrors) => certificateValidationCallback(null, clientCertificate, chain, sslPolicyErrors),
+                            closeGracefully: false);
                     clientTransportFactory = () => new PipeClientWebSocketTransport(envelopeSerializer, serverCertificateValidationCallback: certificateValidationCallback);                         
                     break;
                 
