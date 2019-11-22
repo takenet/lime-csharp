@@ -27,6 +27,12 @@ namespace Lime.Protocol.UnitTests.Network
             _sendTimeout = TimeSpan.FromSeconds(30);
         }
 
+        [TearDown]
+        public void TearDown()
+        {
+            _transport = null;
+        }
+
         public ChannelBase GetTarget(SessionState state, int buffersLimit = 5, bool fillEnvelopeRecipients = false, Node remoteNode = null, Node localNode = null, bool autoReplyPings = false, TimeSpan? remotePingInterval = null, TimeSpan? remoteIdleTimeout = null, TimeSpan? consumeTimeout = null)
         {
             return new TestChannel(
@@ -64,12 +70,8 @@ namespace Lime.Protocol.UnitTests.Network
 
             // Assert
             _transport.Verify(
-                t => t.SendAsync(It.Is<Message>(
-                        e => e.Id == message.Id &&
-                             e.From.Equals(message.From) &&
-                             e.To.Equals(message.To) &&
-                             e.Pp == null &&
-                             e.Content == message.Content),
+                t => t.SendAsync(
+                    message,
                     It.IsAny<CancellationToken>()),
                     Times.Once());
         }
