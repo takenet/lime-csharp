@@ -4,11 +4,10 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
-using Lime.Protocol.Server;
 
 namespace Lime.Protocol.Network
 {
-    internal sealed class SenderChannel : ISenderChannel, IFlushable, IStoppable, IDisposable
+    internal sealed class SenderChannel : ISenderChannel, IFlushable, IDisposable
     {
         private readonly IChannelInformation _channelInformation;
         private readonly ITransport _transport;
@@ -95,13 +94,12 @@ namespace Lime.Protocol.Network
             }
         }
         
-        public Task StopAsync(CancellationToken cancellationToken)
+        public void Stop()
         {
             lock (_syncRoot)
             {
                 _senderCts.CancelIfNotRequested();
             }
-            return Task.CompletedTask;
         }
         
         

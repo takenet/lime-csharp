@@ -9,7 +9,7 @@ using Lime.Protocol.Server;
 
 namespace Lime.Protocol.Network
 {
-    internal sealed class ReceiverChannel : IReceiverChannel, IStartable, IStoppable, IDisposable
+    internal sealed class ReceiverChannel : IReceiverChannel, IDisposable
     {
         private static readonly DataflowLinkOptions PropagateCompletionLinkOptions = new DataflowLinkOptions() { PropagateCompletion = true };
         
@@ -120,7 +120,7 @@ namespace Lime.Protocol.Network
             throw new InvalidOperationException("An empty or unexpected envelope was received from the transport");
         }
         
-        public Task StartAsync(CancellationToken cancellationToken)
+        public void Start()
         {
             lock (_syncRoot)
             {
@@ -129,17 +129,14 @@ namespace Lime.Protocol.Network
                     _consumeTransportTask = Task.Run(ConsumeTransportAsync);
                 }
             }
-            return Task.CompletedTask;
         }
         
-        public Task StopAsync(CancellationToken cancellationToken)
+        public void Stop()
         {
             lock (_syncRoot)
             {
                 _consumerCts.CancelIfNotRequested();
             }
-
-            return Task.CompletedTask;
         }
         
         public void Dispose()
