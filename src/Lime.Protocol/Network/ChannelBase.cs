@@ -92,7 +92,9 @@ namespace Lime.Protocol.Network
                 CommandModules,
                 RaiseSenderExceptionAsync,
                 envelopeBufferSize,
-                sendTimeout);
+                sendTimeout,
+                1,
+                TimeSpan.FromMilliseconds(256));
         }
 
         ~ChannelBase()

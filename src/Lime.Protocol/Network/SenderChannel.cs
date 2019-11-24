@@ -21,11 +21,14 @@ namespace Lime.Protocol.Network
         private readonly TransformBlock<Message, Envelope> _messageToEnvelopeTransformBlock;
         private readonly TransformBlock<Notification, Envelope> _notificationToEnvelopeTransformBlock;
         private readonly TransformBlock<Command, Envelope> _commandToEnvelopeTransformBlock;
-        private readonly ActionBlock<Envelope> _sendEnvelopeBlock;
+        private readonly BatchBlock<Envelope> _envelopeBatchBlock;
+        private readonly ActionBlock<Envelope[]> _sendEnvelopeBlock;
         private readonly object _syncRoot;
         private readonly SemaphoreSlim _sessionSemaphore;
         
         private bool _isDisposing;
+        private readonly Timer _flushBatchTimer;
+        private readonly TimeSpan _flushBatchInterval;
         
         public SenderChannel(
             IChannelInformation channelInformation,
@@ -35,7 +38,9 @@ namespace Lime.Protocol.Network
             ICollection<IChannelModule<Command>> commandModules,
             Func<Exception, Task> exceptionHandler,
             int envelopeBufferSize,
-            TimeSpan sendTimeout)
+            TimeSpan sendTimeout,
+            int sendBatchSize,
+            TimeSpan flushBatchInterval)
         {
             _channelInformation = channelInformation;
             _transport = transport;
@@ -59,20 +64,47 @@ namespace Lime.Protocol.Network
                 e => RaiseModulesAsync(e, _notificationModules, _senderCts.Token), raiseModulesDataflowBlockOptions);
             _commandToEnvelopeTransformBlock = new TransformBlock<Command, Envelope>(
                 e => RaiseModulesAsync(e, _commandModules, _senderCts.Token), raiseModulesDataflowBlockOptions);
-            _sendEnvelopeBlock = new ActionBlock<Envelope>(
+            _envelopeBatchBlock = new BatchBlock<Envelope>(sendBatchSize, new GroupingDataflowBlockOptions()
+            {
+                BoundedCapacity = envelopeBufferSize,
+                MaxNumberOfGroups = DataflowBlockOptions.Unbounded,
+                EnsureOrdered = false,
+            });
+            _sendEnvelopeBlock = new ActionBlock<Envelope[]>(
                 e => SendToTransportAsync(e, _senderCts.Token), 
                 new ExecutionDataflowBlockOptions()
                 {
                     BoundedCapacity = envelopeBufferSize,
                     MaxDegreeOfParallelism = 1,
-                    EnsureOrdered = true,
+                    EnsureOrdered = false,
                 });
-            _messageToEnvelopeTransformBlock.LinkTo(_sendEnvelopeBlock, DataflowUtils.PropagateCompletionLinkOptions);
-            _notificationToEnvelopeTransformBlock.LinkTo(_sendEnvelopeBlock, DataflowUtils.PropagateCompletionLinkOptions);
-            _commandToEnvelopeTransformBlock.LinkTo(_sendEnvelopeBlock, DataflowUtils.PropagateCompletionLinkOptions);
+            
+            _messageToEnvelopeTransformBlock.LinkTo(_envelopeBatchBlock,
+                DataflowUtils.PropagateCompletionLinkOptions);
+            _notificationToEnvelopeTransformBlock.LinkTo(_envelopeBatchBlock,
+                DataflowUtils.PropagateCompletionLinkOptions);
+            _commandToEnvelopeTransformBlock.LinkTo(_envelopeBatchBlock,
+                DataflowUtils.PropagateCompletionLinkOptions);
+            _envelopeBatchBlock.LinkTo(_sendEnvelopeBlock, DataflowUtils.PropagateCompletionLinkOptions);
             
             _syncRoot = new object();
             _sessionSemaphore = new SemaphoreSlim(1);
+            _flushBatchInterval = flushBatchInterval;
+
+            if (sendBatchSize > 1 &&
+                flushBatchInterval > TimeSpan.Zero)
+            {
+                _flushBatchTimer = new Timer(state =>
+                    {
+                        if (!_envelopeBatchBlock.Completion.IsCompleted)
+                        {
+                            _envelopeBatchBlock.TriggerBatch();
+                        }
+                    },
+                    null,
+                    _flushBatchInterval,
+                    _flushBatchInterval);
+            }
         }
         
         public Task SendMessageAsync(Message message, CancellationToken cancellationToken)
@@ -106,7 +138,7 @@ namespace Lime.Protocol.Network
                 }
 
                 // The session envelopes are sent directly to the transport
-                await SendToTransportAsync(session, cancellationToken).ConfigureAwait(false);
+                await SendToTransportAsync(new Envelope[] { session }, cancellationToken).ConfigureAwait(false);
             }
             finally
             {
@@ -120,6 +152,7 @@ namespace Lime.Protocol.Network
             {
                 _senderCts.CancelIfNotRequested();
                 CompletePipeline();
+                _flushBatchTimer?.Change(Timeout.Infinite, Timeout.Infinite);
             }
         }
 
@@ -129,6 +162,7 @@ namespace Lime.Protocol.Network
             _senderCts.CancelIfNotRequested();
             _senderCts.Dispose();
             _sessionSemaphore.Dispose();
+            _flushBatchTimer?.Dispose();
         }
         
         /// <summary>
@@ -183,14 +217,19 @@ namespace Lime.Protocol.Network
             return null;            
         }
 
-        private async Task SendToTransportAsync(Envelope envelope, CancellationToken cancellationToken)
+        private async Task SendToTransportAsync(Envelope[] envelopes, CancellationToken cancellationToken)
         {
             try
             {
-                if (envelope != null)
+                _flushBatchTimer?.Change(_flushBatchInterval, _flushBatchInterval);
+                
+                foreach (var envelope in envelopes)
                 {
+                    if (envelope == null) continue;
+                    
                     using var cts = new CancellationTokenSource(_sendTimeout);
-                    using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, cts.Token);
+                    using var linkedCts =
+                        CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, cts.Token);
                     await _transport.SendAsync(envelope, linkedCts.Token).ConfigureAwait(false);
                 }
             }
@@ -215,21 +254,5 @@ namespace Lime.Protocol.Network
         }
         
         private Task RaiseSenderExceptionAsync(Exception exception) => _exceptionHandler(exception);
-    }
-
-    public static class CancellationTokenSourceExtensions
-    {
-        public static void CancelIfNotRequested(this CancellationTokenSource cts)
-        {
-            if (!cts.IsCancellationRequested) cts.Cancel();
-        }
-    }
-
-    public static class DataflowBlockExtensions
-    {
-        public static void CompleteIfNotCompleted(this IDataflowBlock dataflowBlock)
-        {
-            if (!dataflowBlock.Completion.IsCompleted) dataflowBlock.Complete();
-        }
     }
 }
