@@ -7,6 +7,7 @@ using Lime.Protocol.Network;
 using Moq;
 using System.Threading;
 using Lime.Protocol.Security;
+using Lime.Protocol.UnitTests.Network;
 using Shouldly;
 using Lime.Protocol.Util;
 
@@ -386,7 +387,7 @@ namespace Lime.Protocol.UnitTests.Client
                 localNode: localNode);
 
 
-            await target.SendMessageAndFlushAsync(message, CancellationToken.None);
+            await target.SendMessageAndDelayAsync(message, CancellationToken.None);
 
             _transport.Verify(
                 t => t.SendAsync(It.Is<Message>(
@@ -430,7 +431,7 @@ namespace Lime.Protocol.UnitTests.Client
                 localNode: localNode);
 
 
-            await target.SendMessageAndFlushAsync(message, CancellationToken.None);
+            await target.SendMessageAndDelayAsync(message, CancellationToken.None);
 
             _transport.Verify(
                 t => t.SendAsync(It.Is<Message>(
@@ -466,7 +467,7 @@ namespace Lime.Protocol.UnitTests.Client
 
             // Act
             var actual = await target.ReceiveMessageAsync(cancellationToken);
-            await target.FlushAsync(cancellationToken);
+            await Task.Delay(150, cancellationToken);
 
             // Assert
             _transport.Verify(
@@ -497,7 +498,7 @@ namespace Lime.Protocol.UnitTests.Client
             
             // Act
             var actual = await target.ReceiveMessageAsync(cancellationToken);
-            await target.FlushAsync(cancellationToken);
+            await Task.Delay(150, cancellationToken);
 
             // Assert
             _transport.Verify(
@@ -529,7 +530,7 @@ namespace Lime.Protocol.UnitTests.Client
 
             // Act
             var actual = await target.ReceiveMessageAsync(cancellationToken);
-            await target.FlushAsync(cancellationToken);
+            await Task.Delay(150, cancellationToken);
 
             // Assert
             _transport.Verify(
@@ -559,7 +560,7 @@ namespace Lime.Protocol.UnitTests.Client
 
             // Act
             var actual = await target.ReceiveMessageAsync(cancellationToken);
-            await target.FlushAsync(cancellationToken);
+            await Task.Delay(150, cancellationToken);
 
             // Assert
             _transport.Verify(
@@ -588,7 +589,7 @@ namespace Lime.Protocol.UnitTests.Client
             
             // Act
             var actual = await target.ReceiveMessageAsync(cancellationToken);
-            await target.FlushAsync(cancellationToken);
+            await Task.Delay(150, cancellationToken);
 
             // Assert
             _transport.Verify(
@@ -618,7 +619,7 @@ namespace Lime.Protocol.UnitTests.Client
             
             // Act
             var actual = await target.ReceiveMessageAsync(cancellationToken);
-            await target.FlushAsync(cancellationToken);
+            await Task.Delay(150, cancellationToken);
 
             // Assert
             _transport.Verify(
@@ -682,7 +683,6 @@ namespace Lime.Protocol.UnitTests.Client
 
             // Act
             await Task.Delay(250, cancellationToken);
-            await target.FlushAsync(cancellationToken);
 
             // Assert
             _transport.Verify(
@@ -713,7 +713,7 @@ namespace Lime.Protocol.UnitTests.Client
             
             // Act
             var actual = await target.ReceiveCommandAsync(cancellationToken);
-            await target.FlushAsync(cancellationToken);
+            await Task.Delay(150, cancellationToken);
             
             // Assert
             actual.ShouldBe(command);
