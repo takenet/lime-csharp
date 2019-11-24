@@ -7,7 +7,7 @@ using System.Threading.Tasks.Dataflow;
 
 namespace Lime.Protocol.Network
 {
-    internal sealed class SenderChannel : ISenderChannel, IFlushable, IDisposable
+    internal sealed class SenderChannel : ISenderChannel, IDisposable
     {
         private readonly IChannelInformation _channelInformation;
         private readonly ITransport _transport;
@@ -15,14 +15,18 @@ namespace Lime.Protocol.Network
         private readonly ICollection<IChannelModule<Notification>> _notificationModules;
         private readonly ICollection<IChannelModule<Command>> _commandModules;
         private readonly Func<Exception, Task> _exceptionHandler;
-        
         private readonly TimeSpan _sendTimeout;
         private readonly CancellationTokenSource _senderCts;
-        private readonly ActionBlock<(Envelope, TaskCompletionSource<Envelope>)> _sendEnvelopeBlock;
+
+        private readonly TransformBlock<Message, Envelope> _messageToEnvelopeTransformBlock;
+        private readonly TransformBlock<Notification, Envelope> _notificationToEnvelopeTransformBlock;
+        private readonly TransformBlock<Command, Envelope> _commandToEnvelopeTransformBlock;
+        private readonly ActionBlock<Envelope> _sendEnvelopeBlock;
         private readonly object _syncRoot;
+        private readonly SemaphoreSlim _sessionSemaphore;
+        
         private bool _isDisposing;
-
-
+        
         public SenderChannel(
             IChannelInformation channelInformation,
             ITransport transport,
@@ -43,77 +47,94 @@ namespace Lime.Protocol.Network
 
             // Send pipeline
             _senderCts = new CancellationTokenSource();
-            _sendEnvelopeBlock = new ActionBlock<(Envelope Envelope, TaskCompletionSource<Envelope> SentTcs)>(
-                e => SendToTransportAsync(e.Envelope, e.SentTcs), 
+            var raiseModulesDataflowBlockOptions = new ExecutionDataflowBlockOptions()
+            {
+                BoundedCapacity = envelopeBufferSize,
+                MaxDegreeOfParallelism = DataflowBlockOptions.Unbounded,
+                EnsureOrdered = false
+            };
+            _messageToEnvelopeTransformBlock = new TransformBlock<Message, Envelope>(
+                e => RaiseModulesAsync(e, _messageModules, _senderCts.Token), raiseModulesDataflowBlockOptions);
+            _notificationToEnvelopeTransformBlock = new TransformBlock<Notification, Envelope>(
+                e => RaiseModulesAsync(e, _notificationModules, _senderCts.Token), raiseModulesDataflowBlockOptions);
+            _commandToEnvelopeTransformBlock = new TransformBlock<Command, Envelope>(
+                e => RaiseModulesAsync(e, _commandModules, _senderCts.Token), raiseModulesDataflowBlockOptions);
+            _sendEnvelopeBlock = new ActionBlock<Envelope>(
+                e => SendToTransportAsync(e, _senderCts.Token), 
                 new ExecutionDataflowBlockOptions()
                 {
                     BoundedCapacity = envelopeBufferSize,
                     MaxDegreeOfParallelism = 1,
                     EnsureOrdered = true,
                 });
+            _messageToEnvelopeTransformBlock.LinkTo(_sendEnvelopeBlock, DataflowUtils.PropagateCompletionLinkOptions);
+            _notificationToEnvelopeTransformBlock.LinkTo(_sendEnvelopeBlock, DataflowUtils.PropagateCompletionLinkOptions);
+            _commandToEnvelopeTransformBlock.LinkTo(_sendEnvelopeBlock, DataflowUtils.PropagateCompletionLinkOptions);
+            
             _syncRoot = new object();
+            _sessionSemaphore = new SemaphoreSlim(1);
         }
         
-
-        /// <inheritdoc />
         public Task SendMessageAsync(Message message, CancellationToken cancellationToken)
-            => SendAsync(message, cancellationToken, _messageModules);
+            => SendAsync(message, _messageToEnvelopeTransformBlock, cancellationToken);
 
         public Task SendNotificationAsync(Notification notification, CancellationToken cancellationToken)
-            => SendAsync(notification, cancellationToken, _notificationModules);
+            => SendAsync(notification, _notificationToEnvelopeTransformBlock, cancellationToken);
 
         public Task SendCommandAsync(Command command, CancellationToken cancellationToken)
-            => SendAsync(command, cancellationToken, _commandModules);
+            => SendAsync(command, _commandToEnvelopeTransformBlock, cancellationToken);
 
         public async Task SendSessionAsync(Session session, CancellationToken cancellationToken)
         {
             if (session == null) throw new ArgumentNullException(nameof(session));
-            if (_channelInformation.State == SessionState.Finished || _channelInformation.State == SessionState.Failed)
+            
+            if (_channelInformation.State == SessionState.Finished ||
+                _channelInformation.State == SessionState.Failed)
             {
-                throw new InvalidOperationException($"Cannot send a session in the '{_channelInformation.State}' session state");
-            }
-
-            await SendToBufferAsync(session, cancellationToken);
-            await FlushAsync(cancellationToken).ConfigureAwait(false);
-        }
-        
-        public async Task FlushAsync(CancellationToken cancellationToken)
-        {
-            if (_sendEnvelopeBlock.InputCount == 0 || 
-                _sendEnvelopeBlock.Completion.IsCompleted)
-            {
-                return;
+                throw new InvalidOperationException(
+                    $"Cannot send a session in the '{_channelInformation.State}' session state");
             }
             
-            var sentTcs = new TaskCompletionSource<Envelope>();
-            using (cancellationToken.Register(() => sentTcs.TrySetCanceled(cancellationToken)))
+            await _sessionSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+            try
             {
-                // Sends a "null" message only to force the completion of the tcs by the SendToTransportAsync method.
-                await SendToBufferAsync<Message>(null, cancellationToken, sentTcs);
-                await sentTcs.Task.ConfigureAwait(false);
+                if (_channelInformation.State >= SessionState.Established)
+                {
+                    // Complete the buffers and sends after awaiting for the completion
+                    CompletePipeline();
+                    await _sendEnvelopeBlock.Completion.WithCancellation(cancellationToken).ConfigureAwait(false);
+                }
+
+                // The session envelopes are sent directly to the transport
+                await SendToTransportAsync(session, cancellationToken).ConfigureAwait(false);
+            }
+            finally
+            {
+                _sessionSemaphore.Release();
             }
         }
-        
+
         public void Stop()
         {
             lock (_syncRoot)
             {
                 _senderCts.CancelIfNotRequested();
+                CompletePipeline();
             }
         }
-        
-        
+
         public void Dispose()
         {
             _isDisposing = true;
             _senderCts.CancelIfNotRequested();
             _senderCts.Dispose();
+            _sessionSemaphore.Dispose();
         }
         
         /// <summary>
         /// Sends the envelope to the transport.
         /// </summary>
-        private async Task SendAsync<T>(T envelope, CancellationToken cancellationToken, IEnumerable<IChannelModule<T>> modules) 
+        private async Task SendAsync<T>(T envelope, ITargetBlock<T> targetBlock, CancellationToken cancellationToken) 
             where T : Envelope, new()
         {
             if (envelope == null) throw new ArgumentNullException(nameof(envelope));
@@ -121,80 +142,79 @@ namespace Lime.Protocol.Network
             {
                 throw new InvalidOperationException($"Cannot send a {typeof(T).Name} in the '{_channelInformation.State}' session state");
             }
-
-            foreach (var module in modules.ToList())
-            {
-                if (envelope == null) break;
-                cancellationToken.ThrowIfCancellationRequested();
-                envelope = await module.OnSendingAsync(envelope, cancellationToken);
-            }
-
-            if (envelope != null)
-            {
-                await SendToBufferAsync(envelope, cancellationToken);
-            }
-        }
-
-        /// <summary>
-        /// Sends the envelope to the transport using the envelope buffer.
-        /// </summary>
-        /// <param name="envelope">The envelope instance to be sent</param>
-        /// <param name="cancellationToken">The cancellation token</param>
-        /// <param name="sentTcs">A TaskCompletionSource that is completed after the envelope is sent to the transport</param>
-        private async Task SendToBufferAsync<T>(T envelope, CancellationToken cancellationToken, TaskCompletionSource<Envelope> sentTcs = null) 
-            where T : Envelope, new()
-        {
+            
             if (!_transport.IsConnected)
             {
                 throw new InvalidOperationException("The transport is not connected");
             }
-
-            if (_sendEnvelopeBlock.Completion.IsCompleted)
+            
+            if (targetBlock.Completion.IsCompleted)
             {
-                throw new InvalidOperationException("The send task is complete", _sendEnvelopeBlock.Completion.Exception?.GetBaseException());
+                throw new InvalidOperationException("The send buffer is complete", targetBlock.Completion.Exception?.GetBaseException());
             }
             
-            if (!await _sendEnvelopeBlock.SendAsync((envelope, sentTcs), cancellationToken).ConfigureAwait(false))
+            if (!await targetBlock.SendAsync(envelope, cancellationToken).ConfigureAwait(false))
             {
                 throw new InvalidOperationException("The send buffer is not accepting more envelopes");
             }
         }
-
-        private async Task SendToTransportAsync(Envelope envelope, TaskCompletionSource<Envelope> sentTcs = null)
+        
+        private async Task<Envelope> RaiseModulesAsync<T>(T envelope, IEnumerable<IChannelModule<T>> modules, CancellationToken cancellationToken) 
+            where T : Envelope, new()
         {
             try
             {
-                using var cts = new CancellationTokenSource(_sendTimeout);
-                using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(_senderCts.Token, cts.Token);
+                foreach (var module in modules.ToList())
+                {
+                    if (envelope == null) break;
+                    cancellationToken.ThrowIfCancellationRequested();
+                    envelope = await module.OnSendingAsync(envelope, cancellationToken).ConfigureAwait(false);
+                }
                 
+                return envelope;
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { }
+            catch (Exception ex)
+            {
+                await RaiseSenderExceptionAsync(ex);
+                Stop();
+            }
+
+            return null;            
+        }
+
+        private async Task SendToTransportAsync(Envelope envelope, CancellationToken cancellationToken)
+        {
+            try
+            {
                 if (envelope != null)
                 {
+                    using var cts = new CancellationTokenSource(_sendTimeout);
+                    using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, cts.Token);
                     await _transport.SendAsync(envelope, linkedCts.Token).ConfigureAwait(false);
                 }
-                    
-                sentTcs?.TrySetResult(envelope);
             }
-            catch (OperationCanceledException) when (_senderCts.IsCancellationRequested)
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {
-                sentTcs?.TrySetCanceled(_senderCts.Token);
             }
             catch (ObjectDisposedException) when (_isDisposing)
             {
-                sentTcs?.TrySetCanceled();
             }
             catch (Exception ex)
-            {
-                
-                _sendEnvelopeBlock.Complete();
-                _senderCts.CancelIfNotRequested();
-                sentTcs?.TrySetException(ex);
-                
+            { 
+                Stop();
                 await RaiseSenderExceptionAsync(ex);
             }
         }
         
-        private Task RaiseSenderExceptionAsync(Exception exception) => _exceptionHandler(exception);
+        private void CompletePipeline()
+        {
+            _messageToEnvelopeTransformBlock.CompleteIfNotCompleted();
+            _notificationToEnvelopeTransformBlock.CompleteIfNotCompleted();
+            _commandToEnvelopeTransformBlock.CompleteIfNotCompleted();
+        }
         
+        private Task RaiseSenderExceptionAsync(Exception exception) => _exceptionHandler(exception);
     }
 
     public static class CancellationTokenSourceExtensions
@@ -202,6 +222,14 @@ namespace Lime.Protocol.Network
         public static void CancelIfNotRequested(this CancellationTokenSource cts)
         {
             if (!cts.IsCancellationRequested) cts.Cancel();
+        }
+    }
+
+    public static class DataflowBlockExtensions
+    {
+        public static void CompleteIfNotCompleted(this IDataflowBlock dataflowBlock)
+        {
+            if (!dataflowBlock.Completion.IsCompleted) dataflowBlock.Complete();
         }
     }
 }

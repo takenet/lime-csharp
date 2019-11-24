@@ -10,8 +10,6 @@ namespace Lime.Protocol.Network
 {
     internal sealed class ReceiverChannel : IReceiverChannel, IDisposable
     {
-        private static readonly DataflowLinkOptions PropagateCompletionLinkOptions = new DataflowLinkOptions() { PropagateCompletion = true };
-        
         private readonly IChannelInformation _channelInformation;
         private readonly ITransport _transport;
         private readonly IChannelCommandProcessor _channelCommandProcessor;
@@ -33,6 +31,7 @@ namespace Lime.Protocol.Network
         private readonly BufferBlock<Session> _receiveSessionBuffer;
         private readonly ITargetBlock<Envelope> _drainEnvelopeBlock;
         private readonly object _syncRoot;
+        private readonly SemaphoreSlim _sessionSemaphore;
 
         private Task _consumeTransportTask;
         private bool _isDisposing;
@@ -75,19 +74,21 @@ namespace Lime.Protocol.Network
             _receiveNotificationBuffer = new BufferBlock<Notification>(consumerDataflowBlockOptions);
             _receiveSessionBuffer = new BufferBlock<Session>(consumerDataflowBlockOptions);
             _drainEnvelopeBlock = DataflowBlock.NullTarget<Envelope>();
-            _receiveEnvelopeBuffer.LinkTo(_messageConsumerBlock, PropagateCompletionLinkOptions, e => e is Message);
-            _receiveEnvelopeBuffer.LinkTo(_commandConsumerBlock, PropagateCompletionLinkOptions, e => e is Command);
-            _receiveEnvelopeBuffer.LinkTo(_notificationConsumerBlock, PropagateCompletionLinkOptions, e => e is Notification);
-            _receiveEnvelopeBuffer.LinkTo(_sessionConsumerBlock, PropagateCompletionLinkOptions, e => e is Session);
-            _messageConsumerBlock.LinkTo(_receiveMessageBuffer, PropagateCompletionLinkOptions, e => e != null);
+            _receiveEnvelopeBuffer.LinkTo(_messageConsumerBlock, DataflowUtils.PropagateCompletionLinkOptions, e => e is Message);
+            _receiveEnvelopeBuffer.LinkTo(_commandConsumerBlock, DataflowUtils.PropagateCompletionLinkOptions, e => e is Command);
+            _receiveEnvelopeBuffer.LinkTo(_notificationConsumerBlock, DataflowUtils.PropagateCompletionLinkOptions, e => e is Notification);
+            _receiveEnvelopeBuffer.LinkTo(_sessionConsumerBlock, DataflowUtils.PropagateCompletionLinkOptions, e => e is Session);
+            _messageConsumerBlock.LinkTo(_receiveMessageBuffer, DataflowUtils.PropagateCompletionLinkOptions, e => e != null);
             _messageConsumerBlock.LinkTo(_drainEnvelopeBlock, e => e == null);
-            _commandConsumerBlock.LinkTo(_receiveCommandBuffer, PropagateCompletionLinkOptions, e => e != null);
+            _commandConsumerBlock.LinkTo(_receiveCommandBuffer, DataflowUtils.PropagateCompletionLinkOptions, e => e != null);
             _commandConsumerBlock.LinkTo(_drainEnvelopeBlock, e => e == null);
-            _notificationConsumerBlock.LinkTo(_receiveNotificationBuffer, PropagateCompletionLinkOptions, e => e != null);
+            _notificationConsumerBlock.LinkTo(_receiveNotificationBuffer, DataflowUtils.PropagateCompletionLinkOptions, e => e != null);
             _notificationConsumerBlock.LinkTo(_drainEnvelopeBlock, e => e == null);
-            _sessionConsumerBlock.LinkTo(_receiveSessionBuffer, PropagateCompletionLinkOptions, e => e != null);
+            _sessionConsumerBlock.LinkTo(_receiveSessionBuffer, DataflowUtils.PropagateCompletionLinkOptions, e => e != null);
             _sessionConsumerBlock.LinkTo(_drainEnvelopeBlock, e => e == null);
+            
             _syncRoot = new object();
+            _sessionSemaphore = new SemaphoreSlim(1);
         }
         
         /// <inheritdoc />
@@ -107,16 +108,26 @@ namespace Lime.Protocol.Network
             switch (_channelInformation.State)
             {
                 case SessionState.Finished:
-                    throw new InvalidOperationException($"Cannot receive a session in the '{_channelInformation.State}' session state");
+                    throw new InvalidOperationException(
+                        $"Cannot receive a session in the '{_channelInformation.State}' session state");
 
                 case SessionState.Established:
-                    return await ReceiveFromBufferAsync(_receiveSessionBuffer, cancellationToken).ConfigureAwait(false);
+                    return await ReceiveFromBufferAsync(_receiveSessionBuffer, cancellationToken)
+                        .ConfigureAwait(false);
             }
 
-            var envelope = await ReceiveFromTransportAsync(cancellationToken).ConfigureAwait(false);
-            if (envelope is Session session) return session;
-
-            throw new InvalidOperationException("An empty or unexpected envelope was received from the transport");
+            await _sessionSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+            try
+            {
+                // The session envelopes are received directly from the transport, except when the session is established
+                var envelope = await ReceiveFromTransportAsync(cancellationToken).ConfigureAwait(false);
+                if (envelope is Session session) return session;
+                throw new InvalidOperationException("An empty or unexpected envelope was received from the transport");
+            }
+            finally
+            {
+                _sessionSemaphore.Release();
+            }
         }
         
         public void Start()
@@ -143,6 +154,7 @@ namespace Lime.Protocol.Network
             _isDisposing = true;
             _consumerCts.CancelIfNotRequested();
             _consumerCts.Dispose();
+            _sessionSemaphore.Dispose();
         }
 
         private bool IsChannelEstablished()
@@ -262,7 +274,7 @@ namespace Lime.Protocol.Network
             catch (Exception ex)
             {
                 await RaiseConsumerExceptionAsync(ex);
-                _consumerCts.Cancel();
+                Stop();
             }
 
             return null;
