@@ -155,10 +155,7 @@ namespace Lime.Protocol.Network
 
         /// <inheritdoc />
         public event EventHandler<ExceptionEventArgs> SenderException;
-
-        /// <inheritdoc />
-        public Task FlushAsync(CancellationToken cancellationToken) => _senderChannel.FlushAsync(cancellationToken);
-
+        
         /// <inheritdoc />
         public virtual Task SendMessageAsync(Message message, CancellationToken cancellationToken)
             => _senderChannel.SendMessageAsync(message, cancellationToken);

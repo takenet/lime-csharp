@@ -125,7 +125,7 @@ namespace Lime.Protocol.UnitTests.Network
             target.SetState(SessionState.Established);
 
             // Act
-            await target.SendMessageAndFlushAsync(message, CancellationToken.None);
+            await target.SendMessageAndDelayAsync(message, CancellationToken.None);
 
             // Assert
             moduleMock.Verify(m => m.OnStateChanged(SessionState.Established), Times.Once());
@@ -153,7 +153,7 @@ namespace Lime.Protocol.UnitTests.Network
             target.SetState(SessionState.Established);
 
             // Act
-            await target.SendMessageAndFlushAsync(message, CancellationToken.None);
+            await target.SendMessageAndDelayAsync(message, CancellationToken.None);
 
             // Assert
             moduleMock.Verify(m => m.OnStateChanged(SessionState.Established), Times.Once());
@@ -188,7 +188,7 @@ namespace Lime.Protocol.UnitTests.Network
             target.SetState(SessionState.Established);
 
             // Act
-            await target.SendMessageAndFlushAsync(message, CancellationToken.None);
+            await target.SendMessageAndDelayAsync(message, CancellationToken.None);
 
             // Assert
             _transport.Verify(t => t.SendAsync(message, It.IsAny<CancellationToken>()), Times.Once());
@@ -514,7 +514,7 @@ namespace Lime.Protocol.UnitTests.Network
             var resource = Dummy.CreatePing();
             var command = Dummy.CreateCommand(resource);
 
-            await target.SendCommandAndFlushAsync(command, CancellationToken.None);
+            await target.SendCommandAndDelayAsync(command, CancellationToken.None);
 
             _transport.Verify(
                 t => t.SendAsync(It.Is<Command>(
@@ -542,7 +542,7 @@ namespace Lime.Protocol.UnitTests.Network
             command.Id = null;
             command.Method = CommandMethod.Observe;
 
-            await target.SendCommandAndFlushAsync(command, CancellationToken.None);
+            await target.SendCommandAndDelayAsync(command, CancellationToken.None);
 
             _transport.Verify(
                 t => t.SendAsync(It.Is<Command>(
@@ -567,7 +567,7 @@ namespace Lime.Protocol.UnitTests.Network
 
             Command command = null;
 
-            await target.SendCommandAndFlushAsync(command, CancellationToken.None).ShouldThrowAsync<ArgumentNullException>();
+            await target.SendCommandAndDelayAsync(command, CancellationToken.None).ShouldThrowAsync<ArgumentNullException>();
         }
 
         [Test]
@@ -579,7 +579,7 @@ namespace Lime.Protocol.UnitTests.Network
             var content = Dummy.CreateTextContent();
             var command = Dummy.CreateCommand(content);
 
-            await target.SendCommandAndFlushAsync(command, CancellationToken.None).ShouldThrowAsync<InvalidOperationException>();
+            await target.SendCommandAndDelayAsync(command, CancellationToken.None).ShouldThrowAsync<InvalidOperationException>();
         }
 
         [Test]
@@ -603,7 +603,7 @@ namespace Lime.Protocol.UnitTests.Network
             target.SetState(SessionState.Established);
 
             // Act
-            await target.SendCommandAndFlushAsync(command, CancellationToken.None);
+            await target.SendCommandAndDelayAsync(command, CancellationToken.None);
 
             // Assert
             moduleMock.Verify(m => m.OnSendingAsync(command, It.IsAny<CancellationToken>()), Times.Once());
@@ -631,7 +631,7 @@ namespace Lime.Protocol.UnitTests.Network
             target.SetState(SessionState.Established);
 
             // Act
-            await target.SendCommandAndFlushAsync(command, CancellationToken.None);
+            await target.SendCommandAndDelayAsync(command, CancellationToken.None);
 
             // Assert
             _transport.Verify(t => t.SendAsync(command, It.IsAny<CancellationToken>()), Times.Never);
@@ -665,7 +665,7 @@ namespace Lime.Protocol.UnitTests.Network
             target.SetState(SessionState.Established);
 
             // Act
-            await target.SendCommandAndFlushAsync(command, CancellationToken.None);
+            await target.SendCommandAndDelayAsync(command, CancellationToken.None);
 
             // Assert
             _transport.Verify(t => t.SendAsync(command, It.IsAny<CancellationToken>()), Times.Once());
@@ -1030,7 +1030,7 @@ namespace Lime.Protocol.UnitTests.Network
 
             var notification = Dummy.CreateNotification(Event.Received);
 
-            await target.SendNotificationAndFlushAsync(notification, CancellationToken.None);
+            await target.SendNotificationAndDelayAsync(notification, CancellationToken.None);
 
             _transport.Verify(
                 t => t.SendAsync(It.Is<Notification>(
@@ -1055,7 +1055,7 @@ namespace Lime.Protocol.UnitTests.Network
 
             Notification notification = null;
 
-            await target.SendNotificationAndFlushAsync(notification, CancellationToken.None).ShouldThrowAsync<ArgumentNullException>();
+            await target.SendNotificationAndDelayAsync(notification, CancellationToken.None).ShouldThrowAsync<ArgumentNullException>();
         }
 
         [Test]
@@ -1066,7 +1066,7 @@ namespace Lime.Protocol.UnitTests.Network
 
             var notification = Dummy.CreateNotification(Event.Received);
 
-            await target.SendNotificationAndFlushAsync(notification, CancellationToken.None).ShouldThrowAsync<InvalidOperationException>();
+            await target.SendNotificationAndDelayAsync(notification, CancellationToken.None).ShouldThrowAsync<InvalidOperationException>();
         }
 
         [Test]
@@ -1089,7 +1089,7 @@ namespace Lime.Protocol.UnitTests.Network
             target.SetState(SessionState.Established);
 
             // Act
-            await target.SendNotificationAndFlushAsync(notification, CancellationToken.None);
+            await target.SendNotificationAndDelayAsync(notification, CancellationToken.None);
 
             // Assert
             _transport.Verify(t => t.SendAsync(moduleNotification, It.IsAny<CancellationToken>()), Times.Once());
@@ -1115,7 +1115,7 @@ namespace Lime.Protocol.UnitTests.Network
             target.SetState(SessionState.Established);
 
             // Act
-            await target.SendNotificationAndFlushAsync(notification, CancellationToken.None);
+            await target.SendNotificationAndDelayAsync(notification, CancellationToken.None);
 
             // Assert
             _transport.Verify(t => t.SendAsync(notification, It.IsAny<CancellationToken>()), Times.Never);
@@ -1148,7 +1148,7 @@ namespace Lime.Protocol.UnitTests.Network
             target.SetState(SessionState.Established);
 
             // Act
-            await target.SendNotificationAndFlushAsync(notification, CancellationToken.None);
+            await target.SendNotificationAndDelayAsync(notification, CancellationToken.None);
             await Task.Delay(250);
 
             // Assert
@@ -1763,5 +1763,35 @@ namespace Lime.Protocol.UnitTests.Network
         }
 
         #endregion
+    }
+
+    public static class ChannelExtensions
+    {
+        /// <summary>
+        /// Sends a <see cref="Lime.Protocol.Message"/> and awaits a delay.
+        /// </summary>
+        public static async Task SendMessageAndDelayAsync(this IChannel channel, Message message, CancellationToken cancellationToken)
+        {
+            await channel.SendMessageAsync(message, cancellationToken).ConfigureAwait(false);
+            await Task.Delay(150, cancellationToken).ConfigureAwait(false);
+        }
+        
+        /// <summary>
+        /// Sends a <see cref="Lime.Protocol.Notification"/> and awaits a delay.
+        /// </summary>
+        public static async Task SendNotificationAndDelayAsync(this IChannel channel, Notification notification, CancellationToken cancellationToken)
+        {
+            await channel.SendNotificationAsync(notification, cancellationToken).ConfigureAwait(false);
+            await Task.Delay(150, cancellationToken).ConfigureAwait(false);
+        }
+        
+        /// <summary>
+        /// Sends a <see cref="Lime.Protocol.Command"/> and awaits a delay.
+        /// </summary>
+        public static async Task SendCommandAndDelayAsync(this IChannel channel, Command command, CancellationToken cancellationToken)
+        {
+            await channel.SendCommandAsync(command, cancellationToken).ConfigureAwait(false);
+            await Task.Delay(150, cancellationToken).ConfigureAwait(false);
+        }
     }
 }
