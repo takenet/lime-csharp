@@ -159,11 +159,19 @@ namespace Lime.Protocol.ConsoleTests
                     envelopeBufferSize = 1;
                 }
                 
+                Write("Send batch size (ENTER for 1): ");
+                if (!int.TryParse(ReadLine(), out var sendBatchSize))
+                {
+                    sendBatchSize = 1;
+                }
+                
                 WriteLine("Starting the client...");
 
                 var channelBuilder = ClientChannelBuilder
                     .Create(clientTransportFactory, uri)
                     .WithEnvelopeBufferSize(envelopeBufferSize)
+                    .WithSendBatchSize(sendBatchSize)
+                    .WithSendFlushBatchInterval(TimeSpan.FromMilliseconds(1000))
                     .CreateEstablishedClientChannelBuilder()
                     .WithEncryption(SessionEncryption.TLS);
 
@@ -196,7 +204,7 @@ namespace Lime.Protocol.ConsoleTests
                 _reporter = new Reporter(
                     taskCount * messagesCount, 
                     CursorTop + 2, 
-                    $"Transp {transportType} Ch {channelCount} Buf {envelopeBufferSize} Tasks {taskCount} Msgs {messagesCount}");
+                    $"Transp {transportType} Ch {channelCount} Buf {envelopeBufferSize} Bat {sendBatchSize} Tasks {taskCount} Msgs {messagesCount}");
                 
                 await Task.WhenAll(
                     Enumerable
