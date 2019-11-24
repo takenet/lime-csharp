@@ -26,6 +26,8 @@ namespace Lime.Protocol.Client
         /// <param name="consumeTimeout">The channel consume timeout. Each envelope received from the transport must be consumed in the specified interval or it will cause the channel to be closed.</param>
         /// <param name="closeTimeout">The channel close timeout.</param>
         /// <param name="channelCommandProcessor">The channel command processor.</param>
+        /// <param name="sendBatchSize">The size of the batch when sending to the transport. In high volume scenarios, batching help reduce friction and increase the throughput.</param>
+        /// <param name="sendFlushBatchInterval">The interval to wait for a batch to be complete before sending.</param> 
         public ClientChannel(
             ITransport transport,
             TimeSpan sendTimeout,
@@ -37,8 +39,21 @@ namespace Lime.Protocol.Client
             TimeSpan? remoteIdleTimeout = null,
             TimeSpan? consumeTimeout = null,
             TimeSpan? closeTimeout = null,
-            IChannelCommandProcessor channelCommandProcessor = null)
-            : base(transport, sendTimeout, consumeTimeout, closeTimeout ?? sendTimeout, envelopeBufferSize, fillEnvelopeRecipients, autoReplyPings, remotePingInterval, remoteIdleTimeout, channelCommandProcessor)
+            IChannelCommandProcessor channelCommandProcessor = null,
+            int sendBatchSize = 1,
+            TimeSpan sendFlushBatchInterval = default)
+            : base(transport,
+                sendTimeout,
+                consumeTimeout,
+                closeTimeout ?? sendTimeout,
+                envelopeBufferSize,
+                fillEnvelopeRecipients,
+                autoReplyPings,
+                remotePingInterval,
+                remoteIdleTimeout,
+                channelCommandProcessor,
+                sendBatchSize,
+                sendFlushBatchInterval)
         {
             if (autoNotifyReceipt)
             {

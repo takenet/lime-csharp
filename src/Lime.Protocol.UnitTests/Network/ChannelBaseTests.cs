@@ -4,6 +4,7 @@ using Moq;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Shouldly;
@@ -33,7 +34,18 @@ namespace Lime.Protocol.UnitTests.Network
             _transport = null;
         }
 
-        public ChannelBase GetTarget(SessionState state, int buffersLimit = 5, bool fillEnvelopeRecipients = false, Node remoteNode = null, Node localNode = null, bool autoReplyPings = false, TimeSpan? remotePingInterval = null, TimeSpan? remoteIdleTimeout = null, TimeSpan? consumeTimeout = null)
+        public ChannelBase GetTarget(
+            SessionState state,
+            int buffersLimit = 5,
+            bool fillEnvelopeRecipients = false,
+            Node remoteNode = null,
+            Node localNode = null,
+            bool autoReplyPings = false,
+            TimeSpan? remotePingInterval = null,
+            TimeSpan? remoteIdleTimeout = null,
+            TimeSpan? consumeTimeout = null,
+            int sendBatchSize = 1,
+            TimeSpan sendFlushBatchInterval = default)
         {
             return new TestChannel(
                 state,
@@ -46,7 +58,9 @@ namespace Lime.Protocol.UnitTests.Network
                 autoReplyPings,
                 remotePingInterval,
                 remoteIdleTimeout,
-                consumeTimeout: consumeTimeout
+                consumeTimeout: consumeTimeout,
+                sendBatchSize: sendBatchSize,
+                sendFlushBatchInterval: sendFlushBatchInterval
                 );
         }
 
@@ -195,6 +209,147 @@ namespace Lime.Protocol.UnitTests.Network
             foreach (var mock in modulesMockList)
             {
                 mock.Verify(m => m.OnSendingAsync(message, It.IsAny<CancellationToken>()), Times.Once());
+            }
+        }
+        
+        [Test]
+        [Category("SendMessageAsync")]
+        public async Task SendMessageAsync_MultipleMessagesSameAmountOfBatchSize_CallsTransport()
+        {
+            // Arrange
+            var tcs = new TaskCompletionSource<Envelope>();
+            _transport
+                .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(tcs.Task);            
+            var content = Dummy.CreateTextContent();
+            var batchSize = 5;
+            var messages =  Enumerable.Range(0, batchSize).Select(i => Dummy.CreateMessage(content)).ToArray();
+            var target = GetTarget(SessionState.Established, sendBatchSize: batchSize);
+
+            // Act
+            foreach (var message in messages)
+            {
+                await target.SendMessageAsync(message, CancellationToken.None);    
+            }
+
+            await Task.Delay(150, CancellationToken.None);
+
+            // Assert
+            foreach (var message in messages)
+            {
+                _transport.Verify(
+                    t => t.SendAsync(
+                        message,
+                        It.IsAny<CancellationToken>()),
+                    Times.Once());
+            }
+        }
+        
+        [Test]
+        [Category("SendMessageAsync")]
+        public async Task SendMessageAsync_MultipleMessagesOverAmountOfBatchSize_CallsTransportBatchSizeTimes()
+        {
+            // Arrange
+            var tcs = new TaskCompletionSource<Envelope>();
+            _transport
+                .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(tcs.Task);            
+            var content = Dummy.CreateTextContent();
+            var batchSize = 5;
+            var messages =  Enumerable.Range(0, batchSize + 1).Select(i => Dummy.CreateMessage(content)).ToArray();
+            var target = GetTarget(SessionState.Established, sendBatchSize: batchSize);
+
+            // Act
+            foreach (var message in messages)
+            {
+                await target.SendMessageAsync(message, CancellationToken.None);    
+            }
+
+            await Task.Delay(150, CancellationToken.None);
+
+            // Assert
+            foreach (var message in messages.Take(batchSize))
+            {
+                _transport.Verify(
+                    t => t.SendAsync(
+                        message,
+                        It.IsAny<CancellationToken>()),
+                    Times.Once());
+            }
+            foreach (var message in messages.Skip(batchSize))
+            {
+                _transport.Verify(
+                    t => t.SendAsync(
+                        message,
+                        It.IsAny<CancellationToken>()),
+                    Times.Never);
+            }
+        }
+        
+        [Test]
+        [Category("SendMessageAsync")]
+        public async Task SendMessageAsync_MultipleMessagesOverAmountOfBatchSizeWithFlushInterval_CallsTransport()
+        {
+            // Arrange
+            var tcs = new TaskCompletionSource<Envelope>();
+            _transport
+                .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(tcs.Task);            
+            var content = Dummy.CreateTextContent();
+            var batchSize = 5;
+            var batchInterval = TimeSpan.FromMilliseconds(75);
+            var messages =  Enumerable.Range(0, batchSize + 1).Select(i => Dummy.CreateMessage(content)).ToArray();
+            var target = GetTarget(SessionState.Established, sendBatchSize: batchSize, sendFlushBatchInterval: batchInterval);
+            
+            // Act
+            foreach (var message in messages)
+            {
+                await target.SendMessageAsync(message, CancellationToken.None);    
+            }
+
+            await Task.Delay(batchInterval + batchInterval, CancellationToken.None);
+
+            // Assert
+            foreach (var message in messages)
+            {
+                _transport.Verify(
+                    t => t.SendAsync(
+                        message,
+                        It.IsAny<CancellationToken>()),
+                    Times.Once());
+            }
+        }
+        
+        [Test]
+        [Category("SendMessageAsync")]
+        public async Task SendMessageAsync_MultipleMessagesBelowAmountOfBatchSize_DoNotCallsTransport()
+        {
+            // Arrange
+            var tcs = new TaskCompletionSource<Envelope>();
+            _transport
+                .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(tcs.Task);            
+            var content = Dummy.CreateTextContent();
+            var batchSize = 5;
+            var messages =  Enumerable.Range(0, batchSize - 1).Select(i => Dummy.CreateMessage(content)).ToArray();
+            var target = GetTarget(SessionState.Established, sendBatchSize: batchSize);
+
+            // Act
+            foreach (var message in messages)
+            {
+                await target.SendMessageAsync(message, CancellationToken.None);    
+            }
+
+            await Task.Delay(150, CancellationToken.None);
+
+            // Assert
+            foreach (var message in messages)
+            {
+                _transport.Verify(
+                    t => t.SendAsync(
+                        message,
+                        It.IsAny<CancellationToken>()),
+                    Times.Never);
             }
         }
 
@@ -1748,8 +1903,34 @@ namespace Lime.Protocol.UnitTests.Network
 
         private class TestChannel : ChannelBase
         {
-            public TestChannel(SessionState state, ITransport transport, TimeSpan sendTimeout, int envelopeBufferSize, bool fillEnvelopeRecipients, Node remoteNode = null, Node localNode = null, bool autoReplyPings = false, TimeSpan? remotePingInterval = null, TimeSpan? remoteIdleTimeout = null, int resendMessageTryCount = 0, TimeSpan? resendMessageInterval = null, TimeSpan? consumeTimeout = null)
-                : base(transport, sendTimeout, consumeTimeout ?? sendTimeout, sendTimeout, envelopeBufferSize, fillEnvelopeRecipients, autoReplyPings, remotePingInterval, remoteIdleTimeout, null)
+            public TestChannel(
+                SessionState state,
+                ITransport transport,
+                TimeSpan sendTimeout,
+                int envelopeBufferSize,
+                bool fillEnvelopeRecipients,
+                Node remoteNode = null,
+                Node localNode = null,
+                bool autoReplyPings = false,
+                TimeSpan? remotePingInterval = null,
+                TimeSpan? remoteIdleTimeout = null,
+                int resendMessageTryCount = 0,
+                TimeSpan? resendMessageInterval = null,
+                TimeSpan? consumeTimeout = null,
+                int sendBatchSize = 1,
+                TimeSpan sendFlushBatchInterval = default)
+                : base(transport,
+                    sendTimeout,
+                    consumeTimeout ?? sendTimeout,
+                    sendTimeout,
+                    envelopeBufferSize,
+                    fillEnvelopeRecipients,
+                    autoReplyPings,
+                    remotePingInterval,
+                    remoteIdleTimeout,
+                    null,
+                    sendBatchSize,
+                    sendFlushBatchInterval)
             {                
                 RemoteNode = remoteNode;
                 LocalNode = localNode;

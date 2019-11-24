@@ -47,6 +47,8 @@ namespace Lime.Protocol.Network
             int envelopeBufferSize,
             TimeSpan? consumeTimeout)
         {
+            if (consumeTimeout != null && consumeTimeout.Value == default) throw new ArgumentException("Invalid consume timeout", nameof(consumeTimeout));
+            
             _channelInformation = channelInformation;
             _transport = transport;
             _channelCommandProcessor = channelCommandProcessor;

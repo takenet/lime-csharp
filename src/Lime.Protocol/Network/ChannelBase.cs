@@ -18,7 +18,7 @@ namespace Lime.Protocol.Network
         private readonly SenderChannel _senderChannel;
         private readonly IChannelCommandProcessor _channelCommandProcessor;
         private SessionState _state;
-        
+
         /// <summary>
         /// Creates a new instance of ChannelBase
         /// </summary>
@@ -32,6 +32,8 @@ namespace Lime.Protocol.Network
         /// <param name="remotePingInterval">The interval to ping the remote party.</param>
         /// <param name="remoteIdleTimeout">The timeout to close the channel due to inactivity.</param>
         /// <param name="channelCommandProcessor">The channel command processor.</param>
+        /// <param name="sendBatchSize">The size of the batch when sending to the transport. In high volume scenarios, batching help reduce friction and increase the throughput.</param>
+        /// <param name="sendFlushBatchInterval">The interval to wait for a batch to be complete before sending.</param>
         /// <exception cref="System.ArgumentNullException"></exception>
         /// <exception cref="System.ArgumentException">
         /// Invalid send timeout
@@ -51,10 +53,10 @@ namespace Lime.Protocol.Network
             bool autoReplyPings,
             TimeSpan? remotePingInterval,
             TimeSpan? remoteIdleTimeout,
-            IChannelCommandProcessor channelCommandProcessor)
+            IChannelCommandProcessor channelCommandProcessor,
+            int sendBatchSize,
+            TimeSpan sendFlushBatchInterval)
         {
-            if (sendTimeout == default) throw new ArgumentException("Invalid send timeout", nameof(sendTimeout));
-            if (consumeTimeout != null && consumeTimeout.Value == default) throw new ArgumentException("Invalid consume timeout", nameof(consumeTimeout));
             if (closeTimeout == default) throw new ArgumentException("Invalid close timeout", nameof(closeTimeout));
             if (envelopeBufferSize <= 0)
             {
@@ -83,7 +85,7 @@ namespace Lime.Protocol.Network
                 RaiseConsumerExceptionAsync,
                 envelopeBufferSize,
                 consumeTimeout);
-            
+
             _senderChannel = new SenderChannel(
                 this,
                 Transport,
@@ -93,8 +95,8 @@ namespace Lime.Protocol.Network
                 RaiseSenderExceptionAsync,
                 envelopeBufferSize,
                 sendTimeout,
-                1,
-                TimeSpan.FromMilliseconds(256));
+                sendBatchSize,
+                sendFlushBatchInterval);
         }
 
         ~ChannelBase()
