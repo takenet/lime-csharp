@@ -7,7 +7,6 @@ namespace Lime.Protocol.Network
         public static readonly DataflowLinkOptions PropagateCompletionLinkOptions = new DataflowLinkOptions()
         {
             PropagateCompletion = true,
-            
         };
     }
 }

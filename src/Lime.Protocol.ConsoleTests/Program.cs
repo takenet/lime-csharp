@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
@@ -8,6 +9,7 @@ using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using Lime.Protocol.Client;
 using Lime.Protocol.Network;
+using Lime.Protocol.Network.Modules;
 using Lime.Protocol.Serialization;
 using Lime.Protocol.Serialization.Newtonsoft;
 using Lime.Protocol.Server;
@@ -96,25 +98,33 @@ namespace Lime.Protocol.ConsoleTests
             }
 
             WriteLine("Starting the server...");
-            
-            var messageActionBlock = new ActionBlock<Message>(
-                m => _reporter?.ReportEvent(),
-                new ExecutionDataflowBlockOptions
-                {
-                    BoundedCapacity = DataflowBlockOptions.Unbounded,
-                    MaxDegreeOfParallelism = DataflowBlockOptions.Unbounded,
-                    EnsureOrdered = false
-                });
 
+            var actionBlockOptions = new ExecutionDataflowBlockOptions
+            {
+                BoundedCapacity = DataflowBlockOptions.Unbounded,
+                MaxDegreeOfParallelism = DataflowBlockOptions.Unbounded,
+                EnsureOrdered = false
+            };
+            
+            var reportActionBlock = new ActionBlock<Envelope>(
+                m => _reporter?.ReportEvent(),
+                actionBlockOptions);
+
+            
             var server = new ServerBuilder("postmaster@msging.net/default", transportListenerFactory())
-                .WithChannelConsumers(m => messageActionBlock.SendAsync(m), n => TaskUtil.TrueCompletedTask,
-                    c => TaskUtil.TrueCompletedTask)
+                .WithChannelConsumers(
+                    m => reportActionBlock.SendAsync(m), 
+                    n => reportActionBlock.SendAsync(n),
+                    c => reportActionBlock.SendAsync(c))
                 .WithEnabledEncryptionOptions(new SessionEncryption[] {SessionEncryption.None, SessionEncryption.TLS})
                 .WithExceptionHandler(e =>
                 {
+                    var cursorTop = CursorTop;
+                    CursorTop = 20;
                     ForegroundColor = ConsoleColor.Red;
                     WriteLine(e.ToString());
                     ResetColor();
+                    CursorTop = cursorTop;
                     return Task.CompletedTask;
                 })
                 .WithEnvelopeBufferSize(-1)
@@ -137,6 +147,10 @@ namespace Lime.Protocol.ConsoleTests
                 WriteLine("                                                            ");
                 WriteLine("                                                            ");
                 WriteLine("                                                            ");
+                WriteLine("                                                            ");
+                WriteLine("                                                            ");
+                WriteLine("                                                            ");
+                WriteLine("                                                            ");
                 CursorLeft = cursorLeft;
                 CursorTop = cursorTop;
                 
@@ -148,7 +162,7 @@ namespace Lime.Protocol.ConsoleTests
                     break;
                 }
 
-                if (!int.TryParse(line, out var channelCount))
+                if (!uint.TryParse(line, out var channelCount))
                 {
                     channelCount = 1;
                 }
@@ -160,19 +174,46 @@ namespace Lime.Protocol.ConsoleTests
                 }
                 
                 Write("Send batch size (ENTER for 1): ");
-                if (!int.TryParse(ReadLine(), out var sendBatchSize))
+                if (!uint.TryParse(ReadLine(), out var sendBatchSize))
                 {
                     sendBatchSize = 1;
                 }
                 
+                Write("Module delay (ENTER for 0): ");
+                if (!uint.TryParse(ReadLine(), out var moduleDelay))
+                {
+                    moduleDelay = 0;
+                }
+                
                 WriteLine("Starting the client...");
 
+                var delayMessageChannelModule = new ChannelModule<Message>(
+                    async (message, token) =>
+                    {
+                        await Task.Delay((int)moduleDelay, token);
+                        return message;
+                    },
+                    async (message, token) =>
+                    {
+                        await Task.Delay((int)moduleDelay, token);
+                        return message;
+                    },
+                    state => { });
+                
                 var channelBuilder = ClientChannelBuilder
                     .Create(clientTransportFactory, uri)
                     .WithEnvelopeBufferSize(envelopeBufferSize)
-                    .WithSendBatchSize(sendBatchSize)
+                    .WithSendBatchSize((int)sendBatchSize)
                     .WithSendFlushBatchInterval(TimeSpan.FromMilliseconds(1000))
                     .CreateEstablishedClientChannelBuilder()
+                    .AddEstablishedHandler((channel, token) =>
+                    {
+                        if (moduleDelay > 0)
+                        {
+                            channel.MessageModules.Add(delayMessageChannelModule);
+                        }
+                        return Task.CompletedTask;
+                    })
                     .WithEncryption(SessionEncryption.TLS);
 
                 IEstablishedChannel client;
@@ -190,37 +231,89 @@ namespace Lime.Protocol.ConsoleTests
                 WriteLine("Client started."); 
                 
                 Write("Number of tasks (ENTER for 10): ");
-                if (!int.TryParse(ReadLine(), out var taskCount))
+                if (!uint.TryParse(ReadLine(), out var taskCount))
                 {
                     taskCount = 10;
                 }
 
                 Write("Number of messages (ENTER for 1000): ");
-                if (!int.TryParse(ReadLine(), out var messagesCount))
+                if (!uint.TryParse(ReadLine(), out var messagesCount))
                 {
                     messagesCount = 1000;
                 }
+                
+                Write("Number of notifications (ENTER for 1000): ");
+                if (!uint.TryParse(ReadLine(), out var notificationsCount))
+                {
+                    notificationsCount = 1000;
+                }
+                
+                Write("Number of commands (ENTER for 1000): ");
+                if (!uint.TryParse(ReadLine(), out var commandsCount))
+                {
+                    commandsCount = 1000;
+                }
 
                 _reporter = new Reporter(
-                    taskCount * messagesCount, 
+                    (int)(taskCount * (messagesCount + notificationsCount + commandsCount)), 
                     CursorTop + 2, 
-                    $"Transp {transportType} Ch {channelCount} Buf {envelopeBufferSize} Bat {sendBatchSize} Tasks {taskCount} Msgs {messagesCount}");
+                    $"Transp {transportType} Ch {channelCount} Buf {envelopeBufferSize} Bat {sendBatchSize} Delay {moduleDelay} Tasks {taskCount} Msgs {messagesCount} Not {notificationsCount} Cmds {commandsCount}");
+                
+                var to = Node.Parse("name@domain/instance");
+                var limeUri = new LimeUri("/ping");
                 
                 await Task.WhenAll(
                     Enumerable
-                        .Range(0, taskCount)
+                        .Range(0, (int)taskCount)
                         .Select(i => Task.Run(async () =>
                         {
-                            for (int j = 0; j < messagesCount; j++)
+                            var messagesTask = Task.Run(async () =>
                             {
-                                await client.SendMessageAsync(
-                                    new Message()
-                                    {
-                                        Id = $"{i}_{j}",
-                                        Content = "Testing a message"
-                                    },
-                                    CancellationToken.None);
-                            }
+                                for (int j = 0; j < messagesCount; j++)
+                                {
+                                    await client.SendMessageAsync(
+                                        new Message()
+                                        {
+                                            Id = $"{i}_{j}",
+                                            To = to,
+                                            Content = "Testing a message"
+                                        },
+                                        CancellationToken.None);
+                                }
+                            });
+                            
+                            var notificationsTask = Task.Run(async () =>
+                            {
+                                for (int j = 0; j < notificationsCount; j++)
+                                {
+                                    await client.SendNotificationAsync(
+                                        new Notification()
+                                        {
+                                            Id = $"{i}_{j}",
+                                            To = to,
+                                            Event = Event.Received
+                                        },
+                                        CancellationToken.None);
+                                }
+                            });
+                            
+                            var commandsTask = Task.Run(async () =>
+                            {
+                                for (int j = 0; j < commandsCount; j++)
+                                {
+                                    await client.SendCommandAsync(
+                                        new Command()
+                                        {
+                                            Id = $"{i}_{j}",
+                                            To = to,
+                                            Method= CommandMethod.Observe,
+                                            Uri = limeUri
+                                        },
+                                        CancellationToken.None);
+                                }
+                            });
+
+                            await Task.WhenAll(messagesTask, notificationsTask, commandsTask);
                         })));
 
                 _reporter.ReportSendComplete();

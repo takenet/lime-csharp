@@ -21,6 +21,7 @@ namespace Lime.Protocol.Network
         private readonly TransformBlock<Message, Envelope> _messageToEnvelopeTransformBlock;
         private readonly TransformBlock<Notification, Envelope> _notificationToEnvelopeTransformBlock;
         private readonly TransformBlock<Command, Envelope> _commandToEnvelopeTransformBlock;
+        private readonly BatchBlock<Envelope> _envelopeBatchBlock;
         private readonly ActionBlock<Envelope[]> _sendEnvelopeBatchBlock;
         private readonly ActionBlock<Envelope> _sendEnvelopeBlock;
         private readonly object _syncRoot;
@@ -29,6 +30,7 @@ namespace Lime.Protocol.Network
         private bool _isDisposing;
         private readonly Timer _flushBatchTimer;
         private readonly TimeSpan _flushBatchInterval;
+        
 
         public SenderChannel(
             IChannelInformation channelInformation,
@@ -64,11 +66,11 @@ namespace Lime.Protocol.Network
                 EnsureOrdered = false
             };
             _messageToEnvelopeTransformBlock = new TransformBlock<Message, Envelope>(
-                e => RaiseModulesAsync(e, _messageModules, _senderCts.Token), raiseModulesDataflowBlockOptions);
+                e => RaiseOnSendingAsync(e, _messageModules, _senderCts.Token), raiseModulesDataflowBlockOptions);
             _notificationToEnvelopeTransformBlock = new TransformBlock<Notification, Envelope>(
-                e => RaiseModulesAsync(e, _notificationModules, _senderCts.Token), raiseModulesDataflowBlockOptions);
+                e => RaiseOnSendingAsync(e, _notificationModules, _senderCts.Token), raiseModulesDataflowBlockOptions);
             _commandToEnvelopeTransformBlock = new TransformBlock<Command, Envelope>(
-                e => RaiseModulesAsync(e, _commandModules, _senderCts.Token), raiseModulesDataflowBlockOptions);
+                e => RaiseOnSendingAsync(e, _commandModules, _senderCts.Token), raiseModulesDataflowBlockOptions);
             var sendDataflowBlockOptions = new ExecutionDataflowBlockOptions()
             {
                 BoundedCapacity = envelopeBufferSize,
@@ -93,7 +95,7 @@ namespace Lime.Protocol.Network
             else
             {
                 // Batched mode, create a batch block between the modules block and the send block 
-                var envelopeBatchBlock = new BatchBlock<Envelope>(
+                _envelopeBatchBlock = new BatchBlock<Envelope>(
                     sendBatchSize,
                     new GroupingDataflowBlockOptions()
                     {
@@ -105,22 +107,22 @@ namespace Lime.Protocol.Network
                     e => SendToTransportAsync(e, _senderCts.Token),
                     sendDataflowBlockOptions);
 
-                _messageToEnvelopeTransformBlock.LinkTo(envelopeBatchBlock,
+                _messageToEnvelopeTransformBlock.LinkTo(_envelopeBatchBlock,
                     DataflowUtils.PropagateCompletionLinkOptions);
-                _notificationToEnvelopeTransformBlock.LinkTo(envelopeBatchBlock,
+                _notificationToEnvelopeTransformBlock.LinkTo(_envelopeBatchBlock,
                     DataflowUtils.PropagateCompletionLinkOptions);
-                _commandToEnvelopeTransformBlock.LinkTo(envelopeBatchBlock,
+                _commandToEnvelopeTransformBlock.LinkTo(_envelopeBatchBlock,
                     DataflowUtils.PropagateCompletionLinkOptions);
-                envelopeBatchBlock.LinkTo(_sendEnvelopeBatchBlock, DataflowUtils.PropagateCompletionLinkOptions);
+                _envelopeBatchBlock.LinkTo(_sendEnvelopeBatchBlock, DataflowUtils.PropagateCompletionLinkOptions);
                 _flushBatchInterval = flushBatchInterval;
 
                 if (flushBatchInterval != default)
                 {
                     _flushBatchTimer = new Timer(state =>
                         {
-                            if (!envelopeBatchBlock.Completion.IsCompleted)
+                            if (!_envelopeBatchBlock.Completion.IsCompleted)
                             {
-                                envelopeBatchBlock.TriggerBatch();
+                                _envelopeBatchBlock.TriggerBatch();
                             }
                         },
                         null,
@@ -159,7 +161,7 @@ namespace Lime.Protocol.Network
                     CompletePipeline();
                     
                     // Awaits the completion of the last pipeline block (depending if it is batched or not)
-                    await (_sendEnvelopeBlock?.Completion ?? _sendEnvelopeBatchBlock?.Completion).WithCancellation(cancellationToken).ConfigureAwait(false);
+                    await (_sendEnvelopeBlock?.Completion ?? _sendEnvelopeBatchBlock.Completion).WithCancellation(cancellationToken).ConfigureAwait(false);
                 }
 
                 // The session envelopes are sent directly to the transport
@@ -220,7 +222,7 @@ namespace Lime.Protocol.Network
             }
         }
 
-        private async Task<Envelope> RaiseModulesAsync<T>(T envelope, IEnumerable<IChannelModule<T>> modules, CancellationToken cancellationToken)
+        private async Task<Envelope> RaiseOnSendingAsync<T>(T envelope, IEnumerable<IChannelModule<T>> modules, CancellationToken cancellationToken)
             where T : Envelope, new()
         {
             try
