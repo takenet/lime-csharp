@@ -8,7 +8,8 @@ namespace Lime.Benchmarks
         static void Main(string[] args)
         {
             //var summary = BenchmarkRunner.Run<WebSocketTransportBenchmark>();
-            var summary = BenchmarkRunner.Run<TcpTransportBenchmark>();
+            BenchmarkRunner.Run<TcpTransportBenchmark>();
+            BenchmarkRunner.Run<PipeTcpTransportBenchmark>();
         }
     }
 }

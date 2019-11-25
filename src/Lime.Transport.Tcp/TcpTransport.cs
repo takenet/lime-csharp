@@ -29,11 +29,9 @@ namespace Lime.Transport.Tcp
         public const int DEFAULT_MAX_BUFFER_SIZE = DEFAULT_BUFFER_SIZE * 1024;
 
         public static readonly string UriSchemeNetTcp = "net.tcp";
-        public static readonly TimeSpan ReadTimeout = TimeSpan.FromSeconds(5);
         public static readonly TimeSpan CloseTimeout = TimeSpan.FromSeconds(30);
 
-        private readonly SemaphoreSlim _receiveSemaphore;
-        private readonly SemaphoreSlim _sendSemaphore;
+        private readonly SemaphoreSlim _optionsSemaphore;
         private readonly ITcpClient _tcpClient;
         private readonly IEnvelopeSerializer _envelopeSerializer;
         private readonly ITraceWriter _traceWriter;
@@ -180,8 +178,7 @@ namespace Lime.Transport.Tcp
             _clientCertificateValidationCallback = clientCertificateValidationCallback ?? ValidateClientCertificate;
 
             _jsonBuffer = new JsonBuffer(bufferSize, maxBufferSize, _arrayPool);
-            _receiveSemaphore = new SemaphoreSlim(1);
-            _sendSemaphore = new SemaphoreSlim(1);
+            _optionsSemaphore = new SemaphoreSlim(1);
         }
 
         /// <summary>
@@ -203,8 +200,6 @@ namespace Lime.Transport.Tcp
             
             var buffer = _arrayPool.Rent(Encoding.UTF8.GetByteCount(serializedEnvelope));
             var length = Encoding.UTF8.GetBytes(serializedEnvelope, 0, serializedEnvelope.Length, buffer, 0);
-
-            await _sendSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
             
             try
             {
@@ -217,7 +212,6 @@ namespace Lime.Transport.Tcp
             }
             finally
             {
-                _sendSemaphore.Release();
                 _arrayPool.Return(buffer);
             }
         }
@@ -231,9 +225,7 @@ namespace Lime.Transport.Tcp
         {
             if (_stream == null) throw new InvalidOperationException("The stream was not initialized. Call OpenAsync first.");
             if (!_stream.CanRead) throw new InvalidOperationException("Invalid stream state");
-
-            await _receiveSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
-
+            
             try
             {
                 Envelope envelope = null;
@@ -245,35 +237,21 @@ namespace Lime.Transport.Tcp
 
                     if (envelope == null && CanRead)
                     {
-                        // The NetworkStream ReceiveAsync method doesn't supports cancellation
+                        // The NetworkStream ReadAsync method doesn't supports cancellation
                         // http://stackoverflow.com/questions/21468137/async-network-operations-never-finish
                         // http://referencesource.microsoft.com/#mscorlib/system/io/stream.cs,421
-                        var readTask = _stream
+                        
+                        // This is no longer true for .NET Core 3.0
+                        // https://github.com/dotnet/corefx/pull/36516
+                        // The problem persists only with ConnectAsync operations:
+                        // https://github.com/dotnet/corefx/issues/37118
+                        var read = await _stream
                             .ReadAsync(
                                 _jsonBuffer.Buffer,
                                 _jsonBuffer.BufferCurPos,
                                 _jsonBuffer.Buffer.Length - _jsonBuffer.BufferCurPos,
-                                cancellationToken);
-
-                        while (!readTask.IsCompleted && CanRead)
-                        {
-                            cancellationToken.ThrowIfCancellationRequested();
-
-                            await Task
-                                .WhenAny(
-                                    readTask,
-                                    Task.Delay(ReadTimeout, cancellationToken))
-                                .ConfigureAwait(false);
-                        }
-
-                        // If is not possible to read, closes the transport and returns
-                        if (!readTask.IsCompleted)
-                        {
-                            await CloseWithTimeoutAsync().ConfigureAwait(false);
-                            break;
-                        }
-
-                        var read = await readTask.ConfigureAwait(false);
+                                cancellationToken)
+                            .ConfigureAwait(false);
 
                         // https://msdn.microsoft.com/en-us/library/hh193669(v=vs.110).aspx
                         if (read == 0)
@@ -298,10 +276,6 @@ namespace Lime.Transport.Tcp
                 await TraceAsync($"{nameof(RemoteEndPoint)}: {RemoteEndPoint} - BufferOverflow: {Encoding.UTF8.GetString(_jsonBuffer.Buffer)}", DataOperation.Error).ConfigureAwait(false);
                 await CloseWithTimeoutAsync().ConfigureAwait(false);
                 throw;
-            }
-            finally
-            {
-                _receiveSemaphore.Release();
             }
         }
 
@@ -336,88 +310,79 @@ namespace Lime.Transport.Tcp
         /// <exception cref="System.NotSupportedException"></exception>        
         public override async Task SetEncryptionAsync(SessionEncryption encryption, CancellationToken cancellationToken)
         {
-            await _sendSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+            await _optionsSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
             try
             {
-                await _receiveSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
-                try
+                switch (encryption)
                 {
-                    switch (encryption)
-                    {
-                        case SessionEncryption.None:
-                            _stream = _tcpClient.GetStream();
-                            break;
-                        case SessionEncryption.TLS:
-                            SslStream sslStream;
-                            
-                            if (_serverCertificate != null)
+                    case SessionEncryption.None:
+                        _stream = _tcpClient.GetStream();
+                        break;
+                    case SessionEncryption.TLS:
+                        SslStream sslStream;
+                        
+                        if (_serverCertificate != null)
+                        {
+                            if (_stream == null) throw new InvalidOperationException("The stream was not initialized. Call OpenAsync first.");
+
+                            // Server
+                            sslStream = new SslStream(
+                                _stream,
+                                false,
+                                _clientCertificateValidationCallback,
+                                null,
+                                EncryptionPolicy.RequireEncryption);
+
+                            await sslStream
+                                .AuthenticateAsServerAsync(
+                                    _serverCertificate,
+                                    true,
+                                    SslProtocols.Tls,
+                                    false)
+                                .WithCancellation(cancellationToken)
+                                .ConfigureAwait(false);
+                        }
+                        else
+                        {
+                            // Client
+                            if (string.IsNullOrWhiteSpace(_hostName))
                             {
-                                if (_stream == null) throw new InvalidOperationException("The stream was not initialized. Call OpenAsync first.");
-
-                                // Server
-                                sslStream = new SslStream(
-                                    _stream,
-                                    false,
-                                    _clientCertificateValidationCallback,
-                                    null,
-                                    EncryptionPolicy.RequireEncryption);
-
-                                await sslStream
-                                    .AuthenticateAsServerAsync(
-                                        _serverCertificate,
-                                        true,
-                                        SslProtocols.Tls,
-                                        false)
-                                    .WithCancellation(cancellationToken)
-                                    .ConfigureAwait(false);
+                                throw new InvalidOperationException("The hostname is mandatory for TLS client encryption support");
                             }
-                            else
+
+                            sslStream = new SslStream(
+                                _stream,
+                                false,
+                                 _serverCertificateValidationCallback);
+
+                            X509CertificateCollection clientCertificates = null;
+
+                            if (_clientCertificate != null)
                             {
-                                // Client
-                                if (string.IsNullOrWhiteSpace(_hostName))
-                                {
-                                    throw new InvalidOperationException("The hostname is mandatory for TLS client encryption support");
-                                }
-
-                                sslStream = new SslStream(
-                                    _stream,
-                                    false,
-                                     _serverCertificateValidationCallback);
-
-                                X509CertificateCollection clientCertificates = null;
-
-                                if (_clientCertificate != null)
-                                {
-                                    clientCertificates = new X509CertificateCollection(new X509Certificate[] { _clientCertificate });
-                                }
-
-                                await sslStream
-                                    .AuthenticateAsClientAsync(
-                                        _hostName,
-                                        clientCertificates,
-                                        SslProtocols.Tls,
-                                        false)
-                                    .WithCancellation(cancellationToken)
-                                    .ConfigureAwait(false);
+                                clientCertificates = new X509CertificateCollection(new X509Certificate[] { _clientCertificate });
                             }
-                            _stream = sslStream;
-                            break;
 
-                        default:
-                            throw new NotSupportedException();
-                    }
+                            await sslStream
+                                .AuthenticateAsClientAsync(
+                                    _hostName,
+                                    clientCertificates,
+                                    SslProtocols.Tls,
+                                    false)
+                                .WithCancellation(cancellationToken)
+                                .ConfigureAwait(false);
+                        }
+                        _stream = sslStream;
+                        break;
 
-                    Encryption = encryption;
-                }
-                finally
-                {
-                    _receiveSemaphore.Release();
+                    default:
+                        throw new NotSupportedException();
                 }
 
+                Encryption = encryption;
             }
             finally
             {
-                _sendSemaphore.Release();
+                _optionsSemaphore.Release();
             }
         }
 
@@ -598,9 +563,7 @@ namespace Lime.Transport.Tcp
         protected override Task PerformCloseAsync(CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
-#if NET461
             _stream?.Close();
-#endif
             _tcpClient.Close();
             return Task.FromResult<object>(null);
         }
@@ -619,8 +582,7 @@ namespace Lime.Transport.Tcp
             {
                 if (disposing)
                 {
-                    _sendSemaphore.Dispose();
-                    _receiveSemaphore.Dispose();
+                    _optionsSemaphore.Dispose();
                     _stream?.Dispose();
                     _jsonBuffer.Dispose();
                 }
@@ -650,8 +612,7 @@ namespace Lime.Transport.Tcp
             X509Chain chain,
             SslPolicyErrors sslPolicyErrors)
         {
-            return sslPolicyErrors == SslPolicyErrors.None ||
-                   sslPolicyErrors == SslPolicyErrors.RemoteCertificateNameMismatch;
+            return sslPolicyErrors == SslPolicyErrors.None;
         }
 
         private bool ValidateClientCertificate(

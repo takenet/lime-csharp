@@ -14,69 +14,22 @@ using System.Threading.Tasks;
 namespace Lime.Benchmarks
 {
     [CoreJob]
-    public class WebSocketTransportBenchmark
+    [MemoryDiagnoser]
+    public class WebSocketTransportBenchmark : TransportBenchmarkBase
     {
-        private Uri _uri;
-        private CancellationToken _cancellationToken;
-        private IEnvelopeSerializer _envelopeSerializer;
-        private ITransportListener _transportListener;
-        private ITransport _clientTransport;
-        private ITransport _serverTransport;
-
-        private Message _message;
-
-        public WebSocketTransportBenchmark()
+        protected override Uri CreateUri()
         {
-            _uri = new Uri("ws://localhost:8081");
-            _cancellationToken = TimeSpan.FromSeconds(60).ToCancellationToken();
-            _envelopeSerializer = new EnvelopeSerializer(new DocumentTypeResolver().WithMessagingDocuments());
-            _transportListener = new WebSocketTransportListener(_uri, null, _envelopeSerializer, null, webSocketMessageType: System.Net.WebSockets.WebSocketMessageType.Text);
+            return new Uri("ws://localhost:8081");
         }
 
-        [GlobalSetup]
-        public void Setup()
+        protected override ITransport CreateClientTransport()
         {
-            SetupAsync().Wait();
+            return new ClientWebSocketTransport(EnvelopeSerializer);
         }
 
-        
-        public async Task SetupAsync()
+        protected override ITransportListener CreateTransportListener()
         {
-            await _transportListener.StartAsync(_cancellationToken);
-
-            var serverTcpTransportTask = _transportListener.AcceptTransportAsync(_cancellationToken);
-
-            _clientTransport = new ClientWebSocketTransport(_envelopeSerializer, null, webSocketMessageType: System.Net.WebSockets.WebSocketMessageType.Text);
-            await _clientTransport.OpenAsync(_uri, _cancellationToken);
-
-            _serverTransport = (WebSocketTransport)await serverTcpTransportTask;
-            await _serverTransport.OpenAsync(_uri, _cancellationToken);
-
-            _message = Dummy.CreateMessage(Dummy.CreateTextContent());
+            return new WebSocketTransportListener(new[] { Uri }, EnvelopeSerializer);
         }
-
-        [Benchmark]
-        public Task SendReceiveAsync()
-        {
-            var receiveTask = _serverTransport.ReceiveAsync(_cancellationToken);
-            var sendTask = _clientTransport.SendAsync(_message, _cancellationToken);
-            return Task.WhenAll(receiveTask, sendTask);
-        }
-
-        [GlobalCleanup]
-        public void Cleanup()
-        {
-            CleanupAsync().Wait();
-        }
-
-        
-        public async Task CleanupAsync()
-        {
-            await _transportListener.StopAsync(_cancellationToken);
-            _serverTransport.CloseAsync(_cancellationToken);
-            _clientTransport.CloseAsync(_cancellationToken);
-            
-        }
-
     }
 }

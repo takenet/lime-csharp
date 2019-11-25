@@ -36,11 +36,15 @@ namespace Lime.Sample.Client
             {
                 serverUriValue = $"net.tcp://{Dns.GetHostName()}:{55321}";
             }
-
+            
+            Console.Write("Number of channels (ENTER for 1): ");
+            if (!int.TryParse(Console.ReadLine(), out var channelCount))
+            {
+                channelCount = 1;
+            }
+            
             Console.Write("Identity (name@domain - ENTER for none): ");
-
-            Identity identity;
-            if (!Identity.TryParse(Console.ReadLine(), out identity))
+            if (!Identity.TryParse(Console.ReadLine(), out var identity))
             {
                 identity = null;
             }
@@ -110,19 +114,25 @@ namespace Lime.Sample.Client
                     .WithPlainAuthentication(password);
             }
 
-            //var onDemandChannel = new OnDemandClientChannel(builder);
-            var onDemandChannel = new MultiplexerClientChannel(builder);
-
+            IOnDemandClientChannel onDemandClientChannel;
+            if (channelCount == 1)
+            {
+                onDemandClientChannel = new OnDemandClientChannel(builder);
+            }
+            else
+            {
+                onDemandClientChannel = new MultiplexerClientChannel(builder);
+            }
+            
             var running = true;
-            onDemandChannel.ChannelCreationFailedHandlers.Add(information =>
+            onDemandClientChannel.ChannelCreationFailedHandlers.Add(information =>
             {
                 Console.Write("Could not establish the session: {0}", information.Exception.Message);
                 Console.WriteLine();
                 running = false;
                 return TaskUtil.FalseCompletedTask;
             });
-
-
+            
             var channelListener = new ChannelListener(message =>
             {
                 Console.ForegroundColor = ConsoleColor.DarkRed;
@@ -149,8 +159,8 @@ namespace Lime.Sample.Client
                 });
 
 
-            await onDemandChannel.EstablishAsync(CancellationToken.None);
-            channelListener.Start(onDemandChannel);
+            await onDemandClientChannel.EstablishAsync(CancellationToken.None);
+            channelListener.Start(onDemandClientChannel);
 
             while (running)
             {
@@ -192,7 +202,7 @@ namespace Lime.Sample.Client
                                     }
                                 };
 
-                                await onDemandChannel.SendMessageAsync(message, CancellationToken.None);
+                                await onDemandClientChannel.SendMessageAsync(message, CancellationToken.None);
                             }));
 
                     stopwatch.Stop();
@@ -209,7 +219,7 @@ namespace Lime.Sample.Client
                 channelListener.NotificationListenerTask,
                 channelListener.CommandListenerTask);
 
-            await onDemandChannel.FinishAsync(CancellationToken.None);
+            await onDemandClientChannel.FinishAsync(CancellationToken.None);
 
             Console.WriteLine("Press any key to exit.");
             Console.Read();
@@ -220,7 +230,7 @@ namespace Lime.Sample.Client
             switch (uri.Scheme)
             {
                 case "net.tcp":
-                    return new TcpTransport(new EnvelopeSerializer(new DocumentTypeResolver().WithMessagingDocuments()), bufferSize: 1024, traceWriter: new DebugTraceWriter());
+                    return new PipeTcpTransport(new EnvelopeSerializer(new DocumentTypeResolver().WithMessagingDocuments()), traceWriter: new DebugTraceWriter());
                 //case "ws":
                 //case "wss":
                 //    return new ClientWebSocketTransport(new EnvelopeSerializer(), new DebugTraceWriter());

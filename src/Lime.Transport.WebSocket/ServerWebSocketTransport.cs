@@ -1,30 +1,34 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 using System.Net.WebSockets;
-using System.Reflection;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Lime.Protocol.Network;
 using Lime.Protocol.Serialization;
+using Microsoft.AspNetCore.Http;
 
 namespace Lime.Transport.WebSocket
 {
     public class ServerWebSocketTransport : WebSocketTransport
     {
-        private readonly HttpListenerWebSocketContext _context;
+        private readonly HttpContext _context;
+        private readonly TaskCompletionSource<object> _openTcs;
 
         internal ServerWebSocketTransport(
-            HttpListenerWebSocketContext context,
+            HttpContext context,
+            System.Net.WebSockets.WebSocket webSocket,
             IEnvelopeSerializer envelopeSerializer,
             ITraceWriter traceWriter = null,
             int bufferSize = 8192,
-            WebSocketMessageType webSocketMessageType = WebSocketMessageType.Text)
-            : base(context.WebSocket, envelopeSerializer, traceWriter, bufferSize, webSocketMessageType)
+            WebSocketMessageType webSocketMessageType = WebSocketMessageType.Text,
+            ArrayPool<byte> arrayPool = null,
+            bool closeGracefully = true)
+            : base(webSocket, envelopeSerializer, traceWriter, bufferSize, webSocketMessageType, arrayPool, closeGracefully)
         {
             _context = context;
+            _openTcs = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
         }
 
         public override IReadOnlyDictionary<string, object> Options
@@ -32,35 +36,22 @@ namespace Lime.Transport.WebSocket
             get
             {
                 var options = (Dictionary<string, object>)base.Options;
-                options.Add(nameof(HttpListenerWebSocketContext.IsAuthenticated), _context.IsAuthenticated);
-                options.Add(nameof(HttpListenerWebSocketContext.IsLocal), _context.IsLocal);
-                options.Add(nameof(HttpListenerWebSocketContext.IsSecureConnection), _context.IsSecureConnection);
-                options.Add(nameof(HttpListenerWebSocketContext.Origin), _context.Origin);
-                options.Add(nameof(HttpListenerWebSocketContext.SecWebSocketKey), _context.SecWebSocketKey);
-                options.Add(nameof(HttpListenerWebSocketContext.SecWebSocketVersion), _context.SecWebSocketVersion);
+                options["Connection.Id"] = _context.Connection.Id;
 
-                if (_context.Headers != null &&
-                    _context.Headers.Count > 0)
+                if (_context.Request.Headers != null)
                 {
-                    var headersBuilder = new StringBuilder();
-                    foreach (var key in _context.Headers.AllKeys.Where(o => !options.ContainsKey(o)))
+                    foreach (var key in _context.Request.Headers.Keys.Where(o => !options.ContainsKey(o)))
                     {
-                        headersBuilder.AppendFormat("{0}={1};", key, _context.Headers[key]);
+                        options[$"Request.Headers.{key}"] = _context.Request.Headers[key];                        
                     }
-                    options.Add(nameof(HttpListenerWebSocketContext.Headers), headersBuilder.ToString().TrimEnd(';'));
                 }
 
-                if (_context.CookieCollection != null &&
-                    _context.CookieCollection.Count > 0)
+                if (_context.Request.Cookies != null)
                 {
-                    var cookiesBuilder = new StringBuilder();
-
-                    foreach (Cookie cookie in _context.CookieCollection)
+                    foreach (var key in _context.Request.Cookies.Keys.Where(o => !options.ContainsKey(o)))
                     {
-                        cookiesBuilder.AppendFormat("{0}={1};", cookie.Name, cookie.Value);
+                        options[$"Request.Cookies.{key}"] = _context.Request.Cookies[key];                        
                     }
-
-                    options.Add(nameof(HttpListenerWebSocketContext.CookieCollection), cookiesBuilder.ToString().TrimEnd(';'));
                 }
 
                 return options;
@@ -68,5 +59,36 @@ namespace Lime.Transport.WebSocket
         }
 
         protected override Task PerformOpenAsync(Uri uri, CancellationToken cancellationToken) => Task.CompletedTask;
+
+        /// <summary>
+        /// Gets a task that is complete only when the transport is closed.
+        /// </summary>
+        internal Task OpenTask => _openTcs.Task;
+
+        protected override async Task PerformCloseAsync(CancellationToken cancellationToken)
+        {
+            try
+            {
+                await base.PerformCloseAsync(cancellationToken);
+            }
+            finally
+            {
+                _openTcs.TrySetResult(null);                
+            }                        
+        }
+
+        public override string LocalEndPoint => $"{_context.Connection.LocalIpAddress}:{_context.Connection.LocalPort}";
+
+        public override string RemoteEndPoint => $"{_context.Connection.RemoteIpAddress}:{_context.Connection.RemotePort}";
+
+        protected override void Dispose(bool disposing)
+        {            
+            if (disposing)
+            {
+                _openTcs.TrySetResult(null);
+            }
+            
+            base.Dispose(disposing);
+        }
     }
 }

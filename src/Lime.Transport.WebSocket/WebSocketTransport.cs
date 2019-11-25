@@ -24,13 +24,11 @@ namespace Lime.Transport.WebSocket
         private readonly ITraceWriter _traceWriter;
         private readonly ArrayPool<byte> _arrayPool;
         private readonly int _bufferSize;
-        private readonly SemaphoreSlim _sendSemaphore;
-        private readonly SemaphoreSlim _receiveSemaphore;
         private readonly SemaphoreSlim _closeSemaphore;
         private readonly WebSocketMessageType _webSocketMessageType;
+        private readonly bool _closeGracefully;
         private readonly CancellationTokenSource _receiveCts;
 
-        private WebSocketReceiveResult _closeFrame;
         protected WebSocketCloseStatus CloseStatus;
         protected string CloseStatusDescription;
 
@@ -40,7 +38,8 @@ namespace Lime.Transport.WebSocket
             ITraceWriter traceWriter = null,
             int bufferSize = DEFAULT_BUFFER_SIZE,
             WebSocketMessageType webSocketMessageType = WebSocketMessageType.Text,
-            ArrayPool<byte> arrayPool = null)
+            ArrayPool<byte> arrayPool = null,
+            bool closeGracefully = true)
         {
             WebSocket = webSocket ?? throw new ArgumentNullException(nameof(webSocket));
             _envelopeSerializer = envelopeSerializer;
@@ -48,8 +47,7 @@ namespace Lime.Transport.WebSocket
             _arrayPool = arrayPool ?? ArrayPool<byte>.Shared;
             _bufferSize = bufferSize;
             _webSocketMessageType = webSocketMessageType;
-            _sendSemaphore = new SemaphoreSlim(1);
-            _receiveSemaphore = new SemaphoreSlim(1);
+            _closeGracefully = closeGracefully;
             _closeSemaphore = new SemaphoreSlim(1);
             _receiveCts = new CancellationTokenSource();
             CloseStatus = WebSocketCloseStatus.NormalClosure;
@@ -77,9 +75,7 @@ namespace Lime.Transport.WebSocket
             
             var buffer = _arrayPool.Rent(Encoding.UTF8.GetByteCount(serializedEnvelope));
             var length = Encoding.UTF8.GetBytes(serializedEnvelope, 0, serializedEnvelope.Length, buffer, 0);
-
-            await _sendSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
-
+            
             try
             {
                 EnsureOpen("send");
@@ -94,7 +90,6 @@ namespace Lime.Transport.WebSocket
             }
             finally
             {
-                _sendSemaphore.Release();
                 _arrayPool.Return(buffer);
             }
         }
@@ -104,9 +99,7 @@ namespace Lime.Transport.WebSocket
             EnsureOpen("receive");
 
             var segments = new List<BufferSegment>();
-
-            await _receiveSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
-
+            
             try
             {
                 EnsureOpen("receive");
@@ -185,10 +178,6 @@ namespace Lime.Transport.WebSocket
 
                 throw;
             }
-            finally
-            {
-                _receiveSemaphore.Release();
-            }
 
             string serializedEnvelope = null;
             // Build the serialized envelope using the buffers
@@ -237,9 +226,18 @@ namespace Lime.Transport.WebSocket
                     if (WebSocket.State == WebSocketState.Open ||
                         WebSocket.State == WebSocketState.CloseReceived)
                     {
-                        await
-                            WebSocket.CloseAsync(CloseStatus, CloseStatusDescription, linkedCts.Token)
-                                .ConfigureAwait(false);
+                        if (_closeGracefully)
+                        {
+                            await
+                                WebSocket.CloseAsync(CloseStatus, CloseStatusDescription, linkedCts.Token)
+                                    .ConfigureAwait(false);
+                        }
+                        else
+                        {
+                            await
+                                WebSocket.CloseOutputAsync(CloseStatus, CloseStatusDescription, linkedCts.Token)
+                                    .ConfigureAwait(false);
+                        }
                     }
                 }
 
@@ -254,8 +252,8 @@ namespace Lime.Transport.WebSocket
             }
         }
 
-        public override bool IsConnected => WebSocket.State
-            >= WebSocketState.Open && WebSocket.State <= WebSocketState.CloseReceived; // We need to consider the Close status here to make the channel call the CloseAsync method.
+        public override bool IsConnected => WebSocket.State == WebSocketState.Open ||
+                                            WebSocket.State == WebSocketState.CloseReceived; // We need to consider the CloseReceived status here to make the channel call the CloseAsync method.
 
         public override string LocalEndPoint
         {
@@ -263,18 +261,16 @@ namespace Lime.Transport.WebSocket
             {
                 try
                 {
-#if NETSTANDARD2_0
                     try
                     {
+                        // net core
                         return WebSocket.AsDynamic()._innerStream?._context?.Request?.LocalEndPoint?.ToString();
                     }
                     catch
                     {
+                        // net framework
                         return WebSocket.AsDynamic()._stream?.Socket?.LocalEndPoint?.ToString();
                     }
-#elif NET461
-                    return WebSocket.AsDynamic().m_InnerStream?.m_Context?.Request?.LocalEndPoint?.ToString();
-#endif
                 }
                 catch
                 {
@@ -289,18 +285,16 @@ namespace Lime.Transport.WebSocket
             {
                 try
                 {
-#if NETSTANDARD2_0
                     try
                     {
+                        // net core
                         return WebSocket.AsDynamic()._innerStream?._context?.Request?.RemoteEndPoint?.ToString();
                     }
                     catch
                     {
+                        // net framework
                         return WebSocket.AsDynamic()._stream?.Socket?.RemoteEndPoint?.ToString();
                     }
-#elif NET461
-                    return WebSocket.AsDynamic().m_InnerStream?.m_Context?.Request?.RemoteEndPoint?.ToString();
-#endif
                 }
                 catch
                 {
@@ -328,8 +322,6 @@ namespace Lime.Transport.WebSocket
             if (disposing)
             {
                 WebSocket.Dispose();
-                _sendSemaphore.Dispose();
-                _receiveSemaphore.Dispose();
                 _closeSemaphore.Dispose();
                 _receiveCts.Dispose();
             }
@@ -346,7 +338,6 @@ namespace Lime.Transport.WebSocket
         private void HandleCloseMessage(WebSocketReceiveResult receiveResult)
         {
             CloseStatus = WebSocketCloseStatus.NormalClosure;
-            _closeFrame = receiveResult;
         }
 
         private Task CloseWithTimeoutAsync()

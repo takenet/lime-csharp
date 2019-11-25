@@ -17,9 +17,17 @@ namespace Lime.Protocol.Server
             Authenticator = (node, authentication) => Task.FromResult(
                 new AuthenticationResult(null, new Node(Guid.NewGuid().ToString(), ServerNode.Domain, "default")));
             ServerChannelFactory = transport => 
-                new ServerChannel(Guid.NewGuid().ToString(), ServerNode, transport, TimeSpan.FromSeconds(30));
+                new ServerChannel(
+                    Guid.NewGuid().ToString(),
+                    ServerNode,
+                    transport,
+                    TimeSpan.FromSeconds(30),
+                    EnvelopeBufferSize,
+                    sendBatchSize: SendBatchSize,
+                    sendFlushBatchInterval: SendFlushBatchInterval);
             ChannelListenerFactory = () => new ChannelListener(m => TaskUtil.TrueCompletedTask,
                 n => TaskUtil.TrueCompletedTask, c => TaskUtil.TrueCompletedTask);
+            EnvelopeBufferSize = 1;
         }
 
         public Node ServerNode { get; }
@@ -42,6 +50,11 @@ namespace Lime.Protocol.Server
 
         public int MaxActiveChannels { get; private set; } = -1;
 
+        public int EnvelopeBufferSize { get; private set; }
+
+        public int SendBatchSize { get; private set; } = 1;
+
+        public TimeSpan SendFlushBatchInterval { get; private set; } = TimeSpan.FromMilliseconds(256);
 
         public ServerBuilder WithServerChannelFactory(Func<ITransport, IServerChannel> serverChannelFactory)
         {
@@ -97,6 +110,24 @@ namespace Lime.Protocol.Server
         {
             if (maxActiveChannels == 0) throw new ArgumentOutOfRangeException(nameof(maxActiveChannels));
             MaxActiveChannels = maxActiveChannels;
+            return this;
+        }
+        
+        public ServerBuilder WithEnvelopeBufferSize(int envelopeBufferSize)
+        {
+            EnvelopeBufferSize = envelopeBufferSize;
+            return this;
+        }
+        
+        public ServerBuilder WithSendBatchSize(int sendBatchSize)
+        {
+            SendBatchSize = sendBatchSize;
+            return this;
+        }
+        
+        public ServerBuilder WithSendFlushBatchInterval(TimeSpan sendFlushBatchInterval)
+        {
+            SendFlushBatchInterval = sendFlushBatchInterval;
             return this;
         }
 

@@ -1,4 +1,6 @@
-﻿namespace Lime.Protocol.Serialization
+﻿using System.Buffers;
+
+namespace Lime.Protocol.Serialization
 {
     /// <summary>
     /// Base interface for envelope serializers.

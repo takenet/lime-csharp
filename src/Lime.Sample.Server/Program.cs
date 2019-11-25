@@ -74,15 +74,14 @@ namespace Lime.Sample.Server
             {
                 case "net.tcp":
                     X509Certificate2 serverCertificate = null;  // You should provide a certificate for TLS
-                    return new TcpTransportListener(
+                    return new PipeTcpTransportListener(
                         uri,
                         serverCertificate,
                         serializer,
-                        1024,
                         2048);
                 case "ws":
                 case "wss":
-                    return new KestrelWebSocketTransportListener(
+                    return new WebSocketTransportListener(
                         new[] { uri },                        
                         serializer);
 
@@ -93,7 +92,6 @@ namespace Lime.Sample.Server
                     throw new NotSupportedException($"Unsupported URI scheme '{uri.Scheme}'");
             }
         }
-
 
         static async Task ListenAsync(ITransportListener transportListener, CancellationToken cancellationToken)
         {

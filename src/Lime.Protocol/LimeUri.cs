@@ -136,5 +136,9 @@ namespace Lime.Protocol
         {
             return new Uri($"{LIME_URI_SCHEME}://{authority}/");
         }
+        
+        public static implicit operator LimeUri(string value) => value == null ? null : Parse(value);
+        
+        public static implicit operator string(LimeUri limeUri) => limeUri?.ToString();
     }
 }
