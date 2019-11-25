@@ -26,12 +26,12 @@ namespace Lime.Protocol.Network
         private readonly ActionBlock<Envelope> _sendEnvelopeBlock;
         private readonly object _syncRoot;
         private readonly SemaphoreSlim _sessionSemaphore;
+        private readonly ITargetBlock<Envelope> _skipModulesTargetBlock; // Optimization: Reference to the target block to send directly skipping the modules
 
         private bool _isDisposing;
         private readonly Timer _flushBatchTimer;
         private readonly TimeSpan _flushBatchInterval;
         
-
         public SenderChannel(
             IChannelInformation channelInformation,
             ITransport transport,
@@ -58,6 +58,7 @@ namespace Lime.Protocol.Network
             _sessionSemaphore = new SemaphoreSlim(1);
 
             // Send pipeline
+            // Modules blocks
             _senderCts = new CancellationTokenSource();
             var raiseModulesDataflowBlockOptions = new ExecutionDataflowBlockOptions()
             {
@@ -78,13 +79,13 @@ namespace Lime.Protocol.Network
                 EnsureOrdered = false,
             };
 
+            // Create the after modules pipeline, depending if it is batched or not.
             if (sendBatchSize <= 1)
             {
                 // Single mode, send directly to the the send block
-                _sendEnvelopeBlock = new ActionBlock<Envelope>(
+                _skipModulesTargetBlock = _sendEnvelopeBlock = new ActionBlock<Envelope>(
                     e => SendToTransportAsync(e, _senderCts.Token),
                     sendDataflowBlockOptions);
-
                 _messageToEnvelopeTransformBlock.LinkTo(_sendEnvelopeBlock,
                     DataflowUtils.PropagateCompletionLinkOptions);
                 _notificationToEnvelopeTransformBlock.LinkTo(_sendEnvelopeBlock,
@@ -95,7 +96,7 @@ namespace Lime.Protocol.Network
             else
             {
                 // Batched mode, create a batch block between the modules block and the send block 
-                _envelopeBatchBlock = new BatchBlock<Envelope>(
+                _skipModulesTargetBlock = _envelopeBatchBlock = new BatchBlock<Envelope>(
                     sendBatchSize,
                     new GroupingDataflowBlockOptions()
                     {
@@ -133,13 +134,19 @@ namespace Lime.Protocol.Network
         }
 
         public Task SendMessageAsync(Message message, CancellationToken cancellationToken)
-            => SendAsync(message, _messageToEnvelopeTransformBlock, cancellationToken);
+            =>  _messageModules.Count > 0 
+                ? SendAsync(message, _messageToEnvelopeTransformBlock, cancellationToken) 
+                : SendAsync(message, _skipModulesTargetBlock, cancellationToken); // Skip modules if there's none to optimize the pipeline
 
         public Task SendNotificationAsync(Notification notification, CancellationToken cancellationToken)
-            => SendAsync(notification, _notificationToEnvelopeTransformBlock, cancellationToken);
+            =>  _notificationModules.Count > 0 
+                ? SendAsync(notification, _notificationToEnvelopeTransformBlock, cancellationToken)
+                : SendAsync(notification, _skipModulesTargetBlock, cancellationToken);
 
         public Task SendCommandAsync(Command command, CancellationToken cancellationToken)
-            => SendAsync(command, _commandToEnvelopeTransformBlock, cancellationToken);
+            =>  _commandModules.Count > 0 
+                ? SendAsync(command, _commandToEnvelopeTransformBlock, cancellationToken)
+                : SendAsync(command, _skipModulesTargetBlock, cancellationToken);
 
         public async Task SendSessionAsync(Session session, CancellationToken cancellationToken)
         {
@@ -193,10 +200,10 @@ namespace Lime.Protocol.Network
         }
 
         /// <summary>
-        /// Sends the envelope to the transport.
+        /// Sends the envelope to the specified target.
         /// </summary>
         private async Task SendAsync<T>(T envelope, ITargetBlock<T> targetBlock, CancellationToken cancellationToken)
-            where T : Envelope, new()
+            where T : Envelope
         {
             if (envelope == null) throw new ArgumentNullException(nameof(envelope));
             if (_channelInformation.State != SessionState.Established)
@@ -215,7 +222,6 @@ namespace Lime.Protocol.Network
                 throw new InvalidOperationException("The send buffer is complete",
                     targetBlock.Completion.Exception?.GetBaseException());
             }
-
             if (!await targetBlock.SendAsync(envelope, cancellationToken).ConfigureAwait(false))
             {
                 throw new InvalidOperationException("The send buffer is not accepting more envelopes");
