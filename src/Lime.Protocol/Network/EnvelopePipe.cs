@@ -10,6 +10,9 @@ using Lime.Protocol.Server;
 
 namespace Lime.Protocol.Network
 {
+    /// <summary>
+    /// Manages <see cref="ITransport"/> buffers using the <see cref="System.IO.Pipelines.Pipe"/> class.
+    /// </summary>
     public sealed class EnvelopePipe : IStartable, IStoppable, IDisposable
     {
         public const int DEFAULT_PAUSE_WRITER_THRESHOLD = 8192 * 1024;
@@ -22,10 +25,20 @@ namespace Lime.Protocol.Network
         private readonly Pipe _receivePipe;
         private readonly Pipe _sendPipe;
         private readonly CancellationTokenSource _pipeCts;
-        private Task _receiveTask;
-        private Task _sendTask;
         private readonly SemaphoreSlim _semaphore;
 
+        private Task _receiveTask;
+        private Task _sendTask;
+
+        /// <summary>
+        /// Creates a new instance of <see cref="EnvelopePipe"/>.
+        /// </summary>
+        /// <param name="receiveFunc">The function that will be invoked by the receive task, which passes a memory to be filled by the underlying connection.</param>
+        /// <param name="sendFunc">The function that will be invoked by the send task, container the buffer that should be written to the underlying connection.</param>
+        /// <param name="envelopeSerializer">The envelope serializer</param>
+        /// <param name="traceWriter">The trace writer</param>
+        /// <param name="pauseWriterThreshold">The number of unconsumed bytes in the receive pipe to pause the read task.</param>
+        /// <param name="memoryPool">The memory pool instance to be used by the pipes</param>
         public EnvelopePipe(
             Func<Memory<byte>, CancellationToken, ValueTask<int>> receiveFunc,
             Func<ReadOnlyMemory<byte>, CancellationToken, ValueTask> sendFunc,
@@ -49,6 +62,9 @@ namespace Lime.Protocol.Network
             _semaphore = new SemaphoreSlim(1);
         }
         
+        /// <summary>
+        /// Starts the pipe producer / consumer tasks.
+        /// </summary>
         public async Task StartAsync(CancellationToken cancellationToken)
         {
             await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
@@ -60,8 +76,8 @@ namespace Lime.Protocol.Network
                     throw new InvalidOperationException("The pipe is already started");
                 }
                 
-                _receiveTask = FillReceivePipeAsync(_receivePipe.Writer, _pipeCts.Token);
-                _sendTask = ReadSendPipeAsync(_sendPipe.Reader, _pipeCts.Token);
+                _receiveTask = ReceiveAndWriteToPipeAsync(_receiveFunc, _receivePipe.Writer, _pipeCts.Token);
+                _sendTask = ReadPipeAndSendAsync(_sendFunc, _sendPipe.Reader, _pipeCts.Token);
             }
             finally
             {
@@ -69,6 +85,9 @@ namespace Lime.Protocol.Network
             }
         }
 
+        /// <summary>
+        /// Stops the pipe producer / consumer tasks and awaits they to end.
+        /// </summary>
         public async Task StopAsync(CancellationToken cancellationToken)
         {
             await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
@@ -88,6 +107,9 @@ namespace Lime.Protocol.Network
             }
         }
 
+        /// <summary>
+        /// Writes a envelope into the send pipe.
+        /// </summary>
         public async Task SendAsync(Envelope envelope, CancellationToken cancellationToken)
         {
             if (envelope == null) throw new ArgumentNullException(nameof(envelope));
@@ -120,6 +142,12 @@ namespace Lime.Protocol.Network
             }
         }
 
+        /// <summary>
+        /// Receives an envelope from the receive pipe.
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        /// <exception cref="InvalidOperationException"></exception>
         public async Task<Envelope> ReceiveAsync(CancellationToken cancellationToken)
         {
             if (_receiveTask == null) throw new InvalidOperationException($"The receive task was not initialized. Call {nameof(StartAsync)} first.");
@@ -134,7 +162,8 @@ namespace Lime.Protocol.Network
                 var buffer = readResult.Buffer;
                 if (readResult.IsCompleted || buffer.IsEmpty)
                 {
-                    throw new InvalidOperationException("Receive pipe is completed");
+                    // The receiveTask is completing, no need to thrown an exception.
+                    break;
                 }
 
                 var consumed = buffer.Start;
@@ -161,7 +190,24 @@ namespace Lime.Protocol.Network
             return envelope;
         }
         
-        private async Task FillReceivePipeAsync(PipeWriter writer, CancellationToken cancellationToken)
+        public void Dispose()
+        {
+            _pipeCts.Dispose();
+        }
+
+        private Task TraceAsync(string data, DataOperation operation)
+        {
+            if (_traceWriter == null || !_traceWriter.IsEnabled) return Task.CompletedTask;
+            return _traceWriter.TraceAsync(data, operation);
+        }
+        
+        /// <summary>
+        /// Receives data from the provided function using the memory retrieve from the pipe writer.  
+        /// </summary>
+        private static async Task ReceiveAndWriteToPipeAsync(
+            Func<Memory<byte>, CancellationToken, ValueTask<int>> receiveFunc, 
+            PipeWriter writer,
+            CancellationToken cancellationToken)
         {
             Exception exception = null;
             
@@ -170,7 +216,7 @@ namespace Lime.Protocol.Network
                 while (!cancellationToken.IsCancellationRequested)
                 {
                     var memory = writer.GetMemory();
-                    var read = await _receiveFunc(memory, cancellationToken).ConfigureAwait(false);
+                    var read = await receiveFunc(memory, cancellationToken).ConfigureAwait(false);
                     if (read == 0) break;
                     writer.Advance(read);
                     
@@ -188,7 +234,13 @@ namespace Lime.Protocol.Network
             }
         }
 
-        private async Task ReadSendPipeAsync(PipeReader reader, CancellationToken cancellationToken)
+        /// <summary>
+        /// Read data from the provided pipe and send it using the function. 
+        /// </summary>
+        private static async Task ReadPipeAndSendAsync(
+            Func<ReadOnlyMemory<byte>, CancellationToken, ValueTask> sendFunc, 
+            PipeReader reader, 
+            CancellationToken cancellationToken)
         {
             Exception exception = null;
 
@@ -203,7 +255,7 @@ namespace Lime.Protocol.Network
 
                     foreach (var memory in buffer)
                     {
-                        await _sendFunc(memory, cancellationToken);
+                        await sendFunc(memory, cancellationToken);
                     }
 
                     reader.AdvanceTo(buffer.End);
@@ -218,19 +270,6 @@ namespace Lime.Protocol.Network
                 await reader.CompleteAsync(exception).ConfigureAwait(false);
             }
         }
-
-        private Task TraceAsync(string data, DataOperation operation)
-        {
-            if (_traceWriter == null || !_traceWriter.IsEnabled) return Task.CompletedTask;
-            return _traceWriter.TraceAsync(data, operation);
-        }
-
-        public void Dispose()
-        {
-            _pipeCts.Dispose();
-        }
-
-
     }
 }
 #endif

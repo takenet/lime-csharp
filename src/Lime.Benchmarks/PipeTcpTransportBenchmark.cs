@@ -8,21 +8,21 @@ namespace Lime.Benchmarks
 {
     [CoreJob]
     [MemoryDiagnoser]
-    public class TcpTransportBenchmark : TransportBenchmarkBase
+    public class PipeTcpTransportBenchmark : TransportBenchmarkBase
     {
         protected override Uri CreateUri()
         {
-            return new Uri("net.tcp://localhost:55321");
+            return new Uri("net.tcp://localhost:55322");
         }
 
         protected override ITransport CreateClientTransport()
         {
-            return new TcpTransport(EnvelopeSerializer, null);
+            return new PipeTcpTransport(EnvelopeSerializer, null);
         }
-
+        
         protected override ITransportListener CreateTransportListener()
         {
-            return new TcpTransportListener(Uri, null, EnvelopeSerializer);
+            return new PipeTcpTransportListener(Uri, null, EnvelopeSerializer);
         }
     }
 }

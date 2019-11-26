@@ -2,6 +2,7 @@
 using System.Buffers;
 using System.Linq;
 using System.Net;
+using System.Net.Security;
 using System.Net.WebSockets;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
@@ -47,7 +48,8 @@ namespace Lime.Transport.WebSocket
             WebSocketMessageType webSocketMessageType = WebSocketMessageType.Text,
             bool closeGracefully = true,
             int pauseWriterThreshold = EnvelopePipe.DEFAULT_PAUSE_WRITER_THRESHOLD, 
-            MemoryPool<byte> memoryPool = null)
+            MemoryPool<byte> memoryPool = null,
+            Func<X509Certificate2, X509Chain, SslPolicyErrors, bool> clientCertificateValidationCallback = null)
         {
             if (listenerUris == null) throw new ArgumentNullException(nameof(listenerUris));
             if (listenerUris.Length == 0)
@@ -92,6 +94,7 @@ namespace Lime.Transport.WebSocket
                                 listenOptions.UseHttps(tlsCertificate, httpsOptions =>
                                 {
                                     httpsOptions.SslProtocols = sslProtocols;
+                                    httpsOptions.ClientCertificateValidation = clientCertificateValidationCallback;
                                 });
                             }
                         });

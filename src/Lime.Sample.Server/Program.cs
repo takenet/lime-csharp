@@ -81,7 +81,7 @@ namespace Lime.Sample.Server
                         2048);
                 case "ws":
                 case "wss":
-                    return new KestrelWebSocketTransportListener(
+                    return new WebSocketTransportListener(
                         new[] { uri },                        
                         serializer);
 
@@ -92,7 +92,6 @@ namespace Lime.Sample.Server
                     throw new NotSupportedException($"Unsupported URI scheme '{uri.Scheme}'");
             }
         }
-
 
         static async Task ListenAsync(ITransportListener transportListener, CancellationToken cancellationToken)
         {

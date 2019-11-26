@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Buffers;
+using System.Net.Security;
 using System.Net.WebSockets;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
 using Lime.Protocol;
@@ -10,6 +12,9 @@ using ReflectionMagic;
 
 namespace Lime.Transport.WebSocket
 {
+    /// <summary>
+    /// Implements a client websocket connection.
+    /// </summary>
     public class PipeClientWebSocketTransport : PipeWebSocketTransport, ITransport
     {
         public PipeClientWebSocketTransport(
@@ -19,7 +24,9 @@ namespace Lime.Transport.WebSocket
             ClientWebSocket webSocket = null,
             bool closeGracefully = true,
             int pauseWriterThreshold = EnvelopePipe.DEFAULT_PAUSE_WRITER_THRESHOLD,
-            MemoryPool<byte> memoryPool = null) 
+            MemoryPool<byte> memoryPool = null, 
+            X509CertificateCollection clientCertificates = null, 
+            RemoteCertificateValidationCallback serverCertificateValidationCallback = null) 
             : base(
                 webSocket ?? new ClientWebSocket(),
                 envelopeSerializer,
@@ -29,6 +36,16 @@ namespace Lime.Transport.WebSocket
                 pauseWriterThreshold,
                 memoryPool)
         {
+            if (clientCertificates != null)
+            {
+                ((ClientWebSocket) WebSocket).Options.ClientCertificates = clientCertificates;
+            }
+
+            if (serverCertificateValidationCallback != null)
+            {
+                ((ClientWebSocket) WebSocket).Options.RemoteCertificateValidationCallback =
+                    serverCertificateValidationCallback;
+            }
         }
 
         protected override async Task PerformOpenAsync(Uri uri, CancellationToken cancellationToken)
@@ -45,7 +62,6 @@ namespace Lime.Transport.WebSocket
             {
                 try
                 {
-                    // netcoreapp2.1
                     return WebSocket.AsDynamic()._innerWebSocket?._webSocket?._stream?._connection?._socket?.LocalEndPoint?.ToString();
                 }
                 catch
@@ -61,7 +77,6 @@ namespace Lime.Transport.WebSocket
             {
                 try
                 {
-                    // netcoreapp2.1
                     return WebSocket.AsDynamic()._innerWebSocket?._webSocket?._stream?._connection?._socket?.RemoteEndPoint?.ToString();
                 }
                 catch

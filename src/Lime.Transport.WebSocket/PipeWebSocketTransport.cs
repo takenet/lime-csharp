@@ -19,9 +19,9 @@ namespace Lime.Transport.WebSocket
         private readonly WebSocketMessageType _webSocketMessageType;
         private readonly bool _closeGracefully;
         private readonly EnvelopePipe _envelopePipe;
-        
-        protected WebSocketCloseStatus CloseStatus;
-        protected string CloseStatusDescription;
+
+        private WebSocketCloseStatus _closeStatus;
+        private string _closeStatusDescription;
 
         protected PipeWebSocketTransport(
             System.Net.WebSockets.WebSocket webSocket,
@@ -35,10 +35,11 @@ namespace Lime.Transport.WebSocket
             WebSocket = webSocket ?? throw new ArgumentNullException(nameof(webSocket));
             _webSocketMessageType = webSocketMessageType;
             _closeGracefully = closeGracefully;
-            _closeSemaphore = new SemaphoreSlim(1);
-            CloseStatus = WebSocketCloseStatus.NormalClosure;
-            CloseStatusDescription = string.Empty;
+            _closeSemaphore = new SemaphoreSlim(1);            
             _envelopePipe = new EnvelopePipe(ReceiveFromPipeAsync, SendToPipeAsync, envelopeSerializer, traceWriter, pauseWriterThreshold, memoryPool);
+            
+            _closeStatus = WebSocketCloseStatus.NormalClosure;
+            _closeStatusDescription = string.Empty;
         }
 
         protected System.Net.WebSockets.WebSocket WebSocket { get; }
@@ -104,13 +105,13 @@ namespace Lime.Transport.WebSocket
                         if (_closeGracefully)
                         {
                             await
-                                WebSocket.CloseAsync(CloseStatus, CloseStatusDescription, linkedCts.Token)
+                                WebSocket.CloseAsync(_closeStatus, _closeStatusDescription, linkedCts.Token)
                                     .ConfigureAwait(false);
                         }
                         else
                         {
                             await
-                                WebSocket.CloseOutputAsync(CloseStatus, CloseStatusDescription, linkedCts.Token)
+                                WebSocket.CloseOutputAsync(_closeStatus, _closeStatusDescription, linkedCts.Token)
                                     .ConfigureAwait(false);
                         }
                     }
@@ -227,9 +228,9 @@ namespace Lime.Transport.WebSocket
 
             if (receiveResult.MessageType != _webSocketMessageType)
             {
-                CloseStatus = WebSocketCloseStatus.InvalidMessageType;
-                CloseStatusDescription = "An unsupported message type was received";
-                throw new InvalidOperationException(CloseStatusDescription);
+                _closeStatus = WebSocketCloseStatus.InvalidMessageType;
+                _closeStatusDescription = "An unsupported message type was received";
+                throw new InvalidOperationException(_closeStatusDescription);
             }
             
             return receiveResult.Count;
@@ -237,7 +238,7 @@ namespace Lime.Transport.WebSocket
 
         private void HandleCloseMessage(ValueWebSocketReceiveResult receiveResult)
         {
-            CloseStatus = WebSocketCloseStatus.NormalClosure;
+            _closeStatus = WebSocketCloseStatus.NormalClosure;
         }
 
         private Task CloseWithTimeoutAsync()

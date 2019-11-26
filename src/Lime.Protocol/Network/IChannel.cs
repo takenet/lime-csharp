@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Lime.Protocol.Network
 {
@@ -41,10 +39,5 @@ namespace Lime.Protocol.Network
         /// Occurs when the channel sender task throws an exception.
         /// </summary>
         event EventHandler<ExceptionEventArgs> SenderException;
-
-        /// <summary>
-        /// Flushes the channel send buffer. 
-        /// </summary>
-        Task FlushAsync(CancellationToken cancellationToken);
     }
 }

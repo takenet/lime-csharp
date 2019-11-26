@@ -263,10 +263,12 @@ namespace Lime.Transport.WebSocket
                 {
                     try
                     {
+                        // net core
                         return WebSocket.AsDynamic()._innerStream?._context?.Request?.LocalEndPoint?.ToString();
                     }
                     catch
                     {
+                        // net framework
                         return WebSocket.AsDynamic()._stream?.Socket?.LocalEndPoint?.ToString();
                     }
                 }
@@ -285,10 +287,12 @@ namespace Lime.Transport.WebSocket
                 {
                     try
                     {
+                        // net core
                         return WebSocket.AsDynamic()._innerStream?._context?.Request?.RemoteEndPoint?.ToString();
                     }
                     catch
                     {
+                        // net framework
                         return WebSocket.AsDynamic()._stream?.Socket?.RemoteEndPoint?.ToString();
                     }
                 }

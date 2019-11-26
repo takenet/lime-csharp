@@ -63,7 +63,7 @@ namespace Lime.Protocol.Server
             {
                 if (_listenerTask != null) throw new InvalidOperationException("The server is already started");
 
-                // Initialiaze a block for holding the channel consumer tasks.
+                // Initialize a block for holding the channel consumer tasks.
                 _consumerBlock = new ActionBlock<IServerChannel>(
                     ConsumeAsync,
                     new ExecutionDataflowBlockOptions
