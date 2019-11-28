@@ -41,13 +41,7 @@ namespace Lime.Protocol.Immutable
             return $"{base.ToString()}/{Instance}";
         }
 
-        /// <summary>
-        /// Determines whether the specified <see cref="object" }, is equal to this instance.
-        /// </summary>
-        /// <param name="obj">The <see cref="object" /> to compare with this instance.</param>
-        /// <returns>
-        ///   <c>true</c> if the specified <see cref="object" /> is equal to this instance; otherwise, <c>false</c>.
-        /// </returns>
+        /// <inheritdoc />
         public override bool Equals(object obj)
         {
             var node = obj as Node;
