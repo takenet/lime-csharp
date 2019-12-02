@@ -80,7 +80,7 @@ namespace Lime.Protocol.UnitTests.Network
             var target = GetTarget(SessionState.Established);
 
             // Act
-            await target.SendMessageAsync(message, CancellationToken.None);
+            await target.SendMessageAndDelayAsync(message, CancellationToken.None);
 
             // Assert
             _transport.Verify(
@@ -103,7 +103,7 @@ namespace Lime.Protocol.UnitTests.Network
 
             Message message = null;
 
-            await target.SendMessageAsync(message, CancellationToken.None).ShouldThrowAsync<ArgumentNullException>();
+            await target.SendMessageAndDelayAsync(message, CancellationToken.None).ShouldThrowAsync<ArgumentNullException>();
         }
 
         [Test]
@@ -115,7 +115,7 @@ namespace Lime.Protocol.UnitTests.Network
             var content = Dummy.CreateTextContent();
             var message = Dummy.CreateMessage(content);
 
-            await target.SendMessageAsync(message, CancellationToken.None).ShouldThrowAsync<InvalidOperationException>();
+            await target.SendMessageAndDelayAsync(message, CancellationToken.None).ShouldThrowAsync<InvalidOperationException>();
         }
 
         [Test]
@@ -229,7 +229,7 @@ namespace Lime.Protocol.UnitTests.Network
             // Act
             foreach (var message in messages)
             {
-                await target.SendMessageAsync(message, CancellationToken.None);    
+                await target.SendMessageAndDelayAsync(message, CancellationToken.None);    
             }
 
             await Task.Delay(150, CancellationToken.None);
@@ -262,7 +262,7 @@ namespace Lime.Protocol.UnitTests.Network
             // Act
             foreach (var message in messages)
             {
-                await target.SendMessageAsync(message, CancellationToken.None);    
+                await target.SendMessageAndDelayAsync(message, CancellationToken.None);    
             }
 
             await Task.Delay(150, CancellationToken.None);
@@ -304,7 +304,7 @@ namespace Lime.Protocol.UnitTests.Network
             // Act
             foreach (var message in messages)
             {
-                await target.SendMessageAsync(message, CancellationToken.None);    
+                await target.SendMessageAndDelayAsync(message, CancellationToken.None);    
             }
 
             await Task.Delay(batchInterval + batchInterval, CancellationToken.None);
@@ -337,7 +337,7 @@ namespace Lime.Protocol.UnitTests.Network
             // Act
             foreach (var message in messages)
             {
-                await target.SendMessageAsync(message, CancellationToken.None);    
+                await target.SendMessageAndDelayAsync(message, CancellationToken.None);    
             }
 
             await Task.Delay(150, CancellationToken.None);
