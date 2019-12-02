@@ -16,6 +16,7 @@ namespace Lime.Protocol.UnitTests.Server
     {
         private Mock<TransportBase> _transport;
         private TimeSpan _sendTimeout;
+        private CancellationTokenSource _cts;
     
         [SetUp]
         public void SetUp()
@@ -25,8 +26,15 @@ namespace Lime.Protocol.UnitTests.Server
                 .Setup(t => t.IsConnected)
                 .Returns(true);            
             _sendTimeout = TimeSpan.FromSeconds(30);
+            _cts = new CancellationTokenSource(_sendTimeout);
         }
 
+        [TearDown]
+        public void TearDown()
+        {
+            _cts.Dispose();
+            _cts = null;
+        }
 
         private ServerChannel GetTarget(SessionState state = SessionState.New, Node remoteNode = null, string sessionId = null, Node serverNode = null, TimeSpan? remotePingInterval = null, TimeSpan? remoteIdleTimeout = null)
         {
@@ -402,12 +410,14 @@ namespace Lime.Protocol.UnitTests.Server
         [Category("SendEstablishedSessionAsync")]
         public async Task SendEstablishedSessionAsync_ValidArgumentsAuthenticatingState_CallsTransport()
         {
+            // Arrange
+            var node = Dummy.CreateNode();
             var target = GetTarget(SessionState.Authenticating);
 
-            var node = Dummy.CreateNode();
-
+            // Act
             await target.SendEstablishedSessionAsync(node, CancellationToken.None);
 
+            // Assert
             _transport.Verify(
                 t => t.SendAsync(
                     It.Is<Session>(e => e.State == SessionState.Established &&
@@ -422,9 +432,10 @@ namespace Lime.Protocol.UnitTests.Server
                                         e.Id == target.SessionId),
                     It.IsAny<CancellationToken>()),
                     Times.Once());
-
             Assert.AreEqual(target.State, SessionState.Established);
             Assert.AreEqual(target.RemoteNode, node);
+            // Check if the channel is writable
+            await target.SendMessageAsync(Dummy.CreateMessage(Dummy.CreateTextContent()), CancellationToken.None);
         }
 
         [Test]
@@ -466,6 +477,7 @@ namespace Lime.Protocol.UnitTests.Server
                 target.SendEstablishedSessionAsync(node, CancellationToken.None));
         }
 
+        
         #endregion
 
         #region ReceiveFinishingSessionAsync
@@ -474,22 +486,21 @@ namespace Lime.Protocol.UnitTests.Server
         [Category("ReceiveFinishingSessionAsync")]
         public async Task ReceiveFinishingSessionAsync_EstablishedState_ReadsTransport()
         {            
+            // Arrange
             var session = Dummy.CreateSession(SessionState.Finishing);
-            
             var cancellationToken = Dummy.CreateCancellationToken();
-
             var tcs = new TaskCompletionSource<Envelope>();
             _transport
                 .SetupSequence(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
                 .Returns(Task.FromResult<Envelope>(session))
                 .Returns(tcs.Task);
-
-
             var target = GetTarget(SessionState.Established);
             session.Id = target.SessionId;
 
+            // Act
             var actual = await target.ReceiveFinishingSessionAsync(cancellationToken);
 
+            // Assert
             Assert.AreEqual(session, actual);
             _transport.Verify();
         }
@@ -512,12 +523,14 @@ namespace Lime.Protocol.UnitTests.Server
         [Category("SendFinishedSessionAsync")]
         public async Task SendFinishedSessionAsync_EstablishedState_CallsAndClosesTransport()
         {
+            // Arrange
             var remoteNode = Dummy.CreateNode();
-
             var target = GetTarget(SessionState.Established, remoteNode);
 
-            await target.SendFinishedSessionAsync(CancellationToken.None);
+            // Act
+            await target.SendFinishedSessionAsync(_cts.Token);
 
+            // Assert
             _transport.Verify(
                 t => t.SendAsync(
                     It.Is<Session>(e => e.State == SessionState.Finished &&
@@ -532,12 +545,11 @@ namespace Lime.Protocol.UnitTests.Server
                                         e.Encryption == null),
                     It.IsAny<CancellationToken>()),
                     Times.Once());
-
             _transport.Verify(
                 t => t.CloseAsync(
                     It.IsAny<CancellationToken>()));
-
             Assert.AreEqual(target.State, SessionState.Finished);
+            await target.SendMessageAsync(Dummy.CreateMessage(Dummy.CreateTextContent()), _cts.Token).ShouldThrowAsync<InvalidOperationException>();
         }
 
         [Test]
@@ -563,14 +575,15 @@ namespace Lime.Protocol.UnitTests.Server
         [Category("SendFailedSessionAsync")]
         public async Task SendFailedSessionAsync_EstablishedState_CallsAndClosesTransport()
         {
+            // Arrange
             var remoteNode = Dummy.CreateNode();
-
             var target = GetTarget(SessionState.Established, remoteNode);
-
             var reason = Dummy.CreateReason();
-
+            
+            // Act
             await target.SendFailedSessionAsync(reason, CancellationToken.None);
 
+            // Assert
             _transport.Verify(
                 t => t.SendAsync(
                     It.Is<Session>(e => e.State == SessionState.Failed &&
@@ -585,12 +598,11 @@ namespace Lime.Protocol.UnitTests.Server
                                         e.Encryption == null),
                     It.IsAny<CancellationToken>()),
                     Times.Once());
-
             _transport.Verify(
                 t => t.CloseAsync(
                     It.IsAny<CancellationToken>()));
-
             Assert.AreEqual(target.State, SessionState.Failed);
+            await target.SendMessageAsync(Dummy.CreateMessage(Dummy.CreateTextContent()), _cts.Token).ShouldThrowAsync<InvalidOperationException>();
         }
 
         [Test]

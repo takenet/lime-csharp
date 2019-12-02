@@ -162,7 +162,9 @@ namespace Lime.Protocol.Network
             await _sessionSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
             try
             {
-                if (_channelInformation.State >= SessionState.Established)
+                if (session.State == SessionState.Finishing ||
+                    session.State == SessionState.Finished ||
+                    session.State == SessionState.Failed)
                 {
                     // Complete the buffers and sends after awaiting for the completion
                     CompletePipeline();

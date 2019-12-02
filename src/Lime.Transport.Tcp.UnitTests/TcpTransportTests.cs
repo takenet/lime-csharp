@@ -33,7 +33,7 @@ namespace Lime.Transport.Tcp.UnitTests
             return base.SetUpImpl();
         }
         
-        protected override Uri CreateListenerUri() => new Uri("net.tcp://localhost:55321");
+        protected override Uri CreateListenerUri() => new Uri("net.tcp://localhost:5321");
 
         protected override ITransportListener CreateTransportListener(Uri uri, IEnvelopeSerializer envelopeSerializer) 
             => new TcpTransportListener(uri, null, envelopeSerializer, BufferSize, MaxBufferSize, ArrayPool, TraceWriter);

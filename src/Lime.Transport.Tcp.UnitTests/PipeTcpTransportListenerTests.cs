@@ -11,7 +11,7 @@ namespace Lime.Transport.Tcp.UnitTests
     {
         protected override ITransport CreateClientTransport() => new PipeTcpTransport(EnvelopeSerializer);
 
-        protected override Uri CreateListenerUri() => new Uri("net.tcp://localhost:55332");
+        protected override Uri CreateListenerUri() => new Uri("net.tcp://localhost:5332");
 
         protected override ITransportListener CreateTransportListener() 
             => new PipeTcpTransportListener(ListenerUri, null, EnvelopeSerializer, traceWriter: TraceWriter.Object);

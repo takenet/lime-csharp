@@ -18,6 +18,7 @@ namespace Lime.Protocol.UnitTests.Client
     {
         private Mock<TransportBase> _transport;
         private TimeSpan _sendTimeout;
+        private CancellationTokenSource _cts;
 
         [SetUp]
         public void SetUp()
@@ -27,6 +28,14 @@ namespace Lime.Protocol.UnitTests.Client
                 .Setup(t => t.IsConnected)
                 .Returns(true);
             _sendTimeout = TimeSpan.FromSeconds(30);
+            _cts = new CancellationTokenSource(_sendTimeout);
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            _cts.Dispose();
+            _cts = null;
         }
 
         public ClientChannel GetTarget(string sessionId = null, SessionState state = SessionState.New, bool fillEnvelopeRecipients = false, bool autoReplyPings = true, bool autoNotifyReceipt = true, Node remoteNode = null, Node localNode = null, TimeSpan? remotePingInterval = null, TimeSpan? remoteIdleTimeout = null)
@@ -286,21 +295,24 @@ namespace Lime.Protocol.UnitTests.Client
         [Category("SendFinishingSessionAsync")]
         public async Task SendFinishingSessionAsync_EstablishedState_CallsTransport()
         {
+            // Arrange
             var tcs = new TaskCompletionSource<Envelope>();
             _transport
                 .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
                 .Returns(tcs.Task);
-
             var target = GetTarget(state: SessionState.Established);
 
+            // Act
             await target.SendFinishingSessionAsync(CancellationToken.None);
 
+            // Assert
             _transport.Verify(
                 t => t.SendAsync(It.Is<Session>(
                         e => e.State == SessionState.Finishing &&
                              e.Id == target.SessionId),
                     It.IsAny<CancellationToken>()),
                     Times.Once());
+            await target.SendMessageAsync(Dummy.CreateMessage(Dummy.CreateTextContent()), _cts.Token).ShouldThrowAsync<InvalidOperationException>();
         }
 
         [Test]
