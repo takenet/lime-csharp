@@ -250,6 +250,7 @@ namespace Lime.Protocol.UnitTests.Client
         [Category("SendReceivedNotificationAsync")]
         public async Task SendReceivedNotificationAsync_EstablishedState_CallsTransport()
         {
+            // Arrange
             var tcs = new TaskCompletionSource<Envelope>();
             _transport
                 .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
@@ -260,8 +261,11 @@ namespace Lime.Protocol.UnitTests.Client
             var content = Dummy.CreateTextContent();
             var message = Dummy.CreateMessage(content);
 
+            // Act
             await target.SendReceivedNotificationAsync(message.Id, message.From, CancellationToken.None);
+            await Task.Delay(150);
 
+            // Assert
             _transport.Verify(
                 t => t.SendAsync(It.Is<Notification>(
                         n => n.Id == message.Id &&
