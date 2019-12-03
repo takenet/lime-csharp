@@ -5,10 +5,11 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
+using Lime.Protocol.Server;
 
 namespace Lime.Protocol.Network
 {
-    internal sealed class ReceiverChannel : IReceiverChannel, IDisposable
+    internal sealed class ReceiverChannel : IReceiverChannel, IStoppable, IDisposable
     {
         private readonly IChannelInformation _channelInformation;
         private readonly ITransport _transport;
@@ -16,7 +17,6 @@ namespace Lime.Protocol.Network
         private readonly ICollection<IChannelModule<Message>> _messageModules;
         private readonly ICollection<IChannelModule<Notification>> _notificationModules;
         private readonly ICollection<IChannelModule<Command>> _commandModules;
-        private readonly Func<Exception, Task> _exceptionHandler;
 
         private readonly TimeSpan? _consumeTimeout;
         private readonly CancellationTokenSource _consumerCts;
@@ -30,9 +30,10 @@ namespace Lime.Protocol.Network
         private readonly BufferBlock<Notification> _receiveNotificationBuffer;
         private readonly BufferBlock<Session> _receiveSessionBuffer;
         private readonly ITargetBlock<Envelope> _drainEnvelopeBlock;
-        private readonly object _syncRoot;
         private readonly SemaphoreSlim _sessionSemaphore;
-
+        private readonly SemaphoreSlim _startStopSemaphore;
+        private readonly ActionBlock<Exception> _exceptionHandlerActionBlock;
+        
         private Task _consumeTransportTask;
         private bool _isDisposing;
 
@@ -55,9 +56,11 @@ namespace Lime.Protocol.Network
             _messageModules = messageModules;
             _notificationModules = notificationModules;
             _commandModules = commandModules;
-            _exceptionHandler = exceptionHandler;
             _consumeTimeout = consumeTimeout;
-
+            _exceptionHandlerActionBlock = new ActionBlock<Exception>(exceptionHandler, DataflowUtils.UnboundedUnorderedExecutionDataflowBlockOptions);
+            _sessionSemaphore = new SemaphoreSlim(1);
+            _startStopSemaphore = new SemaphoreSlim(1);
+            
             // Receive pipeline
             _consumerCts = new CancellationTokenSource();
             var consumerDataflowBlockOptions = new ExecutionDataflowBlockOptions()
@@ -88,9 +91,6 @@ namespace Lime.Protocol.Network
             _notificationConsumerBlock.LinkTo(_drainEnvelopeBlock, e => e == null);
             _sessionConsumerBlock.LinkTo(_receiveSessionBuffer, DataflowUtils.PropagateCompletionLinkOptions, e => e != null);
             _sessionConsumerBlock.LinkTo(_drainEnvelopeBlock, e => e == null);
-            
-            _syncRoot = new object();
-            _sessionSemaphore = new SemaphoreSlim(1);
         }
         
         /// <inheritdoc />
@@ -134,20 +134,39 @@ namespace Lime.Protocol.Network
         
         public void Start()
         {
-            lock (_syncRoot)
+            _startStopSemaphore.Wait();
+            try
             {
                 if (_consumeTransportTask == null)
                 {
                     _consumeTransportTask = Task.Run(ConsumeTransportAsync);
                 }
             }
+            finally
+            {
+                _startStopSemaphore.Release();
+            }
         }
         
-        public void Stop()
+        public async Task StopAsync(CancellationToken cancellationToken)
         {
-            lock (_syncRoot)
+            await _startStopSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+            try
             {
+                // Complete the pipeline
+                _receiveEnvelopeBuffer.CompleteIfNotCompleted();
+                
+                // Stops the listener task
                 _consumerCts.CancelIfNotRequested();
+                if (_consumeTransportTask != null &&
+                    !_consumeTransportTask.IsCompleted)
+                {
+                    await _consumeTransportTask.WithCancellation(cancellationToken);
+                }
+            }
+            finally
+            {
+                _startStopSemaphore.Release();
             }
         }
         
@@ -157,6 +176,7 @@ namespace Lime.Protocol.Network
             _consumerCts.CancelIfNotRequested();
             _consumerCts.Dispose();
             _sessionSemaphore.Dispose();
+            _startStopSemaphore.Dispose();
         }
 
         private bool IsChannelEstablished()
@@ -180,9 +200,10 @@ namespace Lime.Protocol.Network
                         
                         try
                         {
-                            if (!await _receiveEnvelopeBuffer.SendAsync(envelope, linkedCts.Token))
+                            if (!await _receiveEnvelopeBuffer.SendAsync(envelope, linkedCts.Token).ConfigureAwait(false))
                             {
-                                throw new InvalidOperationException("Transport buffer limit reached");
+                                // The buffer is complete
+                                break;
                             }
                         }
                         catch (OperationCanceledException ex) when (timeoutCts.IsCancellationRequested && _consumeTimeout != null)
@@ -224,7 +245,7 @@ namespace Lime.Protocol.Network
             finally
             {
                 // Complete the receive pipeline to propagate to the envelope specific buffers
-                _receiveEnvelopeBuffer.Complete();
+                _receiveEnvelopeBuffer.CompleteIfNotCompleted();
                 _channelCommandProcessor.CancelAll();
                 _consumerCts.CancelIfNotRequested();
             }
@@ -276,7 +297,6 @@ namespace Lime.Protocol.Network
             catch (Exception ex)
             {
                 await RaiseConsumerExceptionAsync(ex);
-                Stop();
             }
 
             return null;
@@ -308,6 +328,9 @@ namespace Lime.Protocol.Network
             }
         }
         
-        private Task RaiseConsumerExceptionAsync(Exception exception) => _exceptionHandler(exception);
+        /// <summary>
+        /// Asynchronously raises the channel exception to avoid deadlocks issues.
+        /// </summary>
+        private Task RaiseConsumerExceptionAsync(Exception exception) => _exceptionHandlerActionBlock.SendAsync(exception);
     }
 }

@@ -49,7 +49,7 @@ namespace Lime.Protocol.UnitTests.Network
         {
             return new TestChannel(
                 state,
-                _transport.Object,
+                new CancellableTransportDecorator(_transport.Object, true),
                 _sendTimeout,
                 buffersLimit,
                 fillEnvelopeRecipients,
@@ -118,6 +118,41 @@ namespace Lime.Protocol.UnitTests.Network
             await target.SendMessageAndDelayAsync(message, CancellationToken.None).ShouldThrowAsync<InvalidOperationException>();
         }
 
+        [Test]
+        [Category("SendMessageAsync")]
+        public async Task SendMessageAsync_TransportThrowsException_SendToTransportThenThrowException()
+        {
+            // Arrange
+            var content = Dummy.CreateTextContent();
+            var message = Dummy.CreateMessage(content);
+            var exception = Dummy.CreateException<ApplicationException>();
+            _transport
+                .SetupSequence(t => t.SendAsync(It.IsAny<Envelope>(), It.IsAny<CancellationToken>()))
+                .Returns(Task.CompletedTask)
+                .Returns(Task.CompletedTask)
+                .Throws(exception);
+            var target = GetTarget(SessionState.Established, 5);
+            Exception actualException = null;
+            target.SenderException += (sender, e) =>
+            {
+                using (e.GetDeferral())
+                {
+                    actualException = e.Exception;
+                }
+            };
+
+            var cancellationToken = Dummy.CreateCancellationToken();
+            
+            // Act
+            await target.SendMessageAsync(message, cancellationToken);
+            await target.SendMessageAsync(message, cancellationToken);
+            await target.SendMessageAndDelayAsync(message, cancellationToken);
+            
+            // Assert
+            actualException.ShouldBe(actualException);
+            await target.SendMessageAsync(message, cancellationToken).ShouldThrowAsync<InvalidOperationException>();
+        }        
+        
         [Test]
         [Category("SendMessageAsync")]
         public async Task SendMessageAsync_ModuleReturnsMessage_SendsModuleMessage()
@@ -1556,23 +1591,22 @@ namespace Lime.Protocol.UnitTests.Network
 
         public async Task EnvelopeAsyncBuffer_PromiseAdded_TransportThrowsException_CallsTransportCloseAsyncAndThrowsException()
         {
-            var exception = Dummy.CreateException<InvalidOperationException>();
+            // Arrange
+            var exception = new InvalidOperationException("This exception should be thrown by the transport");
             var cancellationToken = Dummy.CreateCancellationToken();
-
             var taskCompletionSource = new TaskCompletionSource<Envelope>();
             _transport
                 .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
                 .Returns(taskCompletionSource.Task)
                 .Verifiable();
-
             _transport
                 .Setup(t => t.CloseAsync(It.IsAny<CancellationToken>()))
                 .Returns(Task.FromResult<object>(null))
                 .Callback(() => _transport.Raise(t => t.Closing += (sender, e) => { }, new DeferralEventArgs()));
-
             var target = GetTarget(SessionState.Established);
+            
+            // Act
             var receiveTask = target.ReceiveMessageAsync(cancellationToken);
-
             await Task.Delay(300);
             taskCompletionSource.SetException(exception);
 
@@ -1803,7 +1837,6 @@ namespace Lime.Protocol.UnitTests.Network
                 Times.Once());
             receiveSessionTask.ShouldThrow<InvalidOperationException>();
         }
-
 
         [Test]
         [Category("PingRemoteAsync")]

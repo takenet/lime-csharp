@@ -52,7 +52,7 @@ namespace Lime.Protocol.UnitTests.Server
                 state,
                 sessionId,
                 serverNode,
-                _transport.Object,
+                new CancellableTransportDecorator(_transport.Object),
                 _sendTimeout,
                 remoteNode,
                 remotePingInterval,

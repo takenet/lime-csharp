@@ -13,11 +13,16 @@ namespace Lime.Protocol.Network
     /// </summary>
     public abstract class ChannelBase : IChannel, IDisposable
     {
+        private static readonly TimeSpan ExceptionHandlerTimeout = TimeSpan.FromSeconds(5);
+        private static readonly TimeSpan StopTimeout = TimeSpan.FromSeconds(5);
+        
         private readonly TimeSpan _closeTimeout;
         private readonly ReceiverChannel _receiverChannel;
         private readonly SenderChannel _senderChannel;
         private readonly IChannelCommandProcessor _channelCommandProcessor;
+        
         private SessionState _state;
+        private bool _closeTransportInvoked;
 
         /// <summary>
         /// Creates a new instance of ChannelBase
@@ -82,7 +87,7 @@ namespace Lime.Protocol.Network
                 MessageModules,
                 NotificationModules,
                 CommandModules, 
-                RaiseConsumerExceptionAsync,
+                HandleConsumerExceptionAsync,
                 envelopeBufferSize,
                 consumeTimeout);
 
@@ -92,7 +97,7 @@ namespace Lime.Protocol.Network
                 MessageModules,
                 NotificationModules,
                 CommandModules,
-                RaiseSenderExceptionAsync,
+                HandleSenderExceptionAsync,
                 envelopeBufferSize,
                 sendTimeout,
                 sendBatchSize,
@@ -241,18 +246,40 @@ namespace Lime.Protocol.Network
         /// <returns></returns>
         public virtual Task<Session> ReceiveSessionAsync(CancellationToken cancellationToken) 
             => _receiverChannel.ReceiveSessionAsync(cancellationToken);
-
+        
+        
         /// <summary>
         /// Closes the underlying transport.
         /// </summary>
         /// <returns></returns>
         protected async Task CloseTransportAsync()
         {
-            if (Transport.IsConnected)
+            _closeTransportInvoked = true;
+
+            try
             {
-                using var cts = new CancellationTokenSource(_closeTimeout);
-                await Transport.CloseAsync(cts.Token).ConfigureAwait(false);
+                await StopChannelTasks().ConfigureAwait(false);
             }
+            finally
+            {
+                if (Transport.IsConnected)
+                {
+                    using var cts = new CancellationTokenSource(_closeTimeout);
+                    await Transport.CloseAsync(cts.Token).ConfigureAwait(false);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Stops the sender and receiver tasks.
+        /// </summary>
+        /// <returns></returns>
+        private Task StopChannelTasks()
+        {
+            using var cts = new CancellationTokenSource(StopTimeout);
+            return Task.WhenAll(
+                _receiverChannel.StopAsync(cts.Token),
+                _senderChannel.StopAsync(cts.Token));
         }
         
         /// <summary>
@@ -260,12 +287,13 @@ namespace Lime.Protocol.Network
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void Transport_Closing(object sender, DeferralEventArgs e)
+        private async void Transport_Closing(object sender, DeferralEventArgs e)
         {
+            if (_closeTransportInvoked) return;
+            
             using (e.GetDeferral())
             {
-                _receiverChannel.Stop();
-                _senderChannel.Stop();
+                await StopChannelTasks().ConfigureAwait(false);
             }
         }
         
@@ -277,18 +305,23 @@ namespace Lime.Protocol.Network
             }
         }
 
-        private Task RaiseConsumerExceptionAsync(Exception exception)=> RaiseExceptionAsync(exception, ConsumerException);
+        private Task HandleConsumerExceptionAsync(Exception exception)=> HandleExceptionAsync(exception, ConsumerException);
 
-        private Task RaiseSenderExceptionAsync(Exception exception) => RaiseExceptionAsync(exception, SenderException);
+        private Task HandleSenderExceptionAsync(Exception exception) => HandleExceptionAsync(exception, SenderException);
         
-        private async Task RaiseExceptionAsync(Exception exception, EventHandler<ExceptionEventArgs> handler)
+        private async Task HandleExceptionAsync(Exception exception, EventHandler<ExceptionEventArgs> handler)
         {
-            using var cts = new CancellationTokenSource(_closeTimeout);
-            var args = new ExceptionEventArgs(exception);
-            handler.RaiseEvent(this, new ExceptionEventArgs(exception));
-            await args.WaitForDeferralsAsync(cts.Token).ConfigureAwait(false);
-
-            await CloseTransportAsync();
+            try
+            {
+                using var cts = new CancellationTokenSource(ExceptionHandlerTimeout);
+                var args = new ExceptionEventArgs(exception);
+                handler.RaiseEvent(this, new ExceptionEventArgs(exception));
+                await args.WaitForDeferralsAsync(cts.Token).ConfigureAwait(false);
+            }
+            finally
+            {
+                await CloseTransportAsync().ConfigureAwait(false);                
+            }
         }
 
         /// <summary>
@@ -308,9 +341,7 @@ namespace Lime.Protocol.Network
         {
             if (disposing)
             {
-                _receiverChannel.Stop();
                 _receiverChannel.Dispose();
-                _senderChannel.Stop();
                 _senderChannel.Dispose();
                 Transport.DisposeIfDisposable();
             }

@@ -4,17 +4,17 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
+using Lime.Protocol.Server;
 
 namespace Lime.Protocol.Network
 {
-    internal sealed class SenderChannel : ISenderChannel, IDisposable
+    internal sealed class SenderChannel : ISenderChannel, IStoppable, IDisposable
     {
         private readonly IChannelInformation _channelInformation;
         private readonly ITransport _transport;
         private readonly ICollection<IChannelModule<Message>> _messageModules;
         private readonly ICollection<IChannelModule<Notification>> _notificationModules;
         private readonly ICollection<IChannelModule<Command>> _commandModules;
-        private readonly Func<Exception, Task> _exceptionHandler;
         private readonly TimeSpan _sendTimeout;
         private readonly CancellationTokenSource _senderCts;
 
@@ -24,8 +24,10 @@ namespace Lime.Protocol.Network
         private readonly BatchBlock<Envelope> _envelopeBatchBlock;
         private readonly ActionBlock<Envelope[]> _sendEnvelopeBatchBlock;
         private readonly ActionBlock<Envelope> _sendEnvelopeBlock;
-        private readonly object _syncRoot;
         private readonly SemaphoreSlim _sessionSemaphore;
+        private readonly SemaphoreSlim _startStopSemaphore;
+        private readonly ActionBlock<Exception> _exceptionHandlerActionBlock;
+
         private readonly ITargetBlock<Envelope> _skipModulesTargetBlock; // Optimization: Reference to the target block to send directly skipping the modules
 
         private bool _isDisposing;
@@ -52,10 +54,10 @@ namespace Lime.Protocol.Network
             _messageModules = messageModules;
             _notificationModules = notificationModules;
             _commandModules = commandModules;
-            _exceptionHandler = exceptionHandler;
             _sendTimeout = sendTimeout;
-            _syncRoot = new object();
+            _exceptionHandlerActionBlock = new ActionBlock<Exception>(exceptionHandler, DataflowUtils.UnboundedUnorderedExecutionDataflowBlockOptions);
             _sessionSemaphore = new SemaphoreSlim(1);
+            _startStopSemaphore = new SemaphoreSlim(1);
 
             // Send pipeline
             // Modules blocks
@@ -166,11 +168,7 @@ namespace Lime.Protocol.Network
                     session.State == SessionState.Finished ||
                     session.State == SessionState.Failed)
                 {
-                    // Complete the buffers and sends after awaiting for the completion
-                    CompletePipeline();
-                    
-                    // Awaits the completion of the last pipeline block (depending if it is batched or not)
-                    await (_sendEnvelopeBlock?.Completion ?? _sendEnvelopeBatchBlock.Completion).WithCancellation(cancellationToken).ConfigureAwait(false);
+                    await StopAsync(cancellationToken).ConfigureAwait(false);
                 }
 
                 // The session envelopes are sent directly to the transport
@@ -182,13 +180,23 @@ namespace Lime.Protocol.Network
             }
         }
 
-        public void Stop()
+        public async Task StopAsync(CancellationToken cancellationToken)
         {
-            lock (_syncRoot)
+            await _startStopSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+            try
             {
-                _senderCts.CancelIfNotRequested();
+                // Complete the buffers and sends after awaiting for the completion
                 CompletePipeline();
+
+                // Awaits the completion of the last pipeline block (depending if it is batched or not)
+                await (_sendEnvelopeBlock?.Completion ?? _sendEnvelopeBatchBlock.Completion).WithCancellation(cancellationToken).ConfigureAwait(false);                
+                
+                _senderCts.CancelIfNotRequested();
                 _flushBatchTimer?.Change(Timeout.Infinite, Timeout.Infinite);
+            }
+            finally
+            {
+                _startStopSemaphore.Release();
             }
         }
 
@@ -198,6 +206,7 @@ namespace Lime.Protocol.Network
             _senderCts.CancelIfNotRequested();
             _senderCts.Dispose();
             _sessionSemaphore.Dispose();
+            _startStopSemaphore.Dispose();
             _flushBatchTimer?.Dispose();
         }
 
@@ -249,8 +258,7 @@ namespace Lime.Protocol.Network
             }
             catch (Exception ex)
             {
-                await RaiseSenderExceptionAsync(ex);
-                Stop();
+                await RaiseSenderExceptionAsync(ex);                
             }
 
             return null;
@@ -272,7 +280,6 @@ namespace Lime.Protocol.Network
             }
             catch (Exception ex)
             {
-                Stop();
                 await RaiseSenderExceptionAsync(ex);
             }
         }
@@ -297,7 +304,6 @@ namespace Lime.Protocol.Network
             }
             catch (Exception ex)
             {
-                Stop();
                 await RaiseSenderExceptionAsync(ex);
             }
 
@@ -311,6 +317,9 @@ namespace Lime.Protocol.Network
             _commandToEnvelopeTransformBlock.CompleteIfNotCompleted();
         }
 
-        private Task RaiseSenderExceptionAsync(Exception exception) => _exceptionHandler(exception);
+        /// <summary>
+        /// Asynchronously raises the channel exception to avoid deadlocks issues.
+        /// </summary>
+        private Task RaiseSenderExceptionAsync(Exception exception) => _exceptionHandlerActionBlock.SendAsync(exception);
     }
 }

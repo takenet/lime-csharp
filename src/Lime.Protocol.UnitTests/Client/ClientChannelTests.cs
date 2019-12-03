@@ -43,7 +43,7 @@ namespace Lime.Protocol.UnitTests.Client
             return new TestClientChannel(
                 sessionId,
                 state,
-                _transport.Object,
+                new CancellableTransportDecorator(_transport.Object),
                 _sendTimeout,
                 fillEnvelopeRecipients,
                 autoReplyPings,
@@ -338,21 +338,22 @@ namespace Lime.Protocol.UnitTests.Client
         [Test]
         [Category("ReceiveFinishedSessionAsync")]
         public async Task ReceiveFinishedSessionAsync_EstablishedState_ReadsTransport()
-        {            
+        {
+            // Arrange
             var session = Dummy.CreateSession(SessionState.Finished);            
             var tcs = new TaskCompletionSource<Envelope>();
-
             var cancellationToken = Dummy.CreateCancellationToken();
-
             _transport
                 .SetupSequence(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
                 .Returns(Task.FromResult<Envelope>(session))
                 .Returns(tcs.Task);
-
             var target = GetTarget(state: SessionState.Established);
             session.Id = target.SessionId;
+         
+            // Act
             var actual = await target.ReceiveFinishedSessionAsync(cancellationToken);
 
+            // Assert
             Assert.AreEqual(session, actual);
             _transport.Verify();
         }

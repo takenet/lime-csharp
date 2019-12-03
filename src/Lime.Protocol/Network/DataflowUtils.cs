@@ -8,5 +8,13 @@ namespace Lime.Protocol.Network
         {
             PropagateCompletion = true,
         };
+
+        public static readonly ExecutionDataflowBlockOptions UnboundedUnorderedExecutionDataflowBlockOptions =
+            new ExecutionDataflowBlockOptions()
+            {
+                BoundedCapacity = DataflowBlockOptions.Unbounded,
+                MaxDegreeOfParallelism = DataflowBlockOptions.Unbounded,
+                EnsureOrdered = false
+            };
     }
 }
