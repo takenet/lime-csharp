@@ -5,6 +5,9 @@ using System.Threading.Tasks;
 
 namespace Lime.Protocol.Network
 {
+    /// <summary>
+    /// Defines a decorator for <see cref="ITransport"/> that synchronizes concurrent <see cref="SendAsync"/> and <see cref="ReceiveAsync"/> calls.
+    /// </summary>
     public sealed class SynchronizedTransportDecorator : ITransport
     {
         private readonly ITransport _transport;
