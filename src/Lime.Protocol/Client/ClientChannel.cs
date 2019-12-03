@@ -266,7 +266,8 @@ namespace Lime.Protocol.Client
             SessionId = session.Id;
             State = session.State;
 
-            if (session.State == SessionState.Finished || session.State == SessionState.Failed)
+            if (session.State == SessionState.Finished || 
+                session.State == SessionState.Failed)
             {
                 await CloseTransportAsync().ConfigureAwait(false);
             }

@@ -239,19 +239,9 @@ namespace Lime.Protocol.Network
         /// </summary>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns></returns>
-        public virtual async Task<Session> ReceiveSessionAsync(CancellationToken cancellationToken)
-        {
-            try
-            {
-                return await _receiverChannel.ReceiveSessionAsync(cancellationToken);
-            }
-            catch
-            {
-                await CloseTransportAsync().ConfigureAwait(false);
-                throw;
-            }
-        }
-        
+        public virtual Task<Session> ReceiveSessionAsync(CancellationToken cancellationToken) 
+            => _receiverChannel.ReceiveSessionAsync(cancellationToken);
+
         /// <summary>
         /// Closes the underlying transport.
         /// </summary>
