@@ -128,13 +128,13 @@ namespace Lime.Protocol
             using (cancellationToken.Register(
                         s => ((TaskCompletionSource<bool>)s).TrySetResult(true), tcs))
             {
-                if (task != await Task.WhenAny(task, tcs.Task))
+                if (task != await Task.WhenAny(task, tcs.Task).ConfigureAwait(false))
                 {
                     throw new OperationCanceledException(cancellationToken);
                 }
             }
 
-            return await task;
+            return await task.ConfigureAwait(false);
         }
 
         /// <summary>
@@ -148,16 +148,15 @@ namespace Lime.Protocol
         public static async Task WithCancellation(this Task task, CancellationToken cancellationToken)
         {
             var tcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
-            using (cancellationToken.Register(
-                        s => ((TaskCompletionSource<bool>)s).TrySetResult(true), tcs))
+            using (cancellationToken.Register(s => ((TaskCompletionSource<bool>)s).TrySetResult(true), tcs))
             {
-                if (task != await Task.WhenAny(task, tcs.Task))
+                if (task != await Task.WhenAny(task, tcs.Task).ConfigureAwait(false))
                 {
                     throw new OperationCanceledException(cancellationToken);
                 }
             }
 
-            await task;
+            await task.ConfigureAwait(false);
         }
 
         /// <summary>
