@@ -1582,14 +1582,10 @@ namespace Lime.Protocol.UnitTests.Network
             var actual = await target.ReceiveSessionAsync(cancellationToken).ShouldThrowAsync<InvalidOperationException>();
         }
 
-        #endregion
-
-        #region EnvelopeAsyncBuffer_PromiseAdded
-
         [Test]
-        [Category("EnvelopeAsyncBuffer_PromiseAdded")]
+        [Category("ReceiveAsync")]
 
-        public async Task EnvelopeAsyncBuffer_PromiseAdded_TransportThrowsException_CallsTransportCloseAsyncAndThrowsException()
+        public async Task ReceiveAsync_TransportThrowsException_CallsTransportCloseAsyncAndThrowsException()
         {
             // Arrange
             var exception = new InvalidOperationException("This exception should be thrown by the transport");
@@ -1607,11 +1603,11 @@ namespace Lime.Protocol.UnitTests.Network
             
             // Act
             var receiveTask = target.ReceiveMessageAsync(cancellationToken);
-            await Task.Delay(300);
             taskCompletionSource.SetException(exception);
 
             // Assert
             await receiveTask.ShouldThrowAsync<InvalidOperationException>();
+            await Task.Delay(150);
             _transport.Verify();
             _transport.Verify(
                 t => t.CloseAsync(It.IsAny<CancellationToken>()),
@@ -1619,8 +1615,8 @@ namespace Lime.Protocol.UnitTests.Network
         }
 
         [Test]
-        [Category("EnvelopeAsyncBuffer_PromiseAdded")]
-        public async Task EnvelopeAsyncBuffer_PromiseAdded_BufferHasPromises_ConsumersFromTransport()
+        [Category("ReceiveAsync")]
+        public async Task ReceiveAsync_BufferHasPromises_ConsumersFromTransport()
         {
             // Arrange
             var cancellationToken = Dummy.CreateCancellationToken();
@@ -1671,8 +1667,8 @@ namespace Lime.Protocol.UnitTests.Network
         }
 
         [Test]
-        [Category("EnvelopeAsyncBuffer_PromiseAdded")]
-        public async Task EnvelopeAsyncBuffer_PromiseAdded_BufferHasPromises_ConsumersFromTransportInverted()
+        [Category("ReceiveAsync")]
+        public async Task ReceiveAsync_BufferHasPromises_ConsumersFromTransportInverted()
         {
             var cancellationToken = Dummy.CreateCancellationToken();
 
