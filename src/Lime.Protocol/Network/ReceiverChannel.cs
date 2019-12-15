@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using Lime.Protocol.Server;
@@ -17,24 +18,20 @@ namespace Lime.Protocol.Network
         private readonly ICollection<IChannelModule<Message>> _messageModules;
         private readonly ICollection<IChannelModule<Notification>> _notificationModules;
         private readonly ICollection<IChannelModule<Command>> _commandModules;
+        private readonly Func<Exception, Task> _exceptionHandler;
 
         private readonly TimeSpan? _consumeTimeout;
         private readonly CancellationTokenSource _consumerCts;
-        private readonly BufferBlock<Envelope> _receiveEnvelopeBuffer;
-        private readonly TransformBlock<Envelope, Message> _messageConsumerBlock;
-        private readonly TransformBlock<Envelope, Command> _commandConsumerBlock;
-        private readonly TransformBlock<Envelope, Notification> _notificationConsumerBlock;
-        private readonly TransformBlock<Envelope, Session> _sessionConsumerBlock;
-        private readonly BufferBlock<Message> _receiveMessageBuffer;
-        private readonly BufferBlock<Command> _receiveCommandBuffer;
-        private readonly BufferBlock<Notification> _receiveNotificationBuffer;
-        private readonly BufferBlock<Session> _receiveSessionBuffer;
-        private readonly ITargetBlock<Envelope> _drainEnvelopeBlock;
+
+        private readonly Channel<Message> _messageBuffer;
+        private readonly Channel<Command> _commandBuffer;
+        private readonly Channel<Notification> _notificationBuffer;
+        private readonly Channel<Session> _sessionBuffer;
+
         private readonly SemaphoreSlim _sessionSemaphore;
         private readonly SemaphoreSlim _startStopSemaphore;
-        private readonly ActionBlock<Exception> _exceptionHandlerActionBlock;
         
-        private Task _consumeTransportTask;
+        private Task _receiveFromTransportTask;
         private bool _isDisposing;
 
         public ReceiverChannel(
@@ -56,54 +53,53 @@ namespace Lime.Protocol.Network
             _messageModules = messageModules;
             _notificationModules = notificationModules;
             _commandModules = commandModules;
+            _exceptionHandler = exceptionHandler;
             _consumeTimeout = consumeTimeout;
-            _exceptionHandlerActionBlock = new ActionBlock<Exception>(exceptionHandler, DataflowUtils.UnboundedUnorderedExecutionDataflowBlockOptions);
             _sessionSemaphore = new SemaphoreSlim(1);
             _startStopSemaphore = new SemaphoreSlim(1);
             
             // Receive pipeline
             _consumerCts = new CancellationTokenSource();
-            var consumerDataflowBlockOptions = new ExecutionDataflowBlockOptions()
+
+            if (envelopeBufferSize > 0)
             {
-                BoundedCapacity = envelopeBufferSize,
-                MaxDegreeOfParallelism = DataflowBlockOptions.Unbounded,
-                EnsureOrdered = false
-            };
-            _receiveEnvelopeBuffer = new BufferBlock<Envelope>(consumerDataflowBlockOptions);        
-            _messageConsumerBlock = new TransformBlock<Envelope, Message>(e => ConsumeMessageAsync(e), consumerDataflowBlockOptions);
-            _commandConsumerBlock = new TransformBlock<Envelope, Command>(e => ConsumeCommandAsync(e), consumerDataflowBlockOptions);
-            _notificationConsumerBlock = new TransformBlock<Envelope, Notification>(e => ConsumeNotificationAsync(e), consumerDataflowBlockOptions);
-            _sessionConsumerBlock = new TransformBlock<Envelope, Session>(e => ConsumeSession(e), consumerDataflowBlockOptions);
-            _receiveMessageBuffer = new BufferBlock<Message>(consumerDataflowBlockOptions);
-            _receiveCommandBuffer = new BufferBlock<Command>(consumerDataflowBlockOptions);
-            _receiveNotificationBuffer = new BufferBlock<Notification>(consumerDataflowBlockOptions);
-            _receiveSessionBuffer = new BufferBlock<Session>(consumerDataflowBlockOptions);
-            _drainEnvelopeBlock = DataflowBlock.NullTarget<Envelope>();
-            _receiveEnvelopeBuffer.LinkTo(_messageConsumerBlock, DataflowUtils.PropagateCompletionLinkOptions, e => e is Message);
-            _receiveEnvelopeBuffer.LinkTo(_commandConsumerBlock, DataflowUtils.PropagateCompletionLinkOptions, e => e is Command);
-            _receiveEnvelopeBuffer.LinkTo(_notificationConsumerBlock, DataflowUtils.PropagateCompletionLinkOptions, e => e is Notification);
-            _receiveEnvelopeBuffer.LinkTo(_sessionConsumerBlock, DataflowUtils.PropagateCompletionLinkOptions, e => e is Session);
-            _messageConsumerBlock.LinkTo(_receiveMessageBuffer, DataflowUtils.PropagateCompletionLinkOptions, e => e != null);
-            _messageConsumerBlock.LinkTo(_drainEnvelopeBlock, e => e == null);
-            _commandConsumerBlock.LinkTo(_receiveCommandBuffer, DataflowUtils.PropagateCompletionLinkOptions, e => e != null);
-            _commandConsumerBlock.LinkTo(_drainEnvelopeBlock, e => e == null);
-            _notificationConsumerBlock.LinkTo(_receiveNotificationBuffer, DataflowUtils.PropagateCompletionLinkOptions, e => e != null);
-            _notificationConsumerBlock.LinkTo(_drainEnvelopeBlock, e => e == null);
-            _sessionConsumerBlock.LinkTo(_receiveSessionBuffer, DataflowUtils.PropagateCompletionLinkOptions, e => e != null);
-            _sessionConsumerBlock.LinkTo(_drainEnvelopeBlock, e => e == null);
+                var options = new BoundedChannelOptions(envelopeBufferSize)
+                {
+                    SingleReader = false,
+                    SingleWriter = true
+                };
+
+                _messageBuffer = Channel.CreateBounded<Message>(options);
+                _notificationBuffer = Channel.CreateBounded<Notification>(options);
+                _commandBuffer = Channel.CreateBounded<Command>(options);
+                _sessionBuffer = Channel.CreateBounded<Session>(options);
+            }
+            else
+            {
+                var options = new UnboundedChannelOptions()
+                {
+                    SingleReader = false,
+                    SingleWriter = true
+                };
+
+                _messageBuffer = Channel.CreateUnbounded<Message>(options);
+                _notificationBuffer = Channel.CreateUnbounded<Notification>(options);
+                _commandBuffer = Channel.CreateUnbounded<Command>(options);
+                _sessionBuffer = Channel.CreateUnbounded<Session>(options);                
+            }
         }
         
         /// <inheritdoc />
         public Task<Message> ReceiveMessageAsync(CancellationToken cancellationToken)
-            => ReceiveFromBufferAsync(_receiveMessageBuffer, cancellationToken);
+            => ReceiveFromBufferAsync(_messageBuffer.Reader, _messageModules, cancellationToken);
         
         /// <inheritdoc />
         public Task<Command> ReceiveCommandAsync(CancellationToken cancellationToken)
-            => ReceiveFromBufferAsync(_receiveCommandBuffer, cancellationToken);
+            => ReceiveFromBufferAsync(_commandBuffer.Reader, _commandModules, cancellationToken);
         
         /// <inheritdoc />
         public Task<Notification> ReceiveNotificationAsync(CancellationToken cancellationToken)
-            => ReceiveFromBufferAsync(_receiveNotificationBuffer, cancellationToken);
+            => ReceiveFromBufferAsync(_notificationBuffer.Reader, _notificationModules, cancellationToken);
         
         public async Task<Session> ReceiveSessionAsync(CancellationToken cancellationToken)
         {
@@ -114,7 +110,7 @@ namespace Lime.Protocol.Network
                         $"Cannot receive a session in the '{_channelInformation.State}' session state");
 
                 case SessionState.Established:
-                    return await ReceiveFromBufferAsync(_receiveSessionBuffer, cancellationToken)
+                    return await ReceiveFromBufferAsync(_sessionBuffer.Reader, Enumerable.Empty<IChannelModule<Session>>(), cancellationToken)
                         .ConfigureAwait(false);
             }
 
@@ -137,9 +133,9 @@ namespace Lime.Protocol.Network
             _startStopSemaphore.Wait();
             try
             {
-                if (_consumeTransportTask == null)
+                if (_receiveFromTransportTask == null)
                 {
-                    _consumeTransportTask = Task.Run(ConsumeTransportAsync);
+                    _receiveFromTransportTask = Task.Run(ReceiveFromTransportAsync);
                 }
             }
             finally
@@ -154,14 +150,14 @@ namespace Lime.Protocol.Network
             try
             {
                 // Complete the pipeline
-                _receiveEnvelopeBuffer.CompleteIfNotCompleted();
-                
+                TryCompleteWriters();
+
                 // Stops the listener task
                 _consumerCts.CancelIfNotRequested();
-                if (_consumeTransportTask != null &&
-                    !_consumeTransportTask.IsCompleted)
+                if (_receiveFromTransportTask != null &&
+                    !_receiveFromTransportTask.IsCompleted)
                 {
-                    await _consumeTransportTask.WithCancellation(cancellationToken);
+                    await _receiveFromTransportTask.WithCancellation(cancellationToken);
                 }
             }
             finally
@@ -169,7 +165,7 @@ namespace Lime.Protocol.Network
                 _startStopSemaphore.Release();
             }
         }
-        
+
         public void Dispose()
         {
             _isDisposing = true;
@@ -184,8 +180,10 @@ namespace Lime.Protocol.Network
                 _channelInformation.State == SessionState.Established &&
                 _transport.IsConnected;
 
-        private async Task ConsumeTransportAsync()
+        private async Task ReceiveFromTransportAsync()
         {
+            Exception exception = null;
+
             try
             {
                 while (IsChannelEstablished())
@@ -195,36 +193,18 @@ namespace Lime.Protocol.Network
                         var envelope = await ReceiveFromTransportAsync(_consumerCts.Token).ConfigureAwait(false);
                         if (envelope == null) continue;
 
-                        using var timeoutCts = _consumeTimeout == null ? new CancellationTokenSource() : new CancellationTokenSource(_consumeTimeout.Value);
+                        using var timeoutCts = _consumeTimeout == null 
+                            ? new CancellationTokenSource() 
+                            : new CancellationTokenSource(_consumeTimeout.Value);
                         using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(timeoutCts.Token, _consumerCts.Token);
                         
                         try
                         {
-                            if (!await _receiveEnvelopeBuffer.SendAsync(envelope, linkedCts.Token).ConfigureAwait(false))
-                            {
-                                // The buffer is complete
-                                break;
-                            }
+                            await ReceiveEnvelope(envelope, linkedCts.Token).ConfigureAwait(false);
                         }
                         catch (OperationCanceledException ex) when (timeoutCts.IsCancellationRequested && _consumeTimeout != null)
                         {
-                            var exceptionMessageBuilder = new StringBuilder($"The transport consumer has timed out after {_consumeTimeout.Value.TotalSeconds} seconds.");
-                            if (_receiveMessageBuffer.Count > 0
-                                || _receiveNotificationBuffer.Count > 0
-                                || _receiveCommandBuffer.Count > 0
-                                || _receiveSessionBuffer.Count > 0)
-                            {
-                                exceptionMessageBuilder.Append(
-                                    $" The receiver buffer has {_receiveMessageBuffer.Count} ({_messageConsumerBlock.InputCount}/{_messageConsumerBlock.OutputCount}) messages,");
-                                exceptionMessageBuilder.Append(
-                                    $" {_receiveNotificationBuffer.Count} ({_notificationConsumerBlock.InputCount}/{_notificationConsumerBlock.OutputCount}) notifications,");
-                                exceptionMessageBuilder.Append(
-                                    $" {_receiveCommandBuffer.Count} ({_commandConsumerBlock.InputCount}/{_commandConsumerBlock.OutputCount}) commands,");
-                                exceptionMessageBuilder.Append(
-                                    $" and {_receiveSessionBuffer.Count} sessions and it may be the cause of the problem. Please ensure that the channel receive methods are being called.");
-                            }
-
-                            throw new TimeoutException(exceptionMessageBuilder.ToString(), ex);
+                            throw new TimeoutException($"The transport consumer has timed out after {_consumeTimeout.Value.TotalSeconds} seconds.", ex);
                         }
                     }
                     catch (OperationCanceledException) when (_consumerCts.IsCancellationRequested)
@@ -237,71 +217,48 @@ namespace Lime.Protocol.Network
                     }
                     catch (Exception ex)
                     {
-                        await RaiseConsumerExceptionAsync(ex);
+                        exception = ex;
+                        RaiseReceiverException(ex);
                         break;
                     }
                 }
             }
             finally
             {
-                // Complete the receive pipeline to propagate to the envelope specific buffers
-                _receiveEnvelopeBuffer.CompleteIfNotCompleted();
+                TryCompleteWriters(exception);
                 _channelCommandProcessor.CancelAll();
                 _consumerCts.CancelIfNotRequested();
             }
         }
 
-        private Task<Message> ConsumeMessageAsync(Envelope envelope) => OnReceivingAsync((Message)envelope, _messageModules, _consumerCts.Token);
-
-        private async Task<Command> ConsumeCommandAsync(Envelope envelope)
+        private async Task ReceiveEnvelope(Envelope envelope, CancellationToken cancellationToken)
         {
-            var command = await OnReceivingAsync((Command)envelope, _commandModules, _consumerCts.Token);;
+            switch (envelope)
+            {
+                case Message message:
+                    await _messageBuffer.Writer.WriteAsync(message, cancellationToken);
+                    break;
 
-            try
-            {
-                if (command != null &&
-                    !_channelCommandProcessor.TrySubmitCommandResult(command))
-                {
-                    return command;
-                }
+                case Notification notification:
+                    await _notificationBuffer.Writer.WriteAsync(notification, cancellationToken);
+                    break;
+                
+                case Command command:
+                    if (!_channelCommandProcessor.TrySubmitCommandResult(command))
+                    {
+                        await _commandBuffer.Writer.WriteAsync(command, cancellationToken);
+                    }
+                    break;
+                
+                case Session session:
+                    await _sessionBuffer.Writer.WriteAsync(session, cancellationToken);
+                    break;
+                
+                default:
+                    throw new ArgumentException($"Unknown envelope type {envelope.GetType()}");
             }
-            catch (OperationCanceledException) when (_consumerCts.IsCancellationRequested) { }
-            catch (Exception ex)
-            {
-                await RaiseConsumerExceptionAsync(ex);
-                _consumerCts.CancelIfNotRequested();
-            }
-            return null;
         }
 
-        private Task<Notification> ConsumeNotificationAsync(Envelope envelope) => OnReceivingAsync((Notification)envelope, _notificationModules, _consumerCts.Token);
-
-        private Session ConsumeSession(Envelope envelope) => (Session) envelope;
-
-        private async Task<T> OnReceivingAsync<T>(T envelope, IEnumerable<IChannelModule<T>> modules, CancellationToken cancellationToken) 
-            where T : Envelope, new()
-        {
-            try
-            {
-                foreach (var module in modules.ToList())
-                {
-                    cancellationToken.ThrowIfCancellationRequested();
-
-                    if (envelope == null) break;
-                    envelope = await module.OnReceivingAsync(envelope, cancellationToken);
-                }
-
-                return envelope;
-            }
-            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { }
-            catch (Exception ex)
-            {
-                await RaiseConsumerExceptionAsync(ex);
-            }
-
-            return null;
-        }
-        
         /// <summary>
         /// Receives an envelope directly from the transport.
         /// </summary>
@@ -310,27 +267,52 @@ namespace Lime.Protocol.Network
         /// <summary>
         /// Receives an envelope from the buffer.
         /// </summary>
-        private async Task<T> ReceiveFromBufferAsync<T>(ISourceBlock<T> buffer, CancellationToken cancellationToken) 
+        private async Task<T> ReceiveFromBufferAsync<T>(ChannelReader<T> reader, IEnumerable<IChannelModule<T>> modules, CancellationToken cancellationToken) 
             where T : Envelope, new()
         {
             if (_channelInformation.State < SessionState.Established)
             {
                 throw new InvalidOperationException($"Cannot receive envelopes in the '{_channelInformation.State}' session state");
             }
-
+            
             try
             {
-                return await buffer.ReceiveAsync(cancellationToken).ConfigureAwait(false);
+                T envelope;
+                var modulesList = modules.ToList();
+                
+                do
+                {
+                    envelope = await reader.ReadAsync(cancellationToken).ConfigureAwait(false);
+
+                    foreach (var module in modulesList)
+                    {
+                        if (envelope == null) break;
+                        envelope = await module.OnReceivingAsync(envelope, cancellationToken);
+                    }
+                } while (envelope == null);
+
+                return envelope;
             }
-            catch (InvalidOperationException ex) when (buffer.Completion.IsCompleted)
+            catch (ChannelClosedException ex) when (reader.Completion.IsCompleted)
             {
                 throw new InvalidOperationException("The channel listener task is complete and cannot receive envelopes", ex);
             }
         }
         
+        private void TryCompleteWriters(Exception exception = null)
+        {
+            _messageBuffer.Writer.TryComplete(exception);
+            _notificationBuffer.Writer.TryComplete(exception);
+            _commandBuffer.Writer.TryComplete(exception);
+            _sessionBuffer.Writer.TryComplete(exception);
+        }
+        
         /// <summary>
         /// Asynchronously raises the channel exception to avoid deadlocks issues.
         /// </summary>
-        private Task RaiseConsumerExceptionAsync(Exception exception) => _exceptionHandlerActionBlock.SendAsync(exception);
+        private void RaiseReceiverException(Exception exception)
+        {
+            Task.Run(() => _exceptionHandler(exception));
+        }
     }
 }

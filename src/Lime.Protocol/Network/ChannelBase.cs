@@ -141,6 +141,7 @@ namespace Lime.Protocol.Network
                 
                 if (_state == SessionState.Established)
                 {
+                    _senderChannel.Start();
                     _receiverChannel.Start();
                 }
                 
