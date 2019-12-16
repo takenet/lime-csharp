@@ -298,9 +298,7 @@ namespace Lime.Protocol.Client
                 autoReplyPings: false,
                 consumeTimeout: ConsumeTimeout,
                 closeTimeout: CloseTimeout,
-                channelCommandProcessor: ChannelCommandProcessor,
-                sendBatchSize: SendBatchSize,
-                sendFlushBatchInterval: SendFlushBatchInterval);
+                channelCommandProcessor: ChannelCommandProcessor);
 
             try
             {

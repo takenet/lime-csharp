@@ -37,8 +37,6 @@ namespace Lime.Protocol.Network
         /// <param name="remotePingInterval">The interval to ping the remote party.</param>
         /// <param name="remoteIdleTimeout">The timeout to close the channel due to inactivity.</param>
         /// <param name="channelCommandProcessor">The channel command processor.</param>
-        /// <param name="sendBatchSize">The size of the batch when sending to the transport. In high volume scenarios, batching help reduce friction and increase the throughput.</param>
-        /// <param name="sendFlushBatchInterval">The interval to wait for a batch to be complete before sending.</param>
         /// <exception cref="System.ArgumentNullException"></exception>
         /// <exception cref="System.ArgumentException">
         /// Invalid send timeout
@@ -58,9 +56,7 @@ namespace Lime.Protocol.Network
             bool autoReplyPings,
             TimeSpan? remotePingInterval,
             TimeSpan? remoteIdleTimeout,
-            IChannelCommandProcessor channelCommandProcessor,
-            int sendBatchSize,
-            TimeSpan sendFlushBatchInterval)
+            IChannelCommandProcessor channelCommandProcessor)
         {
             if (closeTimeout == default) throw new ArgumentException("Invalid close timeout", nameof(closeTimeout));
             if (envelopeBufferSize <= 0)
@@ -99,9 +95,7 @@ namespace Lime.Protocol.Network
                 CommandModules,
                 HandleSenderExceptionAsync,
                 envelopeBufferSize,
-                sendTimeout,
-                sendBatchSize,
-                sendFlushBatchInterval);
+                sendTimeout);
         }
 
         ~ChannelBase()

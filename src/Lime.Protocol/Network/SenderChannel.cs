@@ -36,12 +36,9 @@ namespace Lime.Protocol.Network
             ICollection<IChannelModule<Command>> commandModules,
             Func<Exception, Task> exceptionHandler,
             int envelopeBufferSize,
-            TimeSpan sendTimeout,
-            int sendBatchSize,
-            TimeSpan flushBatchInterval)
+            TimeSpan sendTimeout)
         {
             if (sendTimeout == default) throw new ArgumentException("Invalid send timeout", nameof(sendTimeout));
-            if (sendBatchSize <= 0) throw new ArgumentOutOfRangeException(nameof(sendBatchSize));
             
             _channelInformation = channelInformation;
             _transport = transport;
@@ -138,7 +135,7 @@ namespace Lime.Protocol.Network
                 if (_sendToTransportTask != null &&
                     !_sendToTransportTask.IsCompleted)
                 {
-                    //await _sendToTransportTask.WithCancellation(cancellationToken);
+                    await _sendToTransportTask.WithCancellation(cancellationToken);
                 }
             }
             finally
@@ -239,7 +236,7 @@ namespace Lime.Protocol.Network
             {
                 // Should the consumer complete the writer?
                 _senderCts.CancelIfNotRequested();
-                _envelopeBuffer.Writer.Complete(exception);
+                _envelopeBuffer.Writer.TryComplete(exception);
             }
         }
 
