@@ -172,13 +172,7 @@ namespace Lime.Protocol.ConsoleTests
                 {
                     envelopeBufferSize = 1;
                 }
-                
-                Write("Send batch size (ENTER for 1): ");
-                if (!uint.TryParse(ReadLine(), out var sendBatchSize))
-                {
-                    sendBatchSize = 1;
-                }
-                
+
                 Write("Module delay (ENTER for 0): ");
                 if (!uint.TryParse(ReadLine(), out var moduleDelay))
                 {
@@ -203,8 +197,6 @@ namespace Lime.Protocol.ConsoleTests
                 var channelBuilder = ClientChannelBuilder
                     .Create(clientTransportFactory, uri)
                     .WithEnvelopeBufferSize(envelopeBufferSize)
-                    .WithSendBatchSize((int)sendBatchSize)
-                    .WithSendFlushBatchInterval(TimeSpan.FromMilliseconds(1000))
                     .CreateEstablishedClientChannelBuilder()
                     .AddEstablishedHandler((channel, token) =>
                     {
@@ -257,7 +249,7 @@ namespace Lime.Protocol.ConsoleTests
                 _reporter = new Reporter(
                     (int)(taskCount * (messagesCount + notificationsCount + commandsCount)), 
                     CursorTop + 2, 
-                    $"Transp {transportType} Ch {channelCount} Buf {envelopeBufferSize} Bat {sendBatchSize} Delay {moduleDelay} Tasks {taskCount} Msgs {messagesCount} Not {notificationsCount} Cmds {commandsCount}");
+                    $"Transp {transportType} Ch {channelCount} Buf {envelopeBufferSize} Delay {moduleDelay} Tasks {taskCount} Msgs {messagesCount} Not {notificationsCount} Cmds {commandsCount}");
                 
                 var to = Node.Parse("name@domain/instance");
                 var limeUri = new LimeUri("/ping");

@@ -37,7 +37,6 @@ namespace Lime.Protocol.Client
             _builtHandlers = new List<Func<IClientChannel, CancellationToken, Task>>();
             SendTimeout = TimeSpan.FromSeconds(60);
             EnvelopeBufferSize = 1;
-            SendBatchSize = 1;
         }
 
         /// <summary>
@@ -64,16 +63,6 @@ namespace Lime.Protocol.Client
         /// Gets the channel envelope buffer size.
         /// </summary>        
         public int EnvelopeBufferSize { get; private set; }
-        
-        /// <summary>
-        /// Gets the batch size when sending to the channel.
-        /// </summary>
-        public int SendBatchSize { get; private set; }
-        
-        /// <summary>
-        /// Gets the channel send batch flush interval.
-        /// </summary>
-        public TimeSpan SendFlushBatchInterval { get; private set; }
 
         /// <summary>
         /// Gets the channel command processor.
@@ -171,18 +160,6 @@ namespace Lime.Protocol.Client
         public IClientChannelBuilder WithEnvelopeBufferSize(int envelopeBufferSize)
         {
             EnvelopeBufferSize = envelopeBufferSize;
-            return this;
-        }
-        
-        public IClientChannelBuilder WithSendBatchSize(int sendBatchSize)
-        {
-            SendBatchSize = sendBatchSize;
-            return this;
-        }
-        
-        public IClientChannelBuilder WithSendFlushBatchInterval(TimeSpan sendFlushBatchInterval)
-        {
-            SendFlushBatchInterval = sendFlushBatchInterval;
             return this;
         }
 
