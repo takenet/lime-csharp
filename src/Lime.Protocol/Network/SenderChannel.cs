@@ -19,12 +19,10 @@ namespace Lime.Protocol.Network
         private readonly Func<Exception, Task> _exceptionHandler;
         private readonly TimeSpan _sendTimeout;
         private readonly CancellationTokenSource _senderCts;
-
         private readonly Channel<Envelope> _envelopeBuffer;
-        
-
         private readonly SemaphoreSlim _sessionSemaphore;
         private readonly SemaphoreSlim _startStopSemaphore;
+        
         private bool _isDisposing;
         private Task _sendToTransportTask;
 
@@ -49,11 +47,7 @@ namespace Lime.Protocol.Network
             _sendTimeout = sendTimeout;
             _sessionSemaphore = new SemaphoreSlim(1);
             _startStopSemaphore = new SemaphoreSlim(1);
-
-            // Send pipeline
-            // Modules blocks
             _senderCts = new CancellationTokenSource();
-
             _envelopeBuffer = envelopeBufferSize > 0
                 ? Channel.CreateBounded<Envelope>(new BoundedChannelOptions(envelopeBufferSize)
                 {

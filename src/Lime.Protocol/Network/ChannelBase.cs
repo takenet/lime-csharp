@@ -242,7 +242,6 @@ namespace Lime.Protocol.Network
         public virtual Task<Session> ReceiveSessionAsync(CancellationToken cancellationToken) 
             => _receiverChannel.ReceiveSessionAsync(cancellationToken);
         
-        
         /// <summary>
         /// Closes the underlying transport.
         /// </summary>

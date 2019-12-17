@@ -19,15 +19,12 @@ namespace Lime.Protocol.Network
         private readonly ICollection<IChannelModule<Notification>> _notificationModules;
         private readonly ICollection<IChannelModule<Command>> _commandModules;
         private readonly Func<Exception, Task> _exceptionHandler;
-
         private readonly TimeSpan? _consumeTimeout;
         private readonly CancellationTokenSource _consumerCts;
-
         private readonly Channel<Message> _messageBuffer;
         private readonly Channel<Command> _commandBuffer;
         private readonly Channel<Notification> _notificationBuffer;
         private readonly Channel<Session> _sessionBuffer;
-
         private readonly SemaphoreSlim _sessionSemaphore;
         private readonly SemaphoreSlim _startStopSemaphore;
         
@@ -57,10 +54,7 @@ namespace Lime.Protocol.Network
             _consumeTimeout = consumeTimeout;
             _sessionSemaphore = new SemaphoreSlim(1);
             _startStopSemaphore = new SemaphoreSlim(1);
-            
-            // Receive pipeline
             _consumerCts = new CancellationTokenSource();
-
             if (envelopeBufferSize > 0)
             {
                 var options = new BoundedChannelOptions(envelopeBufferSize)
@@ -101,6 +95,7 @@ namespace Lime.Protocol.Network
         public Task<Notification> ReceiveNotificationAsync(CancellationToken cancellationToken)
             => ReceiveFromBufferAsync(_notificationBuffer.Reader, _notificationModules, cancellationToken);
         
+        /// <inheritdoc />
         public async Task<Session> ReceiveSessionAsync(CancellationToken cancellationToken)
         {
             switch (_channelInformation.State)
@@ -118,8 +113,9 @@ namespace Lime.Protocol.Network
             try
             {
                 // The session envelopes are received directly from the transport, except when the session is established
-                var envelope = await ReceiveFromTransportAsync(cancellationToken).ConfigureAwait(false);
+                var envelope = await _transport.ReceiveAsync(cancellationToken).ConfigureAwait(false);
                 if (envelope is Session session) return session;
+
                 throw new InvalidOperationException("An empty or unexpected envelope was received from the transport");
             }
             finally
@@ -190,7 +186,7 @@ namespace Lime.Protocol.Network
                 {
                     try
                     {
-                        var envelope = await ReceiveFromTransportAsync(_consumerCts.Token).ConfigureAwait(false);
+                        var envelope = await _transport.ReceiveAsync(_consumerCts.Token).ConfigureAwait(false);
                         if (envelope == null) continue;
 
                         using var timeoutCts = _consumeTimeout == null 
@@ -258,11 +254,6 @@ namespace Lime.Protocol.Network
                     throw new ArgumentException($"Unknown envelope type {envelope.GetType()}");
             }
         }
-
-        /// <summary>
-        /// Receives an envelope directly from the transport.
-        /// </summary>
-        private Task<Envelope> ReceiveFromTransportAsync(CancellationToken cancellationToken) => _transport.ReceiveAsync(cancellationToken);
 
         /// <summary>
         /// Receives an envelope from the buffer.
