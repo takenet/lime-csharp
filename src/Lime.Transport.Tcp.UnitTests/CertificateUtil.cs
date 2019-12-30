@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
-using System.Text;
-using Pluralsight.Crypto;
-using System.IO;
 
 namespace Lime.Transport.Tcp.UnitTests
 {
@@ -12,44 +10,43 @@ namespace Lime.Transport.Tcp.UnitTests
     {
         private static readonly ConcurrentDictionary<string, X509Certificate2> CertificateCache = new ConcurrentDictionary<string, X509Certificate2>();
 
+        public static X509Certificate2 GetOrCreateSelfSignedCertificate(string commonName)
+        {
+            var key = commonName.Aggregate(string.Empty, (a, b) => $"{a};{b}");
+            return CertificateCache.GetOrAdd(key, k => CreateSelfSignedCertificate(commonName));
+        }
+
         /// <summary>
         /// Creates a self-signed certificate
         /// http://stackoverflow.com/questions/13806299/how-to-create-a-self-signed-certificate-using-c
         /// </summary>
         /// <param name="subjectName"></param>       
         /// <returns></returns>
-        public static X509Certificate2 CreateSelfSignedCertificate(params string[] commonNames)
+        public static X509Certificate2 CreateSelfSignedCertificate(string subjectName)
         {
-            using (var ctx = new CryptContext())
+            SubjectAlternativeNameBuilder sanBuilder = new SubjectAlternativeNameBuilder();                
+            sanBuilder.AddDnsName(subjectName);
+            sanBuilder.AddDnsName(Environment.MachineName);
+
+            var distinguishedName = new X500DistinguishedName($"CN={subjectName}");
+
+            using (var rsa = RSA.Create(2048))
             {
-                ctx.Open();
+                var request = new CertificateRequest(distinguishedName, rsa, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
 
-                var nameBuilder = new StringBuilder();
-                foreach (var commonName in commonNames)
-                {
-                    nameBuilder.AppendLine($"CN={commonName}");
-                }
+                request.CertificateExtensions.Add(
+                    new X509KeyUsageExtension(X509KeyUsageFlags.DataEncipherment | X509KeyUsageFlags.KeyEncipherment | X509KeyUsageFlags.DigitalSignature , false));
 
-                var certificate = ctx.CreateSelfSignedCertificate(
-                    new SelfSignedCertProperties
-                    {
-                        IsPrivateKeyExportable = true,
-                        KeyBitLength = 4096,
-                        Name = new X500DistinguishedName(nameBuilder.ToString(), X500DistinguishedNameFlags.UseNewLines),
-                        ValidFrom = DateTime.Today.AddDays(-1),
-                        ValidTo = DateTime.Today.AddYears(1)
-                    });
 
-                return certificate;
+                request.CertificateExtensions.Add(
+                    new X509EnhancedKeyUsageExtension(
+                        new OidCollection { new Oid("1.3.6.1.5.5.7.3.1") }, false));
+
+                request.CertificateExtensions.Add(sanBuilder.Build());
+
+                var certificate = request.CreateSelfSigned(new DateTimeOffset(DateTime.UtcNow.AddDays(-1)), new DateTimeOffset(DateTime.UtcNow.AddDays(3650)));                
+                return new X509Certificate2(certificate.Export(X509ContentType.Pfx));
             }
-        }
-
-        public static X509Certificate2 ReadFromFile(string filepath)
-        {
-            var bytes = File.ReadAllBytes(filepath);
-            var certificate = new X509Certificate2();
-            certificate.Import(bytes);
-            return certificate;
-        }
+        }        
     }
 }

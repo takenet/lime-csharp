@@ -4,6 +4,7 @@ using Moq;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Shouldly;
@@ -27,11 +28,28 @@ namespace Lime.Protocol.UnitTests.Network
             _sendTimeout = TimeSpan.FromSeconds(30);
         }
 
-        public ChannelBase GetTarget(SessionState state, int buffersLimit = 5, bool fillEnvelopeRecipients = false, Node remoteNode = null, Node localNode = null, bool autoReplyPings = false, TimeSpan? remotePingInterval = null, TimeSpan? remoteIdleTimeout = null, TimeSpan? consumeTimeout = null)
+        [TearDown]
+        public void TearDown()
+        {
+            _transport = null;
+        }
+
+        public ChannelBase GetTarget(
+            SessionState state,
+            int buffersLimit = 5,
+            bool fillEnvelopeRecipients = false,
+            Node remoteNode = null,
+            Node localNode = null,
+            bool autoReplyPings = false,
+            TimeSpan? remotePingInterval = null,
+            TimeSpan? remoteIdleTimeout = null,
+            TimeSpan? consumeTimeout = null,
+            int sendBatchSize = 1,
+            TimeSpan sendFlushBatchInterval = default)
         {
             return new TestChannel(
                 state,
-                _transport.Object,
+                new CancellableTransportDecorator(_transport.Object, true),
                 _sendTimeout,
                 buffersLimit,
                 fillEnvelopeRecipients,
@@ -40,7 +58,9 @@ namespace Lime.Protocol.UnitTests.Network
                 autoReplyPings,
                 remotePingInterval,
                 remoteIdleTimeout,
-                consumeTimeout: consumeTimeout
+                consumeTimeout: consumeTimeout,
+                sendBatchSize: sendBatchSize,
+                sendFlushBatchInterval: sendFlushBatchInterval
                 );
         }
 
@@ -60,16 +80,12 @@ namespace Lime.Protocol.UnitTests.Network
             var target = GetTarget(SessionState.Established);
 
             // Act
-            await target.SendMessageAsync(message, CancellationToken.None);
+            await target.SendMessageAndDelayAsync(message, CancellationToken.None);
 
             // Assert
             _transport.Verify(
-                t => t.SendAsync(It.Is<Message>(
-                        e => e.Id == message.Id &&
-                             e.From.Equals(message.From) &&
-                             e.To.Equals(message.To) &&
-                             e.Pp == null &&
-                             e.Content == message.Content),
+                t => t.SendAsync(
+                    message,
                     It.IsAny<CancellationToken>()),
                     Times.Once());
         }
@@ -87,7 +103,7 @@ namespace Lime.Protocol.UnitTests.Network
 
             Message message = null;
 
-            await target.SendMessageAsync(message, CancellationToken.None).ShouldThrowAsync<ArgumentNullException>();
+            await target.SendMessageAndDelayAsync(message, CancellationToken.None).ShouldThrowAsync<ArgumentNullException>();
         }
 
         [Test]
@@ -99,9 +115,44 @@ namespace Lime.Protocol.UnitTests.Network
             var content = Dummy.CreateTextContent();
             var message = Dummy.CreateMessage(content);
 
-            await target.SendMessageAsync(message, CancellationToken.None).ShouldThrowAsync<InvalidOperationException>();
+            await target.SendMessageAndDelayAsync(message, CancellationToken.None).ShouldThrowAsync<InvalidOperationException>();
         }
 
+        [Test]
+        [Category("SendMessageAsync")]
+        public async Task SendMessageAsync_TransportThrowsException_SendToTransportThenThrowException()
+        {
+            // Arrange
+            var content = Dummy.CreateTextContent();
+            var message = Dummy.CreateMessage(content);
+            var exception = Dummy.CreateException<ApplicationException>();
+            _transport
+                .SetupSequence(t => t.SendAsync(It.IsAny<Envelope>(), It.IsAny<CancellationToken>()))
+                .Returns(Task.CompletedTask)
+                .Returns(Task.CompletedTask)
+                .Throws(exception);
+            var target = GetTarget(SessionState.Established, 5);
+            Exception actualException = null;
+            target.SenderException += (sender, e) =>
+            {
+                using (e.GetDeferral())
+                {
+                    actualException = e.Exception;
+                }
+            };
+
+            var cancellationToken = Dummy.CreateCancellationToken();
+            
+            // Act
+            await target.SendMessageAsync(message, cancellationToken);
+            await target.SendMessageAsync(message, cancellationToken);
+            await target.SendMessageAndDelayAsync(message, cancellationToken);
+            
+            // Assert
+            actualException.ShouldBe(actualException);
+            await target.SendMessageAsync(message, cancellationToken).ShouldThrowAsync<InvalidOperationException>();
+        }        
+        
         [Test]
         [Category("SendMessageAsync")]
         public async Task SendMessageAsync_ModuleReturnsMessage_SendsModuleMessage()
@@ -123,7 +174,7 @@ namespace Lime.Protocol.UnitTests.Network
             target.SetState(SessionState.Established);
 
             // Act
-            await target.SendMessageAsync(message, CancellationToken.None);
+            await target.SendMessageAndDelayAsync(message, CancellationToken.None);
 
             // Assert
             moduleMock.Verify(m => m.OnStateChanged(SessionState.Established), Times.Once());
@@ -151,7 +202,7 @@ namespace Lime.Protocol.UnitTests.Network
             target.SetState(SessionState.Established);
 
             // Act
-            await target.SendMessageAsync(message, CancellationToken.None);
+            await target.SendMessageAndDelayAsync(message, CancellationToken.None);
 
             // Assert
             moduleMock.Verify(m => m.OnStateChanged(SessionState.Established), Times.Once());
@@ -186,13 +237,154 @@ namespace Lime.Protocol.UnitTests.Network
             target.SetState(SessionState.Established);
 
             // Act
-            await target.SendMessageAsync(message, CancellationToken.None);
+            await target.SendMessageAndDelayAsync(message, CancellationToken.None);
 
             // Assert
             _transport.Verify(t => t.SendAsync(message, It.IsAny<CancellationToken>()), Times.Once());
             foreach (var mock in modulesMockList)
             {
                 mock.Verify(m => m.OnSendingAsync(message, It.IsAny<CancellationToken>()), Times.Once());
+            }
+        }
+        
+        [Test]
+        [Category("SendMessageAsync")]
+        public async Task SendMessageAsync_MultipleMessagesSameAmountOfBatchSize_CallsTransport()
+        {
+            // Arrange
+            var tcs = new TaskCompletionSource<Envelope>();
+            _transport
+                .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(tcs.Task);            
+            var content = Dummy.CreateTextContent();
+            var batchSize = 5;
+            var messages =  Enumerable.Range(0, batchSize).Select(i => Dummy.CreateMessage(content)).ToArray();
+            var target = GetTarget(SessionState.Established, sendBatchSize: batchSize);
+
+            // Act
+            foreach (var message in messages)
+            {
+                await target.SendMessageAndDelayAsync(message, CancellationToken.None);    
+            }
+
+            await Task.Delay(150, CancellationToken.None);
+
+            // Assert
+            foreach (var message in messages)
+            {
+                _transport.Verify(
+                    t => t.SendAsync(
+                        message,
+                        It.IsAny<CancellationToken>()),
+                    Times.Once());
+            }
+        }
+        
+        [Test]
+        [Category("SendMessageAsync")]
+        public async Task SendMessageAsync_MultipleMessagesOverAmountOfBatchSize_CallsTransportBatchSizeTimes()
+        {
+            // Arrange
+            var tcs = new TaskCompletionSource<Envelope>();
+            _transport
+                .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(tcs.Task);            
+            var content = Dummy.CreateTextContent();
+            var batchSize = 5;
+            var messages =  Enumerable.Range(0, batchSize + 1).Select(i => Dummy.CreateMessage(content)).ToArray();
+            var target = GetTarget(SessionState.Established, sendBatchSize: batchSize);
+
+            // Act
+            foreach (var message in messages)
+            {
+                await target.SendMessageAndDelayAsync(message, CancellationToken.None);    
+            }
+
+            await Task.Delay(150, CancellationToken.None);
+
+            // Assert
+            foreach (var message in messages.Take(batchSize))
+            {
+                _transport.Verify(
+                    t => t.SendAsync(
+                        message,
+                        It.IsAny<CancellationToken>()),
+                    Times.Once());
+            }
+            foreach (var message in messages.Skip(batchSize))
+            {
+                _transport.Verify(
+                    t => t.SendAsync(
+                        message,
+                        It.IsAny<CancellationToken>()),
+                    Times.Never);
+            }
+        }
+        
+        [Test]
+        [Category("SendMessageAsync")]
+        public async Task SendMessageAsync_MultipleMessagesOverAmountOfBatchSizeWithFlushInterval_CallsTransport()
+        {
+            // Arrange
+            var tcs = new TaskCompletionSource<Envelope>();
+            _transport
+                .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(tcs.Task);            
+            var content = Dummy.CreateTextContent();
+            var batchSize = 5;
+            var batchInterval = TimeSpan.FromMilliseconds(75);
+            var messages =  Enumerable.Range(0, batchSize + 1).Select(i => Dummy.CreateMessage(content)).ToArray();
+            var target = GetTarget(SessionState.Established, sendBatchSize: batchSize, sendFlushBatchInterval: batchInterval);
+            
+            // Act
+            foreach (var message in messages)
+            {
+                await target.SendMessageAndDelayAsync(message, CancellationToken.None);    
+            }
+
+            await Task.Delay(batchInterval + batchInterval, CancellationToken.None);
+
+            // Assert
+            foreach (var message in messages)
+            {
+                _transport.Verify(
+                    t => t.SendAsync(
+                        message,
+                        It.IsAny<CancellationToken>()),
+                    Times.Once());
+            }
+        }
+        
+        [Test]
+        [Category("SendMessageAsync")]
+        public async Task SendMessageAsync_MultipleMessagesBelowAmountOfBatchSize_DoNotCallsTransport()
+        {
+            // Arrange
+            var tcs = new TaskCompletionSource<Envelope>();
+            _transport
+                .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(tcs.Task);            
+            var content = Dummy.CreateTextContent();
+            var batchSize = 5;
+            var messages =  Enumerable.Range(0, batchSize - 1).Select(i => Dummy.CreateMessage(content)).ToArray();
+            var target = GetTarget(SessionState.Established, sendBatchSize: batchSize);
+
+            // Act
+            foreach (var message in messages)
+            {
+                await target.SendMessageAndDelayAsync(message, CancellationToken.None);    
+            }
+
+            await Task.Delay(150, CancellationToken.None);
+
+            // Assert
+            foreach (var message in messages)
+            {
+                _transport.Verify(
+                    t => t.SendAsync(
+                        message,
+                        It.IsAny<CancellationToken>()),
+                    Times.Never);
             }
         }
 
@@ -271,9 +463,9 @@ namespace Lime.Protocol.UnitTests.Network
             Assert.IsNotNull(messageReceived);
             messageReceived = await target.ReceiveMessageAsync(cancellationToken);
             Assert.IsNotNull(messageReceived);
-
+            
             // Assert
-            target.ReceiveMessageAsync(cancellationToken).ShouldThrow<ApplicationException>();
+            await target.ReceiveMessageAsync(cancellationToken).ShouldThrowAsync<InvalidOperationException>();
             actualException.ShouldBe(actualException);
         }
 
@@ -512,7 +704,7 @@ namespace Lime.Protocol.UnitTests.Network
             var resource = Dummy.CreatePing();
             var command = Dummy.CreateCommand(resource);
 
-            await target.SendCommandAsync(command, CancellationToken.None);
+            await target.SendCommandAndDelayAsync(command, CancellationToken.None);
 
             _transport.Verify(
                 t => t.SendAsync(It.Is<Command>(
@@ -540,7 +732,7 @@ namespace Lime.Protocol.UnitTests.Network
             command.Id = null;
             command.Method = CommandMethod.Observe;
 
-            await target.SendCommandAsync(command, CancellationToken.None);
+            await target.SendCommandAndDelayAsync(command, CancellationToken.None);
 
             _transport.Verify(
                 t => t.SendAsync(It.Is<Command>(
@@ -565,7 +757,7 @@ namespace Lime.Protocol.UnitTests.Network
 
             Command command = null;
 
-            await target.SendCommandAsync(command, CancellationToken.None).ShouldThrowAsync<ArgumentNullException>();
+            await target.SendCommandAndDelayAsync(command, CancellationToken.None).ShouldThrowAsync<ArgumentNullException>();
         }
 
         [Test]
@@ -577,7 +769,7 @@ namespace Lime.Protocol.UnitTests.Network
             var content = Dummy.CreateTextContent();
             var command = Dummy.CreateCommand(content);
 
-            await target.SendCommandAsync(command, CancellationToken.None).ShouldThrowAsync<InvalidOperationException>();
+            await target.SendCommandAndDelayAsync(command, CancellationToken.None).ShouldThrowAsync<InvalidOperationException>();
         }
 
         [Test]
@@ -601,7 +793,7 @@ namespace Lime.Protocol.UnitTests.Network
             target.SetState(SessionState.Established);
 
             // Act
-            await target.SendCommandAsync(command, CancellationToken.None);
+            await target.SendCommandAndDelayAsync(command, CancellationToken.None);
 
             // Assert
             moduleMock.Verify(m => m.OnSendingAsync(command, It.IsAny<CancellationToken>()), Times.Once());
@@ -629,7 +821,7 @@ namespace Lime.Protocol.UnitTests.Network
             target.SetState(SessionState.Established);
 
             // Act
-            await target.SendCommandAsync(command, CancellationToken.None);
+            await target.SendCommandAndDelayAsync(command, CancellationToken.None);
 
             // Assert
             _transport.Verify(t => t.SendAsync(command, It.IsAny<CancellationToken>()), Times.Never);
@@ -663,7 +855,7 @@ namespace Lime.Protocol.UnitTests.Network
             target.SetState(SessionState.Established);
 
             // Act
-            await target.SendCommandAsync(command, CancellationToken.None);
+            await target.SendCommandAndDelayAsync(command, CancellationToken.None);
 
             // Assert
             _transport.Verify(t => t.SendAsync(command, It.IsAny<CancellationToken>()), Times.Once());
@@ -1028,7 +1220,7 @@ namespace Lime.Protocol.UnitTests.Network
 
             var notification = Dummy.CreateNotification(Event.Received);
 
-            await target.SendNotificationAsync(notification, CancellationToken.None);
+            await target.SendNotificationAndDelayAsync(notification, CancellationToken.None);
 
             _transport.Verify(
                 t => t.SendAsync(It.Is<Notification>(
@@ -1053,7 +1245,7 @@ namespace Lime.Protocol.UnitTests.Network
 
             Notification notification = null;
 
-            await target.SendNotificationAsync(notification, CancellationToken.None).ShouldThrowAsync<ArgumentNullException>();
+            await target.SendNotificationAndDelayAsync(notification, CancellationToken.None).ShouldThrowAsync<ArgumentNullException>();
         }
 
         [Test]
@@ -1064,7 +1256,7 @@ namespace Lime.Protocol.UnitTests.Network
 
             var notification = Dummy.CreateNotification(Event.Received);
 
-            await target.SendNotificationAsync(notification, CancellationToken.None).ShouldThrowAsync<InvalidOperationException>();
+            await target.SendNotificationAndDelayAsync(notification, CancellationToken.None).ShouldThrowAsync<InvalidOperationException>();
         }
 
         [Test]
@@ -1087,7 +1279,7 @@ namespace Lime.Protocol.UnitTests.Network
             target.SetState(SessionState.Established);
 
             // Act
-            await target.SendNotificationAsync(notification, CancellationToken.None);
+            await target.SendNotificationAndDelayAsync(notification, CancellationToken.None);
 
             // Assert
             _transport.Verify(t => t.SendAsync(moduleNotification, It.IsAny<CancellationToken>()), Times.Once());
@@ -1113,7 +1305,7 @@ namespace Lime.Protocol.UnitTests.Network
             target.SetState(SessionState.Established);
 
             // Act
-            await target.SendNotificationAsync(notification, CancellationToken.None);
+            await target.SendNotificationAndDelayAsync(notification, CancellationToken.None);
 
             // Assert
             _transport.Verify(t => t.SendAsync(notification, It.IsAny<CancellationToken>()), Times.Never);
@@ -1146,7 +1338,8 @@ namespace Lime.Protocol.UnitTests.Network
             target.SetState(SessionState.Established);
 
             // Act
-            await target.SendNotificationAsync(notification, CancellationToken.None);
+            await target.SendNotificationAndDelayAsync(notification, CancellationToken.None);
+            await Task.Delay(250);
 
             // Assert
             _transport.Verify(t => t.SendAsync(notification, It.IsAny<CancellationToken>()), Times.Once());
@@ -1389,37 +1582,32 @@ namespace Lime.Protocol.UnitTests.Network
             var actual = await target.ReceiveSessionAsync(cancellationToken).ShouldThrowAsync<InvalidOperationException>();
         }
 
-        #endregion
-
-        #region EnvelopeAsyncBuffer_PromiseAdded
-
         [Test]
-        [Category("EnvelopeAsyncBuffer_PromiseAdded")]
+        [Category("ReceiveAsync")]
 
-        public async Task EnvelopeAsyncBuffer_PromiseAdded_TransportThrowsException_CallsTransportCloseAsyncAndThrowsException()
+        public async Task ReceiveAsync_TransportThrowsException_CallsTransportCloseAsyncAndThrowsException()
         {
-            var exception = Dummy.CreateException<InvalidOperationException>();
+            // Arrange
+            var exception = new InvalidOperationException("This exception should be thrown by the transport");
             var cancellationToken = Dummy.CreateCancellationToken();
-
             var taskCompletionSource = new TaskCompletionSource<Envelope>();
             _transport
                 .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
                 .Returns(taskCompletionSource.Task)
                 .Verifiable();
-
             _transport
                 .Setup(t => t.CloseAsync(It.IsAny<CancellationToken>()))
                 .Returns(Task.FromResult<object>(null))
                 .Callback(() => _transport.Raise(t => t.Closing += (sender, e) => { }, new DeferralEventArgs()));
-
             var target = GetTarget(SessionState.Established);
+            
+            // Act
             var receiveTask = target.ReceiveMessageAsync(cancellationToken);
-
-            await Task.Delay(300);
             taskCompletionSource.SetException(exception);
 
             // Assert
             await receiveTask.ShouldThrowAsync<InvalidOperationException>();
+            await Task.Delay(150);
             _transport.Verify();
             _transport.Verify(
                 t => t.CloseAsync(It.IsAny<CancellationToken>()),
@@ -1427,8 +1615,8 @@ namespace Lime.Protocol.UnitTests.Network
         }
 
         [Test]
-        [Category("EnvelopeAsyncBuffer_PromiseAdded")]
-        public async Task EnvelopeAsyncBuffer_PromiseAdded_BufferHasPromises_ConsumersFromTransport()
+        [Category("ReceiveAsync")]
+        public async Task ReceiveAsync_BufferHasPromises_ConsumersFromTransport()
         {
             // Arrange
             var cancellationToken = Dummy.CreateCancellationToken();
@@ -1479,8 +1667,8 @@ namespace Lime.Protocol.UnitTests.Network
         }
 
         [Test]
-        [Category("EnvelopeAsyncBuffer_PromiseAdded")]
-        public async Task EnvelopeAsyncBuffer_PromiseAdded_BufferHasPromises_ConsumersFromTransportInverted()
+        [Category("ReceiveAsync")]
+        public async Task ReceiveAsync_BufferHasPromises_ConsumersFromTransportInverted()
         {
             var cancellationToken = Dummy.CreateCancellationToken();
 
@@ -1646,7 +1834,6 @@ namespace Lime.Protocol.UnitTests.Network
             receiveSessionTask.ShouldThrow<InvalidOperationException>();
         }
 
-
         [Test]
         [Category("PingRemoteAsync")]
         public async Task PingRemoteAsync_IdleChannel_SendsPing()
@@ -1745,8 +1932,34 @@ namespace Lime.Protocol.UnitTests.Network
 
         private class TestChannel : ChannelBase
         {
-            public TestChannel(SessionState state, ITransport transport, TimeSpan sendTimeout, int envelopeBufferSize, bool fillEnvelopeRecipients, Node remoteNode = null, Node localNode = null, bool autoReplyPings = false, TimeSpan? remotePingInterval = null, TimeSpan? remoteIdleTimeout = null, int resendMessageTryCount = 0, TimeSpan? resendMessageInterval = null, TimeSpan? consumeTimeout = null)
-                : base(transport, sendTimeout, consumeTimeout ?? sendTimeout, sendTimeout, envelopeBufferSize, fillEnvelopeRecipients, autoReplyPings, remotePingInterval, remoteIdleTimeout, null)
+            public TestChannel(
+                SessionState state,
+                ITransport transport,
+                TimeSpan sendTimeout,
+                int envelopeBufferSize,
+                bool fillEnvelopeRecipients,
+                Node remoteNode = null,
+                Node localNode = null,
+                bool autoReplyPings = false,
+                TimeSpan? remotePingInterval = null,
+                TimeSpan? remoteIdleTimeout = null,
+                int resendMessageTryCount = 0,
+                TimeSpan? resendMessageInterval = null,
+                TimeSpan? consumeTimeout = null,
+                int sendBatchSize = 1,
+                TimeSpan sendFlushBatchInterval = default)
+                : base(transport,
+                    sendTimeout,
+                    consumeTimeout ?? sendTimeout,
+                    sendTimeout,
+                    envelopeBufferSize,
+                    fillEnvelopeRecipients,
+                    autoReplyPings,
+                    remotePingInterval,
+                    remoteIdleTimeout,
+                    null,
+                    sendBatchSize,
+                    sendFlushBatchInterval)
             {                
                 RemoteNode = remoteNode;
                 LocalNode = localNode;
@@ -1760,5 +1973,35 @@ namespace Lime.Protocol.UnitTests.Network
         }
 
         #endregion
+    }
+
+    public static class ChannelExtensions
+    {
+        /// <summary>
+        /// Sends a <see cref="Lime.Protocol.Message"/> and awaits a delay.
+        /// </summary>
+        public static async Task SendMessageAndDelayAsync(this IChannel channel, Message message, CancellationToken cancellationToken)
+        {
+            await channel.SendMessageAsync(message, cancellationToken).ConfigureAwait(false);
+            await Task.Delay(150, cancellationToken).ConfigureAwait(false);
+        }
+        
+        /// <summary>
+        /// Sends a <see cref="Lime.Protocol.Notification"/> and awaits a delay.
+        /// </summary>
+        public static async Task SendNotificationAndDelayAsync(this IChannel channel, Notification notification, CancellationToken cancellationToken)
+        {
+            await channel.SendNotificationAsync(notification, cancellationToken).ConfigureAwait(false);
+            await Task.Delay(150, cancellationToken).ConfigureAwait(false);
+        }
+        
+        /// <summary>
+        /// Sends a <see cref="Lime.Protocol.Command"/> and awaits a delay.
+        /// </summary>
+        public static async Task SendCommandAndDelayAsync(this IChannel channel, Command command, CancellationToken cancellationToken)
+        {
+            await channel.SendCommandAsync(command, cancellationToken).ConfigureAwait(false);
+            await Task.Delay(150, cancellationToken).ConfigureAwait(false);
+        }
     }
 }

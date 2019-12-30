@@ -1,4 +1,5 @@
-using System;
+﻿using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.WebSockets;
@@ -8,21 +9,30 @@ using Lime.Protocol.Network;
 using Lime.Protocol.Serialization;
 using Microsoft.AspNetCore.Http;
 
-namespace Lime.Transport.WebSocket.Kestrel
+namespace Lime.Transport.WebSocket
 {
-    public class KestrelServerWebSocketTransport : WebSocketTransport
+    public class PipeServerWebSocketTransport : PipeWebSocketTransport
     {
         private readonly HttpContext _context;
         private readonly TaskCompletionSource<object> _openTcs;
-
-        internal KestrelServerWebSocketTransport(
+        
+        public PipeServerWebSocketTransport(
             HttpContext context,
             System.Net.WebSockets.WebSocket webSocket,
             IEnvelopeSerializer envelopeSerializer,
             ITraceWriter traceWriter = null,
-            int bufferSize = 8192,
-            WebSocketMessageType webSocketMessageType = WebSocketMessageType.Text)
-            : base(webSocket, envelopeSerializer, traceWriter, bufferSize, webSocketMessageType)
+            WebSocketMessageType webSocketMessageType = WebSocketMessageType.Text,
+            bool closeGracefully = true,
+            int pauseWriterThreshold = EnvelopePipe.DEFAULT_PAUSE_WRITER_THRESHOLD,
+            MemoryPool<byte> memoryPool = null) 
+            : base(
+                webSocket,
+                envelopeSerializer,
+                traceWriter,
+                webSocketMessageType,
+                closeGracefully,
+                pauseWriterThreshold,
+                memoryPool)
         {
             _context = context;
             _openTcs = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -54,8 +64,6 @@ namespace Lime.Transport.WebSocket.Kestrel
                 return options;
             }
         }
-
-        protected override Task PerformOpenAsync(Uri uri, CancellationToken cancellationToken) => Task.CompletedTask;
 
         /// <summary>
         /// Gets a task that is complete only when the transport is closed.

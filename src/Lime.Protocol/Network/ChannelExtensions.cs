@@ -41,21 +41,22 @@ namespace Lime.Protocol.Network
             if (channel == null) throw new ArgumentNullException(nameof(channel));
             if (envelope == null) throw new ArgumentNullException(nameof(envelope));
 
-            if (typeof(T) == typeof(Notification))
+            switch (envelope)
             {
-                await channel.SendNotificationAsync(envelope as Notification, cancellationToken).ConfigureAwait(false);
-            }
-            else if (typeof(T) == typeof(Message))
-            {
-                await channel.SendMessageAsync(envelope as Message, cancellationToken).ConfigureAwait(false);
-            }
-            else if (typeof(T) == typeof(Command))
-            {
-                await channel.SendCommandAsync(envelope as Command, cancellationToken).ConfigureAwait(false);
-            }
-            else
-            {
-                throw new ArgumentException("Invalid or unknown envelope type");
+                case Notification notification:
+                    await channel.SendNotificationAsync(notification, cancellationToken).ConfigureAwait(false);
+                    break;
+                
+                case Message message:
+                    await channel.SendMessageAsync(message, cancellationToken).ConfigureAwait(false);
+                    break;
+                
+                case Command command:
+                    await channel.SendCommandAsync(command, cancellationToken).ConfigureAwait(false);
+                    break;
+                
+                default:
+                    throw new ArgumentException("Invalid or unknown envelope type");    
             }
         }
     }

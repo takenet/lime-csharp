@@ -7,6 +7,7 @@ using Lime.Protocol.Network;
 using Moq;
 using System.Threading;
 using Lime.Protocol.Security;
+using Lime.Protocol.UnitTests.Network;
 using Shouldly;
 using Lime.Protocol.Util;
 
@@ -17,6 +18,7 @@ namespace Lime.Protocol.UnitTests.Client
     {
         private Mock<TransportBase> _transport;
         private TimeSpan _sendTimeout;
+        private CancellationTokenSource _cts;
 
         [SetUp]
         public void SetUp()
@@ -26,6 +28,14 @@ namespace Lime.Protocol.UnitTests.Client
                 .Setup(t => t.IsConnected)
                 .Returns(true);
             _sendTimeout = TimeSpan.FromSeconds(30);
+            _cts = new CancellationTokenSource(_sendTimeout);
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            _cts.Dispose();
+            _cts = null;
         }
 
         public ClientChannel GetTarget(string sessionId = null, SessionState state = SessionState.New, bool fillEnvelopeRecipients = false, bool autoReplyPings = true, bool autoNotifyReceipt = true, Node remoteNode = null, Node localNode = null, TimeSpan? remotePingInterval = null, TimeSpan? remoteIdleTimeout = null)
@@ -33,7 +43,7 @@ namespace Lime.Protocol.UnitTests.Client
             return new TestClientChannel(
                 sessionId,
                 state,
-                _transport.Object,
+                new CancellableTransportDecorator(_transport.Object),
                 _sendTimeout,
                 fillEnvelopeRecipients,
                 autoReplyPings,
@@ -240,6 +250,7 @@ namespace Lime.Protocol.UnitTests.Client
         [Category("SendReceivedNotificationAsync")]
         public async Task SendReceivedNotificationAsync_EstablishedState_CallsTransport()
         {
+            // Arrange
             var tcs = new TaskCompletionSource<Envelope>();
             _transport
                 .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
@@ -250,8 +261,11 @@ namespace Lime.Protocol.UnitTests.Client
             var content = Dummy.CreateTextContent();
             var message = Dummy.CreateMessage(content);
 
+            // Act
             await target.SendReceivedNotificationAsync(message.Id, message.From, CancellationToken.None);
+            await Task.Delay(150);
 
+            // Assert
             _transport.Verify(
                 t => t.SendAsync(It.Is<Notification>(
                         n => n.Id == message.Id &&
@@ -285,21 +299,24 @@ namespace Lime.Protocol.UnitTests.Client
         [Category("SendFinishingSessionAsync")]
         public async Task SendFinishingSessionAsync_EstablishedState_CallsTransport()
         {
+            // Arrange
             var tcs = new TaskCompletionSource<Envelope>();
             _transport
                 .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
                 .Returns(tcs.Task);
-
             var target = GetTarget(state: SessionState.Established);
 
+            // Act
             await target.SendFinishingSessionAsync(CancellationToken.None);
 
+            // Assert
             _transport.Verify(
                 t => t.SendAsync(It.Is<Session>(
                         e => e.State == SessionState.Finishing &&
                              e.Id == target.SessionId),
                     It.IsAny<CancellationToken>()),
                     Times.Once());
+            await target.SendMessageAsync(Dummy.CreateMessage(Dummy.CreateTextContent()), _cts.Token).ShouldThrowAsync<InvalidOperationException>();
         }
 
         [Test]
@@ -321,21 +338,22 @@ namespace Lime.Protocol.UnitTests.Client
         [Test]
         [Category("ReceiveFinishedSessionAsync")]
         public async Task ReceiveFinishedSessionAsync_EstablishedState_ReadsTransport()
-        {            
+        {
+            // Arrange
             var session = Dummy.CreateSession(SessionState.Finished);            
             var tcs = new TaskCompletionSource<Envelope>();
-
             var cancellationToken = Dummy.CreateCancellationToken();
-
             _transport
                 .SetupSequence(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
                 .Returns(Task.FromResult<Envelope>(session))
                 .Returns(tcs.Task);
-
             var target = GetTarget(state: SessionState.Established);
             session.Id = target.SessionId;
+         
+            // Act
             var actual = await target.ReceiveFinishedSessionAsync(cancellationToken);
 
+            // Assert
             Assert.AreEqual(session, actual);
             _transport.Verify();
         }
@@ -386,7 +404,7 @@ namespace Lime.Protocol.UnitTests.Client
                 localNode: localNode);
 
 
-            await target.SendMessageAsync(message, CancellationToken.None);
+            await target.SendMessageAndDelayAsync(message, CancellationToken.None);
 
             _transport.Verify(
                 t => t.SendAsync(It.Is<Message>(
@@ -430,7 +448,7 @@ namespace Lime.Protocol.UnitTests.Client
                 localNode: localNode);
 
 
-            await target.SendMessageAsync(message, CancellationToken.None);
+            await target.SendMessageAndDelayAsync(message, CancellationToken.None);
 
             _transport.Verify(
                 t => t.SendAsync(It.Is<Message>(
@@ -466,6 +484,7 @@ namespace Lime.Protocol.UnitTests.Client
 
             // Act
             var actual = await target.ReceiveMessageAsync(cancellationToken);
+            await Task.Delay(150, cancellationToken);
 
             // Assert
             _transport.Verify(
@@ -486,16 +505,17 @@ namespace Lime.Protocol.UnitTests.Client
             var message = Dummy.CreateMessage(content);
             var destination = Dummy.CreateNode();
             message.To = destination.ToIdentity().ToNode();
-            var cts = new TaskCompletionSource<Envelope>();
+            var tcs = new TaskCompletionSource<Envelope>();
             _transport
                 .SetupSequence(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
                 .Returns(Task.FromResult<Envelope>(message))
-                .Returns(cts.Task);
+                .Returns(tcs.Task);
             var target = GetTarget(state: SessionState.Established, localNode: destination, autoNotifyReceipt: true);
             var cancellationToken = Dummy.CreateCancellationToken();
             
             // Act
             var actual = await target.ReceiveMessageAsync(cancellationToken);
+            await Task.Delay(150, cancellationToken);
 
             // Assert
             _transport.Verify(
@@ -527,6 +547,7 @@ namespace Lime.Protocol.UnitTests.Client
 
             // Act
             var actual = await target.ReceiveMessageAsync(cancellationToken);
+            await Task.Delay(150, cancellationToken);
 
             // Assert
             _transport.Verify(
@@ -556,6 +577,7 @@ namespace Lime.Protocol.UnitTests.Client
 
             // Act
             var actual = await target.ReceiveMessageAsync(cancellationToken);
+            await Task.Delay(150, cancellationToken);
 
             // Assert
             _transport.Verify(
@@ -571,19 +593,22 @@ namespace Lime.Protocol.UnitTests.Client
         [Category("ReceiveMessageAsync")]
         public async Task ReceiveMessageAsync_MessageReceivedAndAutoNotifyReceiptFalse_DoNotSendsNotificationToTransport()
         {            
+            // Arrange
             var content = Dummy.CreateTextContent();
             var message = Dummy.CreateMessage(content);
             var cancellationToken = Dummy.CreateCancellationToken();
             var tcs = new TaskCompletionSource<Envelope>();
-
             _transport
                 .SetupSequence(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
                 .Returns(Task.FromResult<Envelope>(message))
                 .Returns(tcs.Task);
-
             var target = GetTarget(state: SessionState.Established, autoNotifyReceipt: false);
+            
+            // Act
             var actual = await target.ReceiveMessageAsync(cancellationToken);
+            await Task.Delay(150, cancellationToken);
 
+            // Assert
             _transport.Verify(
                 t => t.SendAsync(It.Is<Notification>(
                         n => n.Id == message.Id &&
@@ -597,22 +622,23 @@ namespace Lime.Protocol.UnitTests.Client
         [Category("ReceiveMessageAsync")]
         public async Task ReceiveMessageAsync_FireAndForgetMessageReceivedAndAutoNotifyReceiptTrue_DoNotSendsNotificationToTransport()
         {            
+            // Arrange
             var content = Dummy.CreateTextContent();
             var message = Dummy.CreateMessage(content);
             message.Id = null;
-
             var cancellationToken = Dummy.CreateCancellationToken();
-
             var tcs = new TaskCompletionSource<Envelope>();
-
             _transport
                 .SetupSequence(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
                 .Returns(Task.FromResult<Envelope>(message))
                 .Returns(tcs.Task);
-
             var target = GetTarget(state: SessionState.Established, autoNotifyReceipt: true);
+            
+            // Act
             var actual = await target.ReceiveMessageAsync(cancellationToken);
+            await Task.Delay(150, cancellationToken);
 
+            // Assert
             _transport.Verify(
                 t => t.SendAsync(It.Is<Notification>(
                         n => n.Id == message.Id &&
@@ -660,22 +686,22 @@ namespace Lime.Protocol.UnitTests.Client
         [Category("ReceiveCommandAsync")]
         public async Task ReceiveCommandAsync_PingCommandAbsoluteUriReceivedAndAutoReplyPingsTrue_SendsPingCommandToTransport()
         {
+            // Arrange
             var ping = Dummy.CreatePing();
             var command = Dummy.CreateCommand(ping);
             command.Uri = LimeUri.Parse(LimeUri.Parse(UriTemplates.PING).ToUri(command.From).ToString());
             var cancellationToken = Dummy.CreateCancellationToken();
-
             var tcs = new TaskCompletionSource<Envelope>();
-
             _transport
                 .SetupSequence(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
                 .Returns(Task.FromResult<Envelope>(command))
                 .Returns(tcs.Task);
-
             var target = GetTarget(state: SessionState.Established, autoReplyPings: true, localNode: command.To);
 
-            await Task.Delay(250);
+            // Act
+            await Task.Delay(250, cancellationToken);
 
+            // Assert
             _transport.Verify(
                 t => t.SendAsync(It.Is<Command>(
                         c => c.Id == command.Id &&
@@ -689,24 +715,25 @@ namespace Lime.Protocol.UnitTests.Client
         [Test]
         [Category("ReceiveCommandAsync")]
         public async Task ReceiveCommandAsync_PingCommandReceivedAndAutoReplyPingsFalse_DoNotSendsPingCommandToTransport()
-        {           
+        {   
+            // Arrange
             var ping = Dummy.CreatePing();
             var command = Dummy.CreateCommand(ping);
             command.Uri = LimeUri.Parse(UriTemplates.PING);
             var cancellationToken = Dummy.CreateCancellationToken();
-
             var tcs = new TaskCompletionSource<Envelope>();
-
             _transport
                 .SetupSequence(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
                 .Returns(Task.FromResult<Envelope>(command))
                 .Returns(tcs.Task);
-
             var target = GetTarget(state: SessionState.Established, autoReplyPings: false);
+            
+            // Act
             var actual = await target.ReceiveCommandAsync(cancellationToken);
-
+            await Task.Delay(150, cancellationToken);
+            
+            // Assert
             actual.ShouldBe(command);
-
             _transport.Verify(
                 t => t.SendAsync(It.Is<Command>(
                         c => c.Id == command.Id &&

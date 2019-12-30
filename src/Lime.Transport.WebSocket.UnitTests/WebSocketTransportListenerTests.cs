@@ -1,26 +1,19 @@
 ﻿using System;
+using Lime.Protocol.Network;
+using Lime.Protocol.Server;
 using Lime.Protocol.UnitTests.Network;
 using NUnit.Framework;
 
 namespace Lime.Transport.WebSocket.UnitTests
 {
     [TestFixture]
-    public class WebSocketTransportListenerTests : TransportListenerTestsBase<ClientWebSocketTransport, WebSocketTransportListener>
+    public class WebSocketTransportListenerTests : TransportListenerTestsBase
     {
-        [SetUp]
-        public void SetUp()
-        {
-            SetUp(new Uri("ws://localhost:8081"));
-        }
+        protected override ITransport CreateClientTransport() => new ClientWebSocketTransport(EnvelopeSerializer);
 
-        protected override ClientWebSocketTransport CreateClientTransport()
-        {
-            return new ClientWebSocketTransport(EnvelopeSerializer);
-        }
+        protected override Uri CreateListenerUri() => new Uri("ws://localhost:8082");
 
-        protected override WebSocketTransportListener CreateTransportListener()
-        {
-            return new WebSocketTransportListener(ListenerUri, null, EnvelopeSerializer, TraceWriter.Object);
-        }
+        protected override ITransportListener CreateTransportListener() 
+            => new WebSocketTransportListener(new[] { ListenerUri }, EnvelopeSerializer, null, TraceWriter.Object);
     }
 }

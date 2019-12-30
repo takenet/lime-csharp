@@ -11,8 +11,15 @@ namespace Lime.Protocol.Network
     /// </summary>
     public abstract class TransportBase : ITransport
     {
+        private bool _isOpen; // TODO: Merge this logic with IsConnected
         private bool _closingInvoked;
         private bool _closedInvoked;
+        private readonly SemaphoreSlim _openCloseSemaphore;
+
+        protected TransportBase()
+        {
+            _openCloseSemaphore = new SemaphoreSlim(1);
+        }
 
         /// <summary>
         /// Sends an envelope to the connected node.
@@ -38,9 +45,23 @@ namespace Lime.Protocol.Network
         /// <exception cref="System.NotImplementedException"></exception>
         public virtual async Task OpenAsync(Uri uri, CancellationToken cancellationToken)
         {
-            await PerformOpenAsync(uri, cancellationToken);
-            _closingInvoked = false;
-            _closedInvoked = false;
+            await _openCloseSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+            try
+            {
+                if (_isOpen)
+                {
+                    throw new InvalidOperationException("The transport is already open");
+                }
+                
+                await PerformOpenAsync(uri, cancellationToken);
+                _isOpen = true;
+                _closingInvoked = false;
+                _closedInvoked = false;
+            }
+            finally
+            {
+                _openCloseSemaphore.Release();
+            }
         }
 
         /// <summary>
@@ -50,9 +71,23 @@ namespace Lime.Protocol.Network
         /// <returns></returns>
         public virtual async Task CloseAsync(CancellationToken cancellationToken)
         {
-            await OnClosingAsync().ConfigureAwait(false);
-            await PerformCloseAsync(cancellationToken).ConfigureAwait(false);
-            OnClosed();
+            await _openCloseSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+            try
+            {
+                if (!_isOpen)
+                {
+                    throw new InvalidOperationException("The transport is not open");
+                }
+                
+                await OnClosingAsync().ConfigureAwait(false);
+                await PerformCloseAsync(cancellationToken).ConfigureAwait(false);
+                _isOpen = false;
+                OnClosed();
+            }
+            finally
+            {
+                _openCloseSemaphore.Release();
+            }
         }
 
         /// <summary>

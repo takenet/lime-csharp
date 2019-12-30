@@ -21,17 +21,19 @@ namespace Lime.Protocol.UnitTests.Network
         [Category("CloseAsync")]
         public async Task CloseAsync_Default_RaisesClosingAndCallsPerformCloseAndRaisesClosed()
         {
+            // Arrange
             var closingRaised = false;
             var closedRaised = false;
-
             var target = GetTarget();
-
+            var cancellationToken = CancellationToken.None;
+            await target.OpenAsync(Dummy.CreateUri(), cancellationToken);
             target.Closing += (sender, e) => closingRaised = true;
             target.Closed += (sender, e) => closedRaised = true;
-
-            var cancellationToken = CancellationToken.None;
+            
+            // Act
             await target.CloseAsync(cancellationToken);
-
+            
+            // Assert
             Assert.IsTrue(closingRaised);
             Assert.IsTrue(target.PerformCloseAsyncInvoked);
             Assert.IsTrue(target.PerformCloseAsynCancellationToken == cancellationToken);
