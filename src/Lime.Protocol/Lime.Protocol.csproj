@@ -11,6 +11,7 @@
     <PackageProjectUrl>http://limeprotocol.org</PackageProjectUrl>
     <Version>1.0.0</Version>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>1591</NoWarn>
     <LangVersion>8.0</LangVersion>
   </PropertyGroup>
 
