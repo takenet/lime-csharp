@@ -70,7 +70,7 @@ namespace Lime.Protocol.ConsoleTests
                             CertificateUtil.CreateSelfSignedCertificate("localhost"),
                             clientCertificateValidationCallback: (clientCertificate, chain, sslPolicyErrors) => certificateValidationCallback(null, clientCertificate, chain, sslPolicyErrors),
                             closeGracefully: false);
-                    clientTransportFactory = () => new ClientWebSocketTransport(envelopeSerializer, serverCertificateValidationCallback: certificateValidationCallback);                    
+                    clientTransportFactory = () => new ClientWebSocketTransport(envelopeSerializer, serverCertificateValidationCallback: certificateValidationCallback, closeGracefully: false);                    
                     break;
                 
                 case 4:
@@ -82,7 +82,7 @@ namespace Lime.Protocol.ConsoleTests
                             CertificateUtil.CreateSelfSignedCertificate("localhost"),
                             clientCertificateValidationCallback: (clientCertificate, chain, sslPolicyErrors) => certificateValidationCallback(null, clientCertificate, chain, sslPolicyErrors),
                             closeGracefully: false);
-                    clientTransportFactory = () => new PipeClientWebSocketTransport(envelopeSerializer, serverCertificateValidationCallback: certificateValidationCallback);                         
+                    clientTransportFactory = () => new PipeClientWebSocketTransport(envelopeSerializer, serverCertificateValidationCallback: certificateValidationCallback, closeGracefully: false);                         
                     break;
                 
                 default:
@@ -311,27 +311,26 @@ namespace Lime.Protocol.ConsoleTests
                 _reporter.ReportSendComplete();
                 await _reporter.ReportTask;
                 _reporter = null;
-
-                try
+                
+                using var finishCts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+                
+                if (client is IOnDemandClientChannel onDemandClientChannel)
                 {
-                    if (client is IOnDemandClientChannel onDemandClientChannel)
-                    {
-                        await onDemandClientChannel.FinishAsync(default);
-                    }
-                    else if (client is IClientChannel clientChannel)
-                    {
-                        await clientChannel.SendFinishingSessionAsync(default);
-                        await clientChannel.ReceiveFinishedSessionAsync(default);
-                    }
-
-                    client.DisposeIfDisposable();
+                    await onDemandClientChannel.FinishAsync(finishCts.Token);
                 }
-                catch
+                else if (client is IClientChannel clientChannel)
                 {
+                    await clientChannel.SendFinishingSessionAsync(finishCts.Token);
+                    await clientChannel.ReceiveFinishedSessionAsync(finishCts.Token);
                 }
+
+                client.DisposeIfDisposable();
+
             }
             
-            await server.StopAsync(CancellationToken.None);
+            using var stopCts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+            
+            await server.StopAsync(stopCts.Token);
 
             WriteLine("Server stopped. Press ENTER to exit.");
             ReadLine();

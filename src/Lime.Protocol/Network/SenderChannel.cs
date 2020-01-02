@@ -83,6 +83,7 @@ namespace Lime.Protocol.Network
             await _sessionSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
             try
             {
+                // Stops the listener task to avoid concurrent writes to the transport
                 if (session.State == SessionState.Finishing ||
                     session.State == SessionState.Finished ||
                     session.State == SessionState.Failed)
