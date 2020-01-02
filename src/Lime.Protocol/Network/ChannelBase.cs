@@ -3,7 +3,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Collections.Generic;
-using System.Threading.Tasks.Dataflow;
 using Lime.Protocol.Network.Modules;
 
 namespace Lime.Protocol.Network
@@ -61,7 +60,7 @@ namespace Lime.Protocol.Network
             if (closeTimeout == default) throw new ArgumentException("Invalid close timeout", nameof(closeTimeout));
             if (envelopeBufferSize <= 0)
             {
-                envelopeBufferSize = DataflowBlockOptions.Unbounded;
+                envelopeBufferSize = -1;
             }
             Transport = transport ?? throw new ArgumentNullException(nameof(transport));
             Transport.Closing += Transport_Closing;
