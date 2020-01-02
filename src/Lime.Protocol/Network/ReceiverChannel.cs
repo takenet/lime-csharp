@@ -62,7 +62,6 @@ namespace Lime.Protocol.Network
                     SingleReader = false,
                     SingleWriter = true
                 };
-
                 _messageBuffer = Channel.CreateBounded<Message>(options);
                 _notificationBuffer = Channel.CreateBounded<Notification>(options);
                 _commandBuffer = Channel.CreateBounded<Command>(options);
@@ -75,7 +74,6 @@ namespace Lime.Protocol.Network
                     SingleReader = false,
                     SingleWriter = true
                 };
-
                 _messageBuffer = Channel.CreateUnbounded<Message>(options);
                 _notificationBuffer = Channel.CreateUnbounded<Notification>(options);
                 _commandBuffer = Channel.CreateUnbounded<Command>(options);
@@ -196,7 +194,7 @@ namespace Lime.Protocol.Network
                         
                         try
                         {
-                            await ReceiveEnvelope(envelope, linkedCts.Token).ConfigureAwait(false);
+                            await WriteToBufferAsync(envelope, linkedCts.Token).ConfigureAwait(false);
                         }
                         catch (OperationCanceledException ex) when (timeoutCts.IsCancellationRequested && _consumeTimeout != null)
                         {
@@ -227,7 +225,7 @@ namespace Lime.Protocol.Network
             }
         }
 
-        private async Task ReceiveEnvelope(Envelope envelope, CancellationToken cancellationToken)
+        private async Task WriteToBufferAsync(Envelope envelope, CancellationToken cancellationToken)
         {
             switch (envelope)
             {

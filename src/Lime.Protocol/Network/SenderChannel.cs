@@ -62,13 +62,13 @@ namespace Lime.Protocol.Network
         }
 
         public Task SendMessageAsync(Message message, CancellationToken cancellationToken)
-            => SendAsync(message, _messageModules, cancellationToken);
+            => SendToBufferAsync(message, _messageModules, cancellationToken);
 
         public Task SendNotificationAsync(Notification notification, CancellationToken cancellationToken)
-            => SendAsync(notification, _notificationModules, cancellationToken);
+            => SendToBufferAsync(notification, _notificationModules, cancellationToken);
 
         public Task SendCommandAsync(Command command, CancellationToken cancellationToken)
-            => SendAsync(command, _commandModules, cancellationToken);
+            => SendToBufferAsync(command, _commandModules, cancellationToken);
 
         public async Task SendSessionAsync(Session session, CancellationToken cancellationToken)
         {
@@ -150,7 +150,7 @@ namespace Lime.Protocol.Network
         /// <summary>
         /// Sends the envelope to the specified target.
         /// </summary>
-        private async Task SendAsync<T>(T envelope, IEnumerable<IChannelModule<T>> modules, CancellationToken cancellationToken)
+        private async Task SendToBufferAsync<T>(T envelope, IEnumerable<IChannelModule<T>> modules, CancellationToken cancellationToken)
             where T : Envelope, new()
         {
             if (envelope == null) throw new ArgumentNullException(nameof(envelope));
@@ -228,9 +228,8 @@ namespace Lime.Protocol.Network
             }
             finally
             {
-                // Should the consumer complete the writer?
-                _senderCts.CancelIfNotRequested();
                 _envelopeBuffer.Writer.TryComplete(exception);
+                _senderCts.CancelIfNotRequested();
             }
         }
 
