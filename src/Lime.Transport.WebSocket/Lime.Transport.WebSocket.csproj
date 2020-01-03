@@ -27,7 +27,7 @@
         <PackageReference Include="ReflectionMagic" Version="4.1.0" />
         <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel" Version="2.2.0" />
         <PackageReference Include="Microsoft.AspNetCore.WebSockets" Version="2.2.1" /> 
-        <PackageReference Include="System.Threading.Channels" Version="4.6.0" />
+        <PackageReference Include="System.Threading.Channels" Version="4.7.0" />
     </ItemGroup>
 
     <ItemGroup Condition=" '$(TargetFramework)' == 'net461' ">

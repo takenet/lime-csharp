@@ -43,9 +43,7 @@ namespace Lime.Protocol.UnitTests.Network
             bool autoReplyPings = false,
             TimeSpan? remotePingInterval = null,
             TimeSpan? remoteIdleTimeout = null,
-            TimeSpan? consumeTimeout = null,
-            int sendBatchSize = 1,
-            TimeSpan sendFlushBatchInterval = default)
+            TimeSpan? consumeTimeout = null)
         {
             return new TestChannel(
                 state,
@@ -58,9 +56,7 @@ namespace Lime.Protocol.UnitTests.Network
                 autoReplyPings,
                 remotePingInterval,
                 remoteIdleTimeout,
-                consumeTimeout: consumeTimeout,
-                sendBatchSize: sendBatchSize,
-                sendFlushBatchInterval: sendFlushBatchInterval
+                consumeTimeout: consumeTimeout
                 );
         }
 
@@ -247,147 +243,6 @@ namespace Lime.Protocol.UnitTests.Network
             }
         }
         
-        [Test]
-        [Category("SendMessageAsync")]
-        public async Task SendMessageAsync_MultipleMessagesSameAmountOfBatchSize_CallsTransport()
-        {
-            // Arrange
-            var tcs = new TaskCompletionSource<Envelope>();
-            _transport
-                .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
-                .Returns(tcs.Task);            
-            var content = Dummy.CreateTextContent();
-            var batchSize = 5;
-            var messages =  Enumerable.Range(0, batchSize).Select(i => Dummy.CreateMessage(content)).ToArray();
-            var target = GetTarget(SessionState.Established, sendBatchSize: batchSize);
-
-            // Act
-            foreach (var message in messages)
-            {
-                await target.SendMessageAndDelayAsync(message, CancellationToken.None);    
-            }
-
-            await Task.Delay(150, CancellationToken.None);
-
-            // Assert
-            foreach (var message in messages)
-            {
-                _transport.Verify(
-                    t => t.SendAsync(
-                        message,
-                        It.IsAny<CancellationToken>()),
-                    Times.Once());
-            }
-        }
-        
-        [Test]
-        [Category("SendMessageAsync")]
-        public async Task SendMessageAsync_MultipleMessagesOverAmountOfBatchSize_CallsTransportBatchSizeTimes()
-        {
-            // Arrange
-            var tcs = new TaskCompletionSource<Envelope>();
-            _transport
-                .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
-                .Returns(tcs.Task);            
-            var content = Dummy.CreateTextContent();
-            var batchSize = 5;
-            var messages =  Enumerable.Range(0, batchSize + 1).Select(i => Dummy.CreateMessage(content)).ToArray();
-            var target = GetTarget(SessionState.Established, sendBatchSize: batchSize);
-
-            // Act
-            foreach (var message in messages)
-            {
-                await target.SendMessageAndDelayAsync(message, CancellationToken.None);    
-            }
-
-            await Task.Delay(150, CancellationToken.None);
-
-            // Assert
-            foreach (var message in messages.Take(batchSize))
-            {
-                _transport.Verify(
-                    t => t.SendAsync(
-                        message,
-                        It.IsAny<CancellationToken>()),
-                    Times.Once());
-            }
-            foreach (var message in messages.Skip(batchSize))
-            {
-                _transport.Verify(
-                    t => t.SendAsync(
-                        message,
-                        It.IsAny<CancellationToken>()),
-                    Times.Never);
-            }
-        }
-        
-        [Test]
-        [Category("SendMessageAsync")]
-        public async Task SendMessageAsync_MultipleMessagesOverAmountOfBatchSizeWithFlushInterval_CallsTransport()
-        {
-            // Arrange
-            var tcs = new TaskCompletionSource<Envelope>();
-            _transport
-                .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
-                .Returns(tcs.Task);            
-            var content = Dummy.CreateTextContent();
-            var batchSize = 5;
-            var batchInterval = TimeSpan.FromMilliseconds(75);
-            var messages =  Enumerable.Range(0, batchSize + 1).Select(i => Dummy.CreateMessage(content)).ToArray();
-            var target = GetTarget(SessionState.Established, sendBatchSize: batchSize, sendFlushBatchInterval: batchInterval);
-            
-            // Act
-            foreach (var message in messages)
-            {
-                await target.SendMessageAndDelayAsync(message, CancellationToken.None);    
-            }
-
-            await Task.Delay(batchInterval + batchInterval, CancellationToken.None);
-
-            // Assert
-            foreach (var message in messages)
-            {
-                _transport.Verify(
-                    t => t.SendAsync(
-                        message,
-                        It.IsAny<CancellationToken>()),
-                    Times.Once());
-            }
-        }
-        
-        [Test]
-        [Category("SendMessageAsync")]
-        public async Task SendMessageAsync_MultipleMessagesBelowAmountOfBatchSize_DoNotCallsTransport()
-        {
-            // Arrange
-            var tcs = new TaskCompletionSource<Envelope>();
-            _transport
-                .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
-                .Returns(tcs.Task);            
-            var content = Dummy.CreateTextContent();
-            var batchSize = 5;
-            var messages =  Enumerable.Range(0, batchSize - 1).Select(i => Dummy.CreateMessage(content)).ToArray();
-            var target = GetTarget(SessionState.Established, sendBatchSize: batchSize);
-
-            // Act
-            foreach (var message in messages)
-            {
-                await target.SendMessageAndDelayAsync(message, CancellationToken.None);    
-            }
-
-            await Task.Delay(150, CancellationToken.None);
-
-            // Assert
-            foreach (var message in messages)
-            {
-                _transport.Verify(
-                    t => t.SendAsync(
-                        message,
-                        It.IsAny<CancellationToken>()),
-                    Times.Never);
-            }
-        }
-
         #endregion
 
         #region ReceiveMessageAsync
@@ -683,7 +538,7 @@ namespace Lime.Protocol.UnitTests.Network
             // Assert
             exception.ShouldNotBeNull();
             var timeoutException = exception.ShouldBeOfType<TimeoutException>();
-            timeoutException.Message.ShouldBe("The transport consumer has timed out after 1 seconds. The receiver buffer has 1 (0/1) messages, 0 (0/0) notifications, 0 (0/0) commands, and 0 sessions and it may be the cause of the problem. Please ensure that the channel receive methods are being called.");
+            timeoutException.Message.ShouldBe("The transport consumer has timed out after 1 seconds.");
         }
 
         #endregion
@@ -1873,11 +1728,17 @@ namespace Lime.Protocol.UnitTests.Network
             // Act
             await Task.Delay(350);
             tcs1.TrySetResult(envelope);
+            await target.ReceiveMessageAsync(CancellationToken.None);
             await Task.Delay(350);
 
             // Assert
             _transport
-                .Verify(t => t.SendAsync(It.Is<Envelope>(e => e is Command && ((Command)e).Method == CommandMethod.Get && ((Command)e).Uri.ToString().Equals("/ping")), It.IsAny<CancellationToken>()), Times.Never);
+                .Verify(t => t.SendAsync(It.Is<Envelope>(e => e is Command &&
+                                                              ((Command) e).Method == CommandMethod.Get &&
+                                                              ((Command) e).Uri.ToString()
+                                                              .Equals("/ping")),
+                        It.IsAny<CancellationToken>()),
+                    Times.Never);
         }
 
         [Test]
@@ -1943,11 +1804,7 @@ namespace Lime.Protocol.UnitTests.Network
                 bool autoReplyPings = false,
                 TimeSpan? remotePingInterval = null,
                 TimeSpan? remoteIdleTimeout = null,
-                int resendMessageTryCount = 0,
-                TimeSpan? resendMessageInterval = null,
-                TimeSpan? consumeTimeout = null,
-                int sendBatchSize = 1,
-                TimeSpan sendFlushBatchInterval = default)
+                TimeSpan? consumeTimeout = null)
                 : base(transport,
                     sendTimeout,
                     consumeTimeout ?? sendTimeout,
@@ -1957,9 +1814,7 @@ namespace Lime.Protocol.UnitTests.Network
                     autoReplyPings,
                     remotePingInterval,
                     remoteIdleTimeout,
-                    null,
-                    sendBatchSize,
-                    sendFlushBatchInterval)
+                    null)
             {                
                 RemoteNode = remoteNode;
                 LocalNode = localNode;

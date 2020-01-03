@@ -10,7 +10,7 @@ namespace Lime.Protocol.LoadTests.Tcp
     [TestFixture]
     public class TcpTransportLoadTests : TransportLoadTestsBase
     {
-        protected override Uri CreateUri() => new Uri("net.tcp://localhost:55321");
+        protected override Uri CreateUri() => new Uri("net.tcp://localhost:9090");
 
         protected override ITransportListener CreateTransportListener(Uri uri, IEnvelopeSerializer envelopeSerializer)
         {

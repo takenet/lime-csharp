@@ -655,23 +655,25 @@ namespace Lime.Protocol.UnitTests.Client
         [Test]
         [Category("ReceiveCommandAsync")]
         public async Task ReceiveCommandAsync_PingCommandReceivedAndAutoReplyPingsTrue_SendsPingCommandToTransport()
-        {           
+        {
+            // Arrange
             var ping = Dummy.CreatePing();
             var command = Dummy.CreateCommand(ping);
             command.Uri = LimeUri.Parse(UriTemplates.PING);
             var cancellationToken = Dummy.CreateCancellationToken();
-
             var tcs = new TaskCompletionSource<Envelope>();
-
             _transport
                 .SetupSequence(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
                 .Returns(Task.FromResult<Envelope>(command))
                 .Returns(tcs.Task);
-
             var target = GetTarget(state: SessionState.Established, autoReplyPings: true, localNode: command.To);
             
-            await Task.Delay(250);
+            // Act
+            await Task.WhenAny(
+                target.ReceiveCommandAsync(cancellationToken),
+                Task.Delay(250, cancellationToken));
 
+            // Assert
             _transport.Verify(
                 t => t.SendAsync(It.Is<Command>(
                         c => c.Id == command.Id &&
@@ -699,7 +701,9 @@ namespace Lime.Protocol.UnitTests.Client
             var target = GetTarget(state: SessionState.Established, autoReplyPings: true, localNode: command.To);
 
             // Act
-            await Task.Delay(250, cancellationToken);
+            await Task.WhenAny(
+                target.ReceiveCommandAsync(cancellationToken),
+                Task.Delay(250, cancellationToken));
 
             // Assert
             _transport.Verify(

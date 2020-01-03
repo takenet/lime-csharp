@@ -31,16 +31,6 @@ namespace Lime.Protocol.Client
         /// Gets the buffers limit.
         /// </summary>        
         int EnvelopeBufferSize { get; }
-        
-        /// <summary>
-        /// Gets the channel send batch flush interval.
-        /// </summary>
-        TimeSpan SendFlushBatchInterval { get; }
-
-        /// <summary>
-        /// Gets the batch size when sending to the channel.
-        /// </summary>
-        int SendBatchSize { get; }
 
         /// <summary>
         /// Gets the channel command processor.
@@ -75,21 +65,7 @@ namespace Lime.Protocol.Client
         /// <returns></returns>
         /// <exception cref="System.ArgumentOutOfRangeException"></exception>
         IClientChannelBuilder WithEnvelopeBufferSize(int envelopeBufferSize);
-
-        /// <summary>
-        /// Sets the channel send batch size.
-        /// </summary>
-        /// <param name="sendBatchSize"></param>
-        /// <returns></returns>
-        IClientChannelBuilder WithSendBatchSize(int sendBatchSize);
-
-        /// <summary>
-        /// Sets the channel send flush batch interval.
-        /// </summary>
-        /// <param name="sendFlushBatchInterval"></param>
-        /// <returns></returns>
-        IClientChannelBuilder WithSendFlushBatchInterval(TimeSpan sendFlushBatchInterval);
-
+        
         /// <summary>
         /// Sets the channel command processor to be used.
         /// </summary>

@@ -70,7 +70,7 @@ namespace Lime.Protocol.ConsoleTests
                             CertificateUtil.CreateSelfSignedCertificate("localhost"),
                             clientCertificateValidationCallback: (clientCertificate, chain, sslPolicyErrors) => certificateValidationCallback(null, clientCertificate, chain, sslPolicyErrors),
                             closeGracefully: false);
-                    clientTransportFactory = () => new ClientWebSocketTransport(envelopeSerializer, serverCertificateValidationCallback: certificateValidationCallback);                    
+                    clientTransportFactory = () => new ClientWebSocketTransport(envelopeSerializer, serverCertificateValidationCallback: certificateValidationCallback, closeGracefully: false);                    
                     break;
                 
                 case 4:
@@ -82,7 +82,7 @@ namespace Lime.Protocol.ConsoleTests
                             CertificateUtil.CreateSelfSignedCertificate("localhost"),
                             clientCertificateValidationCallback: (clientCertificate, chain, sslPolicyErrors) => certificateValidationCallback(null, clientCertificate, chain, sslPolicyErrors),
                             closeGracefully: false);
-                    clientTransportFactory = () => new PipeClientWebSocketTransport(envelopeSerializer, serverCertificateValidationCallback: certificateValidationCallback);                         
+                    clientTransportFactory = () => new PipeClientWebSocketTransport(envelopeSerializer, serverCertificateValidationCallback: certificateValidationCallback, closeGracefully: false);                         
                     break;
                 
                 default:
@@ -172,13 +172,7 @@ namespace Lime.Protocol.ConsoleTests
                 {
                     envelopeBufferSize = 1;
                 }
-                
-                Write("Send batch size (ENTER for 1): ");
-                if (!uint.TryParse(ReadLine(), out var sendBatchSize))
-                {
-                    sendBatchSize = 1;
-                }
-                
+
                 Write("Module delay (ENTER for 0): ");
                 if (!uint.TryParse(ReadLine(), out var moduleDelay))
                 {
@@ -203,8 +197,6 @@ namespace Lime.Protocol.ConsoleTests
                 var channelBuilder = ClientChannelBuilder
                     .Create(clientTransportFactory, uri)
                     .WithEnvelopeBufferSize(envelopeBufferSize)
-                    .WithSendBatchSize((int)sendBatchSize)
-                    .WithSendFlushBatchInterval(TimeSpan.FromMilliseconds(1000))
                     .CreateEstablishedClientChannelBuilder()
                     .AddEstablishedHandler((channel, token) =>
                     {
@@ -257,7 +249,7 @@ namespace Lime.Protocol.ConsoleTests
                 _reporter = new Reporter(
                     (int)(taskCount * (messagesCount + notificationsCount + commandsCount)), 
                     CursorTop + 2, 
-                    $"Transp {transportType} Ch {channelCount} Buf {envelopeBufferSize} Bat {sendBatchSize} Delay {moduleDelay} Tasks {taskCount} Msgs {messagesCount} Not {notificationsCount} Cmds {commandsCount}");
+                    $"Transp {transportType} Ch {channelCount} Buf {envelopeBufferSize} Delay {moduleDelay} Tasks {taskCount} Msgs {messagesCount} Not {notificationsCount} Cmds {commandsCount}");
                 
                 var to = Node.Parse("name@domain/instance");
                 var limeUri = new LimeUri("/ping");
@@ -319,27 +311,26 @@ namespace Lime.Protocol.ConsoleTests
                 _reporter.ReportSendComplete();
                 await _reporter.ReportTask;
                 _reporter = null;
-
-                try
+                
+                using var finishCts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+                
+                if (client is IOnDemandClientChannel onDemandClientChannel)
                 {
-                    if (client is IOnDemandClientChannel onDemandClientChannel)
-                    {
-                        await onDemandClientChannel.FinishAsync(default);
-                    }
-                    else if (client is IClientChannel clientChannel)
-                    {
-                        await clientChannel.SendFinishingSessionAsync(default);
-                        await clientChannel.ReceiveFinishedSessionAsync(default);
-                    }
-
-                    client.DisposeIfDisposable();
+                    await onDemandClientChannel.FinishAsync(finishCts.Token);
                 }
-                catch
+                else if (client is IClientChannel clientChannel)
                 {
+                    await clientChannel.SendFinishingSessionAsync(finishCts.Token);
+                    await clientChannel.ReceiveFinishedSessionAsync(finishCts.Token);
                 }
+
+                client.DisposeIfDisposable();
+
             }
             
-            await server.StopAsync(CancellationToken.None);
+            using var stopCts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+            
+            await server.StopAsync(stopCts.Token);
 
             WriteLine("Server stopped. Press ENTER to exit.");
             ReadLine();
