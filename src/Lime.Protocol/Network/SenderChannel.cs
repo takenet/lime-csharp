@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using Lime.Protocol.Server;
+using Lime.Protocol.Util;
 
 namespace Lime.Protocol.Network
 {
@@ -47,17 +48,7 @@ namespace Lime.Protocol.Network
             _sessionSemaphore = new SemaphoreSlim(1);
             _startStopSemaphore = new SemaphoreSlim(1);
             _senderCts = new CancellationTokenSource();
-            _envelopeBuffer = envelopeBufferSize > 0
-                ? Channel.CreateBounded<Envelope>(new BoundedChannelOptions(envelopeBufferSize)
-                {
-                    SingleReader = true,
-                    SingleWriter = false
-                })
-                : Channel.CreateUnbounded<Envelope>(new UnboundedChannelOptions()
-                {
-                    SingleReader = true,
-                    SingleWriter = false
-                });
+            _envelopeBuffer = ChannelUtil.CreateForCapacity<Envelope>(envelopeBufferSize, true, false);
         }
 
         public Task SendMessageAsync(Message message, CancellationToken cancellationToken)

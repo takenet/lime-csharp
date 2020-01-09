@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using Lime.Protocol.Server;
+using Lime.Protocol.Util;
 
 namespace Lime.Protocol.Network
 {
@@ -53,30 +54,10 @@ namespace Lime.Protocol.Network
             _sessionSemaphore = new SemaphoreSlim(1);
             _startStopSemaphore = new SemaphoreSlim(1);
             _consumerCts = new CancellationTokenSource();
-            if (envelopeBufferSize > 0)
-            {
-                var options = new BoundedChannelOptions(envelopeBufferSize)
-                {
-                    SingleReader = false,
-                    SingleWriter = true
-                };
-                _messageBuffer = Channel.CreateBounded<Message>(options);
-                _notificationBuffer = Channel.CreateBounded<Notification>(options);
-                _commandBuffer = Channel.CreateBounded<Command>(options);
-                _sessionBuffer = Channel.CreateBounded<Session>(options);
-            }
-            else
-            {
-                var options = new UnboundedChannelOptions()
-                {
-                    SingleReader = false,
-                    SingleWriter = true
-                };
-                _messageBuffer = Channel.CreateUnbounded<Message>(options);
-                _notificationBuffer = Channel.CreateUnbounded<Notification>(options);
-                _commandBuffer = Channel.CreateUnbounded<Command>(options);
-                _sessionBuffer = Channel.CreateUnbounded<Session>(options);                
-            }
+            _messageBuffer = ChannelUtil.CreateForCapacity<Message>(envelopeBufferSize, false, true);
+            _notificationBuffer = ChannelUtil.CreateForCapacity<Notification>(envelopeBufferSize, false, true);
+            _commandBuffer = ChannelUtil.CreateForCapacity<Command>(envelopeBufferSize, false, true);
+            _sessionBuffer = ChannelUtil.CreateForCapacity<Session>(envelopeBufferSize, false, true);
         }
         
         /// <inheritdoc />

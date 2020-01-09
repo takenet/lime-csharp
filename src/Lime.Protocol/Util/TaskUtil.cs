@@ -7,16 +7,16 @@ namespace Lime.Protocol.Util
         /// <summary>
         /// Gets a completed task.
         /// </summary>
-        public readonly static Task CompletedTask = Task.FromResult<object>(null);
+        public static readonly Task CompletedTask = Task.FromResult<object>(null);
 
         /// <summary>
         /// Gets a completed task with true result.
         /// </summary>
-        public readonly static Task<bool> TrueCompletedTask = Task.FromResult(true);
+        public static readonly Task<bool> TrueCompletedTask = Task.FromResult(true);
 
         /// <summary>
         /// Gets a completed task with true result.
         /// </summary>
-        public readonly static Task<bool> FalseCompletedTask = Task.FromResult(false);
+        public static readonly Task<bool> FalseCompletedTask = Task.FromResult(false);
     }
 }
