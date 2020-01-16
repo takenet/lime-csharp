@@ -13,14 +13,14 @@ namespace Lime.Protocol.Util
         /// <param name="producer">The producer func.</param>
         /// <param name="consumer">The consumer func.</param>
         /// <param name="cancellationToken">The cancellation token for the consumer task.</param>
-        /// <param name="handleIfCanceled">Indicates if the <see cref="OperationCanceledException"/> should be handled if the provided cancellationToken is cancelled.</param>
+        /// <param name="handleCancellation">Indicates if the <see cref="OperationCanceledException"/> should be handled if the provided cancellationToken is cancelled.</param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException"></exception>
         public static Task<T> CreateAsync<T>(
             Func<CancellationToken, Task<T>> producer,
             Func<T, CancellationToken, Task<bool>> consumer, 
             CancellationToken cancellationToken, 
-            bool handleIfCanceled = false)
+            bool handleCancellation = false)
         {
             if (producer == null) throw new ArgumentNullException(nameof(producer));
             if (consumer == null) throw new ArgumentNullException(nameof(consumer));
@@ -38,7 +38,7 @@ namespace Lime.Protocol.Util
                                 return item;
                             }
                         }
-                        catch (OperationCanceledException) when (handleIfCanceled && cancellationToken.IsCancellationRequested)
+                        catch (OperationCanceledException) when (handleCancellation && cancellationToken.IsCancellationRequested)
                         {
                             break;
                         }

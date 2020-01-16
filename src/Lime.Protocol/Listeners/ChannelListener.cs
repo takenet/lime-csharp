@@ -140,7 +140,7 @@ namespace Lime.Protocol.Listeners
                 producer,
                 consumer,
                 _cts.Token,
-                handleIfCanceled: true);
+                true);
         }
     }
 }
