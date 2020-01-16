@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Lime.Protocol.Network;
 
@@ -16,27 +17,27 @@ namespace Lime.Protocol.Listeners
             _channelListener = new ChannelListener(RaiseMessageReceivedAsync, RaiseNotificationReceivedAsync, RaiseCommandReceivedAsync);
         }
 
-        private async Task<bool> RaiseMessageReceivedAsync(Message envelope)
+        private async Task<bool> RaiseMessageReceivedAsync(Message envelope, CancellationToken cancellationToken)
         {
             var eventArgs = new EnvelopeEventArgs<Message>(envelope);
             MessageReceived?.RaiseEvent(this,eventArgs);
-            await eventArgs.WaitForDeferralsAsync().ConfigureAwait(false);
+            await eventArgs.WaitForDeferralsAsync(cancellationToken).ConfigureAwait(false);
             return true;
         }
 
-        private async Task<bool> RaiseNotificationReceivedAsync(Notification envelope)
+        private async Task<bool> RaiseNotificationReceivedAsync(Notification envelope, CancellationToken cancellationToken)
         {
             var eventArgs = new EnvelopeEventArgs<Notification>(envelope);
             NotificationReceived?.RaiseEvent(this, eventArgs);
-            await eventArgs.WaitForDeferralsAsync().ConfigureAwait(false);
+            await eventArgs.WaitForDeferralsAsync(cancellationToken).ConfigureAwait(false);
             return true;
         }
 
-        private async Task<bool> RaiseCommandReceivedAsync(Command envelope)
+        private async Task<bool> RaiseCommandReceivedAsync(Command envelope, CancellationToken cancellationToken)
         {
             var eventArgs = new EnvelopeEventArgs<Command>(envelope);
             CommandReceived?.RaiseEvent(this, eventArgs);
-            await eventArgs.WaitForDeferralsAsync().ConfigureAwait(false);
+            await eventArgs.WaitForDeferralsAsync(cancellationToken).ConfigureAwait(false);
             return true;
         }
 

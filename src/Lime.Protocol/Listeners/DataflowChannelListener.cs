@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using Lime.Protocol.Network;
@@ -28,9 +29,9 @@ namespace Lime.Protocol.Listeners
             if (commandTargetBlock == null) throw new ArgumentNullException(nameof(commandTargetBlock));
 
             _channelListener = new ChannelListener(
-                messageTargetBlock.SendAsync,
-                notificationTargetBlock.SendAsync,
-                commandTargetBlock.SendAsync);
+                (Func<Message, CancellationToken, Task<bool>>)messageTargetBlock.SendAsync,
+                (Func<Notification, CancellationToken, Task<bool>>)notificationTargetBlock.SendAsync,
+                (Func<Command, CancellationToken, Task<bool>>)commandTargetBlock.SendAsync);
         }
 
         public void Start(IEstablishedReceiverChannel channel)

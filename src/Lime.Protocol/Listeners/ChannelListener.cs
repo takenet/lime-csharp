@@ -13,12 +13,37 @@ namespace Lime.Protocol.Listeners
     /// <seealso cref="System.IDisposable" />
     public sealed class ChannelListener : IChannelListener, IDisposable
     {
-        private readonly Func<Message, Task<bool>> _messageConsumer;
-        private readonly Func<Notification, Task<bool>> _notificationConsumer;
-        private readonly Func<Command, Task<bool>> _commandConsumer;
+        private readonly Func<Message, CancellationToken, Task<bool>> _messageConsumer;
+        private readonly Func<Notification, CancellationToken, Task<bool>> _notificationConsumer;
+        private readonly Func<Command, CancellationToken, Task<bool>> _commandConsumer;
         private readonly CancellationTokenSource _cts;
         private readonly object _syncRoot;
 
+        [Obsolete("Use the constructor where the consumers accepts a cancellationToken as argument")]
+        public ChannelListener(
+            Func<Message, Task<bool>> messageConsumer,
+            Func<Notification, Task<bool>> notificationConsumer,
+            Func<Command, Task<bool>> commandConsumer)
+            : this(
+                async (m, ct) =>
+                {
+                    ct.ThrowIfCancellationRequested();
+                    return await messageConsumer(m);
+                },
+                async (n, ct) =>
+                {
+                    ct.ThrowIfCancellationRequested();
+                    return await notificationConsumer(n);
+                },
+                async (c, ct) =>
+                {
+                    ct.ThrowIfCancellationRequested();
+                    return await commandConsumer(c);
+                })
+        {
+            
+        }
+        
         /// <summary>
         /// Initializes a new instance of the <see cref="ChannelListener"/> class.
         /// </summary>
@@ -27,7 +52,10 @@ namespace Lime.Protocol.Listeners
         /// <param name="commandConsumer">The command consumer.</param>
         /// <exception cref="System.ArgumentNullException">
         /// </exception>
-        public ChannelListener(Func<Message, Task<bool>> messageConsumer, Func<Notification, Task<bool>> notificationConsumer, Func<Command, Task<bool>> commandConsumer)
+        public ChannelListener(
+            Func<Message, CancellationToken, Task<bool>> messageConsumer,
+            Func<Notification, CancellationToken, Task<bool>> notificationConsumer,
+            Func<Command, CancellationToken, Task<bool>> commandConsumer)
         {
             _messageConsumer = messageConsumer ?? throw new ArgumentNullException(nameof(messageConsumer));
             _notificationConsumer = notificationConsumer ?? throw new ArgumentNullException(nameof(notificationConsumer));
@@ -106,19 +134,13 @@ namespace Lime.Protocol.Listeners
             _cts.Dispose();
         }
 
-        private async Task<T> CreateListenerTask<T>(Func<CancellationToken, Task<T>> producer, Func<T, Task<bool>> consumer)
+        private  Task<T> CreateListenerTask<T>(Func<CancellationToken, Task<T>> producer, Func<T, CancellationToken, Task<bool>> consumer)
         {
-            try
-            {
-                return await ProducerConsumer.CreateAsync(
-                    producer,
-                    consumer,
-                    _cts.Token).ConfigureAwait(false);
-            }
-            catch (OperationCanceledException) when (_cts.IsCancellationRequested)
-            {
-                return default(T);
-            }
+            return ProducerConsumer.CreateAsync(
+                producer,
+                consumer,
+                _cts.Token,
+                handleIfCanceled: true);
         }
     }
 }

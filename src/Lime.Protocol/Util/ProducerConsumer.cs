@@ -13,47 +13,39 @@ namespace Lime.Protocol.Util
         /// <param name="producer">The producer func.</param>
         /// <param name="consumer">The consumer func.</param>
         /// <param name="cancellationToken">The cancellation token for the consumer task.</param>
+        /// <param name="handleIfCanceled">Indicates if the <see cref="OperationCanceledException"/> should be handled if the provided cancellationToken is cancelled.</param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException"></exception>
-        public static Task<T> CreateAsync<T>(Func<CancellationToken, Task<T>> producer, Func<T, Task<bool>> consumer, CancellationToken cancellationToken)
-        {
-            return CreateAsync(producer, consumer, cancellationToken, TaskCreationOptions.DenyChildAttach,
-                TaskScheduler.Default);
-        }
-
-        /// <summary>
-        /// Creates and starts a task that listens the provided producer and call the consumer until the cancellation is requested.
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="producer">The producer func.</param>
-        /// <param name="consumer">The consumer func.</param>
-        /// <param name="cancellationToken">The cancellation token for the consumer task.</param>
-        /// <param name="taskCreationOptions"></param>
-        /// <param name="taskScheduler"></param>
-        /// <returns></returns>
-        /// <exception cref="System.ArgumentNullException"></exception>
-        public static Task<T> CreateAsync<T>(Func<CancellationToken, Task<T>> producer, Func<T, Task<bool>> consumer, CancellationToken cancellationToken, TaskCreationOptions taskCreationOptions, TaskScheduler taskScheduler)
+        public static Task<T> CreateAsync<T>(
+            Func<CancellationToken, Task<T>> producer,
+            Func<T, CancellationToken, Task<bool>> consumer, 
+            CancellationToken cancellationToken, 
+            bool handleIfCanceled = false)
         {
             if (producer == null) throw new ArgumentNullException(nameof(producer));
             if (consumer == null) throw new ArgumentNullException(nameof(consumer));
-            if (taskScheduler == null) throw new ArgumentNullException(nameof(taskScheduler));
 
-            return Task.Factory.StartNew(async () =>
-            {
-                while (true)
+            return Task.Run(
+                async () =>
                 {
-                    cancellationToken.ThrowIfCancellationRequested();
-                    var item = await producer(cancellationToken).ConfigureAwait(false);
-                    if (!cancellationToken.IsCancellationRequested && !await consumer(item).ConfigureAwait(false))
+                    while (true)
                     {
-                        return item;
+                        try
+                        {
+                            var item = await producer(cancellationToken);
+                            if (!await consumer(item, cancellationToken))
+                            {
+                                return item;
+                            }
+                        }
+                        catch (OperationCanceledException) when (handleIfCanceled && cancellationToken.IsCancellationRequested)
+                        {
+                            break;
+                        }
                     }
-                }
-            },
-            cancellationToken,
-            taskCreationOptions,
-            taskScheduler)
-            .Unwrap();
+
+                    return default;
+                });
         }
     }
 
@@ -65,27 +57,11 @@ namespace Lime.Protocol.Util
         /// <typeparam name="T"></typeparam>
         /// <param name="producer"></param>
         /// <param name="consumer"></param>
-        /// <param name="cancellationToken"></param>        
+        /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public static Task<T> Consume<T>(this Func<CancellationToken, Task<T>> producer, Func<T, Task<bool>> consumer, CancellationToken cancellationToken)
+        public static Task<T> Consume<T>(this Func<CancellationToken, Task<T>> producer, Func<T, CancellationToken, Task<bool>> consumer, CancellationToken cancellationToken)
         {
             return ProducerConsumer.CreateAsync(producer, consumer, cancellationToken);
-        }
-
-        /// <summary>
-        /// Attach a consumer to the producer.
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="producer"></param>
-        /// <param name="consumer"></param>
-        /// <param name="cancellationToken"></param>
-        /// <param name="taskCreationOptions"></param>
-        /// <param name="taskScheduler"></param>
-        /// <returns></returns>
-        public static Task<T> Consume<T>(this Func<CancellationToken, Task<T>> producer, Func<T, Task<bool>> consumer, CancellationToken cancellationToken, TaskCreationOptions taskCreationOptions, TaskScheduler taskScheduler)
-        {
-            return ProducerConsumer.CreateAsync(producer, consumer, cancellationToken, taskCreationOptions,
-                taskScheduler);
         }
     }
 }
