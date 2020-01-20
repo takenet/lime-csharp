@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using System.Diagnostics;
 using Lime.Protocol.Network.Modules;
 
 namespace Lime.Protocol.Network
@@ -283,10 +284,17 @@ namespace Lime.Protocol.Network
         private async void Transport_Closing(object sender, DeferralEventArgs e)
         {
             if (_closeTransportInvoked) return;
-            
-            using (e.GetDeferral())
+
+            try
             {
-                await StopChannelTasks().ConfigureAwait(false);
+                using (e.GetDeferral())
+                {
+                    await StopChannelTasks().ConfigureAwait(false);
+                }
+            }
+            catch (Exception ex)
+            {
+                Trace.TraceError("[ChannelBase] Unhandled exception in the Transport_Closing handler: {0}", ex);
             }
         }
         
