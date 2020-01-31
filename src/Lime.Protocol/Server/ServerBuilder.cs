@@ -22,9 +22,7 @@ namespace Lime.Protocol.Server
                     ServerNode,
                     transport,
                     TimeSpan.FromSeconds(30),
-                    EnvelopeBufferSize,
-                    sendBatchSize: SendBatchSize,
-                    sendFlushBatchInterval: SendFlushBatchInterval);
+                    EnvelopeBufferSize);
             ChannelListenerFactory = () => new ChannelListener(m => TaskUtil.TrueCompletedTask,
                 n => TaskUtil.TrueCompletedTask, c => TaskUtil.TrueCompletedTask);
             EnvelopeBufferSize = 1;
@@ -51,11 +49,7 @@ namespace Lime.Protocol.Server
         public int MaxActiveChannels { get; private set; } = -1;
 
         public int EnvelopeBufferSize { get; private set; }
-
-        public int SendBatchSize { get; private set; } = 1;
-
-        public TimeSpan SendFlushBatchInterval { get; private set; } = TimeSpan.FromMilliseconds(256);
-
+        
         public ServerBuilder WithServerChannelFactory(Func<ITransport, IServerChannel> serverChannelFactory)
         {
             ServerChannelFactory = serverChannelFactory ?? throw new ArgumentNullException(nameof(serverChannelFactory));
@@ -119,18 +113,6 @@ namespace Lime.Protocol.Server
             return this;
         }
         
-        public ServerBuilder WithSendBatchSize(int sendBatchSize)
-        {
-            SendBatchSize = sendBatchSize;
-            return this;
-        }
-        
-        public ServerBuilder WithSendFlushBatchInterval(TimeSpan sendFlushBatchInterval)
-        {
-            SendFlushBatchInterval = sendFlushBatchInterval;
-            return this;
-        }
-
         public IServer Build()
         {
             return new Server(

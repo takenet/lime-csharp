@@ -27,7 +27,7 @@ namespace Lime.Transport.WebSocket
         private readonly SemaphoreSlim _closeSemaphore;
         private readonly WebSocketMessageType _webSocketMessageType;
         private readonly bool _closeGracefully;
-        private readonly CancellationTokenSource _receiveCts;
+        private readonly CancellationTokenSource _sendReceiveCts;
 
         protected WebSocketCloseStatus CloseStatus;
         protected string CloseStatusDescription;
@@ -49,7 +49,7 @@ namespace Lime.Transport.WebSocket
             _webSocketMessageType = webSocketMessageType;
             _closeGracefully = closeGracefully;
             _closeSemaphore = new SemaphoreSlim(1);
-            _receiveCts = new CancellationTokenSource();
+            _sendReceiveCts = new CancellationTokenSource();
             CloseStatus = WebSocketCloseStatus.NormalClosure;
             CloseStatusDescription = string.Empty;
         }
@@ -80,8 +80,14 @@ namespace Lime.Transport.WebSocket
             {
                 EnsureOpen("send");
 
-                await WebSocket.SendAsync(new ArraySegment<byte>(buffer, 0, length), _webSocketMessageType, true,
-                    cancellationToken).ConfigureAwait(false);
+                // The WebSocket class doesn't support cancellations on Send/Receive operations...
+                await WebSocket
+                    .SendAsync(
+                        new ArraySegment<byte>(buffer, 0, length),
+                        _webSocketMessageType,
+                        true,
+                        _sendReceiveCts.Token)
+                    .WithCancellation(cancellationToken);
             }
             catch (WebSocketException)
             {
@@ -104,7 +110,7 @@ namespace Lime.Transport.WebSocket
             {
                 EnsureOpen("receive");
 
-                while (!_receiveCts.IsCancellationRequested)
+                while (!_sendReceiveCts.IsCancellationRequested)
                 {
                     cancellationToken.ThrowIfCancellationRequested();
 
@@ -114,20 +120,13 @@ namespace Lime.Transport.WebSocket
                     };
                     segments.Add(segment);
 
-                    // The websocket class go to the 'Aborted' state if the receiveasync operation is cancelled.
+                    // The websocket class go to the 'Aborted' state if the ReceiveAsync operation is cancelled.
                     // In this case, we are unable to close the connection clearly when required.
-                    var receiveTask = WebSocket.ReceiveAsync(new ArraySegment<byte>(segment.Buffer), _receiveCts.Token);
-                    var cancellationTask = cancellationToken.AsTask();
+                    // So, we must use a different cancellation token.
+                    var receiveResult = await WebSocket
+                        .ReceiveAsync(new ArraySegment<byte>(segment.Buffer), _sendReceiveCts.Token)
+                        .WithCancellation(cancellationToken);
 
-                    // If the token is cancelled
-                    var completedTask = await Task.WhenAny(receiveTask, cancellationTask).ConfigureAwait(false);
-                    if (completedTask != receiveTask)
-                    {
-                        // The task above will thrown a TaskCancelledException, but just in case...
-                        cancellationToken.ThrowIfCancellationRequested();
-                    }
-
-                    var receiveResult = await receiveTask;
                     if (receiveResult == null)
                     {
                         continue;
@@ -240,11 +239,8 @@ namespace Lime.Transport.WebSocket
                         }
                     }
                 }
-
-                if (!_receiveCts.IsCancellationRequested)
-                {
-                    _receiveCts.Cancel();
-                }
+                
+                _sendReceiveCts.CancelIfNotRequested();
             }
             finally
             {
@@ -323,7 +319,7 @@ namespace Lime.Transport.WebSocket
             {
                 WebSocket.Dispose();
                 _closeSemaphore.Dispose();
-                _receiveCts.Dispose();
+                _sendReceiveCts.Dispose();
             }
         }
 

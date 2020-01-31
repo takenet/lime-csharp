@@ -3,7 +3,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Collections.Generic;
-using System.Threading.Tasks.Dataflow;
+using System.Diagnostics;
 using Lime.Protocol.Network.Modules;
 
 namespace Lime.Protocol.Network
@@ -37,8 +37,6 @@ namespace Lime.Protocol.Network
         /// <param name="remotePingInterval">The interval to ping the remote party.</param>
         /// <param name="remoteIdleTimeout">The timeout to close the channel due to inactivity.</param>
         /// <param name="channelCommandProcessor">The channel command processor.</param>
-        /// <param name="sendBatchSize">The size of the batch when sending to the transport. In high volume scenarios, batching help reduce friction and increase the throughput.</param>
-        /// <param name="sendFlushBatchInterval">The interval to wait for a batch to be complete before sending.</param>
         /// <exception cref="System.ArgumentNullException"></exception>
         /// <exception cref="System.ArgumentException">
         /// Invalid send timeout
@@ -58,14 +56,12 @@ namespace Lime.Protocol.Network
             bool autoReplyPings,
             TimeSpan? remotePingInterval,
             TimeSpan? remoteIdleTimeout,
-            IChannelCommandProcessor channelCommandProcessor,
-            int sendBatchSize,
-            TimeSpan sendFlushBatchInterval)
+            IChannelCommandProcessor channelCommandProcessor)
         {
             if (closeTimeout == default) throw new ArgumentException("Invalid close timeout", nameof(closeTimeout));
             if (envelopeBufferSize <= 0)
             {
-                envelopeBufferSize = DataflowBlockOptions.Unbounded;
+                envelopeBufferSize = -1;
             }
             Transport = transport ?? throw new ArgumentNullException(nameof(transport));
             Transport.Closing += Transport_Closing;
@@ -99,9 +95,7 @@ namespace Lime.Protocol.Network
                 CommandModules,
                 HandleSenderExceptionAsync,
                 envelopeBufferSize,
-                sendTimeout,
-                sendBatchSize,
-                sendFlushBatchInterval);
+                sendTimeout);
         }
 
         ~ChannelBase()
@@ -141,6 +135,7 @@ namespace Lime.Protocol.Network
                 
                 if (_state == SessionState.Established)
                 {
+                    _senderChannel.Start();
                     _receiverChannel.Start();
                 }
                 
@@ -247,7 +242,6 @@ namespace Lime.Protocol.Network
         public virtual Task<Session> ReceiveSessionAsync(CancellationToken cancellationToken) 
             => _receiverChannel.ReceiveSessionAsync(cancellationToken);
         
-        
         /// <summary>
         /// Closes the underlying transport.
         /// </summary>
@@ -290,10 +284,17 @@ namespace Lime.Protocol.Network
         private async void Transport_Closing(object sender, DeferralEventArgs e)
         {
             if (_closeTransportInvoked) return;
-            
-            using (e.GetDeferral())
+
+            try
             {
-                await StopChannelTasks().ConfigureAwait(false);
+                using (e.GetDeferral())
+                {
+                    await StopChannelTasks().ConfigureAwait(false);
+                }
+            }
+            catch (Exception ex)
+            {
+                Trace.TraceError("[ChannelBase] Unhandled exception in the Transport_Closing handler: {0}", ex);
             }
         }
         

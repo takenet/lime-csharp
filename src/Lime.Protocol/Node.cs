@@ -33,12 +33,7 @@ namespace Lime.Protocol
         /// </summary>
         public string Instance { get; set; }
 
-        /// <summary>
-        /// Returns a <see cref="string" /> that represents this instance.
-        /// </summary>
-        /// <returns>
-        /// A <see cref="string" /> that represents this instance.
-        /// </returns>
+        /// <inheritdoc />
         public override string ToString()
         {
             if (Instance == null)
@@ -49,13 +44,7 @@ namespace Lime.Protocol
             return $"{base.ToString()}/{Instance}";
         }
 
-        /// <summary>
-        /// Determines whether the specified <see cref="object" }, is equal to this instance.
-        /// </summary>
-        /// <param name="obj">The <see cref="object" /> to compare with this instance.</param>
-        /// <returns>
-        ///   <c>true</c> if the specified <see cref="object" /> is equal to this instance; otherwise, <c>false</c>.
-        /// </returns>
+        /// <inheritdoc />
         public override bool Equals(object obj)
         {
             var node = obj as Node;
