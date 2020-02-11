@@ -20,6 +20,7 @@ namespace Lime.Protocol.Network
         private readonly ReceiverChannel _receiverChannel;
         private readonly SenderChannel _senderChannel;
         private readonly IChannelCommandProcessor _channelCommandProcessor;
+        private readonly IDisposable _remotePingChannelModule;
         
         private SessionState _state;
         private bool _closeTransportInvoked;
@@ -67,14 +68,17 @@ namespace Lime.Protocol.Network
             Transport.Closing += Transport_Closing;
             _closeTimeout = closeTimeout;
             _channelCommandProcessor = channelCommandProcessor ?? new ChannelCommandProcessor();
-            
+
             // Modules
             MessageModules = new List<IChannelModule<Message>>();
             NotificationModules = new List<IChannelModule<Notification>>();
             CommandModules = new List<IChannelModule<Command>>();
             if (autoReplyPings) CommandModules.Add(new ReplyPingChannelModule(this));
             if (fillEnvelopeRecipients) FillEnvelopeRecipientsChannelModule.CreateAndRegister(this);
-            if (remotePingInterval != null) RemotePingChannelModule.CreateAndRegister(this, remotePingInterval.Value, remoteIdleTimeout);
+            if (remotePingInterval != null)
+            {
+                _remotePingChannelModule = RemotePingChannelModule.CreateAndRegister(this, remotePingInterval.Value, remoteIdleTimeout);
+            }
             
             _receiverChannel = new ReceiverChannel(
                 this,
@@ -345,6 +349,7 @@ namespace Lime.Protocol.Network
                 _receiverChannel.Dispose();
                 _senderChannel.Dispose();
                 Transport.DisposeIfDisposable();
+                _remotePingChannelModule?.Dispose();;
             }
         }
     }
