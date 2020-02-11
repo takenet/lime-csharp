@@ -178,11 +178,9 @@ namespace Lime.Protocol.Network.Modules
             }
         }
 
-        protected virtual async Task FinishAsync(IClientChannel clientChannel, CancellationToken cancellationToken)
+        protected virtual Task FinishAsync(IClientChannel clientChannel, CancellationToken cancellationToken)
         {
-            var receivedFinishedSessionTask = clientChannel.ReceiveFinishedSessionAsync(cancellationToken);
-            await clientChannel.SendFinishingSessionAsync(cancellationToken).ConfigureAwait(false);
-            await receivedFinishedSessionTask.ConfigureAwait(false);
+            return clientChannel.FinishSessionAsync(cancellationToken);
         }
 
         protected virtual Task FinishAsync(IServerChannel serverChannel, CancellationToken cancellationToken)

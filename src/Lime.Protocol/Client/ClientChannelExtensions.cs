@@ -14,19 +14,16 @@ namespace Lime.Protocol.Client
     public static class ClientChannelExtensions
     {
         /// <summary>
-        /// Performs the session negotiation and authentication
+        /// Performs the session negotiation and authentication handshake.
         /// </summary>
-        /// <param name="channel"></param>
-        /// <param name="compressionSelector"></param>
-        /// <param name="encryptionSelector"></param>
-        /// <param name="identity"></param>
-        /// <param name="authenticator"></param>
-        /// <param name="instance"></param>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        public static async Task<Session> EstablishSessionAsync(this IClientChannel channel, Func<SessionCompression[], SessionCompression> compressionSelector,
-            Func<SessionEncryption[], SessionEncryption> encryptionSelector, Identity identity, Func<AuthenticationScheme[], Authentication, Authentication> authenticator,
-            string instance, CancellationToken cancellationToken)
+        public static async Task<Session> EstablishSessionAsync(
+            this IClientChannel channel,
+            Func<SessionCompression[], SessionCompression> compressionSelector,
+            Func<SessionEncryption[], SessionEncryption> encryptionSelector, 
+            Identity identity, 
+            Func<AuthenticationScheme[], Authentication, Authentication> authenticator,
+            string instance, 
+            CancellationToken cancellationToken)
         {
             if (channel == null) throw new ArgumentNullException(nameof(channel));
             if (authenticator == null) throw new ArgumentNullException(nameof(authenticator));
@@ -89,6 +86,16 @@ namespace Lime.Protocol.Client
             }
 
             return receivedSession;
+        }
+        
+        /// <summary>
+        /// Performs the session finishing handshake.
+        /// </summary>
+        public static async Task<Session> FinishSessionAsync(this IClientChannel clientChannel, CancellationToken cancellationToken)
+        {
+            var finishedTask = clientChannel.ReceiveFinishedSessionAsync(cancellationToken);
+            await clientChannel.SendFinishingSessionAsync(cancellationToken).ConfigureAwait(false);
+            return await finishedTask.ConfigureAwait(false);
         }
     }
 }
