@@ -17,6 +17,7 @@ using Lime.Protocol.Security;
 using Lime.Protocol.Serialization;
 using Lime.Protocol.Serialization.Newtonsoft;
 using System.Buffers;
+using System.Security.Cryptography;
 
 namespace Lime.Transport.Tcp
 {
@@ -474,54 +475,15 @@ namespace Lime.Transport.Tcp
         public Task<DomainRole> AuthenticateAsync(Identity identity)
         {
             if (identity == null) throw new ArgumentNullException(nameof(identity));
-
-            var role = DomainRole.Unknown;
-
-            var sslStream = _stream as SslStream;
-            if (sslStream != null &&
-                sslStream.IsAuthenticated &&
-                sslStream.RemoteCertificate != null)
-            {                
-                var certificate = sslStream.RemoteCertificate;
-                if (!string.IsNullOrWhiteSpace(certificate.Subject))
-                {
-                    var commonNames = certificate
-                        .Subject
-                        .Split(',')
-                        .Select(c => c.Split('='))
-                        .Select(c => new
-                        {
-                            DN = c[0].Trim(' '),
-                            Subject = c[1].Trim(' ')
-                        })
-                        .Where(s => s.DN.Equals("CN"));
-                    Identity certificateIdentity;
-                    if (
-                        commonNames.Any(
-                            c => c.Subject.Equals($"*.{identity.Domain}", StringComparison.OrdinalIgnoreCase)))
-                    {
-                        role = DomainRole.RootAuthority;
-                    }
-                    else if (
-                        commonNames.Any(
-                            c =>
-                                c.Subject.Equals(identity.Domain, StringComparison.OrdinalIgnoreCase) ||
-                                c.Subject.TrimStart('*', '.').Equals(identity.Domain.TrimFirstDomainLabel(), StringComparison.OrdinalIgnoreCase)))
-                    {
-                        role = DomainRole.Authority;
-                    }
-                    else if (
-                        commonNames.Any(
-                            c =>
-                                Identity.TryParse(c.Subject, out certificateIdentity) &&
-                                certificateIdentity.Equals(identity)))
-                    {
-                        role = DomainRole.Member;
-                    }
-                }
+            
+            if (!(_stream is SslStream sslStream) || 
+                !sslStream.IsAuthenticated || 
+                sslStream.RemoteCertificate == null)
+            {
+                return Task.FromResult(DomainRole.Unknown);
             }
 
-            return Task.FromResult(role);
+            return Task.FromResult(sslStream.RemoteCertificate.GetDomainRole(identity));
         }
 
         /// <summary>
