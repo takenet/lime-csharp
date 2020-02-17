@@ -153,27 +153,7 @@ namespace Lime.Transport.Tcp.UnitTests
             actualAuthenticatingSession.Id.ShouldBe(authenticatingSession.Id);
             actualAuthenticatingSession.State.ShouldBe(authenticatingSession.State);
         }
-        
-        [Test]
-        public async Task AuthenticateAsync_WithValidClientCertificate_ShouldSucceed()
-        {
-            // Arrange
-            ServerCertificate = CertificateUtil.GetOrCreateSelfSignedCertificate("localhost");
-            ClientCertificateValidationCallback = ServerCertificateValidationCallback = (sender, certificate, chain, errors) => true;
-            var clientIdentity = Dummy.CreateIdentity();
-            ClientCertificate = CertificateUtil.GetOrCreateSelfSignedCertificate(clientIdentity);
-            var (clientTransport, serverTransport) = await GetAndOpenTargetsAsync();
-            await Task.WhenAll(
-                serverTransport.SetEncryptionAsync(SessionEncryption.TLS, CancellationToken),
-                clientTransport.SetEncryptionAsync(SessionEncryption.TLS, CancellationToken));
-            
-            // Act
-            var actual = await ((IAuthenticatableTransport) serverTransport).AuthenticateAsync(clientIdentity);
-            
-            // Assert
-            actual.ShouldBe(DomainRole.Member);
-        }
-        
+
         [Test]
         public async Task AuthenticateAsync_WithoutClientCertificate_ShouldReturnUnknown()
         {
