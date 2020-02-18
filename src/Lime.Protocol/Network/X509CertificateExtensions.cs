@@ -24,7 +24,9 @@ namespace Lime.Protocol.Network
                     // https://stackoverflow.com/a/5937270/704742
                     // https://tools.ietf.org/html/rfc6125#section-6.4.4
                     var asnEncodedData = new AsnEncodedData(sanExtension.Oid, sanExtension.RawData);
-                    subject = asnEncodedData.Format(false);
+                    subject = asnEncodedData
+                        .Format(false)
+                        .Replace("DNS:", "DNS Name="); // The behavior is different on linux: https://github.com/dotnet/core/issues/2243
                 }
             }
 
