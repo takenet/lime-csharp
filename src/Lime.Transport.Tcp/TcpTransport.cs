@@ -483,7 +483,8 @@ namespace Lime.Transport.Tcp
                 return Task.FromResult(DomainRole.Unknown);
             }
 
-            return Task.FromResult(sslStream.RemoteCertificate.GetDomainRole(identity));
+            var certificate = sslStream.RemoteCertificate as X509Certificate2 ?? new X509Certificate2(sslStream.RemoteCertificate);
+            return Task.FromResult(certificate.GetDomainRole(identity));
         }
 
         /// <summary>
