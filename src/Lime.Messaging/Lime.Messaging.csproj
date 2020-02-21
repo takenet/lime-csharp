@@ -10,12 +10,10 @@
     <PackageId>Lime.Messaging</PackageId>
     <PackageTags>lime</PackageTags>
     <PackageProjectUrl>http://limeprotocol.org</PackageProjectUrl>
-    <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
-    <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
-    <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
     <Version>1.0.0</Version>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <NoWarn>1591</NoWarn>
+    <LangVersion>8.0</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -26,6 +24,10 @@
     <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System" />
     <Reference Include="Microsoft.CSharp" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Properties" />
   </ItemGroup>
 
 </Project>

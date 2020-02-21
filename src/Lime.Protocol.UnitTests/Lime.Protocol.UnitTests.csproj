@@ -5,9 +5,6 @@
     <AssemblyName>Lime.Protocol.UnitTests</AssemblyName>
     <PackageId>Lime.Protocol.UnitTests</PackageId>
     <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
-    <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
-    <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
-    <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
   </PropertyGroup>
 
   <ItemGroup>
@@ -28,6 +25,10 @@
  
   <ItemGroup>
     <Service Include="{82a7f48d-3b50-4b1e-b82e-3ada8210c358}" />
+  </ItemGroup>
+ 
+  <ItemGroup>
+    <Folder Include="Properties" />
   </ItemGroup>
 
 </Project>
