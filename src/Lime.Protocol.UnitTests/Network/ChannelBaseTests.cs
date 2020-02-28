@@ -1723,7 +1723,7 @@ namespace Lime.Protocol.UnitTests.Network
                 .SetupSequence(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
                 .Returns(tcs1.Task)
                 .Returns(tcs2.Task);
-            var target = GetTarget(SessionState.Established, remotePingInterval: TimeSpan.FromMilliseconds(500));
+            var target = GetTarget(SessionState.Established, remotePingInterval: TimeSpan.FromMilliseconds(600));
 
             // Act
             await Task.Delay(350);
