@@ -1013,7 +1013,7 @@ namespace Lime.Protocol.UnitTests.Network
         {
             // Arrange            
             var requestCommand = Dummy.CreateCommand();
-            var cancellationToken = Dummy.CreateCancellationToken(TimeSpan.FromSeconds(2));
+            var cancellationToken = Dummy.CreateCancellationToken(TimeSpan.FromSeconds(5));
             var responseCommand = Dummy.CreateCommand(Dummy.CreatePing(), status: CommandStatus.Success);
             responseCommand.Id = requestCommand.Id;
             var tcs1 = new TaskCompletionSource<Envelope>();
