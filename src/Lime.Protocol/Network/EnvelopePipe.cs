@@ -162,7 +162,7 @@ namespace Lime.Protocol.Network
                 var buffer = readResult.Buffer;
                 if (readResult.IsCompleted || buffer.IsEmpty)
                 {
-                    // The receiveTask is completing, no need to thrown an exception.
+                    // The receiveTask is completing, no need to throw an exception.
                     break;
                 }
 
@@ -177,7 +177,7 @@ namespace Lime.Protocol.Network
 
                 if (envelope != null)
                 {
-                    // A envelope was found and the buffer may contain another one
+                    // An envelope was found and the buffer may contain another one
                     _receivePipe.Reader.AdvanceTo(consumed);
                 }
                 else
