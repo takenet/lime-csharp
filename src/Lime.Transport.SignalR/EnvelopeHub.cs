@@ -12,7 +12,6 @@ using Microsoft.AspNetCore.SignalR;
 namespace Lime.Transport.SignalR
 {
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1812: Remove internal classes that are never instantiated", Justification = "The class is instantiated via reflection by ASP.NET")]
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Reliability", "CA2007: Consider calling ConfigureAwait on the awaited task.", Justification = "ASP.NET Core doesn't have a SynchronizationContext")]
     internal class EnvelopeHub : Hub
     {
         private readonly Channel<ITransport> _transportChannel;
@@ -54,17 +53,13 @@ namespace Lime.Transport.SignalR
 
         public override async Task OnConnectedAsync()
         {
-            await base.OnConnectedAsync();
+            await base.OnConnectedAsync().ConfigureAwait(false);
 
-            var channel = _envelopeHubOptions.BackpressureLimit < 1 ?
+            var clientChannel = _envelopeHubOptions.BackpressureLimit < 1 ?
                 Channel.CreateUnbounded<string>() :
-                Channel.CreateBounded<string>(new BoundedChannelOptions(_envelopeHubOptions.BackpressureLimit)
-                {
-                    AllowSynchronousContinuations = false,
-                    FullMode = BoundedChannelFullMode.DropWrite
-                });
-            var transport = new ServerSignalRTransport(_hubContext, Context.ConnectionId, Context.UserIdentifier, channel, _envelopeSerializer, _hubOptions, _httpConnectionDispatcherOptions, _traceWriter);
-            _clientChannels.TryAdd(Context.UserIdentifier, channel);
+                Channel.CreateBounded<string>(_envelopeHubOptions.BackpressureLimit);
+            var transport = new ServerSignalRTransport(_hubContext, Context.UserIdentifier, clientChannel, _envelopeSerializer, _hubOptions, _httpConnectionDispatcherOptions, _traceWriter);
+            _clientChannels.TryAdd(Context.UserIdentifier, clientChannel);
             
             try
             {
@@ -80,7 +75,7 @@ namespace Lime.Transport.SignalR
         public override async Task OnDisconnectedAsync(Exception exception)
         {
             _clientChannels.TryRemove(Context.ConnectionId, out _);
-            await base.OnDisconnectedAsync(exception);
+            await base.OnDisconnectedAsync(exception).ConfigureAwait(false);
         }
     }
 }

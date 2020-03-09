@@ -18,18 +18,7 @@ namespace Lime.Transport.SignalR.UnitTests
     [TestFixture]
     public class SignalRTransportTests : TransportTestsBase
     {
-        private Channel<string> EnvelopeChannel { get; } = Channel.CreateUnbounded<string>();
-
-        protected override ITransport CreateClientTransport(IEnvelopeSerializer envelopeSerializer)
-        {
-            var hubConnection = new HubConnectionBuilder().WithUrl(CreateListenerUri().ToString() + "envelope").WithAutomaticReconnect().Build();
-            hubConnection.On<string>("FromServer", async envelope =>
-            {
-                await EnvelopeChannel.Writer.WriteAsync(envelope);
-            });
-
-            return new ClientSignalRTransport(EnvelopeChannel, envelopeSerializer, hubConnection: hubConnection);
-        }
+        protected override ITransport CreateClientTransport(IEnvelopeSerializer envelopeSerializer) => new ClientSignalRTransport(envelopeSerializer);
 
         protected override Uri CreateListenerUri() => new Uri("http://localhost:57813");
 
@@ -63,26 +52,5 @@ namespace Lime.Transport.SignalR.UnitTests
             var expected = clientTransport.LocalEndPoint;
             actual.ShouldBeOneOf(expected, "");
         }
-
-        //[Test]
-        //public async Task LimeSessionIsMaintainedAfterReconnect()
-        //{
-        //    // Arrange            
-        //    var message = Dummy.CreateMessage(Dummy.CreatePlainDocument());
-        //    var (clientTransport, serverTransport) = await GetAndOpenTargetsAsync();
-
-        //    // Act
-        //    serverTransport.CloseAsync
-        //    await clientTransport.SendAsync(message, CancellationToken);
-        //    _ = await serverTransport.ReceiveAsync(CancellationToken);
-
-
-
-        //    // Assert
-        //    actual.ShouldNotBeNull();
-
-        //    var actualMessage = actual.ShouldBeOfType<Message>();
-        //    CompareMessages(message, actualMessage);
-        //}
     }
 }

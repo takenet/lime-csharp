@@ -7,7 +7,7 @@ using ReflectionMagic;
 
 namespace Lime.Transport.SignalR
 {
-    public static class HubContextExtensions
+    internal static class HubContextExtensions
     {
         private static IHttpConnectionFeature GetHttpConnectionFeature<T>(IHubContext<T> hubContext, string userId) where T : Hub
         {

@@ -13,24 +13,44 @@ using static Lime.Transport.SignalR.SignalRTransportListener;
 
 namespace Lime.Transport.SignalR
 {
+    /// <summary>
+    /// Base class for SignalR transport implementation.
+    /// </summary>
+    /// <inheritdoc />
     public abstract class SignalRTransport : TransportBase
     {
-        private readonly ChannelReader<string> _envelopeChannel;
         private bool _isConnected;
 
-        internal SignalRTransport(ChannelReader<string> envelopeChannel, IEnvelopeSerializer envelopeSerializer, ITraceWriter traceWriter = null)
+        internal SignalRTransport(Channel<string> envelopeChannel, IEnvelopeSerializer envelopeSerializer, ITraceWriter traceWriter = null)
         {
 
-            TraceWriter = traceWriter;
-            _envelopeChannel = envelopeChannel;
+            EnvelopeChannel = envelopeChannel;
             EnvelopeSerializer = envelopeSerializer;
+            TraceWriter = traceWriter;
         }
 
+        /// <summary>
+        /// Gets the channel used to communicate between the transport and SignalR.
+        /// </summary>
+        protected Channel<string> EnvelopeChannel { get; }
+
+        /// <summary>
+        /// Gets the <see cref="IEnvelopeSerializer"/> used by this transport.
+        /// </summary>
         protected IEnvelopeSerializer EnvelopeSerializer { get; }
+
+        /// <summary>
+        /// Gets the <see cref="ITraceWriter"/> used by this transport.
+        /// </summary>
         protected ITraceWriter TraceWriter { get; }
 
+        /// <summary>
+        /// Gets a value that indicates whether this transport is open and connected.
+        /// </summary>
         public override bool IsConnected => _isConnected;
 
+        /// <inheritdoc />
+        /// <exception cref="ArgumentNullException"><paramref name="envelope"/> is <c>null</c>.</exception>
         public override Task SendAsync(Envelope envelope, CancellationToken cancellationToken)
         {
             if (envelope is null)
@@ -41,24 +61,28 @@ namespace Lime.Transport.SignalR
             return Task.CompletedTask;
         }
 
+        /// <inheritdoc />
+        /// <exception cref="InvalidOperationException">Thrown when the transport is not connected.</exception>
         public override async Task<Envelope> ReceiveAsync(CancellationToken cancellationToken)
         {
-            ThrowIfClosed();
+            ThrowIfNotConnected();
 
-            // TODO check if task is already completed?
-            var envelopeSerialized = await _envelopeChannel.ReadAsync(cancellationToken);
-            // TODO offer ValueTask-returning alternative?
+            var envelopeSerialized = await EnvelopeChannel.Reader.ReadAsync(cancellationToken);
             await TraceWriter.TraceIfEnabledAsync(envelopeSerialized, DataOperation.Receive).ConfigureAwait(false);
 
             return EnvelopeSerializer.Deserialize(envelopeSerialized);
         }
 
+        /// <inheritdoc />
         protected override Task PerformCloseAsync(CancellationToken cancellationToken)
         {
             _isConnected = false;
             return Task.CompletedTask;
         }
 
+        /// <inheritdoc />
+        /// <exception cref="ArgumentNullException"><paramref name="uri"/> is <c>null</c>.</exception>
+        /// <exception cref="ArgumentException">Thrown when <paramref name="uri"/> hasn't a valid HTTP or HTTPS scheme.</exception>
         protected override Task PerformOpenAsync(Uri uri, CancellationToken cancellationToken)
         {
             if (uri is null)
@@ -75,7 +99,10 @@ namespace Lime.Transport.SignalR
             return Task.CompletedTask;
         }
 
-        protected virtual void ThrowIfClosed()
+        /// <summary>
+        /// Throws an <see cref="InvalidOperationException"/> when the transport is not connected.
+        /// </summary>
+        protected virtual void ThrowIfNotConnected()
         {
             if (!IsConnected)
             {

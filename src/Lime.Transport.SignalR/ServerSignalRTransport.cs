@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Threading;
@@ -15,19 +16,22 @@ using ReflectionMagic;
 
 namespace Lime.Transport.SignalR
 {
-    public sealed class ServerSignalRTransport : SignalRTransport
+    /// <summary>
+    /// Provides methods for the server to communicate with client nodes using SignalR as the underlying transport mechanism.
+    /// This class cannot be inherited.
+    /// </summary>
+    /// <inheritdoc />
+    internal sealed class ServerSignalRTransport : SignalRTransport
     {
         private readonly IHubContext<EnvelopeHub> _hubContext;
-        private readonly string _connectionId;
         private readonly string _userId;
         private readonly HubOptions _hubOptions;
         private readonly HttpConnectionDispatcherOptions _httpConnectionDispatcherOptions;
 
         internal ServerSignalRTransport(
             IHubContext<EnvelopeHub> hubContext,
-            string connectionId,
             string userId,
-            ChannelReader<string> envelopeChannel,
+            Channel<string> envelopeChannel,
             IEnvelopeSerializer envelopeSerializer,
             HubOptions hubOptions,
             HttpConnectionDispatcherOptions httpConnectionDispatcherOptions,
@@ -37,28 +41,46 @@ namespace Lime.Transport.SignalR
                                                     traceWriter)
         {
             _hubContext = hubContext;
-            _connectionId = connectionId;
             _userId = userId;
             _hubOptions = hubOptions;
             _httpConnectionDispatcherOptions = httpConnectionDispatcherOptions;
         }
 
+        /// <inheritdoc />
         public override string LocalEndPoint
         {
             get
             {
-                return _hubContext.GetLocalEndpoint(_userId)?.ToString();
+                try
+                {
+                    return _hubContext.GetLocalEndpoint(_userId)?.ToString();
+                }
+                catch (MissingMemberException ex)
+                {
+                    TraceWriter.TraceIfEnabledAsync(ex.ToString(), DataOperation.Error);
+                    return string.Empty;
+                }
             }
         }
 
+        /// <inheritdoc />
         public override string RemoteEndPoint
         {
             get
             {
-                return _hubContext.GetRemoteEndpoint(_userId)?.ToString();
+                try
+                {
+                    return _hubContext.GetRemoteEndpoint(_userId)?.ToString();
+                }
+                catch (MissingMemberException ex)
+                {
+                    TraceWriter.TraceIfEnabledAsync(ex.ToString(), DataOperation.Error);
+                    return string.Empty;
+                }
             }
         }
 
+        /// <inheritdoc />
         public override IReadOnlyDictionary<string, object> Options
         {
             get
@@ -71,9 +93,11 @@ namespace Lime.Transport.SignalR
             }
         }
 
+        /// <inheritdoc />
+        /// <exception cref="InvalidOperationException">Thrown when the transport is not connected.</exception>
         public override async Task SendAsync(Envelope envelope, CancellationToken cancellationToken)
         {
-            ThrowIfClosed();
+            ThrowIfNotConnected();
 
             await base.SendAsync(envelope, cancellationToken).ConfigureAwait(false);
 
@@ -84,6 +108,7 @@ namespace Lime.Transport.SignalR
             await client.SendAsync("FromServer", envelopeSerialized).ConfigureAwait(false);
         }
 
+        /// <inheritdoc />
         protected override async Task PerformCloseAsync(CancellationToken cancellationToken)
         {
             var client = _hubContext.Clients.User(_userId);

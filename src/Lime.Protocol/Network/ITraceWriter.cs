@@ -14,7 +14,7 @@ namespace Lime.Protocol.Network
     public interface ITraceWriter
     {
         /// <summary>
-        /// Trace some data
+        /// Writes the provided data into the tracing output.
         /// </summary>
         /// <param name="data"></param>
         /// <param name="operation"></param>

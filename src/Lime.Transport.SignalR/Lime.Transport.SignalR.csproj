@@ -11,6 +11,7 @@
 		<RepositoryType>git</RepositoryType>
 		<PackageTags>lime</PackageTags>
 		<PackageLicenseFile>LICENSE</PackageLicenseFile>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
 	</PropertyGroup>
 
 	<ItemGroup>
