@@ -7,75 +7,80 @@ using System.Threading.Tasks;
 using Lime.Protocol;
 using Lime.Protocol.Network;
 using Lime.Protocol.Serialization;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.SignalR;
 using static Lime.Transport.SignalR.SignalRTransportListener;
 
 namespace Lime.Transport.SignalR
 {
-    internal class SignalRTransport : TransportBase
+    public abstract class SignalRTransport : TransportBase
     {
-        private readonly IHubContext<EnvelopeHub> _hubContext;
-        private readonly string _connectionId;
-        private readonly ITraceWriter _traceWriter;
-        private Channel<string> _envelopeChannel;
-        private readonly IEnvelopeSerializer _envelopeSerializer;
+        private readonly ChannelReader<string> _envelopeChannel;
+        private bool _isConnected;
 
-        internal SignalRTransport(IHubContext<EnvelopeHub> hub, string connectionId, Channel<string> envelopeChannel, IEnvelopeSerializer envelopeSerializer, ITraceWriter traceWriter)
+        internal SignalRTransport(ChannelReader<string> envelopeChannel, IEnvelopeSerializer envelopeSerializer, ITraceWriter traceWriter = null)
         {
-            _hubContext = hub;
-            _connectionId = connectionId;
-            _traceWriter = traceWriter;
+
+            TraceWriter = traceWriter;
             _envelopeChannel = envelopeChannel;
-            _envelopeSerializer = envelopeSerializer;
+            EnvelopeSerializer = envelopeSerializer;
         }
 
-        public override bool IsConnected => _hubContext.Clients.Client(_connectionId) != null; // TODO verify that this works
+        protected IEnvelopeSerializer EnvelopeSerializer { get; }
+        protected ITraceWriter TraceWriter { get; }
+
+        public override bool IsConnected => _isConnected;
+
+        public override Task SendAsync(Envelope envelope, CancellationToken cancellationToken)
+        {
+            if (envelope is null)
+            {
+                return Task.FromException(new ArgumentNullException(nameof(envelope)));
+            }
+
+            return Task.CompletedTask;
+        }
 
         public override async Task<Envelope> ReceiveAsync(CancellationToken cancellationToken)
         {
-            var envelopeSerialized = await _envelopeChannel.Reader.ReadAsync(cancellationToken);
-            await _traceWriter.TraceIfEnabledAsync(envelopeSerialized, DataOperation.Receive).ConfigureAwait(false);
-            return _envelopeSerializer.Deserialize(envelopeSerialized);
-        }
+            ThrowIfClosed();
 
-        public override async Task SendAsync(Envelope envelope, CancellationToken cancellationToken)
-        {
-            string envelopeSerialized = _envelopeSerializer.Serialize(envelope);
-            await _traceWriter.TraceIfEnabledAsync(envelopeSerialized, DataOperation.Send).ConfigureAwait(false);
-            var client = _hubContext.Clients.Client(_connectionId);
+            // TODO check if task is already completed?
+            var envelopeSerialized = await _envelopeChannel.ReadAsync(cancellationToken);
+            // TODO offer ValueTask-returning alternative?
+            await TraceWriter.TraceIfEnabledAsync(envelopeSerialized, DataOperation.Receive).ConfigureAwait(false);
 
-            await client.SendAsync("FromServer", envelopeSerialized).ConfigureAwait(false);
+            return EnvelopeSerializer.Deserialize(envelopeSerialized);
         }
 
         protected override Task PerformCloseAsync(CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            _isConnected = false;
+            return Task.CompletedTask;
         }
 
         protected override Task PerformOpenAsync(Uri uri, CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            if (uri is null)
+            {
+                throw new ArgumentNullException(nameof(uri));
+            }
+
+            if (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps)
+            {
+                throw new ArgumentException("A valid HTTP or HTTPS URL must be provided", nameof(uri));
+            }
+
+            _isConnected = true;
+            return Task.CompletedTask;
         }
 
-        #region IDisposable Support
-        private bool _disposed = false;
-
-        protected virtual void Dispose(bool disposing)
+        protected virtual void ThrowIfClosed()
         {
-            if (!_disposed)
+            if (!IsConnected)
             {
-                if (disposing)
-                {
-                }
-
-                _disposed = true;
+                throw new InvalidOperationException("The connection is not open.");
             }
         }
-
-        public void Dispose()
-        {
-            Dispose(true);
-        }
-        #endregion
     }
 }

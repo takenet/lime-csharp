@@ -6,61 +6,80 @@ using Lime.Protocol;
 using Lime.Protocol.Network;
 using Lime.Protocol.Serialization;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Connections;
 using Microsoft.AspNetCore.SignalR;
 
 namespace Lime.Transport.SignalR
 {
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Reliability", "CA2007:Consider calling ConfigureAwait on the awaited task", Justification = "ASP.NET Core doesn't have a SynchronizationContext")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1812: Remove internal classes that are never instantiated", Justification = "The class is instantiated via reflection by ASP.NET")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Reliability", "CA2007: Consider calling ConfigureAwait on the awaited task.", Justification = "ASP.NET Core doesn't have a SynchronizationContext")]
     internal class EnvelopeHub : Hub
     {
         private readonly Channel<ITransport> _transportChannel;
         private readonly ITraceWriter _traceWriter;
         private readonly IEnvelopeSerializer _envelopeSerializer;
         private readonly IHubContext<EnvelopeHub> _hubContext;
+        private readonly HubOptions _hubOptions;
+        private readonly HttpConnectionDispatcherOptions _httpConnectionDispatcherOptions;
+        private readonly EnvelopeHubOptions _envelopeHubOptions;
+        private readonly ConcurrentDictionary<string, Channel<string>> _clientChannels;
 
-        public EnvelopeHub(Channel<ITransport> transportChannel, ITraceWriter traceWriter, IEnvelopeSerializer envelopeSerializer, IHubContext<EnvelopeHub> hubContext)
+        public EnvelopeHub(Channel<ITransport> transportChannel,
+                           ConcurrentDictionary<string, Channel<string>> clientChannels,
+                           IEnvelopeSerializer envelopeSerializer,
+                           IHubContext<EnvelopeHub> hubContext,
+                           HubOptions hubOptions,
+                           HttpConnectionDispatcherOptions httpConnectionDispatcherOptions,
+                           EnvelopeHubOptions envelopeHubOptions,
+                           ITraceWriter traceWriter = null)
         {
             _transportChannel = transportChannel;
+            _clientChannels = clientChannels;
             _traceWriter = traceWriter;
             _envelopeSerializer = envelopeSerializer;
             _hubContext = hubContext;
+            _hubOptions = hubOptions;
+            _httpConnectionDispatcherOptions = httpConnectionDispatcherOptions;
+            _envelopeHubOptions = envelopeHubOptions;            
         }
 
-        private static ConcurrentDictionary<string, (SignalRTransport Transport, Channel<string> Channel)> ClientTransports { get; } = new ConcurrentDictionary<string, (SignalRTransport, Channel<string>)>();
-
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "transport is being written into the channel and stored somewhere else")]
         public async Task FromClient(string envelope)
         {
-            if (ClientTransports.TryGetValue(Context.ConnectionId, out var client))
+            if (_clientChannels.TryGetValue(Context.UserIdentifier, out var channel))
             {
-                await client.Channel.Writer.WriteAsync(envelope);
+                await channel.Writer.WriteAsync(envelope);
                 return;
             }
+        }
 
-            var channel = Channel.CreateUnbounded<string>(); // TODO bounded
-            var transport = new SignalRTransport(_hubContext, Context.ConnectionId, channel, _envelopeSerializer, _traceWriter);
-            ClientTransports.TryAdd(Context.ConnectionId, (transport, channel));
+        public override async Task OnConnectedAsync()
+        {
+            await base.OnConnectedAsync();
 
+            var channel = _envelopeHubOptions.BackpressureLimit < 1 ?
+                Channel.CreateUnbounded<string>() :
+                Channel.CreateBounded<string>(new BoundedChannelOptions(_envelopeHubOptions.BackpressureLimit)
+                {
+                    AllowSynchronousContinuations = false,
+                    FullMode = BoundedChannelFullMode.DropWrite
+                });
+            var transport = new ServerSignalRTransport(_hubContext, Context.ConnectionId, Context.UserIdentifier, channel, _envelopeSerializer, _hubOptions, _httpConnectionDispatcherOptions, _traceWriter);
+            _clientChannels.TryAdd(Context.UserIdentifier, channel);
+            
             try
             {
-
                 await _transportChannel.Writer.WriteAsync(transport);
             }
             catch
             {
-                ClientTransports.TryRemove(Context.ConnectionId, out _);
-                transport.Dispose();
+                _clientChannels.TryRemove(Context.ConnectionId, out _);
                 throw;
             }
         }
 
         public override async Task OnDisconnectedAsync(Exception exception)
         {
-            if (ClientTransports.TryRemove(Context.ConnectionId, out var client))
-            {
-                client.Transport.Dispose();
-            }
-
+            _clientChannels.TryRemove(Context.ConnectionId, out _);
             await base.OnDisconnectedAsync(exception);
         }
     }

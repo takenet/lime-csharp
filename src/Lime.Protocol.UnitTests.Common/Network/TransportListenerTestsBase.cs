@@ -13,6 +13,7 @@ using Shouldly;
 using Lime.Protocol.Server;
 using System.Net.Sockets;
 using Lime.Messaging;
+using System.Net.Http;
 
 namespace Lime.Protocol.UnitTests.Network
 {
@@ -23,8 +24,8 @@ namespace Lime.Protocol.UnitTests.Network
         {
             ListenerUri = CreateListenerUri();
             EnvelopeSerializer = new EnvelopeSerializer(new DocumentTypeResolver().WithMessagingDocuments());
-            TraceWriter = new Mock<ITraceWriter>();           
-            CancellationToken = TimeSpan.FromSeconds(5).ToCancellationToken();
+            TraceWriter = new Mock<ITraceWriter>();
+            CancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(5)).Token;
             Target = CreateTransportListener();
         }
 
@@ -149,15 +150,16 @@ namespace Lime.Protocol.UnitTests.Network
             {
                 var clientTransport = CreateClientTransport();
                 await clientTransport.OpenAsync(ListenerUri, CancellationToken);
-                throw new Exception("The listener is active");
+                Assert.Fail("The listener is active");
             }
-            catch (WebSocketException ex)
-            {
-                
+            catch (WebSocketException)
+            {                
             }
-            catch (SocketException ex)
+            catch (SocketException)
+            {                
+            }
+            catch (HttpRequestException)
             {
-                
             }
         }
     }

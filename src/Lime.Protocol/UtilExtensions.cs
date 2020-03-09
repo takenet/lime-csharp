@@ -78,10 +78,9 @@ namespace Lime.Protocol
         /// <param name="source"></param>
         public static void DisposeIfDisposable<T>(this T source) where T : class
         {
-            if (source != null &&
-                source is IDisposable)
+            if (source is IDisposable disposable)
             {
-                ((IDisposable)source).Dispose();
+                disposable.Dispose();
             }
         }
 
