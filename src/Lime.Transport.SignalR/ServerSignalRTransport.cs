@@ -115,7 +115,7 @@ namespace Lime.Transport.SignalR
             // This is the current suggested workaround, as there is currently no supported way to forcibly close 
             // a connection from server side outside of the Hub context.
             // https://github.com/dotnet/aspnetcore/issues/5333 tracks the feature request for this 
-            // and also describes another alternative, unreliable workaround.
+            // and also describes an alternative, unreliable workaround.
             await client.SendAsync(CLOSE_METHOD, cancellationToken).ConfigureAwait(false);
 
             await base.PerformCloseAsync(cancellationToken).ConfigureAwait(false);
