@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -12,7 +11,6 @@ using Microsoft.AspNetCore.Http.Connections;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
-using ReflectionMagic;
 
 namespace Lime.Transport.SignalR
 {
@@ -88,7 +86,6 @@ namespace Lime.Transport.SignalR
                 var options = new RouteValueDictionary(_httpConnectionDispatcherOptions);
                 new RouteValueDictionary(_hubOptions).ToList().ForEach(x => options[x.Key] = x.Value);
                 
-
                 return options;
             }
         }

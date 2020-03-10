@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Net.Sockets;
 using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Channels;
@@ -8,12 +9,11 @@ using Lime.Protocol;
 using Lime.Protocol.Network;
 using Lime.Protocol.Serialization;
 using Microsoft.AspNetCore.SignalR.Client;
-using ReflectionMagic;
 
 namespace Lime.Transport.SignalR
 {
     /// <summary>
-    /// Provides methods for client nodes to communicate with the server using SignalR as the underlying transport mechanism.
+    /// Provides methods for client nodes to communicate with a server using SignalR as the underlying transport mechanism.
     /// This class cannot be inherited.
     /// </summary>
     /// <inheritdoc />
@@ -43,13 +43,7 @@ namespace Lime.Transport.SignalR
             {
                 try
                 {
-                    dynamic transport = _hubConnection.AsDynamic()._state.CurrentConnectionStateUnsynchronized.Connection._transport;
-                    var transportName = ((object)transport).GetType().Name;
-                    if (transportName.Contains("WebSocket", StringComparison.InvariantCulture))
-                        return string.Empty;
-
-                    var webSocket = transport._webSocket._innerWebSocket._webSocket;
-                    return webSocket._stream._connection._socket.RemoteEndPoint.ToString();
+                    return _hubConnection.GetRemoteEndpoint()?.ToString() ?? string.Empty;
                 }
                 catch (MissingMemberException ex)
                 {
@@ -68,13 +62,7 @@ namespace Lime.Transport.SignalR
             {
                 try
                 {
-                    dynamic transport = _hubConnection.AsDynamic()._state.CurrentConnectionStateUnsynchronized.Connection._transport;
-                    var transportName = ((object)transport).GetType().Name;
-                    if (transportName.Contains("WebSocket", StringComparison.InvariantCulture))
-                        return string.Empty;
-
-                    var webSocket = transport._webSocket._innerWebSocket._webSocket;
-                    return webSocket._stream._connection._socket.LocalEndPoint.ToString();
+                    return _hubConnection.GetLocalEndpoint()?.ToString() ?? string.Empty;
                 }
                 catch (MissingMemberException ex)
                 {

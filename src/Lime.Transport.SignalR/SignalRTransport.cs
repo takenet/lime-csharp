@@ -1,15 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using Lime.Protocol;
 using Lime.Protocol.Network;
 using Lime.Protocol.Serialization;
-using Microsoft.AspNetCore.Routing;
-using Microsoft.AspNetCore.SignalR;
-using static Lime.Transport.SignalR.SignalRTransportListener;
 
 namespace Lime.Transport.SignalR
 {

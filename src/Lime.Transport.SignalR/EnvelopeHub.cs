@@ -2,10 +2,8 @@
 using System.Collections.Concurrent;
 using System.Threading.Channels;
 using System.Threading.Tasks;
-using Lime.Protocol;
 using Lime.Protocol.Network;
 using Lime.Protocol.Serialization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Connections;
 using Microsoft.AspNetCore.SignalR;
 

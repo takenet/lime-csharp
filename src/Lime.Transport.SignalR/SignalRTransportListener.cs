@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Buffers;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Net;
 using System.Net.Security;
 using System.Security.Authentication;
@@ -12,7 +10,6 @@ using System.Threading.Tasks;
 using Lime.Protocol.Network;
 using Lime.Protocol.Serialization;
 using Lime.Protocol.Server;
-using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http.Connections;
