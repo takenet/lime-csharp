@@ -28,7 +28,6 @@ namespace Lime.Transport.SignalR
     public sealed partial class SignalRTransportListener : ITransportListener, IDisposable
     {
         private const int DEFAULT_MAX_BUFFER_SIZE = 32768;
-        private const string URI_SCHEME_HTTPS = "https";
 
         private readonly IHost _webHost;
         private readonly int _acceptCapacity;
@@ -48,9 +47,10 @@ namespace Lime.Transport.SignalR
         /// <param name="acceptCapacity">The maximum capacity for new connections. Unlimited when set to zero or less. Default <c>0</c>.</param>
         /// <param name="httpProtocols">The HTTP protocols that will be enabled on the endpoints. Default <see cref="HttpProtocols.Http1AndHttp2"/></param>
         /// <param name="sslProtocols">Allowable SSL protcols. Default <see cref="SslProtocols.None"/>.</param>
-        /// <param name="backpressureLimit">The limit after which requests in a given transport will start to get queued. Unlimited when set to zero or less. Default <c>0</c>.</param>
+        /// <param name="boundedCapacity">The limit after which requests in a given transport will start to get queued. Unlimited when set to zero or less. Default <c>0</c>.</param>
         /// <param name="clientCertificateValidationCallback">A callback for additional client certificate validation that will be invoked during authentication. Default <c>null</c>.</param>
-        public SignalRTransportListener(Uri[] listenerUris,
+        public SignalRTransportListener(
+            Uri[] listenerUris,
             IEnvelopeSerializer envelopeSerializer,
             X509Certificate2 tlsCertificate = null,
             int maxBufferSize = DEFAULT_MAX_BUFFER_SIZE,
@@ -59,12 +59,12 @@ namespace Lime.Transport.SignalR
             int acceptCapacity = 0,
             HttpProtocols httpProtocols = HttpProtocols.Http1AndHttp2,
             SslProtocols sslProtocols = SslProtocols.None,
-            int backpressureLimit = 0,
+            int boundedCapacity = 0,
             Func<X509Certificate2, X509Chain, SslPolicyErrors, bool> clientCertificateValidationCallback = null)
         {
             ListenerUris = listenerUris;
             _acceptCapacity = acceptCapacity;
-            _backpressureLimit = backpressureLimit;
+            _backpressureLimit = boundedCapacity;
             _webHost = BuildWebHost(envelopeSerializer, tlsCertificate, maxBufferSize, traceWriter, httpProtocols, sslProtocols, clientCertificateValidationCallback, keepAliveInterval);
 
             _semaphore = new SemaphoreSlim(1, 1);
@@ -89,8 +89,8 @@ namespace Lime.Transport.SignalR
                 }
 
                 _transportChannel = _acceptCapacity > 0
-                ? Channel.CreateBounded<ITransport>(_acceptCapacity)
-                : Channel.CreateUnbounded<ITransport>();
+                    ? Channel.CreateBounded<ITransport>(_acceptCapacity)
+                    : Channel.CreateUnbounded<ITransport>();
 
                 await _webHost.StartAsync(cancellationToken).ConfigureAwait(false);
             }
@@ -164,7 +164,7 @@ namespace Lime.Transport.SignalR
                                 {
                                     listenOptions.Protocols = httpProtocols;
 
-                                    if (listenerUri.Scheme == URI_SCHEME_HTTPS)
+                                    if (listenerUri.Scheme == Uri.UriSchemeHttps)
                                     {
                                         listenOptions.UseHttps(tlsCertificate, httpsOptions =>
                                         {
@@ -181,19 +181,19 @@ namespace Lime.Transport.SignalR
                         .ConfigureServices(services =>
                         {
                             services
-                            .AddLogging()
-                            .AddSingleton(sp => _transportChannel)
-                            .AddSingleton(sp => httpConnectionDispatcherOptions)
-                            .AddSingleton(sp => hubOptions)
-                            .AddSingleton(envelopeSerializer)
-                            .AddSingleton(new EnvelopeHubOptions { BackpressureLimit = _backpressureLimit })
-                            .AddSingleton(new ConcurrentDictionary<string, Channel<string>>())
-                            .AddSingleton<IUserIdProvider, RandomUserIdProvider>()
-                            .AddSignalR().AddHubOptions<EnvelopeHub>(options =>
-                            {
-                                hubOptions = options;
-                                options.KeepAliveInterval = keepAliveInterval;
-                            });
+                                .AddLogging()
+                                .AddSingleton(sp => _transportChannel)
+                                .AddSingleton(sp => httpConnectionDispatcherOptions)
+                                .AddSingleton(sp => hubOptions)
+                                .AddSingleton(envelopeSerializer)
+                                .AddSingleton(new EnvelopeHubOptions { BoundedCapacity = _backpressureLimit })
+                                .AddSingleton(new ConcurrentDictionary<string, Channel<string>>())
+                                .AddSingleton<IUserIdProvider, RandomUserIdProvider>()
+                                .AddSignalR().AddHubOptions<EnvelopeHub>(options =>
+                                {
+                                    hubOptions = options;
+                                    options.KeepAliveInterval = keepAliveInterval;
+                                });
 
                             if (traceWriter != null)
                                 services.AddSingleton(traceWriter);

@@ -25,7 +25,7 @@ namespace Lime.Protocol.UnitTests.Network
             ListenerUri = CreateListenerUri();
             EnvelopeSerializer = new EnvelopeSerializer(new DocumentTypeResolver().WithMessagingDocuments());
             TraceWriter = new Mock<ITraceWriter>();
-            CancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(5)).Token;
+            CancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(5));
             Target = CreateTransportListener();
         }
 
@@ -37,6 +37,7 @@ namespace Lime.Protocol.UnitTests.Network
                 await Target.StopAsync(CancellationToken);
             }
             catch (InvalidOperationException) { }
+            CancellationTokenSource.Dispose();
             Target.DisposeIfDisposable();
             Target = null;
         }
@@ -55,7 +56,9 @@ namespace Lime.Protocol.UnitTests.Network
 
         public Mock<ITraceWriter> TraceWriter { get; private set; }
 
-        public CancellationToken CancellationToken { get; private set; }
+        public CancellationTokenSource CancellationTokenSource { get; set; }
+
+        public CancellationToken CancellationToken => CancellationTokenSource.Token;
 
         [Test]
         public void ListenerUris_ValidHostAndPort_GetsRegisteredUris()

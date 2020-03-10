@@ -21,14 +21,15 @@ namespace Lime.Transport.SignalR
         private readonly EnvelopeHubOptions _envelopeHubOptions;
         private readonly ConcurrentDictionary<string, Channel<string>> _clientChannels;
 
-        public EnvelopeHub(Channel<ITransport> transportChannel,
-                           ConcurrentDictionary<string, Channel<string>> clientChannels,
-                           IEnvelopeSerializer envelopeSerializer,
-                           IHubContext<EnvelopeHub> hubContext,
-                           HubOptions hubOptions,
-                           HttpConnectionDispatcherOptions httpConnectionDispatcherOptions,
-                           EnvelopeHubOptions envelopeHubOptions,
-                           ITraceWriter traceWriter = null)
+        public EnvelopeHub(
+            Channel<ITransport> transportChannel,
+            ConcurrentDictionary<string, Channel<string>> clientChannels,
+            IEnvelopeSerializer envelopeSerializer,
+            IHubContext<EnvelopeHub> hubContext,
+            HubOptions hubOptions,
+            HttpConnectionDispatcherOptions httpConnectionDispatcherOptions,
+            EnvelopeHubOptions envelopeHubOptions,
+            ITraceWriter traceWriter = null)
         {
             _transportChannel = transportChannel;
             _clientChannels = clientChannels;
@@ -53,9 +54,9 @@ namespace Lime.Transport.SignalR
         {
             await base.OnConnectedAsync().ConfigureAwait(false);
 
-            var clientChannel = _envelopeHubOptions.BackpressureLimit < 1 ?
+            var clientChannel = _envelopeHubOptions.BoundedCapacity < 1 ?
                 Channel.CreateUnbounded<string>() :
-                Channel.CreateBounded<string>(_envelopeHubOptions.BackpressureLimit);
+                Channel.CreateBounded<string>(_envelopeHubOptions.BoundedCapacity);
             var transport = new ServerSignalRTransport(_hubContext, Context.UserIdentifier, clientChannel, _envelopeSerializer, _hubOptions, _httpConnectionDispatcherOptions, _traceWriter);
             _clientChannels.TryAdd(Context.UserIdentifier, clientChannel);
             

@@ -19,7 +19,11 @@ namespace Lime.Transport.SignalR
     /// <inheritdoc />
     public sealed class ClientSignalRTransport : SignalRTransport, IDisposable, IAsyncDisposable
     {
+        private const string FROM_CLIENT_METHOD = "FromClient";
+        private const string HUB_NAME = "envelope";
+        private const string FROM_SERVER_METHOD = "FromServer";
         private HubConnection _hubConnection;
+        private bool _disposed;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ClientSignalRTransport"/> class.
@@ -28,9 +32,11 @@ namespace Lime.Transport.SignalR
         /// <param name="traceWriter">A sink for tracing messages. Default <c>null</c>.</param>
         public ClientSignalRTransport(
             IEnvelopeSerializer envelopeSerializer,
-            ITraceWriter traceWriter = null) : base(Channel.CreateUnbounded<string>(),
-                                                    envelopeSerializer,
-                                                    traceWriter)
+            ITraceWriter traceWriter = null) 
+            : base(
+                  Channel.CreateUnbounded<string>(),
+                  envelopeSerializer,
+                  traceWriter)
         {
         }
 
@@ -43,7 +49,7 @@ namespace Lime.Transport.SignalR
             {
                 try
                 {
-                    return _hubConnection.GetRemoteEndpoint()?.ToString() ?? string.Empty;
+                    return _hubConnection?.GetRemoteEndpoint()?.ToString() ?? string.Empty;
                 }
                 catch (MissingMemberException ex)
                 {
@@ -62,7 +68,7 @@ namespace Lime.Transport.SignalR
             {
                 try
                 {
-                    return _hubConnection.GetLocalEndpoint()?.ToString() ?? string.Empty;
+                    return _hubConnection?.GetLocalEndpoint()?.ToString() ?? string.Empty;
                 }
                 catch (MissingMemberException ex)
                 {
@@ -73,12 +79,14 @@ namespace Lime.Transport.SignalR
         }
 
         /// <inheritdoc />
-        public override IReadOnlyDictionary<string, object> Options => new Dictionary<string, object>
-        {
-            [nameof(_hubConnection.HandshakeTimeout)] = _hubConnection.HandshakeTimeout,
-            [nameof(_hubConnection.ServerTimeout)] = _hubConnection.ServerTimeout,
-            [nameof(_hubConnection.KeepAliveInterval)] = _hubConnection.KeepAliveInterval
-        };
+        public override IReadOnlyDictionary<string, object> Options => _hubConnection != null ? 
+            new Dictionary<string, object>
+            {
+                [nameof(HubConnection.HandshakeTimeout)] = _hubConnection.HandshakeTimeout,
+                [nameof(HubConnection.ServerTimeout)] = _hubConnection.ServerTimeout,
+                [nameof(HubConnection.KeepAliveInterval)] = _hubConnection.KeepAliveInterval
+            }
+            : new Dictionary<string, object>();
 
         /// <inheritdoc />
         /// <exception cref="ObjectDisposedException">This instance has already been disposed.</exception>
@@ -97,10 +105,10 @@ namespace Lime.Transport.SignalR
 
             await base.SendAsync(envelope, cancellationToken).ConfigureAwait(false);
 
-            string envelopeSerialized = EnvelopeSerializer.Serialize(envelope);
-            await TraceWriter.TraceIfEnabledAsync(envelopeSerialized, DataOperation.Send).ConfigureAwait(false);
+            string serializedEnvelope = EnvelopeSerializer.Serialize(envelope);
+            await TraceWriter.TraceIfEnabledAsync(serializedEnvelope, DataOperation.Send).ConfigureAwait(false);
 
-            await _hubConnection.SendAsync("FromClient", envelopeSerialized, cancellationToken).ConfigureAwait(false);
+            await _hubConnection.SendAsync(FROM_CLIENT_METHOD, serializedEnvelope, cancellationToken).ConfigureAwait(false);
         }
 
         /// <inheritdoc />
@@ -127,11 +135,11 @@ namespace Lime.Transport.SignalR
             await base.PerformOpenAsync(uri, cancellationToken).ConfigureAwait(false);
 
             _hubConnection = new HubConnectionBuilder()
-                .WithUrl(uri.ToString() + "envelope")
+                .WithUrl(uri.ToString() + HUB_NAME)
                 .WithAutomaticReconnect()
                 .Build();
 
-            _hubConnection.On<string>("FromServer", async envelope =>
+            _hubConnection.On<string>(FROM_SERVER_METHOD, async envelope =>
             {
                 await EnvelopeChannel.Writer.WriteAsync(envelope);
             });
@@ -148,9 +156,6 @@ namespace Lime.Transport.SignalR
             ThrowIfDisposed();
             base.ThrowIfNotConnected();
         }
-
-        #region IDisposable Support
-        private bool _disposed;
 
         /// <inheritdoc />
         public void Dispose()
@@ -173,7 +178,5 @@ namespace Lime.Transport.SignalR
                 throw new ObjectDisposedException(GetType().FullName);
             }
         }
-
-        #endregion
     }
 }

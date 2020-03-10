@@ -2,6 +2,6 @@
 {
     internal class EnvelopeHubOptions
     {
-        public int BackpressureLimit { get; set; }
+        public int BoundedCapacity { get; set; }
     }
 }
