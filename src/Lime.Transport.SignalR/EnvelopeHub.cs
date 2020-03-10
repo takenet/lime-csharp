@@ -43,7 +43,7 @@ namespace Lime.Transport.SignalR
 
         public async Task FromClient(string envelope)
         {
-            if (_clientChannels.TryGetValue(Context.UserIdentifier, out var channel))
+            if (_clientChannels.TryGetValue(Context.ConnectionId, out var channel))
             {
                 await channel.Writer.WriteAsync(envelope);
                 return;
@@ -57,8 +57,9 @@ namespace Lime.Transport.SignalR
             var clientChannel = _envelopeHubOptions.BoundedCapacity < 1 ?
                 Channel.CreateUnbounded<string>() :
                 Channel.CreateBounded<string>(_envelopeHubOptions.BoundedCapacity);
-            var transport = new ServerSignalRTransport(_hubContext, Context.UserIdentifier, clientChannel, _envelopeSerializer, _hubOptions, _httpConnectionDispatcherOptions, _traceWriter);
-            _clientChannels.TryAdd(Context.UserIdentifier, clientChannel);
+
+            var transport = new ServerSignalRTransport(_hubContext, Context.ConnectionId, clientChannel, _envelopeSerializer, _hubOptions, _httpConnectionDispatcherOptions, _traceWriter);
+            _clientChannels.TryAdd(Context.ConnectionId, clientChannel);
             
             try
             {
@@ -73,6 +74,9 @@ namespace Lime.Transport.SignalR
 
         public override async Task OnDisconnectedAsync(Exception exception)
         {
+            // TODO there is a concurrency issue here where a client
+            // may be disconnected before it's added to the dictionary
+            // and thus it'll never be removed
             _clientChannels.TryRemove(Context.ConnectionId, out _);
             await base.OnDisconnectedAsync(exception).ConfigureAwait(false);
         }

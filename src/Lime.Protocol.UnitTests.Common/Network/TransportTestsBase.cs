@@ -35,7 +35,13 @@ namespace Lime.Protocol.UnitTests.Common.Network
             {
                 if (ClientTransport != null && ClientTransport.IsConnected)
                 {
-                    await ClientTransport.CloseAsync(cts.Token);
+                    try
+                    {
+                        await ClientTransport.CloseAsync(cts.Token);
+                    }
+                    catch (InvalidOperationException)
+                    {
+                    }
                 }
 
                 await (TransportListener?.StopAsync(cts.Token) ?? Task.CompletedTask);

@@ -22,6 +22,7 @@ namespace Lime.Transport.SignalR
         private const string FROM_CLIENT_METHOD = "FromClient";
         private const string HUB_NAME = "envelope";
         private const string FROM_SERVER_METHOD = "FromServer";
+        private const string CLOSE_METHOD = "Close";
         private HubConnection _hubConnection;
         private bool _disposed;
 
@@ -141,7 +142,14 @@ namespace Lime.Transport.SignalR
 
             _hubConnection.On<string>(FROM_SERVER_METHOD, async envelope =>
             {
-                await EnvelopeChannel.Writer.WriteAsync(envelope);
+                await EnvelopeChannel.Writer.WriteAsync(envelope).ConfigureAwait(false);
+            });
+
+            _hubConnection.On(CLOSE_METHOD, async () =>
+            {
+                // awaiting here will cause a deadlock
+                // https://github.com/dotnet/aspnetcore/issues/19750
+                _ = CloseAsync(CancellationToken.None);
             });
 
             await _hubConnection.StartAsync(cancellationToken).ConfigureAwait(false);
