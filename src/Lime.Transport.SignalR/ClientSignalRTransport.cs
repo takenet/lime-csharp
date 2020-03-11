@@ -14,7 +14,6 @@ namespace Lime.Transport.SignalR
 {
     /// <summary>
     /// Provides methods for client nodes to communicate with a server using SignalR as the underlying transport mechanism.
-    /// This class cannot be inherited.
     /// </summary>
     /// <inheritdoc />
     public sealed class ClientSignalRTransport : SignalRTransport, IDisposable, IAsyncDisposable
