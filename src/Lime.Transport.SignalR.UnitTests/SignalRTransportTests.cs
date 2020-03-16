@@ -4,6 +4,7 @@ using System.Net;
 using System.Text;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+using Lime.Protocol;
 using Lime.Protocol.Network;
 using Lime.Protocol.Serialization;
 using Lime.Protocol.Server;
@@ -26,6 +27,7 @@ namespace Lime.Transport.SignalR.UnitTests
             => new SignalRTransportListener(new[] { uri }, envelopeSerializer, traceWriter: TraceWriter);
 
         [Test]
+        [Category("LocalEndPoint")]
         public override async Task LocalEndPoint_ConnectedTransport_ShouldEqualsClientRemoteEndPoint()
         {
             // Arrange
@@ -40,6 +42,7 @@ namespace Lime.Transport.SignalR.UnitTests
         }
 
         [Test]
+        [Category("RemoteEndPoint")]
         public override async Task RemoteEndPoint_ConnectedTransport_ShouldEqualsClientLocalEndPoint()
         {
             // Arrange
@@ -52,5 +55,49 @@ namespace Lime.Transport.SignalR.UnitTests
             var expected = clientTransport.LocalEndPoint;
             actual.ShouldBeOneOf(expected, "");
         }
+
+        [Test]
+        [Category("SendAsync")]
+        public async Task SendAsync_AfterServerDisconnect_ClientAutomaticallyReconnects()
+        {
+            ITransport clientTransport = null;
+            ITransport serverTransport = null;
+            ITransportListener transportListener = null;
+
+            try
+            {
+                // Arrange
+                transportListener = CreateTransportListener(ListenerUri, EnvelopeSerializer);
+                await transportListener.StartAsync(CancellationToken);
+                clientTransport = CreateClientTransport(EnvelopeSerializer);
+                var serverTransportTask = transportListener.AcceptTransportAsync(CancellationToken);
+                await clientTransport.OpenAsync(ListenerUri, CancellationToken);
+                serverTransport = await serverTransportTask;
+                await serverTransport.OpenAsync(ListenerUri, CancellationToken);
+                var message = Dummy.CreateMessage(Dummy.CreateTextContent());
+
+                // Act
+                await transportListener.StopAsync(CancellationToken);
+                await serverTransport.CloseAsync(CancellationToken);
+                transportListener = CreateTransportListener(ListenerUri, EnvelopeSerializer);
+                await transportListener.StartAsync(CancellationToken);
+                serverTransport = await transportListener.AcceptTransportAsync(CancellationToken);
+                await serverTransport.OpenAsync(ListenerUri, CancellationToken);
+
+                await clientTransport.SendAsync(message, CancellationToken);
+                var actual = await serverTransport.ReceiveAsync(CancellationToken);
+
+                // Assert
+                var actualMessage = actual.ShouldBeOfType<Message>();
+                CompareMessages(message, actualMessage);
+            }
+            finally
+            {
+                (clientTransport as IDisposable)?.Dispose();
+                (serverTransport as IDisposable)?.Dispose();
+                (transportListener as IDisposable)?.Dispose();
+            }
+        }
+
     }
 }

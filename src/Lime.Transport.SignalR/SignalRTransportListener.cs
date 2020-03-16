@@ -188,7 +188,6 @@ namespace Lime.Transport.SignalR
                                 .AddSingleton(envelopeSerializer)
                                 .AddSingleton(new EnvelopeHubOptions { BoundedCapacity = _backpressureLimit })
                                 .AddSingleton(new ConcurrentDictionary<string, Channel<string>>())
-                                .AddSingleton<IUserIdProvider, RandomUserIdProvider>()
                                 .AddSignalR().AddHubOptions<EnvelopeHub>(options =>
                                 {
                                     hubOptions = options;

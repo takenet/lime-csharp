@@ -688,7 +688,7 @@ namespace Lime.Protocol.UnitTests.Common.Network
             actual.ShouldNotBeNull();
         }
 
-        private static void CompareMessages(Message message, Message actualMessage)
+        protected static void CompareMessages(Message message, Message actualMessage)
         {
             actualMessage.Id.ShouldBe(message.Id);
             actualMessage.From.ShouldBe(message.From);
