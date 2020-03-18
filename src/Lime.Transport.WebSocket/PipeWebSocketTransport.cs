@@ -215,7 +215,7 @@ namespace Lime.Transport.WebSocket
             var completedTask = await Task.WhenAny(receiveTask, cancellationTask).ConfigureAwait(false);
             if (completedTask != receiveTask)
             {
-                // The task above will thrown a TaskCancelledException, but just in case...
+                // The task above will throw a TaskCancelledException, but just in case...
                 cancellationToken.ThrowIfCancellationRequested();
             }
             
