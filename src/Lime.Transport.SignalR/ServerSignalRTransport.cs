@@ -34,10 +34,11 @@ namespace Lime.Transport.SignalR
             IEnvelopeSerializer envelopeSerializer,
             HubOptions hubOptions,
             HttpConnectionDispatcherOptions httpConnectionDispatcherOptions,
-
-            ITraceWriter traceWriter = null) : base(envelopeChannel,
-                                                    envelopeSerializer,
-                                                    traceWriter)
+            ITraceWriter traceWriter = null) 
+            : base(
+                  envelopeChannel,
+                  envelopeSerializer,
+                  traceWriter)
         {
             _hubContext = hubContext;
             _connectionId = connectionId;
@@ -99,11 +100,11 @@ namespace Lime.Transport.SignalR
 
             await base.SendAsync(envelope, cancellationToken).ConfigureAwait(false);
 
-            string envelopeSerialized = EnvelopeSerializer.Serialize(envelope);
-            await TraceWriter.TraceIfEnabledAsync(envelopeSerialized, DataOperation.Send).ConfigureAwait(false);
+            string serializedEnvelope = EnvelopeSerializer.Serialize(envelope);
+            await TraceWriter.TraceIfEnabledAsync(serializedEnvelope, DataOperation.Send).ConfigureAwait(false);
             var client = _hubContext.Clients.Client(_connectionId);
 
-            await client.SendAsync(FROM_SERVER_METHOD, envelopeSerialized).ConfigureAwait(false);
+            await client.SendAsync(FROM_SERVER_METHOD, serializedEnvelope).ConfigureAwait(false);
         }
 
         /// <inheritdoc />
