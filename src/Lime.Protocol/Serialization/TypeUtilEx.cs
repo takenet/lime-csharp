@@ -219,8 +219,8 @@ namespace Lime.Protocol.Serialization
             if (type.IsArray)
             {
                 var elementType = type.GetElementType();
-                var arrayValues = value.Split(';');
-                
+                var arrayValues = value.Split(new char[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
+
                 var resultArray = Array.CreateInstance(elementType, arrayValues.Length);
 
                 for (int i = 0; i < arrayValues.Length; i++)
