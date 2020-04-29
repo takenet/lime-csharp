@@ -1,15 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.Serialization;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Runtime.Serialization;
 
 namespace Lime.Protocol.Security
 {
     /// <summary>
-    /// Defines a transport layer 
-    /// authentication scheme. 
+    /// Defines a transport layer authentication scheme. 
     /// </summary>
     [DataContract(Namespace = "http://limeprotocol.org/2014")]
     public class TransportAuthentication : Authentication
@@ -18,5 +12,12 @@ namespace Lime.Protocol.Security
             : base(AuthenticationScheme.Transport)
         {
         }
+
+        /// <summary>
+        /// The domain role determined by the <see cref="IAuthenticatableTransport.AuthenticateAsync"/> method call.
+        /// This value should not be serialized.
+        /// </summary>
+        [IgnoreDataMember]
+        public DomainRole? DomainRole { get; set; }
     }
 }

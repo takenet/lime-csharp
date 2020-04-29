@@ -1,8 +1,6 @@
 ﻿using Lime.Protocol.Security;
 using System;
 using System.Linq;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -13,22 +11,6 @@ namespace Lime.Protocol.Server
         /// <summary>
         /// Establishes a server channel with transport options negotiation and authentication.
         /// </summary>
-        /// <param name="channel">The channel.</param>
-        /// <param name="enabledCompressionOptions">The enabled compression options.</param>
-        /// <param name="enabledEncryptionOptions">The enabled encryption options.</param>
-        /// <param name="schemeOptions">The scheme options.</param>
-        /// <param name="authenticateFunc">The authenticate function.</param>
-        /// <param name="cancellationToken">The cancellation token.</param>
-        /// <returns></returns>
-        /// <exception cref="System.ArgumentNullException">
-        /// </exception>
-        /// <exception cref="System.ArgumentException">
-        /// The transport doesn't support one or more of the specified compression options
-        /// or
-        /// The transport doesn't support one or more of the specified compression options
-        /// or
-        /// The authentication scheme options is mandatory
-        /// </exception>
         public static async Task EstablishSessionAsync(
             this IServerChannel channel, 
             SessionCompression[] enabledCompressionOptions,
@@ -64,82 +46,127 @@ namespace Lime.Protocol.Server
                 var compressionOptions = enabledCompressionOptions.Intersect(channel.Transport.GetSupportedCompression()).ToArray();
                 var encryptionOptions = enabledEncryptionOptions.Intersect(channel.Transport.GetSupportedEncryption()).ToArray();
                 
-                if (compressionOptions.Length > 1 || encryptionOptions.Length > 1)
+                if (compressionOptions.Length > 1 || 
+                    encryptionOptions.Length > 1)
                 {
-                    // Negotiate the transport options
-                    receivedSession = await channel.NegotiateSessionAsync(
-                        compressionOptions,
-                        encryptionOptions,
-                        cancellationToken).ConfigureAwait(false);
+                    await NegotiateSessionAsync(channel, compressionOptions, encryptionOptions, cancellationToken).ConfigureAwait(false);
+                }
 
-                    // Validate the selected options
-                    if (receivedSession.State == SessionState.Negotiating &&
-                        receivedSession.Compression != null &&
-                        compressionOptions.Contains(receivedSession.Compression.Value) &&
-                        receivedSession.Encryption != null &&
-                        encryptionOptions.Contains(receivedSession.Encryption.Value))
+                if (channel.State != SessionState.Failed)
+                {
+                    await AuthenticateSessionAsync(channel, schemeOptions, authenticateFunc, cancellationToken).ConfigureAwait(false);
+                }
+            }
+        }
+
+        private static async Task NegotiateSessionAsync(
+            IServerChannel channel,
+            SessionCompression[] compressionOptions,
+            SessionEncryption[] encryptionOptions,
+            CancellationToken cancellationToken)
+        {
+            Session receivedSession;
+            // Negotiate the transport options
+            receivedSession = await channel.NegotiateSessionAsync(
+                compressionOptions,
+                encryptionOptions,
+                cancellationToken).ConfigureAwait(false);
+
+            // Validate the selected options
+            if (receivedSession.State == SessionState.Negotiating &&
+                receivedSession.Compression != null &&
+                compressionOptions.Contains(receivedSession.Compression.Value) &&
+                receivedSession.Encryption != null &&
+                encryptionOptions.Contains(receivedSession.Encryption.Value))
+            {
+                await channel.SendNegotiatingSessionAsync(
+                    receivedSession.Compression.Value,
+                    receivedSession.Encryption.Value, cancellationToken);
+
+                if (channel.Transport.Compression != receivedSession.Compression.Value)
+                {
+                    await channel.Transport.SetCompressionAsync(
+                        receivedSession.Compression.Value,
+                        cancellationToken);
+                }
+
+                if (channel.Transport.Encryption != receivedSession.Encryption.Value)
+                {
+                    await channel.Transport.SetEncryptionAsync(
+                        receivedSession.Encryption.Value,
+                        cancellationToken);
+                }
+            }
+            else
+            {
+                await channel.SendFailedSessionAsync(new Reason()
+                {
+                    Code = ReasonCodes.SESSION_NEGOTIATION_INVALID_OPTIONS,
+                    Description = "An invalid negotiation option was selected"
+                }, cancellationToken);
+            }
+        }
+        
+        private static async Task AuthenticateSessionAsync(
+            IServerChannel channel,
+            AuthenticationScheme[] schemeOptions,
+            Func<Node, Authentication, Task<AuthenticationResult>> authenticateFunc,
+            CancellationToken cancellationToken)
+        {
+            // Sends the authentication options and awaits for the authentication 
+            var receivedSession = await channel.AuthenticateSessionAsync(schemeOptions, cancellationToken);
+            
+            if (receivedSession.State == SessionState.Authenticating &&
+                receivedSession.Authentication != null &&
+                receivedSession.Scheme != null &&
+                schemeOptions.Contains(receivedSession.Scheme.Value))
+            {
+                while (channel.State == SessionState.Authenticating)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+
+                    if (receivedSession.Authentication is TransportAuthentication transportAuthentication)
                     {
-                        await channel.SendNegotiatingSessionAsync(
-                            receivedSession.Compression.Value,
-                            receivedSession.Encryption.Value, cancellationToken);
+                        await AuthenticateAsTransportAsync(channel, transportAuthentication, receivedSession.From?.ToIdentity());
+                    }
 
-                        if (channel.Transport.Compression != receivedSession.Compression.Value)
-                        {
-                            await channel.Transport.SetCompressionAsync(
-                                receivedSession.Compression.Value,
-                                cancellationToken);
-                        }
+                    var authenticationResult = await authenticateFunc(
+                        receivedSession.From,
+                        receivedSession.Authentication);
 
-                        if (channel.Transport.Encryption != receivedSession.Encryption.Value)
-                        {
-                            await channel.Transport.SetEncryptionAsync(
-                                receivedSession.Encryption.Value,
-                                cancellationToken);
-                        }
+                    if (authenticationResult.Roundtrip != null)
+                    {
+                        receivedSession =
+                            await channel.AuthenticateSessionAsync(authenticationResult.Roundtrip, cancellationToken);
+                    }
+                    else if (authenticationResult.Node != null)
+                    {
+                        await channel.SendEstablishedSessionAsync(authenticationResult.Node, cancellationToken);
                     }
                     else
                     {
                         await channel.SendFailedSessionAsync(new Reason()
                         {
-                            Code = ReasonCodes.SESSION_NEGOTIATION_INVALID_OPTIONS,
-                            Description = "An invalid negotiation option was selected"
+                            Code = ReasonCodes.SESSION_AUTHENTICATION_FAILED,
+                            Description = "The session authentication failed"
                         }, cancellationToken);
                     }
                 }
+            }
+        }
 
-                if (channel.State != SessionState.Failed)
-                {
-                    // Sends the authentication options and awaits for the authentication 
-                    receivedSession = await channel.AuthenticateSessionAsync(schemeOptions, cancellationToken);
-                    if (receivedSession.State == SessionState.Authenticating &&
-                        receivedSession.Authentication != null &&
-                        receivedSession.Scheme != null &&
-                        schemeOptions.Contains(receivedSession.Scheme.Value))
-                    {
-                        while (channel.State == SessionState.Authenticating)
-                        {
-                            cancellationToken.ThrowIfCancellationRequested();
+        private static async Task AuthenticateAsTransportAsync(
+            IServerChannel channel,
+            TransportAuthentication transportAuthentication,
+            Identity identity)
+        {
+            // Ensure that the domain role value is null.
+            transportAuthentication.DomainRole = null;
 
-                            var authenticationResult = await authenticateFunc(receivedSession.From, receivedSession.Authentication).ConfigureAwait(false);
-                            if (authenticationResult.Roundtrip != null)
-                            {
-                                receivedSession = await channel.AuthenticateSessionAsync(authenticationResult.Roundtrip, cancellationToken);
-                            }
-                            else if (authenticationResult.Node != null)
-                            {
-                                await channel.SendEstablishedSessionAsync(authenticationResult.Node, cancellationToken);
-                            }
-                            else
-                            {
-                                await channel.SendFailedSessionAsync(new Reason()
-                                {
-                                    Code = ReasonCodes.SESSION_AUTHENTICATION_FAILED,
-                                    Description = "The session authentication failed"
-                                }, cancellationToken);
-                            }
-                        }
-                    }
-                }
+            if (channel.Transport is IAuthenticatableTransport authenticatableTransport && 
+                identity != null)
+            {
+                transportAuthentication.DomainRole = await authenticatableTransport.AuthenticateAsync(identity);
             }
         }
     }

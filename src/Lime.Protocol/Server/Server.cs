@@ -14,7 +14,7 @@ namespace Lime.Protocol.Server
     /// Simple generic server for receiving connections and processing envelopes.
     /// </summary>
     public class Server : IServer
-    {               
+    {
         private readonly ITransportListener _transportListener;
         private readonly Func<ITransport, IServerChannel> _serverChannelFactory;
         private readonly SessionCompression[] _enabledCompressionOptions;
@@ -31,7 +31,7 @@ namespace Lime.Protocol.Server
         private CancellationTokenSource _listenerCts;
         private Task _listenerTask;
         private ITargetBlock<IServerChannel> _consumerBlock;
-        
+
         public Server(
             ITransportListener transportListener,
             Func<ITransport, IServerChannel> serverChannelFactory,
@@ -44,12 +44,16 @@ namespace Lime.Protocol.Server
             int maxActiveChannels = -1)
         {
             _transportListener = transportListener ?? throw new ArgumentNullException(nameof(transportListener));
-            _serverChannelFactory = serverChannelFactory ?? throw new ArgumentNullException(nameof(serverChannelFactory));
-            _enabledCompressionOptions = enabledCompressionOptions ?? throw new ArgumentNullException(nameof(enabledCompressionOptions));
-            _enabledEncryptionOptions = enabledEncryptionOptions ?? throw new ArgumentNullException(nameof(enabledEncryptionOptions));
+            _serverChannelFactory =
+                serverChannelFactory ?? throw new ArgumentNullException(nameof(serverChannelFactory));
+            _enabledCompressionOptions = enabledCompressionOptions ??
+                                         throw new ArgumentNullException(nameof(enabledCompressionOptions));
+            _enabledEncryptionOptions = enabledEncryptionOptions ??
+                                        throw new ArgumentNullException(nameof(enabledEncryptionOptions));
             _schemeOptions = schemeOptions ?? throw new ArgumentNullException(nameof(schemeOptions));
             _authenticator = authenticator ?? throw new ArgumentNullException(nameof(authenticator));
-            _channelListenerFactory = channelListenerFactory ?? throw new ArgumentNullException(nameof(channelListenerFactory));
+            _channelListenerFactory =
+                channelListenerFactory ?? throw new ArgumentNullException(nameof(channelListenerFactory));
             _exceptionHandler = exceptionHandler;
             _maxActiveChannels = maxActiveChannels;
             _semaphore = new SemaphoreSlim(1, 1);
@@ -74,7 +78,7 @@ namespace Lime.Protocol.Server
 
                 await _transportListener.StartAsync(cancellationToken).ConfigureAwait(false);
 
-                // Initialize a backgound task for listening for new transport connections
+                // Initialize a background task for listening for new transport connections
                 _listenerCts = new CancellationTokenSource();
                 _listenerTask = Task.Run(() => ListenAsync(_listenerCts.Token));
             }
@@ -117,10 +121,11 @@ namespace Lime.Protocol.Server
             {
                 try
                 {
-                    var transport = await _transportListener.AcceptTransportAsync(cancellationToken).ConfigureAwait(false);
+                    var transport = await _transportListener.AcceptTransportAsync(cancellationToken)
+                        .ConfigureAwait(false);
                     await transport.OpenAsync(null, cancellationToken).ConfigureAwait(false);
                     var channel = _serverChannelFactory(transport);
-                    if (!await _consumerBlock.SendAsync<IServerChannel>(channel, cancellationToken))
+                    if (!await _consumerBlock.SendAsync(channel, cancellationToken))
                     {
                         // The server pipeline is complete
                         break;
@@ -160,39 +165,7 @@ namespace Lime.Protocol.Server
                         return;
                     }
 
-                    // Initializes a new consumer
-                    var channelListener = _channelListenerFactory();
-
-                    try
-                    {
-                        // Consume the channel envelopes
-                        channelListener.Start(serverChannel);
-
-                        // Awaits for the finishing envelope
-                        var finishingSessionTask = serverChannel.ReceiveFinishingSessionAsync(_listenerCts.Token);
-
-                        // Stops the consumer when any of the tasks finishes
-                        await
-                            Task.WhenAny(
-                                finishingSessionTask,
-                                channelListener.MessageListenerTask,
-                                channelListener.CommandListenerTask,
-                                channelListener.NotificationListenerTask);
-
-                        if (finishingSessionTask.IsCompleted)
-                        {
-                            await serverChannel.SendFinishedSessionAsync(_listenerCts.Token);
-                        }
-                    }
-                    finally
-                    {
-                        channelListener.Stop();
-
-                        if (serverChannel.RemoteNode != null)
-                        {
-                            _nodeChannelsDictionary.TryRemove(serverChannel.RemoteNode, out _);
-                        }
-                    }
+                    await ListenAsync(serverChannel);
                 }
 
                 // If something bizarre occurs
@@ -224,6 +197,43 @@ namespace Lime.Protocol.Server
             finally
             {
                 serverChannel.DisposeIfDisposable();
+            }
+        }
+
+        private async Task ListenAsync(IServerChannel serverChannel)
+        {
+            // Initializes a new consumer
+            var channelListener = _channelListenerFactory();
+
+            try
+            {
+                // Consume the channel envelopes
+                channelListener.Start(serverChannel);
+
+                // Awaits for the finishing envelope
+                var finishingSessionTask = serverChannel.ReceiveFinishingSessionAsync(_listenerCts.Token);
+
+                // Stops the consumer when any of the tasks finishes
+                await
+                    Task.WhenAny(
+                        finishingSessionTask,
+                        channelListener.MessageListenerTask,
+                        channelListener.CommandListenerTask,
+                        channelListener.NotificationListenerTask);
+
+                if (finishingSessionTask.IsCompleted)
+                {
+                    await serverChannel.SendFinishedSessionAsync(_listenerCts.Token);
+                }
+            }
+            finally
+            {
+                channelListener.Stop();
+
+                if (serverChannel.RemoteNode != null)
+                {
+                    _nodeChannelsDictionary.TryRemove(serverChannel.RemoteNode, out _);
+                }
             }
         }
     }
