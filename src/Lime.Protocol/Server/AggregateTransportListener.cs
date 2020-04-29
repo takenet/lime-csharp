@@ -18,6 +18,7 @@ namespace Lime.Protocol.Server
         private readonly Channel<ITransport> _transportChannel;
         private readonly List<Task> _listenerTasks;
         private readonly CancellationTokenSource _cts;
+        private bool _listenerFaulted;
 
         public AggregateTransportListener(IEnumerable<ITransportListener> transportListeners, int capacity = -1)
         {
@@ -53,8 +54,23 @@ namespace Lime.Protocol.Server
 
         public Uri[] ListenerUris { get; }
 
-        public Task<ITransport> AcceptTransportAsync(CancellationToken cancellationToken) 
-            => _transportChannel.Reader.ReadAsync(cancellationToken).AsTask();
+        public Task<ITransport> AcceptTransportAsync(CancellationToken cancellationToken)
+        {
+            if (_listenerFaulted)
+            {
+                var exceptions = _listenerTasks
+                    .Where(t => t.Exception != null)
+                    .SelectMany(t => t.Exception.InnerExceptions)
+                    .ToList();
+
+                if (exceptions.Count > 0)
+                {
+                    return Task.FromException<ITransport>(new AggregateException(exceptions));
+                }
+            }
+            
+            return _transportChannel.Reader.ReadAsync(cancellationToken).AsTask();
+        }
 
         private async Task ListenAsync(ITransportListener transportListener, CancellationToken cancellationToken)
         {
@@ -68,6 +84,11 @@ namespace Lime.Protocol.Server
                 catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
                 {
                     break;
+                }
+                catch
+                {
+                    _listenerFaulted = true;
+                    throw;
                 }
             }
         }
