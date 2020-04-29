@@ -51,5 +51,17 @@ namespace Lime.Protocol.UnitTests.Serialization
             // Assert
             result.ShouldBe(100_000);
         }
+
+        [Test]
+        public void GetStringValue_EmptyStringToEmptyArray_ReturnEmptyArray()
+        {
+            object result = null;
+            //Act
+            TypeUtilEx.TryParseString(string.Empty, typeof(string[]), out result, CultureInfo.InvariantCulture);
+
+            //Assert
+            var output = result.ShouldBeOfType<string[]>();
+            output.ShouldBeEmpty();
+        }
     }
 }
