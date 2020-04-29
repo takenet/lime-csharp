@@ -155,7 +155,7 @@ namespace Lime.Sample.Server
                     serverChannel.Transport.GetSupportedCompression(),
                     serverChannel.Transport.GetSupportedEncryption(),
                     new[] {AuthenticationScheme.Guest},
-                    (identity, authentication) =>
+                    (identity, authentication, cancellationToken) =>
                         new AuthenticationResult(null,
                             new Node()
                             {

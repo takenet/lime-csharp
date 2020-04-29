@@ -14,7 +14,7 @@ namespace Lime.Protocol.Server
         {
             ServerNode = serverNode ?? throw new ArgumentNullException(nameof(serverNode));
             TransportListener = transportListener ?? throw new ArgumentNullException(nameof(transportListener));
-            Authenticator = (node, authentication) => Task.FromResult(
+            Authenticator = (node, authentication, cancellationToken) => Task.FromResult(
                 new AuthenticationResult(null, new Node(Guid.NewGuid().ToString(), ServerNode.Domain, "default")));
             ServerChannelFactory = transport => 
                 new ServerChannel(
@@ -40,7 +40,7 @@ namespace Lime.Protocol.Server
 
         public AuthenticationScheme[] SchemeOptions { get; private set; } = {AuthenticationScheme.Guest};
 
-        public Func<Node, Authentication, Task<AuthenticationResult>> Authenticator { get; private set; }
+        public Func<Node, Authentication, CancellationToken, Task<AuthenticationResult>> Authenticator { get; private set; }
 
         public Func<IChannelListener> ChannelListenerFactory { get; private set; }
 
@@ -74,7 +74,7 @@ namespace Lime.Protocol.Server
             return this;
         }
 
-        public ServerBuilder WithAuthenticator(Func<Node, Authentication, Task<AuthenticationResult>> authenticator)
+        public ServerBuilder WithAuthenticator(Func<Node, Authentication, CancellationToken, Task<AuthenticationResult>> authenticator)
         {
             Authenticator = authenticator ?? throw new ArgumentNullException(nameof(authenticator));
             return this;

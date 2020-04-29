@@ -16,7 +16,7 @@ namespace Lime.Protocol.Server
             SessionCompression[] enabledCompressionOptions,
             SessionEncryption[] enabledEncryptionOptions,
             AuthenticationScheme[] schemeOptions,
-            Func<Node, Authentication, Task<AuthenticationResult>> authenticateFunc,
+            Func<Node, Authentication, CancellationToken, Task<AuthenticationResult>> authenticateFunc,
             CancellationToken cancellationToken)
         {
             if (channel == null) throw new ArgumentNullException(nameof(channel));            
@@ -110,7 +110,7 @@ namespace Lime.Protocol.Server
         private static async Task AuthenticateSessionAsync(
             IServerChannel channel,
             AuthenticationScheme[] schemeOptions,
-            Func<Node, Authentication, Task<AuthenticationResult>> authenticateFunc,
+            Func<Node, Authentication, CancellationToken, Task<AuthenticationResult>> authenticateFunc,
             CancellationToken cancellationToken)
         {
             // Sends the authentication options and awaits for the authentication 
@@ -132,7 +132,8 @@ namespace Lime.Protocol.Server
 
                     var authenticationResult = await authenticateFunc(
                         receivedSession.From,
-                        receivedSession.Authentication);
+                        receivedSession.Authentication,
+                        cancellationToken);
 
                     if (authenticationResult.Roundtrip != null)
                     {

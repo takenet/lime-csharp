@@ -20,7 +20,7 @@ namespace Lime.Protocol.Server
         private readonly SessionCompression[] _enabledCompressionOptions;
         private readonly SessionEncryption[] _enabledEncryptionOptions;
         private readonly AuthenticationScheme[] _schemeOptions;
-        private readonly Func<Node, Authentication, Task<AuthenticationResult>> _authenticator;
+        private readonly Func<Node, Authentication, CancellationToken, Task<AuthenticationResult>> _authenticator;
         private readonly Func<IChannelListener> _channelListenerFactory;
         private readonly Func<Exception, Task> _exceptionHandler;
         private readonly int _maxActiveChannels;
@@ -38,7 +38,7 @@ namespace Lime.Protocol.Server
             SessionCompression[] enabledCompressionOptions,
             SessionEncryption[] enabledEncryptionOptions,
             AuthenticationScheme[] schemeOptions,
-            Func<Node, Authentication, Task<AuthenticationResult>> authenticator,
+            Func<Node, Authentication, CancellationToken, Task<AuthenticationResult>> authenticator,
             Func<IChannelListener> channelListenerFactory,
             Func<Exception, Task> exceptionHandler = null,
             int maxActiveChannels = -1)
