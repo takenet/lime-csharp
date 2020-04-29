@@ -18,7 +18,8 @@ namespace Lime.Protocol.Serialization
         private static readonly ConcurrentDictionary<Type, Func<string, object>> TypeParseFuncDictionary = new ConcurrentDictionary<Type, Func<string, object>>();
         private static readonly ConcurrentDictionary<Type, Func<string, IFormatProvider, object>> FormattedTypeParseFuncDictionary = new ConcurrentDictionary<Type, Func<string, IFormatProvider, object>>();
 
-        
+        private static readonly char[] ArraySeparator = new char[] { ';' };
+
         /// <summary>
         /// Gets the Parse static method of a Type as a func.
         /// </summary>
@@ -219,8 +220,8 @@ namespace Lime.Protocol.Serialization
             if (type.IsArray)
             {
                 var elementType = type.GetElementType();
-                var arrayValues = value.Split(';');
-                
+                var arrayValues = value.Split(ArraySeparator, StringSplitOptions.RemoveEmptyEntries);
+
                 var resultArray = Array.CreateInstance(elementType, arrayValues.Length);
 
                 for (int i = 0; i < arrayValues.Length; i++)
