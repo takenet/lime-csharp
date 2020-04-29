@@ -135,14 +135,15 @@ namespace Lime.Protocol.Server
                         receivedSession.Authentication,
                         cancellationToken);
 
-                    if (authenticationResult.Roundtrip != null)
+                    if (authenticationResult.DomainRole != DomainRole.Unknown &&
+                        authenticationResult.Node != null)
+                    {
+                        await channel.SendEstablishedSessionAsync(authenticationResult.Node, cancellationToken);
+                    }
+                    else if (authenticationResult.Roundtrip != null)
                     {
                         receivedSession =
                             await channel.AuthenticateSessionAsync(authenticationResult.Roundtrip, cancellationToken);
-                    }
-                    else if (authenticationResult.Node != null)
-                    {
-                        await channel.SendEstablishedSessionAsync(authenticationResult.Node, cancellationToken);
                     }
                     else
                     {
@@ -170,18 +171,5 @@ namespace Lime.Protocol.Server
                 transportAuthentication.DomainRole = await authenticatableTransport.AuthenticateAsync(identity);
             }
         }
-    }
-
-    public sealed class AuthenticationResult
-    {
-        public AuthenticationResult(Authentication roundtrip, Node node)
-        {
-            Roundtrip = roundtrip;
-            Node = node;
-        }
-
-        public Authentication Roundtrip { get; }
-
-        public Node Node { get; }
     }
 }

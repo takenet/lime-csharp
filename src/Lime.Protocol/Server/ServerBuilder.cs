@@ -15,7 +15,7 @@ namespace Lime.Protocol.Server
             ServerNode = serverNode ?? throw new ArgumentNullException(nameof(serverNode));
             TransportListener = transportListener ?? throw new ArgumentNullException(nameof(transportListener));
             Authenticator = (node, authentication, cancellationToken) => Task.FromResult(
-                new AuthenticationResult(null, new Node(Guid.NewGuid().ToString(), ServerNode.Domain, "default")));
+                new AuthenticationResult(DomainRole.Member, new Node(Guid.NewGuid().ToString(), ServerNode.Domain, "default")));
             ServerChannelFactory = transport => 
                 new ServerChannel(
                     Guid.NewGuid().ToString(),

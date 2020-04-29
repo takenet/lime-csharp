@@ -156,7 +156,8 @@ namespace Lime.Sample.Server
                     serverChannel.Transport.GetSupportedEncryption(),
                     new[] {AuthenticationScheme.Guest},
                     (identity, authentication, cancellationToken) =>
-                        new AuthenticationResult(null,
+                        new AuthenticationResult(
+                            DomainRole.Member,
                             new Node()
                             {
                                 Name = EnvelopeId.NewId(),
