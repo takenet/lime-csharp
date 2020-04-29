@@ -21,7 +21,7 @@ namespace Lime.Protocol.Server
         private readonly SessionEncryption[] _enabledEncryptionOptions;
         private readonly AuthenticationScheme[] _schemeOptions;
         private readonly Func<Node, Authentication, CancellationToken, Task<AuthenticationResult>> _authenticator;
-        private readonly Func<IChannelListener> _channelListenerFactory;
+        private readonly Func<IChannelInformation, IChannelListener> _channelListenerFactory;
         private readonly Func<Exception, Task> _exceptionHandler;
         private readonly int _maxActiveChannels;
 
@@ -39,7 +39,7 @@ namespace Lime.Protocol.Server
             SessionEncryption[] enabledEncryptionOptions,
             AuthenticationScheme[] schemeOptions,
             Func<Node, Authentication, CancellationToken, Task<AuthenticationResult>> authenticator,
-            Func<IChannelListener> channelListenerFactory,
+            Func<IChannelInformation, IChannelListener> channelListenerFactory,
             Func<Exception, Task> exceptionHandler = null,
             int maxActiveChannels = -1)
         {
@@ -203,7 +203,7 @@ namespace Lime.Protocol.Server
         private async Task ListenAsync(IServerChannel serverChannel)
         {
             // Initializes a new consumer
-            var channelListener = _channelListenerFactory();
+            var channelListener = _channelListenerFactory(serverChannel);
 
             try
             {

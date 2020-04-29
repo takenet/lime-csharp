@@ -23,7 +23,7 @@ namespace Lime.Protocol.Server
                     transport,
                     TimeSpan.FromSeconds(30),
                     EnvelopeBufferSize);
-            ChannelListenerFactory = () => new ChannelListener(m => TaskUtil.TrueCompletedTask,
+            ChannelListenerFactory = _ => new ChannelListener(m => TaskUtil.TrueCompletedTask,
                 n => TaskUtil.TrueCompletedTask, c => TaskUtil.TrueCompletedTask);
             EnvelopeBufferSize = 1;
         }
@@ -42,7 +42,7 @@ namespace Lime.Protocol.Server
 
         public Func<Node, Authentication, CancellationToken, Task<AuthenticationResult>> Authenticator { get; private set; }
 
-        public Func<IChannelListener> ChannelListenerFactory { get; private set; }
+        public Func<IChannelInformation, IChannelListener> ChannelListenerFactory { get; private set; }
 
         public Func<Exception, Task> ExceptionHandler { get; private set; }
 
@@ -80,7 +80,7 @@ namespace Lime.Protocol.Server
             return this;
         }
 
-        public ServerBuilder WithChannelListenerFactory(Func<IChannelListener> channelListenerFactory)
+        public ServerBuilder WithChannelListenerFactory(Func<IChannelInformation, IChannelListener> channelListenerFactory)
         {
             ChannelListenerFactory = channelListenerFactory ?? throw new ArgumentNullException(nameof(channelListenerFactory));
             return this;
@@ -91,7 +91,7 @@ namespace Lime.Protocol.Server
             if (messageConsumer == null) throw new ArgumentNullException(nameof(messageConsumer));
             if (notificationConsumer == null) throw new ArgumentNullException(nameof(notificationConsumer));
             if (commandConsumer == null) throw new ArgumentNullException(nameof(commandConsumer));
-            return WithChannelListenerFactory(() => new ChannelListener(messageConsumer, notificationConsumer, commandConsumer));
+            return WithChannelListenerFactory(_ => new ChannelListener(messageConsumer, notificationConsumer, commandConsumer));
         }
 
         public ServerBuilder WithExceptionHandler(Func<Exception, Task> exceptionHandler)
