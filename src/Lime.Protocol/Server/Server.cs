@@ -95,6 +95,7 @@ namespace Lime.Protocol.Server
             try
             {
                 if (_listenerTask == null) throw new InvalidOperationException("The server is not started");
+                await _transportListener.StopAsync(cancellationToken);
                 _listenerCts.Cancel();
                 _consumerBlock.Complete();
                 await Task.WhenAll(_listenerTask, _consumerBlock.Completion).ConfigureAwait(false);
