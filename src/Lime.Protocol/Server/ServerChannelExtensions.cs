@@ -16,7 +16,8 @@ namespace Lime.Protocol.Server
             SessionCompression[] enabledCompressionOptions,
             SessionEncryption[] enabledEncryptionOptions,
             AuthenticationScheme[] schemeOptions,
-            Func<Node, Authentication, CancellationToken, Task<AuthenticationResult>> authenticateFunc,
+            Func<Identity, Authentication, CancellationToken, Task<AuthenticationResult>> authenticationFunc,
+            Func<Node, IServerChannel, CancellationToken, Task<Node>> registrationFunc,
             CancellationToken cancellationToken)
         {
             if (channel == null) throw new ArgumentNullException(nameof(channel));            
@@ -36,7 +37,7 @@ namespace Lime.Protocol.Server
 
             if (schemeOptions == null) throw new ArgumentNullException(nameof(schemeOptions));            
             if (schemeOptions.Length == 0) throw new ArgumentException("The authentication scheme options is mandatory", nameof(schemeOptions));
-            if (authenticateFunc == null) throw new ArgumentNullException(nameof(authenticateFunc));
+            if (authenticationFunc == null) throw new ArgumentNullException(nameof(authenticationFunc));
 
             // Awaits for the 'new' session envelope
             var receivedSession = await channel.ReceiveNewSessionAsync(cancellationToken).ConfigureAwait(false);
@@ -54,8 +55,19 @@ namespace Lime.Protocol.Server
 
                 if (channel.State != SessionState.Failed)
                 {
-                    await AuthenticateSessionAsync(channel, schemeOptions, authenticateFunc, cancellationToken).ConfigureAwait(false);
+                    await AuthenticateSessionAsync(channel, schemeOptions, authenticationFunc, registrationFunc, cancellationToken).ConfigureAwait(false);
                 }
+            }
+
+            if (channel.State < SessionState.Established)
+            {
+                await channel.SendFailedSessionAsync(
+                    new Reason()
+                    {
+                        Code = ReasonCodes.SESSION_ERROR,
+                        Description = "The session establishment failed"
+                    }, 
+                    cancellationToken);
             }
         }
 
@@ -65,9 +77,8 @@ namespace Lime.Protocol.Server
             SessionEncryption[] encryptionOptions,
             CancellationToken cancellationToken)
         {
-            Session receivedSession;
             // Negotiate the transport options
-            receivedSession = await channel.NegotiateSessionAsync(
+            var receivedSession = await channel.NegotiateSessionAsync(
                 compressionOptions,
                 encryptionOptions,
                 cancellationToken).ConfigureAwait(false);
@@ -99,60 +110,81 @@ namespace Lime.Protocol.Server
             }
             else
             {
-                await channel.SendFailedSessionAsync(new Reason()
-                {
-                    Code = ReasonCodes.SESSION_NEGOTIATION_INVALID_OPTIONS,
-                    Description = "An invalid negotiation option was selected"
-                }, cancellationToken);
+                await channel.SendFailedSessionAsync(
+                    new Reason()
+                    {
+                        Code = ReasonCodes.SESSION_NEGOTIATION_INVALID_OPTIONS,
+                        Description = "An invalid negotiation option was selected"
+                    }, 
+                    cancellationToken);
             }
         }
         
         private static async Task AuthenticateSessionAsync(
             IServerChannel channel,
             AuthenticationScheme[] schemeOptions,
-            Func<Node, Authentication, CancellationToken, Task<AuthenticationResult>> authenticateFunc,
+            Func<Identity, Authentication, CancellationToken, Task<AuthenticationResult>> authenticationFunc,
+            Func<Node, IServerChannel, CancellationToken, Task<Node>> registrationFunc,
             CancellationToken cancellationToken)
         {
             // Sends the authentication options and awaits for the authentication 
             var receivedSession = await channel.AuthenticateSessionAsync(schemeOptions, cancellationToken);
             
-            if (receivedSession.State == SessionState.Authenticating &&
-                receivedSession.Authentication != null &&
-                receivedSession.Scheme != null &&
-                schemeOptions.Contains(receivedSession.Scheme.Value))
+            while (receivedSession.State == SessionState.Authenticating &&
+                   receivedSession.From != null &&
+                   receivedSession.Authentication != null &&
+                   receivedSession.Scheme != null &&
+                   schemeOptions.Contains(receivedSession.Scheme.Value))
             {
-                while (channel.State == SessionState.Authenticating)
+                cancellationToken.ThrowIfCancellationRequested();
+
+                if (receivedSession.Authentication is TransportAuthentication transportAuthentication)
                 {
-                    cancellationToken.ThrowIfCancellationRequested();
+                    await AuthenticateAsTransportAsync(channel, transportAuthentication, receivedSession.From.ToIdentity());
+                }
 
-                    if (receivedSession.Authentication is TransportAuthentication transportAuthentication)
-                    {
-                        await AuthenticateAsTransportAsync(channel, transportAuthentication, receivedSession.From?.ToIdentity());
-                    }
+                var authenticationResult = await authenticationFunc(
+                    receivedSession.From.ToIdentity(),
+                    receivedSession.Authentication,
+                    cancellationToken);
 
-                    var authenticationResult = await authenticateFunc(
-                        receivedSession.From,
-                        receivedSession.Authentication,
-                        cancellationToken);
-
-                    if (authenticationResult.DomainRole != DomainRole.Unknown &&
-                        authenticationResult.Node != null)
+                if (authenticationResult.DomainRole != DomainRole.Unknown)
+                {
+                    var registeredNode = await registrationFunc(receivedSession.From, channel, cancellationToken);
+                    if (registeredNode != null)
                     {
-                        await channel.SendEstablishedSessionAsync(authenticationResult.Node, cancellationToken);
-                    }
-                    else if (authenticationResult.Roundtrip != null)
-                    {
-                        receivedSession =
-                            await channel.AuthenticateSessionAsync(authenticationResult.Roundtrip, cancellationToken);
+                        await channel.SendEstablishedSessionAsync(registeredNode, cancellationToken);
                     }
                     else
                     {
-                        await channel.SendFailedSessionAsync(new Reason()
+                        await channel.SendFailedSessionAsync(
+                            new Reason()
+                            {
+                                Code = ReasonCodes.SESSION_REGISTRATION_ERROR,
+                                Description = "The session instance registration failed"
+                            }, 
+                            cancellationToken);
+                    }
+
+                    break;
+                }
+                
+                if (authenticationResult.Roundtrip != null)
+                {
+                    receivedSession =
+                        await channel.AuthenticateSessionAsync(authenticationResult.Roundtrip, cancellationToken);
+                }
+                else
+                {
+                    await channel.SendFailedSessionAsync(
+                        new Reason()
                         {
                             Code = ReasonCodes.SESSION_AUTHENTICATION_FAILED,
                             Description = "The session authentication failed"
-                        }, cancellationToken);
-                    }
+                        }, 
+                        cancellationToken);
+
+                    break;
                 }
             }
         }
@@ -165,8 +197,7 @@ namespace Lime.Protocol.Server
             // Ensure that the domain role value is null.
             transportAuthentication.DomainRole = null;
 
-            if (channel.Transport is IAuthenticatableTransport authenticatableTransport && 
-                identity != null)
+            if (channel.Transport is IAuthenticatableTransport authenticatableTransport)
             {
                 transportAuthentication.DomainRole = await authenticatableTransport.AuthenticateAsync(identity);
             }

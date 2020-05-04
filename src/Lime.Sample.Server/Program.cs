@@ -155,15 +155,12 @@ namespace Lime.Sample.Server
                     serverChannel.Transport.GetSupportedCompression(),
                     serverChannel.Transport.GetSupportedEncryption(),
                     new[] {AuthenticationScheme.Guest},
-                    (identity, authentication, cancellationToken) =>
+                    (identity, authentication, _) =>
                         new AuthenticationResult(
                             DomainRole.Member,
-                            new Node()
-                            {
-                                Name = EnvelopeId.NewId(),
-                                Domain = "limeprotocol.org",
-                                Instance = Environment.MachineName
-                            }).AsCompletedTask(),
+                            identity)
+                        .AsCompletedTask(),
+                    (node, _, __) => Task.FromResult(node),
                     cancellationToken);
 
                 if (serverChannel.State == SessionState.Established)

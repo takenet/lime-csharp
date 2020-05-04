@@ -125,7 +125,7 @@ namespace Lime.Protocol.ConsoleTests
                     WriteLine(e.ToString());
                     ResetColor();
                     CursorTop = cursorTop;
-                    return Task.CompletedTask;
+                    return TaskUtil.TrueCompletedTask;
                 })
                 .WithEnvelopeBufferSize(-1)
                 .Build();

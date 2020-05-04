@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -20,13 +19,14 @@ namespace Lime.Protocol.Server
         private readonly SessionCompression[] _enabledCompressionOptions;
         private readonly SessionEncryption[] _enabledEncryptionOptions;
         private readonly AuthenticationScheme[] _schemeOptions;
-        private readonly Func<Node, Authentication, CancellationToken, Task<AuthenticationResult>> _authenticator;
+        private readonly Func<Identity, Authentication, CancellationToken, Task<AuthenticationResult>> _authenticator;
         private readonly Func<IChannelInformation, IChannelListener> _channelListenerFactory;
-        private readonly Func<Exception, Task> _exceptionHandler;
+        private readonly INodeRegistry _nodeRegistry;
+        private readonly Func<Exception, Task<bool>> _exceptionHandler;
         private readonly int _maxActiveChannels;
 
         private readonly SemaphoreSlim _semaphore;
-        private readonly ConcurrentDictionary<Node, IServerChannel> _nodeChannelsDictionary;
+        
 
         private CancellationTokenSource _listenerCts;
         private Task _listenerTask;
@@ -38,26 +38,23 @@ namespace Lime.Protocol.Server
             SessionCompression[] enabledCompressionOptions,
             SessionEncryption[] enabledEncryptionOptions,
             AuthenticationScheme[] schemeOptions,
-            Func<Node, Authentication, CancellationToken, Task<AuthenticationResult>> authenticator,
+            Func<Identity, Authentication, CancellationToken, Task<AuthenticationResult>> authenticator,
             Func<IChannelInformation, IChannelListener> channelListenerFactory,
-            Func<Exception, Task> exceptionHandler = null,
+            INodeRegistry nodeRegistry = null,
+            Func<Exception, Task<bool>> exceptionHandler = null,
             int maxActiveChannels = -1)
         {
             _transportListener = transportListener ?? throw new ArgumentNullException(nameof(transportListener));
-            _serverChannelFactory =
-                serverChannelFactory ?? throw new ArgumentNullException(nameof(serverChannelFactory));
-            _enabledCompressionOptions = enabledCompressionOptions ??
-                                         throw new ArgumentNullException(nameof(enabledCompressionOptions));
-            _enabledEncryptionOptions = enabledEncryptionOptions ??
-                                        throw new ArgumentNullException(nameof(enabledEncryptionOptions));
+            _serverChannelFactory = serverChannelFactory ?? throw new ArgumentNullException(nameof(serverChannelFactory));
+            _enabledCompressionOptions = enabledCompressionOptions ?? throw new ArgumentNullException(nameof(enabledCompressionOptions));
+            _enabledEncryptionOptions = enabledEncryptionOptions ?? throw new ArgumentNullException(nameof(enabledEncryptionOptions));
             _schemeOptions = schemeOptions ?? throw new ArgumentNullException(nameof(schemeOptions));
             _authenticator = authenticator ?? throw new ArgumentNullException(nameof(authenticator));
-            _channelListenerFactory =
-                channelListenerFactory ?? throw new ArgumentNullException(nameof(channelListenerFactory));
+            _channelListenerFactory = channelListenerFactory ?? throw new ArgumentNullException(nameof(channelListenerFactory));
+            _nodeRegistry = nodeRegistry ?? new NodeRegistry();
             _exceptionHandler = exceptionHandler;
             _maxActiveChannels = maxActiveChannels;
             _semaphore = new SemaphoreSlim(1, 1);
-            _nodeChannelsDictionary = new ConcurrentDictionary<Node, IServerChannel>();
         }
 
         public async Task StartAsync(CancellationToken cancellationToken)
@@ -80,7 +77,7 @@ namespace Lime.Protocol.Server
 
                 // Initialize a background task for listening for new transport connections
                 _listenerCts = new CancellationTokenSource();
-                _listenerTask = Task.Run(() => ListenAsync(_listenerCts.Token));
+                _listenerTask = Task.Run(() => AcceptTransportsAsync(_listenerCts.Token));
             }
             finally
             {
@@ -110,13 +107,7 @@ namespace Lime.Protocol.Server
             }
         }
 
-        public IServerChannel GetChannel(Node remoteNode)
-        {
-            _nodeChannelsDictionary.TryGetValue(remoteNode, out var channel);
-            return channel;
-        }
-
-        private async Task ListenAsync(CancellationToken cancellationToken)
+        private async Task AcceptTransportsAsync(CancellationToken cancellationToken)
         {
             while (!cancellationToken.IsCancellationRequested)
             {
@@ -136,6 +127,14 @@ namespace Lime.Protocol.Server
                 {
                     break;
                 }
+                catch (Exception ex)
+                {
+                    if (_exceptionHandler == null ||
+                        !await _exceptionHandler(ex).ConfigureAwait(false))
+                    {
+                        throw;
+                    }
+                }
             }
         }
 
@@ -150,22 +149,12 @@ namespace Lime.Protocol.Server
                         serverChannel.Transport.GetSupportedEncryption().Intersect(_enabledEncryptionOptions).ToArray(),
                         _schemeOptions,
                         _authenticator,
+                        _nodeRegistry.TryRegisterAsync,
                         _listenerCts.Token)
                     .ConfigureAwait(false);
 
                 if (serverChannel.State == SessionState.Established)
                 {
-                    if (!_nodeChannelsDictionary.TryAdd(serverChannel.RemoteNode, serverChannel))
-                    {
-                        await serverChannel.SendFailedSessionAsync(new Reason()
-                        {
-                            Code = ReasonCodes.SESSION_ERROR,
-                            Description = "Could not register the channel node"
-                        }, _listenerCts.Token);
-
-                        return;
-                    }
-
                     await ListenAsync(serverChannel);
                 }
 
@@ -231,10 +220,8 @@ namespace Lime.Protocol.Server
             {
                 channelListener.Stop();
 
-                if (serverChannel.RemoteNode != null)
-                {
-                    _nodeChannelsDictionary.TryRemove(serverChannel.RemoteNode, out _);
-                }
+                using var cts  = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+                await _nodeRegistry.UnregisterAsync(serverChannel.RemoteNode, cts.Token);
             }
         }
     }

@@ -40,11 +40,13 @@ namespace Lime.Protocol.Server
 
         public AuthenticationScheme[] SchemeOptions { get; private set; } = {AuthenticationScheme.Guest};
 
-        public Func<Node, Authentication, CancellationToken, Task<AuthenticationResult>> Authenticator { get; private set; }
+        public Func<Identity, Authentication, CancellationToken, Task<AuthenticationResult>> Authenticator { get; private set; }
+        
+        public INodeRegistry NodeRegistry { get; private set; }
 
         public Func<IChannelInformation, IChannelListener> ChannelListenerFactory { get; private set; }
 
-        public Func<Exception, Task> ExceptionHandler { get; private set; }
+        public Func<Exception, Task<bool>> ExceptionHandler { get; private set; }
 
         public int MaxActiveChannels { get; private set; } = -1;
 
@@ -74,9 +76,15 @@ namespace Lime.Protocol.Server
             return this;
         }
 
-        public ServerBuilder WithAuthenticator(Func<Node, Authentication, CancellationToken, Task<AuthenticationResult>> authenticator)
+        public ServerBuilder WithAuthenticator(Func<Identity, Authentication, CancellationToken, Task<AuthenticationResult>> authenticator)
         {
             Authenticator = authenticator ?? throw new ArgumentNullException(nameof(authenticator));
+            return this;
+        }
+        
+        public ServerBuilder WithNodeRegistry(INodeRegistry nodeRegistry)
+        {
+            NodeRegistry = nodeRegistry ?? throw new ArgumentNullException(nameof(nodeRegistry));
             return this;
         }
 
@@ -94,7 +102,7 @@ namespace Lime.Protocol.Server
             return WithChannelListenerFactory(_ => new ChannelListener(messageConsumer, notificationConsumer, commandConsumer));
         }
 
-        public ServerBuilder WithExceptionHandler(Func<Exception, Task> exceptionHandler)
+        public ServerBuilder WithExceptionHandler(Func<Exception, Task<bool>> exceptionHandler)
         {
             ExceptionHandler = exceptionHandler ?? throw new ArgumentNullException(nameof(exceptionHandler));
             return this;
@@ -123,6 +131,7 @@ namespace Lime.Protocol.Server
                 SchemeOptions,
                 Authenticator,
                 ChannelListenerFactory,
+                NodeRegistry,
                 ExceptionHandler,
                 MaxActiveChannels);
         }
