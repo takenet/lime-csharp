@@ -36,20 +36,26 @@ namespace Lime.Protocol.Server
                 await transportListener.StartAsync(cancellationToken);
                 
                 var t = transportListener;
-                _listenerTasks.Add(
-                    Task.Run(() => ListenAsync(t, _cts.Token)));
+
+                var listenerTask = Task.Run(() => ListenAsync(t, _cts.Token));
+                _listenerTasks.Add(listenerTask);
             }
         }
 
-        public Task StopAsync(CancellationToken cancellationToken)
+        public async Task StopAsync(CancellationToken cancellationToken)
         {
             _cts.CancelIfNotRequested();
-
-            return Task.WhenAll(
-                _listenerTasks
-                    .Union(
-                        _transportListeners.Select(t 
-                            => t.StopAsync(cancellationToken))));
+            try
+            {
+                foreach (var transportListener in _transportListeners)
+                {
+                    await transportListener.StopAsync(cancellationToken);
+                }
+            }
+            finally
+            {
+                await Task.WhenAll(_listenerTasks);
+            }
         }
 
         public Uri[] ListenerUris { get; }
