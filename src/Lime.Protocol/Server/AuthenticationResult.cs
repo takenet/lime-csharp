@@ -8,29 +8,17 @@ namespace Lime.Protocol.Server
     /// </summary>
     public sealed class AuthenticationResult
     {
-        public AuthenticationResult(DomainRole domainRole, Identity identity = null, Authentication roundtrip = null)
+        public AuthenticationResult(DomainRole domainRole, Authentication roundtrip = null)
         {
             DomainRole = domainRole;
-            Identity = identity;
             Roundtrip = roundtrip;
-
-            if (domainRole != DomainRole.Unknown && 
-                Identity == null)
-            {
-                throw new ArgumentException("Identity should be supplied if domain role defined", nameof(identity));
-            }
         }
         
         /// <summary>
         /// The domain role for the specified node.
         /// </summary>
         public DomainRole DomainRole { get; }
-        
-        /// <summary>
-        /// The authenticated identity.
-        /// </summary>
-        public Identity Identity { get; }
-        
+
         /// <summary>
         /// The authentication roundtrip.
         /// </summary>

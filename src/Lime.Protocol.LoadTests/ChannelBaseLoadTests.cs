@@ -61,7 +61,7 @@ namespace Lime.Protocol.LoadTests
                     new [] { SessionCompression.None, },
                     new [] { SessionEncryption.None },
                     new [] { AuthenticationScheme.Guest },
-                    (i, authentication, cancellationToken) => new AuthenticationResult(DomainRole.Member, i).AsCompletedTask(),
+                    (i, authentication, cancellationToken) => new AuthenticationResult(DomainRole.Member).AsCompletedTask(),
                     (_, __, ___) => Task.FromResult(Dummy.CreateNode()),
                     _cancellationToken),
                 clientEstablishSessionTask);

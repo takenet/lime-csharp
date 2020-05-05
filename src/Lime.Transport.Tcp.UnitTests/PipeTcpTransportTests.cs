@@ -235,7 +235,7 @@ namespace Lime.Transport.Tcp.UnitTests
                 serverTransport.GetSupportedCompression(),
                 serverTransport.GetSupportedEncryption(),
                 new[] {AuthenticationScheme.Guest},
-                (i, am, cancellationToken) => new AuthenticationResult(DomainRole.Member, i).AsCompletedTask(),
+                (i, am, cancellationToken) => new AuthenticationResult(DomainRole.Member).AsCompletedTask(),
                 (_, __, ___) => Task.FromResult(Node.Parse("client@domain.com/instance")),
                 CancellationToken);
             await Task.WhenAll(clientEstablishmentTask, serverEstablishmentTask);

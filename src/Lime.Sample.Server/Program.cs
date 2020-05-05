@@ -157,8 +157,7 @@ namespace Lime.Sample.Server
                     new[] {AuthenticationScheme.Guest},
                     (identity, authentication, _) =>
                         new AuthenticationResult(
-                            DomainRole.Member,
-                            identity)
+                            DomainRole.Member)
                         .AsCompletedTask(),
                     (node, _, __) => Task.FromResult(node),
                     cancellationToken);
