@@ -38,6 +38,7 @@ namespace Lime.Protocol.Server
             if (schemeOptions == null) throw new ArgumentNullException(nameof(schemeOptions));            
             if (schemeOptions.Length == 0) throw new ArgumentException("The authentication scheme options is mandatory", nameof(schemeOptions));
             if (authenticationFunc == null) throw new ArgumentNullException(nameof(authenticationFunc));
+            if (registrationFunc == null) throw new ArgumentNullException(nameof(registrationFunc));
 
             // Awaits for the 'new' session envelope
             var receivedSession = await channel.ReceiveNewSessionAsync(cancellationToken).ConfigureAwait(false);

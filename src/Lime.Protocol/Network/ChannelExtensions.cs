@@ -59,5 +59,17 @@ namespace Lime.Protocol.Network
                     throw new ArgumentException("Invalid or unknown envelope type");    
             }
         }
+        
+        /// <summary>
+        /// Indicates if the channel transport is connected and in a session negotiation/established state
+        /// </summary>
+        public static bool IsActive(this IChannel channel) =>
+            channel.Transport.IsConnected && channel.State <= SessionState.Established;
+        
+        /// <summary>
+        /// Indicates if the channel transport is connected and in the <see cref="SessionState.Established"/> state.
+        /// </summary>
+        public static bool IsEstablished(this IChannel channel) =>
+            channel.Transport.IsConnected && channel.State == SessionState.Established;
     }
 }

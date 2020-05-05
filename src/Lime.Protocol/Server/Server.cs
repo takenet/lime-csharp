@@ -70,7 +70,8 @@ namespace Lime.Protocol.Server
                     new ExecutionDataflowBlockOptions
                     {
                         BoundedCapacity = _maxActiveChannels,
-                        MaxDegreeOfParallelism = DataflowBlockOptions.Unbounded
+                        MaxDegreeOfParallelism = DataflowBlockOptions.Unbounded,
+                        EnsureOrdered = false
                     });
 
                 await _transportListener.StartAsync(cancellationToken).ConfigureAwait(false);
@@ -159,29 +160,46 @@ namespace Lime.Protocol.Server
                 }
 
                 // If something bizarre occurs
-                if (serverChannel.State != SessionState.Finished &&
-                    serverChannel.State != SessionState.Failed)
+                if (serverChannel.IsActive())
                 {
-                    await serverChannel.SendFailedSessionAsync(new Reason()
-                    {
-                        Code = ReasonCodes.SESSION_ERROR,
-                        Description = "The session failed"
-                    }, _listenerCts.Token);
+                    await serverChannel.SendFailedSessionAsync(
+                        new Reason()
+                        {
+                            Code = ReasonCodes.SESSION_ERROR,
+                            Description = "The session was terminated by the server"
+                        }, 
+                        _listenerCts.Token);
                 }
             }
             catch (OperationCanceledException) when (_listenerCts.IsCancellationRequested)
             {
-                await serverChannel.SendFailedSessionAsync(new Reason()
+                if (serverChannel.IsActive())
                 {
-                    Code = ReasonCodes.SESSION_ERROR,
-                    Description = "The server is being shut down"
-                }, CancellationToken.None);
+                    await serverChannel.SendFailedSessionAsync(
+                        new Reason()
+                        {
+                            Code = ReasonCodes.SESSION_ERROR,
+                            Description = "The server is being shut down"
+                        },
+                        CancellationToken.None);
+                }
             }
             catch (Exception ex)
             {
                 if (_exceptionHandler != null)
                 {
                     await _exceptionHandler(ex).ConfigureAwait(false);
+                }
+                
+                if (serverChannel.IsActive())
+                {
+                    await serverChannel.SendFailedSessionAsync(
+                        new Reason()
+                        {
+                            Code = ReasonCodes.SESSION_ERROR,
+                            Description = "An unexpected server error occurred"
+                        },
+                        CancellationToken.None);
                 }
             }
             finally
