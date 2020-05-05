@@ -14,7 +14,7 @@ namespace Lime.Protocol.Server
     /// </summary>
     public sealed class AggregateTransportListener : ITransportListener, IDisposable
     {
-        private readonly IEnumerable<ITransportListener> _transportListeners;
+        private readonly IReadOnlyCollection<ITransportListener> _transportListeners;
         private readonly Channel<ITransport> _transportChannel;
         private readonly List<Task> _listenerTasks;
         private readonly CancellationTokenSource _cts;
@@ -22,8 +22,14 @@ namespace Lime.Protocol.Server
 
         public AggregateTransportListener(IEnumerable<ITransportListener> transportListeners, int capacity = -1)
         {
-            _transportListeners = transportListeners;
-            ListenerUris = transportListeners.SelectMany(t => t.ListenerUris).ToArray();
+            if (transportListeners == null) throw new ArgumentNullException(nameof(transportListeners));
+            _transportListeners = transportListeners.ToList();
+            if (_transportListeners.Count == 0)
+            {
+                throw new ArgumentException("The transport listeners enumerable is empty", nameof(transportListeners));
+            }
+            
+            ListenerUris = _transportListeners.SelectMany(t => t.ListenerUris).ToArray();
             _transportChannel = ChannelUtil.CreateForCapacity<ITransport>(capacity);
             _listenerTasks = new List<Task>();
             _cts = new CancellationTokenSource();
