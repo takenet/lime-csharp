@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using System;
+using System.Globalization;
 using Lime.Protocol.Serialization;
 using NUnit.Framework;
 using Shouldly;
@@ -55,13 +56,27 @@ namespace Lime.Protocol.UnitTests.Serialization
         [Test]
         public void GetStringValue_EmptyStringToEmptyArray_ReturnEmptyArray()
         {
-            object result = null;
             //Act
-            TypeUtilEx.TryParseString(string.Empty, typeof(string[]), out result, CultureInfo.InvariantCulture);
+            var actual = TypeUtilEx.TryParseString(string.Empty, typeof(string[]), out var result, CultureInfo.InvariantCulture, StringSplitOptions.RemoveEmptyEntries);
 
             //Assert
+            actual.ShouldBeTrue();
             var output = result.ShouldBeOfType<string[]>();
             output.ShouldBeEmpty();
+        }
+        
+        [Test]
+        public void GetStringValue_EmptyStringToEmptyArray_ReturnArray()
+        {
+            //Act
+            var actual = TypeUtilEx.TryParseString(string.Empty, typeof(string[]), out var result, CultureInfo.InvariantCulture, StringSplitOptions.None);
+
+            //Assert
+            actual.ShouldBeTrue();
+            var output = result.ShouldBeOfType<string[]>();
+            output.Length.ShouldBe(1);
+            output[0].ShouldBe("");
+            
         }
     }
 }
