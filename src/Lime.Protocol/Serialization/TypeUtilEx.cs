@@ -18,7 +18,7 @@ namespace Lime.Protocol.Serialization
         private static readonly ConcurrentDictionary<Type, Func<string, object>> TypeParseFuncDictionary = new ConcurrentDictionary<Type, Func<string, object>>();
         private static readonly ConcurrentDictionary<Type, Func<string, IFormatProvider, object>> FormattedTypeParseFuncDictionary = new ConcurrentDictionary<Type, Func<string, IFormatProvider, object>>();
 
-        private static readonly char[] ArraySeparator = new char[] { ';' };
+        private static readonly char[] ArraySeparator = { ';' };
 
         /// <summary>
         /// Gets the Parse static method of a Type as a func.
@@ -195,12 +195,8 @@ namespace Lime.Protocol.Serialization
         /// <summary>
         /// Try parses the string to a object of the specified type.
         /// </summary>
-        /// <param name="value"></param>
-        /// <param name="type"></param>
-        /// <param name="result"></param>
-        /// <param name="formatProvider"></param>
         /// <returns></returns>
-        public static bool TryParseString(string value, Type type, out object result, IFormatProvider formatProvider = null)
+        public static bool TryParseString(string value, Type type, out object result, IFormatProvider formatProvider = null, StringSplitOptions arraySplitOptions = StringSplitOptions.None)
         {
             if (value == null) throw new ArgumentNullException(nameof(value));
             if (type == null) throw new ArgumentNullException(nameof(type));
@@ -220,7 +216,7 @@ namespace Lime.Protocol.Serialization
             if (type.IsArray)
             {
                 var elementType = type.GetElementType();
-                var arrayValues = value.Split(ArraySeparator, StringSplitOptions.RemoveEmptyEntries);
+                var arrayValues = value.Split(ArraySeparator, arraySplitOptions);
 
                 var resultArray = Array.CreateInstance(elementType, arrayValues.Length);
 
@@ -228,7 +224,7 @@ namespace Lime.Protocol.Serialization
                 {
                     var arrayValue = arrayValues[i];
 
-                    if (TryParseString(arrayValue, elementType, out var resultArrayElement))
+                    if (TryParseString(arrayValue, elementType, out var resultArrayElement, arraySplitOptions: arraySplitOptions))
                     {
                         resultArray.SetValue(resultArrayElement, i);
                     }
