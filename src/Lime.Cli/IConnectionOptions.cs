@@ -11,7 +11,7 @@ namespace Lime.Cli
         
         string Password { get; }
         
-        string AccessKey { get; }
+        string Key { get; }
         
         string Instance { get; }
         
@@ -28,27 +28,40 @@ namespace Lime.Cli
     {
         public static ConnectionInformation ToConnectionInformation(this IConnectionOptions options)
         {
+            Presence presence = null;
+            if (options.PresenceStatus != null)
+            {
+                presence = new Presence()
+                {
+                    Status = Enum.Parse<PresenceStatus>(options.PresenceStatus, true),
+                    RoutingRule = options.PresenceRoutingRule != null
+                        ? Enum.Parse<RoutingRule>(options.PresenceRoutingRule, true)
+                        : RoutingRule.Instance,
+                };
+            }
+
+            Receipt receipt = null;
+            if (options.ReceiptEvents != null)
+            {
+                receipt = new Receipt()
+                {
+                    Events = options
+                        .ReceiptEvents
+                        .Split(',')
+                        .Select(e => Enum.Parse<Event>(e, true))
+                        .ToArray()
+                };
+            }
+
             return new ConnectionInformation()
             {
                 Identity = options.Identity,
                 Password = options.Password,
+                Key = options.Key,
                 ServerUri = options.Uri,
                 Instance = options.Instance ?? $"{Environment.MachineName.ToLowerInvariant()}-cli",
-                Presence = new Presence
-                {
-                    Status = options.PresenceStatus != null
-                        ? Enum.Parse<PresenceStatus>(options.PresenceStatus, true)
-                        : PresenceStatus.Available,
-                    RoutingRule = options.PresenceRoutingRule != null
-                        ? Enum.Parse<RoutingRule>(options.PresenceRoutingRule, true)
-                        : RoutingRule.Instance,
-                },
-                Receipt = new Receipt()
-                {
-                    Events = options.ReceiptEvents != null 
-                        ? options.ReceiptEvents.Split(',').Select(e => Enum.Parse<Event>(e, true)).ToArray()
-                        : new[] { Event.Accepted, Event.Received, Event.Consumed }
-                }
+                Presence = presence,
+                Receipt = receipt
             };
         }
     }

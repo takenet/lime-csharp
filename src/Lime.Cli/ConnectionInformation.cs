@@ -9,6 +9,8 @@ namespace Lime.Cli
         public Identity Identity { get; set; }
 
         public string Password { get; set; }
+        
+        public string Key { get; set; }
 
         public string Instance { get; set; }
 

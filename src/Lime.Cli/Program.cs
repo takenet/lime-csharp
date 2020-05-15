@@ -78,7 +78,7 @@ namespace Lime.Cli
 
             if (interactive)
             {
-                WriteInfo("Channel established");
+                WriteInfo("Successfully connected");
             }
 
             var actionsDictionary = GetActions();
@@ -229,30 +229,35 @@ namespace Lime.Cli
                 .CreateEstablishedClientChannelBuilder()
                 .WithEncryption(SessionEncryption.None)
                 .WithInstance(connectionInformation.Instance)
+                .WithIdentity(connectionInformation.Identity)
                 .AddEstablishedHandler(async (channel, handlerCancellationToken) =>
                 {
-                    await channel.SetResourceAsync(
-                        new LimeUri(UriTemplates.PRESENCE),
-                        connectionInformation.Presence,
-                        handlerCancellationToken);
+                    if (connectionInformation.Presence != null)
+                    {
+                        await channel.SetResourceAsync(
+                            new LimeUri(UriTemplates.PRESENCE),
+                            connectionInformation.Presence,
+                            handlerCancellationToken);
+                    }
                 })
                 .AddEstablishedHandler(async (channel, handlerCancellationToken) =>
                 {
-                    await channel.SetResourceAsync(
-                        new LimeUri(UriTemplates.RECEIPT),
-                        connectionInformation.Receipt,
-                        handlerCancellationToken);
+                    if (connectionInformation.Receipt != null)
+                    {
+                        await channel.SetResourceAsync(
+                            new LimeUri(UriTemplates.RECEIPT),
+                            connectionInformation.Receipt,
+                            handlerCancellationToken);
+                    }
                 });
 
-            if (connectionInformation.Identity == null)
+            if (connectionInformation.Password != null)
             {
-                builder = builder.WithAuthentication<GuestAuthentication>();
+                builder = builder.WithPlainAuthentication(connectionInformation.Password);
             }
-            else
+            else if (connectionInformation.Key != null)
             {
-                builder = builder
-                    .WithIdentity(connectionInformation.Identity)
-                    .WithPlainAuthentication(connectionInformation.Password);
+                builder = builder.WithKeyAuthentication(connectionInformation.Key);
             }
 
             var clientChannel = new OnDemandClientChannel(builder);
