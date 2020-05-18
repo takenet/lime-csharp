@@ -155,7 +155,7 @@ namespace Lime.Protocol.Network.Modules.Resend
 
         private async Task ResendExpiredMessagesAsync(CancellationToken cancellationToken)
         {            
-            while (!cancellationToken.IsCancellationRequested && _channel.State == SessionState.Established && _channel.Transport.IsConnected)
+            while (!cancellationToken.IsCancellationRequested && _channel.IsEstablished())
             {                
                 try
                 {
@@ -186,25 +186,34 @@ namespace Lime.Protocol.Network.Modules.Resend
                             }
                             catch (Exception ex)
                             {
-                                Trace.TraceError("Error resending a message with id {0} on channel {1}: {2}", expiredMessage.Id, _channel.SessionId, ex.ToString());
                                 if (_resendExceptionHandler != null)
                                 {
                                     await _resendExceptionHandler(ex, _channel, expiredMessage);
                                 }
+                                else
+                                {
+                                    Trace.TraceError(
+                                        "Error resending a message with id {0} on channel {1}: {2}",
+                                        expiredMessage.Id,
+                                        _channel.SessionId,
+                                        ex);
+                                }
 
                                 // Create a new CTS because the exception can be caused by the cancellation of the method token
-                                using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5)))
+                                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+                                try
                                 {
-                                    try
-                                    {
-                                        // If any error occurs when resending the message, put the expired message
-                                        // back into the storage before throwing the exception.
-                                        await _messageStorage.AddAsync(_channelKey, expiredMessageKey, expiredMessage,
-                                            DateTimeOffset.UtcNow.Add(_resendWindow), cts.Token);
-                                    }
-                                    catch (OperationCanceledException) { }
-                                    throw;
+                                    // If any error occurs when resending the message, put the expired message
+                                    // back into the storage before throwing the exception.
+                                    await _messageStorage.AddAsync(
+                                        _channelKey,
+                                        expiredMessageKey,
+                                        expiredMessage,
+                                        DateTimeOffset.UtcNow.Add(_resendWindow),
+                                        cts.Token);
                                 }
+                                catch (OperationCanceledException) { }
+                                throw;
                             }
                         }
                         else
@@ -219,10 +228,16 @@ namespace Lime.Protocol.Network.Modules.Resend
                 }
                 catch (Exception ex)
                 {
-                    Trace.TraceError("An unhandled exception occurred on ResendMessagesChannelModule on channel {0}: {1}", _channel.SessionId, ex.ToString());
                     if (_resendExceptionHandler != null)
                     {
                         await _resendExceptionHandler(ex, _channel, null);
+                    }
+                    else
+                    {
+                        Trace.TraceError(
+                            "An unhandled exception occurred on ResendMessagesChannelModule on channel {0}: {1}",
+                            _channel.SessionId,
+                            ex);
                     }
                 }
             }
