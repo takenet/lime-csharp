@@ -168,81 +168,35 @@ namespace Lime.Protocol.Network
         public virtual Task SendMessageAsync(Message message, CancellationToken cancellationToken)
             => _senderChannel.SendMessageAsync(message, cancellationToken);
 
-        /// <summary>
-        /// Receives a message from the remote node.
-        /// </summary>
-        /// <param name="cancellationToken">The cancellation token.</param>
-        /// <returns></returns>
+        /// <inheritdoc />
         public virtual Task<Message> ReceiveMessageAsync(CancellationToken cancellationToken)
             => _receiverChannel.ReceiveMessageAsync(cancellationToken);
 
-        /// <summary>
-        /// Sends a command envelope to the remote node.
-        /// </summary>
-        /// <param name="command"></param>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        /// <exception cref="System.ArgumentNullException">message</exception>
-        /// <exception cref="System.InvalidOperationException"></exception>
+        /// <inheritdoc />
         public virtual Task SendCommandAsync(Command command, CancellationToken cancellationToken)
             => _senderChannel.SendCommandAsync(command, cancellationToken);
 
-        /// <summary>
-        /// Receives a command from the remote node.
-        /// </summary>
-        /// <param name="cancellationToken">The cancellation token.</param>
-        /// <returns></returns>
-        /// <exception cref="System.NotImplementedException"></exception>
+        /// <inheritdoc />
         public virtual Task<Command> ReceiveCommandAsync(CancellationToken cancellationToken)
             => _receiverChannel.ReceiveCommandAsync(cancellationToken);
 
-        /// <summary>
-        /// Processes the command request.
-        /// </summary>
-        /// <param name="requestCommand">The request command.</param>
-        /// <param name="cancellationToken">The cancellation token.</param>
-        /// <returns></returns>
-        /// <exception cref="System.NotImplementedException"></exception>
+        /// <inheritdoc />
         public virtual Task<Command> ProcessCommandAsync(Command requestCommand, CancellationToken cancellationToken)
             => _channelCommandProcessor.ProcessCommandAsync(this, requestCommand, cancellationToken);
 
-        /// <summary>
-        /// Sends a notification to the remote node.
-        /// </summary>
-        /// <param name="notification"></param>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        /// <exception cref="System.ArgumentNullException">notification</exception>
-        /// <exception cref="System.InvalidOperationException"></exception>
+        /// <inheritdoc />
         public virtual Task SendNotificationAsync(Notification notification, CancellationToken cancellationToken)
             => _senderChannel.SendNotificationAsync(notification, cancellationToken);
 
-        /// <summary>
-        /// Receives a notification from the remote node.
-        /// </summary>
-        /// <param name="cancellationToken">The cancellation token.</param>
-        /// <returns></returns>
-        /// <exception cref="System.NotImplementedException"></exception>
+        /// <inheritdoc />
         public virtual Task<Notification> ReceiveNotificationAsync(CancellationToken cancellationToken)
             => _receiverChannel.ReceiveNotificationAsync(cancellationToken);
 
-        /// <summary>
-        /// Sends a session change message to the remote node. 
-        /// Avoid to use this method directly. Instead, use the Server or Client channel methods.
-        /// </summary>
-        /// <param name="session"></param>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        /// <exception cref="System.ArgumentNullException">session</exception>
+        /// <inheritdoc />
         public virtual Task SendSessionAsync(Session session, CancellationToken cancellationToken) 
             => _senderChannel.SendSessionAsync(session, cancellationToken);
 
-        /// <summary>
-        /// Receives a session from the remote node.
-        /// Avoid to use this method directly. Instead, use the Server or Client channel methods.
-        /// </summary>
-        /// <param name="cancellationToken">The cancellation token.</param>
-        /// <returns></returns>
+        /// <inheritdoc />
         public virtual Task<Session> ReceiveSessionAsync(CancellationToken cancellationToken) 
             => _receiverChannel.ReceiveSessionAsync(cancellationToken);
         
