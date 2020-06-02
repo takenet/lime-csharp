@@ -69,7 +69,7 @@ namespace Lime.Messaging.Resources
         public int? Priority { get; set; }
 
         /// <summary>
-        /// Indicate the contact group.
+        /// Indicates the contact group.
         /// </summary>
         [DataMember(Name = GROUP_KEY, EmitDefaultValue = false)]
         public string Group { get; set; }
