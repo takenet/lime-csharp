@@ -19,6 +19,7 @@ namespace Lime.Messaging.Resources
         public const string SHARE_ACCOUNT_INFO_KEY = "shareAccountInfo";
         public const string PRIORITY_KEY = "priority";
         public const string GROUP_KEY = "group";
+        public const string LAST_MESSAGE_DATE = "lastMessageDate";
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Contact"/> class.
@@ -72,6 +73,12 @@ namespace Lime.Messaging.Resources
         /// </summary>
         [DataMember(Name = GROUP_KEY, EmitDefaultValue = false)]
         public string Group { get; set; }
+
+        /// <summary>
+        /// Indicates the last message received or sent date off the contact.
+        /// </summary>
+        [DataMember(Name = LAST_MESSAGE_DATE)]
+        public DateTimeOffset? LastMessageDate { get; set; }
 
         [IgnoreDataMember]
         string IIdentity.Name => Identity?.Name;
