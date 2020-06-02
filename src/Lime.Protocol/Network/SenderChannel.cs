@@ -155,21 +155,38 @@ namespace Lime.Protocol.Network
             {
                 throw new InvalidOperationException("The transport is not connected");
             }
-            
-            if (_envelopeBuffer.Reader.Completion.IsCompleted)
-            {
-                throw new InvalidOperationException("The send buffer is complete",
-                    _envelopeBuffer.Reader.Completion.Exception?.GetBaseException());
-            }
-            
-            foreach (var module in modules.ToList())
-            {
-                if (envelope == null) break;
-                cancellationToken.ThrowIfCancellationRequested();
-                envelope = await module.OnSendingAsync(envelope, cancellationToken).ConfigureAwait(false);
-            }
 
-            await _envelopeBuffer.Writer.WriteAsync(envelope, cancellationToken).ConfigureAwait(false);
+            try
+            {
+                if (_envelopeBuffer.Reader.Completion.IsCompleted)
+                {
+                    throw new InvalidOperationException("The send buffer is complete",
+                        _envelopeBuffer.Reader.Completion.Exception?.GetBaseException());
+                }
+
+                foreach (var module in modules.ToList())
+                {
+                    if (envelope == null) break;
+                    cancellationToken.ThrowIfCancellationRequested();
+                    envelope = await module.OnSendingAsync(envelope, cancellationToken).ConfigureAwait(false);
+                }
+
+                await _envelopeBuffer.Writer.WriteAsync(envelope, cancellationToken).ConfigureAwait(false);
+            }
+            catch when (_transport.IsConnected)
+            {
+                // Closes the transport in case of any exception
+                using var cts = new CancellationTokenSource(_sendTimeout);
+                try
+                {
+                    await _transport.CloseAsync(cts.Token).ConfigureAwait(false);
+                }
+                catch (Exception ex)
+                {
+                    RaiseSenderException(ex);
+                }
+                throw;
+            }
         }
         
         private bool IsChannelEstablished()

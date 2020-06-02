@@ -261,9 +261,29 @@ namespace Lime.Protocol.Network
 
                 return envelope;
             }
-            catch (ChannelClosedException ex) when (reader.Completion.IsCompleted)
+            catch (Exception ex)
             {
-                throw new InvalidOperationException("The channel listener task is complete and cannot receive envelopes", ex);
+                // Closes the transport in case of any exception
+                if (_transport.IsConnected)
+                {
+                    using var cts = new CancellationTokenSource(_consumeTimeout ?? TimeSpan.FromSeconds(5));
+                    try
+                    {
+                        await _transport.CloseAsync(cts.Token).ConfigureAwait(false);
+                    }
+                    catch (Exception ex2)
+                    {
+                        RaiseReceiverException(ex2);
+                    }
+                }
+
+                if (ex is ChannelClosedException && reader.Completion.IsCompleted)
+                {
+                    throw new InvalidOperationException(
+                        "The channel listener task is complete and cannot receive envelopes", ex);
+                }
+
+                throw;
             }
         }
         

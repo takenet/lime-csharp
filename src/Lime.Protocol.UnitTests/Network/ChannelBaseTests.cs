@@ -1453,7 +1453,11 @@ namespace Lime.Protocol.UnitTests.Network
             _transport
                 .Setup(t => t.CloseAsync(It.IsAny<CancellationToken>()))
                 .Returns(Task.FromResult<object>(null))
-                .Callback(() => _transport.Raise(t => t.Closing += (sender, e) => { }, new DeferralEventArgs()));
+                .Callback(() =>
+                {
+                    _transport.SetupGet(t => t.IsConnected).Returns(false);
+                    _transport.Raise(t => t.Closing += (sender, e) => { }, new DeferralEventArgs());
+                });
             var target = GetTarget(SessionState.Established);
             
             // Act
