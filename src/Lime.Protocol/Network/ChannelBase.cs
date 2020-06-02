@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -316,6 +316,12 @@ namespace Lime.Protocol.Network
         
         private async Task HandleExceptionAsync(Exception exception, EventHandler<ExceptionEventArgs> handler)
         {
+            await RaiseExceptionHandlerAsync(handler, exception).ConfigureAwait(false);
+            await CloseTransportAsync().ConfigureAwait(false);
+        }
+
+        private async Task RaiseExceptionHandlerAsync(EventHandler<ExceptionEventArgs> handler, Exception exception)
+        {
             try
             {
                 using var cts = new CancellationTokenSource(ExceptionHandlerTimeout);
@@ -323,9 +329,10 @@ namespace Lime.Protocol.Network
                 handler.RaiseEvent(this, new ExceptionEventArgs(exception));
                 await args.WaitForDeferralsAsync(cts.Token).ConfigureAwait(false);
             }
-            finally
+            catch (Exception ex)
             {
-                await CloseTransportAsync().ConfigureAwait(false);                
+                // The exception handler is expected to never fail
+                Trace.TraceError("Channel {0} exception handler failed: {1}", SessionId, ex);
             }
         }
 
