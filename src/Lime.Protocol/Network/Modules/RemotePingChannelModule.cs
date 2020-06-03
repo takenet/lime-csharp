@@ -55,6 +55,8 @@ namespace Lime.Protocol.Network.Modules
 
         public DateTimeOffset LastReceivedEnvelope { get; private set; }
 
+        public event EventHandler<ExceptionEventArgs> RemotePingException;
+        
         public void OnStateChanged(SessionState state)
         {
             lock (_syncRoot)
@@ -123,32 +125,31 @@ namespace Lime.Protocol.Network.Modules
         {
             LastReceivedEnvelope = DateTime.UtcNow;
 
-            while (!_cancellationTokenSource.IsCancellationRequested && 
-                _channel.State == SessionState.Established && 
-                _channel.Transport.IsConnected)
+            while (_channel.IsEstablished() &&
+                   !_cancellationTokenSource.IsCancellationRequested)
             {
                 try
                 {
+                    // Waits for the next ping
                     await Task.Delay(_remotePingInterval, _cancellationTokenSource.Token).ConfigureAwait(false);
 
-                    if (_channel.State != SessionState.Established || !_channel.Transport.IsConnected) continue;
+                    if (!_channel.IsEstablished()) break;
 
                     var idleTime = DateTimeOffset.UtcNow - LastReceivedEnvelope;
-                    if (_hasPendingPingRequest && 
-                        _remoteIdleTimeout > TimeSpan.Zero && 
+
+                    if (_hasPendingPingRequest &&
+                        _remoteIdleTimeout > TimeSpan.Zero &&
                         idleTime >= _remoteIdleTimeout)
                     {
-                        using (var cts = new CancellationTokenSource(_finishChannelTimeout))
+                        using var cts = new CancellationTokenSource(_finishChannelTimeout);
+                        switch (_channel)
                         {
-                            switch (_channel)
-                            {
-                                case IClientChannel clientChannel:
-                                    await FinishAsync(clientChannel, cts.Token).ConfigureAwait(false);
-                                    break;
-                                case IServerChannel serverChannel:
-                                    await FinishAsync(serverChannel, cts.Token).ConfigureAwait(false);
-                                    break;
-                            }
+                            case IClientChannel clientChannel:
+                                await FinishAsync(clientChannel, cts.Token).ConfigureAwait(false);
+                                break;
+                            case IServerChannel serverChannel:
+                                await FinishAsync(serverChannel, cts.Token).ConfigureAwait(false);
+                                break;
                         }
                     }
                     else if (idleTime >= _remotePingInterval)
@@ -174,6 +175,13 @@ namespace Lime.Protocol.Network.Modules
                 catch (OperationCanceledException) when (_cancellationTokenSource.IsCancellationRequested)
                 {
                     break;
+                }
+                catch (Exception ex)
+                {
+                    using var cts = new CancellationTokenSource(_finishChannelTimeout);
+                    var args = new ExceptionEventArgs(ex);
+                    RemotePingException?.Invoke(this, args);
+                    await args.WaitForDeferralsAsync(cts.Token).ConfigureAwait(false);
                 }
             }
         }
