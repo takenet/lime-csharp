@@ -202,7 +202,43 @@ namespace Lime.Protocol.UnitTests.Network
 
             // Assert
             moduleMock.Verify(m => m.OnStateChanged(SessionState.Established), Times.Once());
-            _transport.Verify(t => t.SendAsync(message, It.IsAny<CancellationToken>()), Times.Never);
+            _transport.Verify(t => t.SendAsync(message, It.IsAny<CancellationToken>()), Times.Never());
+            _transport.Verify(t => t.CloseAsync(It.IsAny<CancellationToken>()), Times.Never());
+        }
+
+        [Test]
+        [Category("SendMessageAsync")]
+        public async Task SendMessageAsync_ModuleThrowsException_CloseTransport()
+        {
+            // Arrange
+            var content = Dummy.CreateTextContent();
+            var message = Dummy.CreateMessage(content);
+            var exception = new ApplicationException("Module has failed");
+            var tcs = new TaskCompletionSource<Envelope>();
+            _transport
+                .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(tcs.Task);
+            var target = (TestChannel)GetTarget(SessionState.New);
+            var moduleMock = new Mock<IChannelModule<Message>>();
+            moduleMock
+                .Setup(t => t.OnSendingAsync(message, It.IsAny<CancellationToken>()))
+                .Returns(Task.FromException<Message>(exception));
+            target.MessageModules.Add(moduleMock.Object);
+            target.SetState(SessionState.Established);
+
+            // Act
+            try
+            {
+                await target.SendMessageAndDelayAsync(message, CancellationToken.None);
+                Assert.Fail("Exception was not thrown");
+            }
+            catch (ApplicationException ex)
+            {
+                ex.Message.ShouldBe(exception.Message);
+            }
+
+            // Assert
+            _transport.Verify(t => t.CloseAsync(It.IsAny<CancellationToken>()), Times.Once());
         }
 
         [Test]
@@ -241,6 +277,38 @@ namespace Lime.Protocol.UnitTests.Network
             {
                 mock.Verify(m => m.OnSendingAsync(message, It.IsAny<CancellationToken>()), Times.Once());
             }
+        }
+        
+        [Test]
+        [Category("SendMessageAsync")]
+        public async Task SendMessageAsync_TokenCancelled_DoNotCloseTransport()
+        {
+            // Arrange
+            var content = Dummy.CreateTextContent();
+            var message = Dummy.CreateMessage(content);
+            var tcs = new TaskCompletionSource<Envelope>();
+            _transport
+                .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(tcs.Task);
+            var target = (TestChannel)GetTarget(SessionState.New);
+            target.SetState(SessionState.Established);
+            using var cts = new CancellationTokenSource();
+            
+            // Act
+            cts.Cancel();
+            
+            try
+            {
+                await target.SendMessageAsync(message, cts.Token);
+                Assert.Fail("Exception was not thrown");
+            }
+            catch (OperationCanceledException ex)
+            {
+                
+            }
+
+            // Assert
+            _transport.Verify(t => t.CloseAsync(It.IsAny<CancellationToken>()), Times.Never());
         }
         
         #endregion
@@ -358,8 +426,7 @@ namespace Lime.Protocol.UnitTests.Network
 
             _transport.Verify();
         }
-
-
+        
         [Test]
         [Category("ReceiveMessageAsync")]
         public async Task ReceiveMessageAsync_IncompleteRecipients_FillsFromTheSession()
@@ -432,8 +499,7 @@ namespace Lime.Protocol.UnitTests.Network
             Assert.AreEqual(moduleMessage, actual);
             moduleMock.Verify(m => m.OnReceivingAsync(message, It.IsAny<CancellationToken>()), Times.Once);
         }
-
-
+        
         [Test]
         [Category("ReceiveMessageAsync")]
         public async Task ReceiveMessageAsync_ModuleReturnsNull_IgnoresMessage()
@@ -466,6 +532,43 @@ namespace Lime.Protocol.UnitTests.Network
             // Assert
             Assert.AreEqual(message2, actual);
             moduleMock.Verify(m => m.OnReceivingAsync(message1, It.IsAny<CancellationToken>()), Times.Once);
+        }        
+        
+        [Test]
+        [Category("ReceiveMessageAsync")]
+        public async Task ReceiveMessageAsync_ModuleThrowsException_CloseTransport()
+        {
+            // Arrange
+            var content = Dummy.CreateTextContent();
+            var message = Dummy.CreateMessage(content);
+            var exception = new ApplicationException("Module has failed");
+            var cancellationToken = Dummy.CreateCancellationToken();
+            var tcs = new TaskCompletionSource<Envelope>();
+            _transport
+                .SetupSequence(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(Task.FromResult<Envelope>(message))
+                .Returns(tcs.Task);
+            var target = (TestChannel)GetTarget(SessionState.New);
+            var moduleMock = new Mock<IChannelModule<Message>>();
+            moduleMock
+                .Setup(t => t.OnReceivingAsync(message, It.IsAny<CancellationToken>()))
+                .Returns(Task.FromException<Message>(exception));
+            target.MessageModules.Add(moduleMock.Object);
+            target.SetState(SessionState.Established);
+
+            // Act
+            try
+            {
+                await target.ReceiveMessageAsync(cancellationToken);
+                Assert.Fail("Exception was not thrown");
+            }
+            catch (ApplicationException ex)
+            {
+                ex.Message.ShouldBe(exception.Message);
+            }
+
+            // Assert
+            _transport.Verify(t => t.CloseAsync(It.IsAny<CancellationToken>()), Times.Once());
         }
 
         [Test]
@@ -508,7 +611,6 @@ namespace Lime.Protocol.UnitTests.Network
             }
         }
 
-
         [Test]
         [Category("ReceiveMessageAsync")]
         public async Task ReceiveMessageAsync_ChannelNotBeingConsumer_ThrowsTimeoutException()
@@ -541,6 +643,38 @@ namespace Lime.Protocol.UnitTests.Network
             timeoutException.Message.ShouldBe("The transport consumer has timed out after 1 seconds.");
         }
 
+        [Test]
+        [Category("ReceiveMessageAsync")]
+        public async Task ReceiveMessageAsync_TokenCancelled_DoNotCloseTransport()
+        {
+            // Arrange
+            var content = Dummy.CreateTextContent();
+            var message = Dummy.CreateMessage(content);
+            var tcs = new TaskCompletionSource<Envelope>();
+            _transport
+                .SetupSequence(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(Task.FromResult<Envelope>(message))
+                .Returns(tcs.Task);
+            var target = GetTarget(SessionState.Established);
+            using var cts = new CancellationTokenSource();
+
+            // Act
+            cts.Cancel();
+
+            try
+            {
+                var actual = await target.ReceiveMessageAsync(cts.Token);
+                Assert.Fail("Exception was not thrown");
+            }
+            catch (OperationCanceledException ex)
+            {
+                
+            }
+
+            // Assert
+            _transport.Verify(t => t.CloseAsync(It.IsAny<CancellationToken>()), Times.Never());
+        }
+        
         #endregion
 
         #region SendCommandAsync
