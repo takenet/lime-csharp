@@ -242,12 +242,12 @@ namespace Lime.Protocol.Network
             {
                 throw new InvalidOperationException($"Cannot receive envelopes in the '{_channelInformation.State}' session state");
             }
-            
+
             try
             {
                 T envelope;
                 var modulesList = modules.ToList();
-                
+
                 do
                 {
                     envelope = await reader.ReadAsync(cancellationToken).ConfigureAwait(false);
@@ -260,6 +260,10 @@ namespace Lime.Protocol.Network
                 } while (envelope == null);
 
                 return envelope;
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                throw;
             }
             catch (Exception ex)
             {

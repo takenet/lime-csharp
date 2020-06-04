@@ -173,6 +173,10 @@ namespace Lime.Protocol.Network
 
                 await _envelopeBuffer.Writer.WriteAsync(envelope, cancellationToken).ConfigureAwait(false);
             }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                throw;
+            }
             catch when (_transport.IsConnected)
             {
                 // Closes the transport in case of any exception
