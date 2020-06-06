@@ -10,10 +10,20 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Lime.Protocol\Lime.Protocol.csproj"/>
-        <ProjectReference Include="..\Lime.Transport.Tcp.UnitTests\Lime.Transport.Tcp.UnitTests.csproj"/>
-        <ProjectReference Include="..\Lime.Transport.Tcp\Lime.Transport.Tcp.csproj"/>
-        <ProjectReference Include="..\Lime.Transport.WebSocket\Lime.Transport.WebSocket.csproj"/>
+        <ProjectReference Include="..\Lime.Protocol\Lime.Protocol.csproj" />
+        <ProjectReference Include="..\Lime.Transport.Tcp.UnitTests\Lime.Transport.Tcp.UnitTests.csproj" />
+        <ProjectReference Include="..\Lime.Transport.Tcp\Lime.Transport.Tcp.csproj" />
+        <ProjectReference Include="..\Lime.Transport.WebSocket\Lime.Transport.WebSocket.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="3.1.3" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Update="appsettings.json">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
     </ItemGroup>
 
 </Project>
