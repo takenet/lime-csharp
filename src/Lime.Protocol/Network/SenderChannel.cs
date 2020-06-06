@@ -132,8 +132,7 @@ namespace Lime.Protocol.Network
         public void Dispose()
         {
             _isDisposing = true;
-            _senderCts.CancelIfNotRequested();
-            _senderCts.Dispose();
+            _senderCts.CancelAndDispose();
             _sessionSemaphore.Dispose();
             _startStopSemaphore.Dispose();
         }

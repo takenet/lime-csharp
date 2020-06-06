@@ -19,12 +19,13 @@ namespace Lime.Protocol.Network.Modules
         private readonly TimeSpan _remotePingInterval;
         private readonly TimeSpan _remoteIdleTimeout;
         private readonly TimeSpan _finishChannelTimeout;
-        private readonly CancellationTokenSource _cancellationTokenSource;
+        private readonly CancellationTokenSource _cts;
         private readonly object _syncRoot = new object();
        
         private Task _pingRemoteTask;
         private string _lastPingCommandRequestId;
         private bool _hasPendingPingRequest;
+        private bool _disposing;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="RemotePingChannelModule"/> class.
@@ -50,7 +51,7 @@ namespace Lime.Protocol.Network.Modules
             }
             _remoteIdleTimeout = remoteIdleTimeout ?? TimeSpan.Zero;
             _finishChannelTimeout = finishChannelTimeout ?? DefaultFinishChannelTimeout;
-            _cancellationTokenSource = new CancellationTokenSource();
+            _cts = new CancellationTokenSource();
         }
 
         public DateTimeOffset LastReceivedEnvelope { get; private set; }
@@ -66,10 +67,9 @@ namespace Lime.Protocol.Network.Modules
                 {
                     _pingRemoteTask = Task.Run(PingRemoteAsync);
                 }
-                else if (state > SessionState.Established &&
-                    !_cancellationTokenSource.IsCancellationRequested)
+                else if (state > SessionState.Established)
                 {
-                    _cancellationTokenSource.Cancel();
+                    _cts.CancelIfNotRequested();
                 }
             }
         }
@@ -126,12 +126,12 @@ namespace Lime.Protocol.Network.Modules
             LastReceivedEnvelope = DateTime.UtcNow;
 
             while (_channel.IsEstablished() &&
-                   !_cancellationTokenSource.IsCancellationRequested)
+                   !_cts.IsCancellationRequestedOrDisposed())
             {
                 try
                 {
                     // Waits for the next ping
-                    await Task.Delay(_remotePingInterval, _cancellationTokenSource.Token).ConfigureAwait(false);
+                    await Task.Delay(_remotePingInterval, _cts.Token).ConfigureAwait(false);
 
                     if (!_channel.IsEstablished()) break;
 
@@ -164,15 +164,17 @@ namespace Lime.Protocol.Network.Modules
 
                         _hasPendingPingRequest = true;
 
-                        using (var cts = new CancellationTokenSource(_remotePingInterval))
-                        {
-                            await
-                                _channel.SendCommandAsync(pingCommandRequest, cts.Token)
-                                    .ConfigureAwait(false);
-                        }
+                        using var cts = new CancellationTokenSource(_remotePingInterval);
+                        await
+                            _channel.SendCommandAsync(pingCommandRequest, cts.Token)
+                                .ConfigureAwait(false);
                     }
                 }
-                catch (OperationCanceledException) when (_cancellationTokenSource.IsCancellationRequested)
+                catch (ObjectDisposedException) when (_disposing)
+                {
+                    break;
+                }
+                catch (OperationCanceledException) when (_cts.IsCancellationRequested)
                 {
                     break;
                 }
@@ -198,7 +200,8 @@ namespace Lime.Protocol.Network.Modules
 
         public void Dispose()
         {
-            _cancellationTokenSource.Dispose();
+            _disposing = true;
+            _cts.CancelAndDispose();
         }
     }
 }

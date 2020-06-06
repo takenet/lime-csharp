@@ -130,8 +130,7 @@ namespace Lime.Protocol.Listeners
         /// </summary>
         public void Dispose()
         {
-            if (!_cts.IsCancellationRequested) _cts.Cancel();
-            _cts.Dispose();
+            _cts.CancelAndDispose();
         }
 
         private  Task<T> CreateListenerTask<T>(Func<CancellationToken, Task<T>> producer, Func<T, CancellationToken, Task<bool>> consumer)
