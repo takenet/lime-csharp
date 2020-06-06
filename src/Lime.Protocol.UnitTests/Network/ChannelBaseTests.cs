@@ -128,12 +128,12 @@ namespace Lime.Protocol.UnitTests.Network
                 .Returns(Task.CompletedTask)
                 .Throws(exception);
             var target = GetTarget(SessionState.Established, 5);
-            Exception actualException = null;
+            var exceptions = new ConcurrentBag<Exception>();
             target.SenderException += (sender, e) =>
             {
                 using (e.GetDeferral())
                 {
-                    actualException = e.Exception;
+                    exceptions.Add(e.Exception);
                 }
             };
 
@@ -145,7 +145,8 @@ namespace Lime.Protocol.UnitTests.Network
             await target.SendMessageAndDelayAsync(message, cancellationToken);
             
             // Assert
-            actualException.ShouldBe(actualException);
+            exceptions.Count.ShouldBe(1);
+            exceptions.ShouldContain(exception);
             await target.SendMessageAsync(message, cancellationToken).ShouldThrowAsync<InvalidOperationException>();
         }        
         
@@ -1593,6 +1594,14 @@ namespace Lime.Protocol.UnitTests.Network
                     _transport.Raise(t => t.Closing += (sender, e) => { }, new DeferralEventArgs());
                 });
             var target = GetTarget(SessionState.Established);
+            var exceptions = new ConcurrentBag<Exception>();
+            target.ConsumerException += (sender, e) =>
+            {
+                using (e.GetDeferral())
+                {
+                    exceptions.Add(e.Exception);
+                }
+            };
             
             // Act
             var receiveTask = target.ReceiveMessageAsync(cancellationToken);
@@ -1604,7 +1613,9 @@ namespace Lime.Protocol.UnitTests.Network
             _transport.Verify();
             _transport.Verify(
                 t => t.CloseAsync(It.IsAny<CancellationToken>()),
-                Times.Once());    
+                Times.Once());
+            exceptions.Count.ShouldBe(1);
+            exceptions.ShouldContain(exception);
         }
 
         [Test]
