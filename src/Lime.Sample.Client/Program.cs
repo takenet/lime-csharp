@@ -22,12 +22,7 @@ namespace Lime.Sample.Client
 {
     class Program
     {
-        static void Main(string[] args)
-        {
-            MainAsync(args).Wait();
-        }
-
-        static async Task MainAsync(string[] args)
+        static async Task Main(string[] args)
         {
             Console.Write("Server URI (ENTER for default): ");
 
@@ -36,13 +31,7 @@ namespace Lime.Sample.Client
             {
                 serverUriValue = $"net.tcp://{Dns.GetHostName()}:{55321}";
             }
-            
-            Console.Write("Number of channels (ENTER for 1): ");
-            if (!int.TryParse(Console.ReadLine(), out var channelCount))
-            {
-                channelCount = 1;
-            }
-            
+
             Console.Write("Identity (name@domain - ENTER for none): ");
             if (!Identity.TryParse(Console.ReadLine(), out var identity))
             {
@@ -55,6 +44,12 @@ namespace Lime.Sample.Client
             {
                 Console.Write("Password: ");
                 password = Console.ReadLine();
+            }
+            
+            Console.Write("Number of channels (ENTER for 1): ");
+            if (!int.TryParse(Console.ReadLine(), out var channelCount))
+            {
+                channelCount = 1;
             }
 
             var setPresence = false;
@@ -210,7 +205,6 @@ namespace Lime.Sample.Client
                     Console.WriteLine("Elapsed: {0} ms", stopwatch.ElapsedMilliseconds);
                     Console.ResetColor();
                 }
-
             }
 
             channelListener.Stop();
@@ -240,49 +234,6 @@ namespace Lime.Sample.Client
                 default:
                     throw new NotSupportedException($"Unsupported URI scheme '{uri.Scheme}'");
             }
-        }
-
-        static async Task ConsumeMessagesAsync(IClientChannel clientChannel, CancellationToken cancellationToken)
-        {
-            while (!cancellationToken.IsCancellationRequested)
-            {
-                var message = await clientChannel.ReceiveMessageAsync(cancellationToken);
-
-                Console.ForegroundColor = ConsoleColor.DarkRed;
-                Console.WriteLine("Message with id '{0}' received from '{1}': {2}", message.Id, message.From ?? clientChannel.RemoteNode, message.Content);
-                Console.ResetColor();
-            }
-        }
-
-        static async Task ConsumeCommandsAsync(IClientChannel clientChannel, CancellationToken cancellationToken)
-        {
-            while (!cancellationToken.IsCancellationRequested)
-            {
-                var command = await clientChannel.ReceiveCommandAsync(cancellationToken);
-                Console.ForegroundColor = ConsoleColor.DarkGreen;
-                Console.WriteLine("Command with id '{0}' received from '{1}' - Method: {2} - URI: {3}", command.Id, command.From ?? clientChannel.RemoteNode, command.Method, command.Uri);
-                Console.ResetColor();
-            }
-        }
-
-        static async Task ConsumeNotificationsAsync(IClientChannel clientChannel, CancellationToken cancellationToken)
-        {
-            while (!cancellationToken.IsCancellationRequested)
-            {
-                var notification = await clientChannel.ReceiveNotificationAsync(cancellationToken);
-
-                Console.ForegroundColor = ConsoleColor.DarkBlue;
-                Console.WriteLine("Notification with id {0} received from '{1}' - Event: {2}", notification.Id, notification.From ?? clientChannel.RemoteNode, notification.Event);
-                Console.ResetColor();
-            }
-        }
-    }
-
-    public static class TaskExtensions
-    {
-        public static Task WithPassiveCancellation(this Task task)
-        {
-            return task.ContinueWith(t => t, TaskContinuationOptions.OnlyOnCanceled);
         }
     }
 }

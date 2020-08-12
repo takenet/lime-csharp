@@ -278,9 +278,10 @@ namespace Lime.Protocol.Network
         {
             try
             {
+                if (handler == null) return;
                 using var cts = new CancellationTokenSource(ExceptionHandlerTimeout);
                 var args = new ExceptionEventArgs(exception);
-                handler.RaiseEvent(this, new ExceptionEventArgs(exception));
+                handler.Invoke(this, args);
                 await args.WaitForDeferralsAsync(cts.Token).ConfigureAwait(false);
             }
             catch (Exception ex)

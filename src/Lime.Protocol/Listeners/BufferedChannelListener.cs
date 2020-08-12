@@ -127,11 +127,7 @@ namespace Lime.Protocol.Listeners
         /// </summary>
         public void Dispose()
         {
-            if (_cts != null)
-            {
-                _cts.CancelIfNotRequested();
-                _cts.Dispose();
-            }
+            _cts?.CancelAndDispose();
         }
     }
 }

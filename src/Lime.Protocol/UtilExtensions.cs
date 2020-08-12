@@ -107,6 +107,7 @@ namespace Lime.Protocol
         /// <param name="event"></param>
         /// <param name="sender"></param>
         /// <param name="e"></param>
+        [Obsolete("Use null propagation instead (handler?.Invoke)")]
         public static void RaiseEvent<T>(this EventHandler<T> @event, object sender, T e)
             where T : EventArgs
         {

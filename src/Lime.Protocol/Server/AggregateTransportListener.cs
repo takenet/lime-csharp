@@ -107,7 +107,7 @@ namespace Lime.Protocol.Server
 
         public void Dispose()
         {
-            _cts.Dispose();
+            _cts.CancelAndDispose();
         }
     }
 }

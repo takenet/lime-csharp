@@ -19,12 +19,13 @@ namespace Lime.Protocol.Network.Modules
         private readonly TimeSpan _remotePingInterval;
         private readonly TimeSpan _remoteIdleTimeout;
         private readonly TimeSpan _finishChannelTimeout;
-        private readonly CancellationTokenSource _cancellationTokenSource;
+        private readonly CancellationTokenSource _cts;
         private readonly object _syncRoot = new object();
        
         private Task _pingRemoteTask;
         private string _lastPingCommandRequestId;
         private bool _hasPendingPingRequest;
+        private bool _disposing;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="RemotePingChannelModule"/> class.
@@ -50,11 +51,13 @@ namespace Lime.Protocol.Network.Modules
             }
             _remoteIdleTimeout = remoteIdleTimeout ?? TimeSpan.Zero;
             _finishChannelTimeout = finishChannelTimeout ?? DefaultFinishChannelTimeout;
-            _cancellationTokenSource = new CancellationTokenSource();
+            _cts = new CancellationTokenSource();
         }
 
         public DateTimeOffset LastReceivedEnvelope { get; private set; }
 
+        public event EventHandler<ExceptionEventArgs> RemotePingException;
+        
         public void OnStateChanged(SessionState state)
         {
             lock (_syncRoot)
@@ -64,10 +67,9 @@ namespace Lime.Protocol.Network.Modules
                 {
                     _pingRemoteTask = Task.Run(PingRemoteAsync);
                 }
-                else if (state > SessionState.Established &&
-                    !_cancellationTokenSource.IsCancellationRequested)
+                else if (state > SessionState.Established)
                 {
-                    _cancellationTokenSource.Cancel();
+                    _cts.CancelIfNotRequested();
                 }
             }
         }
@@ -123,32 +125,31 @@ namespace Lime.Protocol.Network.Modules
         {
             LastReceivedEnvelope = DateTime.UtcNow;
 
-            while (!_cancellationTokenSource.IsCancellationRequested && 
-                _channel.State == SessionState.Established && 
-                _channel.Transport.IsConnected)
+            while (_channel.IsEstablished() &&
+                   !_cts.IsCancellationRequestedOrDisposed())
             {
                 try
                 {
-                    await Task.Delay(_remotePingInterval, _cancellationTokenSource.Token).ConfigureAwait(false);
+                    // Waits for the next ping
+                    await Task.Delay(_remotePingInterval, _cts.Token).ConfigureAwait(false);
 
-                    if (_channel.State != SessionState.Established || !_channel.Transport.IsConnected) continue;
+                    if (!_channel.IsEstablished()) break;
 
                     var idleTime = DateTimeOffset.UtcNow - LastReceivedEnvelope;
-                    if (_hasPendingPingRequest && 
-                        _remoteIdleTimeout > TimeSpan.Zero && 
+
+                    if (_hasPendingPingRequest &&
+                        _remoteIdleTimeout > TimeSpan.Zero &&
                         idleTime >= _remoteIdleTimeout)
                     {
-                        using (var cts = new CancellationTokenSource(_finishChannelTimeout))
+                        using var cts = new CancellationTokenSource(_finishChannelTimeout);
+                        switch (_channel)
                         {
-                            switch (_channel)
-                            {
-                                case IClientChannel clientChannel:
-                                    await FinishAsync(clientChannel, cts.Token).ConfigureAwait(false);
-                                    break;
-                                case IServerChannel serverChannel:
-                                    await FinishAsync(serverChannel, cts.Token).ConfigureAwait(false);
-                                    break;
-                            }
+                            case IClientChannel clientChannel:
+                                await FinishAsync(clientChannel, cts.Token).ConfigureAwait(false);
+                                break;
+                            case IServerChannel serverChannel:
+                                await FinishAsync(serverChannel, cts.Token).ConfigureAwait(false);
+                                break;
                         }
                     }
                     else if (idleTime >= _remotePingInterval)
@@ -163,17 +164,26 @@ namespace Lime.Protocol.Network.Modules
 
                         _hasPendingPingRequest = true;
 
-                        using (var cts = new CancellationTokenSource(_remotePingInterval))
-                        {
-                            await
-                                _channel.SendCommandAsync(pingCommandRequest, cts.Token)
-                                    .ConfigureAwait(false);
-                        }
+                        using var cts = new CancellationTokenSource(_remotePingInterval);
+                        await
+                            _channel.SendCommandAsync(pingCommandRequest, cts.Token)
+                                .ConfigureAwait(false);
                     }
                 }
-                catch (OperationCanceledException) when (_cancellationTokenSource.IsCancellationRequested)
+                catch (ObjectDisposedException) when (_disposing)
                 {
                     break;
+                }
+                catch (OperationCanceledException) when (_cts.IsCancellationRequested)
+                {
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    using var cts = new CancellationTokenSource(_finishChannelTimeout);
+                    var args = new ExceptionEventArgs(ex);
+                    RemotePingException?.Invoke(this, args);
+                    await args.WaitForDeferralsAsync(cts.Token).ConfigureAwait(false);
                 }
             }
         }
@@ -190,7 +200,8 @@ namespace Lime.Protocol.Network.Modules
 
         public void Dispose()
         {
-            _cancellationTokenSource.Dispose();
+            _disposing = true;
+            _cts.CancelAndDispose();
         }
     }
 }

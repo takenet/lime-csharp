@@ -17,6 +17,7 @@ using Lime.Protocol.Util;
 using Lime.Transport.Tcp;
 using Lime.Transport.Tcp.UnitTests;
 using Lime.Transport.WebSocket;
+using Microsoft.Extensions.Configuration;
 using static System.Console;
 
 namespace Lime.Protocol.ConsoleTests
@@ -47,11 +48,14 @@ namespace Lime.Protocol.ConsoleTests
             Uri uri;
             var envelopeSerializer = new EnvelopeSerializer(new DocumentTypeResolver());
             RemoteCertificateValidationCallback certificateValidationCallback = (sender, certificate, chain, errors) => true;
+
+
+            var configuration = new ConfigurationBuilder().AddJsonFile("appsettings.json").Build();
             
             switch (transportType)
             {
                 case 2:
-                    uri = new Uri("net.tcp://localhost:55322");
+                    uri = new Uri(configuration["PipeTcpTransport"]);
                     transportListenerFactory = () =>
                         new PipeTcpTransportListener(
                             uri, 
@@ -62,7 +66,7 @@ namespace Lime.Protocol.ConsoleTests
                     break;
                 
                 case 3:
-                    uri = new Uri("wss://localhost:8081");
+                    uri = new Uri(configuration["WebSocketTransport"]);
                     transportListenerFactory = () =>
                         new WebSocketTransportListener(
                             new[] { uri }, 
@@ -74,7 +78,7 @@ namespace Lime.Protocol.ConsoleTests
                     break;
                 
                 case 4:
-                    uri = new Uri("wss://localhost:8082");
+                    uri = new Uri(configuration["PipeWebSocketTransport"]);
                     transportListenerFactory = () =>
                         new PipeWebSocketTransportListener(
                             new[] { uri }, 
@@ -86,7 +90,7 @@ namespace Lime.Protocol.ConsoleTests
                     break;
                 
                 default:
-                    uri = new Uri("net.tcp://localhost:55321");
+                    uri = new Uri(configuration["TcpTransport"]);
                     transportListenerFactory = () =>
                         new TcpTransportListener(
                             uri, 

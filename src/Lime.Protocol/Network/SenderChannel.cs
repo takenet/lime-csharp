@@ -132,8 +132,7 @@ namespace Lime.Protocol.Network
         public void Dispose()
         {
             _isDisposing = true;
-            _senderCts.CancelIfNotRequested();
-            _senderCts.Dispose();
+            _senderCts.CancelAndDispose();
             _sessionSemaphore.Dispose();
             _startStopSemaphore.Dispose();
         }
@@ -172,6 +171,10 @@ namespace Lime.Protocol.Network
                 }
 
                 await _envelopeBuffer.Writer.WriteAsync(envelope, cancellationToken).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                throw;
             }
             catch when (_transport.IsConnected)
             {
