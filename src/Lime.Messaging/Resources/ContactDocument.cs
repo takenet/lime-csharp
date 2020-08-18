@@ -30,7 +30,6 @@ namespace Lime.Messaging.Resources
         public const string BIRTH_DATE_KEY = "birthDate";
         public const string TAX_DOCUMENT_KEY = "taxDocument";
         public const string CREATION_DATE_KEY = "creationDate";
-        public const string GROUP_KEY = "group";
 
 
         /// <summary>
@@ -151,12 +150,6 @@ namespace Lime.Messaging.Resources
         /// </summary>
         [DataMember(Name = CREATION_DATE_KEY)]
         public DateTimeOffset? CreationDate { get; set; }
-
-        /// <summary>
-        /// Indicates the contact group.
-        /// </summary>
-        [DataMember(Name = GROUP_KEY, EmitDefaultValue = false)]
-        public string Group { get; set; }
     }
 
     /// <summary>
