@@ -24,5 +24,19 @@ namespace Lime.Client.TestConsole
         {
             InitializeComponent();
         }
+
+        private void IsDarkMode_Checked(object sender, RoutedEventArgs e)
+        {
+            MenuItem isDarkMode = (MenuItem)sender;
+
+            if (isDarkMode.IsChecked)
+            {
+                SessionView.Style = (Style)Resources["darkMode"];
+            }
+            else
+            {
+                SessionView.Style = null;
+            }
+        }
     }
 }
