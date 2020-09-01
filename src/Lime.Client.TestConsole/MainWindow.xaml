@@ -12,9 +12,11 @@
         Title="{Binding Title}" Height="600" Width="800" Icon="lime.ico">
 
     <Window.Resources>
+        <SolidColorBrush x:Key="DarkModeColor">#2D2D2D</SolidColorBrush>
+        
         <Style x:Key="darkMode" TargetType="Control">
             <Setter Property="Foreground" Value="White"></Setter>
-            <Setter Property="Background" Value="DarkSlateGray"></Setter>
+            <Setter Property="Background" Value="{DynamicResource DarkModeColor}"></Setter>
             <Style.Resources>
                 <Style TargetType="Label">
                     <Setter Property="Foreground" Value="White"></Setter>
@@ -47,9 +49,15 @@
                 </Style>
                 <Style TargetType="DataGridRow">
                     <Setter Property="Foreground" Value="White"></Setter>
-                    <Setter Property="Background" Value="DarkSlateGray"></Setter>
+                    <Setter Property="Background" Value="{DynamicResource DarkModeColor}"></Setter>
                 </Style>
                 <Style TargetType="StackPanel">
+                    <Setter Property="Background" Value="Transparent"></Setter>
+                </Style>
+                <Style TargetType="StatusBar">
+                    <Setter Property="Background" Value="Transparent"></Setter>
+                </Style>
+                <Style TargetType="GridSplitter">
                     <Setter Property="Background" Value="Transparent"></Setter>
                 </Style>                
             </Style.Resources>

@@ -135,7 +135,6 @@
                         <DataTemplate>
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="{Binding TimestampFormat, Mode=OneWay}"></TextBlock>
-                                <!--<TextBlock Margin="5,0,0,0" Text="{Binding Message}" Foreground="{Binding IsError, Converter={StaticResource IsErrorToBrushConverter}}"></TextBlock>-->
                                 <TextBlock Margin="5,0,0,0" Text="{Binding Message}">
                                     <TextBlock.Foreground>
                                         <MultiBinding Converter="{StaticResource IsErrorToBrushConverter }">
