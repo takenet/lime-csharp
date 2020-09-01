@@ -10,7 +10,8 @@
              xmlns:i="clr-namespace:System.Windows.Interactivity;assembly=System.Windows.Interactivity"
              d:DataContext="{d:DesignData /DesignData/SessionDesignData.xaml}"
              d:DesignHeight="768"
-             d:DesignWidth="1224">
+             d:DesignWidth="1224"
+             Name="UcSessionView">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="300*" />
@@ -134,7 +135,15 @@
                         <DataTemplate>
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="{Binding TimestampFormat, Mode=OneWay}"></TextBlock>
-                                <TextBlock Margin="5,0,0,0" Text="{Binding Message}" Foreground="{Binding IsError, Converter={StaticResource IsErrorToBrushConverter}}"></TextBlock>
+                                <!--<TextBlock Margin="5,0,0,0" Text="{Binding Message}" Foreground="{Binding IsError, Converter={StaticResource IsErrorToBrushConverter}}"></TextBlock>-->
+                                <TextBlock Margin="5,0,0,0" Text="{Binding Message}">
+                                    <TextBlock.Foreground>
+                                        <MultiBinding Converter="{StaticResource IsErrorToBrushConverter }">
+                                            <Binding Path="IsError"/>
+                                            <Binding ElementName="UcSessionView" Path="Style"/>
+                                        </MultiBinding>
+                                    </TextBlock.Foreground>
+                                </TextBlock>
                             </StackPanel>
                         </DataTemplate>
                     </ListBox.ItemTemplate>
