@@ -32,10 +32,14 @@ namespace Lime.Client.TestConsole
             if (isDarkMode.IsChecked)
             {
                 SessionView.Style = (Style)Resources["darkMode"];
+                this.Style = (Style)Resources["darkMode"];
+
             }
+
             else
             {
                 SessionView.Style = null;
+                this.Style = null;
             }
         }
     }

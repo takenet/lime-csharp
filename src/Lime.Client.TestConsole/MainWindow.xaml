@@ -35,9 +35,23 @@
                 </Style>
                 <Style TargetType="ListBox">
                     <Setter Property="Foreground" Value="White"></Setter>
-                    <Setter Property="Background" Value="Transparent"></Setter>                    
+                    <Setter Property="Background" Value="Transparent"></Setter>
                 </Style>
-                
+                <Style TargetType="xctk:IntegerUpDown">
+                    <Setter Property="Foreground" Value="White"></Setter>
+                    <Setter Property="Background" Value="Transparent"></Setter>
+                </Style>
+                <Style TargetType="MenuItem">
+                    <Setter Property="Foreground" Value="White"></Setter>
+                    <Setter Property="Background" Value="Transparent"></Setter>
+                </Style>
+                <Style TargetType="DataGridRow">
+                    <Setter Property="Foreground" Value="White"></Setter>
+                    <Setter Property="Background" Value="DarkSlateGray"></Setter>
+                </Style>
+                <Style TargetType="StackPanel">
+                    <Setter Property="Background" Value="Transparent"></Setter>
+                </Style>                
             </Style.Resources>
         </Style>
     </Window.Resources>

@@ -133,8 +133,8 @@
                     <ListBox.ItemTemplate>
                         <DataTemplate>
                             <StackPanel Orientation="Horizontal">
-                                <TextBox Style="{StaticResource ReadOnlyTextBox}" Text="{Binding TimestampFormat, Mode=OneWay}" />
-                                <TextBox Style="{StaticResource ReadOnlyTextBox}" Margin="5,0,0,0" Text="{Binding Message}" Foreground="{Binding IsError, Converter={StaticResource IsErrorToBrushConverter}}" />
+                                <TextBlock Text="{Binding TimestampFormat, Mode=OneWay}"></TextBlock>
+                                <TextBlock Margin="5,0,0,0" Text="{Binding Message}" Foreground="{Binding IsError, Converter={StaticResource IsErrorToBrushConverter}}"></TextBlock>
                             </StackPanel>
                         </DataTemplate>
                     </ListBox.ItemTemplate>
