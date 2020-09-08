@@ -13,8 +13,8 @@ namespace Lime.Client.TestConsole.Converters
     public class DataOperationToBrushConverter : IMultiValueConverter
     {
 
-        private readonly SolidColorBrush LightDarkMode = (SolidColorBrush)(new BrushConverter().ConvertFrom("#1e1e1e"));
-        private readonly SolidColorBrush NormalDarkMode = (SolidColorBrush)(new BrushConverter().ConvertFrom("#252526"));
+        private readonly SolidColorBrush LightDarkMode = (SolidColorBrush)(new BrushConverter().ConvertFrom("#424242"));
+        private readonly SolidColorBrush NormalDarkMode = (SolidColorBrush)(new BrushConverter().ConvertFrom("#212121"));
 
         #region IValueConverter Members
 
