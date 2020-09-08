@@ -10,71 +10,7 @@
         DataContext="{StaticResource MainViewModel}"
         d:DataContext="{d:DesignData /DesignData/MainDesignData.xaml}"   
         Title="{Binding Title}" Height="600" Width="800" Icon="lime.ico">
-
-    <Window.Resources>
-        <SolidColorBrush x:Key="DarkModeColor">#2D2D2D</SolidColorBrush>
-        <SolidColorBrush x:Key="DarkModeDataGridHeader">#18191A</SolidColorBrush>        
-        
-        <Style x:Key="darkMode" TargetType="Control">
-            <Setter Property="Foreground" Value="White"></Setter>
-            <Setter Property="Background" Value="{DynamicResource DarkModeColor}"></Setter>
-            <Style.Resources>
-                <Style TargetType="Label">
-                    <Setter Property="Foreground" Value="White"></Setter>
-                </Style>
-                <Style TargetType="TextBlock">
-                    <Setter Property="Foreground" Value="White"></Setter>
-                </Style>
-                <Style TargetType="CheckBox">
-                    <Setter Property="Foreground" Value="White"></Setter>
-                </Style>
-                <Style TargetType="TextBox">
-                    <Setter Property="Foreground" Value="White"></Setter>
-                    <Setter Property="Background" Value="Transparent"></Setter>
-                </Style>
-                <Style TargetType="xctk:WatermarkTextBox">
-                    <Setter Property="Foreground" Value="White"></Setter>
-                    <Setter Property="Background" Value="Transparent"></Setter>
-                </Style>
-                <Style TargetType="ListBox">
-                    <Setter Property="Foreground" Value="White"></Setter>
-                    <Setter Property="Background" Value="Transparent"></Setter>
-                </Style>
-                <Style TargetType="xctk:IntegerUpDown">
-                    <Setter Property="Foreground" Value="White"></Setter>
-                    <Setter Property="Background" Value="Transparent"></Setter>
-                </Style>
-                <Style TargetType="MenuItem">
-                    <Setter Property="Foreground" Value="White"></Setter>
-                    <Setter Property="Background" Value="Transparent"></Setter>
-                </Style>
-                <Style TargetType="DataGridRow">
-                    <Setter Property="Foreground" Value="White"></Setter>
-                    <Setter Property="Background" Value="{DynamicResource DarkModeColor}"></Setter>
-                </Style>
-                <Style TargetType="StackPanel">
-                    <Setter Property="Background" Value="Transparent"></Setter>
-                </Style>
-                <Style TargetType="StatusBar">
-                    <Setter Property="Background" Value="Transparent"></Setter>
-                </Style>
-                <Style TargetType="GridSplitter">
-                    <Setter Property="Background" Value="Transparent"></Setter>
-                </Style>
-                <Style TargetType="Button">
-                    <Setter Property="Foreground" Value="White"></Setter>
-                    <Setter Property="Background" Value="Transparent"></Setter>
-                    <Setter Property="Margin" Value="0,0,5,0" />
-                    <Setter Property="Padding" Value="15,2" />
-                </Style>
-                <Style TargetType="DataGridColumnHeader">
-                    <Setter Property="Foreground" Value="White"></Setter>
-                    <Setter Property="Background" Value="{DynamicResource DarkModeDataGridHeader}"></Setter>
-                </Style>
-            </Style.Resources>
-        </Style>
-    </Window.Resources>
-    
+   
     <i:Interaction.Triggers>
         <i:EventTrigger EventName="Closing">
             <i:InvokeCommandAction Command="{Binding ClosingCommand}" />
@@ -85,15 +21,7 @@
     </i:Interaction.Triggers>
 
     <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-        </Grid.RowDefinitions>
-
-        <Menu Grid.Row="0" Height="18" Name="menu1" Width="150" Margin="10, 10, 5, 5" HorizontalAlignment="Left" VerticalAlignment="Top" Background="Transparent">
-            <MenuItem Name="IsDarkMode" Header="Utlizar Dark Mode" IsCheckable="True" Checked="IsDarkMode_Checked" Unchecked="IsDarkMode_Checked"></MenuItem>
-        </Menu>
-        <vw:SessionView x:Name="SessionView" Margin="10,0,5,5" DataContext="{Binding SelectedSession}" Grid.Row="1" />
+        <vw:SessionView x:Name="SessionView" DataContext="{Binding SelectedSession}" Grid.Row="1" />
     </Grid>
 
 </Window>

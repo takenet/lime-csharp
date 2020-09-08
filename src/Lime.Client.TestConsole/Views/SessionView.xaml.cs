@@ -1,18 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-using Xceed.Wpf.Toolkit;
 
 namespace Lime.Client.TestConsole.Views
 {
@@ -60,7 +48,20 @@ namespace Lime.Client.TestConsole.Views
             scv.ScrollToVerticalOffset(scv.VerticalOffset - e.Delta);
             e.Handled = true;
         }
+        private void IsDarkMode_Checked(object sender, RoutedEventArgs e)
+        {
+            MenuItem isDarkMode = (MenuItem)sender;
 
-
+            if (isDarkMode.IsChecked)
+            {
+                this.Style = (Style)Resources["darkMode"];
+                EnvelopesListBox.Style = (Style)Resources["darkMode"];
+            }
+            else
+            {
+                this.Style = null;
+                EnvelopesListBox.Style = null;
+            }
+        }
     }
 }

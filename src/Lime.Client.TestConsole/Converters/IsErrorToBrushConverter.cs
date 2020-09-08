@@ -33,7 +33,7 @@ namespace Lime.Client.TestConsole.Converters
             return new SolidColorBrush(Colors.Black);
         }
 
-        public object[] ConvertBack(object value, Type[] targetType, object parameter, System.Globalization.CultureInfo culture)
+        public object[] ConvertBack(object value, Type[] targetTypes, object parameter, System.Globalization.CultureInfo culture)
         {
             throw new NotImplementedException();
         }
