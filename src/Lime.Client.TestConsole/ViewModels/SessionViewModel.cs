@@ -225,6 +225,8 @@ namespace Lime.Client.TestConsole.ViewModels
             }
         }
 
+        public string JsonToSend { get; set; }
+
         private string _host;
 
         private Uri _hostUri;
@@ -753,11 +755,11 @@ namespace Lime.Client.TestConsole.ViewModels
                 {
                     AddStatusMessage("Sending...");
 
-                    var inputJson = InputJson;
+                    var inputJson = !string.IsNullOrEmpty(JsonToSend) ? JsonToSend : InputJson;
 
                     if (ParseBeforeSend)
                     {
-                        inputJson = ParseInput(InputJson, Variables);
+                        inputJson = ParseInput(inputJson, Variables);
                     }
 
                     var timeoutCancellationToken = _operationTimeout.ToCancellationToken();

@@ -32,10 +32,12 @@
                 </Style>
                 <Style TargetType="TextBox">
                     <Setter Property="Foreground" Value="White"></Setter>
+                    <Setter Property="CaretBrush" Value="White"></Setter>
                     <Setter Property="Background" Value="Transparent"></Setter>
                 </Style>
                 <Style TargetType="xctk:WatermarkTextBox">
                     <Setter Property="Foreground" Value="White"></Setter>
+                    <Setter Property="CaretBrush" Value="White"></Setter>
                     <Setter Property="Background" Value="Transparent"></Setter>
                 </Style>
                 <Style TargetType="ListBox">
