@@ -85,7 +85,7 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
         <Menu Grid.Row="0" Height="18" Name="menu1" Width="150" Margin="10, 10, 5, 5" HorizontalAlignment="Left" VerticalAlignment="Top" Background="Transparent">
-            <MenuItem Name="IsDarkMode" Header="Utlizar Dark Mode" IsCheckable="True" Checked="IsDarkMode_Checked" Unchecked="IsDarkMode_Checked"></MenuItem>
+            <MenuItem Name="IsDarkMode" Header="Dark Mode" IsCheckable="True" Checked="IsDarkMode_Checked" Unchecked="IsDarkMode_Checked"></MenuItem>
         </Menu>
         <Grid Grid.Row="1">
             <Grid.RowDefinitions>
