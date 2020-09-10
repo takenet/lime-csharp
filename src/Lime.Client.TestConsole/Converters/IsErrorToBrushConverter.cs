@@ -16,16 +16,16 @@ namespace Lime.Client.TestConsole.Converters
 
         public object Convert(object[] values, Type targetType, object parameter, System.Globalization.CultureInfo culture)
         {
-            //First value is IsErrror property
-            //Second value is IsDarkMode property
+            var isError = values[0];
+            var darkMode = values[1];
 
-            if (values[0] is bool &&
-                (bool)values[0])
+            if (isError is bool &&
+                (bool)isError)
             {
                 return new SolidColorBrush(Colors.Red);
             }
 
-            if (values[1] is Style)
+            if (darkMode is Style)
             {
                 return new SolidColorBrush(Colors.White);
             }

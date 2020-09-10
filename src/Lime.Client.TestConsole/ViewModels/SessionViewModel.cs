@@ -755,7 +755,7 @@ namespace Lime.Client.TestConsole.ViewModels
                 {
                     AddStatusMessage("Sending...");
 
-                    var inputJson = !string.IsNullOrEmpty(JsonToSend) ? JsonToSend : InputJson;
+                    var inputJson = !string.IsNullOrWhiteSpace(JsonToSend) ? JsonToSend : InputJson;
 
                     if (ParseBeforeSend)
                     {

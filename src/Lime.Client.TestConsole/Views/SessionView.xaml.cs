@@ -50,9 +50,9 @@ namespace Lime.Client.TestConsole.Views
         }
         private void IsDarkMode_Checked(object sender, RoutedEventArgs e)
         {
-            MenuItem isDarkMode = (MenuItem)sender;
+            MenuItem darkMode = (MenuItem)sender;
 
-            if (isDarkMode.IsChecked)
+            if (darkMode.IsChecked)
             {
                 this.Style = (Style)Resources["darkMode"];
                 EnvelopesListBox.Style = (Style)Resources["darkMode"];

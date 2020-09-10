@@ -20,10 +20,10 @@ namespace Lime.Client.TestConsole.Converters
 
         public object Convert(object[] values, Type targetType, object parameter, System.Globalization.CultureInfo culture)
         {
-            //First value is Direction property
-            //Second value is IsDarkMode property
+            var direction = values[0];
+            var darkMode = values[1];
 
-            if (values[0] is DataOperation && ((DataOperation)values[0]) == DataOperation.Receive)
+            if (direction is DataOperation && ((DataOperation)direction) == DataOperation.Receive)
             {
                 if (values[1] is Style)
                 {
@@ -33,7 +33,7 @@ namespace Lime.Client.TestConsole.Converters
                 return new SolidColorBrush(Colors.LightGray);
             }
 
-            if (values[1] is Style)
+            if (darkMode is Style)
             {
                 return LightDarkMode;
             }
