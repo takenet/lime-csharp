@@ -733,7 +733,7 @@ namespace Lime.Client.TestConsole.ViewModels
 
         public AsyncCommand SendCommand { get; private set; }
 
-        private async Task SendAsync()
+        private async Task SendAsync(object parameter)
         {
             var times = 0;
 
@@ -755,7 +755,7 @@ namespace Lime.Client.TestConsole.ViewModels
                 {
                     AddStatusMessage("Sending...");
 
-                    var inputJson = !string.IsNullOrWhiteSpace(JsonToSend) ? JsonToSend : InputJson;
+                    var inputJson = parameter.ToString();
 
                     if (ParseBeforeSend)
                     {

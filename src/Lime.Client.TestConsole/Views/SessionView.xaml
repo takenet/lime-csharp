@@ -186,12 +186,13 @@
                                        HorizontalScrollBarVisibility="Auto"
                                        AcceptsReturn="True"
                                        AcceptsTab="True"
+                                       Name="JsonInput"
                                        Text="{Binding InputJson, UpdateSourceTrigger=PropertyChanged}" />
                     <StackPanel Grid.Row="1" Margin="0,5" Orientation="Horizontal">
                         <Button Content="_Indent" ToolTip="Indent the JSON input" Command="{Binding IndentCommand}" />
                         <Button Content="_Validate" ToolTip="Validates the JSON input" Command="{Binding ValidateCommand}" />
                         <Button Content="_Parse" ToolTip="Parse the input variables" Command="{Binding ParseCommand}" />
-                        <Button Content="_Send" ToolTip="Sends the JSON through the transport" Command="{Binding SendCommand}" />
+                        <Button Content="_Send" ToolTip="Sends the JSON through the transport" Command="{Binding SendCommand}" CommandParameter="{Binding ElementName=JsonInput,Path=Text}" />
                         <CheckBox Margin="0,0,5,0" VerticalAlignment="Center" Content="Parse before send" IsChecked="{Binding ParseBeforeSend}" />
                         <CheckBox Margin="0,0,5,0" VerticalAlignment="Center" Content="Clear after sent" IsChecked="{Binding ClearAfterSent}" />
                         <CheckBox Margin="0,0,5,0" VerticalAlignment="Center" Content="Send as raw" IsChecked="{Binding SendAsRaw}" IsEnabled="{Binding CanSendAsRaw}" />
