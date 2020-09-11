@@ -8,10 +8,6 @@
              d:DesignHeight="200" d:DesignWidth="500"
              Name="UcEnvelopesView">
     
-    <!--<TextBox Background="{Binding Direction, Converter={StaticResource DataOperationToBrushConverter}}" 
-             Foreground="{Binding IsRaw, Converter={StaticResource IsRawToBrushConverter}}"
-             Text="{Binding Json}" 
-             Style="{StaticResource ReadOnlyTextBox}" />-->
     <TextBox Text="{Binding Json}" Style="{StaticResource ReadOnlyTextBox}">
         <TextBox.Background>
             <MultiBinding Converter="{StaticResource DataOperationToBrushConverter}">
