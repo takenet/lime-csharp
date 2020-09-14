@@ -25,7 +25,7 @@ namespace Lime.Client.TestConsole.Converters
 
             if (direction is DataOperation && ((DataOperation)direction) == DataOperation.Receive)
             {
-                if (values[1] is Style)
+                if (darkMode is Style)
                 {
                     return NormalDarkMode;
                 }
