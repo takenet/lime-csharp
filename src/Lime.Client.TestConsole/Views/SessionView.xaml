@@ -14,69 +14,7 @@
              Name="UcSessionView">
 
     <UserControl.Resources>
-        <SolidColorBrush x:Key="DarkModeColor">#2D2D2D</SolidColorBrush>
-        <SolidColorBrush x:Key="DarkModeDataGridHeader">#18191A</SolidColorBrush>
-
-        <Style x:Key="darkMode" TargetType="Control">
-            <Setter Property="Foreground" Value="White"></Setter>
-            <Setter Property="Background" Value="{DynamicResource DarkModeColor}"></Setter>
-            <Style.Resources>
-                <Style TargetType="Label">
-                    <Setter Property="Foreground" Value="White"></Setter>
-                </Style>
-                <Style TargetType="TextBlock">
-                    <Setter Property="Foreground" Value="White"></Setter>
-                </Style>
-                <Style TargetType="CheckBox">
-                    <Setter Property="Foreground" Value="White"></Setter>
-                </Style>
-                <Style TargetType="TextBox">
-                    <Setter Property="Foreground" Value="White"></Setter>
-                    <Setter Property="CaretBrush" Value="White"></Setter>
-                    <Setter Property="Background" Value="Transparent"></Setter>
-                </Style>
-                <Style TargetType="xctk:WatermarkTextBox">
-                    <Setter Property="Foreground" Value="White"></Setter>
-                    <Setter Property="CaretBrush" Value="White"></Setter>
-                    <Setter Property="Background" Value="Transparent"></Setter>
-                </Style>
-                <Style TargetType="ListBox">
-                    <Setter Property="Foreground" Value="White"></Setter>
-                    <Setter Property="Background" Value="Transparent"></Setter>
-                </Style>
-                <Style TargetType="xctk:IntegerUpDown">
-                    <Setter Property="Foreground" Value="White"></Setter>
-                    <Setter Property="Background" Value="Transparent"></Setter>
-                </Style>
-                <Style TargetType="MenuItem">
-                    <Setter Property="Foreground" Value="White"></Setter>
-                    <Setter Property="Background" Value="Transparent"></Setter>
-                </Style>
-                <Style TargetType="DataGridRow">
-                    <Setter Property="Foreground" Value="White"></Setter>
-                    <Setter Property="Background" Value="{DynamicResource DarkModeColor}"></Setter>
-                </Style>
-                <Style TargetType="StackPanel">
-                    <Setter Property="Background" Value="Transparent"></Setter>
-                </Style>
-                <Style TargetType="StatusBar">
-                    <Setter Property="Background" Value="Transparent"></Setter>
-                </Style>
-                <Style TargetType="GridSplitter">
-                    <Setter Property="Background" Value="Transparent"></Setter>
-                </Style>
-                <Style TargetType="Button">
-                    <Setter Property="Foreground" Value="White"></Setter>
-                    <Setter Property="Background" Value="Transparent"></Setter>
-                    <Setter Property="Margin" Value="0,0,5,0" />
-                    <Setter Property="Padding" Value="15,2" />
-                </Style>
-                <Style TargetType="DataGridColumnHeader">
-                    <Setter Property="Foreground" Value="White"></Setter>
-                    <Setter Property="Background" Value="{DynamicResource DarkModeDataGridHeader}"></Setter>
-                </Style>
-            </Style.Resources>
-        </Style>
+        <ResourceDictionary Source="DarkModeDictionary.xaml" />
     </UserControl.Resources>
 
     <Grid>
