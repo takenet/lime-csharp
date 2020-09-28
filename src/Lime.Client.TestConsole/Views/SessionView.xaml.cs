@@ -1,5 +1,6 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 
 namespace Lime.Client.TestConsole.Views
@@ -12,9 +13,12 @@ namespace Lime.Client.TestConsole.Views
         public SessionView()
         {
             InitializeComponent();
+            _darModeStyle = (Style)Resources["darkMode"];
         }
 
         private bool _autoScroll;
+        private Style _darModeStyle;
+
         private void ScrollViewer_ScrollChanged(object sender, ScrollChangedEventArgs e)
         {
             var scrollViewer = (ScrollViewer)sender;
@@ -48,14 +52,15 @@ namespace Lime.Client.TestConsole.Views
             scv.ScrollToVerticalOffset(scv.VerticalOffset - e.Delta);
             e.Handled = true;
         }
+
         private void IsDarkMode_Checked(object sender, RoutedEventArgs e)
         {
-            MenuItem darkMode = (MenuItem)sender;
+            var darkMode = (ToggleButton)sender;
 
-            if (darkMode.IsChecked)
+            if (darkMode.IsChecked == true)
             {
-                this.Style = (Style)Resources["darkMode"];
-                EnvelopesListBox.Style = (Style)Resources["darkMode"];
+                this.Style = _darModeStyle;
+                EnvelopesListBox.Style = _darModeStyle;
             }
             else
             {

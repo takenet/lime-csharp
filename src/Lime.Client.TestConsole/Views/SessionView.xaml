@@ -22,9 +22,6 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
-        <Menu Grid.Row="0" Height="18" Name="menu1" Width="150" Margin="10, 10, 5, 5" HorizontalAlignment="Left" VerticalAlignment="Top" Background="Transparent">
-            <MenuItem Name="IsDarkMode" Header="Dark Mode" IsCheckable="True" Checked="IsDarkMode_Checked" Unchecked="IsDarkMode_Checked"></MenuItem>
-        </Menu>
         <Grid Grid.Row="1">
             <Grid.RowDefinitions>
                 <RowDefinition Height="300*" />
@@ -266,12 +263,29 @@
             </Grid>
 
             <StatusBar Grid.Row="1">
+                <StatusBar.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="100" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="100" />
+                            </Grid.ColumnDefinitions>
+                        </Grid>
+                    </ItemsPanelTemplate>
+                </StatusBar.ItemsPanel>
                 <StatusBarItem>
-                    <ProgressBar Width="100" Height="16" IsIndeterminate="{Binding IsBusy}" />
+                    <ProgressBar Width="95" Height="16" IsIndeterminate="{Binding IsBusy}" />
                 </StatusBarItem>
-                <Separator />
-                <StatusBarItem>
-                    <TextBlock Text="{Binding StatusMessage}" />
+                <Separator Grid.Column="1" />
+                <StatusBarItem Grid.Column="2">
+                    <TextBlock Text="{Binding StatusMessage}" Width="988" />
+                </StatusBarItem>
+                <Separator Grid.Column="3" />
+                <StatusBarItem Grid.Column="4">
+                    <CheckBox Name="IsDarkMode" Content="Dark Mode" Checked="IsDarkMode_Checked" Unchecked="IsDarkMode_Checked"></CheckBox>
                 </StatusBarItem>
             </StatusBar>
         </Grid>
