@@ -1,18 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-using Xceed.Wpf.Toolkit;
 
 namespace Lime.Client.TestConsole.Views
 {
@@ -24,9 +13,12 @@ namespace Lime.Client.TestConsole.Views
         public SessionView()
         {
             InitializeComponent();
+            _darModeStyle = (Style)Resources["darkMode"];
         }
 
         private bool _autoScroll;
+        private Style _darModeStyle;
+
         private void ScrollViewer_ScrollChanged(object sender, ScrollChangedEventArgs e)
         {
             var scrollViewer = (ScrollViewer)sender;
@@ -61,6 +53,20 @@ namespace Lime.Client.TestConsole.Views
             e.Handled = true;
         }
 
+        private void IsDarkMode_Checked(object sender, RoutedEventArgs e)
+        {
+            var darkMode = (ToggleButton)sender;
 
+            if (darkMode.IsChecked == true)
+            {
+                this.Style = _darModeStyle;
+                EnvelopesListBox.Style = _darModeStyle;
+            }
+            else
+            {
+                this.Style = null;
+                EnvelopesListBox.Style = null;
+            }
+        }
     }
 }

@@ -46,11 +46,9 @@ namespace Lime.Client.TestConsole.Macros
                     Envelope = commandResponse
                 };
 
-                sessionViewModel.InputJson = commandEnvelopeViewModel.Json;
-
                 if (sessionViewModel.SendCommand.CanExecute(null))
                 {
-                    await sessionViewModel.SendCommand.ExecuteAsync(null);
+                    await sessionViewModel.SendCommand.ExecuteAsync(commandEnvelopeViewModel.Json);
                 }
             }
         }

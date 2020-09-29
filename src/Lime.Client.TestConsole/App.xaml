@@ -21,6 +21,7 @@
                 <Setter Property="BorderThickness"  Value="0" />
                 <Setter Property="TextWrapping" Value="Wrap" />
                 <Setter Property="FontFamily" Value="Courier New" />
+                <Setter Property="Background" Value="Transparent" />                
             </Style>
             
             <vm:MainViewModel x:Key="MainViewModel" />

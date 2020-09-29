@@ -35,11 +35,9 @@ namespace Lime.Client.TestConsole.Macros
                     Envelope = notification
                 };
 
-                sessionViewModel.InputJson = notificationEnvelopeViewModel.Json;
-
                 if (sessionViewModel.SendCommand.CanExecute(null))
                 {
-                    await sessionViewModel.SendCommand.ExecuteAsync(null);
+                    await sessionViewModel.SendCommand.ExecuteAsync(notificationEnvelopeViewModel.Json);
                 }
             }
         }

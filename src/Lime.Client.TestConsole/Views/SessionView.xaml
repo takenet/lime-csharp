@@ -10,247 +10,284 @@
              xmlns:i="clr-namespace:System.Windows.Interactivity;assembly=System.Windows.Interactivity"
              d:DataContext="{d:DesignData /DesignData/SessionDesignData.xaml}"
              d:DesignHeight="768"
-             d:DesignWidth="1224">
+             d:DesignWidth="1224"
+             Name="UcSessionView">
+
+    <UserControl.Resources>
+        <ResourceDictionary Source="DarkModeDictionary.xaml" />
+    </UserControl.Resources>
+
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="300*" />
-            <RowDefinition Height="25" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
         </Grid.RowDefinitions>
-
-        <Grid Margin="10">
+        <Grid Grid.Row="1">
             <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
                 <RowDefinition Height="300*" />
-                <RowDefinition Height="5" />
-                <RowDefinition Height="150*" />
-                <RowDefinition Height="5" />
-                <RowDefinition Height="100" />
+                <RowDefinition Height="25" />
             </Grid.RowDefinitions>
 
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="200*" />
-                <ColumnDefinition Width="5" />
-                <ColumnDefinition Width="100*" />
-            </Grid.ColumnDefinitions>
-
-            <Grid Grid.Row="0" Margin="0,0,0,5">
+            <Grid Margin="10">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="300*" />
+                    <RowDefinition Height="5" />
+                    <RowDefinition Height="150*" />
+                    <RowDefinition Height="5" />
+                    <RowDefinition Height="100" />
                 </Grid.RowDefinitions>
+
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="200*" />
+                    <ColumnDefinition Width="5" />
+                    <ColumnDefinition Width="100*" />
                 </Grid.ColumnDefinitions>
 
-                <Label Grid.Row="0" Content="Host" />
-                <TextBox Grid.Row="0" Grid.Column="1" VerticalAlignment="Center" Text="{Binding Host, UpdateSourceTrigger=PropertyChanged}" Grid.ColumnSpan="2" />
+                <Grid Grid.Row="0" Margin="0,0,0,5">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
 
-                <StackPanel Grid.Row="1" Grid.Column="0"  Margin="0,5" Orientation="Horizontal" Grid.ColumnSpan="2">
-                    <Button Content="_Open" Command="{Binding OpenTransportCommand}" />
-                    <Button Content="_Close" Command="{Binding CloseTransportCommand}" />
-                    <xctk:WatermarkTextBox Margin="0,0,5,0"  VerticalAlignment="Center" Watermark="Client certificate thumbprint" Width="180" Text="{Binding ClientCertificateThumbprint, UpdateSourceTrigger=PropertyChanged}" />
-                </StackPanel>
+                    <Label Grid.Row="0" Content="Host" />
+                    <TextBox Grid.Row="0" Grid.Column="1" VerticalAlignment="Center" Text="{Binding Host, UpdateSourceTrigger=PropertyChanged}" Grid.ColumnSpan="2" />
 
-                <StackPanel Grid.Row="2" Grid.Column="0"  Margin="0,5" Orientation="Horizontal" Grid.ColumnSpan="2">
-                    <TextBlock Margin="0,0,5,0" VerticalAlignment="Center" Text="Last session state" />
-                    <TextBox Margin="0,0,5,0" VerticalAlignment="Center" Width="80" IsReadOnly="True" Text="{Binding LastSessionState}" />
-                    <TextBlock Margin="0,0,5,0" VerticalAlignment="Center" Text="Last notification" />
-                    <TextBox Margin="0,0,5,0" VerticalAlignment="Center" Width="80" IsReadOnly="True" Text="{Binding LastNotificationEvent}" />
-                </StackPanel>
+                    <StackPanel Grid.Row="1" Grid.Column="0"  Margin="0,5" Orientation="Horizontal" Grid.ColumnSpan="2">
+                        <Button Content="_Open" Command="{Binding OpenTransportCommand}" />
+                        <Button Content="_Close" Command="{Binding CloseTransportCommand}" />
+                        <xctk:WatermarkTextBox Margin="0,0,5,0"  VerticalAlignment="Center" Watermark="Client certificate thumbprint" Width="180" Text="{Binding ClientCertificateThumbprint, UpdateSourceTrigger=PropertyChanged}" />
+                    </StackPanel>
 
-                <StackPanel Grid.Row="3" Grid.Column="0"  Margin="0,5" Orientation="Horizontal" Grid.ColumnSpan="2">
-                    <TextBlock Margin="0,0,5,0" VerticalAlignment="Center" Text="Local node" />
-                    <TextBox Margin="0,0,5,0" VerticalAlignment="Center" Width="250" IsReadOnly="True" Text="{Binding LocalNode, Converter={StaticResource ToStringConverter}}" />
-                    <TextBlock Margin="0,0,5,0" VerticalAlignment="Center" Text="Remote node" />
-                    <TextBox Margin="0,0,5,0" VerticalAlignment="Center" Width="250" IsReadOnly="True" Text="{Binding RemoteNode, Converter={StaticResource ToStringConverter}}" />
-                </StackPanel>
-            </Grid>
+                    <StackPanel Grid.Row="2" Grid.Column="0"  Margin="0,5" Orientation="Horizontal" Grid.ColumnSpan="2">
+                        <TextBlock Margin="0,0,5,0" VerticalAlignment="Center" Text="Last session state" />
+                        <TextBox Margin="0,0,5,0" VerticalAlignment="Center" Width="80" IsReadOnly="True" Text="{Binding LastSessionState}" />
+                        <TextBlock Margin="0,0,5,0" VerticalAlignment="Center" Text="Last notification" />
+                        <TextBox Margin="0,0,5,0" VerticalAlignment="Center" Width="80" IsReadOnly="True" Text="{Binding LastNotificationEvent}" />
+                    </StackPanel>
 
-            <Grid Grid.Row="1" Margin="0,5">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="*" />
-                    <RowDefinition Height="Auto" />
-                </Grid.RowDefinitions>
+                    <StackPanel Grid.Row="3" Grid.Column="0"  Margin="0,5" Orientation="Horizontal" Grid.ColumnSpan="2">
+                        <TextBlock Margin="0,0,5,0" VerticalAlignment="Center" Text="Local node" />
+                        <TextBox Margin="0,0,5,0" VerticalAlignment="Center" Width="250" IsReadOnly="True" Text="{Binding LocalNode, Converter={StaticResource ToStringConverter}}" />
+                        <TextBlock Margin="0,0,5,0" VerticalAlignment="Center" Text="Remote node" />
+                        <TextBox Margin="0,0,5,0" VerticalAlignment="Center" Width="250" IsReadOnly="True" Text="{Binding RemoteNode, Converter={StaticResource ToStringConverter}}" />
+                    </StackPanel>
+                </Grid>
 
-                <ScrollViewer ScrollChanged="ScrollViewer_ScrollChanged" PreviewMouseWheel="ScrollViewer_PreviewMouseWheel">
-                    <ListBox ItemsSource="{Binding EnvelopesView}">
-                        <ListBox.ItemContainerStyle>
-                            <Style TargetType="ListBoxItem">
-                                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-                            </Style>
-                        </ListBox.ItemContainerStyle>
-                        <ListBox.ItemTemplate>
-                            <DataTemplate>
-                                <vw:EnvelopeView />
-                            </DataTemplate>
-                        </ListBox.ItemTemplate>
-                    </ListBox>
-                </ScrollViewer>
-                <StackPanel Margin="0,5" Orientation="Horizontal" Grid.Row="1">
-                    <Button Content="Clear" Command="{Binding ClearTraceCommand}" />
-                    <CheckBox Margin="0,5" Content="Show raw values" IsChecked="{Binding ShowRawValues}" />
-                </StackPanel>
-            </Grid>
+                <Grid Grid.Row="1" Margin="0,5">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
 
-            <GridSplitter Grid.Row="2" Height="5" HorizontalAlignment="Stretch" />
+                    <ScrollViewer ScrollChanged="ScrollViewer_ScrollChanged" PreviewMouseWheel="ScrollViewer_PreviewMouseWheel">
+                        <ListBox Name="EnvelopesListBox" ItemsSource="{Binding EnvelopesView}">
+                            <ListBox.ItemContainerStyle>
+                                <Style TargetType="ListBoxItem">
+                                    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                </Style>
+                            </ListBox.ItemContainerStyle>
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <vw:EnvelopeView x:Name="EnvelopesView" />
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </ScrollViewer>
+                    <StackPanel Margin="0,5" Orientation="Horizontal" Grid.Row="1">
+                        <Button Content="Clear" Command="{Binding ClearTraceCommand}" />
+                        <CheckBox Margin="0,5" Content="Show raw values" IsChecked="{Binding ShowRawValues}" />
+                    </StackPanel>
+                </Grid>
 
-            <Grid Grid.Row="3" Margin="0,5">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="*" />
-                    <RowDefinition Height="Auto" />
-                </Grid.RowDefinitions>
+                <GridSplitter Grid.Row="2" Height="5" HorizontalAlignment="Stretch" />
 
-                <xctk:WatermarkTextBox FontFamily="Courier New"
+                <Grid Grid.Row="3" Margin="0,5">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <xctk:WatermarkTextBox FontFamily="Courier New"
                                        Watermark="JSON input"
                                        TextWrapping="NoWrap"
                                        VerticalScrollBarVisibility="Visible"
                                        HorizontalScrollBarVisibility="Auto"
                                        AcceptsReturn="True"
                                        AcceptsTab="True"
+                                       Name="JsonInput"
                                        Text="{Binding InputJson, UpdateSourceTrigger=PropertyChanged}" />
-                <StackPanel Grid.Row="1" Margin="0,5" Orientation="Horizontal">
-                    <Button Content="_Indent" ToolTip="Indent the JSON input" Command="{Binding IndentCommand}" />
-                    <Button Content="_Validate" ToolTip="Validates the JSON input" Command="{Binding ValidateCommand}" />
-                    <Button Content="_Parse" ToolTip="Parse the input variables" Command="{Binding ParseCommand}" />
-                    <Button Content="_Send" ToolTip="Sends the JSON through the transport" Command="{Binding SendCommand}" />
-                    <CheckBox Margin="0,0,5,0" VerticalAlignment="Center" Content="Parse before send" IsChecked="{Binding ParseBeforeSend}" />
-                    <CheckBox Margin="0,0,5,0" VerticalAlignment="Center" Content="Clear after sent" IsChecked="{Binding ClearAfterSent}" />
-                    <CheckBox Margin="0,0,5,0" VerticalAlignment="Center" Content="Send as raw" IsChecked="{Binding SendAsRaw}" IsEnabled="{Binding CanSendAsRaw}" />
-                    <CheckBox Margin="0,0,5,0" VerticalAlignment="Center" Content="Ignore parsing errors" IsChecked="{Binding IgnoreParsingErrors}" />
-                    <CheckBox Margin="0,0,5,0" VerticalAlignment="Center" Content="Repeat" IsChecked="{Binding Repeat}" />
-                    <xctk:IntegerUpDown Margin="0,0,3,0" VerticalAlignment="Center" Minimum="1" Value="{Binding RepeatTimes}" />
-                    <Label Margin="0,0,3,0" Content="times" />
-                </StackPanel>
-            </Grid>
+                    <StackPanel Grid.Row="1" Margin="0,5" Orientation="Horizontal">
+                        <Button Content="_Indent" ToolTip="Indent the JSON input" Command="{Binding IndentCommand}" />
+                        <Button Content="_Validate" ToolTip="Validates the JSON input" Command="{Binding ValidateCommand}" />
+                        <Button Content="_Parse" ToolTip="Parse the input variables" Command="{Binding ParseCommand}" />
+                        <Button Content="_Send" ToolTip="Sends the JSON through the transport" Command="{Binding SendCommand}" CommandParameter="{Binding ElementName=JsonInput,Path=Text}" />
+                        <CheckBox Margin="0,0,5,0" VerticalAlignment="Center" Content="Parse before send" IsChecked="{Binding ParseBeforeSend}" />
+                        <CheckBox Margin="0,0,5,0" VerticalAlignment="Center" Content="Clear after sent" IsChecked="{Binding ClearAfterSent}" />
+                        <CheckBox Margin="0,0,5,0" VerticalAlignment="Center" Content="Send as raw" IsChecked="{Binding SendAsRaw}" IsEnabled="{Binding CanSendAsRaw}" />
+                        <CheckBox Margin="0,0,5,0" VerticalAlignment="Center" Content="Ignore parsing errors" IsChecked="{Binding IgnoreParsingErrors}" />
+                        <CheckBox Margin="0,0,5,0" VerticalAlignment="Center" Content="Repeat" IsChecked="{Binding Repeat}" />
+                        <xctk:IntegerUpDown Margin="0,0,3,0" VerticalAlignment="Center" Minimum="1" Value="{Binding RepeatTimes}" />
+                        <Label Margin="0,0,3,0" Content="times" />
+                    </StackPanel>
+                </Grid>
 
-            <GridSplitter Grid.Row="4" Height="5" HorizontalAlignment="Stretch" />
+                <GridSplitter Grid.Row="4" Height="5" HorizontalAlignment="Stretch" />
 
-            <ScrollViewer Grid.Row="5" Grid.ColumnSpan="3" ScrollChanged="ScrollViewer_ScrollChanged" PreviewMouseWheel="ScrollViewer_PreviewMouseWheel">
-                <ListBox ItemsSource="{Binding StatusMessages}" SelectionMode="Extended">
-                    <ListBox.ItemTemplate>
-                        <DataTemplate>
-                            <StackPanel Orientation="Horizontal">
-                                <TextBox Style="{StaticResource ReadOnlyTextBox}" Text="{Binding TimestampFormat, Mode=OneWay}" />
-                                <TextBox Style="{StaticResource ReadOnlyTextBox}" Margin="5,0,0,0" Text="{Binding Message}" Foreground="{Binding IsError, Converter={StaticResource IsErrorToBrushConverter}}" />
+                <ScrollViewer Grid.Row="5" Grid.ColumnSpan="3" ScrollChanged="ScrollViewer_ScrollChanged" PreviewMouseWheel="ScrollViewer_PreviewMouseWheel">
+                    <ListBox ItemsSource="{Binding StatusMessages}" SelectionMode="Extended">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="{Binding TimestampFormat, Mode=OneWay}"></TextBlock>
+                                    <TextBlock Margin="5,0,0,0" Text="{Binding Message}">
+                                        <TextBlock.Foreground>
+                                            <MultiBinding Converter="{StaticResource IsErrorToBrushConverter }">
+                                                <Binding Path="IsError"/>
+                                                <Binding ElementName="UcSessionView" Path="Style"/>
+                                            </MultiBinding>
+                                        </TextBlock.Foreground>
+                                    </TextBlock>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </ScrollViewer>
+
+                <GridSplitter Grid.Column="1" Grid.RowSpan="4" Width="5" HorizontalAlignment="Left" VerticalAlignment="Stretch" />
+
+                <Grid Grid.Row="0" Grid.RowSpan="4" Grid.Column="2">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="200*" />
+                            <RowDefinition Height="200*" />
+                            <RowDefinition Height="200*" />
+                        </Grid.RowDefinitions>
+
+                        <Grid Grid.Row="0">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+
+                            <Label Grid.Row="0" Content="Variables" FontWeight="Bold" />
+                            <ScrollViewer Grid.Row="1" PreviewMouseWheel="ScrollViewer_PreviewMouseWheel">
+                                <DataGrid AutoGenerateColumns="False" ItemsSource="{Binding Variables}">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="50*" />
+                                        <DataGridTextColumn Header="Value" Binding="{Binding Value}" Width="50*" />
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </ScrollViewer>
+                        </Grid>
+
+                        <Grid Grid.Row="1">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <Label Grid.Row="0" Content="Templates" FontWeight="Bold" />
+                            <xctk:WatermarkTextBox Watermark="Search templates" Grid.Row="1" Text="{Binding TemplatesFilter, UpdateSourceTrigger=PropertyChanged}" />
+                            <ScrollViewer Grid.Row="2" PreviewMouseWheel="ScrollViewer_PreviewMouseWheel">
+                                <ListBox ItemsSource="{Binding TemplatesView}" SelectedValue="{Binding SelectedTemplate}">
+                                    <i:Interaction.Triggers>
+                                        <i:EventTrigger EventName="MouseDoubleClick">
+                                            <i:InvokeCommandAction Command="{Binding LoadTemplateCommand}" />
+                                        </i:EventTrigger>
+                                    </i:Interaction.Triggers>
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding Name}" />
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                    <ListBox.GroupStyle>
+                                        <GroupStyle>
+                                            <GroupStyle.HeaderTemplate>
+                                                <DataTemplate>
+                                                    <TextBlock FontWeight="Bold"  Text="{Binding Name}" />
+                                                </DataTemplate>
+                                            </GroupStyle.HeaderTemplate>
+                                        </GroupStyle>
+                                    </ListBox.GroupStyle>
+                                </ListBox>
+                            </ScrollViewer>
+                            <StackPanel Grid.Row="3" Orientation="Horizontal">
+                                <Button Content="_Load" ToolTip="Load the selected template to the input" Command="{Binding LoadTemplateCommand }" />
                             </StackPanel>
-                        </DataTemplate>
-                    </ListBox.ItemTemplate>
-                </ListBox>
-            </ScrollViewer>
+                        </Grid>
 
-            <GridSplitter Grid.Column="1" Grid.RowSpan="4" Width="5" HorizontalAlignment="Left" VerticalAlignment="Stretch" />
-
-            <Grid Grid.Row="0" Grid.RowSpan="4" Grid.Column="2" Margin="10,0">
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="200*" />
-                        <RowDefinition Height="200*" />
-                        <RowDefinition Height="200*" />
-                    </Grid.RowDefinitions>
-
-                    <Grid Grid.Row="0">
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="*" />
-                        </Grid.RowDefinitions>
-
-                        <Label Grid.Row="0" Content="Variables" FontWeight="Bold" />
-                        <ScrollViewer Grid.Row="1" PreviewMouseWheel="ScrollViewer_PreviewMouseWheel">
-                            <DataGrid AutoGenerateColumns="False" ItemsSource="{Binding Variables}">
-                                <DataGrid.Columns>
-                                    <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="50*" />
-                                    <DataGridTextColumn Header="Value" Binding="{Binding Value}" Width="50*" />
-                                </DataGrid.Columns>
-                            </DataGrid>
-                        </ScrollViewer>
-                    </Grid>
-
-                    <Grid Grid.Row="1">
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="*" />
-                            <RowDefinition Height="Auto" />
-                        </Grid.RowDefinitions>
-
-                        <Label Grid.Row="0" Content="Templates" FontWeight="Bold" />
-                        <xctk:WatermarkTextBox Watermark="Search templates" Grid.Row="1" Text="{Binding TemplatesFilter, UpdateSourceTrigger=PropertyChanged}" />
-                        <ScrollViewer Grid.Row="2" PreviewMouseWheel="ScrollViewer_PreviewMouseWheel">
-                            <ListBox ItemsSource="{Binding TemplatesView}" SelectedValue="{Binding SelectedTemplate}">
-                                <i:Interaction.Triggers>
-                                    <i:EventTrigger EventName="MouseDoubleClick">
-                                        <i:InvokeCommandAction Command="{Binding LoadTemplateCommand}" />
-                                    </i:EventTrigger>
-                                </i:Interaction.Triggers>
-                                <ListBox.ItemTemplate>
-                                    <DataTemplate>
-                                        <TextBlock Text="{Binding Name}" />
-                                    </DataTemplate>
-                                </ListBox.ItemTemplate>
-                                <ListBox.GroupStyle>
-                                    <GroupStyle>
-                                        <GroupStyle.HeaderTemplate>
-                                            <DataTemplate>
-                                                <TextBlock FontWeight="Bold"  Text="{Binding Name}" />
-                                            </DataTemplate>
-                                        </GroupStyle.HeaderTemplate>
-                                    </GroupStyle>
-                                </ListBox.GroupStyle>
-                            </ListBox>
-                        </ScrollViewer>
-                        <StackPanel Grid.Row="3" Orientation="Horizontal">
-                            <Button Content="_Load" ToolTip="Load the selected template to the input" Command="{Binding LoadTemplateCommand }" />
-                        </StackPanel>
-                    </Grid>
-
-                    <Grid Grid.Row="2">
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="*" />
-                        </Grid.RowDefinitions>
-                        <Label Grid.Row="0" Content="Macros" FontWeight="Bold" />
-                        <ScrollViewer Grid.Row="1" PreviewMouseWheel="ScrollViewer_PreviewMouseWheel">
-                            <ListBox ItemsSource="{Binding MacrosView}" SelectedValue="{Binding SelectedMacro}">
-                                <i:Interaction.Triggers>
-                                    <i:EventTrigger EventName="MouseDoubleClick">
-                                        <i:InvokeCommandAction Command="{Binding LoadTemplateCommand}" />
-                                    </i:EventTrigger>
-                                </i:Interaction.Triggers>
-                                <ListBox.ItemTemplate>
-                                    <DataTemplate>
-                                        <StackPanel Orientation="Horizontal">
-                                            <CheckBox IsChecked="{Binding IsActive, UpdateSourceTrigger=PropertyChanged}" />
-                                            <TextBlock Margin="5,0,0,0" Text="{Binding Name}" />
-                                        </StackPanel>
-                                    </DataTemplate>
-                                </ListBox.ItemTemplate>
-                                <ListBox.GroupStyle>
-                                    <GroupStyle>
-                                        <GroupStyle.HeaderTemplate>
-                                            <DataTemplate>
-                                                <TextBlock FontWeight="Bold"  Text="{Binding Name}" />
-                                            </DataTemplate>
-                                        </GroupStyle.HeaderTemplate>
-                                    </GroupStyle>
-                                </ListBox.GroupStyle>
-                            </ListBox>
-                        </ScrollViewer>
+                        <Grid Grid.Row="2">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+                            <Label Grid.Row="0" Content="Macros" FontWeight="Bold" />
+                            <ScrollViewer Grid.Row="1" PreviewMouseWheel="ScrollViewer_PreviewMouseWheel">
+                                <ListBox ItemsSource="{Binding MacrosView}" SelectedValue="{Binding SelectedMacro}">
+                                    <i:Interaction.Triggers>
+                                        <i:EventTrigger EventName="MouseDoubleClick">
+                                            <i:InvokeCommandAction Command="{Binding LoadTemplateCommand}" />
+                                        </i:EventTrigger>
+                                    </i:Interaction.Triggers>
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal">
+                                                <CheckBox IsChecked="{Binding IsActive, UpdateSourceTrigger=PropertyChanged}" />
+                                                <TextBlock Margin="5,0,0,0" Text="{Binding Name}" />
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                    <ListBox.GroupStyle>
+                                        <GroupStyle>
+                                            <GroupStyle.HeaderTemplate>
+                                                <DataTemplate>
+                                                    <TextBlock FontWeight="Bold"  Text="{Binding Name}" />
+                                                </DataTemplate>
+                                            </GroupStyle.HeaderTemplate>
+                                        </GroupStyle>
+                                    </ListBox.GroupStyle>
+                                </ListBox>
+                            </ScrollViewer>
+                        </Grid>
                     </Grid>
                 </Grid>
             </Grid>
-        </Grid>
 
-        <StatusBar Grid.Row="1">
-            <StatusBarItem>
-                <ProgressBar Width="100" Height="16" IsIndeterminate="{Binding IsBusy}" />
-            </StatusBarItem>
-            <Separator />
-            <StatusBarItem>
-                <TextBlock Text="{Binding StatusMessage}" />
-            </StatusBarItem>
-        </StatusBar>
+            <StatusBar Grid.Row="1">
+                <StatusBar.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="100" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="100" />
+                            </Grid.ColumnDefinitions>
+                        </Grid>
+                    </ItemsPanelTemplate>
+                </StatusBar.ItemsPanel>
+                <StatusBarItem>
+                    <ProgressBar Width="95" Height="16" IsIndeterminate="{Binding IsBusy}" />
+                </StatusBarItem>
+                <Separator Grid.Column="1" />
+                <StatusBarItem Grid.Column="2">
+                    <TextBlock Text="{Binding StatusMessage}" Width="988" />
+                </StatusBarItem>
+                <Separator Grid.Column="3" />
+                <StatusBarItem Grid.Column="4">
+                    <CheckBox Name="IsDarkMode" Content="Dark Mode" Checked="IsDarkMode_Checked" Unchecked="IsDarkMode_Checked"></CheckBox>
+                </StatusBarItem>
+            </StatusBar>
+        </Grid>
     </Grid>
 </UserControl>

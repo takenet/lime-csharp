@@ -3,12 +3,14 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
         xmlns:vw="clr-namespace:Lime.Client.TestConsole.Views"
+        xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"       
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"         
         xmlns:i="clr-namespace:System.Windows.Interactivity;assembly=System.Windows.Interactivity"
         mc:Ignorable="d" 
         DataContext="{StaticResource MainViewModel}"
         d:DataContext="{d:DesignData /DesignData/MainDesignData.xaml}"   
         Title="{Binding Title}" Height="600" Width="800" Icon="lime.ico">
+   
     <i:Interaction.Triggers>
         <i:EventTrigger EventName="Closing">
             <i:InvokeCommandAction Command="{Binding ClosingCommand}" />
@@ -17,7 +19,9 @@
             <i:InvokeCommandAction Command="{Binding ClosedCommand}" />
         </i:EventTrigger>
     </i:Interaction.Triggers>
-    
-    <vw:SessionView DataContext="{Binding SelectedSession}" />
-    
+
+    <Grid>
+        <vw:SessionView x:Name="SessionView" DataContext="{Binding SelectedSession}" Grid.Row="1" />
+    </Grid>
+
 </Window>

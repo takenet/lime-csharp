@@ -5,9 +5,21 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              mc:Ignorable="d" 
              d:DataContext="{d:DesignData /DesignData/EnvelopeDesignData.xaml}"                
-             d:DesignHeight="200" d:DesignWidth="500">
-    <TextBox Background="{Binding Direction, Converter={StaticResource DataOperationToBrushConverter}}" 
-             Foreground="{Binding IsRaw, Converter={StaticResource IsRawToBrushConverter}}"
-             Text="{Binding Json}" 
-             Style="{StaticResource ReadOnlyTextBox}" />    
+             d:DesignHeight="200" d:DesignWidth="500"
+             Name="UcEnvelopesView">
+    
+    <TextBox Text="{Binding Json}" Style="{StaticResource ReadOnlyTextBox}">
+        <TextBox.Background>
+            <MultiBinding Converter="{StaticResource DataOperationToBrushConverter}">
+                <Binding Path="Direction"></Binding>
+                <Binding ElementName="EnvelopesListBox" Path="Style"></Binding>
+            </MultiBinding>
+        </TextBox.Background>
+        <TextBox.Foreground>
+            <MultiBinding Converter="{StaticResource IsRawToBrushConverter}">
+                <Binding Path="IsRaw"></Binding>
+                <Binding ElementName="EnvelopesListBox" Path="Style"></Binding>
+            </MultiBinding>            
+        </TextBox.Foreground>
+    </TextBox>
 </UserControl>

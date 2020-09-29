@@ -17,10 +17,9 @@ namespace Lime.Client.TestConsole.Macros
                 var template = sessionViewModel.Templates.FirstOrDefault(t => t.Name.Equals(TemplateName, StringComparison.OrdinalIgnoreCase));
                 if (template != null)
                 {
-                    sessionViewModel.InputJson = template.JsonTemplate;
                     if (sessionViewModel.SendCommand.CanExecute(null))
                     {
-                        await sessionViewModel.SendCommand.ExecuteAsync(null);
+                        await sessionViewModel.SendCommand.ExecuteAsync(template.JsonTemplate);
                     }
                 }
             }            

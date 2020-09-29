@@ -225,6 +225,8 @@ namespace Lime.Client.TestConsole.ViewModels
             }
         }
 
+        public string JsonToSend { get; set; }
+
         private string _host;
 
         private Uri _hostUri;
@@ -731,7 +733,7 @@ namespace Lime.Client.TestConsole.ViewModels
 
         public AsyncCommand SendCommand { get; private set; }
 
-        private async Task SendAsync()
+        private async Task SendAsync(object parameter)
         {
             var times = 0;
 
@@ -753,11 +755,11 @@ namespace Lime.Client.TestConsole.ViewModels
                 {
                     AddStatusMessage("Sending...");
 
-                    var inputJson = InputJson;
+                    var inputJson = parameter.ToString();
 
                     if (ParseBeforeSend)
                     {
-                        inputJson = ParseInput(InputJson, Variables);
+                        inputJson = ParseInput(inputJson, Variables);
                     }
 
                     var timeoutCancellationToken = _operationTimeout.ToCancellationToken();
