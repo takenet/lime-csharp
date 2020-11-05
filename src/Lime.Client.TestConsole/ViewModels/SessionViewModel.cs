@@ -56,6 +56,7 @@ namespace Lime.Client.TestConsole.ViewModels
             ParseCommand = new RelayCommand(Parse, CanParse);
 
             // Defaults
+            DarkMode = false;
             Host = "net.tcp://iris.limeprotocol.org:55321";
             ClientCertificateThumbprint = Settings.Default.LastCertificateThumbprint;
             ClearAfterSent = true;
@@ -70,6 +71,7 @@ namespace Lime.Client.TestConsole.ViewModels
                 LoadVariables();
                 LoadTemplates();
                 LoadMacros();
+                LoadConfigurations();
             }
 
             ServicePointManager.ServerCertificateValidationCallback = (sender, certificate, chain, errors) =>
@@ -120,6 +122,18 @@ namespace Lime.Client.TestConsole.ViewModels
                 OpenTransportCommand.RaiseCanExecuteChanged();
                 CloseTransportCommand.RaiseCanExecuteChanged();
                 SendCommand.RaiseCanExecuteChanged();
+            }
+        }
+
+        private bool _darkMode;
+
+        public bool DarkMode
+        {
+            get { return _darkMode; }
+            set
+            {
+                _darkMode = value;
+                RaisePropertyChanged(() => DarkMode);
             }
         }
 
@@ -922,6 +936,9 @@ namespace Lime.Client.TestConsole.ViewModels
         public const string VARIABLES_FILE_NAME = "Variables.txt";
         public const char VARIABLES_FILE_SEPARATOR = '\t';
 
+        public const string CONFIGURATION_FILE_NAME = "Configuration.txt";
+        public const char CONFIGURATION_FILE_SEPARATOR = '\t';
+
         private void LoadVariables()
         {
             foreach (var lineValues in FileUtil.GetFileLines(VARIABLES_FILE_NAME, VARIABLES_FILE_SEPARATOR))
@@ -939,10 +956,30 @@ namespace Lime.Client.TestConsole.ViewModels
             }
         }
 
+        private void LoadConfigurations()
+        {
+            foreach (var configuration in FileUtil.GetFileLines(CONFIGURATION_FILE_NAME, CONFIGURATION_FILE_SEPARATOR))
+            {
+                var property = typeof(SessionViewModel).GetProperty(configuration.First());
+                property.SetValue(this, Convert.ChangeType(configuration.Last(), property.PropertyType), null);
+            }
+        }
+
         private void SaveVariables()
         {
             var lineValues = Variables.Select(v => new[] { v.Name, v.Value }).ToArray();
             FileUtil.SaveFile(lineValues, VARIABLES_FILE_NAME, VARIABLES_FILE_SEPARATOR);
+        }
+
+        /// <summary>
+        /// Allow save every persistent configuration
+        /// </summary>
+        private void SaveConfigurations()
+        {
+            var configurations = new List<string[]>();
+            configurations.Add(new string[] { nameof(DarkMode), DarkMode.ToString() });
+
+            FileUtil.SaveFile(configurations, CONFIGURATION_FILE_NAME, CONFIGURATION_FILE_SEPARATOR);
         }
 
         private string ParseInput(string input, IEnumerable<VariableViewModel> variables)
@@ -1057,6 +1094,7 @@ namespace Lime.Client.TestConsole.ViewModels
                 SaveHost();
                 SaveVariables();
                 SaveMacros();
+                SaveConfigurations();
             }
         }
     }
