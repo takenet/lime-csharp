@@ -210,9 +210,9 @@ namespace Lime.Protocol.Client
                 await Task.WhenAll(
                     _listeners.Select(
                         l => Task.WhenAll(
-                            l.MessageListenerTask, 
-                            l.NotificationListenerTask, 
-                            l.CommandListenerTask)))
+                            l.MessageListenerTask ?? Task.CompletedTask,
+                            l.NotificationListenerTask ?? Task.CompletedTask,
+                            l.CommandListenerTask?? Task.CompletedTask)))
                     .ConfigureAwait(false);
 
                 await Task.WhenAll(
