@@ -15,6 +15,12 @@ namespace Lime.Cli
         [Option(HelpText = "The access key for using key authentication.")]
         public string Key { get; set; }
 
+        [Option(HelpText = "The token to be used on External Authentication")]
+        public string Token { get; set; }
+
+        [Option(HelpText = "The issuer to be used on External Authentication", Default = "account.blip.ai")]
+        public string Issuer { get; set; }
+
         [Option(HelpText = "The session instance name.")]
         public string Instance { get; set; }
 

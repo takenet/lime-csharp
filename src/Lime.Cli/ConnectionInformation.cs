@@ -17,6 +17,11 @@ namespace Lime.Cli
         /// </summary>
         public string Token { get; set; }
 
+        /// <summary>
+        /// Issuer to be used with External Authentication. Defaults to accounts.blip.ai
+        /// </summary>
+        public string Issuer { get; set; }
+
         public string Instance { get; set; }
 
         public Uri ServerUri { get; set; }

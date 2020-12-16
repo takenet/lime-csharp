@@ -12,7 +12,11 @@ namespace Lime.Cli
         string Password { get; }
         
         string Key { get; }
-        
+
+        string Token { get; }
+
+        string Issuer { get; }
+
         string Instance { get; }
         
         Uri Uri { get; }
@@ -58,6 +62,8 @@ namespace Lime.Cli
                 Identity = options.Identity,
                 Password = options.Password,
                 Key = options.Key,
+                Token = options.Token,
+                Issuer = options.Issuer,
                 ServerUri = options.Uri,
                 Instance = options.Instance ?? $"{Environment.MachineName.ToLowerInvariant()}-cli",
                 Presence = presence,
