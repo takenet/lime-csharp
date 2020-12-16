@@ -105,9 +105,10 @@ namespace Lime.Protocol.Client
         /// Set the external authentication token to be used in the session establishment.
         /// </summary>
         /// <param name="token">The authentication token</param>
+        /// <param name="issuer"></param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException"></exception>
-        IEstablishedClientChannelBuilder WithExternalAuthentication(string token);
+        IEstablishedClientChannelBuilder WithExternalAuthentication(string token, string issuer);
 
         /// <summary>
         /// Sets the authentication to be used in the session establishment.

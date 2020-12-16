@@ -13,6 +13,7 @@ namespace Lime.Protocol.Client
     /// </summary>
     public sealed class EstablishedClientChannelBuilder : IEstablishedClientChannelBuilder
     {
+        private const string DEFAULT_EXTERNAL_AUTH_ISSUER = "account.blip.ai";
         private readonly List<Func<IClientChannel, CancellationToken, Task>> _establishedHandlers;
 
         /// <summary>
@@ -174,7 +175,7 @@ namespace Lime.Protocol.Client
             return WithAuthentication(authentication);
         }
 
-        public IEstablishedClientChannelBuilder WithExternalAuthentication(string token, string )
+        public IEstablishedClientChannelBuilder WithExternalAuthentication(string token, string issuer = DEFAULT_EXTERNAL_AUTH_ISSUER)
         {
             if (token == null)
             {
@@ -183,6 +184,7 @@ namespace Lime.Protocol.Client
 
             var authentication = new ExternalAuthentication();
             authentication.SetToBase64Token(token);
+            authentication.Issuer = issuer;
             return WithAuthentication(authentication);
         }
 
