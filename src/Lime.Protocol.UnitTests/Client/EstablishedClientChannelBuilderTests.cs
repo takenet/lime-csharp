@@ -240,6 +240,40 @@ namespace Lime.Protocol.UnitTests.Client
         }
 
         [Test]
+        public async Task WithExternalAuthentication_AnyToken_EstablishesSessionWithSelectedOption()
+        {
+            // Arrange                        
+            var token = Dummy.CreateRandomString(100);
+            var issuer = "account.blip.ai";
+            var target = GetTarget();
+
+            // Act            
+            target.WithExternalAuthentication(token, issuer);
+            var channel = await target.BuildAndEstablishAsync(_cancellationToken);
+
+            // Assert
+            _clientChannel.Verify(c => c.AuthenticateSessionAsync(
+                It.IsAny<Identity>(),
+                It.Is<Authentication>(a => a is ExternalAuthentication && ((ExternalAuthentication)a).GetFromBase64Token().Equals(token)),
+                It.IsAny<string>(),
+                It.IsAny<CancellationToken>()),
+                Times.Once);
+        }
+
+        [Test]
+        public void WithExternalAuthentication_NullToken_ThrowsArgumentNullException()
+        {
+            // Arrange                        
+            string token = null;
+            var issuer = "account.blip.ai";
+            var target = GetTarget();
+
+            // Act            
+            Action action = () => target.WithExternalAuthentication(token, issuer);
+            action.ShouldThrow<ArgumentNullException>();
+        }
+
+        [Test]
         public async Task WithPlainAuthentication_AnyPassword_EstablishesSessionWithSelectedOption()
         {
             // Arrange                        
