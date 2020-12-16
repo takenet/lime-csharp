@@ -102,7 +102,11 @@ namespace Lime.Protocol.Client
         /// <exception cref="System.ArgumentNullException"></exception>
         public IEstablishedClientChannelBuilder WithCompression(Func<SessionCompression[], SessionCompression> compressionSelector)
         {
-            if (compressionSelector == null) throw new ArgumentNullException(nameof(compressionSelector));
+            if (compressionSelector == null)
+            {
+                throw new ArgumentNullException(nameof(compressionSelector));
+            }
+
             CompressionSelector = compressionSelector;
             return this;
         }
@@ -125,7 +129,11 @@ namespace Lime.Protocol.Client
         /// <exception cref="System.ArgumentNullException"></exception>
         public IEstablishedClientChannelBuilder WithEncryption(Func<SessionEncryption[], SessionEncryption> encryptionSelector)
         {
-            if (encryptionSelector == null) throw new ArgumentNullException(nameof(encryptionSelector));
+            if (encryptionSelector == null)
+            {
+                throw new ArgumentNullException(nameof(encryptionSelector));
+            }
+
             EncryptionSelector = encryptionSelector;
             return this;
         }
@@ -138,7 +146,11 @@ namespace Lime.Protocol.Client
         /// <exception cref="System.ArgumentNullException"></exception>
         public IEstablishedClientChannelBuilder WithPlainAuthentication(string password)
         {
-            if (password == null) throw new ArgumentNullException(nameof(password));
+            if (password == null)
+            {
+                throw new ArgumentNullException(nameof(password));
+            }
+
             var authentication = new PlainAuthentication();
             authentication.SetToBase64Password(password);
             return WithAuthentication(authentication);
@@ -152,9 +164,25 @@ namespace Lime.Protocol.Client
         /// <exception cref="System.ArgumentNullException"></exception>
         public IEstablishedClientChannelBuilder WithKeyAuthentication(string key)
         {
-            if (key == null) throw new ArgumentNullException(nameof(key));
+            if (key == null)
+            {
+                throw new ArgumentNullException(nameof(key));
+            }
+
             var authentication = new KeyAuthentication();
             authentication.SetToBase64Key(key);
+            return WithAuthentication(authentication);
+        }
+
+        public IEstablishedClientChannelBuilder WithExternalAuthentication(string token)
+        {
+            if (token == null)
+            {
+                throw new ArgumentNullException(nameof(token));
+            }
+
+            var authentication = new ExternalAuthentication();
+            authentication.SetToBase64Token(token);
             return WithAuthentication(authentication);
         }
 
@@ -176,7 +204,11 @@ namespace Lime.Protocol.Client
         /// <exception cref="System.ArgumentNullException"></exception>
         public IEstablishedClientChannelBuilder WithAuthentication(Authentication authentication)
         {
-            if (authentication == null) throw new ArgumentNullException(nameof(authentication));
+            if (authentication == null)
+            {
+                throw new ArgumentNullException(nameof(authentication));
+            }
+
             return WithAuthentication((schemes, roundtrip) => authentication);
         }
 
@@ -188,7 +220,11 @@ namespace Lime.Protocol.Client
         /// <exception cref="System.ArgumentNullException"></exception>
         public IEstablishedClientChannelBuilder WithAuthentication(Func<AuthenticationScheme[], Authentication, Authentication> authenticator)
         {
-            if (authenticator == null) throw new ArgumentNullException(nameof(authenticator));
+            if (authenticator == null)
+            {
+                throw new ArgumentNullException(nameof(authenticator));
+            }
+
             Authenticator = authenticator;
             return this;
         }
@@ -201,7 +237,11 @@ namespace Lime.Protocol.Client
         /// <exception cref="System.ArgumentNullException"></exception>
         public IEstablishedClientChannelBuilder WithIdentity(Identity identity)
         {
-            if (identity == null) throw new ArgumentNullException(nameof(identity));
+            if (identity == null)
+            {
+                throw new ArgumentNullException(nameof(identity));
+            }
+
             Identity = identity;
             return this;
         }
@@ -214,7 +254,11 @@ namespace Lime.Protocol.Client
         /// <exception cref="System.ArgumentNullException"></exception>
         public IEstablishedClientChannelBuilder WithInstance(string instance)
         {
-            if (instance == null) throw new ArgumentNullException(nameof(instance));
+            if (instance == null)
+            {
+                throw new ArgumentNullException(nameof(instance));
+            }
+
             Instance = instance;
             return this;
         }
@@ -227,7 +271,11 @@ namespace Lime.Protocol.Client
         /// <exception cref="System.ArgumentNullException"></exception>
         public IEstablishedClientChannelBuilder AddEstablishedHandler(Func<IClientChannel, CancellationToken, Task> establishedHandler)
         {
-            if (establishedHandler == null) throw new ArgumentNullException(nameof(establishedHandler));
+            if (establishedHandler == null)
+            {
+                throw new ArgumentNullException(nameof(establishedHandler));
+            }
+
             _establishedHandlers.Add(establishedHandler);
             return this;
         }
@@ -238,7 +286,7 @@ namespace Lime.Protocol.Client
         /// <returns></returns>
         public IEstablishedClientChannelBuilder Copy()
         {
-            return (IEstablishedClientChannelBuilder) MemberwiseClone();
+            return (IEstablishedClientChannelBuilder)MemberwiseClone();
         }
 
         /// <summary>
@@ -254,7 +302,6 @@ namespace Lime.Protocol.Client
 
             try
             {
-
                 Session session;
 
                 using (var cancellationTokenSource = new CancellationTokenSource(EstablishmentTimeout))
