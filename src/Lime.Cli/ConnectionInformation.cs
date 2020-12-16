@@ -12,6 +12,11 @@ namespace Lime.Cli
         
         public string Key { get; set; }
 
+        /// <summary>
+        /// Token to be used with External Authentication
+        /// </summary>
+        public string Token { get; set; }
+
         public string Instance { get; set; }
 
         public Uri ServerUri { get; set; }

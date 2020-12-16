@@ -174,7 +174,7 @@ namespace Lime.Protocol.Client
             return WithAuthentication(authentication);
         }
 
-        public IEstablishedClientChannelBuilder WithExternalAuthentication(string token)
+        public IEstablishedClientChannelBuilder WithExternalAuthentication(string token, string )
         {
             if (token == null)
             {

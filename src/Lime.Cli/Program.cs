@@ -259,6 +259,10 @@ namespace Lime.Cli
             {
                 builder = builder.WithKeyAuthentication(connectionInformation.Key);
             }
+            else if (connectionInformation.Token != null)
+            {
+                builder = builder.WithExternalAuthentication(connectionInformation.Token);
+            }
 
             var clientChannel = new OnDemandClientChannel(builder);
 
