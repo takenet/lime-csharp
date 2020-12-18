@@ -111,6 +111,14 @@ namespace Lime.Protocol.Client
         IEstablishedClientChannelBuilder WithExternalAuthentication(string token, string issuer);
 
         /// <summary>
+        /// Set the domain role to be used in the session establishment
+        /// </summary>
+        /// <param name="domainRole"></param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException"></exception>
+        IEstablishedClientChannelBuilder WithTransportAuthentication(DomainRole domainRole);
+
+        /// <summary>
         /// Sets the authentication to be used in the session establishment.
         /// </summary>
         /// <returns></returns>

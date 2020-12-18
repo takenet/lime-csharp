@@ -174,6 +174,18 @@ namespace Lime.Protocol.Client
             return WithAuthentication(authentication);
         }
 
+        public IEstablishedClientChannelBuilder WithTransportAuthentication(DomainRole domainRole)
+        {
+            if (domainRole == null)
+            {
+                throw new ArgumentNullException(nameof(domainRole));
+            }
+
+            var authentication = new TransportAuthentication();
+            authentication.DomainRole = domainRole;
+            return WithAuthentication(authentication);
+        }
+
         public IEstablishedClientChannelBuilder WithExternalAuthentication(string token, string issuer)
         {
             if (token == null)

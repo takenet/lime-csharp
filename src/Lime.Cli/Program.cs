@@ -1,6 +1,7 @@
 ﻿using CommandLine;
 using CommandLine.Text;
 using Lime.Cli.Actions;
+using Lime.Cli.Util;
 using Lime.Messaging;
 using Lime.Messaging.Resources;
 using Lime.Protocol;
@@ -23,6 +24,7 @@ using System.Net.Mime;
 using System.Net.Security;
 using System.Net.WebSockets;
 using System.Reflection;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -216,7 +218,8 @@ namespace Lime.Cli
 
         private static async Task<IOnDemandClientChannel> EstablishChannelAsync(ConnectionInformation connectionInformation, CancellationToken cancellationToken)
         {
-            ITransport transportFactory() => CreateTransportForUri(connectionInformation.ServerUri);
+            var certificate = CertificateUtil.GetCertificateFromThumbprint(connectionInformation.Thumbprint);
+            ITransport transportFactory() => CreateTransportForUri(connectionInformation.ServerUri, certificate);
 
             // Creates a new client channel
             var builder = ClientChannelBuilder
@@ -263,6 +266,10 @@ namespace Lime.Cli
             {
                 builder = builder.WithExternalAuthentication(connectionInformation.Token, connectionInformation.Issuer);
             }
+            else if (connectionInformation.Thumbprint != null)
+            {
+                builder = builder.WithTransportAuthentication(connectionInformation.DomainRole);
+            }
 
             var clientChannel = new OnDemandClientChannel(builder);
 
@@ -295,14 +302,15 @@ namespace Lime.Cli
             return clientChannel;
         }
 
-        private static ITransport CreateTransportForUri(Uri uri)
+        private static ITransport CreateTransportForUri(Uri uri, X509Certificate2 certificate = null)
         {                        
             switch (uri.Scheme)
             {
                 case "net.tcp":
                     return new TcpTransport(
                         new EnvelopeSerializer(
-                            new DocumentTypeResolver().WithMessagingDocuments()));
+                            new DocumentTypeResolver().WithMessagingDocuments()),
+                        clientCertificate: certificate);
                 case "ws":
                 case "wss":
                     var webSocket = new ClientWebSocket();

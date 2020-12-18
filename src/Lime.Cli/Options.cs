@@ -1,5 +1,6 @@
 ﻿
 using CommandLine;
+using Lime.Protocol.Security;
 using System;
 
 namespace Lime.Cli
@@ -41,5 +42,11 @@ namespace Lime.Cli
 
         [Option(HelpText = "The action to be executed in the non-interactive mode.")]
         public string Action { get; set; }
+
+        [Option(HelpText = "The thumbprint of the X509 certificate to be used.")]
+        public string Thumbprint { get; set; }
+
+        [Option(HelpText = "The DomainRole to be used on Transport Authentication.", Default = DomainRole.Authority)]
+        public DomainRole DomainRole { get; set; }
     }
 }

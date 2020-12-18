@@ -1,5 +1,6 @@
 ﻿using Lime.Messaging.Resources;
 using Lime.Protocol;
+using Lime.Protocol.Security;
 using System;
 
 namespace Lime.Cli
@@ -29,5 +30,15 @@ namespace Lime.Cli
         public Presence Presence { get; set; }
 
         public Receipt Receipt { get; set; }
+
+        /// <summary>
+        /// Thumbprint for the X509 Certificate
+        /// </summary>
+        public string Thumbprint { get; set; }
+
+        /// <summary>
+        /// Domain role to use as Transport Authentication
+        /// </summary>
+        public DomainRole DomainRole { get; set; }
     }
 }

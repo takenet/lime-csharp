@@ -1,5 +1,6 @@
 ﻿using Lime.Messaging.Resources;
 using Lime.Protocol;
+using Lime.Protocol.Security;
 using System;
 using System.Linq;
 
@@ -26,6 +27,10 @@ namespace Lime.Cli
         string PresenceRoutingRule { get; }
 
         string ReceiptEvents { get; }
+
+        string Thumbprint { get; }
+
+        DomainRole DomainRole { get; }
     }
 
     public static class ConnectionOptionExtensions
