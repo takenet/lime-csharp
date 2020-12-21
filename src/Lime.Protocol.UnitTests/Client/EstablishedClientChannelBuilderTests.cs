@@ -274,6 +274,25 @@ namespace Lime.Protocol.UnitTests.Client
         }
 
         [Test]
+        public async Task WithTransportAuthentication_AuthorityRole_EstablishesSessionWithSelectedOption()
+        {
+            // Arrange                        
+            var target = GetTarget();
+
+            // Act            
+            target.WithTransportAuthentication(DomainRole.Authority);
+            var channel = await target.BuildAndEstablishAsync(_cancellationToken);
+
+            // Assert
+            _clientChannel.Verify(c => c.AuthenticateSessionAsync(
+                It.IsAny<Identity>(),
+                It.Is<Authentication>(a => a is TransportAuthentication && ((TransportAuthentication)a).DomainRole.Equals(DomainRole.Authority)),
+                It.IsAny<string>(),
+                It.IsAny<CancellationToken>()),
+                Times.Once);
+        }
+
+        [Test]
         public async Task WithPlainAuthentication_AnyPassword_EstablishesSessionWithSelectedOption()
         {
             // Arrange                        
