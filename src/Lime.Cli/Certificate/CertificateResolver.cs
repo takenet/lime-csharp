@@ -1,9 +1,9 @@
 ﻿using System.Runtime.InteropServices;
 using System.Security.Cryptography.X509Certificates;
 
-namespace Lime.Cli.Util
+namespace Lime.Cli.Certificate
 {
-    public static class CertificateUtil
+    public static class CertificateResolver
     {
         public static X509Certificate2 GetCertificateFromThumbprint(string certificateThumbprint)
         {

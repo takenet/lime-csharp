@@ -1,7 +1,7 @@
 ﻿using CommandLine;
 using CommandLine.Text;
 using Lime.Cli.Actions;
-using Lime.Cli.Util;
+using Lime.Cli.Certificate;
 using Lime.Messaging;
 using Lime.Messaging.Resources;
 using Lime.Protocol;
@@ -9,7 +9,6 @@ using Lime.Protocol.Client;
 using Lime.Protocol.Listeners;
 using Lime.Protocol.Network;
 using Lime.Protocol.Network.Modules;
-using Lime.Protocol.Security;
 using Lime.Protocol.Serialization;
 using Lime.Protocol.Serialization.Newtonsoft;
 using Lime.Protocol.Util;
@@ -19,8 +18,6 @@ using SimpleInjector;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
-using System.Net.Mime;
 using System.Net.Security;
 using System.Net.WebSockets;
 using System.Reflection;
@@ -218,7 +215,7 @@ namespace Lime.Cli
 
         private static async Task<IOnDemandClientChannel> EstablishChannelAsync(ConnectionInformation connectionInformation, CancellationToken cancellationToken)
         {
-            var certificate = CertificateUtil.GetCertificateFromThumbprint(connectionInformation.Thumbprint);
+            var certificate = CertificateResolver.GetCertificateFromThumbprint(connectionInformation.Thumbprint);
             ITransport transportFactory() => CreateTransportForUri(connectionInformation.ServerUri, certificate);
 
             // Creates a new client channel
