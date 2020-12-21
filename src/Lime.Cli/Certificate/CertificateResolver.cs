@@ -7,6 +7,11 @@ namespace Lime.Cli.Certificate
     {
         public static X509Certificate2 GetCertificateFromThumbprint(string certificateThumbprint)
         {
+            if (string.IsNullOrWhiteSpace(certificateThumbprint))
+            {
+                return null;
+            }
+
             X509Certificate2 certificate = null;
             X509Store store;
 
