@@ -32,9 +32,9 @@ namespace Lime.Cli
         public Receipt Receipt { get; set; }
 
         /// <summary>
-        /// Thumbprint for the X509 Certificate
+        /// Thumbprint for the X509 Certificate to use as Transport Authentication
         /// </summary>
-        public string Thumbprint { get; set; }
+        public string CertificateThumbprint { get; set; }
 
         /// <summary>
         /// Domain role to use as Transport Authentication

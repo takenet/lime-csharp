@@ -215,7 +215,7 @@ namespace Lime.Cli
 
         private static async Task<IOnDemandClientChannel> EstablishChannelAsync(ConnectionInformation connectionInformation, CancellationToken cancellationToken)
         {
-            var certificate = CertificateResolver.GetCertificateFromThumbprint(connectionInformation.Thumbprint);
+            var certificate = CertificateResolver.GetCertificateFromThumbprint(connectionInformation.CertificateThumbprint);
             ITransport transportFactory() => CreateTransportForUri(connectionInformation.ServerUri, certificate);
 
             // Creates a new client channel
@@ -263,7 +263,7 @@ namespace Lime.Cli
             {
                 builder = builder.WithExternalAuthentication(connectionInformation.Token, connectionInformation.Issuer);
             }
-            else if (connectionInformation.Thumbprint != null)
+            else if (connectionInformation.CertificateThumbprint != null)
             {
                 builder = builder
                     .WithTransportAuthentication(connectionInformation.DomainRole)

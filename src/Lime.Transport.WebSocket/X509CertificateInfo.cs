@@ -11,13 +11,13 @@ namespace Lime.Transport.WebSocket
         /// <summary>
         /// Initializes a new instance of the <see cref="X509CertificateInfo"/> class.
         /// </summary>
-        /// <param name="thumbprint">The thumbprint.</param>
+        /// <param name="certificateThumbprint">The thumbprint.</param>
         /// <param name="store">The store.</param>
         /// <exception cref="ArgumentNullException"></exception>
-        public X509CertificateInfo(string thumbprint, StoreName store = StoreName.My)
+        public X509CertificateInfo(string certificateThumbprint, StoreName store = StoreName.My)
         {
-            if (thumbprint == null) throw new ArgumentNullException(nameof(thumbprint));
-            Thumbprint = thumbprint;
+            if (certificateThumbprint == null) throw new ArgumentNullException(nameof(certificateThumbprint));
+            CertificateThumbprint = certificateThumbprint;
             Store = store;
         }
 
@@ -27,7 +27,7 @@ namespace Lime.Transport.WebSocket
         /// <value>
         /// The thumbprint.
         /// </value>
-        public string Thumbprint { get; }
+        public string CertificateThumbprint { get; }
 
         /// <summary>
         /// Gets the certificate store.
@@ -35,6 +35,6 @@ namespace Lime.Transport.WebSocket
         /// <value>
         /// The store.
         /// </value>
-        public StoreName Store { get; }        
+        public StoreName Store { get; }
     }
 }

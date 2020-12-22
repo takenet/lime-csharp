@@ -28,7 +28,7 @@ namespace Lime.Cli
 
         string ReceiptEvents { get; }
 
-        string Thumbprint { get; }
+        string CertificateThumbprint { get; }
 
         DomainRole DomainRole { get; }
     }
@@ -69,7 +69,7 @@ namespace Lime.Cli
                 Key = options.Key,
                 Token = options.Token,
                 Issuer = options.Issuer,
-                Thumbprint = options.Thumbprint,
+                CertificateThumbprint = options.CertificateThumbprint,
                 DomainRole = options.DomainRole,
                 ServerUri = options.Uri,
                 Instance = options.Instance ?? $"{Environment.MachineName.ToLowerInvariant()}-cli",

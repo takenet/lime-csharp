@@ -44,7 +44,7 @@ namespace Lime.Cli
         public string Action { get; set; }
 
         [Option(HelpText = "The thumbprint of the X509 certificate to be used.")]
-        public string Thumbprint { get; set; }
+        public string CertificateThumbprint { get; set; }
 
         [Option(HelpText = "The DomainRole to be used on Transport Authentication.", Default = DomainRole.Authority)]
         public DomainRole DomainRole { get; set; }
