@@ -265,7 +265,9 @@ namespace Lime.Cli
             }
             else if (connectionInformation.Thumbprint != null)
             {
-                builder = builder.WithTransportAuthentication(connectionInformation.DomainRole);
+                builder = builder
+                    .WithTransportAuthentication(connectionInformation.DomainRole)
+                    .WithEncryption(SessionEncryption.TLS);
             }
 
             var clientChannel = new OnDemandClientChannel(builder);

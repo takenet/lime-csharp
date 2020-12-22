@@ -69,6 +69,8 @@ namespace Lime.Cli
                 Key = options.Key,
                 Token = options.Token,
                 Issuer = options.Issuer,
+                Thumbprint = options.Thumbprint,
+                DomainRole = options.DomainRole,
                 ServerUri = options.Uri,
                 Instance = options.Instance ?? $"{Environment.MachineName.ToLowerInvariant()}-cli",
                 Presence = presence,
