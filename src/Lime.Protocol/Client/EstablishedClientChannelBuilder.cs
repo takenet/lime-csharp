@@ -188,9 +188,11 @@ namespace Lime.Protocol.Client
                 throw new ArgumentNullException(nameof(token));
             }
 
-            var authentication = new ExternalAuthentication();
-            authentication.SetToBase64Token(token);
-            authentication.Issuer = issuer;
+            var authentication = new ExternalAuthentication
+            {
+                Token = token,
+                Issuer = issuer
+            };
             return WithAuthentication(authentication);
         }
 
