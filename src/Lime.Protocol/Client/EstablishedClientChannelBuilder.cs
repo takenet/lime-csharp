@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Dawn;
 using Lime.Protocol.Network;
 using Lime.Protocol.Security;
 
@@ -102,10 +103,7 @@ namespace Lime.Protocol.Client
         /// <exception cref="System.ArgumentNullException"></exception>
         public IEstablishedClientChannelBuilder WithCompression(Func<SessionCompression[], SessionCompression> compressionSelector)
         {
-            if (compressionSelector == null)
-            {
-                throw new ArgumentNullException(nameof(compressionSelector));
-            }
+            Guard.Argument(compressionSelector, nameof(compressionSelector)).NotNull();
 
             CompressionSelector = compressionSelector;
             return this;
@@ -129,10 +127,7 @@ namespace Lime.Protocol.Client
         /// <exception cref="System.ArgumentNullException"></exception>
         public IEstablishedClientChannelBuilder WithEncryption(Func<SessionEncryption[], SessionEncryption> encryptionSelector)
         {
-            if (encryptionSelector == null)
-            {
-                throw new ArgumentNullException(nameof(encryptionSelector));
-            }
+            Guard.Argument(encryptionSelector, nameof(encryptionSelector)).NotNull();
 
             EncryptionSelector = encryptionSelector;
             return this;
@@ -146,10 +141,7 @@ namespace Lime.Protocol.Client
         /// <exception cref="System.ArgumentNullException"></exception>
         public IEstablishedClientChannelBuilder WithPlainAuthentication(string password)
         {
-            if (password == null)
-            {
-                throw new ArgumentNullException(nameof(password));
-            }
+            Guard.Argument(password, nameof(password)).NotNull();
 
             var authentication = new PlainAuthentication();
             authentication.SetToBase64Password(password);
@@ -164,10 +156,7 @@ namespace Lime.Protocol.Client
         /// <exception cref="System.ArgumentNullException"></exception>
         public IEstablishedClientChannelBuilder WithKeyAuthentication(string key)
         {
-            if (key == null)
-            {
-                throw new ArgumentNullException(nameof(key));
-            }
+            Guard.Argument(key, nameof(key)).NotNull();
 
             var authentication = new KeyAuthentication();
             authentication.SetToBase64Key(key);
@@ -183,10 +172,7 @@ namespace Lime.Protocol.Client
 
         public IEstablishedClientChannelBuilder WithExternalAuthentication(string token, string issuer)
         {
-            if (token == null)
-            {
-                throw new ArgumentNullException(nameof(token));
-            }
+            Guard.Argument(token, nameof(token)).NotNull();
 
             var authentication = new ExternalAuthentication
             {
@@ -214,10 +200,7 @@ namespace Lime.Protocol.Client
         /// <exception cref="System.ArgumentNullException"></exception>
         public IEstablishedClientChannelBuilder WithAuthentication(Authentication authentication)
         {
-            if (authentication == null)
-            {
-                throw new ArgumentNullException(nameof(authentication));
-            }
+            Guard.Argument(authentication, nameof(authentication)).NotNull();
 
             return WithAuthentication((schemes, roundtrip) => authentication);
         }
@@ -230,10 +213,7 @@ namespace Lime.Protocol.Client
         /// <exception cref="System.ArgumentNullException"></exception>
         public IEstablishedClientChannelBuilder WithAuthentication(Func<AuthenticationScheme[], Authentication, Authentication> authenticator)
         {
-            if (authenticator == null)
-            {
-                throw new ArgumentNullException(nameof(authenticator));
-            }
+            Guard.Argument(authenticator, nameof(authenticator)).NotNull();
 
             Authenticator = authenticator;
             return this;
@@ -247,11 +227,8 @@ namespace Lime.Protocol.Client
         /// <exception cref="System.ArgumentNullException"></exception>
         public IEstablishedClientChannelBuilder WithIdentity(Identity identity)
         {
-            if (identity == null)
-            {
-                throw new ArgumentNullException(nameof(identity));
-            }
-
+            Guard.Argument(identity, nameof(identity)).NotNull();
+            
             Identity = identity;
             return this;
         }
@@ -264,10 +241,7 @@ namespace Lime.Protocol.Client
         /// <exception cref="System.ArgumentNullException"></exception>
         public IEstablishedClientChannelBuilder WithInstance(string instance)
         {
-            if (instance == null)
-            {
-                throw new ArgumentNullException(nameof(instance));
-            }
+            Guard.Argument(instance, nameof(instance)).NotNull();
 
             Instance = instance;
             return this;
@@ -281,11 +255,8 @@ namespace Lime.Protocol.Client
         /// <exception cref="System.ArgumentNullException"></exception>
         public IEstablishedClientChannelBuilder AddEstablishedHandler(Func<IClientChannel, CancellationToken, Task> establishedHandler)
         {
-            if (establishedHandler == null)
-            {
-                throw new ArgumentNullException(nameof(establishedHandler));
-            }
-
+            Guard.Argument(establishedHandler, nameof(establishedHandler)).NotNull();
+            
             _establishedHandlers.Add(establishedHandler);
             return this;
         }
