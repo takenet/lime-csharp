@@ -1,6 +1,7 @@
 ﻿using CommandLine;
 using CommandLine.Text;
 using Lime.Cli.Actions;
+using Lime.Cli.Certificate;
 using Lime.Messaging;
 using Lime.Messaging.Resources;
 using Lime.Protocol;
@@ -8,7 +9,6 @@ using Lime.Protocol.Client;
 using Lime.Protocol.Listeners;
 using Lime.Protocol.Network;
 using Lime.Protocol.Network.Modules;
-using Lime.Protocol.Security;
 using Lime.Protocol.Serialization;
 using Lime.Protocol.Serialization.Newtonsoft;
 using Lime.Protocol.Util;
@@ -18,11 +18,10 @@ using SimpleInjector;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
-using System.Net.Mime;
 using System.Net.Security;
 using System.Net.WebSockets;
 using System.Reflection;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -216,7 +215,8 @@ namespace Lime.Cli
 
         private static async Task<IOnDemandClientChannel> EstablishChannelAsync(ConnectionInformation connectionInformation, CancellationToken cancellationToken)
         {
-            ITransport transportFactory() => CreateTransportForUri(connectionInformation.ServerUri);
+            var certificate = CertificateResolver.GetCertificateFromThumbprint(connectionInformation.CertificateThumbprint);
+            ITransport transportFactory() => CreateTransportForUri(connectionInformation.ServerUri, certificate);
 
             // Creates a new client channel
             var builder = ClientChannelBuilder
@@ -259,6 +259,16 @@ namespace Lime.Cli
             {
                 builder = builder.WithKeyAuthentication(connectionInformation.Key);
             }
+            else if (connectionInformation.Token != null)
+            {
+                builder = builder.WithExternalAuthentication(connectionInformation.Token, connectionInformation.Issuer);
+            }
+            else if (connectionInformation.CertificateThumbprint != null)
+            {
+                builder = builder
+                    .WithTransportAuthentication(connectionInformation.DomainRole)
+                    .WithEncryption(SessionEncryption.TLS);
+            }
 
             var clientChannel = new OnDemandClientChannel(builder);
 
@@ -291,14 +301,15 @@ namespace Lime.Cli
             return clientChannel;
         }
 
-        private static ITransport CreateTransportForUri(Uri uri)
+        private static ITransport CreateTransportForUri(Uri uri, X509Certificate2 certificate = null)
         {                        
             switch (uri.Scheme)
             {
                 case "net.tcp":
                     return new TcpTransport(
                         new EnvelopeSerializer(
-                            new DocumentTypeResolver().WithMessagingDocuments()));
+                            new DocumentTypeResolver().WithMessagingDocuments()),
+                        clientCertificate: certificate);
                 case "ws":
                 case "wss":
                     var webSocket = new ClientWebSocket();

@@ -35,6 +35,6 @@ namespace Lime.Transport.WebSocket
         /// <value>
         /// The store.
         /// </value>
-        public StoreName Store { get; }        
+        public StoreName Store { get; }
     }
 }

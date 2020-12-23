@@ -102,6 +102,23 @@ namespace Lime.Protocol.Client
         IEstablishedClientChannelBuilder WithKeyAuthentication(string key);
 
         /// <summary>
+        /// Set the external authentication token to be used in the session establishment.
+        /// </summary>
+        /// <param name="token">The authentication token</param>
+        /// <param name="issuer"></param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException"></exception>
+        IEstablishedClientChannelBuilder WithExternalAuthentication(string token, string issuer);
+
+        /// <summary>
+        /// Set the domain role to be used in the session establishment
+        /// </summary>
+        /// <param name="domainRole"></param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException"></exception>
+        IEstablishedClientChannelBuilder WithTransportAuthentication(DomainRole domainRole);
+
+        /// <summary>
         /// Sets the authentication to be used in the session establishment.
         /// </summary>
         /// <returns></returns>
