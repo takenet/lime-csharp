@@ -43,7 +43,7 @@ namespace Lime.Cli
         [Option(HelpText = "The action to be executed in the non-interactive mode.")]
         public string Action { get; set; }
 
-        [Option(HelpText = "The thumbprint of the X509 certificate to be used.")]
+        [Option(HelpText = "Thumbprint for the X509 Certificate to use as Transport Authentication.")]
         public string CertificateThumbprint { get; set; }
 
         [Option(HelpText = "The DomainRole to be used on Transport Authentication.", Default = DomainRole.Authority)]
