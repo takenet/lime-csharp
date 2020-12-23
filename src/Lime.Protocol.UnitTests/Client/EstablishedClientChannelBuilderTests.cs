@@ -254,7 +254,7 @@ namespace Lime.Protocol.UnitTests.Client
             // Assert
             _clientChannel.Verify(c => c.AuthenticateSessionAsync(
                 It.IsAny<Identity>(),
-                It.Is<Authentication>(a => a is ExternalAuthentication && ((ExternalAuthentication)a).GetFromBase64Token().Equals(token)),
+                It.Is<Authentication>(a => a is ExternalAuthentication && ((ExternalAuthentication)a).Token.Equals(token)),
                 It.IsAny<string>(),
                 It.IsAny<CancellationToken>()),
                 Times.Once);
