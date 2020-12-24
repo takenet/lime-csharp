@@ -1171,13 +1171,6 @@ namespace Lime.Protocol.UnitTests.Network
             // Act
             var actual = await target.ReceiveCommandAsync(cancellationToken);
             var processingTask = target.ProcessCommandAsync(requestCommand, cancellationToken);
-            
-            // Assert
-            _transport.Verify(
-                t => t.SendAsync(requestCommand,
-                    It.IsAny<CancellationToken>()),
-                    Times.Exactly(2));
-            actual.ShouldBe(responseCommand);
 
             Exception exception = null;
             try
@@ -1188,6 +1181,15 @@ namespace Lime.Protocol.UnitTests.Network
             {
                 exception = ex;
             }
+
+
+            // Assert
+            actual.ShouldBe(responseCommand);
+
+            _transport.Verify(
+                t => t.SendAsync(requestCommand,
+                    It.IsAny<CancellationToken>()),
+                    Times.Exactly(2));
 
             exception.ShouldNotBeNull();
             exception.ShouldBeOfType<TaskCanceledException>();
