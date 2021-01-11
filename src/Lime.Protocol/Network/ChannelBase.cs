@@ -228,10 +228,10 @@ namespace Lime.Protocol.Network
         /// Stops the sender and receiver tasks.
         /// </summary>
         /// <returns></returns>
-        private Task StopChannelTasks()
+        private async Task StopChannelTasks()
         {
             using var cts = new CancellationTokenSource(StopTimeout);
-            return Task.WhenAll(
+            await Task.WhenAll(
                 _receiverChannel.StopAsync(cts.Token),
                 _senderChannel.StopAsync(cts.Token));
         }
