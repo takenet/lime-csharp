@@ -272,7 +272,7 @@ namespace Lime.Protocol.Network
                 // Closes the transport in case of any exception
                 if (_transport.IsConnected)
                 {
-                    using var cts = new CancellationTokenSource(_closeTimeout);
+                    using var cts = new CancellationTokenSource(_closeTimeout.Value);
                     try
                     {
                         await _transport.CloseAsync(cts.Token).ConfigureAwait(false);
