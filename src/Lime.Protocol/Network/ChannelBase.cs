@@ -89,7 +89,8 @@ namespace Lime.Protocol.Network
                 CommandModules, 
                 HandleConsumerExceptionAsync,
                 envelopeBufferSize,
-                consumeTimeout);
+                consumeTimeout,
+                StopTimeout);
 
             _senderChannel = new SenderChannel(
                 this,
@@ -99,7 +100,8 @@ namespace Lime.Protocol.Network
                 CommandModules,
                 HandleSenderExceptionAsync,
                 envelopeBufferSize,
-                sendTimeout);
+                sendTimeout,
+                StopTimeout);
         }
 
         ~ChannelBase()
@@ -226,10 +228,10 @@ namespace Lime.Protocol.Network
         /// Stops the sender and receiver tasks.
         /// </summary>
         /// <returns></returns>
-        private async Task StopChannelTasks()
+        private Task StopChannelTasks()
         {
             using var cts = new CancellationTokenSource(StopTimeout);
-            await Task.WhenAll(
+            return Task.WhenAll(
                 _receiverChannel.StopAsync(cts.Token),
                 _senderChannel.StopAsync(cts.Token));
         }
