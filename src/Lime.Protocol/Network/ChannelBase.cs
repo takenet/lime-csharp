@@ -89,7 +89,8 @@ namespace Lime.Protocol.Network
                 CommandModules, 
                 HandleConsumerExceptionAsync,
                 envelopeBufferSize,
-                consumeTimeout);
+                consumeTimeout,
+                _closeTimeout);
 
             _senderChannel = new SenderChannel(
                 this,
@@ -99,7 +100,8 @@ namespace Lime.Protocol.Network
                 CommandModules,
                 HandleSenderExceptionAsync,
                 envelopeBufferSize,
-                sendTimeout);
+                sendTimeout,
+                _closeTimeout);
         }
 
         ~ChannelBase()

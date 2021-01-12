@@ -18,6 +18,7 @@ namespace Lime.Protocol.Network
         private readonly ICollection<IChannelModule<Command>> _commandModules;
         private readonly Func<Exception, Task> _exceptionHandler;
         private readonly TimeSpan _sendTimeout;
+        private readonly TimeSpan _closeTimeout;
         private readonly CancellationTokenSource _senderCts;
         private readonly Channel<Envelope> _envelopeBuffer;
         private readonly SemaphoreSlim _sessionSemaphore;
@@ -34,7 +35,8 @@ namespace Lime.Protocol.Network
             ICollection<IChannelModule<Command>> commandModules,
             Func<Exception, Task> exceptionHandler,
             int envelopeBufferSize,
-            TimeSpan sendTimeout)
+            TimeSpan sendTimeout,
+            TimeSpan? closeTimeout = null)
         {
             if (sendTimeout == default) throw new ArgumentException("Invalid send timeout", nameof(sendTimeout));
             
@@ -45,6 +47,7 @@ namespace Lime.Protocol.Network
             _commandModules = commandModules;
             _exceptionHandler = exceptionHandler;
             _sendTimeout = sendTimeout;
+            _closeTimeout = closeTimeout ?? sendTimeout;
             _sessionSemaphore = new SemaphoreSlim(1);
             _startStopSemaphore = new SemaphoreSlim(1);
             _senderCts = new CancellationTokenSource();
@@ -179,7 +182,7 @@ namespace Lime.Protocol.Network
             catch when (_transport.IsConnected)
             {
                 // Closes the transport in case of any exception
-                using var cts = new CancellationTokenSource(_sendTimeout);
+                using var cts = new CancellationTokenSource(_closeTimeout);
                 try
                 {
                     await _transport.CloseAsync(cts.Token).ConfigureAwait(false);

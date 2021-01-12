@@ -19,6 +19,7 @@ namespace Lime.Protocol.Network
         private readonly ICollection<IChannelModule<Command>> _commandModules;
         private readonly Func<Exception, Task> _exceptionHandler;
         private readonly TimeSpan? _consumeTimeout;
+        private readonly TimeSpan _closeTimeout;
         private readonly CancellationTokenSource _consumerCts;
         private readonly Channel<Message> _messageBuffer;
         private readonly Channel<Command> _commandBuffer;
@@ -39,7 +40,8 @@ namespace Lime.Protocol.Network
             ICollection<IChannelModule<Command>> commandModules,
             Func<Exception, Task> exceptionHandler,
             int envelopeBufferSize,
-            TimeSpan? consumeTimeout)
+            TimeSpan? consumeTimeout,
+            TimeSpan? closeTimeout = null)
         {
             if (consumeTimeout != null && consumeTimeout.Value == default) throw new ArgumentException("Invalid consume timeout", nameof(consumeTimeout));
             
@@ -51,6 +53,7 @@ namespace Lime.Protocol.Network
             _commandModules = commandModules;
             _exceptionHandler = exceptionHandler;
             _consumeTimeout = consumeTimeout;
+            _closeTimeout = closeTimeout ?? consumeTimeout ?? TimeSpan.FromSeconds(5);
             _sessionSemaphore = new SemaphoreSlim(1);
             _startStopSemaphore = new SemaphoreSlim(1);
             _consumerCts = new CancellationTokenSource();
@@ -269,7 +272,7 @@ namespace Lime.Protocol.Network
                 // Closes the transport in case of any exception
                 if (_transport.IsConnected)
                 {
-                    using var cts = new CancellationTokenSource(_consumeTimeout ?? TimeSpan.FromSeconds(5));
+                    using var cts = new CancellationTokenSource(_closeTimeout);
                     try
                     {
                         await _transport.CloseAsync(cts.Token).ConfigureAwait(false);
