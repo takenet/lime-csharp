@@ -19,7 +19,7 @@ namespace Lime.Protocol.Network
         private readonly ICollection<IChannelModule<Command>> _commandModules;
         private readonly Func<Exception, Task> _exceptionHandler;
         private readonly TimeSpan? _consumeTimeout;
-        private readonly TimeSpan? _closeTimeout;
+        private readonly TimeSpan _closeTimeout;
         private readonly CancellationTokenSource _consumerCts;
         private readonly Channel<Message> _messageBuffer;
         private readonly Channel<Command> _commandBuffer;
@@ -272,7 +272,7 @@ namespace Lime.Protocol.Network
                 // Closes the transport in case of any exception
                 if (_transport.IsConnected)
                 {
-                    using var cts = new CancellationTokenSource(_closeTimeout.Value);
+                    using var cts = new CancellationTokenSource(_closeTimeout);
                     try
                     {
                         await _transport.CloseAsync(cts.Token).ConfigureAwait(false);
