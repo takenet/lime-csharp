@@ -323,7 +323,7 @@ namespace Lime.Protocol.Network
                 _receiverChannel.Dispose();
                 _senderChannel.Dispose();
                 Transport.DisposeIfDisposable();
-                _remotePingChannelModule?.Dispose(); ;
+                _remotePingChannelModule?.Dispose();
             }
         }
     }
