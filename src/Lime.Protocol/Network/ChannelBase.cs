@@ -15,13 +15,13 @@ namespace Lime.Protocol.Network
     {
         private static readonly TimeSpan ExceptionHandlerTimeout = TimeSpan.FromSeconds(5);
         private static readonly TimeSpan StopTimeout = TimeSpan.FromSeconds(5);
-        
+
         private readonly TimeSpan _closeTimeout;
         private readonly ReceiverChannel _receiverChannel;
         private readonly SenderChannel _senderChannel;
         private readonly IChannelCommandProcessor _channelCommandProcessor;
         private readonly IDisposable _remotePingChannelModule;
-        
+
         private SessionState _state;
         private bool _closeTransportInvoked;
 
@@ -79,14 +79,14 @@ namespace Lime.Protocol.Network
             {
                 _remotePingChannelModule = RemotePingChannelModule.CreateAndRegister(this, remotePingInterval.Value, remoteIdleTimeout);
             }
-            
+
             _receiverChannel = new ReceiverChannel(
                 this,
-                Transport, 
+                Transport,
                 _channelCommandProcessor,
                 MessageModules,
                 NotificationModules,
-                CommandModules, 
+                CommandModules,
                 HandleConsumerExceptionAsync,
                 envelopeBufferSize,
                 consumeTimeout,
@@ -138,13 +138,13 @@ namespace Lime.Protocol.Network
             protected set
             {
                 _state = value;
-                
+
                 if (_state == SessionState.Established)
                 {
                     _senderChannel.Start();
                     _receiverChannel.Start();
                 }
-                
+
                 OnStateChanged(MessageModules, _state);
                 OnStateChanged(NotificationModules, _state);
                 OnStateChanged(CommandModules, _state);
@@ -165,7 +165,7 @@ namespace Lime.Protocol.Network
 
         /// <inheritdoc />
         public event EventHandler<ExceptionEventArgs> SenderException;
-        
+
         /// <inheritdoc />
         public virtual Task SendMessageAsync(Message message, CancellationToken cancellationToken)
             => _senderChannel.SendMessageAsync(message, cancellationToken);
@@ -195,13 +195,13 @@ namespace Lime.Protocol.Network
             => _receiverChannel.ReceiveNotificationAsync(cancellationToken);
 
         /// <inheritdoc />
-        public virtual Task SendSessionAsync(Session session, CancellationToken cancellationToken) 
+        public virtual Task SendSessionAsync(Session session, CancellationToken cancellationToken)
             => _senderChannel.SendSessionAsync(session, cancellationToken);
 
         /// <inheritdoc />
-        public virtual Task<Session> ReceiveSessionAsync(CancellationToken cancellationToken) 
+        public virtual Task<Session> ReceiveSessionAsync(CancellationToken cancellationToken)
             => _receiverChannel.ReceiveSessionAsync(cancellationToken);
-        
+
         /// <summary>
         /// Closes the underlying transport.
         /// </summary>
@@ -235,7 +235,7 @@ namespace Lime.Protocol.Network
                 _receiverChannel.StopAsync(cts.Token),
                 _senderChannel.StopAsync(cts.Token));
         }
-        
+
         /// <summary>
         /// Cancels the token that is associated to the channel send and receive tasks.
         /// </summary>
@@ -257,7 +257,7 @@ namespace Lime.Protocol.Network
                 Trace.TraceError("[ChannelBase] Unhandled exception in the Transport_Closing handler: {0}", ex);
             }
         }
-        
+
         private static void OnStateChanged<T>(IEnumerable<IChannelModule<T>> modules, SessionState state) where T : Envelope, new()
         {
             foreach (var module in modules.ToList())
@@ -266,11 +266,21 @@ namespace Lime.Protocol.Network
             }
         }
 
-        private Task HandleConsumerExceptionAsync(Exception exception)=> HandleExceptionAsync(exception, ConsumerException);
+        private async Task HandleConsumerExceptionAsync(Exception exception) => await HandleExceptionAndCloseAsync(exception, ConsumerException);
 
-        private Task HandleSenderExceptionAsync(Exception exception) => HandleExceptionAsync(exception, SenderException);
-        
-        private async Task HandleExceptionAsync(Exception exception, EventHandler<ExceptionEventArgs> handler)
+        private async Task HandleSenderExceptionAsync(Exception exception)
+        {
+            if (exception is EnvelopeTooLargeException)
+            {
+                await RaiseExceptionHandlerAsync(SenderException, exception).ConfigureAwait(false);
+            }
+            else
+            {
+                await HandleExceptionAndCloseAsync(exception, SenderException);
+            }
+        }
+
+        private async Task HandleExceptionAndCloseAsync(Exception exception, EventHandler<ExceptionEventArgs> handler)
         {
             await RaiseExceptionHandlerAsync(handler, exception).ConfigureAwait(false);
             await CloseTransportAsync().ConfigureAwait(false);
@@ -313,7 +323,7 @@ namespace Lime.Protocol.Network
                 _receiverChannel.Dispose();
                 _senderChannel.Dispose();
                 Transport.DisposeIfDisposable();
-                _remotePingChannelModule?.Dispose();;
+                _remotePingChannelModule?.Dispose();
             }
         }
     }
