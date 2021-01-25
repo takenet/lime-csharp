@@ -264,7 +264,6 @@ namespace Lime.Transport.Tcp.UnitTests
             var content = Dummy.CreateTextContent();
             var message = Dummy.CreateMessage(content);
             var serializedMessage = Dummy.CreateRandomString(200);
-            var serializedMessageBytes = Encoding.UTF8.GetBytes(serializedMessage);
             var cancellationToken = CancellationToken.None;
 
             _tcpClient
@@ -309,7 +308,6 @@ namespace Lime.Transport.Tcp.UnitTests
             var content = Dummy.CreateTextContent();
             var message = Dummy.CreateMessage(content);
             var serializedMessage = Dummy.CreateRandomString(200);
-            var serializedMessageBytes = Encoding.UTF8.GetBytes(serializedMessage);
             var cancellationToken = CancellationToken.None;
 
             _envelopeSerializer
