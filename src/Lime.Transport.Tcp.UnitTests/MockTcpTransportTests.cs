@@ -254,7 +254,7 @@ namespace Lime.Transport.Tcp.UnitTests
                     t.TraceAsync(serializedMessage, DataOperation.Send),
                 Times.Once());
         }
-        
+
         [Test]
         [Category("SendAsync")]
         public async Task SendAsync_IOException_ThrowsIOExceptionAndCallsCloseAsync()
@@ -278,7 +278,7 @@ namespace Lime.Transport.Tcp.UnitTests
             _stream
                 .Setup(s => s.CanWrite)
                 .Returns(true);
-                
+
             _stream
                 .Setup(s =>
                     s.WriteAsync(
@@ -297,6 +297,45 @@ namespace Lime.Transport.Tcp.UnitTests
 
             _tcpClient.Verify();
             _stream.Verify();
+        }
+
+        [Test]
+        [Category("SendAsync")]
+        public async Task SendAsync_AboveMaxBufferSize_ThrowsEnvelopeTooLargeExceptionAndDoNotCloseAsync()
+        {
+            // 'maxBufferSize' under 'serializedMessage' size
+            using var target = await this.GetAndOpenTargetAsync(maxBufferSize: 180);
+
+            var content = Dummy.CreateTextContent();
+            var message = Dummy.CreateMessage(content);
+            var serializedMessage = Dummy.CreateRandomString(200);
+            var serializedMessageBytes = Encoding.UTF8.GetBytes(serializedMessage);
+            var cancellationToken = CancellationToken.None;
+
+            _envelopeSerializer
+                .Setup(e => e.Serialize(message))
+                .Returns(serializedMessage);
+
+            _stream
+                .Setup(s => s.CanWrite)
+                .Returns(true);
+
+            Should.Throw<EnvelopeTooLargeException>(() => target.SendAsync(message, cancellationToken));
+
+            _tcpClient
+                .Verify(s => s.Close(), Times.Never);
+
+            _stream
+                .Verify(s => s.Close(), Times.Never);
+
+            _stream
+                .Verify(s =>
+                    s.WriteAsync(
+                        It.IsAny<byte[]>(),
+                        It.IsAny<int>(),
+                        It.IsAny<int>(),
+                        It.IsAny<CancellationToken>()),
+                    Times.Never);
         }
 
         #endregion

@@ -21,31 +21,34 @@ namespace Lime.Transport.Tcp.UnitTests
     {
         public int BufferSize { get; set; }
 
-        public int MaxBufferSize { get; set; }
+        public int ClientMaxBufferSize { get; set; }
+
+        public int ServerMaxBufferSize { get; set; }
 
         public ArrayPool<byte> ArrayPool { get; } = ArrayPool<byte>.Shared;
         
         protected override Task SetUpImpl()
         {
             BufferSize = TcpTransport.DEFAULT_BUFFER_SIZE;
-            MaxBufferSize = TcpTransport.DEFAULT_MAX_BUFFER_SIZE;
-            
+            ClientMaxBufferSize = TcpTransport.DEFAULT_MAX_BUFFER_SIZE;
+            ServerMaxBufferSize = TcpTransport.DEFAULT_MAX_BUFFER_SIZE;
+
             return base.SetUpImpl();
         }
         
         protected override Uri CreateListenerUri() => new Uri("net.tcp://localhost:5321");
 
         protected override ITransportListener CreateTransportListener(Uri uri, IEnvelopeSerializer envelopeSerializer) 
-            => new TcpTransportListener(uri, null, envelopeSerializer, BufferSize, MaxBufferSize, ArrayPool, TraceWriter);
+            => new TcpTransportListener(uri, null, envelopeSerializer, BufferSize, ServerMaxBufferSize, ArrayPool, TraceWriter);
 
-        protected override ITransport CreateClientTransport(IEnvelopeSerializer envelopeSerializer) => new TcpTransport(envelopeSerializer, null, BufferSize, MaxBufferSize);
+        protected override ITransport CreateClientTransport(IEnvelopeSerializer envelopeSerializer) => new TcpTransport(envelopeSerializer, null, BufferSize, ClientMaxBufferSize);
 
         [Test]
         public async Task ReceiveAsync_BiggerThanBufferSizeMessageEnvelope_ServerShouldReceive()
         {
             // Arrange
             BufferSize = 64;
-            MaxBufferSize = BufferSize * 6;
+            ServerMaxBufferSize = ClientMaxBufferSize = BufferSize * 10;
             var message = Dummy.CreateMessage(Dummy.CreateRandomString(BufferSize * 4));
             var (clientTransport, serverTransport) = await GetAndOpenTargetsAsync();
 
@@ -66,7 +69,7 @@ namespace Lime.Transport.Tcp.UnitTests
         {
             // Arrange            
             BufferSize = 64;
-            MaxBufferSize = BufferSize * 6;
+            ServerMaxBufferSize = ClientMaxBufferSize = BufferSize * 10;
             var count = Dummy.CreateRandomInt(100);
             var (clientTransport, serverTransport) = await GetAndOpenTargetsAsync();
             var synchronizedserverTransport = new SynchronizedTransportDecorator(serverTransport);
@@ -108,7 +111,7 @@ namespace Lime.Transport.Tcp.UnitTests
         {
             // Arrange            
             BufferSize = 64;
-            MaxBufferSize = BufferSize * 12;
+            ServerMaxBufferSize = ClientMaxBufferSize = BufferSize * 12;
             var count = 50;
             var (clientTransport, serverTransport) = await GetAndOpenTargetsAsync();
             var messages = new Message[count];
@@ -148,7 +151,7 @@ namespace Lime.Transport.Tcp.UnitTests
         {
             // Arrange            
             BufferSize = 64;
-            MaxBufferSize = BufferSize * 24;
+            ServerMaxBufferSize = ClientMaxBufferSize = BufferSize * 24;
             var pageSize = 5;
             var count = 9 * pageSize;
             var (clientTransport, serverTransport) = await GetAndOpenTargetsAsync();
@@ -195,8 +198,9 @@ namespace Lime.Transport.Tcp.UnitTests
         {
             // Arrange
             BufferSize = 64;
-            MaxBufferSize = BufferSize * 4;
-            var message = Dummy.CreateMessage(Dummy.CreateRandomString(BufferSize * 5));
+            ClientMaxBufferSize = BufferSize * 8;
+            ServerMaxBufferSize = BufferSize * 4;
+            var message = Dummy.CreateMessage(Dummy.CreateRandomString(BufferSize * 4));
             var (clientTransport, serverTransport) = await GetAndOpenTargetsAsync();
 
             // Act
