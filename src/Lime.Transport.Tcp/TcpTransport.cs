@@ -197,18 +197,19 @@ namespace Lime.Transport.Tcp
             if (!_stream.CanWrite) throw new InvalidOperationException("Invalid stream state");
 
             var serializedEnvelope = _envelopeSerializer.Serialize(envelope);
+            int envelopeByteCount = Encoding.UTF8.GetByteCount(serializedEnvelope);
 
-            if (serializedEnvelope.Length > _maxBufferSize)
+            if (envelopeByteCount > _maxBufferSize)
             {
                 // Prevent sending an envelope that could potentially make the receiver side drop the connection,
                 // since most probably it's _maxBufferSize has the same value used by the sender side
-                await TraceAsync($"EnvelopeTooLarge (size of {serializedEnvelope.Length}): {serializedEnvelope}", DataOperation.Error).ConfigureAwait(false);
-                throw new EnvelopeTooLargeException($"Envelope type {envelope.GetType().Name} with id {envelope.Id} and size {serializedEnvelope.Length} will probably exceed the maximum size supported by a receiver (the value for this instance is {_maxBufferSize})");
+                await TraceAsync($"EnvelopeTooLarge (size of {envelopeByteCount}): {serializedEnvelope}", DataOperation.Error).ConfigureAwait(false);
+                throw new EnvelopeTooLargeException($"Envelope type {envelope.GetType().Name} with id {envelope.Id} and size {envelopeByteCount} will probably exceed the maximum size supported by a receiver (the value for this instance is {_maxBufferSize})");
             }
 
             await TraceAsync(serializedEnvelope, DataOperation.Send).ConfigureAwait(false);
-            
-            var buffer = _arrayPool.Rent(Encoding.UTF8.GetByteCount(serializedEnvelope));
+
+            var buffer = _arrayPool.Rent(envelopeByteCount);
             var length = Encoding.UTF8.GetBytes(serializedEnvelope, 0, serializedEnvelope.Length, buffer, 0);
             
             try
