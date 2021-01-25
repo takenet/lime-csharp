@@ -41,7 +41,7 @@ namespace Lime.Transport.Tcp
         private readonly X509Certificate2 _serverCertificate;
         private readonly X509Certificate2 _clientCertificate;
         private readonly JsonBuffer _jsonBuffer;
-        private readonly int _maxBufferSize;
+        private readonly int _maxSenderBufferSize;
         private readonly ArrayPool<byte> _arrayPool;
 
         private Stream _stream;
@@ -178,7 +178,7 @@ namespace Lime.Transport.Tcp
             _traceWriter = traceWriter;
             _serverCertificateValidationCallback = serverCertificateValidationCallback ?? ValidateServerCertificate;
             _clientCertificateValidationCallback = clientCertificateValidationCallback ?? ValidateClientCertificate;
-            _maxBufferSize = maxBufferSize;
+            _maxSenderBufferSize = maxBufferSize == 0 ? bufferSize : maxBufferSize;
 
             _jsonBuffer = new JsonBuffer(bufferSize, maxBufferSize, _arrayPool);
             _optionsSemaphore = new SemaphoreSlim(1);
@@ -199,12 +199,12 @@ namespace Lime.Transport.Tcp
             var serializedEnvelope = _envelopeSerializer.Serialize(envelope);
             int envelopeByteCount = Encoding.UTF8.GetByteCount(serializedEnvelope);
 
-            if (envelopeByteCount > _maxBufferSize)
+            if (envelopeByteCount > _maxSenderBufferSize)
             {
                 // Prevent sending an envelope that could potentially make the receiver side drop the connection,
                 // since most probably it's _maxBufferSize has the same value used by the sender side
                 await TraceAsync($"EnvelopeTooLarge (size of {envelopeByteCount}): {serializedEnvelope}", DataOperation.Error).ConfigureAwait(false);
-                throw new EnvelopeTooLargeException($"Envelope NOT sent: {envelope.GetType().Name} with id {envelope.Id} and size {envelopeByteCount} will probably exceed the maximum size supported by a receiver (the local value is {_maxBufferSize})");
+                throw new EnvelopeTooLargeException($"Envelope NOT sent: {envelope.GetType().Name} with id {envelope.Id} and size {envelopeByteCount} will probably exceed the maximum size supported by a receiver (the local value is {_maxSenderBufferSize})");
             }
 
             await TraceAsync(serializedEnvelope, DataOperation.Send).ConfigureAwait(false);
