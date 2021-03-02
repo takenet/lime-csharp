@@ -51,9 +51,9 @@ namespace Lime.Protocol.Client
         /// <param name="command"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public Task SendCommandAsync(Command command, CancellationToken cancellationToken)
+        public async Task SendCommandAsync(Command command, CancellationToken cancellationToken)
         {
-            return SendAsync(command, cancellationToken, (channel, envelope) => channel.SendCommandAsync(envelope, cancellationToken));
+            await SendAsync(command, cancellationToken, (channel, envelope) => channel.SendCommandAsync(envelope, cancellationToken));
         }
 
         /// <summary>
@@ -107,9 +107,9 @@ namespace Lime.Protocol.Client
         /// <param name="message"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public Task SendMessageAsync(Message message, CancellationToken cancellationToken)
+        public async Task SendMessageAsync(Message message, CancellationToken cancellationToken)
         {
-            return SendAsync(message, cancellationToken, (channel, envelope) => channel.SendMessageAsync(envelope, cancellationToken));
+            await SendAsync(message, cancellationToken, (channel, envelope) => channel.SendMessageAsync(envelope, cancellationToken));
         }
 
         /// <summary>
@@ -128,9 +128,9 @@ namespace Lime.Protocol.Client
         /// <param name="notification"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public Task SendNotificationAsync(Notification notification, CancellationToken cancellationToken)
+        public async Task SendNotificationAsync(Notification notification, CancellationToken cancellationToken)
         {
-            return SendAsync(notification, cancellationToken, (channel, envelope) => channel.SendNotificationAsync(envelope, cancellationToken));
+            await SendAsync(notification, cancellationToken, (channel, envelope) => channel.SendNotificationAsync(envelope, cancellationToken));
         }
 
         /// <summary>

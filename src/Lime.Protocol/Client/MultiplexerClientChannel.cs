@@ -133,14 +133,14 @@ namespace Lime.Protocol.Client
             _semaphore = new SemaphoreSlim(1, 1);
         }
 
-        public Task SendMessageAsync(Message message, CancellationToken cancellationToken)
-            => SendToBufferAsync(message, cancellationToken);
+        public async Task SendMessageAsync(Message message, CancellationToken cancellationToken)
+            => await SendToBufferAsync(message, cancellationToken);
 
-        public Task SendNotificationAsync(Notification notification, CancellationToken cancellationToken)
-            => SendToBufferAsync(notification, cancellationToken);
+        public async Task SendNotificationAsync(Notification notification, CancellationToken cancellationToken)
+            => await SendToBufferAsync(notification, cancellationToken);
 
-        public Task SendCommandAsync(Command command, CancellationToken cancellationToken)
-            => SendToBufferAsync(command, cancellationToken);
+        public async Task SendCommandAsync(Command command, CancellationToken cancellationToken)
+            => await SendToBufferAsync(command, cancellationToken);
 
         public async Task<Message> ReceiveMessageAsync(CancellationToken cancellationToken)
         {
