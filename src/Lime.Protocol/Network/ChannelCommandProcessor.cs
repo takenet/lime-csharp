@@ -21,10 +21,7 @@ namespace Lime.Protocol.Network
         
         public async Task<Command> ProcessCommandAsync(ICommandSenderChannel commandSenderChannel, Command requestCommand, CancellationToken cancellationToken)
         {
-            if (cancellationToken.IsCancellationRequested)
-            {
-                throw new TaskCanceledException();
-            }
+            cancellationToken.ThrowIfCancellationRequested();
 
             if (commandSenderChannel == null) throw new ArgumentNullException(nameof(commandSenderChannel));
             if (requestCommand == null) throw new ArgumentNullException(nameof(requestCommand));
