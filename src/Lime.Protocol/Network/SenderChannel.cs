@@ -54,14 +54,14 @@ namespace Lime.Protocol.Network
             _envelopeBuffer = ChannelUtil.CreateForCapacity<Envelope>(envelopeBufferSize, true, false);
         }
 
-        public Task SendMessageAsync(Message message, CancellationToken cancellationToken)
-            => SendToBufferAsync(message, _messageModules, cancellationToken);
+        public async Task SendMessageAsync(Message message, CancellationToken cancellationToken)
+            => await SendToBufferAsync(message, _messageModules, cancellationToken);
 
-        public Task SendNotificationAsync(Notification notification, CancellationToken cancellationToken)
-            => SendToBufferAsync(notification, _notificationModules, cancellationToken);
+        public async Task SendNotificationAsync(Notification notification, CancellationToken cancellationToken)
+            => await SendToBufferAsync(notification, _notificationModules, cancellationToken);
 
-        public Task SendCommandAsync(Command command, CancellationToken cancellationToken)
-            => SendToBufferAsync(command, _commandModules, cancellationToken);
+        public async Task SendCommandAsync(Command command, CancellationToken cancellationToken)
+            => await SendToBufferAsync(command, _commandModules, cancellationToken);
 
         public async Task SendSessionAsync(Session session, CancellationToken cancellationToken)
         {
