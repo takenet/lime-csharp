@@ -160,7 +160,7 @@
                     </ListBox>
                 </ScrollViewer>
 
-                <GridSplitter Grid.Column="1" Grid.RowSpan="4" Width="5" HorizontalAlignment="Left" VerticalAlignment="Stretch" />
+                <GridSplitter Grid.Column="1" Grid.RowSpan="4" Width="5" HorizontalAlignment="Stretch"/>
 
                 <Grid Grid.Row="0" Grid.RowSpan="4" Grid.Column="2">
                     <Grid>
