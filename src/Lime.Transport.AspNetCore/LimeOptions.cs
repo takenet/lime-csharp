@@ -1,14 +1,17 @@
 using System;
+using System.Collections.Generic;
 using System.Net;
-using System.Security.Cryptography.X509Certificates;
+using System.Threading;
+using System.Threading.Tasks;
 using Lime.Protocol;
 using Lime.Protocol.Security;
+using Lime.Protocol.Server;
 
 namespace Lime.Transport.AspNetCore
 {
     public class LimeOptions
     {
-        public TransportEndPoint[] EndPoints { get; set; } = new[]
+        public ICollection<TransportEndPoint> EndPoints { get; set; } = new List<TransportEndPoint> 
         {
             new TransportEndPoint()
             {
@@ -21,31 +24,15 @@ namespace Lime.Transport.AspNetCore
                 EndPoint = new IPEndPoint(IPAddress.Any, 8080)
             },
         };
-
-        public Node LocalNode { get; set; } =
-            new Node(Environment.UserName, Environment.UserDomainName, Environment.MachineName);
-
+        public Node LocalNode { get; set; } = new Node(Environment.UserName, Environment.UserDomainName ?? "localhost", Environment.MachineName);
         public TimeSpan SendTimeout { get; set; } = TimeSpan.FromSeconds(60);
         public SessionCompression[] EnabledCompressionOptions { get; set; } = {SessionCompression.None};
-
-        public SessionEncryption[] EnabledEncryptionOptions { get; set; } =
-            {SessionEncryption.None, SessionEncryption.TLS};
-
+        public SessionEncryption[] EnabledEncryptionOptions { get; set; } = {SessionEncryption.None, SessionEncryption.TLS};
         public AuthenticationScheme[] SchemeOptions { get; set; } = {AuthenticationScheme.Guest};
+        public AuthenticationHandler AuthenticationHandler { get; set; } = (identity, authentication, token) => Task.FromResult(new AuthenticationResult(DomainRole.Member));
+        public RegistrationHandler RegistrationHandler { get; set; } = (node, channel, token) => Task.FromResult(new Node(Guid.NewGuid().ToString(), Environment.UserDomainName, Environment.MachineName));
     }
-
-    public enum TransportType
-    {
-        Tcp,
-        Ws,
-        Http
-    }
-
-    public class TransportEndPoint
-    {
-        public TransportType Transport { get; set; } = TransportType.Tcp;
-        public IPEndPoint EndPoint { get; set; } = new IPEndPoint(IPAddress.Any, 55321);
-        public bool Tls { get; set; } = false;
-        public X509Certificate2? ServerCertificate { get; set; }
-    }
+    
+    public delegate Task<AuthenticationResult> AuthenticationHandler(Identity identity, Authentication authentication, CancellationToken cancellationToken);
+    public delegate Task<Node> RegistrationHandler(Node node, IServerChannel channel, CancellationToken cancellationToken);
 }

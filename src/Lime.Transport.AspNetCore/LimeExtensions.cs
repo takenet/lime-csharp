@@ -13,7 +13,7 @@ namespace Lime.Transport.AspNetCore
     {
         public static IServiceCollection AddLime(this IServiceCollection services, Action<LimeOptions> configure)
         {
-            services.Configure(nameof(Lime), configure);
+            services.Configure(configure);
             services.TryAddEnumerable(ServiceDescriptor.Singleton<IConfigureOptions<KestrelServerOptions>, LimeOptionsSetup>());
 
             services.AddSingleton<IDocumentTypeResolver, DocumentTypeResolver>();

@@ -26,7 +26,7 @@ namespace Lime.Transport.AspNetCore
                     switch (endPoint.Transport)
                     {
                         case TransportType.Tcp:
-                            builder.UseConnectionHandler<LimeConnectionHandler>();
+                            builder.UseConnectionHandler<LimeTcpConnectionHandler>();
                             break;
                         
                         case TransportType.Ws:

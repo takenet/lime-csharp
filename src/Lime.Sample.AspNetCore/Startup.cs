@@ -1,18 +1,14 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using System.Net;
+using System.Security.Cryptography.X509Certificates;
 using Lime.Transport.AspNetCore;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebSockets;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using Microsoft.OpenApi.Models;
+using TransportType = Lime.Transport.AspNetCore.TransportType;
 
 namespace Lime.Sample.AspNetCore
 {
@@ -28,9 +24,39 @@ namespace Lime.Sample.AspNetCore
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddLime(options => { });
-            services.AddWebSockets(options => { options.KeepAliveInterval = TimeSpan.FromSeconds(30); });
+            var store = new X509Store(StoreName.My, StoreLocation.CurrentUser);
+            store.Open(OpenFlags.ReadOnly);
+            var certs = store.Certificates.Find(X509FindType.FindBySubjectName, "localhost", true);
+
+            X509Certificate2? serverCertificate = certs.Count > 0 ? certs[0] : null;
+            
+            services.AddLime(options =>
+            {
+                options.EndPoints.Clear();
+                options.EndPoints.Add(new TransportEndPoint()
+                {
+                    EndPoint = new IPEndPoint(IPAddress.Any, 55321),
+                    Transport = TransportType.Tcp,
+                    Tls = serverCertificate != null,
+                    ServerCertificate = serverCertificate 
+                });
+                options.EndPoints.Add(new TransportEndPoint()
+                {
+                    EndPoint = new IPEndPoint(IPAddress.Any, 8080),
+                    Transport = TransportType.Ws,
+                    Tls = serverCertificate != null,
+                    ServerCertificate = serverCertificate         
+                });
+
+            });
+            services.AddWebSockets(options =>
+            {
+                options.KeepAliveInterval = TimeSpan.FromSeconds(30);
+            });
             //services.AddControllers();
+            
+            
+            
             // services.AddSwaggerGen(c =>
             // {
             //     c.SwaggerDoc("v1", new OpenApiInfo {Title = "Lime.Sample.AspNetCore", Version = "v1"});

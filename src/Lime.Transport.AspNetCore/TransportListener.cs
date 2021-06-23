@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using Lime.Protocol;
 using Lime.Protocol.Listeners;
 using Lime.Protocol.Network;
-using Lime.Protocol.Security;
 using Lime.Protocol.Server;
 using Lime.Protocol.Util;
 using Microsoft.Extensions.Options;
@@ -76,17 +75,11 @@ namespace Lime.Transport.AspNetCore
                 transport.GetSupportedCompression().Intersect(_options.Value.EnabledCompressionOptions).ToArray(),
                 transport.GetSupportedEncryption().Intersect(_options.Value.EnabledEncryptionOptions).ToArray(),
                 _options.Value.SchemeOptions,
-                AuthenticateAsync,
-                RegisterAsync,
+                (identity, authentication, c) => _options.Value.AuthenticationHandler(identity, authentication, c),
+                (node, serverChannel, c) => _options.Value.RegistrationHandler(node, serverChannel, c),
                 cancellationToken);
 
             return channel;
         }
-
-        private async Task<Node> RegisterAsync(Node arg1, IServerChannel arg2, CancellationToken arg3) => 
-            new Node(Guid.NewGuid().ToString(), Environment.UserDomainName, Environment.MachineName);
-
-        private async Task<AuthenticationResult> AuthenticateAsync(Identity arg1, Authentication arg2, CancellationToken arg3) => 
-            new AuthenticationResult(DomainRole.Member);
     }
 }
