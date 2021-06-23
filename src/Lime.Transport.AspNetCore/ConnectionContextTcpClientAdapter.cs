@@ -19,12 +19,14 @@ namespace Lime.Transport.AspNetCore
 
         public Task ConnectAsync(string host, int port) => Task.CompletedTask;
 
-        public bool Connected { get; } = true;
+        public bool Connected => !_context.ConnectionClosed.IsCancellationRequested;
+
         public void Close()
         {
-            
+            _context.Transport.Input.Complete();
+            _context.Transport.Output.Complete();
         }
 
-        public Socket Client { get; } = null!;
+        public Socket Client => null!;
     }
 }

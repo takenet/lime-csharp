@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Lime.Protocol;
@@ -43,7 +44,8 @@ namespace Lime.Transport.AspNetCore
                 if (sessionTask.IsCompleted &&
                     channel.Transport.IsConnected)
                 {
-                    await channel.SendFinishedSessionAsync(default);
+                    using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+                    await channel.SendFinishedSessionAsync(cts.Token);
                 }
             }
 
@@ -51,13 +53,14 @@ namespace Lime.Transport.AspNetCore
                 channel.State != SessionState.Failed &&
                 channel.Transport.IsConnected)
             {
+                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
                 await channel.SendFailedSessionAsync(
                     new Reason()
                     {
                         Code = ReasonCodes.SESSION_ERROR,
                         Description = "The session was finished by the server"
                     },
-                    default);
+                    cts.Token);
             }
         }
 
@@ -70,12 +73,13 @@ namespace Lime.Transport.AspNetCore
                 _options.Value.SendTimeout);
 
             await channel.EstablishSessionAsync(
-                _options.Value.EnabledCompressionOptions,
-                _options.Value.EnabledEncryptionOptions,
+                transport.GetSupportedCompression().Intersect(_options.Value.EnabledCompressionOptions).ToArray(),
+                transport.GetSupportedEncryption().Intersect(_options.Value.EnabledEncryptionOptions).ToArray(),
                 _options.Value.SchemeOptions,
                 AuthenticateAsync,
                 RegisterAsync,
                 cancellationToken);
+
             return channel;
         }
 

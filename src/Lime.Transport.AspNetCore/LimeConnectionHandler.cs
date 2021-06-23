@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using Lime.Protocol.Serialization;
 using Lime.Transport.Tcp;
 using Microsoft.AspNetCore.Connections;
-using Microsoft.AspNetCore.SignalR;
 
 namespace Lime.Transport.AspNetCore
 {
@@ -13,7 +12,7 @@ namespace Lime.Transport.AspNetCore
     {
         private readonly TransportListener _listener;
         private readonly IEnvelopeSerializer _envelopeSerializer;
-        private X509Certificate2? _certificate;
+        private X509Certificate2? _serverCertificate;
 
         public LimeConnectionHandler(
             TransportListener listener,
@@ -27,8 +26,7 @@ namespace Lime.Transport.AspNetCore
         {
             var tcpClient = new ConnectionContextTcpClientAdapter(connection);
 
-            using var transport = new TcpTransport(tcpClient, _envelopeSerializer, _certificate);
-            
+            using var transport = new TcpTransport(tcpClient, _envelopeSerializer, _serverCertificate);
             await transport.OpenAsync(null, default);
             
             try

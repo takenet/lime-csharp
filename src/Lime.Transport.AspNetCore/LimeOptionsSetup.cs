@@ -17,27 +17,31 @@ namespace Lime.Transport.AspNetCore
         
         public void Configure(KestrelServerOptions options)
         {
-            foreach (var (protocol, endPoint) in _options.EndPoints)
+            foreach (var endPoint in _options.EndPoints)
             {
-                options.Listen(endPoint, builder =>
+                options.Listen(endPoint.EndPoint, builder =>
                 {
                     builder.UseConnectionLogging();
 
-                    switch (protocol)
+                    switch (endPoint.Transport)
                     {
-                        case "wss":
-                            builder.UseHttps();
-                            break;
-
-                        case "net.tcp":
+                        case TransportType.Tcp:
                             builder.UseConnectionHandler<LimeConnectionHandler>();
                             break;
                         
-                        case "ws":
+                        case TransportType.Ws:
+                            if (endPoint.Tls)
+                            {
+                                builder.UseHttps(httpsOptions =>
+                                {
+                                    httpsOptions.ServerCertificate = endPoint.ServerCertificate;
+                                });
+                            }
                             break;
-                        
+
+                        case TransportType.Http:
                         default:
-                            throw new NotSupportedException($"Unsupported protocol '{protocol}'");
+                            throw new NotSupportedException($"Unsupported tran '{endPoint.Transport}'");
                     }
                 });
             }

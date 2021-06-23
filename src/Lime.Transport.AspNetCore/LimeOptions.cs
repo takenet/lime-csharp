@@ -1,23 +1,23 @@
 using System;
 using System.Net;
+using System.Security.Cryptography.X509Certificates;
 using Lime.Protocol;
 using Lime.Protocol.Security;
-using Lime.Transport.WebSocket;
 
 namespace Lime.Transport.AspNetCore
 {
     public class LimeOptions
     {
-        public ProtocolEndPoint[] EndPoints { get; set; } = new[]
+        public TransportEndPoint[] EndPoints { get; set; } = new[]
         {
-            new ProtocolEndPoint()
+            new TransportEndPoint()
             {
-                Protocol = Uri.UriSchemeNetTcp,
+                Transport = TransportType.Tcp,
                 EndPoint = new IPEndPoint(IPAddress.Any, 55321)
             },
-            new ProtocolEndPoint()
+            new TransportEndPoint()
             {
-                Protocol = WebSocketTransportListener.UriSchemeWebSocket,
+                Transport = TransportType.Ws,
                 EndPoint = new IPEndPoint(IPAddress.Any, 8080)
             },
         };
@@ -34,15 +34,18 @@ namespace Lime.Transport.AspNetCore
         public AuthenticationScheme[] SchemeOptions { get; set; } = {AuthenticationScheme.Guest};
     }
 
-    public class ProtocolEndPoint
+    public enum TransportType
     {
-        public string Protocol { get; set; } = Uri.UriSchemeNetTcp;
-        public IPEndPoint EndPoint { get; set; } = new IPEndPoint(IPAddress.Any, 55321);
+        Tcp,
+        Ws,
+        Http
+    }
 
-        public void Deconstruct(out string protocol, out IPEndPoint endPoint)
-        {
-            protocol = Protocol;
-            endPoint = EndPoint;
-        }
+    public class TransportEndPoint
+    {
+        public TransportType Transport { get; set; } = TransportType.Tcp;
+        public IPEndPoint EndPoint { get; set; } = new IPEndPoint(IPAddress.Any, 55321);
+        public bool Tls { get; set; } = false;
+        public X509Certificate2? ServerCertificate { get; set; }
     }
 }
