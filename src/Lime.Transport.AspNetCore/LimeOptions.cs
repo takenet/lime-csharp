@@ -9,8 +9,14 @@ using Lime.Protocol.Server;
 
 namespace Lime.Transport.AspNetCore
 {
+    /// <summary>
+    /// Defines configuration options for the Lime service. 
+    /// </summary>
     public class LimeOptions
     {
+        /// <summary>
+        /// The endpoints for receiving connections.
+        /// </summary>
         public ICollection<TransportEndPoint> EndPoints { get; set; } = new List<TransportEndPoint> 
         {
             new TransportEndPoint()
@@ -24,6 +30,10 @@ namespace Lime.Transport.AspNetCore
                 EndPoint = new IPEndPoint(IPAddress.Any, 8080)
             },
         };
+        
+        /// <summary>
+        /// The node for the local server, which will be presented to the connected clients.
+        /// </summary>
         public Node LocalNode { get; set; } = new Node(Environment.UserName, Environment.UserDomainName ?? "localhost", Environment.MachineName);
         public TimeSpan SendTimeout { get; set; } = TimeSpan.FromSeconds(60);
         public SessionCompression[] EnabledCompressionOptions { get; set; } = {SessionCompression.None};

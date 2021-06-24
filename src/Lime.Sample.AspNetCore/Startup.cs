@@ -1,6 +1,7 @@
 using System;
 using System.Net;
 using System.Security.Cryptography.X509Certificates;
+using Lime.Protocol;
 using Lime.Transport.AspNetCore;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -48,12 +49,14 @@ namespace Lime.Sample.AspNetCore
                     ServerCertificate = serverCertificate         
                 });
 
+                options.LocalNode = new Node("postmaster", "domain", Environment.MachineName);
+
             });
             services.AddWebSockets(options =>
             {
                 options.KeepAliveInterval = TimeSpan.FromSeconds(30);
             });
-            //services.AddControllers();
+            services.AddControllers();
             
             
             

@@ -1,4 +1,6 @@
 using System;
+using System.Linq;
+using System.Reflection;
 using Lime.Protocol.Serialization;
 using Lime.Protocol.Serialization.Newtonsoft;
 using Microsoft.AspNetCore.Builder;
@@ -19,6 +21,11 @@ namespace Lime.Transport.AspNetCore
             services.AddSingleton<IDocumentTypeResolver, DocumentTypeResolver>();
             services.AddSingleton<IEnvelopeSerializer, EnvelopeSerializer>();
             services.AddSingleton<TransportListener>();
+
+            services.RegisterManyTransient<IMessageListener>();
+            services.RegisterManyTransient<INotificationListener>();
+            services.RegisterManyTransient<ICommandListener>();
+
             return services;
         }
 
@@ -27,6 +34,22 @@ namespace Lime.Transport.AspNetCore
             app.UseMiddleware<LimeWebSocketMiddleware>();
             
             return app;
+        }
+        
+        public static void RegisterManyTransient<T>(this IServiceCollection services)
+        {
+            var types = Assembly
+                .GetEntryAssembly()
+                ?.DefinedTypes
+                .Where(t => !t.IsAbstract && typeof(T).IsAssignableFrom(t));
+
+            if (types != null)
+            {
+                foreach (var type in types)
+                {
+                    services.AddTransient(typeof(T), type);
+                }
+            }
         }
     }
 }

@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Lime.Protocol;
@@ -6,30 +5,11 @@ using Lime.Protocol.Network;
 
 namespace Lime.Transport.AspNetCore
 {
-    public abstract class MessageProcessor
-    {
-        public ISenderChannel Channel { get; internal set; } = null!; 
-        
-        public abstract Task OnMessageAsync(Message message, CancellationToken cancellationToken);
-    }
-
-    public abstract class NotificationProcessor
-    {
-        public ISenderChannel Channel { get; internal set; } = null!;
-        
-        public abstract Task OnNotificationAsync(Notification notification, CancellationToken cancellationToken);
-    }
-
-    public interface ISenderChannel : IMessageSenderChannel, INotificationSenderChannel, ICommandSenderChannel, ICommandProcessor, IChannelInformation
-    {
-        ITransportInformation Transport { get; }
-    }
-
-    public sealed class ChannelAdapter : ISenderChannel
+    public sealed class SenderChannelAdapter : ISenderChannel
     {
         private readonly IChannel _channel;
 
-        public ChannelAdapter(IChannel channel)
+        public SenderChannelAdapter(IChannel channel)
         {
             _channel = channel;
             Transport = new TransportInformation(

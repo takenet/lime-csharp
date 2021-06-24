@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -6,7 +8,8 @@ using Lime.Protocol;
 using Lime.Protocol.Listeners;
 using Lime.Protocol.Network;
 using Lime.Protocol.Server;
-using Lime.Protocol.Util;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace Lime.Transport.AspNetCore
@@ -14,10 +17,17 @@ namespace Lime.Transport.AspNetCore
     public sealed class TransportListener
     {
         private readonly IOptions<LimeOptions> _options;
+        private readonly IServiceProvider _serviceProvider;
+        private readonly ILogger<TransportListener> _logger;
+        private readonly ConcurrentDictionary<Node, ISenderChannel> _establishedChannels;
 
-        public TransportListener(IOptions<LimeOptions> options)
+        public TransportListener(IOptions<LimeOptions> options, IServiceProvider serviceProvider,
+            ILogger<TransportListener> logger)
         {
             _options = options;
+            _serviceProvider = serviceProvider;
+            _logger = logger;
+            _establishedChannels = new ConcurrentDictionary<Node, ISenderChannel>();
         }
 
         public async Task ListenAsync(ITransport transport, CancellationToken cancellationToken)
@@ -26,19 +36,32 @@ namespace Lime.Transport.AspNetCore
 
             if (channel.State == SessionState.Established)
             {
+                var node = channel.RemoteNode;
+                var senderChannel = new SenderChannelAdapter(channel);
+                _establishedChannels[node] = senderChannel;
+
                 var listener = new ChannelListener(
-                    (m, ct) => TaskUtil.TrueCompletedTask,
-                    (n, ct) => TaskUtil.TrueCompletedTask,
-                    (c, ct) => TaskUtil.TrueCompletedTask);
-                listener.Start(channel);
+                    (m, ct) => OnMessageAsync(m, senderChannel, ct),
+                    (n, ct) => OnNotificationAsync(n, senderChannel, ct),
+                    (c, ct) => OnCommandAsync(c, senderChannel, ct));
 
                 var sessionTask = channel.ReceiveFinishingSessionAsync(cancellationToken);
 
-                await Task.WhenAny(
-                    sessionTask,
-                    listener.CommandListenerTask,
-                    listener.MessageListenerTask,
-                    listener.NotificationListenerTask);
+                listener.Start(channel);
+
+                try
+                {
+                    await Task.WhenAny(
+                        sessionTask,
+                        listener.CommandListenerTask,
+                        listener.MessageListenerTask,
+                        listener.NotificationListenerTask);
+                }
+                finally
+                {
+                    listener.Stop();
+                    _establishedChannels.TryRemove(node, out _);
+                }
 
                 if (sessionTask.IsCompleted &&
                     channel.Transport.IsConnected)
@@ -63,7 +86,8 @@ namespace Lime.Transport.AspNetCore
             }
         }
 
-        private async Task<ServerChannel> EstablishChannelAsync(ITransport transport, CancellationToken cancellationToken)
+        private async Task<ServerChannel> EstablishChannelAsync(ITransport transport,
+            CancellationToken cancellationToken)
         {
             var channel = new ServerChannel(
                 EnvelopeId.NewId(),
@@ -81,5 +105,103 @@ namespace Lime.Transport.AspNetCore
 
             return channel;
         }
+
+        private async Task<bool> OnCommandAsync(Command command, ISenderChannel channel,
+            CancellationToken cancellationToken)
+        {
+            using var _ = _logger.BeginScope(
+                new Dictionary<string, string>
+                {
+                    {"Command.Id", command.Id},
+                    {"Command.From", command.From},
+                    {"Command.To", command.To},
+                    {"Command.Method", command.Method.ToString()},
+                    {"Command.Uri", command.Uri},
+                    {"Command.Type", command.Type},
+                });
+
+            await InvokeListenersAsync<ICommandListener, Command>(
+                command, 
+                channel,
+                cancellationToken);
+
+            return true;
+        }
+
+        private async Task<bool> OnNotificationAsync(Notification notification, ISenderChannel channel,
+            CancellationToken cancellationToken)
+        {
+            using var _ = _logger.BeginScope(
+                new Dictionary<string, string>
+                {
+                    {"id", notification.Id},
+                    {"from", notification.From},
+                    {"to", notification.To},
+                    {"event", notification.Event.ToString()},
+                });
+
+            await InvokeListenersAsync<INotificationListener, Notification>(
+                notification, 
+                channel,
+                cancellationToken);
+
+            return true;
+        }
+
+        private async Task<bool> OnMessageAsync(Message message, ISenderChannel channel,
+            CancellationToken cancellationToken)
+        {
+            using var _ = _logger.BeginScope(
+                new Dictionary<string, string>
+                {
+                    {"id", message.Id},
+                    {"from", message.From},
+                    {"to", message.To},
+                    {"type", message.Type},
+                });
+
+            await InvokeListenersAsync<IMessageListener, Message>(
+                message, 
+                channel,
+                cancellationToken);
+            
+            return true;
+        }
+
+        private async Task InvokeListenersAsync<TListener, TEnvelope>(
+            TEnvelope envelope,
+            ISenderChannel channel,
+            CancellationToken cancellationToken) 
+            where TEnvelope : Envelope, new()
+            where TListener : IEnvelopeListener<TEnvelope>
+        {
+            try
+            {
+                var listeners = _serviceProvider.GetServices<TListener>();
+                if (listeners != null)
+                {
+                    await Task.WhenAll(
+                        listeners
+                            .Where(l => l.Filter(envelope))
+                            .Select(l =>
+                                Task.Run(() =>
+                                {
+                                    if (l is EnvelopeContext envelopeListenerBase)
+                                    {
+                                        envelopeListenerBase.Channel = channel;
+                                        envelopeListenerBase.GetChannelFunc = GetChannel;
+                                    }
+
+                                    return l.OnEnvelopeAsync(envelope, cancellationToken);
+                                }, cancellationToken)));
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "{EnvelopeType} processing failed", typeof(TEnvelope).Name);
+            }
+        }
+
+        private ISenderChannel? GetChannel(Node node) => _establishedChannels.TryGetValue(node, out var c) ? c : null;
     }
 }
