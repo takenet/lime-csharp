@@ -9,11 +9,13 @@ namespace Lime.Sample.AspNetCore.Listeners
     public class CommandListener : CommandListenerBase
     {
         private readonly ILogger<CommandListener> _logger;
+        private readonly ChannelContext _channelContext;
 
-        public CommandListener(ILogger<CommandListener> logger)
+        public CommandListener(ILogger<CommandListener> logger, ChannelContext channelContext)
             : base(c => c.Status == CommandStatus.Pending)
         {
             _logger = logger;
+            _channelContext = channelContext;
         }
         
         public override async Task OnCommandAsync(Command command, CancellationToken cancellationToken)
@@ -27,7 +29,7 @@ namespace Lime.Sample.AspNetCore.Listeners
                 Status = CommandStatus.Success
             };
 
-            await Channel.SendCommandAsync(responseCommand, cancellationToken);
+            await _channelContext.Channel.SendCommandAsync(responseCommand, cancellationToken);
         }
     }
 }

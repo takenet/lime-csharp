@@ -5,7 +5,7 @@ using Lime.Protocol;
 
 namespace Lime.Transport.AspNetCore
 {
-    public abstract class NotificationListenerBase : EnvelopeContext, INotificationListener
+    public abstract class NotificationListenerBase : INotificationListener
     {
         protected NotificationListenerBase()
             : this (_ => true)

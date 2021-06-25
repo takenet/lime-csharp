@@ -17,15 +17,17 @@ namespace Lime.Transport.AspNetCore
     public sealed class TransportListener
     {
         private readonly IOptions<LimeOptions> _options;
-        private readonly IServiceProvider _serviceProvider;
+        private readonly IServiceScopeFactory _serviceScopeFactory;
         private readonly ILogger<TransportListener> _logger;
         private readonly ConcurrentDictionary<Node, ISenderChannel> _establishedChannels;
 
-        public TransportListener(IOptions<LimeOptions> options, IServiceProvider serviceProvider,
+        public TransportListener(
+            IOptions<LimeOptions> options, 
+            IServiceScopeFactory serviceScopeFactory,
             ILogger<TransportListener> logger)
         {
             _options = options;
-            _serviceProvider = serviceProvider;
+            _serviceScopeFactory = serviceScopeFactory;
             _logger = logger;
             _establishedChannels = new ConcurrentDictionary<Node, ISenderChannel>();
         }
@@ -168,38 +170,43 @@ namespace Lime.Transport.AspNetCore
             return true;
         }
 
-        private async Task InvokeListenersAsync<TListener, TEnvelope>(
+        private async Task<int> InvokeListenersAsync<TListener, TEnvelope>(
             TEnvelope envelope,
             ISenderChannel channel,
             CancellationToken cancellationToken) 
             where TEnvelope : Envelope, new()
             where TListener : IEnvelopeListener<TEnvelope>
         {
+            using var scope = _serviceScopeFactory.CreateScope();
+            
+            var channelContext = new ChannelContext(channel, GetChannel);
+            var contextProvider = scope.ServiceProvider.GetRequiredService<ChannelContextProvider>();
+            contextProvider.SetContext(channelContext);
+            
             try
             {
-                var listeners = _serviceProvider.GetServices<TListener>();
-                if (listeners != null)
+                var listeners = scope
+                    .ServiceProvider
+                    .GetServices<TListener>()
+                    ?.Where(l => l.Filter(envelope))
+                    .ToArray();
+
+                if (listeners != null && listeners.Length > 0)
                 {
                     await Task.WhenAll(
                         listeners
-                            .Where(l => l.Filter(envelope))
                             .Select(l =>
-                                Task.Run(() =>
-                                {
-                                    if (l is EnvelopeContext envelopeListenerBase)
-                                    {
-                                        envelopeListenerBase.Channel = channel;
-                                        envelopeListenerBase.GetChannelFunc = GetChannel;
-                                    }
+                                Task.Run(() => l.OnEnvelopeAsync(envelope, cancellationToken), cancellationToken)));
 
-                                    return l.OnEnvelopeAsync(envelope, cancellationToken);
-                                }, cancellationToken)));
+                    return listeners.Length;
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "{EnvelopeType} processing failed", typeof(TEnvelope).Name);
             }
+
+            return 0;
         }
 
         private ISenderChannel? GetChannel(Node node) => _establishedChannels.TryGetValue(node, out var c) ? c : null;

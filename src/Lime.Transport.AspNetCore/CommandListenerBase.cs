@@ -5,7 +5,7 @@ using Lime.Protocol;
 
 namespace Lime.Transport.AspNetCore
 {
-    public abstract class CommandListenerBase : EnvelopeContext, ICommandListener
+    public abstract class CommandListenerBase : ICommandListener
     {
         protected CommandListenerBase()
             : this (_ => true)

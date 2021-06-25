@@ -10,10 +10,12 @@ namespace Lime.Sample.AspNetCore.Listeners
     public class MessageListener : MessageListenerBase
     {
         private readonly ILogger<MessageListener> _logger;
+        private readonly ChannelContext _channelContext;
 
-        public MessageListener(ILogger<MessageListener> logger)
+        public MessageListener(ILogger<MessageListener> logger, ChannelContext channelContext)
         {
             _logger = logger;
+            _channelContext = channelContext;
         }
 
         public override async Task OnMessageAsync(Message message, CancellationToken cancellationToken)
@@ -22,7 +24,7 @@ namespace Lime.Sample.AspNetCore.Listeners
 
             if (message.Id != null)
             {
-                await Channel.SendNotificationAsync(
+                await _channelContext.Channel.SendNotificationAsync(
                     new Notification(message.Id)
                     {
                         Event = Event.Accepted
@@ -34,7 +36,7 @@ namespace Lime.Sample.AspNetCore.Listeners
             
             if (message.To != null)
             {
-                destinationChannel = GetChannel(message.To);
+                destinationChannel = _channelContext.GetChannel(message.To);
             }
 
             if (destinationChannel != null)
@@ -43,7 +45,7 @@ namespace Lime.Sample.AspNetCore.Listeners
             }
             else
             {
-                await Channel.SendNotificationAsync(
+                await _channelContext.Channel.SendNotificationAsync(
                     new Notification(message.Id)
                     {
                         Event = Event.Failed,

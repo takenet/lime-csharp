@@ -5,7 +5,7 @@ using Lime.Protocol;
 
 namespace Lime.Transport.AspNetCore
 {
-    public abstract class MessageListenerBase : EnvelopeContext, IMessageListener
+    public abstract class MessageListenerBase : IMessageListener
     {
         protected MessageListenerBase()
             : this (_ => true)
