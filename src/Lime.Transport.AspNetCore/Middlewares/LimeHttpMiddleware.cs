@@ -14,7 +14,7 @@ using Microsoft.Net.Http.Headers;
 
 namespace Lime.Transport.AspNetCore
 {
-    public class LimeHttpMiddleware
+    internal class LimeHttpMiddleware
     {
         private const string MESSAGES_PATH = "/messages";
         private const string COMMANDS_PATH = "/commands";
@@ -37,27 +37,34 @@ namespace Lime.Transport.AspNetCore
 
         private readonly RequestDelegate _next;
         private readonly IEnvelopeSerializer _envelopeSerializer;
-        private readonly IOptions<LimeOptions> _limeOptions;
+        private readonly IOptions<LimeOptions> _options;
         private readonly TransportListener _transportListener;
         private readonly ILogger<LimeHttpMiddleware> _logger;
+        private readonly int[] _httpPorts;
 
         public LimeHttpMiddleware(
             RequestDelegate next,
             IEnvelopeSerializer envelopeSerializer,
-            IOptions<LimeOptions> limeOptions,
+            IOptions<LimeOptions> options,
             TransportListener transportListener,
             ILogger<LimeHttpMiddleware> logger)
         {
             _next = next;
             _envelopeSerializer = envelopeSerializer;
-            _limeOptions = limeOptions;
+            _options = options;
             _transportListener = transportListener;
             _logger = logger;
+            _httpPorts = options
+                .Value
+                .EndPoints.Where(e => e.Transport == TransportType.Http)
+                .Select(e => e.EndPoint.Port)
+                .ToArray();
         }
 
         public async Task Invoke(HttpContext context)
         {
-            if (context.Request.Method != HttpMethods.Post ||
+            if (!_httpPorts.Contains(context.Connection.LocalPort) ||
+                context.Request.Method != HttpMethods.Post ||
                 !EnvelopePaths.Any(e => string.Equals(e, context.Request.Path, StringComparison.OrdinalIgnoreCase)) ||
                 !EnvelopeContentTypes.Contains(context.Request.ContentType))
             {
@@ -79,7 +86,7 @@ namespace Lime.Transport.AspNetCore
 
             var channel = new HttpContextChannel(
                 context,
-                _limeOptions.Value.LocalNode,
+                _options.Value.LocalNode,
                 identity.ToNode(),
                 _envelopeSerializer);
             
@@ -87,25 +94,20 @@ namespace Lime.Transport.AspNetCore
             {
                 case Message message:
                     await _transportListener.OnMessageAsync(message, channel, context.RequestAborted);
-                    context.Response.StatusCode = StatusCodes.Status202Accepted;
                     break;
 
                 case Notification notification:
                     await _transportListener.OnNotificationAsync(notification, channel, context.RequestAborted);
-                    context.Response.StatusCode = StatusCodes.Status202Accepted;
                     break;
                 
                 case Command command:
                     await _transportListener.OnCommandAsync(command, channel, context.RequestAborted);
-                    context.Response.StatusCode = StatusCodes.Status202Accepted;
                     break;
                 
                 default:
                     context.Response.StatusCode = StatusCodes.Status400BadRequest;
                     break;
             }
-
-            await context.Response.CompleteAsync();
         }
 
         private async Task<Identity?> AuthenticateAsync(HttpContext context)
@@ -128,11 +130,11 @@ namespace Lime.Transport.AspNetCore
             }
             else
             {
-                identity = new Identity(Guid.NewGuid().ToString().ToLowerInvariant(), _limeOptions.Value.LocalNode.Domain);
+                identity = new Identity(Guid.NewGuid().ToString().ToLowerInvariant(), _options.Value.LocalNode.Domain);
                 authentication = new GuestAuthentication();
             }
 
-            var result = await _limeOptions.Value.AuthenticationHandler(identity, authentication, context.RequestAborted);
+            var result = await _options.Value.AuthenticationHandler(identity, authentication, context.RequestAborted);
 
             if (result.DomainRole != DomainRole.Unknown)
             {

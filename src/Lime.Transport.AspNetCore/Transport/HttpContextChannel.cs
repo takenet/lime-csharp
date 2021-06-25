@@ -1,5 +1,6 @@
 using System;
 using System.Buffers;
+using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -15,6 +16,7 @@ namespace Lime.Transport.AspNetCore
     /// </summary>
     public sealed class HttpContextChannel : ISenderChannel
     {
+        private readonly HttpContext _context;
         private readonly IEnvelopeSerializer _envelopeSerializer;
         private readonly SemaphoreSlim _sendSemaphore;
         private bool _envelopeSent;
@@ -22,7 +24,7 @@ namespace Lime.Transport.AspNetCore
         public HttpContextChannel(HttpContext context, Node localNode, Node remoteNode, IEnvelopeSerializer envelopeSerializer)
         {
             _envelopeSerializer = envelopeSerializer;
-            Context = context;
+            _context = context;
             LocalNode = localNode;
             RemoteNode = remoteNode;
             SessionId = context.Connection.Id;
@@ -31,19 +33,19 @@ namespace Lime.Transport.AspNetCore
                 SessionCompression.None,
                 context.Request.IsHttps ? SessionEncryption.TLS : SessionEncryption.None,
                 true,
-                "",
-                "", 
-                null);
+                $"{context.Connection.LocalIpAddress}:{context.Connection.LocalPort}",
+                $"{context.Connection.RemoteIpAddress}:{context.Connection.RemotePort}",
+                new Dictionary<string, object>
+                {
+                    { nameof(HttpContext), context }
+                });
             _sendSemaphore = new SemaphoreSlim(1);
         }
-        
-        public HttpContext Context { get; }
         
         public string SessionId { get; }
         public SessionState State { get; }
         public Node LocalNode { get; }
         public Node RemoteNode { get; }
-
         public ITransportInformation Transport { get; }
 
         public Task SendMessageAsync(Message message, CancellationToken cancellationToken) =>
@@ -69,13 +71,14 @@ namespace Lime.Transport.AspNetCore
                 EnsureNotSent();
                 _envelopeSent = true;
                 
-                Context.Response.ContentType = "application/json";
+                _context.Response.StatusCode = StatusCodes.Status200OK;
+                _context.Response.ContentType = "application/json";
                 var serializedEnvelope = _envelopeSerializer.Serialize(envelope);
                 var buffer = ArrayPool<byte>.Shared.Rent(Encoding.UTF8.GetByteCount(serializedEnvelope));
                 try
                 {
                     var length = Encoding.UTF8.GetBytes(serializedEnvelope, 0, serializedEnvelope.Length, buffer, 0);
-                    await Context.Response.Body.WriteAsync(buffer, 0, length, cancellationToken).ConfigureAwait(false);
+                    await _context.Response.Body.WriteAsync(buffer, 0, length, cancellationToken).ConfigureAwait(false);
                 }
                 finally
                 {

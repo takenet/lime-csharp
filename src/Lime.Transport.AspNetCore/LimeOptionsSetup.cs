@@ -29,9 +29,9 @@ namespace Lime.Transport.AspNetCore
                             builder.UseConnectionHandler<LimeTcpConnectionHandler>();
                             break;
                         
-                        case TransportType.Ws:
+                        case TransportType.WebSocket:
                         case TransportType.Http:
-                            if (endPoint.Tls)
+                            if (endPoint.ServerCertificate != null)
                             {
                                 builder.UseHttps(httpsOptions =>
                                 {

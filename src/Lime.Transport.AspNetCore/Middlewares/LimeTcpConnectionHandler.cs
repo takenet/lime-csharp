@@ -11,7 +11,7 @@ using Microsoft.Extensions.Options;
 
 namespace Lime.Transport.AspNetCore
 {
-    public class LimeTcpConnectionHandler : ConnectionHandler
+    internal class LimeTcpConnectionHandler : ConnectionHandler
     {
         private readonly TransportListener _listener;
         private readonly IEnvelopeSerializer _envelopeSerializer;
@@ -33,8 +33,7 @@ namespace Lime.Transport.AspNetCore
             var tcpClient = new ConnectionContextTcpClientAdapter(connection);
             
             var transportEndPoint =
-                _options.Value.EndPoints.FirstOrDefault(e => 
-                    e.Tls &&
+                _options.Value.EndPoints.FirstOrDefault(e =>
                     e.Transport == TransportType.Tcp && 
                     e.EndPoint.Port == ((IPEndPoint)connection.LocalEndPoint).Port);
 

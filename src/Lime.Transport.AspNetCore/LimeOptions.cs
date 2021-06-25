@@ -26,7 +26,7 @@ namespace Lime.Transport.AspNetCore
             },
             new TransportEndPoint()
             {
-                Transport = TransportType.Ws,
+                Transport = TransportType.WebSocket,
                 EndPoint = new IPEndPoint(IPAddress.Any, 8080)
             },
         };

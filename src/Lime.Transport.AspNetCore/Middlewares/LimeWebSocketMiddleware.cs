@@ -1,31 +1,41 @@
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Lime.Protocol.Serialization;
 using Lime.Transport.WebSocket;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Options;
 
 namespace Lime.Transport.AspNetCore
 {
-    public class LimeWebSocketMiddleware
+    internal class LimeWebSocketMiddleware
     {
         private readonly RequestDelegate _next;
         private readonly IEnvelopeSerializer _envelopeSerializer;
         private readonly TransportListener _listener;
+        private readonly int[] _wsPorts;
 
         public LimeWebSocketMiddleware(
             RequestDelegate next,
             IEnvelopeSerializer envelopeSerializer,
-            TransportListener listener)
+            TransportListener listener,
+            IOptions<LimeOptions> options)
         {
             _next = next;
             _envelopeSerializer = envelopeSerializer;
             _listener = listener;
+            _wsPorts = options
+                .Value
+                .EndPoints.Where(e => e.Transport == TransportType.WebSocket)
+                .Select(e => e.EndPoint.Port)
+                .ToArray();
         }
 
         public async Task Invoke(HttpContext context)
         {
-            if (!context.WebSockets.IsWebSocketRequest)
+            if (!context.WebSockets.IsWebSocketRequest ||
+                !_wsPorts.Contains(context.Connection.LocalPort))
             {
                 await _next.Invoke(context);
                 return;

@@ -14,7 +14,7 @@ using Microsoft.Extensions.Options;
 
 namespace Lime.Transport.AspNetCore
 {
-    public sealed class TransportListener
+    internal sealed class TransportListener
     {
         private readonly IOptions<LimeOptions> _options;
         private readonly IServiceScopeFactory _serviceScopeFactory;

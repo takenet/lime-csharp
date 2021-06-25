@@ -40,18 +40,22 @@ namespace Lime.Sample.AspNetCore
                 {
                     EndPoint = new IPEndPoint(IPAddress.Any, 55321),
                     Transport = TransportType.Tcp,
-                    Tls = serverCertificate != null,
                     ServerCertificate = serverCertificate 
                 });
                 options.EndPoints.Add(new TransportEndPoint()
                 {
                     EndPoint = new IPEndPoint(IPAddress.Any, 8080),
-                    Transport = TransportType.Ws,
-                    Tls = serverCertificate != null,
+                    Transport = TransportType.WebSocket,
                     ServerCertificate = serverCertificate         
                 });
-
-                options.LocalNode = new Node("postmaster", "domain", Environment.MachineName);
+                options.EndPoints.Add(new TransportEndPoint()
+                {
+                    EndPoint = new IPEndPoint(IPAddress.Any, 443),
+                    Transport = TransportType.Http,
+                    ServerCertificate = serverCertificate         
+                });
+                
+                options.LocalNode = new Node("postmaster", "localhost", Environment.MachineName);
 
             });
             services.AddWebSockets(options =>
@@ -78,8 +82,6 @@ namespace Lime.Sample.AspNetCore
             //app.UseHttpsRedirection();
 
             //app.UseRouting();
-
-            //app.UseAuthorization();
 
             // app.UseEndpoints(endpoints =>
             // {
