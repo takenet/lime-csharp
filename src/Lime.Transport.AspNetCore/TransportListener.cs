@@ -22,7 +22,7 @@ namespace Lime.Transport.AspNetCore
         private readonly ConcurrentDictionary<Node, ISenderChannel> _establishedChannels;
 
         public TransportListener(
-            IOptions<LimeOptions> options, 
+            IOptions<LimeOptions> options,
             IServiceScopeFactory serviceScopeFactory,
             ILogger<TransportListener> logger)
         {
@@ -34,82 +34,43 @@ namespace Lime.Transport.AspNetCore
 
         public async Task ListenAsync(ITransport transport, CancellationToken cancellationToken)
         {
-            using var channel = await EstablishChannelAsync(transport, cancellationToken);
+            using var channel = CreateChannel(transport);
+            await EstablishChannelAsync(channel, cancellationToken);
 
             if (channel.State == SessionState.Established)
             {
-                var node = channel.RemoteNode;
-                var senderChannel = new SenderChannelAdapter(channel);
-                _establishedChannels[node] = senderChannel;
-
-                var listener = new ChannelListener(
-                    (m, ct) => OnMessageAsync(m, senderChannel, ct),
-                    (n, ct) => OnNotificationAsync(n, senderChannel, ct),
-                    (c, ct) => OnCommandAsync(c, senderChannel, ct));
-
-                var sessionTask = channel.ReceiveFinishingSessionAsync(cancellationToken);
-
-                listener.Start(channel);
-
-                try
-                {
-                    await Task.WhenAny(
-                        sessionTask,
-                        listener.CommandListenerTask,
-                        listener.MessageListenerTask,
-                        listener.NotificationListenerTask);
-                }
-                finally
-                {
-                    listener.Stop();
-                    _establishedChannels.TryRemove(node, out _);
-                }
-
-                if (sessionTask.IsCompleted &&
-                    channel.Transport.IsConnected)
-                {
-                    using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
-                    await channel.SendFinishedSessionAsync(cts.Token);
-                }
+                await ListenChannelAsync(channel, cancellationToken);
             }
 
-            if (channel.State != SessionState.Finished &&
-                channel.State != SessionState.Failed &&
-                channel.Transport.IsConnected)
-            {
-                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
-                await channel.SendFailedSessionAsync(
-                    new Reason()
-                    {
-                        Code = ReasonCodes.SESSION_ERROR,
-                        Description = "The session was finished by the server"
-                    },
-                    cts.Token);
-            }
+            await CloseChannelAsync(channel);
         }
 
-        private async Task<ServerChannel> EstablishChannelAsync(ITransport transport,
-            CancellationToken cancellationToken)
-        {
-            var channel = new ServerChannel(
+        private ServerChannel CreateChannel(ITransport transport) =>
+            new ServerChannel(
                 EnvelopeId.NewId(),
                 _options.Value.LocalNode,
                 transport,
                 _options.Value.SendTimeout);
 
+        private async Task EstablishChannelAsync(ServerChannel channel, CancellationToken cancellationToken)
+        {
             await channel.EstablishSessionAsync(
-                transport.GetSupportedCompression().Intersect(_options.Value.EnabledCompressionOptions).ToArray(),
-                transport.GetSupportedEncryption().Intersect(_options.Value.EnabledEncryptionOptions).ToArray(),
+                channel.Transport.GetSupportedCompression().Intersect(_options.Value.EnabledCompressionOptions)
+                    .ToArray(),
+                channel.Transport.GetSupportedEncryption().Intersect(_options.Value.EnabledEncryptionOptions).ToArray(),
                 _options.Value.SchemeOptions,
                 (identity, authentication, c) => _options.Value.AuthenticationHandler(identity, authentication, c),
                 (node, serverChannel, c) => _options.Value.RegistrationHandler(node, serverChannel, c),
                 cancellationToken);
-
-            return channel;
         }
 
-        private async Task<bool> OnCommandAsync(Command command, ISenderChannel channel,
-            CancellationToken cancellationToken)
+        private ChannelListener CreateChannelListener(SenderChannelAdapter senderChannel) =>
+            new ChannelListener(
+                (m, ct) => OnMessageAsync(m, senderChannel, ct),
+                (n, ct) => OnNotificationAsync(n, senderChannel, ct),
+                (c, ct) => OnCommandAsync(c, senderChannel, ct));
+
+        public async Task<bool> OnCommandAsync(Command command, ISenderChannel channel, CancellationToken cancellationToken)
         {
             using var _ = _logger.BeginScope(
                 new Dictionary<string, string>
@@ -123,15 +84,14 @@ namespace Lime.Transport.AspNetCore
                 });
 
             await InvokeListenersAsync<ICommandListener, Command>(
-                command, 
+                command,
                 channel,
                 cancellationToken);
 
             return true;
         }
 
-        private async Task<bool> OnNotificationAsync(Notification notification, ISenderChannel channel,
-            CancellationToken cancellationToken)
+        public async Task<bool> OnNotificationAsync(Notification notification, ISenderChannel channel, CancellationToken cancellationToken)
         {
             using var _ = _logger.BeginScope(
                 new Dictionary<string, string>
@@ -143,15 +103,14 @@ namespace Lime.Transport.AspNetCore
                 });
 
             await InvokeListenersAsync<INotificationListener, Notification>(
-                notification, 
+                notification,
                 channel,
                 cancellationToken);
 
             return true;
         }
 
-        private async Task<bool> OnMessageAsync(Message message, ISenderChannel channel,
-            CancellationToken cancellationToken)
+        public async Task<bool> OnMessageAsync(Message message, ISenderChannel channel, CancellationToken cancellationToken)
         {
             using var _ = _logger.BeginScope(
                 new Dictionary<string, string>
@@ -163,26 +122,26 @@ namespace Lime.Transport.AspNetCore
                 });
 
             await InvokeListenersAsync<IMessageListener, Message>(
-                message, 
+                message,
                 channel,
                 cancellationToken);
-            
+
             return true;
         }
 
         private async Task<int> InvokeListenersAsync<TListener, TEnvelope>(
             TEnvelope envelope,
             ISenderChannel channel,
-            CancellationToken cancellationToken) 
+            CancellationToken cancellationToken)
             where TEnvelope : Envelope, new()
             where TListener : IEnvelopeListener<TEnvelope>
         {
             using var scope = _serviceScopeFactory.CreateScope();
-            
+
             var channelContext = new ChannelContext(channel, GetChannel);
             var contextProvider = scope.ServiceProvider.GetRequiredService<ChannelContextProvider>();
             contextProvider.SetContext(channelContext);
-            
+
             try
             {
                 var listeners = scope
@@ -210,5 +169,56 @@ namespace Lime.Transport.AspNetCore
         }
 
         private ISenderChannel? GetChannel(Node node) => _establishedChannels.TryGetValue(node, out var c) ? c : null;
+
+        private async Task ListenChannelAsync(IServerChannel channel, CancellationToken cancellationToken)
+        {
+            var node = channel.RemoteNode;
+            var senderChannel = new SenderChannelAdapter(channel);
+            _establishedChannels[node] = senderChannel;
+
+            using var listener = CreateChannelListener(senderChannel);
+
+            var sessionTask = channel.ReceiveFinishingSessionAsync(cancellationToken);
+
+            listener.Start(channel);
+
+            try
+            {
+                await Task.WhenAny(
+                    sessionTask,
+                    listener.CommandListenerTask,
+                    listener.MessageListenerTask,
+                    listener.NotificationListenerTask);
+            }
+            finally
+            {
+                listener.Stop();
+                _establishedChannels.TryRemove(node, out _);
+            }
+
+            if (sessionTask.IsCompleted &&
+                channel.Transport.IsConnected)
+            {
+                using var cts = new CancellationTokenSource(_options.Value.CloseTimeout);
+                await channel.SendFinishedSessionAsync(cts.Token);
+            }
+        }
+
+        private async Task CloseChannelAsync(IServerChannel channel)
+        {
+            if (channel.State != SessionState.Finished &&
+                channel.State != SessionState.Failed &&
+                channel.Transport.IsConnected)
+            {
+                using var cts = new CancellationTokenSource(_options.Value.CloseTimeout);
+                await channel.SendFailedSessionAsync(
+                    new Reason()
+                    {
+                        Code = ReasonCodes.SESSION_ERROR,
+                        Description = "The session was finished by the server"
+                    },
+                    cts.Token);
+            }
+        }
     }
 }

@@ -36,6 +36,7 @@ namespace Lime.Transport.AspNetCore
         /// </summary>
         public Node LocalNode { get; set; } = new Node(Environment.UserName, Environment.UserDomainName ?? "localhost", Environment.MachineName);
         public TimeSpan SendTimeout { get; set; } = TimeSpan.FromSeconds(60);
+        public TimeSpan CloseTimeout { get; set; } = TimeSpan.FromSeconds(5);
         public SessionCompression[] EnabledCompressionOptions { get; set; } = {SessionCompression.None};
         public SessionEncryption[] EnabledEncryptionOptions { get; set; } = {SessionEncryption.None, SessionEncryption.TLS};
         public AuthenticationScheme[] SchemeOptions { get; set; } = {AuthenticationScheme.Guest};

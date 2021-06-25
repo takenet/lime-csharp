@@ -35,6 +35,7 @@ namespace Lime.Transport.AspNetCore
         public static IApplicationBuilder UseLime(this IApplicationBuilder app)
         {
             app.UseMiddleware<LimeWebSocketMiddleware>();
+            app.UseMiddleware<LimeHttpMiddleware>();
             
             return app;
         }

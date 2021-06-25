@@ -30,6 +30,7 @@ namespace Lime.Transport.AspNetCore
                             break;
                         
                         case TransportType.Ws:
+                        case TransportType.Http:
                             if (endPoint.Tls)
                             {
                                 builder.UseHttps(httpsOptions =>
@@ -38,8 +39,7 @@ namespace Lime.Transport.AspNetCore
                                 });
                             }
                             break;
-
-                        case TransportType.Http:
+                        
                         default:
                             throw new NotSupportedException($"Unsupported tran '{endPoint.Transport}'");
                     }

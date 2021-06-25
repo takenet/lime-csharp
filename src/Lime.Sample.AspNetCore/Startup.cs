@@ -2,6 +2,8 @@ using System;
 using System.Net;
 using System.Security.Cryptography.X509Certificates;
 using Lime.Protocol;
+using Lime.Protocol.Serialization;
+using Lime.Protocol.Serialization.Newtonsoft;
 using Lime.Transport.AspNetCore;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -56,10 +58,7 @@ namespace Lime.Sample.AspNetCore
             {
                 options.KeepAliveInterval = TimeSpan.FromSeconds(30);
             });
-            services.AddControllers();
-            
-            
-            
+
             // services.AddSwaggerGen(c =>
             // {
             //     c.SwaggerDoc("v1", new OpenApiInfo {Title = "Lime.Sample.AspNetCore", Version = "v1"});
