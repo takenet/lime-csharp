@@ -3,6 +3,9 @@ using System.Linq;
 using System.Reflection;
 using Lime.Protocol.Serialization;
 using Lime.Protocol.Serialization.Newtonsoft;
+using Lime.Transport.AspNetCore.Listeners;
+using Lime.Transport.AspNetCore.Middlewares;
+using Lime.Transport.AspNetCore.Transport;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.DependencyInjection;
@@ -34,8 +37,8 @@ namespace Lime.Transport.AspNetCore
 
         public static IApplicationBuilder UseLime(this IApplicationBuilder app)
         {
-            app.UseMiddleware<LimeWebSocketMiddleware>();
-            app.UseMiddleware<LimeHttpMiddleware>();
+            app.UseMiddleware<WebSocketMiddleware>();
+            app.UseMiddleware<HttpMiddleware>();
             
             return app;
         }

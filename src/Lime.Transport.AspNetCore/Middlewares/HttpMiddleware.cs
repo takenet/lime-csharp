@@ -1,21 +1,23 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using Lime.Protocol;
 using Lime.Protocol.Security;
 using Lime.Protocol.Serialization;
+using Lime.Transport.AspNetCore.Transport;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Net.Http.Headers;
 
-namespace Lime.Transport.AspNetCore
+namespace Lime.Transport.AspNetCore.Middlewares
 {
-    internal class LimeHttpMiddleware
+    [SuppressMessage("ReSharper", "ClassNeverInstantiated.Global")]
+    internal class HttpMiddleware
     {
         private static readonly string[] EnvelopeContentTypes =
         {
@@ -29,22 +31,22 @@ namespace Lime.Transport.AspNetCore
         private readonly IEnvelopeSerializer _envelopeSerializer;
         private readonly IOptions<LimeOptions> _options;
         private readonly TransportListener _transportListener;
-        private readonly ILogger<LimeHttpMiddleware> _logger;
-        private readonly Dictionary<int, HttpEndPointOptions> _portEndPointOptionsDictionary;
+        private readonly ILogger<HttpMiddleware> _logger;
+        private readonly Dictionary<int, HttpEndPointOptions> _portEndPointOptions;
 
-        public LimeHttpMiddleware(
+        public HttpMiddleware(
             RequestDelegate next,
             IEnvelopeSerializer envelopeSerializer,
             IOptions<LimeOptions> options,
             TransportListener transportListener,
-            ILogger<LimeHttpMiddleware> logger)
+            ILogger<HttpMiddleware> logger)
         {
             _next = next;
             _envelopeSerializer = envelopeSerializer;
             _options = options;
             _transportListener = transportListener;
             _logger = logger;
-            _portEndPointOptionsDictionary = options
+            _portEndPointOptions = options
                 .Value
                 .EndPoints.Where(e => e.Transport == TransportType.Http)
                 .ToDictionary(e => e.EndPoint.Port,
@@ -56,7 +58,7 @@ namespace Lime.Transport.AspNetCore
         {
             if (context.Request.Method != HttpMethods.Post ||
                 !EnvelopeContentTypes.Contains(context.Request.ContentType) ||
-                !_portEndPointOptionsDictionary.TryGetValue(context.Connection.LocalPort, out var endPointOptions) ||
+                !_portEndPointOptions.TryGetValue(context.Connection.LocalPort, out var endPointOptions) ||
                 !endPointOptions.ContainsPath(context.Request.Path))
             {
                 await _next(context);
@@ -173,7 +175,7 @@ namespace Lime.Transport.AspNetCore
         
         private void ValidateOptions()
         {
-            foreach (var (port, option) in _portEndPointOptionsDictionary)
+            foreach (var (port, option) in _portEndPointOptions)
             {
                 if (!option.IsValid())
                 {

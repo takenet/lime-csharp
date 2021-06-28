@@ -15,5 +15,11 @@
       <ProjectReference Include="..\Lime.Transport.Tcp\Lime.Transport.Tcp.csproj" />
       <ProjectReference Include="..\Lime.Transport.WebSocket\Lime.Transport.WebSocket.csproj" />
     </ItemGroup>
+
+    <ItemGroup>
+        <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+            <_Parameter1>Lime.Transport.AspNetCore.UnitTests</_Parameter1>
+        </AssemblyAttribute>
+    </ItemGroup>
     
 </Project>

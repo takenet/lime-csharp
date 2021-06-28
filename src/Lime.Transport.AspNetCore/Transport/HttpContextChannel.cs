@@ -9,7 +9,7 @@ using Lime.Protocol.Network;
 using Lime.Protocol.Serialization;
 using Microsoft.AspNetCore.Http;
 
-namespace Lime.Transport.AspNetCore
+namespace Lime.Transport.AspNetCore.Transport
 {
     /// <summary>
     /// Emulates a channel using the HttpContext to allow the application sending a envelope in the HTTP response.

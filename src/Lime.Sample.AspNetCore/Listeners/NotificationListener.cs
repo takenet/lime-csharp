@@ -2,6 +2,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Lime.Protocol;
 using Lime.Transport.AspNetCore;
+using Lime.Transport.AspNetCore.Listeners;
 using Microsoft.Extensions.Logging;
 
 namespace Lime.Sample.AspNetCore.Listeners

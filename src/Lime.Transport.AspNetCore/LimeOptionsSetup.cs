@@ -1,4 +1,5 @@
 using System;
+using Lime.Transport.AspNetCore.Middlewares;
 using Microsoft.AspNetCore.Connections;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
@@ -26,7 +27,7 @@ namespace Lime.Transport.AspNetCore
                     switch (endPoint.Transport)
                     {
                         case TransportType.Tcp:
-                            builder.UseConnectionHandler<LimeTcpConnectionHandler>();
+                            builder.UseConnectionHandler<TcpConnectionHandler>();
                             break;
                         
                         case TransportType.WebSocket:

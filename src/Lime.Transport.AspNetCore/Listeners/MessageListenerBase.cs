@@ -3,7 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Lime.Protocol;
 
-namespace Lime.Transport.AspNetCore
+namespace Lime.Transport.AspNetCore.Listeners
 {
     public abstract class MessageListenerBase : IMessageListener
     {

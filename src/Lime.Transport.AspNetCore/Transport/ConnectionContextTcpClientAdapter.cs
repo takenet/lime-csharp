@@ -4,9 +4,9 @@ using System.Threading.Tasks;
 using Lime.Transport.Tcp;
 using Microsoft.AspNetCore.Connections;
 
-namespace Lime.Transport.AspNetCore
+namespace Lime.Transport.AspNetCore.Transport
 {
-    public sealed class ConnectionContextTcpClientAdapter : ITcpClient
+    internal sealed class ConnectionContextTcpClientAdapter : ITcpClient
     {
         private readonly ConnectionContext _context;
 

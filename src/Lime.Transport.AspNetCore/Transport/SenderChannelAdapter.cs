@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using Lime.Protocol;
 using Lime.Protocol.Network;
 
-namespace Lime.Transport.AspNetCore
+namespace Lime.Transport.AspNetCore.Transport
 {
     public sealed class SenderChannelAdapter : ISenderChannel
     {

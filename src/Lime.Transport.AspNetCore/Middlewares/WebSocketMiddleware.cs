@@ -3,20 +3,21 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Lime.Protocol.Serialization;
+using Lime.Transport.AspNetCore.Transport;
 using Lime.Transport.WebSocket;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 
-namespace Lime.Transport.AspNetCore
+namespace Lime.Transport.AspNetCore.Middlewares
 {
-    internal class LimeWebSocketMiddleware
+    internal class WebSocketMiddleware
     {
         private readonly RequestDelegate _next;
         private readonly IEnvelopeSerializer _envelopeSerializer;
         private readonly TransportListener _listener;
         private readonly int[] _wsPorts;
 
-        public LimeWebSocketMiddleware(
+        public WebSocketMiddleware(
             RequestDelegate next,
             IEnvelopeSerializer envelopeSerializer,
             TransportListener listener,

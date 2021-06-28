@@ -8,11 +8,12 @@ using Lime.Protocol;
 using Lime.Protocol.Listeners;
 using Lime.Protocol.Network;
 using Lime.Protocol.Server;
+using Lime.Transport.AspNetCore.Listeners;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace Lime.Transport.AspNetCore
+namespace Lime.Transport.AspNetCore.Transport
 {
     internal sealed class TransportListener
     {
