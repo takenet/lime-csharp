@@ -34,10 +34,16 @@ namespace Lime.Transport.AspNetCore
 
         public async Task Invoke(HttpContext context)
         {
-            if (!context.WebSockets.IsWebSocketRequest ||
-                !_wsPorts.Contains(context.Connection.LocalPort))
+            if (!_wsPorts.Contains(context.Connection.LocalPort))
             {
                 await _next.Invoke(context);
+                return;
+            }
+            
+            if (!context.WebSockets.IsWebSocketRequest)
+            {
+                // Do not continue in the ASP.NET pipeline if this is not a websocket request.
+                context.Response.StatusCode = StatusCodes.Status400BadRequest;
                 return;
             }
 
