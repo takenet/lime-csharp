@@ -6,5 +6,8 @@ using Lime.Protocol.Server;
 
 namespace Lime.Transport.AspNetCore
 {
+    /// <summary>
+    /// Defines a handler for authenticating the an identity.
+    /// </summary>
     public delegate Task<AuthenticationResult> AuthenticationHandler(Identity identity, Authentication authentication, CancellationToken cancellationToken);
 }

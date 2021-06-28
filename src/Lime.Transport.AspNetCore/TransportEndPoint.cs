@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.Net;
 using System.Security.Cryptography.X509Certificates;
 
@@ -20,7 +19,7 @@ namespace Lime.Transport.AspNetCore
         public IPEndPoint EndPoint { get; set; } = new IPEndPoint(IPAddress.Any, 55321);
         
         /// <summary>
-        /// Defines the server certificate, for TLS connections. (HTTPS, WSS and TLS over TCP).
+        /// Defines the server certificate, for TLS connections. (HTTPS, WSS and TCP+TLS).
         /// </summary>
         public X509Certificate2? ServerCertificate { get; set; }
 

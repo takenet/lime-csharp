@@ -26,14 +26,19 @@ namespace Lime.Sample.AspNetCore
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            var store = new X509Store(StoreName.My, StoreLocation.CurrentUser);
-            store.Open(OpenFlags.ReadOnly);
-            var certs = store.Certificates.Find(X509FindType.FindBySubjectName, "localhost", true);
-
-            X509Certificate2? serverCertificate = certs.Count > 0 ? certs[0] : null;
-
+            // Registering ASP.NET WebSockets
+            services.AddWebSockets(options => { options.KeepAliveInterval = TimeSpan.FromSeconds(30); });
+            
+            // Register Lime types
             services.AddLime(options =>
             {
+                // Define the local server node address
+                options.LocalNode = new Node("postmaster", "localhost", Environment.MachineName);
+                
+                // Load certificate for TLS support
+                var serverCertificate = GetLocalhostCertificate();
+                
+                // Set the listening endpoints
                 options.EndPoints.Clear();
                 options.EndPoints.Add(new TransportEndPoint()
                 {
@@ -53,16 +58,12 @@ namespace Lime.Sample.AspNetCore
                     Transport = TransportType.Http,
                     ServerCertificate = serverCertificate
                 });
-
-                options.LocalNode = new Node("postmaster", "localhost", Environment.MachineName);
             });
-            services.AddWebSockets(options => { options.KeepAliveInterval = TimeSpan.FromSeconds(30); });
-
+            
+            // MVC configurations (optional)
             services.AddControllers();
             services.AddSwaggerGen(c =>
             {
-                
-                
                 c.SwaggerDoc("v1", new OpenApiInfo {Title = "Lime.Sample.AspNetCore", Version = "v1"});
             });
         }
@@ -80,10 +81,21 @@ namespace Lime.Sample.AspNetCore
             app.UseWebSockets();
             app.UseLime();
 
-            // Conventional MVC registration. The MVC endpoints can be reached in the HTTP endpoint defined in the lime configuration. 
+            // Conventional MVC registration.
+            // The MVC middleware can be reached if there an HTTP endpoint defined in Lime options. 
             app.UseHttpsRedirection();
             app.UseRouting();
             app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
+        }
+        
+        private static X509Certificate2? GetLocalhostCertificate()
+        {
+            var store = new X509Store(StoreName.My, StoreLocation.CurrentUser);
+            store.Open(OpenFlags.ReadOnly);
+            var certs = store.Certificates.Find(X509FindType.FindBySubjectName, "localhost", true);
+
+            X509Certificate2? serverCertificate = certs.Count > 0 ? certs[0] : null;
+            return serverCertificate;
         }
     }
 }

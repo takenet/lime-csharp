@@ -45,6 +45,6 @@ namespace Lime.Transport.AspNetCore
         public SessionEncryption[] EnabledEncryptionOptions { get; set; } = {SessionEncryption.None, SessionEncryption.TLS};
         public AuthenticationScheme[] SchemeOptions { get; set; } = {AuthenticationScheme.Guest};
         public AuthenticationHandler AuthenticationHandler { get; set; } = (identity, authentication, token) => Task.FromResult(new AuthenticationResult(DomainRole.Member));
-        public RegistrationHandler RegistrationHandler { get; set; } = (node, channel, token) => Task.FromResult(new Node(Guid.NewGuid().ToString(), Environment.UserDomainName, Environment.MachineName));
+        public RegistrationHandler RegistrationHandler { get; set; } = (candidate, channel, token) => Task.FromResult(new Node(Guid.NewGuid().ToString(), Environment.UserDomainName, Environment.MachineName));
     }
 }
