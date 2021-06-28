@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -16,17 +17,6 @@ namespace Lime.Transport.AspNetCore
 {
     internal class LimeHttpMiddleware
     {
-        private const string MESSAGES_PATH = "/messages";
-        private const string COMMANDS_PATH = "/commands";
-        private const string NOTIFICATIONS_PATH = "/notifications";
-
-        private static readonly string[] EnvelopePaths =
-        {
-            MESSAGES_PATH,
-            COMMANDS_PATH,
-            NOTIFICATIONS_PATH
-        };
-
         private static readonly string[] EnvelopeContentTypes =
         {
             MediaType.ApplicationJson.ToString(),
@@ -40,7 +30,7 @@ namespace Lime.Transport.AspNetCore
         private readonly IOptions<LimeOptions> _options;
         private readonly TransportListener _transportListener;
         private readonly ILogger<LimeHttpMiddleware> _logger;
-        private readonly int[] _httpPorts;
+        private readonly Dictionary<int, HttpEndPointOptions> _portEndPointOptionsDictionary;
 
         public LimeHttpMiddleware(
             RequestDelegate next,
@@ -54,19 +44,20 @@ namespace Lime.Transport.AspNetCore
             _options = options;
             _transportListener = transportListener;
             _logger = logger;
-            _httpPorts = options
+            _portEndPointOptionsDictionary = options
                 .Value
                 .EndPoints.Where(e => e.Transport == TransportType.Http)
-                .Select(e => e.EndPoint.Port)
-                .ToArray();
+                .ToDictionary(e => e.EndPoint.Port,
+                    e => e.Options as HttpEndPointOptions ?? new HttpEndPointOptions());
+            ValidateOptions();
         }
 
         public async Task Invoke(HttpContext context)
         {
-            if (!_httpPorts.Contains(context.Connection.LocalPort) ||
-                context.Request.Method != HttpMethods.Post ||
-                !EnvelopePaths.Any(e => string.Equals(e, context.Request.Path, StringComparison.OrdinalIgnoreCase)) ||
-                !EnvelopeContentTypes.Contains(context.Request.ContentType))
+            if (context.Request.Method != HttpMethods.Post ||
+                !EnvelopeContentTypes.Contains(context.Request.ContentType) ||
+                !_portEndPointOptionsDictionary.TryGetValue(context.Connection.LocalPort, out var endPointOptions) ||
+                !endPointOptions.ContainsPath(context.Request.Path))
             {
                 await _next(context);
                 return;
@@ -80,9 +71,7 @@ namespace Lime.Transport.AspNetCore
                 return;
             }
 
-            using var reader = new StreamReader(context.Request.Body);
-            var json = await reader.ReadToEndAsync();
-            var envelope = _envelopeSerializer.Deserialize(json);
+            var envelope = await ReadEnvelopeAsync(context);
 
             var channel = new HttpContextChannel(
                 context,
@@ -90,24 +79,7 @@ namespace Lime.Transport.AspNetCore
                 identity.ToNode(),
                 _envelopeSerializer);
             
-            switch (envelope)
-            {
-                case Message message:
-                    await _transportListener.OnMessageAsync(message, channel, context.RequestAborted);
-                    break;
-
-                case Notification notification:
-                    await _transportListener.OnNotificationAsync(notification, channel, context.RequestAborted);
-                    break;
-                
-                case Command command:
-                    await _transportListener.OnCommandAsync(command, channel, context.RequestAborted);
-                    break;
-                
-                default:
-                    context.Response.StatusCode = StatusCodes.Status400BadRequest;
-                    break;
-            }
+            await HandleEnvelopeAsync(envelope, channel, context);
         }
 
         private async Task<Identity?> AuthenticateAsync(HttpContext context)
@@ -136,15 +108,12 @@ namespace Lime.Transport.AspNetCore
 
             var result = await _options.Value.AuthenticationHandler(identity, authentication, context.RequestAborted);
 
-            if (result.DomainRole != DomainRole.Unknown)
-            {
-                return identity;
-            }
-
-            return null;
+            return result.DomainRole != DomainRole.Unknown 
+                ? identity : 
+                null;
         }
 
-        private (Identity, Authentication) GetAuthentication(AuthenticationHeaderValue header)
+        private static (Identity, Authentication) GetAuthentication(AuthenticationHeaderValue header)
         {
             var identityAndSecret = header.Parameter.FromBase64().Split(':');
             if (identityAndSecret.Length != 2)
@@ -152,7 +121,7 @@ namespace Lime.Transport.AspNetCore
                 throw new ArgumentException("Invalid authentication parameter");
             }
 
-            // For transport authentication, use the cert authentication from ASP.net
+            // For transport authentication, use the cert authentication from ASP.NET pipeline.
             // https://docs.microsoft.com/en-us/aspnet/core/security/authentication/certauth
             Identity identity = identityAndSecret[0];
             switch (header.Scheme.ToLowerInvariant())
@@ -169,6 +138,47 @@ namespace Lime.Transport.AspNetCore
                     });
                 default:
                     throw new NotSupportedException($"Unsupported authentication scheme '{header.Scheme}'");
+            }
+        }
+        
+        private async Task<Envelope?> ReadEnvelopeAsync(HttpContext context)
+        {
+            using var reader = new StreamReader(context.Request.Body);
+            var json = await reader.ReadToEndAsync();
+            var envelope = _envelopeSerializer.Deserialize(json);
+            return envelope;
+        }
+        
+        private async Task HandleEnvelopeAsync(Envelope? envelope, HttpContextChannel channel, HttpContext context)
+        {
+            switch (envelope)
+            {
+                case Message message:
+                    await _transportListener.OnMessageAsync(message, channel, context.RequestAborted);
+                    break;
+
+                case Notification notification:
+                    await _transportListener.OnNotificationAsync(notification, channel, context.RequestAborted);
+                    break;
+
+                case Command command:
+                    await _transportListener.OnCommandAsync(command, channel, context.RequestAborted);
+                    break;
+
+                default:
+                    context.Response.StatusCode = StatusCodes.Status400BadRequest;
+                    break;
+            }
+        }
+        
+        private void ValidateOptions()
+        {
+            foreach (var (port, option) in _portEndPointOptionsDictionary)
+            {
+                if (!option.IsValid())
+                {
+                    throw new InvalidOperationException($"The HTTP configuration options value for port {port} is not valid");
+                }
             }
         }
     }

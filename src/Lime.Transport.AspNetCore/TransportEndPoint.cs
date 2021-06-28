@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Net;
 using System.Security.Cryptography.X509Certificates;
 
@@ -22,5 +23,10 @@ namespace Lime.Transport.AspNetCore
         /// Defines the server certificate, for TLS connections. (HTTPS, WSS and TLS over TCP).
         /// </summary>
         public X509Certificate2? ServerCertificate { get; set; }
+
+        /// <summary>
+        /// Specific endpoint settings.
+        /// </summary>
+        public EndPointOptions? Options { get; set; }
     }
 }

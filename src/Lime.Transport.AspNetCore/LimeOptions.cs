@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Net;
-using System.Threading;
 using System.Threading.Tasks;
 using Lime.Protocol;
 using Lime.Protocol.Security;
@@ -29,6 +28,11 @@ namespace Lime.Transport.AspNetCore
                 Transport = TransportType.WebSocket,
                 EndPoint = new IPEndPoint(IPAddress.Any, 8080)
             },
+            new TransportEndPoint()
+            {
+                Transport = TransportType.Http,
+                EndPoint = new IPEndPoint(IPAddress.Any, 443)
+            },
         };
         
         /// <summary>
@@ -43,7 +47,4 @@ namespace Lime.Transport.AspNetCore
         public AuthenticationHandler AuthenticationHandler { get; set; } = (identity, authentication, token) => Task.FromResult(new AuthenticationResult(DomainRole.Member));
         public RegistrationHandler RegistrationHandler { get; set; } = (node, channel, token) => Task.FromResult(new Node(Guid.NewGuid().ToString(), Environment.UserDomainName, Environment.MachineName));
     }
-    
-    public delegate Task<AuthenticationResult> AuthenticationHandler(Identity identity, Authentication authentication, CancellationToken cancellationToken);
-    public delegate Task<Node> RegistrationHandler(Node node, IServerChannel channel, CancellationToken cancellationToken);
 }
