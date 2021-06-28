@@ -55,6 +55,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lime.Transport.AspNetCore",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lime.Sample.AspNetCore", "Lime.Sample.AspNetCore\Lime.Sample.AspNetCore.csproj", "{BD1D0A53-CDB7-4562-A00A-4A5FAA96E617}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lime.Transport.AspNetCore.UnitTests", "Lime.Transport.AspNetCore.UnitTests\Lime.Transport.AspNetCore.UnitTests.csproj", "{7ADDF49E-4B31-4E80-81E3-CB8D6E1C90EC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -141,6 +143,10 @@ Global
 		{BD1D0A53-CDB7-4562-A00A-4A5FAA96E617}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BD1D0A53-CDB7-4562-A00A-4A5FAA96E617}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BD1D0A53-CDB7-4562-A00A-4A5FAA96E617}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7ADDF49E-4B31-4E80-81E3-CB8D6E1C90EC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7ADDF49E-4B31-4E80-81E3-CB8D6E1C90EC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7ADDF49E-4B31-4E80-81E3-CB8D6E1C90EC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7ADDF49E-4B31-4E80-81E3-CB8D6E1C90EC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -158,6 +164,7 @@ Global
 		{4CF51843-B658-4593-BF3C-655D7BA549B6} = {215CAFFF-E0B2-4107-86B4-DFB767339781}
 		{B8EF5505-3374-410C-A094-B2A77B5E1E82} = {215CAFFF-E0B2-4107-86B4-DFB767339781}
 		{BD1D0A53-CDB7-4562-A00A-4A5FAA96E617} = {967A83B8-5E7F-47F1-91A0-B4415587E783}
+		{7ADDF49E-4B31-4E80-81E3-CB8D6E1C90EC} = {215CAFFF-E0B2-4107-86B4-DFB767339781}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {C9C3A8AB-7272-43CC-9C9B-755A217231E1}
