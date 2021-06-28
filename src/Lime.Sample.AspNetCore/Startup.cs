@@ -38,6 +38,8 @@ namespace Lime.Sample.AspNetCore
                 // Load certificate for TLS support
                 var serverCertificate = GetLocalhostCertificate();
                 
+                //options.AuthenticationHandler
+                
                 // Set the listening endpoints
                 options.EndPoints.Clear();
                 options.EndPoints.Add(new TransportEndPoint()

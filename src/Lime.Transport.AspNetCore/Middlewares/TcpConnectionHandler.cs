@@ -9,6 +9,7 @@ using Lime.Transport.AspNetCore.Transport;
 using Lime.Transport.Tcp;
 using Microsoft.AspNetCore.Connections;
 using Microsoft.Extensions.Options;
+using TcpClientAdapter = Lime.Transport.AspNetCore.Transport.TcpClientAdapter;
 
 namespace Lime.Transport.AspNetCore.Middlewares
 {
@@ -34,7 +35,7 @@ namespace Lime.Transport.AspNetCore.Middlewares
         
         public override async Task OnConnectedAsync(ConnectionContext connection)
         {
-            var tcpClient = new ConnectionContextTcpClientAdapter(connection);
+            var tcpClient = new TcpClientAdapter(connection);
 
             if (!_portEndPoints.TryGetValue(((IPEndPoint) connection.LocalEndPoint).Port, out var transportEndPoint))
             {

@@ -3,19 +3,20 @@ using System.Net.Sockets;
 using System.Threading.Tasks;
 using Lime.Transport.Tcp;
 using Microsoft.AspNetCore.Connections;
+using Microsoft.AspNetCore.Server.Kestrel.Core.Internal;
 
 namespace Lime.Transport.AspNetCore.Transport
 {
-    internal sealed class ConnectionContextTcpClientAdapter : ITcpClient
+    internal sealed class TcpClientAdapter : ITcpClient
     {
         private readonly ConnectionContext _context;
 
-        public ConnectionContextTcpClientAdapter(ConnectionContext context)
+        public TcpClientAdapter(ConnectionContext context)
         {
             _context = context;
         }
         
-        public Stream GetStream() => new DuplexPipeStreamAdapter(_context.Transport);
+        public Stream GetStream() => new DuplexPipeStream(_context.Transport.Input, _context.Transport.Output);
 
         public Task ConnectAsync(string host, int port) => Task.CompletedTask;
 
