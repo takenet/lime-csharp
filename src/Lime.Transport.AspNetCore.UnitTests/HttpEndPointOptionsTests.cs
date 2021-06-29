@@ -2,7 +2,7 @@
 
 namespace Lime.Transport.AspNetCore.UnitTests
 {
-    public class ChannelContextTests
+    public class HttpEndPointOptionsTests
     {
     }
 }
