@@ -16,13 +16,15 @@ namespace Lime.Transport.AspNetCore.UnitTests.Middlewares
     [TestFixture]
     public class TcpConnectionHandlerTests : TestsBase
     {
-        public TcpConnectionHandlerTests()
-        : base(new TransportEndPoint()
+        [SetUp]
+        public void SetUp()
         {
-            Transport = TransportType.Tcp,
-            EndPoint = new IPEndPoint(IPAddress.Any, 55321)
-        })
-        {
+            base.SetUp(new TransportEndPoint()
+            {
+                Transport = TransportType.Tcp,
+                EndPoint = new IPEndPoint(IPAddress.Any, 55321)
+            });
+            
             InputPipe = new Pipe();
             Reader = new PipeReaderDecorator(InputPipe.Reader);
             OutputPipe = new Pipe();
@@ -42,22 +44,20 @@ namespace Lime.Transport.AspNetCore.UnitTests.Middlewares
             Context
                 .SetupGet(c => c.LocalEndPoint)
                 .Returns(TransportEndPoint.EndPoint);
-            CancellationTokenSource = new CancellationTokenSource();
             Context
                 .SetupGet(c => c.ConnectionClosed)
                 .Returns(CancellationTokenSource.Token);
         }
         
 
-        internal ILogger<TransportListener> Logger { get; }
-        public Mock<ConnectionContext> Context { get; }
-        public Mock<IDuplexPipe> Transport { get; }
-        public Pipe InputPipe { get; }
-        public PipeReaderDecorator Reader { get; }
-        public Pipe OutputPipe { get; }
-        public PipeWriterDecorator Writer { get; } 
+        internal ILogger<TransportListener> Logger { get; set; }
+        public Mock<ConnectionContext> Context { get; set; }
+        public Mock<IDuplexPipe> Transport { get; set; }
+        public Pipe InputPipe { get; set; }
+        public PipeReaderDecorator Reader { get; set; }
+        public Pipe OutputPipe { get; set; }
+        public PipeWriterDecorator Writer { get; set; }
         
-        public CancellationTokenSource CancellationTokenSource { get; }
         
         private TcpConnectionHandler GetTarget() =>
             new TcpConnectionHandler(TransportListener, EnvelopeSerializer, Microsoft.Extensions.Options.Options.Create(Options));

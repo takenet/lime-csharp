@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Threading;
 using Lime.Protocol.Serialization;
 using Lime.Protocol.Serialization.Newtonsoft;
 using Lime.Transport.AspNetCore.Transport;
@@ -10,7 +11,7 @@ namespace Lime.Transport.AspNetCore.UnitTests.Middlewares
 {
     public abstract class TestsBase
     {
-        protected TestsBase(TransportEndPoint transportEndPoint)
+        protected void SetUp(TransportEndPoint transportEndPoint)
         {
             TransportEndPoint = transportEndPoint;
             Options = new LimeOptions()
@@ -26,12 +27,14 @@ namespace Lime.Transport.AspNetCore.UnitTests.Middlewares
                 Microsoft.Extensions.Options.Options.Create(Options), 
                 ServiceScopeFactory.Object, 
                 new Logger<TransportListener>(new LoggerFactory()));
+            CancellationTokenSource = new CancellationTokenSource();
         }
         
-        public TransportEndPoint TransportEndPoint { get; }
-        internal TransportListener TransportListener { get; }
-        public IEnvelopeSerializer EnvelopeSerializer { get; }
-        public LimeOptions Options { get; }
-        public Mock<IServiceScopeFactory> ServiceScopeFactory { get; }
+        public TransportEndPoint TransportEndPoint { get; private set; }
+        internal TransportListener TransportListener { get; private set; }
+        public IEnvelopeSerializer EnvelopeSerializer { get; private set; }
+        public LimeOptions Options { get; private set; }
+        public Mock<IServiceScopeFactory> ServiceScopeFactory { get; private set; }
+        public CancellationTokenSource CancellationTokenSource { get; private set; }
     }
 }

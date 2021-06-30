@@ -8,17 +8,17 @@ namespace Lime.Transport.AspNetCore.UnitTests.Middlewares
     {
         public RequestDelegateExecutor()
         {
-            NextCallCount = 0;
+            NextCalls = 0;
             HttpContexts = new List<HttpContext>();
         }
         
-        public int NextCallCount { get; private set; }
+        public int NextCalls { get; private set; }
         
         public List<HttpContext> HttpContexts { get; }
         
         public Task Next(HttpContext context)
         {
-            NextCallCount++;
+            NextCalls++;
             HttpContexts.Add(context);
             return Task.CompletedTask;
         }
