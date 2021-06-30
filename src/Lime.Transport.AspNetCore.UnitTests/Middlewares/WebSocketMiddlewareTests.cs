@@ -1,38 +1,35 @@
+using System.Net;
 using System.Threading.Tasks;
-using Lime.Protocol.Serialization;
-using Lime.Protocol.Serialization.Newtonsoft;
 using Lime.Transport.AspNetCore.Middlewares;
-using Lime.Transport.AspNetCore.Transport;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Options;
 using NUnit.Framework;
 
 namespace Lime.Transport.AspNetCore.UnitTests.Middlewares
 {
     [TestFixture]
-    public class WebSocketMiddlewareTests
+    public class WebSocketMiddlewareTests : TestsBase
     {
-        private WebSocketMiddleware GetTarget() => new WebSocketMiddleware(
-            Next, EnvelopeSerializer, Listener, Options);
-
-        public IOptions<LimeOptions> Options { get; set; }
-
-        internal TransportListener Listener { get; set; }
-
-        public IEnvelopeSerializer EnvelopeSerializer { get; set; }
-
-        private Task Next(HttpContext context)
+        public WebSocketMiddlewareTests()
+        : base(new TransportEndPoint()
         {
-            throw new System.NotImplementedException();
+            Transport = TransportType.WebSocket,
+            EndPoint = new IPEndPoint(IPAddress.Any, 443)
+        })
+        {
+            RequestDelegateExecutor = new RequestDelegateExecutor();
         }
+
+        public RequestDelegateExecutor RequestDelegateExecutor { get;  }
+
+        private WebSocketMiddleware GetTarget() => new WebSocketMiddleware(
+            RequestDelegateExecutor.Next, 
+            EnvelopeSerializer, 
+            TransportListener, 
+            Microsoft.Extensions.Options.Options.Create(Options));
 
         [Test]
         public async Task Invoke_WebSocketRequest_ShouldOpenTransport()
         {
-            
-            
+
         }
-        
     }
 }

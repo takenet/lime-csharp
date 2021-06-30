@@ -1,17 +1,12 @@
 using System;
-using System.Collections.Generic;
 using System.IO.Pipelines;
 using System.Net;
-using System.Net.Mime;
 using System.Threading;
 using System.Threading.Tasks;
-using Lime.Protocol.Serialization;
 using Lime.Transport.AspNetCore.Middlewares;
 using Lime.Transport.AspNetCore.Transport;
 using Microsoft.AspNetCore.Connections;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using Moq;
 using NUnit.Framework;
 using Shouldly;
@@ -19,29 +14,15 @@ using Shouldly;
 namespace Lime.Transport.AspNetCore.UnitTests.Middlewares
 {
     [TestFixture]
-    public class TcpConnectionHandlerTests
+    public class TcpConnectionHandlerTests : TestsBase
     {
         public TcpConnectionHandlerTests()
+        : base(new TransportEndPoint()
         {
-            TransportEndPoint = new TransportEndPoint()
-            {
-                Transport = TransportType.Tcp,
-                EndPoint = new IPEndPoint(IPAddress.Any, 55321)
-            };
-            LimeOptions = new LimeOptions()
-            {
-                EndPoints = new List<TransportEndPoint>()
-                {
-                    TransportEndPoint
-                }
-            };
-            EnvelopeSerializer = new Mock<IEnvelopeSerializer>();
-            ServiceScopeFactory = new Mock<IServiceScopeFactory>();
-            Logger = new Logger<TransportListener>(new LoggerFactory());
-            TransportListener = new TransportListener(
-                Options.Create(LimeOptions), 
-                ServiceScopeFactory.Object, 
-                Logger);
+            Transport = TransportType.Tcp,
+            EndPoint = new IPEndPoint(IPAddress.Any, 55321)
+        })
+        {
             InputPipe = new Pipe();
             Reader = new PipeReaderDecorator(InputPipe.Reader);
             OutputPipe = new Pipe();
@@ -67,11 +48,7 @@ namespace Lime.Transport.AspNetCore.UnitTests.Middlewares
                 .Returns(CancellationTokenSource.Token);
         }
         
-        public TransportEndPoint TransportEndPoint { get; }
-        internal TransportListener TransportListener { get; }
-        public Mock<IEnvelopeSerializer> EnvelopeSerializer { get; }
-        public LimeOptions LimeOptions { get; }
-        public Mock<IServiceScopeFactory> ServiceScopeFactory { get; }
+
         internal ILogger<TransportListener> Logger { get; }
         public Mock<ConnectionContext> Context { get; }
         public Mock<IDuplexPipe> Transport { get; }
@@ -83,7 +60,7 @@ namespace Lime.Transport.AspNetCore.UnitTests.Middlewares
         public CancellationTokenSource CancellationTokenSource { get; }
         
         private TcpConnectionHandler GetTarget() =>
-            new TcpConnectionHandler(TransportListener, EnvelopeSerializer.Object, Options.Create(LimeOptions));
+            new TcpConnectionHandler(TransportListener, EnvelopeSerializer, Microsoft.Extensions.Options.Options.Create(Options));
 
         [Test]
         public async Task OnConnectedAsync_NewConnection_ShouldReadFromTransport()
