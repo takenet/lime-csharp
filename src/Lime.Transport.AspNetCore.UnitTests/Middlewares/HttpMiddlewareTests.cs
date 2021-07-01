@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Text;
@@ -5,6 +6,7 @@ using System.Threading.Tasks;
 using Lime.Protocol;
 using Lime.Protocol.Security;
 using Lime.Protocol.Server;
+using Lime.Transport.AspNetCore.Listeners;
 using Lime.Transport.AspNetCore.Middlewares;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
@@ -27,14 +29,14 @@ namespace Lime.Transport.AspNetCore.UnitTests.Middlewares
                 EndPoint = new IPEndPoint(IPAddress.Any, 443)
             });
             Headers = new HeaderDictionary();
-            Stream = new MemoryStream(Encoding.UTF8.GetBytes("{\"type\":\"text/plain\",\"content\":\"Hello\"}"));
+            BodyStream = new MemoryStream();
             HttpRequest = new Mock<HttpRequest>();
             HttpRequest
                 .SetupGet(r => r.Headers)
                 .Returns(Headers);
             HttpRequest
                 .SetupGet(r => r.Body)
-                .Returns(Stream);
+                .Returns(BodyStream);
             HttpRequest
                 .SetupGet(r => r.Method)
                 .Returns("POST");
@@ -51,8 +53,8 @@ namespace Lime.Transport.AspNetCore.UnitTests.Middlewares
 
         public HeaderDictionary Headers { get; private set; }
         public Mock<HttpRequest> HttpRequest { get; private set; }
-        public MemoryStream Stream { get; private set; }
-
+        public MemoryStream BodyStream { get; private set; }
+        
         private HttpMiddleware GetTarget() => new HttpMiddleware(
             RequestDelegateExecutor.Next,
             EnvelopeSerializer,
@@ -73,6 +75,8 @@ namespace Lime.Transport.AspNetCore.UnitTests.Middlewares
                 handlerAuthentication = authentication;
                 return Task.FromResult(handlerResult);
             };
+            BodyStream.Write(Encoding.UTF8.GetBytes("{\"type\":\"text/plain\",\"content\":\"Hello\"}"));
+            BodyStream.Position = 0;
             var target = GetTarget();
 
             // Act
@@ -101,6 +105,8 @@ namespace Lime.Transport.AspNetCore.UnitTests.Middlewares
             var password = "(*R1jsd92<asÇ2931kd";
             var authorizationValue = $"{userName}:{password}".ToBase64();
             Headers.Add(HeaderNames.Authorization, $"Basic {authorizationValue}");
+            BodyStream.Write(Encoding.UTF8.GetBytes("{\"type\":\"text/plain\",\"content\":\"Hello\"}"));
+            BodyStream.Position = 0;
             var target = GetTarget();
 
             // Act
@@ -127,11 +133,12 @@ namespace Lime.Transport.AspNetCore.UnitTests.Middlewares
                 handlerAuthentication = authentication;
                 return Task.FromResult(handlerResult);
             };
-            
             var userName = "name@domain.local";
             var password = "(*R1jsd92<asÇ2931kd";
             var authorizationValue = $"{userName}:{password}".ToBase64();
             Headers.Add(HeaderNames.Authorization, $"Key {authorizationValue}");
+            BodyStream.Write(Encoding.UTF8.GetBytes("{\"type\":\"text/plain\",\"content\":\"Hello\"}"));
+            BodyStream.Position = 0;
             var target = GetTarget();
 
             // Act
@@ -143,6 +150,85 @@ namespace Lime.Transport.AspNetCore.UnitTests.Middlewares
             handlerAuthentication.ShouldNotBeNull();
             var keyAuthentication = handlerAuthentication.ShouldBeOfType<KeyAuthentication>();
             keyAuthentication.GetFromBase64Key().ShouldBe(password);
+        }
+        
+        [Test]
+        public async Task Invoke_MessageRequest_ShouldCallListener()
+        {
+            // Arrange
+            var listener = new MockMessageListener();
+            ServiceProvider
+                .Setup(s => s.GetService(typeof(IEnumerable<IMessageListener>)))
+                .Returns(new[] {listener});
+            HttpRequest
+                .SetupGet(r => r.Path)
+                .Returns("/messages");
+            var messageBytes = Encoding.UTF8.GetBytes("{\"type\":\"text/plain\",\"content\":\"Hello world!\"}");
+            BodyStream.Write(messageBytes);
+            BodyStream.Position = 0;
+            
+            var target = GetTarget();
+
+            // Act
+            await target.Invoke(HttpContext.Object);
+
+            // Assert
+            listener.Envelopes.Count.ShouldBe(1);
+            listener.Envelopes[0].Type.ToString().ShouldBe("text/plain");
+            listener.Envelopes[0].Content.ToString().ShouldBe("Hello world!");
+        }
+        
+        [Test]
+        public async Task Invoke_NotificationRequest_ShouldCallListener()
+        {
+            // Arrange
+            var listener = new MockNotificationListener();
+            ServiceProvider
+                .Setup(s => s.GetService(typeof(IEnumerable<INotificationListener>)))
+                .Returns(new[] {listener});
+            HttpRequest
+                .SetupGet(r => r.Path)
+                .Returns("/notifications");
+            var notificationBytes = Encoding.UTF8.GetBytes("{\"id\":\"1\",\"event\":\"received\"}");
+            BodyStream.Write(notificationBytes);
+            BodyStream.Position = 0;
+            
+            var target = GetTarget();
+
+            // Act
+            await target.Invoke(HttpContext.Object);
+
+            // Assert
+            listener.Envelopes.Count.ShouldBe(1);
+            listener.Envelopes[0].Id.ShouldBe("1");
+            listener.Envelopes[0].Event.ShouldBe(Event.Received);
+        }     
+        
+        [Test]
+        public async Task Invoke_CommandRequest_ShouldCallListener()
+        {
+            // Arrange
+            var listener = new MockCommandListener();
+            ServiceProvider
+                .Setup(s => s.GetService(typeof(IEnumerable<ICommandListener>)))
+                .Returns(new[] {listener});
+            HttpRequest
+                .SetupGet(r => r.Path)
+                .Returns("/commands");
+            var commandBytes = Encoding.UTF8.GetBytes("{\"id\":\"1\",\"method\":\"get\",\"uri\":\"/ping\"}");
+            BodyStream.Write(commandBytes);
+            BodyStream.Position = 0;
+            
+            var target = GetTarget();
+
+            // Act
+            await target.Invoke(HttpContext.Object);
+
+            // Assert
+            listener.Envelopes.Count.ShouldBe(1);
+            listener.Envelopes[0].Id.ShouldBe("1");
+            listener.Envelopes[0].Method.ShouldBe(CommandMethod.Get);
+            listener.Envelopes[0].Uri.ToString().ShouldBe("/ping");
         }
     }
 }
