@@ -131,12 +131,12 @@ namespace Lime.Transport.AspNetCore.Middlewares
                 case "basic":
                     return (identity, new PlainAuthentication()
                     {
-                        Password = identityAndSecret[1]
+                        Password = identityAndSecret[1].ToBase64()
                     });
                 case "key":
                     return (identity, new KeyAuthentication()
                     {
-                        Key = identityAndSecret[1]
+                        Key = identityAndSecret[1].ToBase64()
                     });
                 default:
                     throw new NotSupportedException($"Unsupported authentication scheme '{header.Scheme}'");

@@ -11,7 +11,7 @@ using Shouldly;
 namespace Lime.Transport.AspNetCore.UnitTests.Middlewares
 {
     [TestFixture]
-    public class WebSocketMiddlewareTests : TestsBase
+    public class WebSocketMiddlewareTests : HttpMiddlewareTestsBase
     {
         [SetUp]
         public void SetUp()
@@ -22,41 +22,21 @@ namespace Lime.Transport.AspNetCore.UnitTests.Middlewares
                 EndPoint = new IPEndPoint(IPAddress.Any, 443)
             });
             
-            RequestDelegateExecutor = new RequestDelegateExecutor();
             WebSocket = new MockWebSocket(state: WebSocketState.Open);
-            HttpContext = new Mock<HttpContext>();
-            HttpResponse = new Mock<HttpResponse>();
-            ConnectionInfo = new Mock<ConnectionInfo>();
             WebSocketManager = new Mock<WebSocketManager>();
             WebSocketManager
                 .SetupGet(m => m.IsWebSocketRequest)
                 .Returns(true);
-            ConnectionInfo
-                .SetupGet(c => c.LocalPort)
-                .Returns(TransportEndPoint.EndPoint.Port);
             WebSocketManager
                 .Setup(m => m.AcceptWebSocketAsync(It.IsAny<string>()))
                 .ReturnsAsync(WebSocket);
             HttpContext
-                .SetupGet(c => c.Connection)
-                .Returns(ConnectionInfo.Object);
-            HttpContext
                 .SetupGet(c => c.WebSockets)
                 .Returns(WebSocketManager.Object);
-            HttpContext
-                .SetupGet(c => c.RequestAborted)
-                .Returns(CancellationTokenSource.Token);
-            HttpContext
-                .SetupGet(c => c.Response)
-                .Returns(HttpResponse.Object);
         }
-
-        public RequestDelegateExecutor RequestDelegateExecutor { get; set; }
-        public Mock<ConnectionInfo> ConnectionInfo { get; set; }
+        
         public MockWebSocket WebSocket { get; set; } 
         public Mock<WebSocketManager> WebSocketManager { get; set; }
-        public Mock<HttpContext> HttpContext { get; set; }
-        public Mock<HttpResponse> HttpResponse { get; set; }
 
         private WebSocketMiddleware GetTarget() => new WebSocketMiddleware(
             RequestDelegateExecutor.Next, 

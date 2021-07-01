@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using Lime.Protocol.Serialization;
@@ -28,6 +29,20 @@ namespace Lime.Transport.AspNetCore.UnitTests.Middlewares
                 ServiceScopeFactory.Object, 
                 new Logger<TransportListener>(new LoggerFactory()));
             CancellationTokenSource = new CancellationTokenSource();
+            Scope = new Mock<IServiceScope>();
+            ServiceScopeFactory
+                .Setup(s => s.CreateScope())
+                .Returns(Scope.Object);
+            ServiceProvider = new Mock<IServiceProvider>();
+            ChannelContextProvider = new ChannelContextProvider();
+            Scope
+                .SetupGet(s => s.ServiceProvider)
+                .Returns(ServiceProvider.Object);
+            ServiceProvider
+                .Setup(s => s.GetService(typeof(ChannelContextProvider)))
+                .Returns(ChannelContextProvider);
+            SenderChannel = new Mock<ISenderChannel>();
+            ChannelContext = new ChannelContext(SenderChannel.Object, node => null);
         }
         
         public TransportEndPoint TransportEndPoint { get; private set; }
@@ -36,5 +51,11 @@ namespace Lime.Transport.AspNetCore.UnitTests.Middlewares
         public LimeOptions Options { get; private set; }
         public Mock<IServiceScopeFactory> ServiceScopeFactory { get; private set; }
         public CancellationTokenSource CancellationTokenSource { get; private set; }
+        public Mock<IServiceScope> Scope { get; private set; }
+        public Mock<IServiceProvider> ServiceProvider { get; private set; }
+        internal ChannelContextProvider ChannelContextProvider { get; private set; }
+        internal ChannelContext ChannelContext { get; private set; }
+        public Mock<ISenderChannel> SenderChannel { get; private set; }
+        
     }
 }
