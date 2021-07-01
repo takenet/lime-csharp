@@ -53,20 +53,9 @@ namespace Lime.Transport.AspNetCore.Middlewares
                 context,
                 webSocket,
                 _envelopeSerializer);
-
-            try
-            {
-                await transport.OpenAsync(null, context.RequestAborted);
-                await _listener.ListenAsync(transport, context.RequestAborted);
-            }
-            finally
-            {
-                if (transport.IsConnected)
-                {
-                    using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
-                    await transport.CloseAsync(cts.Token);
-                }
-            }
+            
+            await transport.OpenAsync(null, context.RequestAborted);
+            await _listener.ListenAsync(transport, context.RequestAborted);
         }
     }
 }

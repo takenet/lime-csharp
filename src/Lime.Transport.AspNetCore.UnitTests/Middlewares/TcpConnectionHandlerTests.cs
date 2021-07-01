@@ -1,12 +1,9 @@
 using System;
 using System.IO.Pipelines;
 using System.Net;
-using System.Threading;
 using System.Threading.Tasks;
 using Lime.Transport.AspNetCore.Middlewares;
-using Lime.Transport.AspNetCore.Transport;
 using Microsoft.AspNetCore.Connections;
-using Microsoft.Extensions.Logging;
 using Moq;
 using NUnit.Framework;
 using Shouldly;
@@ -24,7 +21,6 @@ namespace Lime.Transport.AspNetCore.UnitTests.Middlewares
                 Transport = TransportType.Tcp,
                 EndPoint = new IPEndPoint(IPAddress.Any, 55321)
             });
-            
             InputPipe = new Pipe();
             Reader = new PipeReaderDecorator(InputPipe.Reader);
             OutputPipe = new Pipe();
@@ -49,8 +45,6 @@ namespace Lime.Transport.AspNetCore.UnitTests.Middlewares
                 .Returns(CancellationTokenSource.Token);
         }
         
-
-        internal ILogger<TransportListener> Logger { get; set; }
         public Mock<ConnectionContext> Context { get; set; }
         public Mock<IDuplexPipe> Transport { get; set; }
         public Pipe InputPipe { get; set; }
@@ -89,8 +83,8 @@ namespace Lime.Transport.AspNetCore.UnitTests.Middlewares
         {
             // Arrange
             var readException = new Exception("Cannot read from transport");
-            var target = GetTarget();
             Reader.ReadCalledHandler = () => throw readException;
+            var target = GetTarget();
             
             // Act
             try
