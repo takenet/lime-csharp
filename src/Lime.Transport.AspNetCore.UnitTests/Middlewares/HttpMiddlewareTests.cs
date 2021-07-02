@@ -35,7 +35,7 @@ namespace Lime.Transport.AspNetCore.UnitTests.Middlewares
 
         
         private HttpMiddleware GetTarget() => new HttpMiddleware(
-            RequestDelegateExecutor.Next,
+            FakeRequestDelegate.Next,
             EnvelopeSerializer,
             Microsoft.Extensions.Options.Options.Create(Options),
             TransportListener,
@@ -135,7 +135,7 @@ namespace Lime.Transport.AspNetCore.UnitTests.Middlewares
         public async Task Invoke_MessageRequest_ShouldCallListener()
         {
             // Arrange
-            var listener = new MockMessageListener();
+            var listener = new FakeMessageListener();
             ServiceProvider
                 .Setup(s => s.GetService(typeof(IEnumerable<IMessageListener>)))
                 .Returns(new[] {listener});
@@ -161,7 +161,7 @@ namespace Lime.Transport.AspNetCore.UnitTests.Middlewares
         public async Task Invoke_NotificationRequest_ShouldCallListener()
         {
             // Arrange
-            var listener = new MockNotificationListener();
+            var listener = new FakeNotificationListener();
             ServiceProvider
                 .Setup(s => s.GetService(typeof(IEnumerable<INotificationListener>)))
                 .Returns(new[] {listener});
@@ -187,7 +187,7 @@ namespace Lime.Transport.AspNetCore.UnitTests.Middlewares
         public async Task Invoke_CommandRequest_ShouldCallListener()
         {
             // Arrange
-            var listener = new MockCommandListener();
+            var listener = new FakeCommandListener();
             ServiceProvider
                 .Setup(s => s.GetService(typeof(IEnumerable<ICommandListener>)))
                 .Returns(new[] {listener});

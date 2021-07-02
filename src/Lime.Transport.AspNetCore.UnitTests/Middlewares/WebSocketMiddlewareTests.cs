@@ -22,7 +22,7 @@ namespace Lime.Transport.AspNetCore.UnitTests.Middlewares
                 EndPoint = new IPEndPoint(IPAddress.Any, 443)
             });
             
-            WebSocket = new MockWebSocket(state: WebSocketState.Open);
+            WebSocket = new FakeWebSocket(state: WebSocketState.Open);
             WebSocketManager = new Mock<WebSocketManager>();
             WebSocketManager
                 .SetupGet(m => m.IsWebSocketRequest)
@@ -35,11 +35,11 @@ namespace Lime.Transport.AspNetCore.UnitTests.Middlewares
                 .Returns(WebSocketManager.Object);
         }
         
-        public MockWebSocket WebSocket { get; set; } 
+        public FakeWebSocket WebSocket { get; set; } 
         public Mock<WebSocketManager> WebSocketManager { get; set; }
 
         private WebSocketMiddleware GetTarget() => new WebSocketMiddleware(
-            RequestDelegateExecutor.Next, 
+            FakeRequestDelegate.Next, 
             EnvelopeSerializer, 
             TransportListener, 
             Microsoft.Extensions.Options.Options.Create(Options));
@@ -85,7 +85,7 @@ namespace Lime.Transport.AspNetCore.UnitTests.Middlewares
             }
 
             // Assert
-            RequestDelegateExecutor.NextCalls.ShouldBe(0);
+            FakeRequestDelegate.NextCalls.ShouldBe(0);
         }
         
         [Test]
@@ -102,8 +102,8 @@ namespace Lime.Transport.AspNetCore.UnitTests.Middlewares
             await target.Invoke(HttpContext.Object);
 
             // Assert
-            RequestDelegateExecutor.NextCalls.ShouldBe(1);
-            RequestDelegateExecutor.HttpContexts[0].ShouldBe(HttpContext.Object);
+            FakeRequestDelegate.NextCalls.ShouldBe(1);
+            FakeRequestDelegate.HttpContexts[0].ShouldBe(HttpContext.Object);
         }
         
         [Test]

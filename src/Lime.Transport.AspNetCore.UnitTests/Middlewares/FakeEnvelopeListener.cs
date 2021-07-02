@@ -7,9 +7,9 @@ using Lime.Transport.AspNetCore.Listeners;
 
 namespace Lime.Transport.AspNetCore.UnitTests.Middlewares
 {
-    public class MockEnvelopeListener<T> : IEnvelopeListener<T> where T : Envelope, new()
+    public class FakeEnvelopeListener<T> : IEnvelopeListener<T> where T : Envelope, new()
     {
-        public MockEnvelopeListener()
+        public FakeEnvelopeListener()
         {
             Envelopes = new List<T>();
         }

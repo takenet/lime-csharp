@@ -6,11 +6,11 @@ using Lime.Protocol;
 
 namespace Lime.Transport.AspNetCore.UnitTests.Middlewares
 {
-    public class MockWebSocket : System.Net.WebSockets.WebSocket
+    public class FakeWebSocket : System.Net.WebSockets.WebSocket
     {
         private WebSocketState _state;
 
-        public MockWebSocket(
+        public FakeWebSocket(
             WebSocketCloseStatus? closeStatus = null,
             string closeStatusDescription = "",
             WebSocketState state = default,

@@ -22,9 +22,9 @@ namespace Lime.Transport.AspNetCore.UnitTests.Middlewares
                 EndPoint = new IPEndPoint(IPAddress.Any, 55321)
             });
             InputPipe = new Pipe();
-            Reader = new PipeReaderDecorator(InputPipe.Reader);
+            Reader = new FakePipeReader(InputPipe.Reader);
             OutputPipe = new Pipe();
-            Writer = new PipeWriterDecorator(OutputPipe.Writer);
+            Writer = new FakePipeWriter(OutputPipe.Writer);
             
             Transport = new Mock<IDuplexPipe>();
             Transport
@@ -48,9 +48,9 @@ namespace Lime.Transport.AspNetCore.UnitTests.Middlewares
         public Mock<ConnectionContext> Context { get; set; }
         public Mock<IDuplexPipe> Transport { get; set; }
         public Pipe InputPipe { get; set; }
-        public PipeReaderDecorator Reader { get; set; }
+        public FakePipeReader Reader { get; set; }
         public Pipe OutputPipe { get; set; }
-        public PipeWriterDecorator Writer { get; set; }
+        public FakePipeWriter Writer { get; set; }
         
         
         private TcpConnectionHandler GetTarget() =>

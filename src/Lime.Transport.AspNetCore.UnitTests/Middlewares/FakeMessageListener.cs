@@ -3,7 +3,7 @@ using Lime.Transport.AspNetCore.Listeners;
 
 namespace Lime.Transport.AspNetCore.UnitTests.Middlewares
 {
-    public class MockNotificationListener : MockEnvelopeListener<Notification>, INotificationListener
+    public class FakeMessageListener : FakeEnvelopeListener<Message>, IMessageListener
     {
 
     }

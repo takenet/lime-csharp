@@ -4,9 +4,9 @@ using Microsoft.AspNetCore.Http;
 
 namespace Lime.Transport.AspNetCore.UnitTests.Middlewares
 {
-    public class RequestDelegateExecutor
+    public class FakeRequestDelegate
     {
-        public RequestDelegateExecutor()
+        public FakeRequestDelegate()
         {
             NextCalls = 0;
             HttpContexts = new List<HttpContext>();

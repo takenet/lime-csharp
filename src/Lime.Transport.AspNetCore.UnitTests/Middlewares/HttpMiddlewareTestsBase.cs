@@ -10,7 +10,7 @@ namespace Lime.Transport.AspNetCore.UnitTests.Middlewares
         {
             base.SetUp(transportEndPoint);
             
-            RequestDelegateExecutor = new RequestDelegateExecutor();
+            FakeRequestDelegate = new FakeRequestDelegate();
             HttpContext = new Mock<HttpContext>();
             HttpRequest = new Mock<HttpRequest>();
             HttpResponse = new Mock<HttpResponse>();
@@ -53,7 +53,7 @@ namespace Lime.Transport.AspNetCore.UnitTests.Middlewares
                 .Returns(ResponseBody);
         }
         
-        public RequestDelegateExecutor RequestDelegateExecutor { get; private set; }
+        public FakeRequestDelegate FakeRequestDelegate { get; private set; }
         public Mock<ConnectionInfo> ConnectionInfo { get; private set; }
         public Mock<HttpContext> HttpContext { get; private set; }
         public Mock<HttpRequest> HttpRequest { get; private set; }

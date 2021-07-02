@@ -5,11 +5,11 @@ using System.Threading.Tasks;
 
 namespace Lime.Transport.AspNetCore.UnitTests.Middlewares
 {
-    public class PipeWriterDecorator : PipeWriter
+    public class FakePipeWriter : PipeWriter
     {
         private readonly PipeWriter _writer;
 
-        public PipeWriterDecorator(PipeWriter writer)
+        public FakePipeWriter(PipeWriter writer)
         {
             _writer = writer;
         }

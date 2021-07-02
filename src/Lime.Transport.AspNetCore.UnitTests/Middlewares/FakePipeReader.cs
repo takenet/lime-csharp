@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace Lime.Transport.AspNetCore.UnitTests.Middlewares
 {
-    public class PipeReaderDecorator : PipeReader
+    public class FakePipeReader : PipeReader
     {
         private readonly PipeReader _reader;
 
@@ -13,7 +13,7 @@ namespace Lime.Transport.AspNetCore.UnitTests.Middlewares
         public bool CompleteCalled;
         public Action ReadCalledHandler;
         
-        public PipeReaderDecorator(PipeReader reader)
+        public FakePipeReader(PipeReader reader)
         {
             _reader = reader;
         }
