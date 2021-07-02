@@ -14,7 +14,7 @@ namespace Lime.Transport.AspNetCore.Transport
     /// <summary>
     /// Emulates a channel using the HttpContext to allow the application sending a envelope in the HTTP response.
     /// </summary>
-    public sealed class HttpContextChannel : ISenderChannel
+    internal sealed class HttpContextChannel : ISenderChannel
     {
         private readonly HttpContext _context;
         private readonly IEnvelopeSerializer _envelopeSerializer;

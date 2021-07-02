@@ -28,32 +28,11 @@ namespace Lime.Transport.AspNetCore.UnitTests.Middlewares
                 Transport = TransportType.Http,
                 EndPoint = new IPEndPoint(IPAddress.Any, 443)
             });
-            Headers = new HeaderDictionary();
-            BodyStream = new MemoryStream();
-            HttpRequest = new Mock<HttpRequest>();
-            HttpRequest
-                .SetupGet(r => r.Headers)
-                .Returns(Headers);
-            HttpRequest
-                .SetupGet(r => r.Body)
-                .Returns(BodyStream);
-            HttpRequest
-                .SetupGet(r => r.Method)
-                .Returns("POST");
-            HttpRequest
-                .SetupGet(r => r.ContentType)
-                .Returns("application/json");
-            HttpRequest
-                .SetupGet(r => r.Path)
-                .Returns("/messages");
-            HttpContext
-                .SetupGet(c => c.Request)
-                .Returns(HttpRequest.Object);
+
+
         }
 
-        public HeaderDictionary Headers { get; private set; }
-        public Mock<HttpRequest> HttpRequest { get; private set; }
-        public MemoryStream BodyStream { get; private set; }
+
         
         private HttpMiddleware GetTarget() => new HttpMiddleware(
             RequestDelegateExecutor.Next,
@@ -75,8 +54,8 @@ namespace Lime.Transport.AspNetCore.UnitTests.Middlewares
                 handlerAuthentication = authentication;
                 return Task.FromResult(handlerResult);
             };
-            BodyStream.Write(Encoding.UTF8.GetBytes("{\"type\":\"text/plain\",\"content\":\"Hello\"}"));
-            BodyStream.Position = 0;
+            RequestBody.Write(Encoding.UTF8.GetBytes("{\"type\":\"text/plain\",\"content\":\"Hello\"}"));
+            RequestBody.Position = 0;
             var target = GetTarget();
 
             // Act
@@ -105,8 +84,8 @@ namespace Lime.Transport.AspNetCore.UnitTests.Middlewares
             var password = "(*R1jsd92<asÇ2931kd";
             var authorizationValue = $"{userName}:{password}".ToBase64();
             Headers.Add(HeaderNames.Authorization, $"Basic {authorizationValue}");
-            BodyStream.Write(Encoding.UTF8.GetBytes("{\"type\":\"text/plain\",\"content\":\"Hello\"}"));
-            BodyStream.Position = 0;
+            RequestBody.Write(Encoding.UTF8.GetBytes("{\"type\":\"text/plain\",\"content\":\"Hello\"}"));
+            RequestBody.Position = 0;
             var target = GetTarget();
 
             // Act
@@ -137,8 +116,8 @@ namespace Lime.Transport.AspNetCore.UnitTests.Middlewares
             var password = "(*R1jsd92<asÇ2931kd";
             var authorizationValue = $"{userName}:{password}".ToBase64();
             Headers.Add(HeaderNames.Authorization, $"Key {authorizationValue}");
-            BodyStream.Write(Encoding.UTF8.GetBytes("{\"type\":\"text/plain\",\"content\":\"Hello\"}"));
-            BodyStream.Position = 0;
+            RequestBody.Write(Encoding.UTF8.GetBytes("{\"type\":\"text/plain\",\"content\":\"Hello\"}"));
+            RequestBody.Position = 0;
             var target = GetTarget();
 
             // Act
@@ -164,8 +143,8 @@ namespace Lime.Transport.AspNetCore.UnitTests.Middlewares
                 .SetupGet(r => r.Path)
                 .Returns("/messages");
             var messageBytes = Encoding.UTF8.GetBytes("{\"type\":\"text/plain\",\"content\":\"Hello world!\"}");
-            BodyStream.Write(messageBytes);
-            BodyStream.Position = 0;
+            RequestBody.Write(messageBytes);
+            RequestBody.Position = 0;
             
             var target = GetTarget();
 
@@ -190,8 +169,8 @@ namespace Lime.Transport.AspNetCore.UnitTests.Middlewares
                 .SetupGet(r => r.Path)
                 .Returns("/notifications");
             var notificationBytes = Encoding.UTF8.GetBytes("{\"id\":\"1\",\"event\":\"received\"}");
-            BodyStream.Write(notificationBytes);
-            BodyStream.Position = 0;
+            RequestBody.Write(notificationBytes);
+            RequestBody.Position = 0;
             
             var target = GetTarget();
 
@@ -216,8 +195,8 @@ namespace Lime.Transport.AspNetCore.UnitTests.Middlewares
                 .SetupGet(r => r.Path)
                 .Returns("/commands");
             var commandBytes = Encoding.UTF8.GetBytes("{\"id\":\"1\",\"method\":\"get\",\"uri\":\"/ping\"}");
-            BodyStream.Write(commandBytes);
-            BodyStream.Position = 0;
+            RequestBody.Write(commandBytes);
+            RequestBody.Position = 0;
             
             var target = GetTarget();
 

@@ -22,8 +22,6 @@ namespace Lime.Transport.AspNetCore
             {
                 options.Listen(endPoint.EndPoint, builder =>
                 {
-                    builder.UseConnectionLogging();
-                    
                     switch (endPoint.Transport)
                     {
                         case TransportType.Tcp:
