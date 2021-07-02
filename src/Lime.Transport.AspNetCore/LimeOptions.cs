@@ -39,9 +39,7 @@ namespace Lime.Transport.AspNetCore
         /// The node for the local server, which will be presented to the connected clients.
         /// </summary>
         public Node LocalNode { get; set; } = new Node(Environment.UserName, Environment.UserDomainName ?? "localhost", Environment.MachineName);
-        public TimeSpan SendTimeout { get; set; } = TimeSpan.FromSeconds(60);
-        public TimeSpan CloseTimeout { get; set; } = TimeSpan.FromSeconds(5);
-        
+
         /// <summary>
         /// The supported transport compression options.
         /// </summary>
@@ -68,5 +66,49 @@ namespace Lime.Transport.AspNetCore
         /// The handler for node registration.
         /// </summary>
         public RegistrationHandler RegistrationHandler { get; set; } = (candidate, channel, token) => Task.FromResult(new Node(Guid.NewGuid().ToString(), Environment.UserDomainName, Environment.MachineName));
+
+        /// <summary>
+        /// The channel send timeout.
+        /// Each send operation must be completed in the specified timeout or it will be canceled.
+        /// </summary>
+        public TimeSpan SendTimeout { get; set; } = TimeSpan.FromSeconds(60);
+        
+        /// <summary>
+        /// The channel close timeout. 
+        /// </summary>
+        public TimeSpan CloseTimeout { get; set; } = TimeSpan.FromSeconds(5);
+        
+        /// <summary>
+        /// The number of envelopes to be buffered internally by the channel in the receive operations.
+        /// If this limit is reached, the channel will not consume the transport until the buffer is consumed by the receive operations.
+        /// </summary>
+        public int EnvelopeBufferSize { get; set; } = 1;
+        
+        /// <summary>
+        /// Automatically fill missing envelope 'from', 'to' and 'pp' properties using channel information.
+        /// </summary>
+        public bool FillEnvelopeRecipients { get; set; } = false;
+        
+        /// <summary>
+        /// Indicates if the channel should reply automatically to ping request commands.
+        /// In this case, the ping command are not returned by the ReceiveCommandAsync method.
+        /// </summary>
+        public bool AutoReplyPings { get; set; } = true;
+        
+        /// <summary>
+        /// The interval to ping the remote party.
+        /// </summary>
+        public TimeSpan? RemotePingInterval { get; set; }
+        
+        /// <summary>
+        /// The timeout to close the channel due to inactivity.
+        /// </summary>
+        public TimeSpan? RemoteIdleTimeout { get; set; }
+        
+        /// <summary>
+        /// The channel consume timeout.
+        /// Each envelope received from the transport must be consumed in the specified interval or it will cause the channel to be closed.
+        /// </summary>
+        public TimeSpan? ConsumeTimeout { get; set; }
     }
 }

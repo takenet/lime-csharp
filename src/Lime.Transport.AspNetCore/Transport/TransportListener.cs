@@ -51,14 +51,32 @@ namespace Lime.Transport.AspNetCore.Transport
                 EnvelopeId.NewId(),
                 _options.Value.LocalNode,
                 transport,
-                _options.Value.SendTimeout);
+                _options.Value.SendTimeout,
+                _options.Value.EnvelopeBufferSize,
+                _options.Value.FillEnvelopeRecipients,
+                _options.Value.AutoReplyPings,
+                _options.Value.RemotePingInterval,
+                _options.Value.RemoteIdleTimeout,
+                _options.Value.ConsumeTimeout,
+                _options.Value.CloseTimeout);
 
         private async Task EstablishChannelAsync(ServerChannel channel, CancellationToken cancellationToken)
         {
+            var compressionOptions = channel
+                .Transport
+                .GetSupportedCompression()
+                .Intersect(_options.Value.EnabledCompressionOptions)
+                .ToArray();
+
+            var encryptionOptions = channel
+                .Transport
+                .GetSupportedEncryption()
+                .Intersect(_options.Value.EnabledEncryptionOptions)
+                .ToArray();
+
             await channel.EstablishSessionAsync(
-                channel.Transport.GetSupportedCompression().Intersect(_options.Value.EnabledCompressionOptions)
-                    .ToArray(),
-                channel.Transport.GetSupportedEncryption().Intersect(_options.Value.EnabledEncryptionOptions).ToArray(),
+                compressionOptions,
+                encryptionOptions,
                 _options.Value.SchemeOptions,
                 (identity, authentication, c) => _options.Value.AuthenticationHandler(identity, authentication, c),
                 (node, serverChannel, c) => _options.Value.RegistrationHandler(node, serverChannel, c),
