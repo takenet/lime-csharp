@@ -12,9 +12,9 @@ namespace Lime.Transport.AspNetCore.UnitTests
 {
     public abstract class TestsBase
     {
-        protected void SetUp(TransportEndPoint transportEndPoint)
+        protected void SetUp(TransportEndPoint transportEndPoint = null)
         {
-            TransportEndPoint = transportEndPoint;
+            TransportEndPoint = transportEndPoint ?? new TransportEndPoint();
             Options = new LimeOptions()
             {
                 EndPoints = new List<TransportEndPoint>()
