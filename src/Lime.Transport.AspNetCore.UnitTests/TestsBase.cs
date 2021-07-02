@@ -8,7 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
 
-namespace Lime.Transport.AspNetCore.UnitTests.Middlewares
+namespace Lime.Transport.AspNetCore.UnitTests
 {
     public abstract class TestsBase
     {

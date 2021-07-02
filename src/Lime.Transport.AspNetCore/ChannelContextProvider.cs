@@ -5,13 +5,12 @@ namespace Lime.Transport.AspNetCore
     internal class ChannelContextProvider
     {
         private ChannelContext? _context;
-        private bool _used;
 
         public void SetContext(ChannelContext requestContext)
         {
-            if (_context != null || requestContext == null)
+            if (_context != null)
             {
-                throw new InvalidOperationException();
+                throw new InvalidOperationException("The channel context has already been set");
             }
 
             _context = requestContext;
@@ -19,12 +18,11 @@ namespace Lime.Transport.AspNetCore
 
         public ChannelContext GetContext()
         {
-            if (_used || _context == null)
+            if (_context == null)
             {
-                throw new InvalidOperationException();
-            }
-
-            _used = true;
+                throw new InvalidOperationException("The channel context was not been set");
+            }            
+            
             return _context;
         }
     }
