@@ -466,9 +466,9 @@ public class MessageListener : MessageListenerBase
     {
         _logger.LogInformation("Message received");
         
-        // Echo the received message
+        // Echoes the received message
         await _channelContext.Channel.SendNessageAsync(
-            new Nessage(message.Id)
+            new Message(message.Id)
             {
                 Content = message.Content
             }, 
@@ -478,4 +478,4 @@ public class MessageListener : MessageListenerBase
 
 ```
 
-For more details, please check the `Lime.Sample.AspNetCore` project for more configuration examples.
+For more details, please check the `Lime.Sample.AspNetCore` project for other configuration examples.
