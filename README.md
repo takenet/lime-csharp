@@ -20,13 +20,14 @@ Finally it has built-in support for authentication, transport encryption and com
 - **Lime.Protocol**: Base protocol ([NuGet](https://www.nuget.org/Packages/Lime.Protocol))
 - **Lime.Transport.Tcp**: TCP transport implementation ([NuGet](https://www.nuget.org/Packages/Lime.Transport.Tcp))
 - **Lime.Transport.WebSocket**: WebSocket transport implementation ([NuGet](https://www.nuget.org/Packages/Lime.Transport.WebSocket))
-- **Lime.Transport.Http**: HTTP emulation layer (LIME over HTTP) ([NuGet](https://www.nuget.org/Packages/Lime.Transport.Http))
+- **Lime.Transport.AspNetCore**: Middleware for hosting Lime in the ASP.NET Core infrastructure ([NuGet](https://www.nuget.org/Packages/Lime.Transport.AspNetCore))
 - **Lime.Messaging**: Common content and resource types for instant messaging applications ([NuGet](https://www.nuget.org/Packages/Lime.Messaging))
 - **Lime.Protocol.Serialization**: serialization library ([NuGet](https://www.nuget.org/Packages/Lime.Protocol.Serialization))
 - **Lime.Client.TestConsole**: Client console for server testing
 - **Lime.Client.Windows**: Instant messaging client built with WPF
 - **Lime.Sample.Server**: Sample server implementation with very basic functionality
 - **Lime.Sample.Client**: Sample client implementation
+- **Lime.Sample.AspNetCore**: Sample ASP.NET Core server implementation
 
 Implementation overview
 ---------------------
