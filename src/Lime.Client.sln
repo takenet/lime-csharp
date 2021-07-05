@@ -1,9 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.26430.14
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31205.134
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lime.Client.TestConsole", "Lime.Client.TestConsole\Lime.Client.TestConsole.csproj", "{9E13148D-726D-4E42-B924-4A1AF4F0DC3E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lime.Client.TestConsole", "Lime.Client.TestConsole\Lime.Client.TestConsole.csproj", "{9E13148D-726D-4E42-B924-4A1AF4F0DC3E}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lime.Client.Windows", "Lime.Client.Windows\Lime.Client.Windows.csproj", "{1847098B-FE9E-4E40-AA69-9E70FAF5D06E}"
 EndProject
@@ -28,5 +28,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {E1DF7082-9FDC-4078-8AC1-CF19406760F3}
 	EndGlobalSection
 EndGlobal
