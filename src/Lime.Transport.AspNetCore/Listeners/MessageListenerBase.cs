@@ -5,6 +5,9 @@ using Lime.Protocol;
 
 namespace Lime.Transport.AspNetCore.Listeners
 {
+    /// <summary>
+    /// Defines a base class for receiving <see cref="Message"/> instances from the connected clients.
+    /// </summary>
     public abstract class MessageListenerBase : IMessageListener
     {
         protected MessageListenerBase()
