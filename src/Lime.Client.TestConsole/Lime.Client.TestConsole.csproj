@@ -80,16 +80,12 @@
     <Resource Include="lime.ico" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Lime.Protocol\Lime.Protocol.csproj" />
-    <ProjectReference Include="..\Lime.Transport.Tcp\Lime.Transport.Tcp.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="Extended.Wpf.Toolkit" Version="2.2.0" />
-    <PackageReference Include="Lime.Messaging" Version="0.8.70-beta" />
-    <PackageReference Include="Lime.Transport.Tcp" Version="0.8.70-beta" />
-    <PackageReference Include="Lime.Transport.WebSocket" Version="0.8.70-beta" />
+    <PackageReference Include="Extended.Wpf.Toolkit" Version="4.1.0" />
+    <PackageReference Include="Lime.Messaging" Version="0.10.64-beta" />
+    <PackageReference Include="Lime.Transport.Tcp" Version="0.10.64-beta" />
+    <PackageReference Include="Lime.Transport.WebSocket" Version="0.10.64-beta" />
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
-    <PackageReference Include="MvvmLightLibs" Version="4.4.32.7" />
+    <PackageReference Include="MvvmLightLibs" Version="5.4.1.1" />
     <PackageReference Include="StackExchange.Redis" Version="1.1.608" />
     <PackageReference Include="System.Threading.Tasks.Dataflow" Version="4.11.1" />
     <PackageReference Include="System.ServiceModel.Duplex" Version="4.8.1" />
