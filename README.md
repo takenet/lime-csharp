@@ -396,7 +396,7 @@ Using with ASP.NET Core
 It is possible to use the ASP.NET Core infrastructure for the server-side implementation, making easier to receive new connection and handling envelopes.
 It also allows using Lime along with the ASP.NET Core MVC HTTP pipeline.
 
-For doing that, just install the `Lime.Protocol.Transport.AspNetCore` package and add the following lines to the `Startup.cs` file:
+To do this, just install the `Lime.Protocol.Transport.AspNetCore` package and add the following lines to the `Startup.cs` file:
 
 ```csharp
 
