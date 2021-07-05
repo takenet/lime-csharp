@@ -6,7 +6,7 @@ namespace Lime.Transport.AspNetCore.UnitTests.Middlewares
 {
     public abstract class HttpMiddlewareTestsBase : TestsBase
     {
-        protected void SetUp(TransportEndPoint transportEndPoint)
+        protected new void SetUp(TransportEndPoint transportEndPoint)
         {
             base.SetUp(transportEndPoint);
             

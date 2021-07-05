@@ -26,6 +26,12 @@ namespace Lime.Transport.AspNetCore.UnitTests.Transport
             RemoteNode = new Node("remote", "domain.local", "remote1");
         }
         
+        [TearDown]
+        public new void TearDown()
+        {
+            base.TearDown();
+        }
+        
         public Node LocalNode { get; private set; }
         public Node RemoteNode { get; private set; }
         

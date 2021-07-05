@@ -28,11 +28,13 @@ namespace Lime.Transport.AspNetCore.UnitTests.Middlewares
                 Transport = TransportType.Http,
                 EndPoint = new IPEndPoint(IPAddress.Any, 443)
             });
-
-
         }
-
-
+        
+        [TearDown]
+        public new void TearDown()
+        {
+            base.TearDown();
+        }
         
         private HttpMiddleware GetTarget() => new HttpMiddleware(
             FakeRequestDelegate.Next,

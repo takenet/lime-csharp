@@ -35,6 +35,12 @@ namespace Lime.Transport.AspNetCore.UnitTests.Middlewares
                 .Returns(WebSocketManager.Object);
         }
         
+        [TearDown]
+        public new void TearDown()
+        {
+            base.TearDown();
+        }
+        
         public FakeWebSocket WebSocket { get; set; } 
         public Mock<WebSocketManager> WebSocketManager { get; set; }
 

@@ -28,23 +28,32 @@ namespace Lime.Transport.AspNetCore.UnitTests
                 Microsoft.Extensions.Options.Options.Create(Options), 
                 ServiceScopeFactory.Object, 
                 new Logger<TransportListener>(new LoggerFactory()));
-            CancellationTokenSource = new CancellationTokenSource();
+            CancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(30));
             Scope = new Mock<IServiceScope>();
             ServiceScopeFactory
                 .Setup(s => s.CreateScope())
                 .Returns(Scope.Object);
             ServiceProvider = new Mock<IServiceProvider>();
-            ChannelContextProvider = new ChannelContextProvider();
             Scope
                 .SetupGet(s => s.ServiceProvider)
                 .Returns(ServiceProvider.Object);
             ServiceProvider
                 .Setup(s => s.GetService(typeof(ChannelContextProvider)))
-                .Returns(ChannelContextProvider);
+                .Returns(() =>
+                {
+                    var provider = new ChannelContextProvider();
+                    ChannelContextProviders.Add(provider);
+                    return provider;
+                });
             SenderChannel = new Mock<ISenderChannel>();
-            ChannelContext = new ChannelContext(SenderChannel.Object, node => null);
+            ChannelContextProviders = new List<ChannelContextProvider>();
         }
-        
+
+        protected void TearDown()
+        {
+            CancellationTokenSource.Dispose();
+        }
+
         public TransportEndPoint TransportEndPoint { get; private set; }
         internal TransportListener TransportListener { get; private set; }
         public IEnvelopeSerializer EnvelopeSerializer { get; private set; }
@@ -53,9 +62,7 @@ namespace Lime.Transport.AspNetCore.UnitTests
         public CancellationTokenSource CancellationTokenSource { get; private set; }
         public Mock<IServiceScope> Scope { get; private set; }
         public Mock<IServiceProvider> ServiceProvider { get; private set; }
-        internal ChannelContextProvider ChannelContextProvider { get; private set; }
-        internal ChannelContext ChannelContext { get; private set; }
         public Mock<ISenderChannel> SenderChannel { get; private set; }
-        
+        internal List<ChannelContextProvider> ChannelContextProviders { get; private set; }
     }
 }

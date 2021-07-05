@@ -6,7 +6,6 @@ namespace Lime.Transport.AspNetCore.UnitTests
     [TestFixture]
     public class HttpEndPointOptionsTests
     {
-
         private HttpEndPointOptions GetTarget() => new HttpEndPointOptions();
         
         [Test]

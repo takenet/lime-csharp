@@ -45,6 +45,12 @@ namespace Lime.Transport.AspNetCore.UnitTests.Middlewares
                 .Returns(CancellationTokenSource.Token);
         }
         
+        [TearDown]
+        public new void TearDown()
+        {
+            base.TearDown();
+        }
+        
         public Mock<ConnectionContext> Context { get; set; }
         public Mock<IDuplexPipe> Transport { get; set; }
         public Pipe InputPipe { get; set; }

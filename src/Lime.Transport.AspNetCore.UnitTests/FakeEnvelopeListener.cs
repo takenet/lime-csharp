@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using Lime.Protocol;
 using Lime.Transport.AspNetCore.Listeners;
 
-namespace Lime.Transport.AspNetCore.UnitTests.Middlewares
+namespace Lime.Transport.AspNetCore.UnitTests
 {
     public class FakeEnvelopeListener<T> : IEnvelopeListener<T> where T : Envelope, new()
     {

@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
@@ -11,31 +13,40 @@ namespace Lime.Transport.AspNetCore.UnitTests.Transport
     {                
         public FakeTransport()
         {
-            SendBuffer = new BufferBlock<Envelope>(
-                new DataflowBlockOptions()
-                {
-                    BoundedCapacity = -1
-                });
+            SentEnvelopes = new List<Envelope>();
             ReceiveBuffer = new BufferBlock<Envelope>(
                 new DataflowBlockOptions()
                 {
                     BoundedCapacity = -1
                 });
+            SentHandlers = new List<Func<Envelope, Task>>();
         }
 
-        public BufferBlock<Envelope> SendBuffer { get; }
+        public List<Envelope> SentEnvelopes { get; }
 
-        public BufferBlock<Envelope> ReceiveBuffer { get; set; }
+        public BufferBlock<Envelope> ReceiveBuffer { get; }
 
-        public override Task SendAsync(Envelope envelope, CancellationToken cancellationToken) => SendBuffer.SendAsync(envelope, cancellationToken);
+        public ICollection<Func<Envelope, Task>> SentHandlers { get; }
 
-        public override Task<Envelope> ReceiveAsync(CancellationToken cancellationToken) => ReceiveBuffer.ReceiveAsync(cancellationToken);
+        public Func<Task> ReceivingHandler { get; set; }
+        
+        public override async Task SendAsync(Envelope envelope, CancellationToken cancellationToken)
+        {
+            SentEnvelopes.Add(envelope);
+            await Task.WhenAll(SentHandlers.Select(h => h.Invoke(envelope)));
+        }
 
-        public override bool IsConnected => !SendBuffer.Completion.IsCompleted;
+        public override async Task<Envelope> ReceiveAsync(CancellationToken cancellationToken)
+        {
+            await (ReceivingHandler?.Invoke() ?? Task.CompletedTask);
+            return await ReceiveBuffer.ReceiveAsync(cancellationToken);
+        }
+
+        public override bool IsConnected => !ReceiveBuffer.Completion.IsCompleted;
 
         protected override Task PerformCloseAsync(CancellationToken cancellationToken)
         {
-            SendBuffer.Complete();
+            ReceiveBuffer.Complete();
             return Task.CompletedTask;
         }
 
