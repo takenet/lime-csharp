@@ -268,7 +268,7 @@ namespace Lime.Transport.Tcp
                                 .AuthenticateAsServerAsync(
                                     _serverCertificate,
                                     true,
-                                    SslProtocols.Tls,
+                                    SslProtocols.Tls | SslProtocols.Tls11 | SslProtocols.Tls12,
                                     false)
                                 .WithCancellation(cancellationToken)
                                 .ConfigureAwait(false);
@@ -297,7 +297,7 @@ namespace Lime.Transport.Tcp
                                 .AuthenticateAsClientAsync(
                                     _hostName,
                                     clientCertificates,
-                                    SslProtocols.Tls,
+                                    SslProtocols.Tls | SslProtocols.Tls11 | SslProtocols.Tls12,
                                     false)
                                 .WithCancellation(cancellationToken)
                                 .ConfigureAwait(false);
