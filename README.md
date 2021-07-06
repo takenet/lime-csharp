@@ -20,17 +20,15 @@ Finally it has built-in support for authentication, transport encryption and com
 - **Lime.Protocol**: Base protocol ([NuGet](https://www.nuget.org/Packages/Lime.Protocol))
 - **Lime.Transport.Tcp**: TCP transport implementation ([NuGet](https://www.nuget.org/Packages/Lime.Transport.Tcp))
 - **Lime.Transport.WebSocket**: WebSocket transport implementation ([NuGet](https://www.nuget.org/Packages/Lime.Transport.WebSocket))
-- **Lime.Transport.AspNetCore**: Middleware for hosting Lime in the ASP.NET Core infrastructure ([NuGet](https://www.nuget.org/Packages/Lime.Transport.AspNetCore))
+- **Lime.Transport.AspNetCore**: (Experimental) Middleware for hosting Lime in the ASP.NET Core infrastructure ([NuGet](https://www.nuget.org/Packages/Lime.Transport.AspNetCore))
 - **Lime.Messaging**: Common content and resource types for instant messaging applications ([NuGet](https://www.nuget.org/Packages/Lime.Messaging))
-- **Lime.Protocol.Serialization**: serialization library ([NuGet](https://www.nuget.org/Packages/Lime.Protocol.Serialization))
 - **Lime.Client.TestConsole**: Client console for server testing
-- **Lime.Client.Windows**: Instant messaging client built with WPF
 - **Lime.Sample.Server**: Sample server implementation with very basic functionality
 - **Lime.Sample.Client**: Sample client implementation
 - **Lime.Sample.AspNetCore**: Sample ASP.NET Core server implementation
 
 Implementation overview
----------------------
+-----------------------
 
 The basic protocol data package is called **envelope**. As mentioned before, there are four types:
 
@@ -438,14 +436,14 @@ public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
     app.UseLime();
 
     // Optional: Conventional MVC configuration.
-    // The MVC middleware can be reached if there an HTTP endpoint defined in Lime options. 
+    // The MVC middleware can be reached if there is an HTTP endpoint defined in Lime options. 
     app.UseHttpsRedirection();
     app.UseRouting();
     app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
 } 
 ```
 
-To handling the envelopes, create a `Listeners` folder in the ASP.NET core project and add the listeners, inheriting from `[EnvelopeType]ListenerBase` classes.
+To handle the envelopes, create a `Listeners` folder in the ASP.NET core project and add the listeners, inheriting from `[EnvelopeType]ListenerBase` classes.
 
 For instance, a simple message handler implementation that only echoes the received messages: 
 
@@ -467,7 +465,7 @@ public class MessageListener : MessageListenerBase
         _logger.LogInformation("Message received");
         
         // Echoes the received message
-        await _channelContext.Channel.SendNessageAsync(
+        await _channelContext.Channel.SendMessageAsync(
             new Message(message.Id)
             {
                 Content = message.Content
