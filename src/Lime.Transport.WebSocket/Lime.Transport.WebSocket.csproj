@@ -37,7 +37,9 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="Properties" />
+        <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+            <_Parameter1>Lime.Transport.AspNetCore</_Parameter1>
+        </AssemblyAttribute>
     </ItemGroup>
 
 </Project>

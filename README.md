@@ -20,16 +20,15 @@ Finally it has built-in support for authentication, transport encryption and com
 - **Lime.Protocol**: Base protocol ([NuGet](https://www.nuget.org/Packages/Lime.Protocol))
 - **Lime.Transport.Tcp**: TCP transport implementation ([NuGet](https://www.nuget.org/Packages/Lime.Transport.Tcp))
 - **Lime.Transport.WebSocket**: WebSocket transport implementation ([NuGet](https://www.nuget.org/Packages/Lime.Transport.WebSocket))
-- **Lime.Transport.Http**: HTTP emulation layer (LIME over HTTP) ([NuGet](https://www.nuget.org/Packages/Lime.Transport.Http))
+- **Lime.Transport.AspNetCore**: (Experimental) Middleware for hosting Lime in the ASP.NET Core infrastructure ([NuGet](https://www.nuget.org/Packages/Lime.Transport.AspNetCore))
 - **Lime.Messaging**: Common content and resource types for instant messaging applications ([NuGet](https://www.nuget.org/Packages/Lime.Messaging))
-- **Lime.Protocol.Serialization**: serialization library ([NuGet](https://www.nuget.org/Packages/Lime.Protocol.Serialization))
 - **Lime.Client.TestConsole**: Client console for server testing
-- **Lime.Client.Windows**: Instant messaging client built with WPF
 - **Lime.Sample.Server**: Sample server implementation with very basic functionality
 - **Lime.Sample.Client**: Sample client implementation
+- **Lime.Sample.AspNetCore**: Sample ASP.NET Core server implementation
 
-Protocol overview
----------------------
+Implementation overview
+-----------------------
 
 The basic protocol data package is called **envelope**. As mentioned before, there are four types:
 
@@ -389,3 +388,92 @@ var receivedSessionEnvelopeTask = serverChannel
 // ...
 ```
 
+Using with ASP.NET Core
+-----------------------
+
+It is possible to use the ASP.NET Core infrastructure for the server-side implementation, making easier to receive new connection and handling envelopes.
+It also allows using Lime along with the ASP.NET Core MVC HTTP pipeline.
+
+To do this, just install the `Lime.Protocol.Transport.AspNetCore` package and add the following lines to the `Startup.cs` file:
+
+```csharp
+
+ public void ConfigureServices(IServiceCollection services)
+{
+    // Register WebSockets middleware (required if you are using the WebSocket transport)
+    services.AddWebSockets(options => { options.KeepAliveInterval = TimeSpan.FromSeconds(30); });
+    
+    // Register Lime
+    services.AddLime(options =>
+    {
+        // TODO: Optionally configure the Lime server options, like the transports and endpoints.
+        // The default server listens the following ports and transports:
+        // - 55321: TCP transport
+        // - 8080: WebSocket transport
+        // - 443: HTTP transport (emulated) 
+    });
+    
+    // Optional: Register ASP.NET Core MVC
+    services.AddControllers();
+    services.AddSwaggerGen(c =>
+    {
+        c.SwaggerDoc("v1", new OpenApiInfo {Title = "Lime.Sample.AspNetCore", Version = "v1"});
+    });
+}
+
+public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+{
+    if (env.IsDevelopment())
+    {
+        app.UseDeveloperExceptionPage();
+        app.UseSwagger();
+        app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Lime.Sample.AspNetCore v1"));
+    }
+    
+    app.UseWebSockets();
+    
+    // Initialize the Lime middlewares
+    app.UseLime();
+
+    // Optional: Conventional MVC configuration.
+    // The MVC middleware can be reached if there is an HTTP endpoint defined in Lime options. 
+    app.UseHttpsRedirection();
+    app.UseRouting();
+    app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
+} 
+```
+
+To handle the envelopes, create a `Listeners` folder in the ASP.NET core project and add the listeners, inheriting from `[EnvelopeType]ListenerBase` classes.
+
+For instance, a simple message handler implementation that only echoes the received messages: 
+
+```csharp
+public class MessageListener : MessageListenerBase
+{
+    private readonly ILogger<MessageListener> _logger;
+    private readonly ChannelContext _channelContext;
+
+    public MessageListener(ILogger<MessageListener> logger, ChannelContext channelContext)
+    {
+        _logger = logger;
+        // This instance gives access to the connected client information.
+        _channelContext = channelContext; 
+    }
+
+    public override async Task OnMessageAsync(Message message, CancellationToken cancellationToken)
+    {
+        _logger.LogInformation("Message received");
+        
+        // Echoes the received message
+        await _channelContext.Channel.SendMessageAsync(
+            new Message(message.Id)
+            {
+                Content = message.Content
+            }, 
+            cancellationToken);
+    }
+}
+
+```
+
+For more details, please check the `Lime.Sample.AspNetCore` project for other configuration examples.
