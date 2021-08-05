@@ -86,16 +86,20 @@ namespace Lime.Sample.AspNetCore
             app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
         }
         
-        private static X509Certificate2? GetCertificate()
+        private static X509Certificate2 GetCertificate()
         {
             // Note: This implementation is intended for development.
             // TODO: Retrieve a valid certificate.
-            var store = new X509Store(StoreName.My, StoreLocation.CurrentUser);
+            var store = new X509Store(StoreName.My, StoreLocation.LocalMachine);
             store.Open(OpenFlags.ReadOnly);
             var certs = store.Certificates.Find(X509FindType.FindBySubjectName, "localhost", true);
 
-            X509Certificate2? serverCertificate = certs.Count > 0 ? certs[0] : null;
-            return serverCertificate;
+            if (certs.Count == 0)
+            {
+                throw new Exception("No localhost certificate found for TLS");
+            }
+            
+            return certs[0];
         }
     }
 }
