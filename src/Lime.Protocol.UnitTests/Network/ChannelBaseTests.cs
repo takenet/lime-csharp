@@ -331,7 +331,6 @@ namespace Lime.Protocol.UnitTests.Network
             Assert.DoesNotThrowAsync(() => target.SendMessageAndDelayAsync(message, CancellationToken.None), "The send buffer is complete");
 
             // Assert - should resolve other messages
-            Assert.IsTrue((target).IsEstablished());
             _transport.Verify(
                 t => t.SendAsync(
                     message,
