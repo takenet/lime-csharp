@@ -220,6 +220,12 @@ namespace Lime.Protocol.Network
 
                         await _transport.SendAsync(envelope, linkedCts.Token).ConfigureAwait(false);
                     }
+                    catch (EnvelopeTooLargeException ex)
+                    {
+                        /*This exception is handled since a sender should not close his channel 
+                        * if a client requests for a large envelope.*/
+                        RaiseSenderException(ex);
+                    }
                     catch (ChannelClosedException) 
                     {
                         break;
