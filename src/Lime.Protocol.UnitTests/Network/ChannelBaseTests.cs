@@ -324,13 +324,13 @@ namespace Lime.Protocol.UnitTests.Network
             var content = Dummy.CreateTextContent();
             var message = Dummy.CreateMessage(content);
             var target = GetTarget(SessionState.Established);
-
-            // Act
+            //setting up failure state.
             await target.SendMessageAndDelayAsync(message, CancellationToken.None);
 
-            // Assert - should resolve other messages
+            // Act
             Assert.DoesNotThrowAsync(() => target.SendMessageAndDelayAsync(message, CancellationToken.None), "The send buffer is complete");
 
+            // Assert - should resolve other messages
             Assert.IsTrue((target).IsEstablished());
             _transport.Verify(
                 t => t.SendAsync(
