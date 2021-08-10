@@ -311,7 +311,33 @@ namespace Lime.Protocol.UnitTests.Network
             // Assert
             _transport.Verify(t => t.CloseAsync(It.IsAny<CancellationToken>()), Times.Never());
         }
-        
+
+        [Test]
+        [Category("SendMessageAsync")]
+        public async Task SendMessageAsync_LargeEnvelope_DoesNotCompleteTheBuffer()
+        {
+            // Arrange
+            var tcs = new TaskCompletionSource<Envelope>();
+            _transport
+                .Setup(t => t.SendAsync(It.IsAny<Envelope>(), It.IsAny<CancellationToken>()))
+                .Throws(new EnvelopeTooLargeException("too large envelope sent"));
+            var content = Dummy.CreateTextContent();
+            var message = Dummy.CreateMessage(content);
+            var target = GetTarget(SessionState.Established);
+
+            // Act
+            await target.SendMessageAndDelayAsync(message, CancellationToken.None);
+
+            // Assert - should resolve other messages
+            Assert.DoesNotThrowAsync(() => target.SendMessageAndDelayAsync(message, CancellationToken.None), "The send buffer is complete");
+
+            Assert.IsTrue((target).IsEstablished());
+            _transport.Verify(
+                t => t.SendAsync(
+                    message,
+                    It.IsAny<CancellationToken>()),
+                    Times.Exactly(2));
+        }
         #endregion
 
         #region ReceiveMessageAsync

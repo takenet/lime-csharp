@@ -232,6 +232,10 @@ namespace Lime.Protocol.Network
                     {
                         break;
                     }
+                    catch (EnvelopeTooLargeException ex)
+                    {
+                        RaiseSenderException(ex);
+                    }
                     catch (Exception ex)
                     {
                         exception = ex;
