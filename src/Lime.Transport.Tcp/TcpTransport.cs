@@ -204,7 +204,9 @@ namespace Lime.Transport.Tcp
                 // Prevent sending an envelope that could potentially make the receiver side drop the connection,
                 // since most probably it's _maxBufferSize has the same value used by the sender side
                 await TraceAsync($"EnvelopeTooLarge (size of {envelopeByteCount}): {serializedEnvelope}", DataOperation.Error).ConfigureAwait(false);
-                throw new EnvelopeTooLargeException($"Envelope NOT sent: {envelope.GetType().Name} with id {envelope.Id} and size {envelopeByteCount} will probably exceed the maximum size supported by a receiver (the local value is {_maxSenderBufferSize})");
+                throw new EnvelopeTooLargeException(
+                    $"Envelope NOT sent: {envelope.GetType().Name} with id {envelope.Id} and size {envelopeByteCount} will probably exceed the maximum size supported by a receiver (the local value is {_maxSenderBufferSize})",
+                    envelope);
             }
 
             await TraceAsync(serializedEnvelope, DataOperation.Send).ConfigureAwait(false);
