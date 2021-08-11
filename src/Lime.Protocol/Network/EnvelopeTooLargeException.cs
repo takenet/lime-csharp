@@ -34,7 +34,7 @@ namespace Lime.Protocol.Network
         private void AddEnvelopePropertiesToData(Envelope envelope)
         {
             Data["EnvelopeType"] = envelope.GetType().Name;
-            Data[nameof(envelope.Id)] = envelope.Id?.ToString();
+            Data[nameof(envelope.Id)] = envelope.Id;
             Data[nameof(envelope.To)] = envelope.To?.ToString();
             Data[nameof(envelope.From)] = envelope.From?.ToString();
             Data[nameof(envelope.Pp)] = envelope.Pp?.ToString();
