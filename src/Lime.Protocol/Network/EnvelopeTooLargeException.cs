@@ -24,6 +24,7 @@ namespace Lime.Protocol.Network
             : base(message, innerException)
         {
         }
+
         public EnvelopeTooLargeException(string message, Envelope envelope, Exception innerException)
             : base(message, innerException)
         {
