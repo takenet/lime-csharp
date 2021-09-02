@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -19,18 +18,19 @@ namespace Lime.Transport.AspNetCore.Transport
     {
         private readonly IOptions<LimeOptions> _options;
         private readonly IServiceScopeFactory _serviceScopeFactory;
+        private readonly IChannelProvider _channelProvider;
         private readonly ILogger<TransportListener> _logger;
-        private readonly ConcurrentDictionary<Node, ISenderChannel> _establishedChannels;
-
+        
         public TransportListener(
             IOptions<LimeOptions> options,
             IServiceScopeFactory serviceScopeFactory,
+            IChannelProvider channelProvider,
             ILogger<TransportListener> logger)
         {
             _options = options;
             _serviceScopeFactory = serviceScopeFactory;
+            _channelProvider = channelProvider;
             _logger = logger;
-            _establishedChannels = new ConcurrentDictionary<Node, ISenderChannel>();
         }
 
         public async Task ListenAsync(ITransport transport, CancellationToken cancellationToken)
@@ -157,7 +157,7 @@ namespace Lime.Transport.AspNetCore.Transport
         {
             using var scope = _serviceScopeFactory.CreateScope();
 
-            var channelContext = new ChannelContext(channel, GetChannel);
+            var channelContext = new ChannelContext(channel, _channelProvider);
             var contextProvider = scope.ServiceProvider.GetRequiredService<ChannelContextProvider>();
             contextProvider.SetContext(channelContext);
 
@@ -187,14 +187,13 @@ namespace Lime.Transport.AspNetCore.Transport
             return 0;
         }
 
-        private ISenderChannel? GetChannel(Node node) => _establishedChannels.TryGetValue(node, out var c) ? c : null;
 
         private async Task ListenChannelAsync(IServerChannel channel, CancellationToken cancellationToken)
         {
             var node = channel.RemoteNode;
             var senderChannel = new SenderChannelAdapter(channel);
-            _establishedChannels[node] = senderChannel;
-
+            _channelProvider.AddChannel(node, senderChannel);
+            
             using var listener = CreateChannelListener(senderChannel);
 
             var sessionTask = channel.ReceiveFinishingSessionAsync(cancellationToken);
@@ -212,7 +211,10 @@ namespace Lime.Transport.AspNetCore.Transport
             finally
             {
                 listener.Stop();
-                _establishedChannels.TryRemove(node, out _);
+                _channelProvider.RemoveChannel(node);
+
+                await _options.Value.UnregistrationHandler(
+                    node, channel, cancellationToken.IsCancellationRequested ? default : cancellationToken);
             }
 
             if (sessionTask.IsCompleted &&

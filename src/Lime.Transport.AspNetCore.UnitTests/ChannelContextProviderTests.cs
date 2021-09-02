@@ -1,4 +1,5 @@
 using System;
+using Lime.Transport.AspNetCore.Transport;
 using NUnit.Framework;
 using Shouldly;
 
@@ -19,7 +20,7 @@ namespace Lime.Transport.AspNetCore.UnitTests
         public void SetContext_ValidChannelContext_ShouldBeStored()
         {
             // Arrange
-            var context = new ChannelContext(SenderChannel.Object, _ => null);
+            var context = new ChannelContext(SenderChannel.Object, new ChannelProvider());
             var target = GetTarget();
             
             // Act
@@ -34,7 +35,7 @@ namespace Lime.Transport.AspNetCore.UnitTests
         public void SetContext_SetTwice_ThrowsInvalidOperation()
         {
             // Arrange
-            var context = new ChannelContext(SenderChannel.Object, _ => null);
+            var context = new ChannelContext(SenderChannel.Object, new ChannelProvider());
             var target = GetTarget();
             target.SetContext(context);
             

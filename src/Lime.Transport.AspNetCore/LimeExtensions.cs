@@ -24,6 +24,7 @@ namespace Lime.Transport.AspNetCore
             services.AddSingleton<IDocumentTypeResolver, DocumentTypeResolver>();
             services.AddSingleton<IEnvelopeSerializer, EnvelopeSerializer>();
             services.AddSingleton<TransportListener>();
+            services.AddSingleton<IChannelProvider, ChannelProvider>();
 
             services.AddScoped<ChannelContextProvider>();
             services.AddScoped<ChannelContext>(di => di.GetRequiredService<ChannelContextProvider>().GetContext());

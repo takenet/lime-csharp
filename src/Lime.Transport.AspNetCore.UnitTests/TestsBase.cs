@@ -27,6 +27,7 @@ namespace Lime.Transport.AspNetCore.UnitTests
             TransportListener = new TransportListener(
                 Microsoft.Extensions.Options.Options.Create(Options), 
                 ServiceScopeFactory.Object, 
+                new ChannelProvider(),
                 new Logger<TransportListener>(new LoggerFactory()));
             CancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(30));
             Scope = new Mock<IServiceScope>();

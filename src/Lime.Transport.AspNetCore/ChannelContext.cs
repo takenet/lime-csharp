@@ -1,5 +1,6 @@
 using System;
 using Lime.Protocol;
+using Lime.Transport.AspNetCore.Transport;
 
 namespace Lime.Transport.AspNetCore
 {
@@ -8,12 +9,12 @@ namespace Lime.Transport.AspNetCore
     /// </summary>
     public sealed class ChannelContext
     {
-        private readonly Func<Node, ISenderChannel?> _getChannelFunc;
+        private readonly IChannelProvider _channelProvider;
 
-        public ChannelContext(ISenderChannel channel, Func<Node, ISenderChannel?> getChannelFunc)
+        public ChannelContext(ISenderChannel channel, IChannelProvider channelProvider)
         {
             Channel = channel;
-            _getChannelFunc = getChannelFunc;
+            _channelProvider = channelProvider;
         }
 
         /// <summary>
@@ -26,6 +27,6 @@ namespace Lime.Transport.AspNetCore
         /// </summary>
         /// <param name="node"></param>
         /// <returns></returns>
-        public ISenderChannel? GetChannel(Node node) => _getChannelFunc(node);
+        public ISenderChannel? GetChannel(Node node) => _channelProvider.GetChannel(node);
     }
 }

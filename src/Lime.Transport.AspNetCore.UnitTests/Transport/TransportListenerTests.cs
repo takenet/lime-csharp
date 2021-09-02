@@ -58,7 +58,9 @@ namespace Lime.Transport.AspNetCore.UnitTests.Transport
         
         private TransportListener GetTarget() => new TransportListener(
             new OptionsWrapper<LimeOptions>(Options),
-            ServiceScopeFactory.Object, new Logger<TransportListener>(new LoggerFactory()));
+            ServiceScopeFactory.Object,
+            new ChannelProvider(),
+            new Logger<TransportListener>(new LoggerFactory()));
 
 
         [Test]

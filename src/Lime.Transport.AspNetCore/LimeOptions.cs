@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 using Lime.Protocol;
 using Lime.Protocol.Security;
@@ -65,8 +66,13 @@ namespace Lime.Transport.AspNetCore
         /// <summary>
         /// The handler for node registration.
         /// </summary>
-        public RegistrationHandler RegistrationHandler { get; set; } = (candidate, channel, token) => Task.FromResult(new Node(Guid.NewGuid().ToString(), Environment.UserDomainName, Environment.MachineName));
+        public RegistrationHandler RegistrationHandler { get; set; } = (candidate, channel, token) => Task.FromResult<Node?>(new Node(Guid.NewGuid().ToString(), Environment.UserDomainName, Environment.MachineName));
 
+        /// <summary>
+        /// The handler for node unregistration.
+        /// </summary>
+        public UnregistrationHandler UnregistrationHandler { get; set; } = (node, channel, token) => Task.CompletedTask;
+        
         /// <summary>
         /// The channel send timeout.
         /// Each send operation must be completed in the specified timeout or it will be canceled.
@@ -110,5 +116,7 @@ namespace Lime.Transport.AspNetCore
         /// Each envelope received from the transport must be consumed in the specified interval or it will cause the channel to be closed.
         /// </summary>
         public TimeSpan? ConsumeTimeout { get; set; }
+
+        
     }
 }
