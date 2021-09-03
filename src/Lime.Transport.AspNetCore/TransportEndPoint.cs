@@ -17,6 +17,15 @@ namespace Lime.Transport.AspNetCore
         /// The endpoint for listening for new connections.
         /// </summary>
         public IPEndPoint EndPoint { get; set; } = new IPEndPoint(IPAddress.Any, 55321);
+
+        /// <summary>
+        /// The endpoint for listening for new connections.
+        /// </summary>
+        public string EndPointValue
+        {
+            get => EndPoint.ToString();
+            set => EndPoint = IPEndPoint.Parse(value);
+        }
         
         /// <summary>
         /// Defines the server certificate, for TLS connections. (HTTPS, WSS and TCP+TLS).
