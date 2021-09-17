@@ -27,10 +27,7 @@ namespace Lime.Protocol
             if (Uri.IsWellFormedUriString(uriPath, UriKind.Absolute))
             {
                 _absoluteUri = new Uri(uriPath);
-                if (!_absoluteUri.Scheme.Equals(LIME_URI_SCHEME))
-                {
-                    throw new ArgumentException($"Invalid URI scheme. Expected is '{LIME_URI_SCHEME}'");
-                }
+                ValidateAbsoluteUri(_absoluteUri);
             }
             else if (!Uri.IsWellFormedUriString(uriPath, UriKind.Relative))
             {
@@ -41,11 +38,8 @@ namespace Lime.Protocol
                     Uri.IsWellFormedUriString($"{receivedUri.Scheme}://{receivedUri.UserInfo}@{receivedUri.Host}", UriKind.Absolute) &&
                     Uri.IsWellFormedUriString(receivedUri.PathAndQuery + receivedUri.Fragment, UriKind.Relative))
                 {
-                    _absoluteUri = receivedUri;
-                    if (!_absoluteUri.Scheme.Equals(LIME_URI_SCHEME))
-                    {
-                        throw new ArgumentException($"Invalid URI scheme. Expected is '{LIME_URI_SCHEME}'");
-                    }
+                    _absoluteUri = new Uri(uriPath);
+                    ValidateAbsoluteUri(_absoluteUri);
                 }
                 else
                 {
@@ -160,5 +154,13 @@ namespace Lime.Protocol
         // TODO: Remove this method once the 'if' statement on the ctor is removed
         private bool ReceivedUriPathIsEncoded(string uri)
             => WebUtility.UrlDecode(uri) != uri;
+
+        private void ValidateAbsoluteUri(Uri absoluteUri)
+        {
+            if (!absoluteUri.Scheme.Equals(LIME_URI_SCHEME))
+            {
+                throw new ArgumentException($"Invalid URI scheme. Expected is '{LIME_URI_SCHEME}'");
+            }
+        }
     }
 }
