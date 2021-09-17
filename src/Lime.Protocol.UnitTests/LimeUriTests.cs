@@ -34,7 +34,7 @@ namespace Lime.Protocol.UnitTests
         }
 
         [Test]
-        public void Parse_ValidAbsoluteSpecialCharactersString_ReturnsInstance()
+        public void Parse_ValidAbsoluteSpecialCharactersStringContainingSpace_ReturnsInstance()
         {
             var identity = Dummy.CreateIdentity();
             var resourceNameWithSpace = $"{Dummy.CreateRandomStringSpecial(5)} {Dummy.CreateRandomStringSpecial(5)}";
