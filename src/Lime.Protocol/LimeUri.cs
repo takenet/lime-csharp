@@ -37,7 +37,7 @@ namespace Lime.Protocol
                 // TODO: This 'if' statement is only necessary while the related issue is not fixed
                 // Issue: https://github.com/dotnet/runtime/issues/21626
                 if (Uri.TryCreate(uriPath, UriKind.Absolute, out var receivedUri) &&
-                    ReceivedUriPathIsEncoded(receivedUri) &&
+                    ReceivedUriPathIsEncoded(uriPath) &&
                     Uri.IsWellFormedUriString($"{receivedUri.Scheme}://{receivedUri.UserInfo}@{receivedUri.Host}", UriKind.Absolute) &&
                     Uri.IsWellFormedUriString(receivedUri.PathAndQuery + receivedUri.Fragment, UriKind.Relative))
                 {
@@ -158,7 +158,7 @@ namespace Lime.Protocol
         public static implicit operator string(LimeUri limeUri) => limeUri?.ToString();
 
         // TODO: Remove this method once the 'if' statement on the ctor is removed
-        private bool ReceivedUriPathIsEncoded(Uri receivedUri)
-            => WebUtility.UrlDecode(receivedUri.OriginalString) != receivedUri.OriginalString;
+        private bool ReceivedUriPathIsEncoded(string uri)
+            => WebUtility.UrlDecode(uri) != uri;
     }
 }
