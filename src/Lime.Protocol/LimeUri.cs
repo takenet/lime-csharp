@@ -27,7 +27,7 @@ namespace Lime.Protocol
             if (Uri.IsWellFormedUriString(uriPath, UriKind.Absolute))
             {
                 _absoluteUri = new Uri(uriPath);
-                ValidateAbsoluteUri(_absoluteUri);
+                ValidatLimeScheme(_absoluteUri);
             }
             else if (!Uri.IsWellFormedUriString(uriPath, UriKind.Relative))
             {
@@ -39,7 +39,7 @@ namespace Lime.Protocol
                     Uri.IsWellFormedUriString(receivedUri.PathAndQuery + receivedUri.Fragment, UriKind.Relative))
                 {
                     _absoluteUri = new Uri(uriPath);
-                    ValidateAbsoluteUri(_absoluteUri);
+                    ValidatLimeScheme(_absoluteUri);
                 }
                 else
                 {
@@ -155,7 +155,7 @@ namespace Lime.Protocol
         private bool ReceivedUriPathIsEncoded(string uri)
             => WebUtility.UrlDecode(uri) != uri;
 
-        private void ValidateAbsoluteUri(Uri absoluteUri)
+        private void ValidatLimeScheme(Uri absoluteUri)
         {
             if (!absoluteUri.Scheme.Equals(LIME_URI_SCHEME))
             {
