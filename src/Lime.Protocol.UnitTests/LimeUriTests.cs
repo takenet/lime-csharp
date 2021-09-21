@@ -1,6 +1,7 @@
 ﻿using NUnit.Framework;
 using Shouldly;
 using System;
+using System.Net;
 
 namespace Lime.Protocol.UnitTests
 {
@@ -25,6 +26,19 @@ namespace Lime.Protocol.UnitTests
             var identity = Dummy.CreateIdentity();
             var resourceName = Dummy.CreateRandomString(10);
             var absolutePath = string.Format("{0}://{1}/{2}", LimeUri.LIME_URI_SCHEME, identity, resourceName);
+            var actual = LimeUri.Parse(absolutePath);
+
+            actual.Path.ShouldNotBe(null);
+            actual.Path.ShouldBe(absolutePath);
+            actual.IsRelative.ShouldBe(false);
+        }
+
+        [Test]
+        public void Parse_ValidAbsoluteSpecialCharactersStringContainingSpace_ReturnsInstance()
+        {
+            var identity = Dummy.CreateIdentity();
+            var resourceNameWithSpace = $"{Dummy.CreateRandomStringSpecial(5)} {Dummy.CreateRandomStringSpecial(5)}";
+            var absolutePath = string.Format("{0}://{1}/{2}", LimeUri.LIME_URI_SCHEME, identity, WebUtility.UrlEncode(resourceNameWithSpace));
             var actual = LimeUri.Parse(absolutePath);
 
             actual.Path.ShouldNotBe(null);

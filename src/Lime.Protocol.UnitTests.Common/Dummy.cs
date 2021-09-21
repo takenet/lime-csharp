@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using Lime.Protocol.Serialization;
 
 namespace Lime.Protocol.UnitTests
 {
@@ -13,7 +12,8 @@ namespace Lime.Protocol.UnitTests
     {
         private static readonly Random _random        = new Random();
         private static readonly string _chars         = "abcdefghijklmnopqrstuvwxyz0123456789";
-        private static readonly string _extendedChars = _chars + "!@#$%¨&*()_+-=\"'{}[],.;/<>:?^~\\áéíóúàèìòùºç ";
+        private static readonly string _specialChars  = "!@#$%¨&*()_+-=\"'{}[],.;/<>:?^~\\áéíóúàèìòùºç ";
+        private static readonly string _extendedChars = _chars + _specialChars;
 
         public static int CreateRandomInt(int maxValue)
         {
@@ -23,6 +23,11 @@ namespace Lime.Protocol.UnitTests
         public static string CreateRandomString(int size)
         {
             return CreateRandomString(size, _chars);
+        }
+
+        public static string CreateRandomStringSpecial(int size)
+        {
+            return CreateRandomString(size, _specialChars);
         }
 
         public static string CreateRandomStringExtended(int size)

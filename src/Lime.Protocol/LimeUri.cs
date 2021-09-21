@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net;
 
 namespace Lime.Protocol
 {
@@ -26,16 +27,25 @@ namespace Lime.Protocol
             if (Uri.IsWellFormedUriString(uriPath, UriKind.Absolute))
             {
                 _absoluteUri = new Uri(uriPath);
-                if (!_absoluteUri.Scheme.Equals(LIME_URI_SCHEME))
-                {
-                    throw new ArgumentException($"Invalid URI scheme. Expected is '{LIME_URI_SCHEME}'");
-                }
+                ValidatLimeScheme(_absoluteUri);
             }
             else if (!Uri.IsWellFormedUriString(uriPath, UriKind.Relative))
             {
-                throw new ArgumentException("Invalid URI format");
+                // TODO: This 'if' statement is only necessary while the related issue is not fixed
+                // Issue: https://github.com/dotnet/runtime/issues/21626
+                if (Uri.TryCreate(uriPath, UriKind.Absolute, out var receivedUri) &&
+                    ReceivedUriPathIsEncoded(uriPath) &&
+                    Uri.IsWellFormedUriString($"{receivedUri.Scheme}://{receivedUri.UserInfo}@{receivedUri.Host}", UriKind.Absolute) &&
+                    Uri.IsWellFormedUriString(receivedUri.PathAndQuery + receivedUri.Fragment, UriKind.Relative))
+                {
+                    _absoluteUri = new Uri(uriPath);
+                    ValidatLimeScheme(_absoluteUri);
+                }
+                else
+                {
+                    throw new ArgumentException("Invalid URI format");
+                }
             }
-
             Path = uriPath.TrimEnd('/');
         }
 
@@ -140,5 +150,17 @@ namespace Lime.Protocol
         public static implicit operator LimeUri(string value) => value == null ? null : Parse(value);
         
         public static implicit operator string(LimeUri limeUri) => limeUri?.ToString();
+
+        // TODO: Remove this method once the 'if' statement on the ctor is removed
+        private bool ReceivedUriPathIsEncoded(string uri)
+            => WebUtility.UrlDecode(uri) != uri;
+
+        private void ValidatLimeScheme(Uri absoluteUri)
+        {
+            if (!absoluteUri.Scheme.Equals(LIME_URI_SCHEME))
+            {
+                throw new ArgumentException($"Invalid URI scheme. Expected is '{LIME_URI_SCHEME}'");
+            }
+        }
     }
 }
