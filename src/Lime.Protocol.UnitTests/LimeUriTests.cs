@@ -1,7 +1,6 @@
 ﻿using NUnit.Framework;
 using Shouldly;
 using System;
-using System.Net;
 
 namespace Lime.Protocol.UnitTests
 {
@@ -38,7 +37,7 @@ namespace Lime.Protocol.UnitTests
         {
             var identity = Dummy.CreateIdentity();
             var resourceNameWithSpace = $"{Dummy.CreateRandomStringSpecial(5)} {Dummy.CreateRandomStringSpecial(5)}";
-            var absolutePath = string.Format("{0}://{1}/{2}", LimeUri.LIME_URI_SCHEME, identity, WebUtility.UrlEncode(resourceNameWithSpace));
+            var absolutePath = string.Format("{0}://{1}/{2}", LimeUri.LIME_URI_SCHEME, identity, Uri.EscapeDataString(resourceNameWithSpace));
             var actual = LimeUri.Parse(absolutePath);
 
             actual.Path.ShouldNotBe(null);
