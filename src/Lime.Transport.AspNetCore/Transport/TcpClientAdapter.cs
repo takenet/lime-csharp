@@ -10,6 +10,7 @@ namespace Lime.Transport.AspNetCore.Transport
     internal sealed class TcpClientAdapter : ITcpClient
     {
         private readonly ConnectionContext _context;
+        private bool _closed;
 
         public TcpClientAdapter(ConnectionContext context)
         {
@@ -20,12 +21,13 @@ namespace Lime.Transport.AspNetCore.Transport
 
         public Task ConnectAsync(string host, int port) => Task.CompletedTask;
 
-        public bool Connected => !_context.ConnectionClosed.IsCancellationRequested;
+        public bool Connected => !_context.ConnectionClosed.IsCancellationRequested && !_closed;
 
         public void Close()
         {
             _context.Transport.Input.Complete();
             _context.Transport.Output.Complete();
+            _closed = true;
         }
 
         public Socket Client => null!;
