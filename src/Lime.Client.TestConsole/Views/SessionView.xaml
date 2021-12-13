@@ -168,9 +168,45 @@
                             <RowDefinition Height="200*" />
                             <RowDefinition Height="200*" />
                             <RowDefinition Height="200*" />
+                            <RowDefinition Height="200*" />
                         </Grid.RowDefinitions>
 
                         <Grid Grid.Row="0">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <Label Grid.Row="0" Content="Variable Profiles" FontWeight="Bold" />
+                            <ListBox Grid.Row="1" ItemsSource="{Binding ProfilesView}" SelectedValue="{Binding SelectedProfile}">
+                                <i:Interaction.Triggers>
+                                    <i:EventTrigger EventName="MouseDoubleClick">
+                                        <i:InvokeCommandAction Command="{Binding LoadProfileCommand}" />
+                                    </i:EventTrigger>
+                                </i:Interaction.Triggers>
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Name}" />
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                                <ListBox.GroupStyle>
+                                    <GroupStyle>
+                                        <GroupStyle.HeaderTemplate>
+                                            <DataTemplate>
+                                                <TextBlock FontWeight="Bold"  Text="{Binding Name}" />
+                                            </DataTemplate>
+                                        </GroupStyle.HeaderTemplate>
+                                    </GroupStyle>
+                                </ListBox.GroupStyle>
+                            </ListBox>
+                            <StackPanel Grid.Row="2" Margin="0,5" Orientation="Horizontal" HorizontalAlignment="Right">
+                                <xctk:WatermarkTextBox Text="{Binding ProfileName, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,5,0" MinWidth="150" Watermark="Profile name"></xctk:WatermarkTextBox>
+                                <Button Content="Save Profile" Command="{Binding SaveProfileCommand}" />
+                            </StackPanel>
+                        </Grid>
+
+                        <Grid Grid.Row="1">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="*" />
@@ -187,7 +223,7 @@
                             </ScrollViewer>
                         </Grid>
 
-                        <Grid Grid.Row="1">
+                        <Grid Grid.Row="2">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="Auto" />
@@ -225,7 +261,7 @@
                             </StackPanel>
                         </Grid>
 
-                        <Grid Grid.Row="2">
+                        <Grid Grid.Row="3">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="*" />
