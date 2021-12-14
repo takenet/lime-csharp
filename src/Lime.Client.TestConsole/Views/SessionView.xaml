@@ -123,6 +123,7 @@
                                        AcceptsTab="True"
                                        Name="JsonInput"
                                        Text="{Binding InputJson, UpdateSourceTrigger=PropertyChanged}" />
+
                     <StackPanel Grid.Row="1" Margin="0,5" Orientation="Horizontal">
                         <Button Content="_Indent" ToolTip="Indent the JSON input" Command="{Binding IndentCommand}" />
                         <Button Content="_Validate" ToolTip="Validates the JSON input" Command="{Binding ValidateCommand}" />
@@ -179,33 +180,35 @@
                             </Grid.RowDefinitions>
 
                             <Label Grid.Row="0" Content="Variable Profiles" FontWeight="Bold" />
-                            <ListBox Grid.Row="1" ItemsSource="{Binding ProfilesView}" SelectedValue="{Binding SelectedProfile}">
-                                <i:Interaction.Triggers>
-                                    <i:EventTrigger EventName="MouseDoubleClick">
-                                        <i:InvokeCommandAction Command="{Binding LoadProfileCommand}" />
-                                    </i:EventTrigger>
-                                </i:Interaction.Triggers>
-                                <ListBox.ItemTemplate>
-                                    <DataTemplate>
-                                        <TextBlock Text="{Binding Name}" />
-                                    </DataTemplate>
-                                </ListBox.ItemTemplate>
-                                <ListBox.GroupStyle>
-                                    <GroupStyle>
-                                        <GroupStyle.HeaderTemplate>
-                                            <DataTemplate>
-                                                <TextBlock FontWeight="Bold"  Text="{Binding Name}" />
-                                            </DataTemplate>
-                                        </GroupStyle.HeaderTemplate>
-                                    </GroupStyle>
-                                </ListBox.GroupStyle>
-                            </ListBox>
-                            
-                            <StackPanel Grid.Row="2" Margin="0,5" Orientation="Horizontal" HorizontalAlignment="Right">
+                            <ScrollViewer Grid.Row="1" PreviewMouseWheel="ScrollViewer_PreviewMouseWheel">
+                                <ListBox ItemsSource="{Binding ProfilesView}" SelectedValue="{Binding SelectedProfile}">
+                                    <i:Interaction.Triggers>
+                                        <i:EventTrigger EventName="MouseDoubleClick">
+                                            <i:InvokeCommandAction Command="{Binding LoadProfileCommand}" />
+                                        </i:EventTrigger>
+                                    </i:Interaction.Triggers>
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding Name}" />
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                    <ListBox.GroupStyle>
+                                        <GroupStyle>
+                                            <GroupStyle.HeaderTemplate>
+                                                <DataTemplate>
+                                                    <TextBlock FontWeight="Bold"  Text="{Binding Name}" />
+                                                </DataTemplate>
+                                            </GroupStyle.HeaderTemplate>
+                                        </GroupStyle>
+                                    </ListBox.GroupStyle>
+                                </ListBox>
+                            </ScrollViewer>
+
+                            <StackPanel Grid.Row="2" Margin="0,5,13,0" Orientation="Horizontal" HorizontalAlignment="Right">
                                 <xctk:WatermarkTextBox Text="{Binding ProfileName, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,5,0" MinWidth="125" Watermark="Profile name"></xctk:WatermarkTextBox>
                                 <Button Content="Save Profile" Command="{Binding SaveProfileCommand}" />
                             </StackPanel>
-                            
+
                         </Grid>
 
                         <Grid Grid.Row="1">
