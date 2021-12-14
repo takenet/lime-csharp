@@ -918,9 +918,7 @@ namespace Lime.Client.TestConsole.ViewModels
                 variablesDictionary.Add(item.Name, item.Value);
             }
 
-            var existingProfile = Profiles
-                                        .Where(p => p.Name.Equals(ProfileName, StringComparison.InvariantCultureIgnoreCase))
-                                        .FirstOrDefault();
+            var existingProfile = Profiles.FirstOrDefault(p => p.Name.Equals(ProfileName, StringComparison.InvariantCultureIgnoreCase));
 
             if (existingProfile != null)
             {
@@ -1070,7 +1068,8 @@ namespace Lime.Client.TestConsole.ViewModels
         {
             var content = FileUtil.GetFileContent<ObservableCollectionEx<ProfileViewModel>>(PROFILE_FILE_NAME);
 
-            Profiles = content;
+            if (content!=null)
+                Profiles = content;
         }
 
         private void LoadConfigurations()
