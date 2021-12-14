@@ -114,10 +114,10 @@
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
 
-                    <xctk:WatermarkTextBox FontFamily="Courier New"
+                    <xctk:WatermarkTextBox Margin="0,0,8,0" FontFamily="Courier New"
                                        Watermark="JSON input"
                                        TextWrapping="NoWrap"
-                                       VerticalScrollBarVisibility="Visible"
+                                       VerticalScrollBarVisibility="Auto"
                                        HorizontalScrollBarVisibility="Auto"
                                        AcceptsReturn="True"
                                        AcceptsTab="True"
@@ -200,10 +200,12 @@
                                     </GroupStyle>
                                 </ListBox.GroupStyle>
                             </ListBox>
+                            
                             <StackPanel Grid.Row="2" Margin="0,5" Orientation="Horizontal" HorizontalAlignment="Right">
-                                <xctk:WatermarkTextBox Text="{Binding ProfileName, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,5,0" MinWidth="150" Watermark="Profile name"></xctk:WatermarkTextBox>
+                                <xctk:WatermarkTextBox Text="{Binding ProfileName, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,5,0" MinWidth="125" Watermark="Profile name"></xctk:WatermarkTextBox>
                                 <Button Content="Save Profile" Command="{Binding SaveProfileCommand}" />
                             </StackPanel>
+                            
                         </Grid>
 
                         <Grid Grid.Row="1">
@@ -232,7 +234,7 @@
                             </Grid.RowDefinitions>
 
                             <Label Grid.Row="0" Content="Templates" FontWeight="Bold" />
-                            <xctk:WatermarkTextBox Watermark="Search templates" Grid.Row="1" Text="{Binding TemplatesFilter, UpdateSourceTrigger=PropertyChanged}" />
+                            <xctk:WatermarkTextBox Margin="0,0,0,5" Grid.Row="1" Watermark="Search templates"  Text="{Binding TemplatesFilter, UpdateSourceTrigger=PropertyChanged}" />
                             <ScrollViewer Grid.Row="2" PreviewMouseWheel="ScrollViewer_PreviewMouseWheel">
                                 <ListBox ItemsSource="{Binding TemplatesView}" SelectedValue="{Binding SelectedTemplate}">
                                     <i:Interaction.Triggers>
@@ -256,7 +258,7 @@
                                     </ListBox.GroupStyle>
                                 </ListBox>
                             </ScrollViewer>
-                            <StackPanel Grid.Row="3" Orientation="Horizontal">
+                            <StackPanel Margin="0,5,0,0" Grid.Row="3" Orientation="Horizontal">
                                 <Button Content="_Load" ToolTip="Load the selected template to the input" Command="{Binding LoadTemplateCommand }" />
                             </StackPanel>
                         </Grid>

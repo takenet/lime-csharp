@@ -9,7 +9,7 @@
         mc:Ignorable="d" 
         DataContext="{StaticResource MainViewModel}"
         d:DataContext="{d:DesignData /DesignData/MainDesignData.xaml}"   
-        Title="{Binding Title}" Height="600" Width="800" Icon="lime.ico">
+        Title="{Binding Title}" Height="800" Width="1200" Icon="lime.ico">
    
     <i:Interaction.Triggers>
         <i:EventTrigger EventName="Closing">

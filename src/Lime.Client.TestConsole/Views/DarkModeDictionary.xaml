@@ -83,12 +83,12 @@ xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                 <ControlTemplate TargetType="{x:Type Thumb}">
                     <Grid x:Name="Grid">
                         <Rectangle HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Width="Auto" Height="Auto" Fill="Transparent" />
-                        <Border x:Name="Rectangle1" CornerRadius="5" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Width="Auto" Height="Auto"  Background="{TemplateBinding Background}" />
+                        <Border x:Name="Rectangle1" CornerRadius="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Width="Auto" Height="Auto"  Background="{TemplateBinding Background}" />
                     </Grid>
                     <ControlTemplate.Triggers>
                         <Trigger Property="Tag" Value="Horizontal">
                             <Setter TargetName="Rectangle1" Property="Width" Value="Auto" />
-                            <Setter TargetName="Rectangle1" Property="Height" Value="7" />
+                            <Setter TargetName="Rectangle1" Property="Height" Value="Auto" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -101,13 +101,13 @@ xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         <Setter Property="Stylus.IsFlicksEnabled" Value="false" />
         <Setter Property="Foreground" Value="#8C8C8C" />
         <Setter Property="Background" Value="Transparent" />
-        <Setter Property="Width" Value="8" />
+        <Setter Property="Width" Value="10" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type ScrollBar}">
-                    <Grid x:Name="GridRoot" Width="8" Background="{TemplateBinding Background}">
+                    <Grid x:Name="GridRoot" Margin="4,0,0,0" Width="11" Background="{TemplateBinding Background}">
                         <Grid.RowDefinitions>
-                            <RowDefinition Height="0.00001*" />
+                            <RowDefinition Height="*" />
                         </Grid.RowDefinitions>
 
                         <Track x:Name="PART_Track" Grid.Row="0" IsDirectionReversed="true" Focusable="false">
@@ -156,4 +156,5 @@ xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
             </Setter.Value>
         </Setter>
     </Style>
+
 </ResourceDictionary>
