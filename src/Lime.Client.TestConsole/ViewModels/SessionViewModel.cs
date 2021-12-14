@@ -57,6 +57,7 @@ namespace Lime.Client.TestConsole.ViewModels
             ParseCommand = new RelayCommand(Parse, CanParse);
             LoadProfileCommand = new RelayCommand(LoadProfile);
             SaveProfileCommand = new RelayCommand(SaveProfile);
+            DeleteElementProfileCommand = new RelayCommand(DeleteProfile);
 
             // Defaults
             DarkMode = false;
@@ -935,6 +936,13 @@ namespace Lime.Client.TestConsole.ViewModels
                 Name = ProfileName,
                 JsonValues = variablesDictionary
             });
+        }
+
+        public RelayCommand DeleteElementProfileCommand { get; private set; }
+
+        private void DeleteProfile()
+        {
+            Profiles.Remove(SelectedProfile);
         }
 
         private void Execute(Action action)

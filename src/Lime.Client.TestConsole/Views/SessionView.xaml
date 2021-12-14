@@ -176,12 +176,19 @@
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="*" />
-                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />                                
                             </Grid.RowDefinitions>
 
-                            <Label Grid.Row="0" Content="Variable Profiles" FontWeight="Bold" />
+                            <StackPanel Grid.Row="0" Orientation="Horizontal">
+                                <Label Content="Variable Profiles" FontWeight="Bold" />
+                                <Label Content="(Select an entry and hit 'Delete' key to remove)" />
+                            </StackPanel>
+                            
                             <ScrollViewer Grid.Row="1" PreviewMouseWheel="ScrollViewer_PreviewMouseWheel">
                                 <ListBox ItemsSource="{Binding ProfilesView}" SelectedValue="{Binding SelectedProfile}">
+                                    <ListBox.InputBindings>
+                                        <KeyBinding Command="{Binding DeleteElementProfileCommand}" Key="Delete"/>
+                                    </ListBox.InputBindings>
                                     <i:Interaction.Triggers>
                                         <i:EventTrigger EventName="MouseDoubleClick">
                                             <i:InvokeCommandAction Command="{Binding LoadProfileCommand}" />
