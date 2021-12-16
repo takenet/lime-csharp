@@ -56,7 +56,7 @@
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
 
-                    <Label Grid.Row="0" Content="Host" />
+                    <Label Grid.Row="0" Content="Host" FontWeight="Bold" />
                     <TextBox Grid.Row="0" Grid.Column="1" VerticalAlignment="Center" Text="{Binding Host, UpdateSourceTrigger=PropertyChanged}" Grid.ColumnSpan="2" />
 
                     <StackPanel Grid.Row="1" Grid.Column="0"  Margin="0,5" Orientation="Horizontal" Grid.ColumnSpan="2">
@@ -166,7 +166,7 @@
                 <Grid Grid.Row="0" Grid.RowSpan="4" Grid.Column="2">
                     <Grid>
                         <Grid.RowDefinitions>
-                            <RowDefinition Height="200*" />
+                            <RowDefinition Height="Auto" />
                             <RowDefinition Height="200*" />
                             <RowDefinition Height="200*" />
                             <RowDefinition Height="200*" />
@@ -175,44 +175,28 @@
                         <Grid Grid.Row="0">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
-                                <RowDefinition Height="*" />
-                                <RowDefinition Height="Auto" />                                
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
                             </Grid.RowDefinitions>
 
-                            <StackPanel Grid.Row="0" Orientation="Horizontal">
-                                <Label Content="Variable Profiles" FontWeight="Bold" />
-                                <Label Content="(Select an entry and hit 'Delete' key to remove)" />
-                            </StackPanel>
-                            
-                            <ScrollViewer Grid.Row="1" PreviewMouseWheel="ScrollViewer_PreviewMouseWheel">
-                                <ListBox ItemsSource="{Binding ProfilesView}" SelectedValue="{Binding SelectedProfile}">
-                                    <ListBox.InputBindings>
-                                        <KeyBinding Command="{Binding DeleteElementProfileCommand}" Key="Delete"/>
-                                    </ListBox.InputBindings>
-                                    <i:Interaction.Triggers>
-                                        <i:EventTrigger EventName="MouseDoubleClick">
-                                            <i:InvokeCommandAction Command="{Binding LoadProfileCommand}" />
-                                        </i:EventTrigger>
-                                    </i:Interaction.Triggers>
-                                    <ListBox.ItemTemplate>
-                                        <DataTemplate>
-                                            <TextBlock Text="{Binding Name}" />
-                                        </DataTemplate>
-                                    </ListBox.ItemTemplate>
-                                    <ListBox.GroupStyle>
-                                        <GroupStyle>
-                                            <GroupStyle.HeaderTemplate>
-                                                <DataTemplate>
-                                                    <TextBlock FontWeight="Bold"  Text="{Binding Name}" />
-                                                </DataTemplate>
-                                            </GroupStyle.HeaderTemplate>
-                                        </GroupStyle>
-                                    </ListBox.GroupStyle>
-                                </ListBox>
-                            </ScrollViewer>
+                            <Label Grid.Row="0" Content="Variable Profiles" FontWeight="Bold" />
 
-                            <StackPanel Grid.Row="2" Margin="0,5,13,0" Orientation="Horizontal" HorizontalAlignment="Right">
+                            <ComboBox Grid.Row="1" ItemsSource="{Binding ProfilesView}" SelectedItem="{Binding SelectedProfile, Mode=TwoWay}" SelectedIndex="{Binding SelectedProfileIndex}" IsTextSearchEnabled="True">
+                                <i:Interaction.Triggers>
+                                    <i:EventTrigger EventName="SelectionChanged">
+                                        <i:InvokeCommandAction Command="{Binding LoadProfileCommand}"></i:InvokeCommandAction>
+                                    </i:EventTrigger>
+                                </i:Interaction.Triggers>
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Name}" />
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+
+                            <StackPanel Grid.Row="2" Margin="0,5,0,0" Orientation="Horizontal" HorizontalAlignment="Right">
                                 <xctk:WatermarkTextBox Text="{Binding ProfileName, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,5,0" MinWidth="125" Watermark="Profile name"></xctk:WatermarkTextBox>
+                                <Button Content="Delete Profile" Command="{Binding DeleteElementProfileCommand}" />
                                 <Button Content="Save Profile" Command="{Binding SaveProfileCommand}" />
                             </StackPanel>
 

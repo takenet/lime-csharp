@@ -57,7 +57,7 @@ namespace Lime.Client.TestConsole.ViewModels
             ParseCommand = new RelayCommand(Parse, CanParse);
             LoadProfileCommand = new RelayCommand(LoadProfile);
             SaveProfileCommand = new RelayCommand(SaveProfile);
-            DeleteElementProfileCommand = new RelayCommand(DeleteProfile);
+            DeleteElementProfileCommand = new RelayCommand(DeleteProfile, CanDeleteProfile);
 
             // Defaults
             DarkMode = false;
@@ -569,6 +569,18 @@ namespace Lime.Client.TestConsole.ViewModels
             }
         }
 
+        private int _selectedProfileIndex = -1;
+
+        public int SelectedProfileIndex
+        {
+            get { return _selectedProfileIndex; }
+            set
+            {
+                _selectedProfileIndex = value;
+                RaisePropertyChanged(() => SelectedProfileIndex);
+            }
+        }
+
         public AsyncCommand OpenTransportCommand { get; private set; }
 
         private async Task OpenTransportAsync()
@@ -893,6 +905,9 @@ namespace Lime.Client.TestConsole.ViewModels
 
         private void LoadProfile()
         {
+            if (SelectedProfile == null)
+                return;
+
             Variables = new ObservableCollectionEx<VariableViewModel>();
 
             foreach (var item in SelectedProfile.JsonValues)
@@ -926,6 +941,10 @@ namespace Lime.Client.TestConsole.ViewModels
                 existingProfile.JsonValues = variablesDictionary;
 
                 Profiles[existingIndex] = existingProfile;
+
+                SelectedProfileIndex = existingIndex;
+                AddStatusMessage($"Changes applided to profile '{ProfileName}' sucessfully!");
+
                 return;
             }
 
@@ -934,6 +953,8 @@ namespace Lime.Client.TestConsole.ViewModels
                 Name = ProfileName,
                 JsonValues = variablesDictionary
             });
+
+            AddStatusMessage($"Profile '{ProfileName}' created successfully!");
         }
 
         public RelayCommand DeleteElementProfileCommand { get; private set; }
@@ -941,7 +962,10 @@ namespace Lime.Client.TestConsole.ViewModels
         private void DeleteProfile()
         {
             Profiles.Remove(SelectedProfile);
+            ProfileName = string.Empty;
         }
+
+        private bool CanDeleteProfile() => SelectedProfile != null;
 
         private void Execute(Action action)
         {
@@ -1068,7 +1092,7 @@ namespace Lime.Client.TestConsole.ViewModels
         {
             var content = FileUtil.GetFileContent<ObservableCollectionEx<ProfileViewModel>>(PROFILE_FILE_NAME);
 
-            if (content!=null)
+            if (content != null)
                 Profiles = content;
         }
 
