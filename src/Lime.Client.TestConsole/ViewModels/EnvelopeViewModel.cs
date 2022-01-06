@@ -3,6 +3,8 @@ using Lime.Protocol;
 using Lime.Protocol.Network;
 using Lime.Protocol.Serialization;
 using Lime.Protocol.Serialization.Newtonsoft;
+using Newtonsoft.Json.Linq;
+using System;
 
 namespace Lime.Client.TestConsole.ViewModels
 {
@@ -151,5 +153,52 @@ namespace Lime.Client.TestConsole.ViewModels
         }
 
         #endregion Data Properties
+
+        public static EnvelopeViewModel Parse(string inputJson)
+        {
+            try
+            {
+                var jsonObject = JObject.Parse(inputJson);
+
+                if (jsonObject.HasValues)
+                {
+                    var envelopeViewModel = new EnvelopeViewModel
+                    {
+                        Json = inputJson
+                    };
+
+                    if (envelopeViewModel.Envelope != null)
+                    {
+                        return envelopeViewModel;
+                    }
+                    else
+                    {
+                        throw new ArgumentException("The input is a valid JSON document, but is not an Envelope");
+                    }
+                }
+                else
+                {
+                    throw new ArgumentException("The input is a invalid or empty JSON document");
+                }
+            }
+            catch
+            {
+                throw new ArgumentException("The input is a invalid JSON document");
+            }
+        }
+
+        public static bool TryParse(string inputJson, out EnvelopeViewModel envelopeViewModel)
+        {
+            try
+            {
+                envelopeViewModel = Parse(inputJson);
+                return true;
+            }
+            catch (ArgumentException)
+            {
+                envelopeViewModel = null;
+                return false;
+            }
+        }
     }
 }

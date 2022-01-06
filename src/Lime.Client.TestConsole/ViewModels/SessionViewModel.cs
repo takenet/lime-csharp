@@ -683,45 +683,28 @@ namespace Lime.Client.TestConsole.ViewModels
         {
             try
             {
-                var jsonObject = JObject.Parse(InputJson);
+                var envelopeViewModel = EnvelopeViewModel.Parse(InputJson);
 
-                if (jsonObject.HasValues)
+                AddStatusMessage(string.Format("The input is a valid {0} JSON Envelope", envelopeViewModel.Envelope.GetType().Name));
+
+                var variables = InputJson.GetVariables();
+
+                foreach (var variable in variables)
                 {
-                    var envelopeViewModel = new EnvelopeViewModel();
-                    envelopeViewModel.Json = InputJson;
-
-                    if (envelopeViewModel.Envelope != null)
+                    if (!this.Variables.Any(v => v.Name.Equals(variable, StringComparison.OrdinalIgnoreCase)))
                     {
-                        AddStatusMessage(string.Format("The input is a valid {0} JSON Envelope", envelopeViewModel.Envelope.GetType().Name));
-                    }
-                    else
-                    {
-                        AddStatusMessage("The input is a valid JSON document, but is not an Envelope", true);
-                    }
-
-                    var variables = InputJson.GetVariables();
-
-                    foreach (var variable in variables)
-                    {
-                        if (!this.Variables.Any(v => v.Name.Equals(variable, StringComparison.OrdinalIgnoreCase)))
+                        var variableViewModel = new VariableViewModel()
                         {
-                            var variableViewModel = new VariableViewModel()
-                            {
-                                Name = variable
-                            };
+                            Name = variable
+                        };
 
-                            this.Variables.Add(variableViewModel);
-                        }
+                        this.Variables.Add(variableViewModel);
                     }
-                }
-                else
-                {
-                    AddStatusMessage("The input is a invalid or empty JSON document", true);
                 }
             }
-            catch
+            catch (ArgumentException exception)
             {
-                AddStatusMessage("The input is a invalid JSON document", true);
+                AddStatusMessage(exception.Message, true);
             }
         }
 
