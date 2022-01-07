@@ -954,6 +954,8 @@ namespace Lime.Client.TestConsole.ViewModels
                 JsonValues = variablesDictionary
             });
 
+            SelectedProfileIndex = Profiles.Count - 1;
+
             AddStatusMessage($"Profile '{ProfileName}' created successfully!");
         }
 
