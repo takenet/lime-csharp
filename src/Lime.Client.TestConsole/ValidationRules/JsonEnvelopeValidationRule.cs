@@ -12,13 +12,9 @@ namespace Lime.Client.TestConsole.ValidationRules
             try
             {
                 var inputJson = value?.ToString();
-
-                if (!string.IsNullOrEmpty(inputJson))
-                {
-                    EnvelopeViewModel.Parse(value.ToString());
-                }
+                EnvelopeViewModel.Parse(value.ToString());
             }
-            catch (ArgumentException exception)
+            catch (Exception exception)
             {
                 return new ValidationResult(false, exception.Message);
             }

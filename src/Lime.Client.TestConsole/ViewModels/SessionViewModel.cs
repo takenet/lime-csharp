@@ -766,7 +766,7 @@ namespace Lime.Client.TestConsole.ViewModels
                     }
                 }
             }
-            catch (ArgumentException exception)
+            catch (Exception exception)
             {
                 AddStatusMessage(exception.Message, true);
             }

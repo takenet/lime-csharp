@@ -181,9 +181,10 @@ namespace Lime.Client.TestConsole.ViewModels
                     throw new ArgumentException("The input is a invalid or empty JSON document");
                 }
             }
-            catch
+            catch (Exception e)
+            when (!(e is ArgumentException))
             {
-                throw new ArgumentException("The input is a invalid JSON document");
+                throw new ArgumentException("The input is a invalid JSON document", e);
             }
         }
 
@@ -194,7 +195,7 @@ namespace Lime.Client.TestConsole.ViewModels
                 envelopeViewModel = Parse(inputJson);
                 return true;
             }
-            catch (ArgumentException)
+            catch
             {
                 envelopeViewModel = null;
                 return false;
