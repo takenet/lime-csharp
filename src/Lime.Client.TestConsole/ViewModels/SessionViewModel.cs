@@ -44,6 +44,7 @@ namespace Lime.Client.TestConsole.ViewModels
             Templates = new ObservableCollectionEx<TemplateViewModel>();
             Macros = new ObservableCollectionEx<MacroViewModel>();
             StatusMessages = new ObservableCollectionEx<StatusMessageViewModel>();
+            Profiles = new ObservableCollectionEx<ProfileViewModel>();
 
             // Commands
             OpenTransportCommand = new AsyncCommand(OpenTransportAsync, CanOpenTransport);
@@ -54,6 +55,9 @@ namespace Lime.Client.TestConsole.ViewModels
             ValidateCommand = new RelayCommand(Validate, CanValidate);
             LoadTemplateCommand = new RelayCommand(LoadTemplate, CanLoadTemplate);
             ParseCommand = new RelayCommand(Parse, CanParse);
+            LoadProfileCommand = new RelayCommand(LoadProfile);
+            SaveProfileCommand = new RelayCommand(SaveProfile);
+            DeleteElementProfileCommand = new RelayCommand(DeleteProfile, CanDeleteProfile);
 
             // Defaults
             DarkMode = false;
@@ -69,6 +73,7 @@ namespace Lime.Client.TestConsole.ViewModels
             {
                 LoadHost();
                 LoadVariables();
+                LoadProfiles();
                 LoadTemplates();
                 LoadMacros();
                 LoadConfigurations();
@@ -254,6 +259,18 @@ namespace Lime.Client.TestConsole.ViewModels
                 RaisePropertyChanged(() => Host);
 
                 OpenTransportCommand.RaiseCanExecuteChanged();
+            }
+        }
+
+        private string _profileName;
+
+        public string ProfileName
+        {
+            get { return _profileName; }
+            set
+            {
+                _profileName = value;
+                RaisePropertyChanged(() => ProfileName);
             }
         }
 
@@ -514,6 +531,53 @@ namespace Lime.Client.TestConsole.ViewModels
             {
                 _selectedMacro = value;
                 RaisePropertyChanged(() => SelectedMacro);
+            }
+        }
+
+        private ObservableCollectionEx<ProfileViewModel> _profiles;
+
+        public ObservableCollectionEx<ProfileViewModel> Profiles
+        {
+            get { return _profiles; }
+            set
+            {
+                _profiles = value;
+                RaisePropertyChanged(() => Profiles);
+
+                if (_profiles != null)
+                {
+                    ProfilesView = CollectionViewSource.GetDefaultView(_profiles);
+                    RaisePropertyChanged(() => ProfilesView);
+                }
+
+            }
+        }
+
+        public ICollectionView ProfilesView { get; private set; }
+
+        private ProfileViewModel _selectedProfile;
+
+        public ProfileViewModel SelectedProfile
+        {
+            get { return _selectedProfile; }
+            set
+            {
+                _selectedProfile = value;
+                RaisePropertyChanged(() => SelectedProfile);
+
+                LoadProfileCommand.RaiseCanExecuteChanged();
+            }
+        }
+
+        private int _selectedProfileIndex = -1;
+
+        public int SelectedProfileIndex
+        {
+            get { return _selectedProfileIndex; }
+            set
+            {
+                _selectedProfileIndex = value;
+                RaisePropertyChanged(() => SelectedProfileIndex);
             }
         }
 
@@ -820,6 +884,74 @@ namespace Lime.Client.TestConsole.ViewModels
             return SelectedTemplate != null;
         }
 
+        public RelayCommand LoadProfileCommand { get; private set; }
+
+        private void LoadProfile()
+        {
+            if (SelectedProfile == null)
+                return;
+
+            Variables = new ObservableCollectionEx<VariableViewModel>();
+
+            foreach (var item in SelectedProfile.JsonValues)
+            {
+                Variables.Add(new VariableViewModel
+                {
+                    Name = item.Key,
+                    Value = item.Value
+                });
+            }
+
+            ProfileName = SelectedProfile.Name;
+        }
+
+        public RelayCommand SaveProfileCommand { get; private set; }
+
+        private void SaveProfile()
+        {
+            var variablesDictionary = new Dictionary<string, string>();
+
+            foreach (var item in Variables)
+            {
+                variablesDictionary.Add(item.Name, item.Value);
+            }
+
+            var existingProfile = Profiles.FirstOrDefault(p => p.Name.Equals(ProfileName, StringComparison.InvariantCultureIgnoreCase));
+
+            if (existingProfile != null)
+            {
+                var existingIndex = Profiles.IndexOf(existingProfile);
+                existingProfile.JsonValues = variablesDictionary;
+
+                Profiles[existingIndex] = existingProfile;
+
+                SelectedProfileIndex = existingIndex;
+                AddStatusMessage($"Changes applided to profile '{ProfileName}' sucessfully!");
+
+                return;
+            }
+
+            Profiles.Add(new ProfileViewModel
+            {
+                Name = ProfileName,
+                JsonValues = variablesDictionary
+            });
+
+            SelectedProfileIndex = Profiles.Count - 1;
+
+            AddStatusMessage($"Profile '{ProfileName}' created successfully!");
+        }
+
+        public RelayCommand DeleteElementProfileCommand { get; private set; }
+
+        private void DeleteProfile()
+        {
+            Profiles.Remove(SelectedProfile);
+            ProfileName = string.Empty;
+        }
+
+        private bool CanDeleteProfile() => SelectedProfile != null;
+
         private void Execute(Action action)
         {
             IsBusy = true;
@@ -922,6 +1054,8 @@ namespace Lime.Client.TestConsole.ViewModels
         public const string CONFIGURATION_FILE_NAME = "Configuration.txt";
         public const char CONFIGURATION_FILE_SEPARATOR = '\t';
 
+        public const string PROFILE_FILE_NAME = "Profiles.json";
+
         private void LoadVariables()
         {
             foreach (var lineValues in FileUtil.GetFileLines(VARIABLES_FILE_NAME, VARIABLES_FILE_SEPARATOR))
@@ -937,6 +1071,14 @@ namespace Lime.Client.TestConsole.ViewModels
                     Variables.Add(variableViewModel);
                 }
             }
+        }
+
+        private void LoadProfiles()
+        {
+            var content = FileUtil.GetFileContent<ObservableCollectionEx<ProfileViewModel>>(PROFILE_FILE_NAME);
+
+            if (content != null)
+                Profiles = content;
         }
 
         private void LoadConfigurations()
@@ -1076,9 +1218,16 @@ namespace Lime.Client.TestConsole.ViewModels
             {
                 SaveHost();
                 SaveVariables();
+                SaveProfiles();
                 SaveMacros();
                 SaveConfigurations();
+
             }
+        }
+
+        private void SaveProfiles()
+        {
+            FileUtil.SaveFile(Profiles, PROFILE_FILE_NAME);
         }
     }
 

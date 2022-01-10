@@ -209,6 +209,7 @@
     <Compile Include="ViewModels\EnvelopeViewModel.cs" />
     <Compile Include="ViewModels\MacroViewModel.cs" />
     <Compile Include="ViewModels\MainViewModel.cs" />
+    <Compile Include="ViewModels\ProfileViewModel.cs" />
     <Compile Include="ViewModels\SessionViewModel.cs" />
     <Compile Include="ViewModels\StatusMessageViewModel.cs" />
     <Compile Include="ViewModels\TemplateViewModel.cs" />
