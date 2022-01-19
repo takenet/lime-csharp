@@ -1,20 +1,20 @@
 ﻿<UserControl x:Class="Lime.Client.TestConsole.Views.SessionView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:vw="clr-namespace:Lime.Client.TestConsole.Views"
              xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
-             xmlns:xcad="http://schemas.xceed.com/wpf/xaml/avalondock"
-             mc:Ignorable="d"
+             xmlns:vw="clr-namespace:Lime.Client.TestConsole.Views"
+             xmlns:vr="clr-namespace:Lime.Client.TestConsole.ValidationRules"
              xmlns:i="clr-namespace:System.Windows.Interactivity;assembly=System.Windows.Interactivity"
+             mc:Ignorable="d"
              d:DataContext="{d:DesignData /DesignData/SessionDesignData.xaml}"
              d:DesignHeight="768"
              d:DesignWidth="1224"
              Name="UcSessionView">
 
     <UserControl.Resources>
-        <ResourceDictionary Source="DarkModeDictionary.xaml" />
+        <ResourceDictionary Source="ApplicationResourcesDictionary.xaml" />
     </UserControl.Resources>
 
     <Grid>
@@ -114,7 +114,7 @@
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
 
-                    <xctk:WatermarkTextBox Margin="0,0,8,0" FontFamily="Courier New"
+                    <xctk:WatermarkTextBox FontFamily="Courier New"
                                        Watermark="JSON input"
                                        TextWrapping="NoWrap"
                                        VerticalScrollBarVisibility="Auto"
@@ -122,11 +122,41 @@
                                        AcceptsReturn="True"
                                        AcceptsTab="True"
                                        Name="JsonInput"
-                                       Text="{Binding InputJson, UpdateSourceTrigger=PropertyChanged}" />
+                                       Validation.ErrorTemplate="{StaticResource JsonErrorTemplate}"
+                                       Style="{StaticResource jsonErrorStyle}">
+                        <TextBox.Text>
+                            <Binding Path="InputJson" UpdateSourceTrigger="PropertyChanged">
+                                <Binding.ValidationRules>
+                                    <vr:JsonEnvelopeValidationRule/>
+                                </Binding.ValidationRules>
+                            </Binding>
+                        </TextBox.Text>
+                    </xctk:WatermarkTextBox>
 
                     <StackPanel Grid.Row="1" Margin="0,5" Orientation="Horizontal">
                         <Button Content="_Indent" ToolTip="Indent the JSON input" Command="{Binding IndentCommand}" />
-                        <Button Content="_Validate" ToolTip="Validates the JSON input" Command="{Binding ValidateCommand}" />
+                        <Button Content="_Validate" ToolTip="Validates the JSON input" Command="{Binding ValidateCommand}">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="Margin" Value="0,0,5,0"/>
+                                    <Setter Property="Padding" Value="10,0,10,0"/>
+                                    <Style.Triggers>
+                                        <MultiDataTrigger>
+                                            <MultiDataTrigger.Conditions>
+                                                <Condition Binding="{Binding Path=(Validation.HasError), ElementName=JsonInput}" Value="True"/>
+                                            </MultiDataTrigger.Conditions>
+                                            <Setter Property="IsEnabled" Value="False"/>
+                                        </MultiDataTrigger>
+                                        <MultiDataTrigger>
+                                            <MultiDataTrigger.Conditions>
+                                                <Condition Binding="{Binding Path=(Validation.HasError), ElementName=JsonInput}" Value="False"/>
+                                            </MultiDataTrigger.Conditions>
+                                            <Setter Property="IsEnabled" Value="True"/>
+                                        </MultiDataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                        </Button>
                         <Button Content="_Parse" ToolTip="Parse the input variables" Command="{Binding ParseCommand}" />
                         <Button Content="_Send" ToolTip="Sends the JSON through the transport" Command="{Binding SendCommand}" CommandParameter="{Binding ElementName=JsonInput,Path=Text}" />
                         <CheckBox Margin="0,0,5,0" VerticalAlignment="Center" Content="Parse before send" IsChecked="{Binding ParseBeforeSend}" />

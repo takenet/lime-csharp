@@ -1,13 +1,10 @@
-﻿<ResourceDictionary 
-xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:vw="clr-namespace:Lime.Client.TestConsole.Views"
-             xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
-             xmlns:xcad="http://schemas.xceed.com/wpf/xaml/avalondock"
-             mc:Ignorable="d"
-             xmlns:i="clr-namespace:System.Windows.Interactivity;assembly=System.Windows.Interactivity" >
+﻿<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
+    mc:Ignorable="d">
 
     <SolidColorBrush x:Key="DarkModeColor">#2D2D2D</SolidColorBrush>
     <SolidColorBrush x:Key="DarkModeDataGridHeader">#18191A</SolidColorBrush>
@@ -157,4 +154,21 @@ xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         </Setter>
     </Style>
 
+    <ControlTemplate x:Key="JsonErrorTemplate">
+        <StackPanel>
+            <Border BorderBrush="Red" BorderThickness="1">
+                <AdornedElementPlaceholder x:Name="controlWithError"/>
+            </Border>
+            <TextBlock FontSize="11" FontStyle="Italic" Foreground="Red" Margin="5,0,0,0"
+                       Text="{Binding AdornedElement.(Validation.Errors)[0].ErrorContent, ElementName=controlWithError}"/>
+        </StackPanel>
+    </ControlTemplate>
+
+    <Style x:Key="jsonErrorStyle" TargetType="Control">
+        <Style.Triggers>
+            <Trigger Property="Validation.HasError" Value="True">
+                <Setter Property="Margin" Value="0,0,0,15"></Setter>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
 </ResourceDictionary>
