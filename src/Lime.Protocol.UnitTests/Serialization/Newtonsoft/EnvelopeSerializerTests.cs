@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Reflection;
+﻿using Lime.Messaging;
 using Lime.Messaging.Contents;
 using Lime.Messaging.Resources;
 using Lime.Protocol.Security;
@@ -13,10 +9,32 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NUnit.Framework;
 using Shouldly;
-using Lime.Messaging;
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
+using System.Reflection;
 
 namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 {
+    sealed class CustomJsonConverterTest : JsonConverter
+    {
+        public override bool CanConvert(Type objectType)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
     [TestFixture]
     public class EnvelopeSerializerTests
     {
@@ -59,12 +77,12 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.TO_KEY, command.To));
             Assert.IsTrue(resultString.ContainsJsonProperty(Command.METHOD_KEY, command.Method));
             Assert.IsTrue(resultString.ContainsJsonProperty(Command.URI_KEY, command.Uri));
-            
-            
+
+
             Assert.IsTrue(resultString.ContainsJsonProperty(Command.METHOD_KEY, command.Method));
             Assert.IsTrue(resultString.ContainsJsonProperty(metadataKey1, metadataValue1));
             Assert.IsTrue(resultString.ContainsJsonProperty(metadataKey2, metadataValue2));
-            
+
             Assert.IsFalse(resultString.ContainsJsonKey(Command.STATUS_KEY));
             Assert.IsFalse(resultString.ContainsJsonKey(Command.REASON_KEY));
             Assert.IsFalse(resultString.ContainsJsonKey(Command.TYPE_KEY));
@@ -99,7 +117,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 
             Assert.IsFalse(resultString.ContainsJsonKey(Command.METADATA_KEY));
             Assert.IsFalse(resultString.ContainsJsonKey(Command.STATUS_KEY));
-            Assert.IsFalse(resultString.ContainsJsonKey(Command.REASON_KEY));            
+            Assert.IsFalse(resultString.ContainsJsonKey(Command.REASON_KEY));
         }
 
         [Test]
@@ -272,7 +290,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             Assert.IsTrue(resultString.ContainsJsonKey(DocumentCollection.ITEMS_KEY));
             Assert.IsTrue(resultString.ContainsJsonProperty(DocumentCollection.ITEM_TYPE_KEY, contact1.GetMediaType()));
             Assert.IsTrue(resultString.ContainsJsonProperty(DocumentCollection.TOTAL_KEY, resource.Items.Length));
-  
+
             Assert.IsTrue(resultString.ContainsJsonKey(Command.STATUS_KEY));
             Assert.IsFalse(resultString.ContainsJsonKey(Command.REASON_KEY));
         }
@@ -423,16 +441,16 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.TO_KEY, message.To));
             Assert.IsTrue(resultString.ContainsJsonProperty(Message.TYPE_KEY, message.Content.GetMediaType()));
             Assert.IsTrue(resultString.ContainsJsonKey(Message.CONTENT_KEY));
-            
+
             foreach (var keyValuePair in content)
             {
-                    // TODO: Verify for array properties
+                // TODO: Verify for array properties
                 if (!keyValuePair.Value.GetType().IsArray)
                 {
                     Assert.IsTrue(resultString.ContainsJsonProperty(keyValuePair.Key, keyValuePair.Value));
-                }				
-            }            
-            
+                }
+            }
+
             Assert.IsTrue(resultString.ContainsJsonProperty(metadataKey1, metadataValue1));
             Assert.IsTrue(resultString.ContainsJsonProperty(metadataKey2, metadataValue2));
         }
@@ -464,7 +482,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.TO_KEY, message.To));
             Assert.IsTrue(resultString.ContainsJsonProperty(Message.TYPE_KEY, message.Content.GetMediaType()));
             Assert.IsTrue(resultString.ContainsJsonKey(Message.CONTENT_KEY));
-            Assert.IsTrue(resultString.ContainsJsonProperty(Message.CONTENT_KEY, content.Value));           
+            Assert.IsTrue(resultString.ContainsJsonProperty(Message.CONTENT_KEY, content.Value));
             Assert.IsTrue(resultString.ContainsJsonProperty(metadataKey1, metadataValue1));
             Assert.IsTrue(resultString.ContainsJsonProperty(metadataKey2, metadataValue2));
         }
@@ -650,9 +668,9 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
         [Test]
         [Category("Serialize")]
         public void Serialize_ChatStateMessage_ReturnsValidJsonString()
-        {            
+        {
             // Arrange
-            var chatState =  Dummy.CreateChatState();
+            var chatState = Dummy.CreateChatState();
             var message = Dummy.CreateMessage(chatState);
             var target = GetTarget();
 
@@ -731,7 +749,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 
             // Assert
             var dictionary = JsonConvert.DeserializeObject<Dictionary<string, object>>(resultString, target.Settings);
-            var selectJson = dictionary[Message.CONTENT_KEY].ShouldBeAssignableTo<JObject>();            
+            var selectJson = dictionary[Message.CONTENT_KEY].ShouldBeAssignableTo<JObject>();
             Assert.IsTrue(resultString.HasValidJsonStackedBrackets());
             Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.ID_KEY, message.Id));
             Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.FROM_KEY, message.From));
@@ -953,7 +971,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             Assert.AreEqual(command.Metadata[randomKey1], randomString1);
             Assert.IsTrue(command.Metadata.ContainsKey(randomKey2));
             Assert.AreEqual(command.Metadata[randomKey2], randomString2);
-            
+
             var capability = command.Resource.ShouldBeOfType<Capability>();
             Assert.IsTrue(capability.ContentTypes.Any(c => c.Equals(contentType1)));
             Assert.IsTrue(capability.ContentTypes.Any(c => c.Equals(contentType2)));
@@ -995,7 +1013,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             var account = command.Resource.ShouldBeOfType<Account>();
             account.PhotoUri.ShouldBe(photoUri);
         }
-        
+
         [Test]
         [Category("Deserialize")]
         public void Deserialize_PresenceRequestCommand_ReturnsValidInstance()
@@ -1012,7 +1030,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             var routingRule = RoutingRule.Identity;
             var lastSeen = DateTimeOffset.UtcNow;
             var priority = Dummy.CreateRandomInt(100);
-            
+
             string json =
                 $"{{\"uri\":\"{resourceUri}\",\"type\":\"application/vnd.lime.presence+json\",\"resource\":{{\"status\": \"{status.ToString().ToCamelCase()}\",\"message\":\"{message.Escape()}\",\"routingRule\":\"{routingRule.ToString().ToCamelCase()}\",\"lastSeen\":\"{lastSeen.ToUniversalTime().ToString(StringJsonExtensions.DATE_FORMAT, CultureInfo.InvariantCulture)}\",\"priority\":{priority}}},\"method\":\"{method.ToString().ToCamelCase()}\",\"id\":\"{id}\",\"from\":\"{@from}\",\"to\":\"{to}\"}}";
 
@@ -1032,7 +1050,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             presence.Status.ShouldBe(status);
             presence.Message.ShouldBe(message);
             presence.RoutingRule.ShouldBe(routingRule);
-            presence.LastSeen.ShouldNotBe(null);            
+            presence.LastSeen.ShouldNotBe(null);
             presence.LastSeen.Value.Year.ShouldBe(lastSeen.Year);
             presence.LastSeen.Value.Month.ShouldBe(lastSeen.Month);
             presence.LastSeen.Value.Day.ShouldBe(lastSeen.Day);
@@ -1159,10 +1177,10 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             Assert.AreEqual(command.Metadata[randomKey1], randomString1);
             Assert.IsTrue(command.Metadata.ContainsKey(randomKey2));
             Assert.AreEqual(command.Metadata[randomKey2], randomString2);
-            
+
             var documents = command.Resource.ShouldBeOfType<DocumentCollection>();
             Assert.IsNotNull(documents.Items);
-            Assert.AreEqual(documents.Items.Length, 3);		    
+            Assert.AreEqual(documents.Items.Length, 3);
 
             var contacts = documents.Cast<Contact>().ToArray();
 
@@ -1187,7 +1205,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             Assert.IsTrue(contacts[2].IsPending.Value);
             Assert.IsFalse(contacts[2].ShareAccountInfo.HasValue);
             Assert.IsTrue(contacts[2].SharePresence.HasValue);
-            Assert.IsFalse(contacts[2].SharePresence.Value);			
+            Assert.IsFalse(contacts[2].SharePresence.Value);
         }
 
         [Test]
@@ -1293,7 +1311,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             string json =
                 $"{{\"method\":\"{method.ToString().ToCamelCase()}\",\"id\":\"{id}\",\"from\":\"{@from}\",\"to\":\"{to}\",\"status\":\"{status}\",\"reason\":{{\"code\":{reason.Code},\"description\":\"{reason.Description}\"}}}}";
 
-            var envelope = target.Deserialize(json);			
+            var envelope = target.Deserialize(json);
             var command = envelope.ShouldBeOfType<Command>();
             Assert.AreEqual(id, command.Id);
             Assert.AreEqual(from, command.From);
@@ -1321,7 +1339,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             var from = Dummy.CreateNode();
             var pp = Dummy.CreateNode();
             var to = Dummy.CreateNode();
-            
+
             string randomKey1 = "randomString1";
             string randomKey2 = "randomString2";
             string randomString1 = Dummy.CreateRandomStringExtended(50);
@@ -1350,7 +1368,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             var textContent = (PlainText)message.Content;
             Assert.AreEqual(text, textContent.Text);
         }
-        
+
         [Test]
         [Category("Deserialize")]
         public void Deserialize_TextMessageWithNullFromTo_ReturnsValidInstance()
@@ -1390,7 +1408,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             var textContent = (PlainText)message.Content;
             Assert.AreEqual(text, textContent.Text);
         }
-        
+
         [Test]
         [Category("Deserialize")]
         public void Deserialize_ChatStateMessage_ReturnsValidInstance()
@@ -1490,7 +1508,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 
             Assert.IsNotNull(message.Type);
             Assert.AreEqual(message.Type, type);
-            
+
             var content = message.Content.ShouldBeOfType<PlainDocument>();
             Assert.AreEqual(text, content.Value);
 
@@ -1526,7 +1544,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             Assert.AreEqual(identityDocument.Value, content.Value);
 
         }
-        
+
         [Test]
         [Category("Deserialize")]
         public void Deserialize_UnknownJsonContentMessage_ReturnsValidInstance()
@@ -1543,7 +1561,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             string randomString1 = Dummy.CreateRandomStringExtended(50);
             string randomString2 = Dummy.CreateRandomStringExtended(50);
 
-           
+
             var type = Dummy.CreateJsonMediaType();
 
             var propertyName1 = Dummy.CreateRandomStringExtended(100);
@@ -1555,7 +1573,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             var arrayPropertyName2 = Dummy.CreateRandomStringExtended(100);
             var arrayPropertyName3 = Dummy.CreateRandomStringExtended(100);
             var arrayPropertyName4 = Dummy.CreateRandomStringExtended(100);
-            var arrayPropertyValue1 = Dummy.CreateRandomString(100);            
+            var arrayPropertyValue1 = Dummy.CreateRandomString(100);
             var arrayPropertyValue2 = (long)Dummy.CreateRandomInt(1000);
             var arrayPropertyValue3 = Dummy.CreateRandomStringExtended(100);
             var arrayPropertyValue4 = false;
@@ -1583,17 +1601,17 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 
             Assert.IsNotNull(message.Type);
             Assert.AreEqual(message.Type, type);
-            
+
             var content = message.Content.ShouldBeOfType<JsonDocument>();
 
             Assert.IsTrue(content.ContainsKey(propertyName1));
             Assert.AreEqual(content[propertyName1], propertyValue1);
-            Assert.IsTrue(content.ContainsKey(propertyName2));            
-            Assert.AreEqual(content[propertyName2], propertyValue2);            
+            Assert.IsTrue(content.ContainsKey(propertyName2));
+            Assert.AreEqual(content[propertyName2], propertyValue2);
             Assert.IsTrue(content.ContainsKey(propertyName3));
             Assert.IsTrue(content[propertyName3] is IList<object>);
 
-            var list = (IList<object>) content[propertyName3];
+            var list = (IList<object>)content[propertyName3];
             Assert.AreEqual(2, list.Count);
 
             for (int i = 0; i < list.Count; i++)
@@ -1677,7 +1695,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 
             Assert.IsNotNull(message.Type);
             Assert.AreEqual(message.Type, type);
-            
+
             var content = message.Content.ShouldBeOfType<JsonDocument>();
 
             Assert.IsTrue(content.ContainsKey(propertyName1));
@@ -1735,9 +1753,9 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 
             Assert.IsNull(message.Id);
             Assert.IsNull(message.Pp);
-            Assert.IsNull(message.Metadata);			
+            Assert.IsNull(message.Metadata);
             var textContent = message.Content.ShouldBeOfType<ChatState>();
-            Assert.AreEqual(state, textContent.State);            
+            Assert.AreEqual(state, textContent.State);
         }
 
         [Test]
@@ -1837,7 +1855,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
                 $"{{\"state\":\"{state.ToString().ToCamelCase()}\",\"scheme\":\"plain\",\"authentication\":{{\"password\":\"{password}\"}},\"id\":\"{id}\",\"from\":\"{@from}\",\"to\":\"{to}\",\"metadata\":{{\"{randomKey1}\":\"{randomString1.Escape()}\",\"{randomKey2}\":\"{randomString2.Escape()}\"}}}}";
 
             var envelope = target.Deserialize(json);
-            
+
             var session = envelope.ShouldBeOfType<Session>();
             Assert.AreEqual(id, session.Id);
             Assert.AreEqual(from, session.From);
@@ -1862,7 +1880,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 
             var id = EnvelopeId.NewId();
             var from = Dummy.CreateNode();
-            var to = Dummy.CreateNode();        
+            var to = Dummy.CreateNode();
             var state = SessionState.Authenticating;
 
             var reasonCode = Dummy.CreateRandomInt(100);
@@ -1905,7 +1923,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             var plainAuthentication = session.Authentication.ShouldBeOfType<PlainAuthentication>();
             plainAuthentication.Password.ShouldNotBeEmpty();
         }
-        
+
         [Test]
         [Category("Deserialize")]
         public void Deserialize_SessionAuthenticatingWithExternalAuthentication_ReturnsValidInstance()
@@ -1924,7 +1942,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             plainAuthentication.Token.ShouldBe("dFJZMTRXOE03NHBtcmZRNGY3NFo=");
             plainAuthentication.Issuer.ShouldBe("take.net");
         }
-        
+
         [Test]
         [Category("Deserialize")]
         public void Deserialize_SessionAuthenticatingWithGuestAuthentication_ReturnsValidInstance()
@@ -1995,7 +2013,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             var container4 = documentCollection.Items[3].ShouldBeOfType<DocumentContainer>();
             container1.Type.ShouldBe(PlainText.MediaType);
             var document1 = container1.Value.ShouldBeOfType<PlainText>();
-            document1.Text.ShouldBe("text1");            
+            document1.Text.ShouldBe("text1");
             container2.Type.ShouldBe(Account.MediaType);
             var document2 = container2.Value.ShouldBeOfType<Account>();
             document2.FullName.ShouldBe("My Name");
@@ -2067,7 +2085,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             var jObject = JObject.FromObject(jsonDocument, target.Serializer);
             var message = jObject.ToObject(typeof(Message), target.Serializer).ShouldBeOfType<Message>();
         }
-        
+
         [Test]
         [Category("Deserialize")]
         public void Deserialize_ObserveCommandWithoutId_ReturnsValidInstance()
@@ -2085,7 +2103,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             var actualCommand = actual.ShouldBeOfType<Command>();
             actualCommand.Resource.ShouldNotBeNull();
             actualCommand.Id.ShouldBeNull();
-            actualCommand.Method.ShouldBe(CommandMethod.Observe);            
+            actualCommand.Method.ShouldBe(CommandMethod.Observe);
         }
 
         [Test]
@@ -2106,7 +2124,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             webLink.Uri.ShouldNotBeNull();
             webLink.Uri.OriginalString.ShouldBe("http://e0x0rkuaof.com:9288/");
             webLink.PreviewUri.ShouldNotBeNull();
-            webLink.PreviewUri.OriginalString.ShouldBe("http://pcmcjxomhd.com:9875/");            
+            webLink.PreviewUri.OriginalString.ShouldBe("http://pcmcjxomhd.com:9875/");
             webLink.PreviewType.ShouldNotBeNull();
             webLink.PreviewType.ToString().ShouldBe("image/jpeg");
             webLink.Text.ShouldBe("b9s38pra6s7w7b4w1jca6lzf9zp8927ciy4lwdsa3y1gc2ekiw");
@@ -2137,7 +2155,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             jsonDocument["previewType"].ToString().ShouldBe("image/jpeg");
             jsonDocument["text"].ShouldBe("b9s38pra6s7w7b4w1jca6lzf9zp8927ciy4lwdsa3y1gc2ekiw");
         }
-        
+
         [Test]
         [Category("Deserialize")]
         public void Deserialize_LocationMessage_ReturnsJsonDocument()
@@ -2145,7 +2163,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             // Arrange
             var json =
                 "{\"type\":\"application/vnd.lime.location+json\",\"content\":{\"latitude\":\"*\",\"longitude\":\"*\",\"altitude\":853,\"text\":\"*\"},\"id\":\"321fd00b-92c5-492f-8e68-dadb0d1905b0\",\"from\":\"leaseplanhmg@msging.net/az-iris2\",\"to\":\"8425b013-793c-468a-a77f-8ce5ce553868.leaseplanhmg@0mn.io/default\",\"metadata\":{\"#stateName\":\"Y.1.1 - Detalhes do agendamento\",\"#stateId\":\"120f4b27-0bd5-41c6-a103-fa6d7b1066ad\",\"#messageId\":\"c520e0f1-990e-432d-b803-7d342779fc6b\",\"$originator\":\"leaseplanhmg@msging.net\",\"$claims\":\"Node=leaseplanhmg@msging.net/az-iris2;Identity=leaseplanhmg@msging.net;DomainRole=Member;AuthenticationScheme=Transport\"}}";
-                
+
             var target = GetTarget();
 
             // Act
@@ -2158,7 +2176,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             jsonDocument["longitude"].ShouldBe("*");
             jsonDocument["altitude"].ShouldBe(853);
             jsonDocument["text"].ShouldBe("*");
-        }        
+        }
 
         [Test]
         [Category("Deserialize")]
@@ -2238,7 +2256,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 
             // Assert
             var actualMessage = actual.ShouldBeOfType<Message>();
-            var jsonDocument = actualMessage.Content.ShouldBeOfType<JsonDocument>();            
+            var jsonDocument = actualMessage.Content.ShouldBeOfType<JsonDocument>();
             var expectUserResponse = jsonDocument["expectUserResponse"].ShouldBeOfType<bool>();
             expectUserResponse.ShouldBeTrue();
             var array = jsonDocument["expectedInputs"].ShouldBeAssignableTo<JArray>();
@@ -2248,6 +2266,52 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
         }
 
         #endregion
+
+        [Test]
+        [Category("Serialize")]
+        public void TryAddConverter_ShouldAcceptDuplicate()
+        {
+            // Arrange
+            var target = GetTarget();
+
+            // Act
+            var firstInsertResult = target.TryAddConverter(new CustomJsonConverterTest(), false);
+            var secondInsertResult = target.TryAddConverter(new CustomJsonConverterTest(), false);
+
+            // Assert
+            firstInsertResult.ShouldBeTrue();
+            secondInsertResult.ShouldBeTrue();
+            target
+                .Settings
+                .Converters
+                .Where(converter => converter is CustomJsonConverterTest)
+                .ToList()
+                .Count()
+                .ShouldBe(2);
+        }
+
+        [Test]
+        [Category("Serialize")]
+        public void TryAddConverter_ShouldIgnoreDuplicate()
+        {
+            // Arrange
+            var target = GetTarget();
+
+            // Act
+            var firstInsertResult = target.TryAddConverter(new CustomJsonConverterTest(), true);
+            var secondInsertResult = target.TryAddConverter(new CustomJsonConverterTest(), true);
+
+            // Assert
+            firstInsertResult.ShouldBeTrue();
+            secondInsertResult.ShouldBeFalse();
+            target
+                .Settings
+                .Converters
+                .Where(converter => converter is CustomJsonConverterTest)
+                .ToList()
+                .Count()
+                .ShouldBe(1);
+        }
 
         [Test]
         [Category("Serialize")]
@@ -2261,7 +2325,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 
             // Act
             var actualDocument = target.Deserialize(target.Serialize(target.Deserialize(json)));
-            
+
             // Assert
             var actualMessage = actualDocument.ShouldBeOfType<Message>();
             var jsonDocument = actualMessage.Content.ShouldBeOfType<JsonDocument>();
