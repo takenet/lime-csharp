@@ -17,7 +17,7 @@ using System.Reflection;
 
 namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 {
-    sealed class CustomJsonConverterTest : JsonConverter
+    sealed class DummyJsonConverter : JsonConverter
     {
         public override bool CanConvert(Type objectType)
         {
@@ -2275,8 +2275,8 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             var target = GetTarget();
 
             // Act
-            var firstInsertResult = target.TryAddConverter(new CustomJsonConverterTest(), false);
-            var secondInsertResult = target.TryAddConverter(new CustomJsonConverterTest(), false);
+            var firstInsertResult = target.TryAddConverter(new DummyJsonConverter(), false);
+            var secondInsertResult = target.TryAddConverter(new DummyJsonConverter(), false);
 
             // Assert
             firstInsertResult.ShouldBeTrue();
@@ -2284,7 +2284,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             target
                 .Settings
                 .Converters
-                .Where(converter => converter is CustomJsonConverterTest)
+                .Where(converter => converter is DummyJsonConverter)
                 .ToList()
                 .Count()
                 .ShouldBe(2);
@@ -2298,8 +2298,8 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             var target = GetTarget();
 
             // Act
-            var firstInsertResult = target.TryAddConverter(new CustomJsonConverterTest(), true);
-            var secondInsertResult = target.TryAddConverter(new CustomJsonConverterTest(), true);
+            var firstInsertResult = target.TryAddConverter(new DummyJsonConverter(), true);
+            var secondInsertResult = target.TryAddConverter(new DummyJsonConverter(), true);
 
             // Assert
             firstInsertResult.ShouldBeTrue();
@@ -2307,7 +2307,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             target
                 .Settings
                 .Converters
-                .Where(converter => converter is CustomJsonConverterTest)
+                .Where(converter => converter is DummyJsonConverter)
                 .ToList()
                 .Count()
                 .ShouldBe(1);
