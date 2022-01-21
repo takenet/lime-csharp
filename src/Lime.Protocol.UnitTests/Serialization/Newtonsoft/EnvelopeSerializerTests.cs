@@ -2285,7 +2285,6 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
                 .Settings
                 .Converters
                 .Where(converter => converter is DummyJsonConverter)
-                .ToList()
                 .Count()
                 .ShouldBe(2);
         }
@@ -2308,7 +2307,6 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
                 .Settings
                 .Converters
                 .Where(converter => converter is DummyJsonConverter)
-                .ToList()
                 .Count()
                 .ShouldBe(1);
         }

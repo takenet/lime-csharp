@@ -98,7 +98,7 @@ namespace Lime.Protocol.Serialization.Newtonsoft
                 }
             };
 
-            JsonSerializerSettings jsonSerializerSettings = new JsonSerializerSettings
+            var jsonSerializerSettings = new JsonSerializerSettings
             {
                 NullValueHandling = NullValueHandling.Ignore,
                 ReferenceLoopHandling = ReferenceLoopHandling.Serialize,
