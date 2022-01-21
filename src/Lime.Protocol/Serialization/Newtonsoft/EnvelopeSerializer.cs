@@ -67,11 +67,22 @@ namespace Lime.Protocol.Serialization.Newtonsoft
             throw new ArgumentException("JSON string is not a valid envelope", nameof(envelopeString));
         }
 
+        public bool TryAddConverter(JsonConverter jsonConverter, bool checkForDuplicate = false)
+        {
+            if (checkForDuplicate && Settings.Converters.Any(c => c.GetType() == jsonConverter.GetType()))
+            {
+                return false;
+            }
+
+            Settings.Converters.Add(jsonConverter);
+            return true;
+        }
+
         internal static JsonSerializerSettings CreateSettings(IDocumentTypeResolver documentTypeResolver)
         {
             var converters = new List<JsonConverter>
             {
-                new StringEnumConverter {CamelCaseText = false},
+                new StringEnumConverter { CamelCaseText = false },
                 new IdentityJsonConverter(),
                 new NodeJsonConverter(),
                 new LimeUriJsonConverter(),
@@ -86,20 +97,17 @@ namespace Lime.Protocol.Serialization.Newtonsoft
                     DateTimeStyles = DateTimeStyles.AdjustToUniversal
                 }
             };
-            converters.Add(new DocumentJsonConverter(
-                new JsonSerializerSettings
-                {
-                    NullValueHandling = NullValueHandling.Ignore,
-                    ReferenceLoopHandling = ReferenceLoopHandling.Serialize,
-                    Converters = converters.ToList()
-                }));
 
-            return new JsonSerializerSettings
+            var jsonSerializerSettings = new JsonSerializerSettings
             {
                 NullValueHandling = NullValueHandling.Ignore,
                 ReferenceLoopHandling = ReferenceLoopHandling.Serialize,
                 Converters = converters
             };
+
+            // This needs to be added last, since it's a "catch-all" document converter
+            converters.Add(new DocumentJsonConverter(jsonSerializerSettings));
+            return jsonSerializerSettings;
         }
     }
 }
