@@ -88,7 +88,7 @@ namespace Lime.Protocol.Serialization.Newtonsoft
                 throw new InvalidOperationException("The serializer has already been constructed.");
             }
 
-            if (!ignoreDuplicates && Settings.Converters.Any(c => c.GetType() == jsonConverter.GetType()))
+            if (ignoreDuplicates && Settings.Converters.Any(c => c.GetType() == jsonConverter.GetType()))
             {
                 return false;
             }
@@ -127,7 +127,7 @@ namespace Lime.Protocol.Serialization.Newtonsoft
                 }
             };
 
-            JsonSerializerSettings jsonSerializerSettings = new JsonSerializerSettings
+            var jsonSerializerSettings = new JsonSerializerSettings
             {
                 NullValueHandling = NullValueHandling.Ignore,
                 ReferenceLoopHandling = ReferenceLoopHandling.Serialize,
