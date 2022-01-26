@@ -88,20 +88,19 @@ namespace Lime.Protocol.Serialization.Newtonsoft
                 throw new InvalidOperationException("The serializer has already been constructed.");
             }
 
-            if (ignoreDuplicates && Settings.Converters.Any(c => c.GetType() == jsonConverter.GetType()))
+            if (!ignoreDuplicates && Settings.Converters.Any(c => c.GetType() == jsonConverter.GetType()))
             {
                 return false;
             }
 
-            var converters = (List<JsonConverter>)Settings.Converters;
-            var catchAllConverterIndex = converters.FindIndex(c => c.GetType() == typeof(DocumentJsonConverter));
+            int catchAllConverterIndex = FindCatchAllConverterIndex(Settings.Converters);
             if (catchAllConverterIndex != -1)
             {
-                converters.Insert(catchAllConverterIndex, jsonConverter);
+                Settings.Converters.Insert(catchAllConverterIndex, jsonConverter);
             }
             else
             {
-                converters.Add(jsonConverter);
+                Settings.Converters.Add(jsonConverter);
             }
 
             return true;
@@ -137,6 +136,31 @@ namespace Lime.Protocol.Serialization.Newtonsoft
             // This needs to be added last, since it's a "catch-all" document converter
             converters.Add(new DocumentJsonConverter(jsonSerializerSettings));
             return jsonSerializerSettings;
+        }
+
+        private static int FindCatchAllConverterIndex(IList<JsonConverter> converters)
+        {
+            static bool catchAllPredicate(JsonConverter c) => c.GetType() == typeof(DocumentJsonConverter);
+            int catchAllConverterIndex;
+            if (converters is List<JsonConverter> convertersList)
+            {
+                catchAllConverterIndex = convertersList.FindIndex(catchAllPredicate);
+            }
+            else
+            {
+                catchAllConverterIndex = -1;
+                for (int i = 0; i < converters.Count; i++)
+                {
+                    var converter = converters[i];
+                    if (catchAllPredicate(converter))
+                    {
+                        catchAllConverterIndex = i;
+                        break;
+                    }
+                }
+            }
+
+            return catchAllConverterIndex;
         }
     }
 }
