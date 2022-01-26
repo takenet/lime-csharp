@@ -78,6 +78,9 @@ namespace Lime.Protocol.Serialization.Newtonsoft
         /// <param name="ignoreDuplicates">Whether the provided <paramref name="jsonConverter"/> should be added when there is already one instance of that converter type.</param>
         /// <returns><see langword="true"/> if the element was added to the list. Otherwise, <see langword="false"/></returns>
         /// <exception cref="InvalidOperationException">Thrown when invoked after the serializer has already been constructed.</exception>
+        /// <remarks>
+        /// If the catch-all <see cref="DocumentJsonConverter"/> is present in the list, the provided <paramref name="jsonConverter"/> will be inserted before it.
+        /// </remarks>
         public bool TryAddConverter(JsonConverter jsonConverter, bool ignoreDuplicates = true)
         {
             if (_serializer.IsValueCreated)
