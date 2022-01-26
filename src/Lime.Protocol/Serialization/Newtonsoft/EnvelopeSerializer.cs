@@ -6,32 +6,38 @@ using Lime.Protocol.Serialization.Newtonsoft.Converters;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Serialization;
 
 namespace Lime.Protocol.Serialization.Newtonsoft
 {
     /// <summary>
     /// Serializes using the Newtonsoft.Json library.
     /// </summary>
-    /// <seealso cref="Lime.Protocol.Serialization.IEnvelopeSerializer" />
+    /// <seealso cref="IEnvelopeSerializer" />
     public class EnvelopeSerializer : IEnvelopeSerializer
     {
+        private readonly Lazy<JsonSerializer> _serializer;
+
         public EnvelopeSerializer(IDocumentTypeResolver documentTypeResolver)
         {
             if (documentTypeResolver == null) throw new ArgumentNullException(nameof(documentTypeResolver));
 
             Settings = CreateSettings(documentTypeResolver);
-            Serializer = JsonSerializer.Create(Settings);
+            _serializer = new Lazy<JsonSerializer>(() => JsonSerializer.Create(Settings));
         }
 
         public JsonSerializerSettings Settings { get; }
 
-        public JsonSerializer Serializer { get; }
+        /// <summary>
+        /// Gets the <see cref="JsonSerializer"/> used for serialization and deserialization of envelopes.
+        /// This property is lazy. The construction of the <see cref="JsonSerializer"/> instance will only
+        /// happen after the first invocation of the <see langword="get"/> accessor.
+        /// </summary>
+        public JsonSerializer Serializer => _serializer.Value;
 
         /// <summary>
         /// Serialize an envelope to a string.
         /// </summary>
-        /// <param name = "envelope"></param>
-        /// <returns></returns>
         public string Serialize(Envelope envelope)
         {
             return JsonConvert.SerializeObject(envelope, Formatting.None, Settings);
@@ -40,13 +46,11 @@ namespace Lime.Protocol.Serialization.Newtonsoft
         /// <summary>
         /// Deserialize an envelope from a string.
         /// </summary>
-        /// <param name = "envelopeString"></param>
-        /// <returns></returns>
         /// <exception cref = "System.ArgumentException">JSON string is not a valid envelope</exception>
         public Envelope Deserialize(string envelopeString)
         {
             var jObject = JObject.Parse(envelopeString);
-            
+
             if (jObject.Property(Message.CONTENT_KEY) != null)
             {
                 return jObject.ToObject<Message>(Serializer);
@@ -67,14 +71,36 @@ namespace Lime.Protocol.Serialization.Newtonsoft
             throw new ArgumentException("JSON string is not a valid envelope", nameof(envelopeString));
         }
 
-        public bool TryAddConverter(JsonConverter jsonConverter, bool checkForDuplicate = false)
+        /// <summary>
+        /// Adds the provided <paramref name="jsonConverter"/> to the list of converters used by the underlying serializer.
+        /// </summary>
+        /// <param name="jsonConverter">The <see cref="JsonConverter"/> to be added.</param>
+        /// <param name="ignoreDuplicates">Whether the provided <paramref name="jsonConverter"/> should be added when there is already one instance of that converter type.</param>
+        /// <returns><see langword="true"/> if the element was added to the list. Otherwise, <see langword="false"/></returns>
+        /// <exception cref="InvalidOperationException">Thrown when invoked after the serializer has already been constructed.</exception>
+        public bool TryAddConverter(JsonConverter jsonConverter, bool ignoreDuplicates = true)
         {
-            if (checkForDuplicate && Settings.Converters.Any(c => c.GetType() == jsonConverter.GetType()))
+            if (_serializer.IsValueCreated)
+            {
+                throw new InvalidOperationException("The serializer has already been constructed.");
+            }
+
+            if (!ignoreDuplicates && Settings.Converters.Any(c => c.GetType() == jsonConverter.GetType()))
             {
                 return false;
             }
 
-            Settings.Converters.Add(jsonConverter);
+            var converters = (List<JsonConverter>)Settings.Converters;
+            var catchAllConverterIndex = converters.FindIndex(c => c.GetType() == typeof(DocumentJsonConverter));
+            if (catchAllConverterIndex != -1)
+            {
+                converters.Insert(catchAllConverterIndex, jsonConverter);
+            }
+            else
+            {
+                converters.Add(jsonConverter);
+            }
+
             return true;
         }
 
@@ -82,7 +108,7 @@ namespace Lime.Protocol.Serialization.Newtonsoft
         {
             var converters = new List<JsonConverter>
             {
-                new StringEnumConverter {CamelCaseText = false},
+                new StringEnumConverter { NamingStrategy = new CamelCaseNamingStrategy() },
                 new IdentityJsonConverter(),
                 new NodeJsonConverter(),
                 new LimeUriJsonConverter(),
