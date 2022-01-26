@@ -876,7 +876,6 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             Assert.IsTrue(resultString.ContainsJsonProperty(Link.PREVIEW_URI_KEY, webLink.PreviewUri.OriginalString));
         }
 
-
         [Test]
         [Category("Serialize")]
         public void Serialize_Deserialize_DocumentWithEnvelope()
@@ -2334,7 +2333,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
         #region Converter
         [Test]
         [Category("Converter")]
-        public void TryAddConverter_ShouldAcceptDuplicate()
+        public void TryAddConverter_ShouldIgnoreDuplicate()
         {
             // Arrange
             var target = GetTarget();
@@ -2356,7 +2355,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 
         [Test]
         [Category("Converter")]
-        public void TryAddConverter_ShouldNoAcceptDuplicate()
+        public void TryAddConverter_ShouldNotIgnoreDuplicate()
         {
             // Arrange
             var target = GetTarget();
@@ -2379,7 +2378,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 
         [Test]
         [Category("Converter")]
-        public void TryAddConverter_ShouldLastConverterIsDocumentJsonConverter()
+        public void TryAddConverter_ShouldHaveDocumentJsonConverterAsTheLast()
         {
             // Arrange
             var target = GetTarget();
@@ -2389,6 +2388,8 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             var secondInsertResult = target.TryAddConverter(new DummyJsonConverter2());
 
             // Assert
+            firstInsertResult.ShouldBe(true);
+            secondInsertResult.ShouldBe(true);
             target
                 .Serializer
                 .Converters
