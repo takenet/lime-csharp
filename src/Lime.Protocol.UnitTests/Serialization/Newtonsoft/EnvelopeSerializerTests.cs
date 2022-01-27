@@ -1,4 +1,8 @@
-﻿using Lime.Messaging;
+﻿using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
+using System.Reflection;
 using Lime.Messaging.Contents;
 using Lime.Messaging.Resources;
 using Lime.Protocol.Security;
@@ -9,32 +13,11 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NUnit.Framework;
 using Shouldly;
-using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Reflection;
+using Lime.Messaging;
+using Lime.Protocol.Serialization.Newtonsoft.Converters;
 
 namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 {
-    sealed class DummyJsonConverter : JsonConverter
-    {
-        public override bool CanConvert(Type objectType)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
-        {
-            throw new NotImplementedException();
-        }
-    }
-
     [TestFixture]
     public class EnvelopeSerializerTests
     {
@@ -43,6 +26,8 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
         private EnvelopeSerializer GetTarget()
         {
             DocumentTypeResolver = new DocumentTypeResolver().WithMessagingDocuments();
+            DocumentTypeResolver.RegisterDocument(typeof(DummyObject1));
+            DocumentTypeResolver.RegisterDocument(typeof(DummyObject2));
             return new EnvelopeSerializer(DocumentTypeResolver);
         }
 
@@ -891,7 +876,6 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             Assert.IsTrue(resultString.ContainsJsonProperty(Link.PREVIEW_URI_KEY, webLink.PreviewUri.OriginalString));
         }
 
-
         [Test]
         [Category("Serialize")]
         public void Serialize_Deserialize_DocumentWithEnvelope()
@@ -921,6 +905,62 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             var deserializedCommand = (Command)serializer.Deserialize(json);
         }
 
+        [Test]
+        [Category("Serialize")]
+        public void Serialize_DocumentWithCustomConverter()
+        {
+            // Arrange
+            var target = GetTarget();
+            target.TryAddConverter(new DummyJsonConverter1());
+            target.TryAddConverter(new DummyJsonConverter2());
+
+            var command = new Command()
+            {
+                Resource = new DummyObject1() { Property = Guid.NewGuid().ToString() },
+                Id = EnvelopeId.NewId(),
+                From = new Node("limeUser", "limeprotocol.org", null),
+                To = new Node("limeUser", "limeprotocol.org", null),
+                Method = CommandMethod.Set,
+                Uri = new LimeUri("/Dummy")
+            };
+
+            // Act
+            var json = JsonConvert.SerializeObject(command);
+            var deserializedCommand = (Command)target.Deserialize(json);
+
+            // Assert
+            var actualMessage = deserializedCommand.Resource.ShouldBeOfType<DummyObject1>();
+            actualMessage.Property.ShouldBe(DummyJsonConverter1.PropertyDefaultValueConverted);
+        }
+
+        [Test]
+        [Category("Serialize")]
+        public void Serialize_DocumentWithDefaultConverterAfterRegisterAnyCostomConverters()
+        {
+            // Arrange
+            var target = GetTarget();
+            target.TryAddConverter(new DummyJsonConverter1());
+
+            var guid = Guid.NewGuid().ToString();
+            var command = new Command()
+            {
+                Resource = new DummyObject2() { Property = guid },
+                Id = EnvelopeId.NewId(),
+                From = new Node("limeUser", "limeprotocol.org", null),
+                To = new Node("limeUser", "limeprotocol.org", null),
+                Method = CommandMethod.Set,
+                Uri = new LimeUri("/Dummy")
+            };
+
+            // Act
+            var json = JsonConvert.SerializeObject(command);
+            var deserializedCommand = (Command)target.Deserialize(json);
+
+            // Assert
+            var actualMessage = deserializedCommand.Resource.ShouldBeOfType<DummyObject2>();
+            actualMessage.Property.ShouldNotBe(DummyJsonConverter1.PropertyDefaultValueConverted);
+            actualMessage.Property.ShouldNotBe(guid);
+        }
         #endregion
 
         #region Deserialize
@@ -2265,52 +2305,6 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             jObject["inputPrompt"].ShouldBeOfType<JObject>();
         }
 
-        #endregion
-
-        [Test]
-        [Category("Serialize")]
-        public void TryAddConverter_ShouldAcceptDuplicate()
-        {
-            // Arrange
-            var target = GetTarget();
-
-            // Act
-            var firstInsertResult = target.TryAddConverter(new DummyJsonConverter(), false);
-            var secondInsertResult = target.TryAddConverter(new DummyJsonConverter(), false);
-
-            // Assert
-            firstInsertResult.ShouldBeTrue();
-            secondInsertResult.ShouldBeTrue();
-            target
-                .Settings
-                .Converters
-                .Where(converter => converter is DummyJsonConverter)
-                .Count()
-                .ShouldBe(2);
-        }
-
-        [Test]
-        [Category("Serialize")]
-        public void TryAddConverter_ShouldIgnoreDuplicate()
-        {
-            // Arrange
-            var target = GetTarget();
-
-            // Act
-            var firstInsertResult = target.TryAddConverter(new DummyJsonConverter(), true);
-            var secondInsertResult = target.TryAddConverter(new DummyJsonConverter(), true);
-
-            // Assert
-            firstInsertResult.ShouldBeTrue();
-            secondInsertResult.ShouldBeFalse();
-            target
-                .Settings
-                .Converters
-                .Where(converter => converter is DummyJsonConverter)
-                .Count()
-                .ShouldBe(1);
-        }
-
         [Test]
         [Category("Serialize")]
         [Category("Deserialize")]
@@ -2333,6 +2327,112 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             array.Count.ShouldBe(1);
             var jObject = array[0];
             jObject["inputPrompt"].ShouldBeOfType<JObject>();
+        }
+        #endregion
+
+        #region Converter
+        [Test]
+        [Category("Converter")]
+        public void TryAddConverter_ShouldIgnoreDuplicate()
+        {
+            // Arrange
+            var target = GetTarget();
+
+            // Act
+            var firstInsertResult = target.TryAddConverter(new DummyJsonConverter1());
+            var secondInsertResult = target.TryAddConverter(new DummyJsonConverter1());
+
+            // Assert
+            firstInsertResult.ShouldBeTrue();
+            secondInsertResult.ShouldBeTrue();
+            target
+                .Serializer
+                .Converters
+                .Where(converter => converter is DummyJsonConverter1)
+                .Count()
+                .ShouldBe(2);
+        }
+
+        [Test]
+        [Category("Converter")]
+        public void TryAddConverter_ShouldNotIgnoreDuplicate()
+        {
+            // Arrange
+            var target = GetTarget();
+
+            // Act
+            var firstInsertResult = target.TryAddConverter(new DummyJsonConverter1(), false);
+            var secondInsertResult = target.TryAddConverter(new DummyJsonConverter1(), false);
+
+            // Assert
+            firstInsertResult.ShouldBeTrue();
+            secondInsertResult.ShouldBeFalse();
+            target
+                .Serializer
+                .Converters
+                .Where(converter => converter is DummyJsonConverter1)
+                .Count()
+                .ShouldBe(1);
+        }
+
+
+        [Test]
+        [Category("Converter")]
+        public void TryAddConverter_ShouldHaveDocumentJsonConverterAsTheLast()
+        {
+            // Arrange
+            var target = GetTarget();
+
+            // Act
+            var firstInsertResult = target.TryAddConverter(new DummyJsonConverter1());
+            var secondInsertResult = target.TryAddConverter(new DummyJsonConverter2());
+
+            // Assert
+            firstInsertResult.ShouldBe(true);
+            secondInsertResult.ShouldBe(true);
+            target
+                .Serializer
+                .Converters
+                .Last()
+                .ShouldBeOfType(typeof(DocumentJsonConverter));
+        }
+        #endregion
+    }
+
+    internal abstract class DummyObject : Document { public DummyObject(int n) : base(MediaType.Parse($"application/dummy_object{n}+json")) { } public string Property { get; set; } }
+    internal sealed class DummyObject1 : DummyObject { public DummyObject1() : base(1) { } }
+    internal sealed class DummyObject2 : DummyObject { public DummyObject2() : base(2) { } }
+
+    internal sealed class DummyJsonConverter1 : JsonConverter
+    {
+        public static string PropertyDefaultValueConverted => "Dummy Property value";
+        public override bool CanRead => true;
+        public override bool CanWrite => false;
+        public override bool CanConvert(Type objectType) => objectType == typeof(DummyObject1);
+
+        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+        {
+            return new DummyObject1() { Property = PropertyDefaultValueConverted };
+        }
+
+        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    internal sealed class DummyJsonConverter2 : JsonConverter
+    {
+        public override bool CanConvert(Type objectType) => objectType == typeof(DummyObject2);
+
+        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+        {
+            throw new NotImplementedException();
         }
     }
 }
