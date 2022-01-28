@@ -20,5 +20,14 @@ namespace Lime.Protocol.UnitTests.Serialization
         public double? NullableDouble { get; set; }
         [DataMember]
         public Node Address { get; set; }
+        [DataMember]
+        public TestEnum Status { get; set; }
+    }
+
+    public enum TestEnum
+    {
+        None,
+        Success,
+        Failure
     }
 }

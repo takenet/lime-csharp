@@ -304,7 +304,6 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             Assert.IsTrue(resultString.ContainsJsonProperty(Presence.MESSAGE_KEY, resource.Message));
             Assert.IsTrue(resultString.ContainsJsonProperty(Presence.LAST_SEEN_KEY, resource.LastSeen));
 
-
             Assert.IsFalse(resultString.ContainsJsonKey(Envelope.PP_KEY));
             Assert.IsFalse(resultString.ContainsJsonKey(Command.METADATA_KEY));
             Assert.IsFalse(resultString.ContainsJsonProperty(Command.STATUS_KEY, "pending"));
@@ -874,6 +873,48 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             Assert.IsTrue(resultString.ContainsJsonProperty(Link.URI_KEY, uri.OriginalString));
             Assert.IsTrue(resultString.ContainsJsonProperty(Link.PREVIEW_TYPE_KEY, webLink.PreviewType));
             Assert.IsTrue(resultString.ContainsJsonProperty(Link.PREVIEW_URI_KEY, webLink.PreviewUri.OriginalString));
+        }
+
+        [Test]
+        [Category("Serialize")]
+        public void Serialize_RandomDocument_ReturnsValidJsonString()
+        {
+            // Arrange
+            var resource = new TestDocument
+            {
+                Date = new DateTimeOffset(2022, 01, 28, 1, 2, 3, TimeSpan.Zero).UtcDateTime,
+                Double = 44.9,
+                Status = TestEnum.Success,
+                Address = "limeTest@limeprotocol.org/instance"
+            };
+
+            var command = new Command()
+            {
+                Resource = resource,
+                Id = EnvelopeId.NewId(),
+                From = new Node("limeUser", "limeprotocol.org", null),
+                To = new Node("limeUser", "limeprotocol.org", null),
+                Method = CommandMethod.Set,
+            };
+            var target = GetTarget();
+
+            // Act
+            var resultString = target.Serialize(command);
+
+            // Assert
+            Assert.IsTrue(resultString.HasValidJsonStackedBrackets());
+            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.ID_KEY, command.Id));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.FROM_KEY, command.From));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.TO_KEY, command.To));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Command.METHOD_KEY, command.Method));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Command.TYPE_KEY, command.Resource.GetMediaType()));
+            Assert.IsTrue(resultString.ContainsJsonKey(Command.RESOURCE_KEY));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Command.METHOD_KEY, command.Method));
+
+            Assert.IsTrue(resultString.ContainsJsonProperty("Status", "Success"));
+            Assert.IsTrue(resultString.ContainsJsonProperty("date", "2022-01-28T01:02:03.000Z"));
+            Assert.IsTrue(resultString.ContainsJsonProperty("double", 44.9));
+            Assert.IsTrue(resultString.ContainsJsonProperty("Address", resource.Address.ToString()));
         }
 
         [Test]
@@ -2011,7 +2052,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             DocumentTypeResolver.RegisterDocument<TestDocument>();
 
             string json =
-                $"{{\"type\":\"application/vnd.takenet.testdocument+json\",\"resource\":{{\"double\":10.1, \"NullableDouble\": 10.2}},\"method\":\"{method.ToString().ToCamelCase()}\",\"id\":\"{id}\"}}";
+                $"{{\"type\":\"application/vnd.takenet.testdocument+json\",\"resource\":{{\"double\":10.1, \"NullableDouble\": 10.2, \"Status\":\"Success\"}},\"method\":\"{method.ToString().ToCamelCase()}\",\"id\":\"{id}\"}}";
 
             // Act
             var envelope = target.Deserialize(json);
@@ -2023,6 +2064,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             var document = command.Resource.ShouldBeOfType<TestDocument>();
             document.Double.ShouldBe(10.1d);
             document.NullableDouble.ShouldBe(10.2d);
+            document.Status.ShouldBe(TestEnum.Success);
         }
 
         [Test]
