@@ -110,7 +110,7 @@ namespace Lime.Protocol.Serialization.Newtonsoft
         {
             var converters = new List<JsonConverter>
             {
-                new StringEnumConverter { NamingStrategy = new CamelCaseNamingStrategy() },
+                new StringEnumConverter(),
                 new IdentityJsonConverter(),
                 new NodeJsonConverter(),
                 new LimeUriJsonConverter(),
