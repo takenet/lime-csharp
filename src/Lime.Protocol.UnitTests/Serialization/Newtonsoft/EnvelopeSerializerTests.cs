@@ -2052,7 +2052,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             DocumentTypeResolver.RegisterDocument<TestDocument>();
 
             string json =
-                $"{{\"type\":\"application/vnd.takenet.testdocument+json\",\"resource\":{{\"double\":10.1, \"NullableDouble\": 10.2, \"Status\":\"success\"}},\"method\":\"{method.ToString().ToCamelCase()}\",\"id\":\"{id}\"}}";
+                $"{{\"type\":\"application/vnd.takenet.testdocument+json\",\"resource\":{{\"double\":10.1, \"NullableDouble\": 10.2, \"Status\":\"Success\"}},\"method\":\"{method.ToString().ToCamelCase()}\",\"id\":\"{id}\"}}";
 
             // Act
             var envelope = target.Deserialize(json);
