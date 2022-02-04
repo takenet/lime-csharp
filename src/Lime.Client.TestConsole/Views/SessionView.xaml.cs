@@ -14,10 +14,14 @@ namespace Lime.Client.TestConsole.Views
         {
             InitializeComponent();
             _darModeStyle = (Style)Resources["darkMode"];
+            _darkModeJsonInputStyle = (Style)Resources["jsonErrorStyleDarkMode"];
+            _jsonInputStyle = (Style)Resources["jsonErrorStyle"];
         }
 
         private bool _autoScroll;
         private Style _darModeStyle;
+        private Style _darkModeJsonInputStyle;
+        private Style _jsonInputStyle;
 
         private void ScrollViewer_ScrollChanged(object sender, ScrollChangedEventArgs e)
         {
@@ -61,11 +65,13 @@ namespace Lime.Client.TestConsole.Views
             {
                 this.Style = _darModeStyle;
                 EnvelopesListBox.Style = _darModeStyle;
+                this.JsonInput.Style = _darkModeJsonInputStyle;
             }
             else
             {
                 this.Style = null;
                 EnvelopesListBox.Style = null;
+                this.JsonInput.Style = _jsonInputStyle;
             }
         }
     }

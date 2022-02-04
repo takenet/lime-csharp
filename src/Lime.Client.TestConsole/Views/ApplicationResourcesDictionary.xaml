@@ -164,11 +164,23 @@
         </StackPanel>
     </ControlTemplate>
 
-    <Style x:Key="jsonErrorStyle" TargetType="Control">
+    <Style x:Key="jsonErrorStyle" TargetType="xctk:WatermarkTextBox">
         <Style.Triggers>
             <Trigger Property="Validation.HasError" Value="True">
                 <Setter Property="Margin" Value="0,0,0,15"></Setter>
             </Trigger>
         </Style.Triggers>
     </Style>
+
+    <Style x:Key="jsonErrorStyleDarkMode" TargetType="xctk:WatermarkTextBox">
+        <Setter Property="Foreground" Value="White"></Setter>
+        <Setter Property="Background" Value="Transparent"></Setter>
+        <Setter Property="CaretBrush" Value="White"></Setter>
+        <Style.Triggers>
+            <Trigger Property="Validation.HasError" Value="True">
+                <Setter Property="Margin" Value="0,0,0,15"></Setter>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
 </ResourceDictionary>
