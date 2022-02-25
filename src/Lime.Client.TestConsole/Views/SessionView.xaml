@@ -86,7 +86,7 @@
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
 
-                    <ScrollViewer ScrollChanged="ScrollViewer_ScrollChanged" PreviewMouseWheel="ScrollViewer_PreviewMouseWheel">
+                    <ScrollViewer ScrollChanged="ScrollViewer_ScrollChanged" PreviewMouseWheel="ScrollViewerContents_PreviewMouseWheel">
                         <ListBox Name="EnvelopesListBox" ItemsSource="{Binding EnvelopesView}">
                             <ListBox.ItemContainerStyle>
                                 <Style TargetType="ListBoxItem">
@@ -123,7 +123,8 @@
                                        AcceptsTab="True"
                                        Name="JsonInput"
                                        Validation.ErrorTemplate="{StaticResource JsonErrorTemplate}"
-                                       Style="{StaticResource jsonErrorStyle}" Margin="0,0,15,0">
+                                       Style="{StaticResource jsonErrorStyle}" Margin="0,0,15,0"
+                                       PreviewMouseWheel="JsonInput_PreviewMouseWheel">
                         <TextBox.Text>
                             <Binding Path="InputJson" UpdateSourceTrigger="PropertyChanged">
                                 <Binding.ValidationRules>
@@ -185,7 +186,7 @@
 
                 <GridSplitter Grid.Row="4" Height="5" HorizontalAlignment="Stretch" />
 
-                <ScrollViewer Grid.Row="5" Grid.ColumnSpan="3" ScrollChanged="ScrollViewer_ScrollChanged" PreviewMouseWheel="ScrollViewer_PreviewMouseWheel">
+                <ScrollViewer Grid.Row="5" Grid.ColumnSpan="3" ScrollChanged="ScrollViewer_ScrollChanged" PreviewMouseWheel="ScrollViewerContents_PreviewMouseWheel">
                     <ListBox ItemsSource="{Binding StatusMessages}" SelectionMode="Extended">
                         <ListBox.ItemTemplate>
                             <DataTemplate>

@@ -57,6 +57,33 @@ namespace Lime.Client.TestConsole.Views
             e.Handled = true;
         }
 
+        private void ScrollViewerContents_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
+        {
+            ScrollViewer scv = (ScrollViewer)sender;
+            scv.ScrollToVerticalOffset(scv.VerticalOffset - e.Delta);
+            ChangeFontSize(scv, e);
+        }
+
+
+        private void JsonInput_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
+        {
+            JsonInput.ScrollToVerticalOffset((JsonInput.VerticalOffset - e.Delta) / 2);
+            ChangeFontSize((Control)sender, e);
+        }
+
+        private void ChangeFontSize(Control control, MouseWheelEventArgs e)
+        {
+            e.Handled = true;
+
+            if (Keyboard.Modifiers != ModifierKeys.Control)
+                return;
+
+            if (e.Delta > 0)
+                ++control.FontSize;
+            else
+                --control.FontSize;
+        }
+
         private void IsDarkMode_Checked(object sender, RoutedEventArgs e)
         {
             var darkMode = (ToggleButton)sender;
@@ -74,5 +101,6 @@ namespace Lime.Client.TestConsole.Views
                 this.JsonInput.Style = _jsonInputStyle;
             }
         }
+
     }
 }

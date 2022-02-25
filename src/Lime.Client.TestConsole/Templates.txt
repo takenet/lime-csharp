@@ -48,14 +48,14 @@ Get group	Command	{"id":"%commandId","method":"get","uri": "/groups/%groupIdenti
 Set group	Command	{"id":"%commandId","method":"set","type":"application/vnd.lime.group+json","uri": "/groups","resource":{"identity":"%groupIdentity","name":"%groupName","type":"public"}}
 Get group members	Command	{"id":"%commandId","method":"get","uri": "/groups/%groupIdentity/members"}
 Set group member	Command	{"id":"%commandId","method":"set","uri": "/groups/%groupIdentity/members","resource":{"address":"%groupMemberAddress","role":"%groupMemberRole"}}
-Get contacts	Command	{"id":"%commandId","method":"get","uri": "/contacts"}
+Get contacts	Command	{"id":"%commandId","method":"get","uri": "/contacts","to": "postmaster@crm.msging.net"}
 Set contact	Command	{"id":"%commandId","method":"set","type":"application/vnd.lime.contact+json","uri":"/contacts","resource":{"identity":"%contactIdentity","name":"%contactName","email":"%contactEmail","sharePresence":true,"shareAccountInfo":true}}
 Merge contact	Command	{"id":"%commandId","method":"merge","type":"application/vnd.lime.contact+json","uri":"/contacts","resource":{"identity":"%contactIdentity","name":"%contactName"}}
 Delete contact	Command	{"id":"%commandId","method":"delete","uri": "/contacts/%contactIdentity"}
 Set location	Command	{"id":  "%commandId","to":"postmaster@location.take.io","method":"set","type":"application/vnd.lime.location+json","uri":"/location","resource":{"latitude":10.1,"longitude":10.2}}
 Get location	Command	{"id":  "%commandId","to":"postmaster@location.take.io","method":"get","uri":"/location"}
 Set delegation	Command	{"id":"%commandId","method":"set","type":"application/vnd.lime.delegation+json","uri":"/delegations","resource":{"target":"%targetIdentity"}}
-Delete delegation	Command	{"id":"%commandId","method":"delete","type":"application/vnd.lime.delegation+json","uri":"/delegations/%targetIdentity"}
+Delete delegation	Command	{"id":"%commandId","method":"delete","uri":"/delegations/%targetIdentity"}
 Set distribution list	Command	{"id": "%commandId","to":"postmaster@broadcast.%domain","method":"set","type":"application/vnd.iris.distribution-list+json","uri":"/lists","resource":{"identity": "%distributionListIdentity"}} 
 Set distribution list recipient	Command	{"id": "%commandId","to":"postmaster@broadcast.%domain","method":"set","type":"application/vnd.lime.identity","uri":"/lists/%distributionListIdentity/recipients","resource": "%recipientIdentity"} 
 Set distribution list recipients	Command	{"id": "%commandId","to":"postmaster@broadcast.%domain","method":"set","type":"application/vnd.lime.collection+json","uri":"/lists/%distributionListIdentity/recipients","resource": {"itemType": "application/vnd.lime.identity", "items": ["%recipientIdentity1","%recipientIdentity2"]}} 
