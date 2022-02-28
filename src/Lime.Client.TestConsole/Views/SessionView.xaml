@@ -31,9 +31,8 @@
             <Grid Margin="10">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
-                    <RowDefinition Height="300*" />
-                    <RowDefinition Height="5" />
-                    <RowDefinition Height="150*" />
+                    <RowDefinition Height="240*" />
+                    <RowDefinition Height="160*" />
                     <RowDefinition Height="5" />
                     <RowDefinition Height="100" />
                 </Grid.RowDefinitions>
@@ -106,9 +105,7 @@
                     </StackPanel>
                 </Grid>
 
-                <GridSplitter Grid.Row="2" Height="5" HorizontalAlignment="Stretch" />
-
-                <Grid Grid.Row="3" Margin="0,5">
+                <Grid Grid.Row="2">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="*" />
                         <RowDefinition Height="Auto" />
@@ -134,7 +131,7 @@
                         </TextBox.Text>
                     </xctk:WatermarkTextBox>
 
-                    <StackPanel Grid.Row="1" Margin="0,5" Orientation="Horizontal">
+                    <StackPanel Grid.Row="1" Margin="0,18" Orientation="Horizontal">
                         <Button Content="_Indent" ToolTip="Indent the JSON input" Command="{Binding IndentCommand}" />
                         <Button Content="_Validate" ToolTip="Validates the JSON input" Command="{Binding ValidateCommand}">
                             <Button.Style>
@@ -184,9 +181,9 @@
                     </StackPanel>
                 </Grid>
 
-                <GridSplitter Grid.Row="4" Height="5" HorizontalAlignment="Stretch" />
+                <GridSplitter Grid.Row="3" Height="5" HorizontalAlignment="Stretch" />
 
-                <ScrollViewer Grid.Row="5" Grid.ColumnSpan="3" ScrollChanged="ScrollViewer_ScrollChanged" PreviewMouseWheel="ScrollViewerContents_PreviewMouseWheel">
+                <ScrollViewer Grid.Row="4" Grid.ColumnSpan="3" ScrollChanged="ScrollViewer_ScrollChanged" PreviewMouseWheel="ScrollViewerContents_PreviewMouseWheel">
                     <ListBox ItemsSource="{Binding StatusMessages}" SelectionMode="Extended">
                         <ListBox.ItemTemplate>
                             <DataTemplate>
@@ -206,9 +203,9 @@
                     </ListBox>
                 </ScrollViewer>
 
-                <GridSplitter Grid.Column="1" Grid.RowSpan="4" Width="5" HorizontalAlignment="Stretch"/>
+                <GridSplitter Grid.Column="1" Grid.RowSpan="3" Width="5" HorizontalAlignment="Stretch"/>
 
-                <Grid Grid.Row="0" Grid.RowSpan="4" Grid.Column="2">
+                <Grid Grid.Row="0" Grid.RowSpan="3" Grid.Column="2">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
