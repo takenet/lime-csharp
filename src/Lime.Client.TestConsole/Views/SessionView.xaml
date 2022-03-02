@@ -31,9 +31,8 @@
             <Grid Margin="10">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
-                    <RowDefinition Height="300*" />
-                    <RowDefinition Height="5" />
-                    <RowDefinition Height="150*" />
+                    <RowDefinition Height="240*" />
+                    <RowDefinition Height="160*" />
                     <RowDefinition Height="5" />
                     <RowDefinition Height="100" />
                 </Grid.RowDefinitions>
@@ -57,7 +56,7 @@
                     </Grid.ColumnDefinitions>
 
                     <Label Grid.Row="0" Content="Host" FontWeight="Bold" />
-                    <TextBox Grid.Row="0" Grid.Column="1" VerticalAlignment="Center" Text="{Binding Host, UpdateSourceTrigger=PropertyChanged}" Grid.ColumnSpan="2" />
+                    <TextBox Grid.Row="0" Grid.Column="1" VerticalAlignment="Center" Text="{Binding Host, UpdateSourceTrigger=PropertyChanged}" Grid.ColumnSpan="2" Margin="0,0,15,0" />
 
                     <StackPanel Grid.Row="1" Grid.Column="0"  Margin="0,5" Orientation="Horizontal" Grid.ColumnSpan="2">
                         <Button Content="_Open" Command="{Binding OpenTransportCommand}" />
@@ -86,7 +85,7 @@
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
 
-                    <ScrollViewer ScrollChanged="ScrollViewer_ScrollChanged" PreviewMouseWheel="ScrollViewer_PreviewMouseWheel">
+                    <ScrollViewer ScrollChanged="ScrollViewer_ScrollChanged" PreviewMouseWheel="ScrollViewerContents_PreviewMouseWheel">
                         <ListBox Name="EnvelopesListBox" ItemsSource="{Binding EnvelopesView}">
                             <ListBox.ItemContainerStyle>
                                 <Style TargetType="ListBoxItem">
@@ -106,9 +105,7 @@
                     </StackPanel>
                 </Grid>
 
-                <GridSplitter Grid.Row="2" Height="5" HorizontalAlignment="Stretch" />
-
-                <Grid Grid.Row="3" Margin="0,5">
+                <Grid Grid.Row="2">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="*" />
                         <RowDefinition Height="Auto" />
@@ -119,11 +116,12 @@
                                        TextWrapping="NoWrap"
                                        VerticalScrollBarVisibility="Auto"
                                        HorizontalScrollBarVisibility="Auto"
-                                       AcceptsReturn="True"
+                                       AcceptsReturn="True" 
                                        AcceptsTab="True"
                                        Name="JsonInput"
                                        Validation.ErrorTemplate="{StaticResource JsonErrorTemplate}"
-                                       Style="{StaticResource jsonErrorStyle}">
+                                       Style="{StaticResource jsonErrorStyle}" Margin="0,0,15,0"
+                                       PreviewMouseWheel="JsonInput_PreviewMouseWheel">
                         <TextBox.Text>
                             <Binding Path="InputJson" UpdateSourceTrigger="PropertyChanged">
                                 <Binding.ValidationRules>
@@ -133,7 +131,7 @@
                         </TextBox.Text>
                     </xctk:WatermarkTextBox>
 
-                    <StackPanel Grid.Row="1" Margin="0,5" Orientation="Horizontal">
+                    <StackPanel Grid.Row="1" Margin="0,18" Orientation="Horizontal">
                         <Button Content="_Indent" ToolTip="Indent the JSON input" Command="{Binding IndentCommand}" />
                         <Button Content="_Validate" ToolTip="Validates the JSON input" Command="{Binding ValidateCommand}">
                             <Button.Style>
@@ -159,19 +157,33 @@
                         </Button>
                         <Button Content="_Parse" ToolTip="Parse the input variables" Command="{Binding ParseCommand}" />
                         <Button Content="_Send" ToolTip="Sends the JSON through the transport" Command="{Binding SendCommand}" CommandParameter="{Binding ElementName=JsonInput,Path=Text}" />
-                        <CheckBox Margin="0,0,5,0" VerticalAlignment="Center" Content="Parse before send" IsChecked="{Binding ParseBeforeSend}" />
-                        <CheckBox Margin="0,0,5,0" VerticalAlignment="Center" Content="Clear after sent" IsChecked="{Binding ClearAfterSent}" />
-                        <CheckBox Margin="0,0,5,0" VerticalAlignment="Center" Content="Send as raw" IsChecked="{Binding SendAsRaw}" IsEnabled="{Binding CanSendAsRaw}" />
-                        <CheckBox Margin="0,0,5,0" VerticalAlignment="Center" Content="Ignore parsing errors" IsChecked="{Binding IgnoreParsingErrors}" />
-                        <CheckBox Margin="0,0,5,0" VerticalAlignment="Center" Content="Repeat" IsChecked="{Binding Repeat}" />
-                        <xctk:IntegerUpDown Margin="0,0,3,0" VerticalAlignment="Center" Minimum="1" Value="{Binding RepeatTimes}" />
-                        <Label Margin="0,0,3,0" Content="times" />
+
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <CheckBox Grid.Row="0" Grid.Column="0" Margin="0,0,5,0" VerticalAlignment="Center" Content="Parse before send" IsChecked="{Binding ParseBeforeSend}" />
+                            <CheckBox Grid.Row="1" Grid.Column="0" Margin="0,0,5,0" VerticalAlignment="Center" Content="Clear after sent" IsChecked="{Binding ClearAfterSent}" />
+                            <CheckBox Grid.Row="0" Grid.Column="1" Margin="0,0,5,0" VerticalAlignment="Center" Content="Send as raw" IsChecked="{Binding SendAsRaw}" IsEnabled="{Binding CanSendAsRaw}" />
+                            <CheckBox Grid.Row="1" Grid.Column="1" Margin="0,0,5,0" VerticalAlignment="Center" Content="Ignore parsing errors" IsChecked="{Binding IgnoreParsingErrors}" />
+                        </Grid>
+
+                        <CheckBox Margin="0,0,5,0" Content="Repeat" IsChecked="{Binding Repeat}" />
+                        <xctk:IntegerUpDown Margin="0,0,0,0" Height="18" VerticalAlignment="Top" Minimum="1" Value="{Binding RepeatTimes}" ToolTip="bra" />
+                        <Label Margin="0,-5,3,0" Content="times" />
+
                     </StackPanel>
                 </Grid>
 
-                <GridSplitter Grid.Row="4" Height="5" HorizontalAlignment="Stretch" />
+                <GridSplitter Grid.Row="3" Height="5" HorizontalAlignment="Stretch" />
 
-                <ScrollViewer Grid.Row="5" Grid.ColumnSpan="3" ScrollChanged="ScrollViewer_ScrollChanged" PreviewMouseWheel="ScrollViewer_PreviewMouseWheel">
+                <ScrollViewer Grid.Row="4" Grid.ColumnSpan="3" ScrollChanged="ScrollViewer_ScrollChanged" PreviewMouseWheel="ScrollViewerContents_PreviewMouseWheel">
                     <ListBox ItemsSource="{Binding StatusMessages}" SelectionMode="Extended">
                         <ListBox.ItemTemplate>
                             <DataTemplate>
@@ -191,11 +203,12 @@
                     </ListBox>
                 </ScrollViewer>
 
-                <GridSplitter Grid.Column="1" Grid.RowSpan="4" Width="5" HorizontalAlignment="Stretch"/>
+                <GridSplitter Grid.Column="1" Grid.RowSpan="3" Width="5" HorizontalAlignment="Stretch"/>
 
-                <Grid Grid.Row="0" Grid.RowSpan="4" Grid.Column="2">
+                <Grid Grid.Row="0" Grid.RowSpan="3" Grid.Column="2">
                     <Grid>
                         <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="200*" />
                             <RowDefinition Height="200*" />
@@ -205,13 +218,16 @@
                         <Grid Grid.Row="0">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
                             </Grid.RowDefinitions>
 
-                            <Label Grid.Row="0" Content="Variable Profiles" FontWeight="Bold" />
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
 
-                            <ComboBox Grid.Row="1" ItemsSource="{Binding ProfilesView}" SelectedItem="{Binding SelectedProfile, Mode=TwoWay}" SelectedIndex="{Binding SelectedProfileIndex}" IsTextSearchEnabled="True">
+                            <Label Grid.Row="0" Grid.Column="0" Content="Variable Profiles" FontWeight="Bold" />
+
+                            <ComboBox Grid.Row="0" Grid.Column="1" ItemsSource="{Binding ProfilesView}" SelectedItem="{Binding SelectedProfile, Mode=TwoWay}" SelectedIndex="{Binding SelectedProfileIndex}" IsTextSearchEnabled="True">
                                 <i:Interaction.Triggers>
                                     <i:EventTrigger EventName="SelectionChanged">
                                         <i:InvokeCommandAction Command="{Binding LoadProfileCommand}"></i:InvokeCommandAction>
@@ -224,15 +240,24 @@
                                 </ComboBox.ItemTemplate>
                             </ComboBox>
 
-                            <StackPanel Grid.Row="2" Margin="0,5,0,0" Orientation="Horizontal" HorizontalAlignment="Right">
-                                <xctk:WatermarkTextBox Text="{Binding ProfileName, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,5,0" MinWidth="125" Watermark="Profile name"></xctk:WatermarkTextBox>
-                                <Button Content="Delete Profile" Command="{Binding DeleteElementProfileCommand}" />
-                                <Button Content="Save Profile" Command="{Binding SaveProfileCommand}" />
-                            </StackPanel>
+
 
                         </Grid>
 
-                        <Grid Grid.Row="1">
+                        <Grid Grid.Row="1" HorizontalAlignment="Right">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"></ColumnDefinition>
+                                <ColumnDefinition Width="*"></ColumnDefinition>
+                                <ColumnDefinition Width="*"></ColumnDefinition>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Margin="0,5,0,0" Orientation="Horizontal" HorizontalAlignment="Stretch">
+                                <xctk:WatermarkTextBox MinWidth="128" Grid.Column="0" Text="{Binding ProfileName, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,5,0" Watermark="Profile name"></xctk:WatermarkTextBox>
+                                <Button Grid.Column="1" Content="Delete Profile" Command="{Binding DeleteElementProfileCommand}" />
+                                <Button Grid.Column="2" Content="Save Profile" Command="{Binding SaveProfileCommand}" Margin="0,0,0,0" />
+                            </StackPanel>
+                        </Grid>
+
+                        <Grid Grid.Row="2">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="*" />
@@ -249,7 +274,7 @@
                             </ScrollViewer>
                         </Grid>
 
-                        <Grid Grid.Row="2">
+                        <Grid Grid.Row="3">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="Auto" />
@@ -287,7 +312,7 @@
                             </StackPanel>
                         </Grid>
 
-                        <Grid Grid.Row="3">
+                        <Grid Grid.Row="4">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="*" />
