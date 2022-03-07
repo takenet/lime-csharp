@@ -2227,6 +2227,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 
             // Assert
             var actualMessage = actual.ShouldBeOfType<Message>();
+            actualMessage.Type.ShouldBe(WebLink.MediaType);
             var jsonDocument = actualMessage.Content.ShouldBeOfType<JsonDocument>();
             jsonDocument["uri"].ShouldNotBeNull();
             var uri = jsonDocument["uri"].ShouldBeOfType<Dictionary<string, object>>();
@@ -2236,6 +2237,30 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             jsonDocument["previewType"].ShouldNotBeNull();
             jsonDocument["previewType"].ToString().ShouldBe("image/jpeg");
             jsonDocument["text"].ShouldBe("b9s38pra6s7w7b4w1jca6lzf9zp8927ciy4lwdsa3y1gc2ekiw");
+        }
+
+        [Test]
+        [Category("Deserialize")]
+        public void Deserialize_InvalidMedialinkMessage_ReturnsJsonDocument()
+        {
+            // Arrange
+            var json =
+                $"{{ \"id\": \"messageId\", \"type\": \"application/vnd.lime.media-link+json\", \"content\": {{ \"type\": \"image/\", \"uri\": \"http://e0x0rkuaof.com:9288/\" }} }}";
+
+            var target = GetTarget();
+
+            // Act
+            var actual = target.Deserialize(json);
+
+            // Assert
+            var actualMessage = actual.ShouldBeOfType<Message>();
+            actualMessage.Id.ShouldBe("messageId");
+            actualMessage.Type.ShouldBe(MediaLink.MediaType);
+            var jsonDocument = actualMessage.Content.ShouldBeOfType<JsonDocument>();
+            jsonDocument["uri"].ShouldNotBeNull();
+            jsonDocument["uri"].ShouldBe("http://e0x0rkuaof.com:9288/");
+            jsonDocument["type"].ShouldNotBeNull();
+            jsonDocument["type"].ToString().ShouldBe("image/");
         }
 
         [Test]
