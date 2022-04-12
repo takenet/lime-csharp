@@ -1,8 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
-
+    <TargetFrameworks>netcoreapp3.1;net6.0</TargetFrameworks>
     <IsPackable>false</IsPackable>
   </PropertyGroup>
 
@@ -15,10 +14,10 @@
   </ItemGroup>
 
   <ItemGroup>
-      <ProjectReference Include="..\Lime.Protocol\Lime.Protocol.csproj" />
-      <ProjectReference Include="..\Lime.Transport.Tcp\Lime.Transport.Tcp.csproj" />
-      <ProjectReference Include="..\Lime.Transport.SignalR\Lime.Transport.SignalR.csproj" />
-      <ProjectReference Include="..\Lime.Protocol.UnitTests.Common\Lime.Protocol.UnitTests.Common.csproj" />
+    <ProjectReference Include="..\Lime.Protocol\Lime.Protocol.csproj" />
+    <ProjectReference Include="..\Lime.Transport.Tcp\Lime.Transport.Tcp.csproj" />
+    <ProjectReference Include="..\Lime.Transport.SignalR\Lime.Transport.SignalR.csproj" />
+    <ProjectReference Include="..\Lime.Protocol.UnitTests.Common\Lime.Protocol.UnitTests.Common.csproj" />
   </ItemGroup>
 
 </Project>
