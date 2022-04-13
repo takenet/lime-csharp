@@ -15,39 +15,39 @@ namespace Lime.Transport.WebSocket
     public class ClientWebSocketTransport : WebSocketTransport, ITransport
     {
         public ClientWebSocketTransport(
-            IEnvelopeSerializer envelopeSerializer, 
-            ITraceWriter traceWriter = null, 
+            IEnvelopeSerializer envelopeSerializer,
+            ITraceWriter traceWriter = null,
             int bufferSize = DEFAULT_BUFFER_SIZE,
             WebSocketMessageType webSocketMessageType = WebSocketMessageType.Text,
             ClientWebSocket webSocket = null,
             ArrayPool<byte> arrayPool = null,
-            bool closeGracefully = true, 
-            X509CertificateCollection clientCertificates = null, 
-            RemoteCertificateValidationCallback serverCertificateValidationCallback = null) 
+            bool closeGracefully = true,
+            X509CertificateCollection clientCertificates = null,
+            RemoteCertificateValidationCallback serverCertificateValidationCallback = null)
             : base(
-                webSocket ?? new ClientWebSocket(), 
-                envelopeSerializer, 
-                traceWriter, 
-                bufferSize, 
-                webSocketMessageType, 
-                arrayPool, 
+                webSocket ?? new ClientWebSocket(),
+                envelopeSerializer,
+                traceWriter,
+                bufferSize,
+                webSocketMessageType,
+                arrayPool,
                 closeGracefully)
         {
             if (clientCertificates != null)
             {
-                ((ClientWebSocket) WebSocket).Options.ClientCertificates = clientCertificates;
+                ((ClientWebSocket)WebSocket).Options.ClientCertificates = clientCertificates;
             }
 
             if (serverCertificateValidationCallback != null)
             {
-                ((ClientWebSocket) WebSocket).Options.RemoteCertificateValidationCallback =
+                ((ClientWebSocket)WebSocket).Options.RemoteCertificateValidationCallback =
                     serverCertificateValidationCallback;
             }
-        }        
+        }
 
         protected override async Task PerformOpenAsync(Uri uri, CancellationToken cancellationToken)
         {
-            var clientWebSocket = ((ClientWebSocket) WebSocket);
+            var clientWebSocket = ((ClientWebSocket)WebSocket);
             clientWebSocket.Options.AddSubProtocol(LimeUri.LIME_URI_SCHEME);
             await clientWebSocket.ConnectAsync(uri, cancellationToken).ConfigureAwait(false);
         }
@@ -63,11 +63,18 @@ namespace Lime.Transport.WebSocket
                 }
                 catch
                 {
-                    return base.LocalEndPoint;
+                    try
+                    {
+                        return WebSocket.AsDynamic()._innerWebSocket?.WebSocket?._stream?._connection?._socket?.LocalEndPoint?.ToString();
+                    }
+                    catch
+                    {
+                        return base.LocalEndPoint;
+                    }
                 }
             }
         }
-        
+
         public override string RemoteEndPoint
         {
             get
@@ -78,7 +85,14 @@ namespace Lime.Transport.WebSocket
                 }
                 catch
                 {
-                    return base.RemoteEndPoint;
+                    try
+                    {
+                        return WebSocket.AsDynamic()._innerWebSocket?.WebSocket?._stream?._connection?._socket?.RemoteEndPoint?.ToString();
+                    }
+                    catch
+                    {
+                        return base.RemoteEndPoint;
+                    }
                 }
             }
         }
