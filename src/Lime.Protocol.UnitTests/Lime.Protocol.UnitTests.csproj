@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.0</TargetFramework>
+    <TargetFrameworks>netcoreapp3.1;net6.0</TargetFrameworks>
     <AssemblyName>Lime.Protocol.UnitTests</AssemblyName>
     <PackageId>Lime.Protocol.UnitTests</PackageId>
     <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>

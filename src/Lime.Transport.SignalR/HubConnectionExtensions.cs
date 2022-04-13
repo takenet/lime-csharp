@@ -17,8 +17,13 @@ namespace Lime.Transport.SignalR
             var transportName = ((object)transport).GetType().Name;
             if (transportName.Contains("WebSocket", StringComparison.InvariantCulture))
                 return null;
-
+#if NET6_0
+            // For .net 6
+            return (Socket)transport?._webSocket?._innerWebSocket?.WebSocket?._stream?._connection?._socket;
+#else
+            // For .net 3.1
             return (Socket)transport?._webSocket?._innerWebSocket?._webSocket?._stream?._connection?._socket;
+#endif
         }
 
         public static EndPoint GetRemoteEndpoint(this HubConnection hubConnection)

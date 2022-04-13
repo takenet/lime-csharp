@@ -32,12 +32,12 @@ namespace Lime.Transport.AspNetCore.Middlewares
                 .Where(e => e.Transport == TransportType.Tcp)
                 .ToDictionary(e => e.EndPoint.Port, e => e);
         }
-        
+
         public override async Task OnConnectedAsync(ConnectionContext connection)
         {
             var tcpClient = new TcpClientAdapter(connection);
 
-            if (!_portEndPoints.TryGetValue(((IPEndPoint) connection.LocalEndPoint).Port, out var transportEndPoint))
+            if (connection.LocalEndPoint == null || !_portEndPoints.TryGetValue(((IPEndPoint)connection.LocalEndPoint).Port, out var transportEndPoint))
             {
                 // This should never occur, but handling anyway.
                 await connection.DisposeAsync();
@@ -46,7 +46,7 @@ namespace Lime.Transport.AspNetCore.Middlewares
 
             using var transport = new TcpTransport(tcpClient, _envelopeSerializer, transportEndPoint.ServerCertificate);
             await transport.OpenAsync(null, default);
-            
+
             try
             {
                 await _listener.ListenAsync(transport, connection.ConnectionClosed);
