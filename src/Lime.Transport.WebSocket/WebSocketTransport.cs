@@ -72,10 +72,10 @@ namespace Lime.Transport.WebSocket
             {
                 await _traceWriter.TraceAsync(serializedEnvelope, DataOperation.Send).ConfigureAwait(false);
             }
-            
+
             var buffer = _arrayPool.Rent(Encoding.UTF8.GetByteCount(serializedEnvelope));
             var length = Encoding.UTF8.GetBytes(serializedEnvelope, 0, serializedEnvelope.Length, buffer, 0);
-            
+
             try
             {
                 EnsureOpen("send");
@@ -105,7 +105,7 @@ namespace Lime.Transport.WebSocket
             EnsureOpen("receive");
 
             var segments = new List<BufferSegment>();
-            
+
             try
             {
                 EnsureOpen("receive");
@@ -239,7 +239,7 @@ namespace Lime.Transport.WebSocket
                         }
                     }
                 }
-                
+
                 _sendReceiveCts.CancelIfNotRequested();
             }
             finally
@@ -257,20 +257,11 @@ namespace Lime.Transport.WebSocket
             {
                 try
                 {
-                    try
-                    {
-                        // net core
-                        return WebSocket.AsDynamic()._innerStream?._context?.Request?.LocalEndPoint?.ToString();
-                    }
-                    catch
-                    {
-                        // net framework
-                        return WebSocket.AsDynamic()._stream?.Socket?.LocalEndPoint?.ToString();
-                    }
+                    return WebSocket.AsDynamic()._innerStream?._context?.Request?.LocalEndPoint?.ToString();
                 }
                 catch
                 {
-                    return base.LocalEndPoint;                    
+                    return base.LocalEndPoint;
                 }
             }
         }
@@ -281,21 +272,12 @@ namespace Lime.Transport.WebSocket
             {
                 try
                 {
-                    try
-                    {
-                        // net core
-                        return WebSocket.AsDynamic()._innerStream?._context?.Request?.RemoteEndPoint?.ToString();
-                    }
-                    catch
-                    {
-                        // net framework
-                        return WebSocket.AsDynamic()._stream?.Socket?.RemoteEndPoint?.ToString();
-                    }
+                    return WebSocket.AsDynamic()._innerStream?._context?.Request?.RemoteEndPoint?.ToString();
                 }
                 catch
                 {
-                    return base.RemoteEndPoint;                    
-                }                
+                    return base.RemoteEndPoint;
+                }
             }
         }
 

@@ -66,14 +66,7 @@ namespace Lime.Transport.WebSocket
                 }
                 catch
                 {
-                    try
-                    {
-                        return WebSocket.AsDynamic()._innerWebSocket?._webSocket?._stream?._connection?._socket?.LocalEndPoint?.ToString();
-                    }
-                    catch
-                    {
-                        return base.LocalEndPoint;
-                    }
+                    return WebSocket.AsDynamic()._innerWebSocket?._webSocket?._stream?._connection?._socket?.LocalEndPoint?.ToString();
                 }
             }
         }
@@ -88,14 +81,7 @@ namespace Lime.Transport.WebSocket
                 }
                 catch
                 {
-                    try
-                    {
-                        return WebSocket.AsDynamic()._innerWebSocket?._webSocket?._stream?._connection?._socket?.RemoteEndPoint?.ToString();
-                    }
-                    catch
-                    {
-                        return base.RemoteEndPoint;
-                    }
+                    return WebSocket.AsDynamic()._innerWebSocket?._webSocket?._stream?._connection?._socket?.RemoteEndPoint?.ToString();
                 }
             }
         }
