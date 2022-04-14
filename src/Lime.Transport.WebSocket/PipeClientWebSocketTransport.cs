@@ -62,13 +62,13 @@ namespace Lime.Transport.WebSocket
             {
                 try
                 {
-                    return WebSocket.AsDynamic()._innerWebSocket?._webSocket?._stream?._connection?._socket?.LocalEndPoint?.ToString();
+                    return WebSocket.AsDynamic()._innerWebSocket?.WebSocket?._stream?._connection?._socket?.LocalEndPoint?.ToString();
                 }
                 catch
                 {
                     try
                     {
-                        return WebSocket.AsDynamic()._innerWebSocket?.WebSocket?._stream?._connection?._socket?.LocalEndPoint?.ToString();
+                        return WebSocket.AsDynamic()._innerWebSocket?._webSocket?._stream?._connection?._socket?.LocalEndPoint?.ToString();
                     }
                     catch
                     {
@@ -84,13 +84,13 @@ namespace Lime.Transport.WebSocket
             {
                 try
                 {
-                    return WebSocket.AsDynamic()._innerWebSocket?._webSocket?._stream?._connection?._socket?.RemoteEndPoint?.ToString();
+                    return WebSocket.AsDynamic()._innerWebSocket?.WebSocket?._stream?._connection?._socket?.RemoteEndPoint?.ToString();
                 }
                 catch
                 {
                     try
                     {
-                        return WebSocket.AsDynamic()._innerWebSocket?.WebSocket?._stream?._connection?._socket?.RemoteEndPoint?.ToString();
+                        return WebSocket.AsDynamic()._innerWebSocket?._webSocket?._stream?._connection?._socket?.RemoteEndPoint?.ToString();
                     }
                     catch
                     {
