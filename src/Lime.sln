@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.29806.167
+# Visual Studio Version 17
+VisualStudioVersion = 17.1.32328.378
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Samples", "Samples", "{967A83B8-5E7F-47F1-91A0-B4415587E783}"
 EndProject
@@ -47,15 +47,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lime.Benchmarks", "Lime.Ben
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lime.Cli", "Lime.Cli\Lime.Cli.csproj", "{F9B4105D-788D-4235-A9E8-3C682E548014}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lime.Transport.SignalR", "Lime.Transport.SignalR\Lime.Transport.SignalR.csproj", "{81E6B240-5345-421F-9C14-B4A6DC4634CD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lime.Transport.AspNetCore", "Lime.Transport.AspNetCore\Lime.Transport.AspNetCore.csproj", "{B8EF5505-3374-410C-A094-B2A77B5E1E82}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lime.Transport.SignalR.UnitTests", "Lime.Transport.SignalR.UnitTests\Lime.Transport.SignalR.UnitTests.csproj", "{4CF51843-B658-4593-BF3C-655D7BA549B6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lime.Sample.AspNetCore", "Lime.Sample.AspNetCore\Lime.Sample.AspNetCore.csproj", "{BD1D0A53-CDB7-4562-A00A-4A5FAA96E617}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lime.Transport.AspNetCore", "Lime.Transport.AspNetCore\Lime.Transport.AspNetCore.csproj", "{B8EF5505-3374-410C-A094-B2A77B5E1E82}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lime.Sample.AspNetCore", "Lime.Sample.AspNetCore\Lime.Sample.AspNetCore.csproj", "{BD1D0A53-CDB7-4562-A00A-4A5FAA96E617}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lime.Transport.AspNetCore.UnitTests", "Lime.Transport.AspNetCore.UnitTests\Lime.Transport.AspNetCore.UnitTests.csproj", "{7ADDF49E-4B31-4E80-81E3-CB8D6E1C90EC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lime.Transport.AspNetCore.UnitTests", "Lime.Transport.AspNetCore.UnitTests\Lime.Transport.AspNetCore.UnitTests.csproj", "{7ADDF49E-4B31-4E80-81E3-CB8D6E1C90EC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -127,14 +123,6 @@ Global
 		{F9B4105D-788D-4235-A9E8-3C682E548014}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F9B4105D-788D-4235-A9E8-3C682E548014}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F9B4105D-788D-4235-A9E8-3C682E548014}.Release|Any CPU.Build.0 = Release|Any CPU
-		{81E6B240-5345-421F-9C14-B4A6DC4634CD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{81E6B240-5345-421F-9C14-B4A6DC4634CD}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{81E6B240-5345-421F-9C14-B4A6DC4634CD}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{81E6B240-5345-421F-9C14-B4A6DC4634CD}.Release|Any CPU.Build.0 = Release|Any CPU
-		{4CF51843-B658-4593-BF3C-655D7BA549B6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{4CF51843-B658-4593-BF3C-655D7BA549B6}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{4CF51843-B658-4593-BF3C-655D7BA549B6}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{4CF51843-B658-4593-BF3C-655D7BA549B6}.Release|Any CPU.Build.0 = Release|Any CPU
 		{B8EF5505-3374-410C-A094-B2A77B5E1E82}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{B8EF5505-3374-410C-A094-B2A77B5E1E82}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B8EF5505-3374-410C-A094-B2A77B5E1E82}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -160,8 +148,6 @@ Global
 		{355EE108-16FD-4846-AF5F-B633063BF9E9} = {215CAFFF-E0B2-4107-86B4-DFB767339781}
 		{4C50C2D2-4CAB-4FAA-96D6-DE412D2817DA} = {215CAFFF-E0B2-4107-86B4-DFB767339781}
 		{FA70C038-FADD-4C79-BC43-61492D667E98} = {215CAFFF-E0B2-4107-86B4-DFB767339781}
-		{81E6B240-5345-421F-9C14-B4A6DC4634CD} = {215CAFFF-E0B2-4107-86B4-DFB767339781}
-		{4CF51843-B658-4593-BF3C-655D7BA549B6} = {215CAFFF-E0B2-4107-86B4-DFB767339781}
 		{B8EF5505-3374-410C-A094-B2A77B5E1E82} = {215CAFFF-E0B2-4107-86B4-DFB767339781}
 		{BD1D0A53-CDB7-4562-A00A-4A5FAA96E617} = {967A83B8-5E7F-47F1-91A0-B4415587E783}
 		{7ADDF49E-4B31-4E80-81E3-CB8D6E1C90EC} = {215CAFFF-E0B2-4107-86B4-DFB767339781}

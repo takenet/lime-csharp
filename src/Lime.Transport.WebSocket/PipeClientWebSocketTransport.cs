@@ -24,9 +24,9 @@ namespace Lime.Transport.WebSocket
             ClientWebSocket webSocket = null,
             bool closeGracefully = true,
             int pauseWriterThreshold = EnvelopePipe.DEFAULT_PAUSE_WRITER_THRESHOLD,
-            MemoryPool<byte> memoryPool = null, 
-            X509CertificateCollection clientCertificates = null, 
-            RemoteCertificateValidationCallback serverCertificateValidationCallback = null) 
+            MemoryPool<byte> memoryPool = null,
+            X509CertificateCollection clientCertificates = null,
+            RemoteCertificateValidationCallback serverCertificateValidationCallback = null)
             : base(
                 webSocket ?? new ClientWebSocket(),
                 envelopeSerializer,
@@ -38,50 +38,50 @@ namespace Lime.Transport.WebSocket
         {
             if (clientCertificates != null)
             {
-                ((ClientWebSocket) WebSocket).Options.ClientCertificates = clientCertificates;
+                ((ClientWebSocket)WebSocket).Options.ClientCertificates = clientCertificates;
             }
 
             if (serverCertificateValidationCallback != null)
             {
-                ((ClientWebSocket) WebSocket).Options.RemoteCertificateValidationCallback =
+                ((ClientWebSocket)WebSocket).Options.RemoteCertificateValidationCallback =
                     serverCertificateValidationCallback;
             }
         }
 
         protected override async Task PerformOpenAsync(Uri uri, CancellationToken cancellationToken)
         {
-            var clientWebSocket = ((ClientWebSocket) WebSocket);
+            var clientWebSocket = ((ClientWebSocket)WebSocket);
             clientWebSocket.Options.AddSubProtocol(LimeUri.LIME_URI_SCHEME);
             await clientWebSocket.ConnectAsync(uri, cancellationToken).ConfigureAwait(false);
             await base.PerformOpenAsync(uri, cancellationToken);
         }
-        
+
         public override string LocalEndPoint
         {
             get
             {
                 try
                 {
-                    return WebSocket.AsDynamic()._innerWebSocket?._webSocket?._stream?._connection?._socket?.LocalEndPoint?.ToString();
+                    return WebSocket.AsDynamic()._innerWebSocket?.WebSocket?._stream?._connection?._socket?.LocalEndPoint?.ToString();
                 }
                 catch
                 {
-                    return base.LocalEndPoint;
+                    return WebSocket.AsDynamic()._innerWebSocket?._webSocket?._stream?._connection?._socket?.LocalEndPoint?.ToString();
                 }
             }
         }
-        
+
         public override string RemoteEndPoint
         {
             get
             {
                 try
                 {
-                    return WebSocket.AsDynamic()._innerWebSocket?._webSocket?._stream?._connection?._socket?.RemoteEndPoint?.ToString();
+                    return WebSocket.AsDynamic()._innerWebSocket?.WebSocket?._stream?._connection?._socket?.RemoteEndPoint?.ToString();
                 }
                 catch
                 {
-                    return base.RemoteEndPoint;
+                    return WebSocket.AsDynamic()._innerWebSocket?._webSocket?._stream?._connection?._socket?.RemoteEndPoint?.ToString();
                 }
             }
         }
