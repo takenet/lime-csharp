@@ -5,7 +5,7 @@
     <Copyright>Copyright � 2014 Curupira S/A</Copyright>
     <AssemblyTitle>Lime.Messaging</AssemblyTitle>
     <Authors>takenet;andrebires</Authors>
-    <TargetFrameworks>netstandard2.0;netstandard2.1;net461</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;net461</TargetFrameworks>
     <AssemblyName>Lime.Messaging</AssemblyName>
     <PackageId>Lime.Messaging</PackageId>
     <PackageTags>lime</PackageTags>
