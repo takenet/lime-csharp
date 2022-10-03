@@ -85,7 +85,7 @@ namespace Lime.Messaging.Resources
         /// Indicates the last change date in any contact field.
         /// </summary>
         [DataMember(Name = LAST_UPDATE_DATE)]
-        public DateTimeOffset? LastUpdateDate { get; set; }
+        public DateTime? LastUpdateDate { get; set; }
 
         [IgnoreDataMember]
         string IIdentity.Name => Identity?.Name;
