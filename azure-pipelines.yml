@@ -22,7 +22,7 @@ extends:
   template: template-pipeline.yml@templates    
   parameters:   
     restoreSolution: false
-    buildConfiguration: --test123
+    buildConfiguration: "--test123"
     solution: "src/Lime.sln"
     skipSonarBranch: true
     packagename: lime-csharp    
