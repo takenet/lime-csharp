@@ -27,10 +27,7 @@ extends:
     nugetServiceConnection: Nuget.org Take  
     includeSymbols: true
     testParameters: --configuration Release --no-build
-    testProjects: 
-    - 'src/Lime.Protocol/Lime.Protocol.csproj'
-    - 'src/Lime.Transport.Tcp.UnitTests/Lime.Transport.Tcp.UnitTests.csproj'
-    - 'src/Lime.Transport.WebSocket.UnitTests/Lime.Transport.WebSocket.UnitTests.csproj'
+    testProjects: 'src/Lime.Protocol/Lime.Protocol.csproj'
     csprojToPack:
     - 'Lime.Protocol.csproj'
     - 'Lime.Messaging.csproj'
