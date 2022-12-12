@@ -8,7 +8,7 @@ pool:
   vmImage: 'windows-latest'
 
 variables:
- SkipDecorator: true
+ skipDecorator: true
 
 resources:
   repositories:   
