@@ -21,7 +21,7 @@ resources:
 extends:
   template: template-pipeline.yml@templates    
   parameters:   
-    solution: src/Lime.sln
+    solution: 'src/Lime.sln'
     skipSonarBranch: true
     packagename: lime-csharp    
     type: dotnet
