@@ -8,15 +8,14 @@ pool:
   vmImage: 'windows-latest'
 
 variables:
-- name: SkipDecorator
-  value: true 
+ SkipDecorator: false
 
 resources:
   repositories:   
   - repository: templates
     type: git
     name: Operações/template-take-blip
-    ref: refs/tags/v1.3.11
+    ref: refs/tags/v1.4.19
 
 extends:
   template: template-pipeline.yml@templates    
@@ -28,3 +27,11 @@ extends:
     includeSymbols: true
     testParameters: --configuration Release --no-build
     testProjects: 'src/Lime.Protocol/Lime.Protocol.csproj'
+    csprojToPack:
+    - 'Lime.Protocol.csproj'
+    - 'Lime.Messaging.csproj'
+    - 'Lime.Transport.Tcp.csproj'
+    - 'Lime.Transport.Redis.csproj'
+    - 'Lime.Transport.WebSocket.csproj'
+    - 'Lime.Transport.AspNetCore.csproj'
+    - 'Lime.Transport.AspNetCore.csproj'
