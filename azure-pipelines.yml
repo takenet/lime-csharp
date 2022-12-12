@@ -8,14 +8,15 @@ pool:
   vmImage: 'windows-latest'
 
 variables:
- skipDecorator: true
+- name: SkipDecorator
+  value: true 
 
 resources:
   repositories:   
   - repository: templates
     type: git
     name: Operações/template-take-blip
-    ref: refs/tags/v1.4.19
+    ref: refs/tags/v1.4.3
 
 extends:
   template: template-pipeline.yml@templates    
