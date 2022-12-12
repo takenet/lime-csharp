@@ -19,13 +19,11 @@ resources:
     ref: refs/tags/v1.4.19
 
 extends:
-  template: template-pipeline.yml@templates    
+  template: template-pipeline.yml@templates
   parameters:   
-    restoreSolution: false
-    buildConfiguration: "--test123"
     solution: "src/Lime.sln"
     skipSonarBranch: true
-    packagename: lime-csharp    
+    packagename: lime-csharp
     type: dotnet
     to: nuget
     nugetServiceConnection: Nuget.org Take  
