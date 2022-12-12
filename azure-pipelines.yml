@@ -8,8 +8,8 @@ pool:
   vmImage: 'windows-latest'
 
 variables:
-- name: SkipDecorator
-  value: true 
+ skipDecorator: true
+ skipSonarBranch: true
 
 resources:
   repositories:   
