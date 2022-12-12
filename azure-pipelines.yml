@@ -27,5 +27,3 @@ extends:
     to: nuget
     nugetServiceConnection: Nuget.org Take
     includeSymbols: true
-
-  
