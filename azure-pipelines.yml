@@ -1,0 +1,41 @@
+trigger:
+- master
+- main
+- beta/*
+
+name: 0.10$(Rev:.r)
+pool:
+  vmImage: 'windows-latest'
+
+variables:
+- name: SkipDecorator
+  value: true 
+
+resources:
+  repositories:   
+  - repository: templates
+    type: git
+    name: Operações/template-take-blip
+    ref: refs/tags/v1.4.19
+
+extends:
+  template: template-pipeline.yml@templates    
+  parameters:    
+    packagename: lime-csharp    
+    type: dotnet
+    to: nuget
+    nugetServiceConnection: Nuget.org Take  
+    includeSymbols: true
+    testParameters: --configuration Release --no-build
+    testProjects: 
+    - 'src/Lime.Protocol/Lime.Protocol.csproj'
+    - 'src/Lime.Transport.Tcp.UnitTests/Lime.Transport.Tcp.UnitTests.csproj'
+    - 'src/Lime.Transport.WebSocket.UnitTests/Lime.Transport.WebSocket.UnitTests.csproj'
+    csprojToPack:
+    - 'Lime.Protocol.csproj'
+    - 'Lime.Messaging.csproj'
+    - 'Lime.Transport.Tcp.csproj'
+    - 'Lime.Transport.Redis.csproj'
+    - 'Lime.Transport.WebSocket.csproj'
+    - 'Lime.Transport.AspNetCore.csproj'
+    - 'Lime.Transport.AspNetCore.csproj'
