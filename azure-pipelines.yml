@@ -9,7 +9,7 @@ pool:
 
 variables:
     skipDecorator: true
-    skipSonarBranch: true
+
 
 resources:
   repositories:   
@@ -20,7 +20,8 @@ resources:
 
 extends:
   template: template-pipeline.yml@templates    
-  parameters:    
+  parameters:   
+    skipSonarBranch: true
     packagename: lime-csharp    
     type: dotnet
     to: nuget
