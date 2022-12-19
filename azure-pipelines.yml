@@ -5,9 +5,6 @@ trigger:
 
 name: 0.12$(Rev:.r)
 
-#pool:
-#  vmImage: ubuntu-latest
-
 variables:
     skipDecorator: true
     framework: dotnet
@@ -36,8 +33,6 @@ extends:
     - 'Lime.Transport.Redis.csproj'
     - 'Lime.Transport.WebSocket.csproj'
     - 'Lime.Transport.AspNetCore.csproj'
-    #testPermission: true
-    #testParameters: --configuration Release --no-build
     testProjects: |
      src/Lime.Protocol.UnitTests/Lime.Protocol.UnitTests.csproj
      src/Lime.Transport.Tcp.UnitTests/Lime.Transport.Tcp.UnitTests.csproj
