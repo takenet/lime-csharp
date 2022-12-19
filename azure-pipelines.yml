@@ -14,7 +14,8 @@ resources:
   - repository: templates
     type: git
     name: Operações/template-take-blip
-    ref: feature/393524-add-solution-parameter
+    #ref: feature/393524-add-solution-parameter
+    ref: feature/393524-add-timezone-settings
 
 extends:
   template: template-pipeline.yml@templates
