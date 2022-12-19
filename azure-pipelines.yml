@@ -5,7 +5,7 @@ trigger:
 
 name: 0.12$(Rev:.r)
 pool:
-  vmImage: 'windows-latest'
+  vmImage: 'ubuntu-latest'
   
 variables:
     skipDecorator: true
