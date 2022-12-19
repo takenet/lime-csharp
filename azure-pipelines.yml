@@ -4,7 +4,9 @@ trigger:
 - beta/*
 
 name: 0.12$(Rev:.r)
-
+pool:
+  vmImage: 'windows-latest'
+  
 variables:
     skipDecorator: true
     framework: dotnet
