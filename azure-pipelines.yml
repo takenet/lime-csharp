@@ -27,13 +27,13 @@ extends:
     nugetServiceConnection: Nuget.org Take
     includeSymbols: true
     csprojToPack:
-    - 'Lime.Protocol.csproj'
-    - 'Lime.Messaging.csproj'
-    - 'Lime.Transport.Tcp.csproj'
-    - 'Lime.Transport.Redis.csproj'
-    - 'Lime.Transport.WebSocket.csproj'
-    - 'Lime.Transport.AspNetCore.csproj'
+    - "Lime.Protocol.csproj"
+    - "Lime.Messaging.csproj"
+    - "Lime.Transport.Tcp.csproj"
+    - "Lime.Transport.Redis.csproj"
+    - "Lime.Transport.WebSocket.csproj"
+    - "Lime.Transport.AspNetCore.csproj"
     testProjects: |
-     src/Lime.Protocol.UnitTests/Lime.Protocol.UnitTests.csproj
-     src/Lime.Transport.Tcp.UnitTests/Lime.Transport.Tcp.UnitTests.csproj
-     src/Lime.Transport.WebSocket.UnitTests/Lime.Transport.WebSocket.UnitTests.csproj
+     "src/Lime.Protocol.UnitTests/Lime.Protocol.UnitTests.csproj"
+     "src/Lime.Transport.Tcp.UnitTests/Lime.Transport.Tcp.UnitTests.csproj"
+     "src/Lime.Transport.WebSocket.UnitTests/Lime.Transport.WebSocket.UnitTests.csproj"
