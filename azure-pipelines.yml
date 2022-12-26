@@ -34,6 +34,6 @@ extends:
     - "Lime.Transport.WebSocket.csproj"
     - "Lime.Transport.AspNetCore.csproj"
     testProjects: |
-     "src/Lime.Protocol.UnitTests/Lime.Protocol.UnitTests.csproj"
-     "src/Lime.Transport.Tcp.UnitTests/Lime.Transport.Tcp.UnitTests.csproj"
-     "src/Lime.Transport.WebSocket.UnitTests/Lime.Transport.WebSocket.UnitTests.csproj"
+     src/Lime.Protocol.UnitTests/Lime.Protocol.UnitTests.csproj
+     src/Lime.Transport.Tcp.UnitTests/Lime.Transport.Tcp.UnitTests.csproj
+     src/Lime.Transport.WebSocket.UnitTests/Lime.Transport.WebSocket.UnitTests.csproj
