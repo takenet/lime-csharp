@@ -1,10 +1,8 @@
-﻿using Lime.Protocol.Security;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Lime.Protocol.Security;
+using Lime.Protocol.Tracing;
 
 namespace Lime.Protocol.Client
 {
@@ -29,6 +27,8 @@ namespace Lime.Protocol.Client
             if (authenticator == null) throw new ArgumentNullException(nameof(authenticator));
 
             var receivedSession = await channel.StartNewSessionAsync(cancellationToken).ConfigureAwait(false);
+
+            using var _ = receivedSession.Metadata?.StartActivity("Client.Channel.EstablishSession");
 
             // Session negotiation
             if (receivedSession.State == SessionState.Negotiating)
