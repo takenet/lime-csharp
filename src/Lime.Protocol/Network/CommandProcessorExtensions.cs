@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
+using Lime.Protocol.Tracing;
 
 namespace Lime.Protocol.Network
 {
@@ -21,18 +23,22 @@ namespace Lime.Protocol.Network
             IDictionary<string, string> metadata = null)
         {
             if (uri == null) throw new ArgumentNullException(nameof(uri));
-            
+
+            var command = new Command()
+            {
+                From = from,
+                To = to,
+                Pp = pp,
+                Method = method,
+                Uri = uri,
+                Metadata = metadata
+            };
+
+            Activity.Current?.InjectTraceParentIfAbsent(command);
+
             return ProcessCommandOrThrowAsync(
                 channel,
-                new Command()
-                {
-                    From = from,
-                    To = to,
-                    Pp = pp,
-                    Method = method,
-                    Uri = uri,
-                    Metadata = metadata
-                },
+                command,
                 cancellationToken);
         }
         
@@ -53,19 +59,23 @@ namespace Lime.Protocol.Network
         {
             if (uri == null) throw new ArgumentNullException(nameof(uri));
             if (resource == null) throw new ArgumentNullException(nameof(resource));
-            
+
+            var command = new Command()
+            {
+                From = from,
+                To = to,
+                Pp = pp,
+                Method = method,
+                Uri = uri,
+                Resource = resource,
+                Metadata = metadata
+            };
+
+            Activity.Current?.InjectTraceParentIfAbsent(command);
+
             return ProcessCommandOrThrowAsync(
                 channel,
-                new Command()
-                {
-                    From = from,
-                    To = to,
-                    Pp = pp,
-                    Method = method,
-                    Uri = uri,
-                    Resource = resource,
-                    Metadata = metadata
-                },
+                command,
                 cancellationToken);
         }
                 
@@ -108,17 +118,21 @@ namespace Lime.Protocol.Network
             IDictionary<string, string> metadata = null)
             where TResponseResource : Document
         {
+            var command = new Command()
+            {
+                From = from,
+                To = to,
+                Pp = pp,
+                Method = method,
+                Uri = uri,
+                Metadata = metadata
+            };
+
+            Activity.Current?.InjectTraceParentIfAbsent(command);
+
             return ProcessCommandWithResponseResourceAsync<TResponseResource>(
                     channel,
-                    new Command()
-                    {
-                        From = from,
-                        To = to,
-                        Pp = pp,
-                        Method = method,
-                        Uri = uri,
-                        Metadata = metadata
-                    },
+                    command,
                     cancellationToken);
         }
         
@@ -138,18 +152,22 @@ namespace Lime.Protocol.Network
             where TRequestResource : Document
             where TResponseResource : Document
         {
+            var command = new Command()
+            {
+                From = from,
+                To = to,
+                Pp = pp,
+                Method = method,
+                Uri = uri,
+                Resource = resource,
+                Metadata = metadata
+            };
+
+            Activity.Current?.InjectTraceParentIfAbsent(command);
+
             return ProcessCommandWithResponseResourceAsync<TResponseResource>(
                 channel,
-                new Command()
-                {
-                    From = from,
-                    To = to,
-                    Pp = pp,
-                    Method = method,
-                    Uri = uri,
-                    Resource = resource,
-                    Metadata = metadata
-                },
+                command,
                 cancellationToken);
         }        
         

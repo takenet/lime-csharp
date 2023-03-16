@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Dawn;
 using Lime.Protocol.Network;
 using Lime.Protocol.Security;
+using Lime.Protocol.Tracing;
 
 namespace Lime.Protocol.Client
 {
@@ -310,6 +311,8 @@ namespace Lime.Protocol.Client
 
                     throw new LimeException(reason);
                 }
+
+                using var _ = LimeActivitySource.Instance.StartActivity("Client.Channel.Handlers");
 
                 foreach (var handler in _establishedHandlers.ToList())
                 {

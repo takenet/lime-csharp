@@ -11,6 +11,71 @@ namespace Lime.Protocol.Tracing
     public static class ActivityExtensions
     {
         /// <summary>
+        /// Copies the Trace Context from a dictionary to another.
+        /// </summary>
+        /// <param name="from">Dictionary to copy the Trace Context from if available</param>
+        /// <param name="to">Dictionary to copy the Trace Context to</param>
+        public static void CopyTraceParent(this IDictionary<string, string> from, IDictionary<string, string> to)
+        {
+            if (from == null || to == null || to.IsReadOnly)
+            {
+                return;
+            }
+
+            if (!from.ContainsW3CTraceContext())
+            {
+                return;
+            }
+
+            to[OpenTelemetry.TraceParent] = from[OpenTelemetry.TraceParent];
+
+            if (from.TryGetValue(OpenTelemetry.TraceState, out var traceState) && !string.IsNullOrWhiteSpace(traceState))
+            {
+                to[OpenTelemetry.TraceState] = traceState;
+            }
+        }
+
+        /// <summary>
+        /// Checks if the dictionary contains the W3C Trace Context.
+        /// </summary>
+        /// <param name="from">Envelope to copy the Trace Context from if available</param>
+        /// <param name="to">Envelope to copy the Trace Context to</param>
+        public static void CopyTraceParent(this Envelope from, Envelope to)
+        {
+            if (from == null || to == null)
+            {
+                return;
+            }
+
+            if (!from.ContainsW3CTraceContext())
+            {
+                return;
+            }
+
+            to.Metadata ??= new Dictionary<string, string>();
+
+            from.Metadata.CopyTraceParent(to.Metadata);
+        }
+
+        /// <summary>
+        /// Checks if the dictionary contains the W3C Trace Context.
+        /// </summary>
+        /// <param name="dictionary"></param>
+        public static bool ContainsW3CTraceContext(this IDictionary<string, string> dictionary)
+        {
+            return dictionary?.ContainsKey(OpenTelemetry.TraceParent) ?? false;
+        }
+
+        /// <summary>
+        /// Checks if Envelope's metadata contains the W3C Trace Context.
+        /// </summary>
+        /// <param name="envelope">The envelope to check for the Trace Context</param>
+        public static bool ContainsW3CTraceContext(this Envelope envelope)
+        {
+            return envelope?.Metadata?.ContainsW3CTraceContext() ?? false;
+        }
+
+        /// <summary>
         /// Creates and starts a new activity based on a dictionary containing the W3C Trace Context.
         /// <param name="dictionary">The dictionary to retrieve W3C Trace Context</param>
         /// <param name="name">The name of the activity</param>
@@ -146,6 +211,26 @@ namespace Lime.Protocol.Tracing
             envelope.Metadata ??= new Dictionary<string, string>();
 
             activity.InjectTraceParent(envelope.Metadata);
+        }
+
+        /// <summary>
+        /// It will set the trace parent and trace state of the activity into envelope's metadata only if the envelope's metadata does not have a trace parent
+        /// </summary>
+        /// <param name="activity">The activity to get the trace parent and trace state</param>
+        /// <param name="envelope">The envelope to set the trace parent and trace state</param>
+        public static void InjectTraceParentIfAbsent(this Activity activity, Envelope envelope)
+        {
+            if (activity == null || envelope == null)
+            {
+                return;
+            }
+
+            if (envelope.ContainsW3CTraceContext())
+            {
+                return;
+            }
+
+            activity.InjectTraceParent(envelope);
         }
 
         /// <summary>
