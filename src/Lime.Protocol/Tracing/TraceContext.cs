@@ -1,9 +1,9 @@
 namespace Lime.Protocol.Tracing
 {
     /// <summary>
-    /// Defines the OpenTelemetry constants.
+    /// Defines the Trace Context constants.
     /// </summary>
-    public static class OpenTelemetry
+    public static class TraceContext
     {
         /// <summary>
         /// The trace parent header name of the W3C trace context.

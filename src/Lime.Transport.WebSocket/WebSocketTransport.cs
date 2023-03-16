@@ -68,7 +68,7 @@ namespace Lime.Transport.WebSocket
             using var activity = envelope.StartActivity(
                 $"WebSocketTransport.Send {envelope.GetActivityName()}",
                 ActivityKind.Client,
-                ignoreCurrentActivity: true,
+                prioritizeEnvelopeActivity: true,
                 activitySource: LimeWebSocketActivitySource.Instance
             );
             activity?.SetTransportTags(this);
@@ -223,7 +223,7 @@ namespace Lime.Transport.WebSocket
             using var activity = envelope.StartActivity(
                 $"WebSocketTransport.Receive {envelope.GetType().Name}",
                 ActivityKind.Server,
-                ignoreCurrentActivity: true,
+                prioritizeEnvelopeActivity: true,
                 activitySource: LimeWebSocketActivitySource.Instance
             );
             activity?.SetTransportTags(this);

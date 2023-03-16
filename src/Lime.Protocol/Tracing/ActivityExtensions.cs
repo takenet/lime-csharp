@@ -27,11 +27,11 @@ namespace Lime.Protocol.Tracing
                 return;
             }
 
-            to[OpenTelemetry.TraceParent] = from[OpenTelemetry.TraceParent];
+            to[TraceContext.TraceParent] = from[TraceContext.TraceParent];
 
-            if (from.TryGetValue(OpenTelemetry.TraceState, out var traceState) && !string.IsNullOrWhiteSpace(traceState))
+            if (from.TryGetValue(TraceContext.TraceState, out var traceState) && !string.IsNullOrWhiteSpace(traceState))
             {
-                to[OpenTelemetry.TraceState] = traceState;
+                to[TraceContext.TraceState] = traceState;
             }
         }
 
@@ -63,7 +63,7 @@ namespace Lime.Protocol.Tracing
         /// <param name="dictionary"></param>
         public static bool ContainsW3CTraceContext(this IDictionary<string, string> dictionary)
         {
-            return dictionary?.ContainsKey(OpenTelemetry.TraceParent) ?? false;
+            return dictionary?.ContainsKey(TraceContext.TraceParent) ?? false;
         }
 
         /// <summary>
@@ -75,24 +75,25 @@ namespace Lime.Protocol.Tracing
             return envelope?.Metadata?.ContainsW3CTraceContext() ?? false;
         }
 
+#nullable enable
         /// <summary>
-        /// Creates and starts a new activity based on a dictionary containing the W3C Trace Context.
+        /// Creates and starts a new activity based on the current activity or a dictionary containing the W3C Trace Context.
         /// <param name="dictionary">The dictionary to retrieve W3C Trace Context</param>
         /// <param name="name">The name of the activity</param>
         /// <param name="kind">The <see cref="ActivityKind">ActivityKind</see> to be used in the new Activity</param>
         /// <param name="activitySource">The <see cref="ActivitySource">ActivitySource</see> to be used to create the new Activity. It will use <see cref="LimeActivitySource.Instance">LimeTracing.ActivitySource</see> if not specified.</param>
-        /// <param name="ignoreCurrentActivity">If true and if the dictionary contains a valid W3C Trace Context, it will be used as context instead of the current Activity</param>
+        /// <param name="prioritizeDictionaryActivity">If true and if the dictionary contains a valid W3C Trace Context, it will be used as context instead of the current Activity</param>
         /// </summary>
         /// <remarks>
         /// It will not set new trace context to the dictionary.
         /// If there is a current active Activity, it will be used as parent of the new Activity instead of the dictionary trace context, you can modify this behavior with the ignoreCurrentActivity parameter.
         /// </remarks>
-        public static Activity StartActivity(
-            this IDictionary<string, string> dictionary,
+        public static Activity? StartActivity(
+            this IDictionary<string, string>? dictionary,
             [CallerMemberName] string name = "",
             ActivityKind kind = ActivityKind.Internal,
-            ActivitySource activitySource = null,
-            bool ignoreCurrentActivity = false)
+            ActivitySource? activitySource = null,
+            bool prioritizeDictionaryActivity = false)
         {
             if (dictionary == null)
             {
@@ -101,49 +102,44 @@ namespace Lime.Protocol.Tracing
 
             activitySource ??= LimeActivitySource.Instance;
 
-            if (Activity.Current != null && !ignoreCurrentActivity)
+            if (Activity.Current != null && !prioritizeDictionaryActivity)
             {
                 return activitySource.StartActivity(name);
             }
 
-            dictionary.TryGetValue(OpenTelemetry.TraceParent, out var traceParent);
-            if (traceParent.IsNullOrWhiteSpace())
+            dictionary.TryGetValue(TraceContext.TraceParent, out var traceParent);
+            if (string.IsNullOrWhiteSpace(traceParent))
             {
                 return null;
             }
 
-            dictionary.TryGetValue(OpenTelemetry.TraceState, out var traceState);
+            dictionary.TryGetValue(TraceContext.TraceState, out var traceState);
 
             var success = ActivityContext.TryParse(traceParent, traceState, out var resultContext);
 
-            if (success)
-            {
-                return activitySource.StartActivity(name, kind, resultContext);
-            }
-
-            return activitySource.StartActivity(name);
+            return success ? activitySource.StartActivity(name, kind, resultContext) : activitySource.StartActivity(name);
         }
 
         /// <summary>
-        /// Creates and starts a new activity based on the envelope metadata.
+        /// Creates and starts a new activity based on the current activity or the envelope metadata.
         /// The newly created Activity will have its parent from the trace parent and trace state of the envelope metadata if available.
         /// </summary>
         /// <param name="envelope">The envelope to use as context</param>
         /// <param name="name">The name of the activity</param>
         /// <param name="kind">The <see cref="ActivityKind">ActivityKind</see> to be used in the new Activity</param>
         /// <param name="activitySource">The <see cref="ActivitySource">ActivitySource</see> to be used to create the new Activity. It will use <see cref="LimeActivitySource.Instance">LimeTracing.ActivitySource</see> if not specified.</param>
-        /// <param name="ignoreCurrentActivity">If true and if envelope's metadata contains an activity, it will be used as context instead of the current Activity</param>
+        /// <param name="prioritizeEnvelopeActivity">If true and if envelope's metadata contains an activity, it will be used as context instead of the current Activity</param>
         /// <returns>A new Activity created or null if there is no listener on the ActivitySource.</returns>
         /// <remarks>
         /// If the envelope is a Command with '/ping' Uri it will always return null.
         /// If there is a current active Activity, it will be used as parent of the new Activity instead of the dictionary trace context, you can modify this behavior with the ignoreCurrentActivity parameter.
         /// </remarks>
-        public static Activity StartActivity(
+        public static Activity? StartActivity(
             this Envelope envelope,
             [CallerMemberName] string name = "",
             ActivityKind kind = ActivityKind.Internal,
-            ActivitySource activitySource = null,
-            bool ignoreCurrentActivity = false
+            ActivitySource? activitySource = null,
+            bool prioritizeEnvelopeActivity = false
         )
         {
             if (envelope is Command possiblePing &&
@@ -154,11 +150,11 @@ namespace Lime.Protocol.Tracing
 
             activitySource ??= LimeActivitySource.Instance;
 
-            Activity activity = null;
+            Activity? activity = null;
 
-            if (Activity.Current == null || ignoreCurrentActivity)
+            if (Activity.Current == null || prioritizeEnvelopeActivity)
             {
-                activity = StartActivity(envelope.Metadata, name, kind, activitySource, ignoreCurrentActivity: ignoreCurrentActivity);
+                activity = StartActivity(envelope.Metadata, name, kind, activitySource, prioritizeDictionaryActivity: prioritizeEnvelopeActivity);
             }
 
             activity ??= activitySource.StartActivity(name);
@@ -168,7 +164,7 @@ namespace Lime.Protocol.Tracing
 
             return activity;
         }
-
+#nullable disable
         /// <summary>
         /// It will set the trace parent and trace state of the activity into the dictionary using W3C Trace Context format.
         /// </summary>
@@ -179,20 +175,20 @@ namespace Lime.Protocol.Tracing
         /// </remarks>
         public static void InjectTraceParent(this Activity activity, IDictionary<string, string> dictionary)
         {
-            if (activity == null || activity.Id.IsNullOrWhiteSpace() || dictionary == null || dictionary.IsReadOnly)
+            if (activity == null || string.IsNullOrWhiteSpace(activity.Id) || dictionary == null || dictionary.IsReadOnly)
             {
                 return;
             }
 
-            dictionary[OpenTelemetry.TraceParent] = activity.Id;
+            dictionary[TraceContext.TraceParent] = activity.Id;
 
-            if (!activity.TraceStateString.IsNullOrWhiteSpace())
+            if (string.IsNullOrWhiteSpace(activity.TraceStateString))
             {
-                dictionary[OpenTelemetry.TraceState] = activity.TraceStateString;
+                dictionary.Remove(TraceContext.TraceState);
             }
             else
             {
-                dictionary.Remove(OpenTelemetry.TraceState);
+                dictionary[TraceContext.TraceState] = activity.TraceStateString;
             }
         }
 

@@ -15,7 +15,7 @@ public class ActivityExtensionsTests
     {
         var dictionaryWithTraceParent = new Dictionary<string, string>
         {
-            { OpenTelemetry.TraceParent, "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01" }
+            { TraceContext.TraceParent, "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01" }
         };
 
         Assert.DoesNotThrow(() => ((IDictionary<string, string>)null).CopyTraceParent(null));
@@ -33,7 +33,7 @@ public class ActivityExtensionsTests
         {
             Metadata = new Dictionary<string, string>
             {
-                { OpenTelemetry.TraceParent, "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01" }
+                { TraceContext.TraceParent, "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01" }
             }
         };
 
@@ -59,7 +59,7 @@ public class ActivityExtensionsTests
         Assert.False(new Dictionary<string, string>().ContainsW3CTraceContext());
         Assert.True(new Dictionary<string, string>
         {
-            { OpenTelemetry.TraceParent, "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01" }
+            { TraceContext.TraceParent, "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01" }
         }.ContainsW3CTraceContext());
     }
 
@@ -73,7 +73,7 @@ public class ActivityExtensionsTests
         {
             Metadata = new Dictionary<string, string>
             {
-                { OpenTelemetry.TraceParent, "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01" }
+                { TraceContext.TraceParent, "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01" }
             }
         }.ContainsW3CTraceContext());
     }

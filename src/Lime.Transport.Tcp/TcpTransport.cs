@@ -197,7 +197,7 @@ namespace Lime.Transport.Tcp
             using var activity = envelope.StartActivity(
                 $"TcpTransport.Send {envelope.GetActivityName()}",
                 ActivityKind.Client,
-                ignoreCurrentActivity: true,
+                prioritizeEnvelopeActivity: true,
                 activitySource: LimeTcpActivitySource.Instance
             );
             activity?.SetTransportTags(this);
@@ -291,7 +291,7 @@ namespace Lime.Transport.Tcp
                 using var activity = envelope?.StartActivity(
                     $"TcpTransport.Receive {envelope.GetActivityName()}",
                     ActivityKind.Server,
-                    ignoreCurrentActivity: true,
+                    prioritizeEnvelopeActivity: true,
                     activitySource: LimeTcpActivitySource.Instance
                 );
 
