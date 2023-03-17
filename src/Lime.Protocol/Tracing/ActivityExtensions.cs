@@ -135,17 +135,18 @@ namespace Lime.Protocol.Tracing
         /// If there is a current active Activity, it will be used as parent of the new Activity instead of the dictionary trace context, you can modify this behavior with the ignoreCurrentActivity parameter.
         /// </remarks>
         public static Activity? StartActivity(
-            this Envelope envelope,
+            this Envelope? envelope,
             [CallerMemberName] string name = "",
             ActivityKind kind = ActivityKind.Internal,
             ActivitySource? activitySource = null,
             bool prioritizeEnvelopeActivity = false
         )
         {
-            if (envelope is Command possiblePing &&
-                (possiblePing.Type?.ToString() == "application/vnd.lime.ping+json" || possiblePing.Uri?.ToString() == "/ping"))
+            switch (envelope)
             {
-                return null;
+                case null:
+                case Command possiblePing when (possiblePing.Type?.ToString() == "application/vnd.lime.ping+json" || possiblePing.Uri?.ToString() == "/ping"):
+                    return null;
             }
 
             activitySource ??= LimeActivitySource.Instance;
@@ -343,7 +344,7 @@ namespace Lime.Protocol.Tracing
             switch (command.Status)
             {
                 case CommandStatus.Failure:
-                    activity.SetStatus(ActivityStatusCode.Error, $"Code {command.Reason?.Code}: {command.Reason?.Description}.");
+                    activity.SetStatus(ActivityStatusCode.Error, $"Code {command.Reason?.Code}: {command.Reason?.Description}");
                     break;
                 case CommandStatus.Success:
                     activity.SetStatus(ActivityStatusCode.Ok);
@@ -365,7 +366,7 @@ namespace Lime.Protocol.Tracing
             switch (notification.Event)
             {
                 case Event.Failed:
-                    activity.SetStatus(ActivityStatusCode.Error, $"Code {notification.Reason?.Code}: {notification.Reason?.Description}.");
+                    activity.SetStatus(ActivityStatusCode.Error, $"Code {notification.Reason?.Code}: {notification.Reason?.Description}");
                     break;
                 default:
                     activity.SetStatus(ActivityStatusCode.Ok);
@@ -383,7 +384,7 @@ namespace Lime.Protocol.Tracing
             switch (session.State)
             {
                 case SessionState.Failed:
-                    activity.SetStatus(ActivityStatusCode.Error, $"Code {session.Reason?.Code}: {session.Reason?.Description}.");
+                    activity.SetStatus(ActivityStatusCode.Error, $"Code {session.Reason?.Code}: {session.Reason?.Description}");
                     break;
                 case SessionState.New:
                     activity.SetStatus(ActivityStatusCode.Unset);
