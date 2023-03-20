@@ -10,7 +10,7 @@ namespace Lime.Transport.WebSocket
         /// <summary>
         /// The name of the ActivitySource for the Lime.Protocol WebSocket transport
         /// </summary>
-        public const string LimeWebSocket = "Lime.Protocol.WebSocket";
+        public const string LimeWebSocket = "Lime.Transport.WebSocket";
 
         /// <summary>
         /// Gets the ActivitySource for the Lime.Protocol to be used when creating activities.

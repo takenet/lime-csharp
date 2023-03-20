@@ -10,7 +10,7 @@ namespace Lime.Transport.Tcp
         /// <summary>
         /// The name of the ActivitySource for the Lime.Protocol TCP transport
         /// </summary>
-        public const string LimeTcp = "Lime.Protocol.Tcp";
+        public const string LimeTcp = "Lime.Transport.Tcp";
 
         /// <summary>
         /// Gets the ActivitySource for the Lime.Protocol to be used when creating activities.
