@@ -26,9 +26,9 @@ namespace Lime.Protocol.Client
             if (channel == null) throw new ArgumentNullException(nameof(channel));
             if (authenticator == null) throw new ArgumentNullException(nameof(authenticator));
 
-            var receivedSession = await channel.StartNewSessionAsync(cancellationToken).ConfigureAwait(false);
+            using var _ = LimeActivitySource.Instance.StartActivity("Client.Channel.EstablishSession");
 
-            using var _ = receivedSession.Metadata?.StartActivity("Client.Channel.EstablishSession");
+            var receivedSession = await channel.StartNewSessionAsync(cancellationToken).ConfigureAwait(false);
 
             // Session negotiation
             if (receivedSession.State == SessionState.Negotiating)
