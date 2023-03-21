@@ -433,6 +433,11 @@ namespace Lime.Protocol.Tracing
             activity.SetTag("lime.transport.type", transport.GetType().Name);
         }
 
+        /// <summary>
+        /// Sets the node tags in the activity
+        /// </summary>
+        /// <param name="activity"></param>
+        /// <param name="node"></param>
         public static void SetNodeTags(this Activity activity, Node node)
         {
             if (activity == null || node == null)
@@ -443,6 +448,11 @@ namespace Lime.Protocol.Tracing
             activity.SetTag("lime.node", node.ToString());
         }
 
+        /// <summary>
+        /// Sets the channel tags in the activity
+        /// </summary>
+        /// <param name="activity"></param>
+        /// <param name="channel"></param>
         public static void AddChannelTags(this Activity activity, IChannel channel)
         {
             if (channel == null)
