@@ -442,5 +442,16 @@ namespace Lime.Protocol.Tracing
 
             activity.SetTag("lime.node", node.ToString());
         }
+
+        public static void AddChannelTags(this Activity activity, IChannel channel)
+        {
+            if (channel == null)
+            {
+                return;
+            }
+
+            activity?.AddTag("lime.channel.local_node", channel.LocalNode?.ToString());
+            activity?.AddTag("lime.channel.remote_node", channel.RemoteNode?.ToString());
+        }
     }
 }

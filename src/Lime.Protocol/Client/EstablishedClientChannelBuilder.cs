@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -282,6 +283,12 @@ namespace Lime.Protocol.Client
                 .BuildAsync(cancellationToken)
                 .ConfigureAwait(false);
 
+            Activity activity = null;
+            if (Activity.Current == null)
+            {
+                activity = LimeActivitySource.Instance.StartActivity("Client.Channel.BuildAndEstablish");
+            }
+
             try
             {
                 Session session;
@@ -291,12 +298,12 @@ namespace Lime.Protocol.Client
                     using (var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationTokenSource.Token, cancellationToken))
                     {
                         session = await clientChannel.EstablishSessionAsync(
-                            CompressionSelector,
-                            EncryptionSelector,
-                            Identity,
-                            Authenticator,
-                            Instance,
-                            linkedCts.Token)
+                                CompressionSelector,
+                                EncryptionSelector,
+                                Identity,
+                                Authenticator,
+                                Instance,
+                                linkedCts.Token)
                             .ConfigureAwait(false);
                     }
                 }
@@ -324,6 +331,10 @@ namespace Lime.Protocol.Client
             {
                 clientChannel.DisposeIfDisposable();
                 throw;
+            }
+            finally
+            {
+                activity?.Dispose();
             }
 
             return clientChannel;
