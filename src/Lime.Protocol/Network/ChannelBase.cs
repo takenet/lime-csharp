@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Diagnostics;
 using Lime.Protocol.Network.Modules;
+using Lime.Protocol.Tracing;
 
 namespace Lime.Protocol.Network
 {
@@ -168,39 +169,96 @@ namespace Lime.Protocol.Network
 
         /// <inheritdoc />
         public virtual Task SendMessageAsync(Message message, CancellationToken cancellationToken)
-            => _senderChannel.SendMessageAsync(message, cancellationToken);
+        {
+            Activity.Current?.InjectTraceParentIfAbsent(message);
+            Activity.Current?.AddChannelTags(this);
+
+            return _senderChannel.SendMessageAsync(message, cancellationToken);
+        }
 
         /// <inheritdoc />
-        public virtual Task<Message> ReceiveMessageAsync(CancellationToken cancellationToken)
-            => _receiverChannel.ReceiveMessageAsync(cancellationToken);
+        public virtual async Task<Message> ReceiveMessageAsync(CancellationToken cancellationToken)
+        {
+            var message = await _receiverChannel.ReceiveMessageAsync(cancellationToken);
+
+            Activity.Current?.InjectTraceParentIfAbsent(message);
+            Activity.Current?.AddChannelTags(this);
+
+            return message;
+        }
 
         /// <inheritdoc />
         public virtual Task SendCommandAsync(Command command, CancellationToken cancellationToken)
-            => _senderChannel.SendCommandAsync(command, cancellationToken);
+        {
+            Activity.Current?.InjectTraceParentIfAbsent(command);
+            Activity.Current?.AddChannelTags(this);
+
+            return _senderChannel.SendCommandAsync(command, cancellationToken);
+        }
 
         /// <inheritdoc />
-        public virtual Task<Command> ReceiveCommandAsync(CancellationToken cancellationToken)
-            => _receiverChannel.ReceiveCommandAsync(cancellationToken);
+        public virtual async Task<Command> ReceiveCommandAsync(CancellationToken cancellationToken)
+        {
+            var command = await _receiverChannel.ReceiveCommandAsync(cancellationToken);
+
+            Activity.Current?.InjectTraceParentIfAbsent(command);
+            Activity.Current?.AddChannelTags(this);
+
+            return command;
+        }
 
         /// <inheritdoc />
-        public virtual Task<Command> ProcessCommandAsync(Command requestCommand, CancellationToken cancellationToken)
-            => _channelCommandProcessor.ProcessCommandAsync(this, requestCommand, cancellationToken);
+        public virtual async Task<Command> ProcessCommandAsync(Command requestCommand, CancellationToken cancellationToken)
+        {
+            Activity.Current?.InjectTraceParentIfAbsent(requestCommand);
+            Activity.Current?.AddChannelTags(this);
+
+            var responseCommand = await _channelCommandProcessor.ProcessCommandAsync(this, requestCommand, cancellationToken);
+
+            Activity.Current?.InjectTraceParentIfAbsent(responseCommand);
+
+            return responseCommand;
+        }
 
         /// <inheritdoc />
         public virtual Task SendNotificationAsync(Notification notification, CancellationToken cancellationToken)
-            => _senderChannel.SendNotificationAsync(notification, cancellationToken);
+        {
+            Activity.Current?.InjectTraceParentIfAbsent(notification);
+            Activity.Current?.AddChannelTags(this);
+
+            return _senderChannel.SendNotificationAsync(notification, cancellationToken);
+        }
 
         /// <inheritdoc />
-        public virtual Task<Notification> ReceiveNotificationAsync(CancellationToken cancellationToken)
-            => _receiverChannel.ReceiveNotificationAsync(cancellationToken);
+        public virtual async Task<Notification> ReceiveNotificationAsync(CancellationToken cancellationToken)
+        {
+            var notification = await _receiverChannel.ReceiveNotificationAsync(cancellationToken);
+
+            Activity.Current?.InjectTraceParentIfAbsent(notification);
+            Activity.Current?.AddChannelTags(this);
+
+            return notification;
+        }
 
         /// <inheritdoc />
         public virtual Task SendSessionAsync(Session session, CancellationToken cancellationToken)
-            => _senderChannel.SendSessionAsync(session, cancellationToken);
+        {
+            Activity.Current?.InjectTraceParentIfAbsent(session);
+            Activity.Current?.AddChannelTags(this);
+
+            return _senderChannel.SendSessionAsync(session, cancellationToken);
+        }
 
         /// <inheritdoc />
-        public virtual Task<Session> ReceiveSessionAsync(CancellationToken cancellationToken)
-            => _receiverChannel.ReceiveSessionAsync(cancellationToken);
+        public virtual async Task<Session> ReceiveSessionAsync(CancellationToken cancellationToken)
+        {
+            var session = await _receiverChannel.ReceiveSessionAsync(cancellationToken);
+
+            Activity.Current?.InjectTraceParentIfAbsent(session);
+            Activity.Current?.AddChannelTags(this);
+
+            return session;
+        }
 
         /// <summary>
         /// Closes the underlying transport.

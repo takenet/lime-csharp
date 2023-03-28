@@ -27,7 +27,7 @@
         <PackageReference Include="System.Threading.Channels" Version="4.7.0" />
     </ItemGroup>
 
-    <ItemGroup Condition=" '$(TargetFramework)' == 'net461' ">
+    <ItemGroup Condition=" '$(TargetFramework)' == 'net462' ">
         <PackageReference Include="SslCertBinding.Net" Version="1.0.2" />
         <Reference Include="System.Runtime.Serialization" />
         <Reference Include="System.Web" />

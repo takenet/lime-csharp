@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Buffers;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Net.WebSockets;
 using System.Text;
@@ -9,6 +10,7 @@ using System.Threading.Tasks;
 using Lime.Protocol;
 using Lime.Protocol.Network;
 using Lime.Protocol.Serialization;
+using Lime.Protocol.Tracing;
 using ReflectionMagic;
 
 namespace Lime.Transport.WebSocket
@@ -62,6 +64,14 @@ namespace Lime.Transport.WebSocket
             {
                 throw new ArgumentNullException(nameof(envelope));
             }
+
+            using var activity = envelope.StartActivity(
+                $"WebSocketTransport.Send {envelope.GetActivityName()}",
+                ActivityKind.Client,
+                prioritizeEnvelopeActivity: true,
+                activitySource: LimeWebSocketActivitySource.Instance
+            );
+            activity?.SetTransportTags(this);
 
             EnsureOpen("send");
 
@@ -203,7 +213,22 @@ namespace Lime.Transport.WebSocket
                 return null;
             }
 
-            return _envelopeSerializer.Deserialize(serializedEnvelope);
+            var envelope = _envelopeSerializer.Deserialize(serializedEnvelope);
+
+            if (envelope == null)
+            {
+                return null;
+            }
+
+            using var activity = envelope.StartActivity(
+                $"WebSocketTransport.Receive {envelope.GetType().Name}",
+                ActivityKind.Server,
+                prioritizeEnvelopeActivity: true,
+                activitySource: LimeWebSocketActivitySource.Instance
+            );
+            activity?.SetTransportTags(this);
+
+            return envelope;
         }
 
         /// <summary>

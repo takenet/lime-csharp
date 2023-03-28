@@ -1,11 +1,10 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Net;
 using System.Net.Security;
 using System.Net.Sockets;
-using System.Reflection;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
@@ -16,8 +15,7 @@ using Lime.Protocol.Network;
 using Lime.Protocol.Security;
 using Lime.Protocol.Serialization;
 using Lime.Protocol.Serialization.Newtonsoft;
-using System.Buffers;
-using System.Security.Cryptography;
+using Lime.Protocol.Tracing;
 
 namespace Lime.Transport.Tcp
 {
@@ -196,6 +194,14 @@ namespace Lime.Transport.Tcp
             if (_stream == null) throw new InvalidOperationException("The stream was not initialized. Call OpenAsync first.");
             if (!_stream.CanWrite) throw new InvalidOperationException("Invalid stream state");
 
+            using var activity = envelope.StartActivity(
+                $"TcpTransport.Send {envelope.GetActivityName()}",
+                ActivityKind.Client,
+                prioritizeEnvelopeActivity: true,
+                activitySource: LimeTcpActivitySource.Instance
+            );
+            activity?.SetTransportTags(this);
+
             var serializedEnvelope = _envelopeSerializer.Serialize(envelope);
             int envelopeByteCount = Encoding.UTF8.GetByteCount(serializedEnvelope);
 
@@ -281,6 +287,15 @@ namespace Lime.Transport.Tcp
                         }
                     }
                 }
+
+                using var activity = envelope?.StartActivity(
+                    $"TcpTransport.Receive {envelope.GetActivityName()}",
+                    ActivityKind.Server,
+                    prioritizeEnvelopeActivity: true,
+                    activitySource: LimeTcpActivitySource.Instance
+                );
+
+                activity?.SetTransportTags(this);
 
                 return envelope;
             }

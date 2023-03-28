@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
+using Lime.Protocol.Tracing;
 
 namespace Lime.Protocol.Network
 {
@@ -21,10 +23,10 @@ namespace Lime.Protocol.Network
             IDictionary<string, string> metadata = null)
         {
             if (uri == null) throw new ArgumentNullException(nameof(uri));
-            
+
             return ProcessCommandOrThrowAsync(
                 channel,
-                new Command()
+                new Command
                 {
                     From = from,
                     To = to,
@@ -53,10 +55,10 @@ namespace Lime.Protocol.Network
         {
             if (uri == null) throw new ArgumentNullException(nameof(uri));
             if (resource == null) throw new ArgumentNullException(nameof(resource));
-            
+
             return ProcessCommandOrThrowAsync(
                 channel,
-                new Command()
+                new Command
                 {
                     From = from,
                     To = to,
@@ -110,7 +112,7 @@ namespace Lime.Protocol.Network
         {
             return ProcessCommandWithResponseResourceAsync<TResponseResource>(
                     channel,
-                    new Command()
+                    new Command
                     {
                         From = from,
                         To = to,
@@ -140,7 +142,7 @@ namespace Lime.Protocol.Network
         {
             return ProcessCommandWithResponseResourceAsync<TResponseResource>(
                 channel,
-                new Command()
+                new Command
                 {
                     From = from,
                     To = to,

@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Lime.Protocol.Tracing;
 
 namespace Lime.Protocol.Network
 {
@@ -34,6 +36,8 @@ namespace Lime.Protocol.Network
             {
                 throw new ArgumentException("Invalid command id", nameof(requestCommand));
             }
+
+            Activity.Current?.InjectTraceParentIfAbsent(requestCommand);
 
             var tcs = new TaskCompletionSource<Command>(TaskCreationOptions.RunContinuationsAsynchronously);
             if (!_pendingCommandsDictionary.TryAdd(requestCommand.Id, tcs))

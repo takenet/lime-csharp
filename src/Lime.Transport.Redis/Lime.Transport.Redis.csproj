@@ -5,7 +5,7 @@
     <Copyright>Copyright �  2014 Curupira S/A</Copyright>
     <AssemblyTitle>Lime.Transport.Redis</AssemblyTitle>
     <Authors>takenet;andrebires</Authors>
-    <TargetFrameworks>netstandard2.0;net461</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;net462</TargetFrameworks>
     <AssemblyName>Lime.Transport.Redis</AssemblyName>
     <PackageId>Lime.Transport.Redis</PackageId>
     <PackageTags>lime</PackageTags>
@@ -24,7 +24,7 @@
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
   </ItemGroup>
 
-  <ItemGroup Condition=" '$(TargetFramework)' == 'net461' ">
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net462' ">
     <PackageReference Include="Microsoft.Tpl.Dataflow" Version="4.5.24" />
     <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Runtime.Caching" />
