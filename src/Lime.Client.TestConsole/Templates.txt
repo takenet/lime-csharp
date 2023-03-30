@@ -49,9 +49,9 @@ Set group	Command	{"id":"%commandId","method":"set","type":"application/vnd.lime
 Get group members	Command	{"id":"%commandId","method":"get","uri": "/groups/%groupIdentity/members"}
 Set group member	Command	{"id":"%commandId","method":"set","uri": "/groups/%groupIdentity/members","resource":{"address":"%groupMemberAddress","role":"%groupMemberRole"}}
 Get contacts	Command	{"id":"%commandId","method":"get","uri": "/contacts","to": "postmaster@crm.msging.net"}
-Set contact	Command	{"id":"%commandId","method":"set","type":"application/vnd.lime.contact+json","uri":"/contacts","resource":{"identity":"%contactIdentity","name":"%contactName","email":"%contactEmail","sharePresence":true,"shareAccountInfo":true}}
-Merge contact	Command	{"id":"%commandId","method":"merge","type":"application/vnd.lime.contact+json","uri":"/contacts","resource":{"identity":"%contactIdentity","name":"%contactName"}}
-Delete contact	Command	{"id":"%commandId","method":"delete","uri": "/contacts/%contactIdentity"}
+Set contact	Command	{"id":"%commandId","method":"set","type":"application/vnd.lime.contact+json","uri":"/contacts","to": "postmaster@crm.msging.net","resource":{"identity":"%contactIdentity","name":"%contactName","email":"%contactEmail","sharePresence":true,"shareAccountInfo":true}}
+Merge contact	Command	{"id":"%commandId","method":"merge","type":"application/vnd.lime.contact+json","uri":"/contacts","to": "postmaster@crm.msging.net","resource":{"identity":"%contactIdentity","name":"%contactName"}}
+Delete contact	Command	{"id":"%commandId","method":"delete","uri": "/contacts/%contactIdentity","to": "postmaster@crm.msging.net"}
 Set location	Command	{"id":  "%commandId","to":"postmaster@location.take.io","method":"set","type":"application/vnd.lime.location+json","uri":"/location","resource":{"latitude":10.1,"longitude":10.2}}
 Get location	Command	{"id":  "%commandId","to":"postmaster@location.take.io","method":"get","uri":"/location"}
 Set delegation	Command	{"id":"%commandId","method":"set","type":"application/vnd.lime.delegation+json","uri":"/delegations","resource":{"target":"%targetIdentity"}}
