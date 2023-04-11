@@ -8,17 +8,20 @@ name: 0.12$(Rev:.r)
 variables:
     skipDecorator: true
     framework: dotnet
+    checkmarxName: Lime
 
 resources:
   repositories:   
   - repository: templates
     type: git
     name: Operações/template-take-blip
-    ref: refs/tags/v1.4.24
+    ref: refs/tags/v1.4.30
 
 extends:
   template: template-pipeline.yml@templates
   parameters: 
+    skipSast: false
+    sastFilter: "!**/**, src/*"
     skipSonarBranch: true
     solution: "src/Lime.sln"
     packagename: lime-csharp
