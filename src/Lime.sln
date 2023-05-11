@@ -53,6 +53,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lime.Sample.AspNetCore", "L
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lime.Transport.AspNetCore.UnitTests", "Lime.Transport.AspNetCore.UnitTests\Lime.Transport.AspNetCore.UnitTests.csproj", "{7ADDF49E-4B31-4E80-81E3-CB8D6E1C90EC}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lime.Protocol.Benchmark", "Lime.Protocol.Benchmark\Lime.Protocol.Benchmark.csproj", "{AE611E7C-4D2C-460F-A18D-9244ABC16C11}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -135,6 +137,10 @@ Global
 		{7ADDF49E-4B31-4E80-81E3-CB8D6E1C90EC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7ADDF49E-4B31-4E80-81E3-CB8D6E1C90EC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7ADDF49E-4B31-4E80-81E3-CB8D6E1C90EC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AE611E7C-4D2C-460F-A18D-9244ABC16C11}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AE611E7C-4D2C-460F-A18D-9244ABC16C11}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AE611E7C-4D2C-460F-A18D-9244ABC16C11}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AE611E7C-4D2C-460F-A18D-9244ABC16C11}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

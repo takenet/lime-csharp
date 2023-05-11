@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.Serialization;
+using Castle.DynamicProxy.Contributors;
 using Lime.Messaging.Contents;
 using Lime.Messaging.Resources;
 using Lime.Protocol.Security;
@@ -1006,9 +1009,31 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 
         #region Deserialize
 
+        public enum DeserializeMethod
+        {
+            String,
+            Stream
+        }
+        
+        private static Envelope Deserialize<T>(EnvelopeSerializer serializer, string json, DeserializeMethod method) where T : Envelope
+        {
+            if (method == DeserializeMethod.String) return serializer.Deserialize(json) as T;
+            if (method == DeserializeMethod.Stream)
+            {
+                using var memoryStream = new MemoryStream();
+                using var writer = new StreamWriter(memoryStream);
+                writer.Write(json);
+                writer.Flush();
+                memoryStream.Position = 0;
+                using var reader = new StreamReader(memoryStream); 
+                return serializer.Deserialize<T>(reader);
+            }
+            throw new NotImplementedException();
+        }
+        
         [Test]
         [Category("Deserialize")]
-        public void Deserialize_CapabilityRequestCommand_ReturnsValidInstance()
+        public void Deserialize_CapabilityRequestCommand_ReturnsValidInstance([Values(DeserializeMethod.String,DeserializeMethod.Stream)]DeserializeMethod deserializeMethod)
         {
             var target = GetTarget();
 
@@ -1038,7 +1063,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             string json =
                 $"{{\"uri\":\"{resourceUri}\",\"type\":\"application/vnd.lime.capability+json\",\"resource\":{{\"contentTypes\":[\"{contentType1}\",\"{contentType2}\",\"{contentType3}\"],\"resourceTypes\":[\"{resourceType1}\",\"{resourceType2}\",\"{resourceType3}\"]}},\"method\":\"{method.ToString().ToCamelCase()}\",\"id\":\"{id}\",\"from\":\"{@from}\",\"pp\":\"{pp}\",\"to\":\"{to}\",\"metadata\":{{\"{randomKey1}\":\"{randomString1.Escape()}\",\"{randomKey2}\":\"{randomString2.Escape()}\"}}}}";
 
-            var envelope = target.Deserialize(json);
+            var envelope = Deserialize<Command>(target,json,deserializeMethod);
 
             var command = envelope.ShouldBeOfType<Command>();
             Assert.AreEqual(id, command.Id);
@@ -1068,7 +1093,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 
         [Test]
         [Category("Deserialize")]
-        public void Deserialize_AccountRequestCommand_ReturnsValidInstance()
+        public void Deserialize_AccountRequestCommand_ReturnsValidInstance([Values(DeserializeMethod.String,DeserializeMethod.Stream)]DeserializeMethod deserializeMethod)
         {
             var target = GetTarget();
             var method = CommandMethod.Get;
@@ -1081,7 +1106,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             string json =
                 $"{{\"uri\":\"{resourceUri}\",\"type\":\"application/vnd.lime.account+json\",\"resource\":{{\"fullName\": \"{fullName.Escape()}\", \"photoUri\": \"{photoUri}\"}},\"method\":\"{method.ToString().ToCamelCase()}\",\"id\":\"{id}\",\"from\":\"{@from}\",\"to\":\"{to}\"}}";
 
-            var envelope = target.Deserialize(json);
+            var envelope = Deserialize<Command>(target, json, deserializeMethod);
 
             var command = envelope.ShouldBeOfType<Command>();
             command.Id.ShouldBe(id);
@@ -1097,7 +1122,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 
         [Test]
         [Category("Deserialize")]
-        public void Deserialize_PresenceRequestCommand_ReturnsValidInstance()
+        public void Deserialize_PresenceRequestCommand_ReturnsValidInstance([Values(DeserializeMethod.String,DeserializeMethod.Stream)]DeserializeMethod deserializeMethod)
         {
             var target = GetTarget();
 
@@ -1115,7 +1140,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             string json =
                 $"{{\"uri\":\"{resourceUri}\",\"type\":\"application/vnd.lime.presence+json\",\"resource\":{{\"status\": \"{status.ToString().ToCamelCase()}\",\"message\":\"{message.Escape()}\",\"routingRule\":\"{routingRule.ToString().ToCamelCase()}\",\"lastSeen\":\"{lastSeen.ToUniversalTime().ToString(StringJsonExtensions.DATE_FORMAT, CultureInfo.InvariantCulture)}\",\"priority\":{priority}}},\"method\":\"{method.ToString().ToCamelCase()}\",\"id\":\"{id}\",\"from\":\"{@from}\",\"to\":\"{to}\"}}";
 
-            var envelope = target.Deserialize(json);
+            var envelope = Deserialize<Command>(target, json, deserializeMethod);
 
             var command = envelope.ShouldBeOfType<Command>();
             command.Id.ShouldBe(id);
@@ -1144,7 +1169,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 
         [Test]
         [Category("Deserialize")]
-        public void Deserialize_AbsoluteUriRequestCommand_ReturnsValidInstance()
+        public void Deserialize_AbsoluteUriRequestCommand_ReturnsValidInstance([Values(DeserializeMethod.String,DeserializeMethod.Stream)]DeserializeMethod deserializeMethod)
         {
             var target = GetTarget();
 
@@ -1166,7 +1191,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             string json =
                 $"{{\"uri\":\"{resourceUri}\",\"method\":\"get\",\"id\":\"{id}\",\"from\":\"{@from}\",\"pp\":\"{pp}\",\"to\":\"{to}\",\"metadata\":{{\"{randomKey1}\":\"{randomString1.Escape()}\",\"{randomKey2}\":\"{randomString2.Escape()}\"}}}}";
 
-            var envelope = target.Deserialize(json);
+            var envelope = Deserialize<Command>(target, json, deserializeMethod);
 
             var command = envelope.ShouldBeOfType<Command>();
             Assert.AreEqual(id, command.Id);
@@ -1190,7 +1215,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 
         [Test]
         [Category("Deserialize")]
-        public void Deserialize_ReceiptRequestCommand_ReturnsValidInstance()
+        public void Deserialize_ReceiptRequestCommand_ReturnsValidInstance([Values(DeserializeMethod.String,DeserializeMethod.Stream)]DeserializeMethod deserializeMethod)
         {
             var target = GetTarget();
 
@@ -1200,7 +1225,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             string json =
                 $"{{\"type\":\"application/vnd.lime.receipt+json\",\"resource\":{{\"events\":[\"dispatched\",\"received\"]}},\"method\":\"{method.ToString().ToCamelCase()}\",\"id\":\"{id}\"}}";
 
-            var envelope = target.Deserialize(json);
+            var envelope = Deserialize<Command>(target, json, deserializeMethod);
 
             var command = envelope.ShouldBeOfType<Command>();
             Assert.AreEqual(id, command.Id);
@@ -1217,7 +1242,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 
         [Test]
         [Category("Deserialize")]
-        public void Deserialize_ContactCollectionResponseCommand_ReturnsValidInstance()
+        public void Deserialize_ContactCollectionResponseCommand_ReturnsValidInstance([Values(DeserializeMethod.String,DeserializeMethod.Stream)]DeserializeMethod deserializeMethod)
         {
             var target = GetTarget();
 
@@ -1244,7 +1269,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             string json =
                 $"{{\"type\":\"application/vnd.lime.collection+json\",\"resource\":{{\"itemType\":\"application/vnd.lime.contact+json\",\"total\":3,\"items\":[{{\"identity\":\"{identity1}\",\"name\":\"{name1.Escape()}\",\"isPending\":true,\"shareAccountInfo\":false}},{{\"identity\":\"{identity2}\",\"name\":\"{name2.Escape()}\",\"sharePresence\":false}},{{\"identity\":\"{identity3}\",\"name\":\"{name3.Escape()}\",\"isPending\":true,\"sharePresence\":false}}]}},\"method\":\"get\",\"status\":\"success\",\"id\":\"{id}\",\"from\":\"{@from}\",\"pp\":\"{pp}\",\"to\":\"{to}\",\"metadata\":{{\"{randomKey1}\":\"{randomString1.Escape()}\",\"{randomKey2}\":\"{randomString2.Escape()}\"}}}}";
 
-            var envelope = target.Deserialize(json);
+            var envelope = Deserialize<Command>(target, json, deserializeMethod);
 
             var command = envelope.ShouldBeOfType<Command>();
             Assert.AreEqual(id, command.Id);
@@ -1291,7 +1316,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 
         [Test]
         [Category("Deserialize")]
-        public void Deserialize_ContactCollectionResponseCommand_ReturnsValidInstanceWithCreationDate()
+        public void Deserialize_ContactCollectionResponseCommand_ReturnsValidInstanceWithCreationDate([Values(DeserializeMethod.String,DeserializeMethod.Stream)]DeserializeMethod deserializeMethod)
         {
             var target = GetTarget();
 
@@ -1324,7 +1349,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             string json =
                 $"{{\"type\":\"application/vnd.lime.collection+json\",\"resource\":{{\"itemType\":\"application/vnd.lime.contact+json\",\"total\":3,\"items\":[{{\"identity\":\"{identity1}\",\"name\":\"{name1.Escape()}\",\"creationDate\":\"{creationDateTime1}\",\"isPending\":true,\"shareAccountInfo\":false}},{{\"identity\":\"{identity2}\",\"name\":\"{name2.Escape()}\",\"creationDate\":\"{creationDateTime2}\",\"sharePresence\":false}},{{\"identity\":\"{identity3}\",\"name\":\"{name3.Escape()}\",\"isPending\":true,\"sharePresence\":false}}]}},\"method\":\"get\",\"status\":\"success\",\"id\":\"{id}\",\"from\":\"{@from}\",\"pp\":\"{pp}\",\"to\":\"{to}\",\"metadata\":{{\"{randomKey1}\":\"{randomString1.Escape()}\",\"{randomKey2}\":\"{randomString2.Escape()}\"}}}}";
 
-            var envelope = target.Deserialize(json);
+            var envelope = Deserialize<Command>(target, json, deserializeMethod);
 
             var command = envelope.ShouldBeOfType<Command>();
             Assert.AreEqual(id, command.Id);
@@ -1378,7 +1403,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 
         [Test]
         [Category("Deserialize")]
-        public void Deserialize_FailureCapabilityResponseCommand_ReturnsValidInstance()
+        public void Deserialize_FailureCapabilityResponseCommand_ReturnsValidInstance([Values(DeserializeMethod.String,DeserializeMethod.Stream)]DeserializeMethod deserializeMethod)
         {
             var target = GetTarget();
 
@@ -1392,7 +1417,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             string json =
                 $"{{\"method\":\"{method.ToString().ToCamelCase()}\",\"id\":\"{id}\",\"from\":\"{@from}\",\"to\":\"{to}\",\"status\":\"{status}\",\"reason\":{{\"code\":{reason.Code},\"description\":\"{reason.Description}\"}}}}";
 
-            var envelope = target.Deserialize(json);
+            var envelope = Deserialize<Command>(target, json, deserializeMethod);
             var command = envelope.ShouldBeOfType<Command>();
             Assert.AreEqual(id, command.Id);
             Assert.AreEqual(from, command.From);
@@ -1412,7 +1437,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 
         [Test]
         [Category("Deserialize")]
-        public void Deserialize_TextMessage_ReturnsValidInstance()
+        public void Deserialize_TextMessage_ReturnsValidInstance([Values(DeserializeMethod.String,DeserializeMethod.Stream)]DeserializeMethod deserializeMethod)
         {
             var target = GetTarget();
 
@@ -1431,7 +1456,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             string json =
                 $"{{\"type\":\"text/plain\",\"content\":\"{text.Escape()}\",\"id\":\"{id}\",\"from\":\"{@from}\",\"pp\":\"{pp}\",\"to\":\"{to}\",\"metadata\":{{\"{randomKey1}\":\"{randomString1.Escape()}\",\"{randomKey2}\":\"{randomString2.Escape()}\"}}}}";
 
-            var envelope = target.Deserialize(json);
+            var envelope = Deserialize<Message>(target, json, deserializeMethod);
 
             var message = envelope.ShouldBeOfType<Message>();
             Assert.AreEqual(id, message.Id);
@@ -1452,7 +1477,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 
         [Test]
         [Category("Deserialize")]
-        public void Deserialize_TextMessageWithNullFromTo_ReturnsValidInstance()
+        public void Deserialize_TextMessageWithNullFromTo_ReturnsValidInstance([Values(DeserializeMethod.String,DeserializeMethod.Stream)]DeserializeMethod deserializeMethod)
         {
             var target = GetTarget();
 
@@ -1471,7 +1496,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             string json =
                 $"{{\"type\":\"text/plain\",\"content\":\"{text.Escape()}\",\"id\":\"{id}\",\"from\":null,\"pp\":\"{pp}\",\"to\":null,\"metadata\":{{\"{randomKey1}\":\"{randomString1.Escape()}\",\"{randomKey2}\":\"{randomString2.Escape()}\"}}}}";
 
-            var envelope = target.Deserialize(json);
+            var envelope = Deserialize<Message>(target, json, deserializeMethod);
 
             var message = envelope.ShouldBeOfType<Message>();
             Assert.AreEqual(id, message.Id);
@@ -1492,7 +1517,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 
         [Test]
         [Category("Deserialize")]
-        public void Deserialize_ChatStateMessage_ReturnsValidInstance()
+        public void Deserialize_ChatStateMessage_ReturnsValidInstance([Values(DeserializeMethod.String,DeserializeMethod.Stream)]DeserializeMethod deserializeMethod)
         {
             var target = GetTarget();
 
@@ -1511,7 +1536,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             string json =
                 $"{{\"type\":\"application/vnd.lime.chatstate+json\",\"content\":{{\"state\":\"{state.ToString().ToLowerInvariant()}\"}},\"id\":\"{id}\",\"from\":\"{@from}\",\"pp\":\"{pp}\",\"to\":\"{to}\",\"metadata\":{{\"{randomKey1}\":\"{randomString1.Escape()}\",\"{randomKey2}\":\"{randomString2.Escape()}\"}}}}";
 
-            var envelope = target.Deserialize(json);
+            var envelope = Deserialize<Message>(target, json, deserializeMethod);
 
             var message = envelope.ShouldBeOfType<Message>();
             Assert.AreEqual(id, message.Id);
@@ -1532,14 +1557,14 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 
         [Test]
         [Category("Deserialize")]
-        public void Deserialize_DocumentSelect_ReturnValidInstance()
+        public void Deserialize_DocumentSelect_ReturnValidInstance([Values(DeserializeMethod.String,DeserializeMethod.Stream)]DeserializeMethod deserializeMethod)
         {
             // Arrange
             var json = "{\"id\":\"a77fa426-2990-4b98-adbf-db897436017b\",\"to\":\"949839515125748@messenger.gw.msging.net\",\"type\":\"application/vnd.lime.document-select+json\",\"content\":{\"header\":{\"type\":\"text/plain\",\"value\":\"Envie sua localizacao\"},\"options\":[{\"label\":{\"type\":\"application/vnd.lime.input+json\",\"value\":{\"validation\":{\"rule\":\"type\",\"type\":\"application/vnd.lime.location+json\"}}}}]}}";
             var target = GetTarget();
 
             // Act
-            var envelope = target.Deserialize(json);
+            var envelope = Deserialize<Message>(target, json, deserializeMethod);
 
             // Assert
             var message = envelope.ShouldBeOfType<Message>();
@@ -1554,7 +1579,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 
         [Test]
         [Category("Deserialize")]
-        public void Deserialize_UnknownPlainContentMessage_ReturnsValidInstance()
+        public void Deserialize_UnknownPlainContentMessage_ReturnsValidInstance([Values(DeserializeMethod.String,DeserializeMethod.Stream)]DeserializeMethod deserializeMethod)
         {
             var target = GetTarget();
 
@@ -1574,7 +1599,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             string json =
                 $"{{\"type\":\"{type}\",\"content\":\"{text}\",\"id\":\"{id}\",\"from\":\"{@from}\",\"pp\":\"{pp}\",\"to\":\"{to}\",\"metadata\":{{\"{randomKey1}\":\"{randomString1.Escape()}\",\"{randomKey2}\":\"{randomString2.Escape()}\"}}}}";
 
-            var envelope = target.Deserialize(json);
+            var envelope = Deserialize<Message>(target, json, deserializeMethod);
 
             var message = envelope.ShouldBeOfType<Message>();
             Assert.AreEqual(id, message.Id);
@@ -1597,7 +1622,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 
         [Test]
         [Category("Deserialize")]
-        public void Deserialize_IdentityDocumentMessage_ReturnsValidInstance()
+        public void Deserialize_IdentityDocumentMessage_ReturnsValidInstance([Values(DeserializeMethod.String,DeserializeMethod.Stream)]DeserializeMethod deserializeMethod)
         {
             var target = GetTarget();
 
@@ -1611,7 +1636,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             string json =
                 $"{{\"type\":\"{type}\",\"content\":\"{identityDocument}\",\"id\":\"{id}\",\"from\":\"{@from}\",\"to\":\"{to}\"}}";
 
-            var envelope = target.Deserialize(json);
+            var envelope = Deserialize<Message>(target, json, deserializeMethod);
 
             var message = envelope.ShouldBeOfType<Message>();
             Assert.AreEqual(id, message.Id);
@@ -1628,7 +1653,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 
         [Test]
         [Category("Deserialize")]
-        public void Deserialize_UnknownJsonContentMessage_ReturnsValidInstance()
+        public void Deserialize_UnknownJsonContentMessage_ReturnsValidInstance([Values(DeserializeMethod.String,DeserializeMethod.Stream)]DeserializeMethod deserializeMethod)
         {
             var target = GetTarget();
 
@@ -1667,7 +1692,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             string json =
                 $"{{\"type\":\"{type}\",\"content\":{{\"{propertyName1.Escape()}\":\"{propertyValue1.Escape()}\",\"{propertyName2.Escape()}\":{propertyValue2},\"{propertyName3.Escape()}\":[{{\"{arrayPropertyName1.Escape()}\":\"{arrayPropertyValue1}\",\"{arrayPropertyName2.Escape()}\":{arrayPropertyValue2}}},{{\"{arrayPropertyName3.Escape()}\":\"{arrayPropertyValue3.Escape()}\",\"{arrayPropertyName4.Escape()}\":{arrayPropertyValue4.ToString().ToLower()}}}],\"{propertyName4.Escape()}\":\"{propertyValue4.ToUniversalTime().ToString(StringJsonExtensions.DATE_FORMAT, CultureInfo.InvariantCulture)}\"}},\"id\":\"{id}\",\"from\":\"{@from}\",\"pp\":\"{pp}\",\"to\":\"{to}\",\"metadata\":{{\"{randomKey1}\":\"{randomString1.Escape()}\",\"{randomKey2}\":\"{randomString2.Escape()}\"}}}}";
 
-            var envelope = target.Deserialize(json);
+            var envelope = Deserialize<Message>(target, json, deserializeMethod);
 
             var message = envelope.ShouldBeOfType<Message>();
             Assert.AreEqual(id, message.Id);
@@ -1736,7 +1761,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 
         [Test]
         [Category("Deserialize")]
-        public void Deserialize_GenericJsonContentMessage_ReturnsValidInstance()
+        public void Deserialize_GenericJsonContentMessage_ReturnsValidInstance([Values(DeserializeMethod.String,DeserializeMethod.Stream)]DeserializeMethod deserializeMethod)
         {
             var target = GetTarget();
 
@@ -1761,7 +1786,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             string json =
                 $"{{\"type\":\"{type}\",\"content\":{{\"{propertyName1.Escape()}\":\"{propertyValue1.Escape()}\",\"{propertyName2.Escape()}\":{propertyValue2}}},\"id\":\"{id}\",\"from\":\"{@from}\",\"pp\":\"{pp}\",\"to\":\"{to}\",\"metadata\":{{\"{randomKey1}\":\"{randomString1.Escape()}\",\"{randomKey2}\":\"{randomString2.Escape()}\"}}}}";
 
-            var envelope = target.Deserialize(json);
+            var envelope = Deserialize<Message>(target, json, deserializeMethod);
 
             var message = envelope.ShouldBeOfType<Message>();
             Assert.AreEqual(id, message.Id);
@@ -1787,7 +1812,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 
         [Test]
         [Category("Deserialize")]
-        public void Deserialize_FireAndForgetTextMessage_ReturnsValidInstance()
+        public void Deserialize_FireAndForgetTextMessage_ReturnsValidInstance([Values(DeserializeMethod.String,DeserializeMethod.Stream)]DeserializeMethod deserializeMethod)
         {
             // Arrange
             var target = GetTarget();
@@ -1798,7 +1823,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
                 $"{{\"type\":\"text/plain\",\"content\":\"{text.Escape()}\",\"from\":\"{@from}\",\"to\":\"{to}\"}}";
 
             // Act
-            var envelope = target.Deserialize(json);
+            var envelope = Deserialize<Message>(target, json, deserializeMethod);
 
             // Assert
             var message = envelope.ShouldBeOfType<Message>();
@@ -1814,7 +1839,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 
         [Test]
         [Category("Deserialize")]
-        public void Deserialize_FireAndForgetChatStateMessage_ReturnsValidInstance()
+        public void Deserialize_FireAndForgetChatStateMessage_ReturnsValidInstance([Values(DeserializeMethod.String,DeserializeMethod.Stream)]DeserializeMethod deserializeMethod)
         {
             // Arrange
             var target = GetTarget();
@@ -1825,7 +1850,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
                 $"{{\"type\":\"application/vnd.lime.chatstate+json\",\"content\":{{\"state\":\"{state.ToString().ToCamelCase()}\"}},\"from\":\"{@from}\",\"to\":\"{to}\"}}";
 
             // Act
-            var envelope = target.Deserialize(json);
+            var envelope = Deserialize<Message>(target, json, deserializeMethod);
 
             // Assert
             var message = envelope.ShouldBeOfType<Message>();
@@ -1841,7 +1866,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 
         [Test]
         [Category("Deserialize")]
-        public void Deserialize_ReceivedNotification_ReturnsValidInstance()
+        public void Deserialize_ReceivedNotification_ReturnsValidInstance([Values(DeserializeMethod.String,DeserializeMethod.Stream)]DeserializeMethod deserializeMethod)
         {
             var target = GetTarget();
 
@@ -1860,7 +1885,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             string json =
                 $"{{\"type\":\"application/vnd.lime.text+json\",\"event\":\"{@event.ToString().ToCamelCase()}\",\"id\":\"{id}\",\"from\":\"{@from}\",\"pp\":\"{pp}\",\"to\":\"{to}\",\"metadata\":{{\"{randomKey1}\":\"{randomString1.Escape()}\",\"{randomKey2}\":\"{randomString2.Escape()}\"}}}}";
 
-            var envelope = target.Deserialize(json);
+            var envelope = Deserialize<Notification>(target, json, deserializeMethod);
             var notification = envelope.ShouldBeOfType<Notification>();
             Assert.AreEqual(id, notification.Id);
             Assert.AreEqual(from, notification.From);
@@ -1879,7 +1904,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 
         [Test]
         [Category("Deserialize")]
-        public void Deserialize_FailedNotification_ReturnsValidInstance()
+        public void Deserialize_FailedNotification_ReturnsValidInstance([Values(DeserializeMethod.String,DeserializeMethod.Stream)]DeserializeMethod deserializeMethod)
         {
             var target = GetTarget();
 
@@ -1895,7 +1920,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             string json =
                 $"{{\"event\":\"{@event.ToString().ToCamelCase()}\",\"id\":\"{id}\",\"from\":\"{@from}\",\"to\":\"{to}\",\"reason\":{{\"code\":{reasonCode},\"description\":\"{reasonDescription.Escape()}\"}}}}";
 
-            var envelope = target.Deserialize(json);
+            var envelope = Deserialize<Notification>(target, json, deserializeMethod);
 
             var notification = envelope.ShouldBeOfType<Notification>();
             Assert.AreEqual(id, notification.Id);
@@ -1914,7 +1939,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 
         [Test]
         [Category("Deserialize")]
-        public void Deserialize_AuthenticatingSession_ReturnsValidInstance()
+        public void Deserialize_AuthenticatingSession_ReturnsValidInstance([Values(DeserializeMethod.String,DeserializeMethod.Stream)]DeserializeMethod deserializeMethod)
         {
             var target = GetTarget();
 
@@ -1935,7 +1960,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             string json =
                 $"{{\"state\":\"{state.ToString().ToCamelCase()}\",\"scheme\":\"plain\",\"authentication\":{{\"password\":\"{password}\"}},\"id\":\"{id}\",\"from\":\"{@from}\",\"to\":\"{to}\",\"metadata\":{{\"{randomKey1}\":\"{randomString1.Escape()}\",\"{randomKey2}\":\"{randomString2.Escape()}\"}}}}";
 
-            var envelope = target.Deserialize(json);
+            var envelope = Deserialize<Session>(target, json, deserializeMethod);
 
             var session = envelope.ShouldBeOfType<Session>();
             Assert.AreEqual(id, session.Id);
@@ -1955,7 +1980,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 
         [Test]
         [Category("Deserialize")]
-        public void Deserialize_FailedSessionNullProperties_ReturnsValidInstance()
+        public void Deserialize_FailedSessionNullProperties_ReturnsValidInstance([Values(DeserializeMethod.String,DeserializeMethod.Stream)]DeserializeMethod deserializeMethod)
         {
             var target = GetTarget();
 
@@ -1970,7 +1995,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             string json =
                 $"{{\"state\":\"{state.ToString().ToCamelCase()}\",\"id\":\"{id}\",\"from\":\"{@from}\",\"to\":\"{to}\",\"reason\":{{\"code\":{reasonCode},\"description\":\"{reasonDescription.Escape()}\"}},\"encryptionOptions\":null,\"compressionOptions\":null,\"compression\":null,\"encryption\":null}}";
 
-            var envelope = target.Deserialize(json);
+            var envelope = Deserialize<Session>(target, json, deserializeMethod);
 
             var session = envelope.ShouldBeOfType<Session>();
             Assert.AreEqual(id, session.Id);
@@ -1989,14 +2014,14 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 
         [Test]
         [Category("Deserialize")]
-        public void Deserialize_SessionAuthenticatingWithPlainAuthentication_ReturnsValidInstance()
+        public void Deserialize_SessionAuthenticatingWithPlainAuthentication_ReturnsValidInstance([Values(DeserializeMethod.String,DeserializeMethod.Stream)]DeserializeMethod deserializeMethod)
         {
             // Arrange
             var serializer = GetTarget();
             var json = "{\"state\":\"authenticating\",\"scheme\":\"plain\",\"authentication\":{\"password\":\"Zg==\"},\"id\":\"ec9c196c-da09-43b0-923b-8ec162705c32\",\"from\":\"andre@takenet.com.br/MINELLI-NOTE\"}";
 
             // Act
-            var envelope = serializer.Deserialize(json);
+            var envelope = Deserialize<Session>(serializer, json, deserializeMethod);
 
             // Assert
             var session = envelope.ShouldBeOfType<Session>();
@@ -2007,14 +2032,14 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 
         [Test]
         [Category("Deserialize")]
-        public void Deserialize_SessionAuthenticatingWithExternalAuthentication_ReturnsValidInstance()
+        public void Deserialize_SessionAuthenticatingWithExternalAuthentication_ReturnsValidInstance([Values(DeserializeMethod.String,DeserializeMethod.Stream)]DeserializeMethod deserializeMethod)
         {
             // Arrange
             var serializer = GetTarget();
             var json = "{\"state\":\"authenticating\",\"scheme\":\"external\",\"authentication\":{\"token\":\"dFJZMTRXOE03NHBtcmZRNGY3NFo=\",\"issuer\":\"take.net\"},\"id\":\"ec9c196c-da09-43b0-923b-8ec162705c32\",\"from\":\"andre@takenet.com.br/MINELLI-NOTE\"}";
 
             // Act
-            var envelope = serializer.Deserialize(json);
+            var envelope = Deserialize<Session>(serializer, json, deserializeMethod);
 
             // Assert
             var session = envelope.ShouldBeOfType<Session>();
@@ -2026,14 +2051,14 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 
         [Test]
         [Category("Deserialize")]
-        public void Deserialize_SessionAuthenticatingWithGuestAuthentication_ReturnsValidInstance()
+        public void Deserialize_SessionAuthenticatingWithGuestAuthentication_ReturnsValidInstance([Values(DeserializeMethod.String,DeserializeMethod.Stream)]DeserializeMethod deserializeMethod)
         {
             // Arrange
             var serializer = GetTarget();
             var json = "{\"state\":\"authenticating\",\"scheme\":\"guest\",\"id\":\"feeb88e2-c209-40cd-b8ab-e14aeebe57ab\",\"from\":\"ca6829ff-1ac8-4dad-ad78-c25a3e4f8f7b@takenet.com.br/MINELLI-NOTE\"}";
 
             // Act
-            var envelope = serializer.Deserialize(json);
+            var envelope = Deserialize<Session>(serializer, json, deserializeMethod);
 
             // Assert
             var session = envelope.ShouldBeOfType<Session>();
@@ -2043,7 +2068,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 
         [Test]
         [Category("Deserialize")]
-        public void Deserialize_RandomResourceRequestCommand_ReturnsValidInstance()
+        public void Deserialize_RandomResourceRequestCommand_ReturnsValidInstance([Values(DeserializeMethod.String,DeserializeMethod.Stream)]DeserializeMethod deserializeMethod)
         {
             // Arrange
             var target = GetTarget();
@@ -2055,7 +2080,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
                 $"{{\"type\":\"application/vnd.takenet.testdocument+json\",\"resource\":{{\"double\":10.1, \"NullableDouble\": 10.2, \"Status\":\"Success\"}},\"method\":\"{method.ToString().ToCamelCase()}\",\"id\":\"{id}\"}}";
 
             // Act
-            var envelope = target.Deserialize(json);
+            var envelope = Deserialize<Command>(target, json, deserializeMethod);
 
             // Assert
             var command = envelope.ShouldBeOfType<Command>();
@@ -2069,7 +2094,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 
         [Test]
         [Category("Deserialize")]
-        public void Deserialize_DocumentContainerDocumentCollectionMessage_ReturnsValidInstance()
+        public void Deserialize_DocumentContainerDocumentCollectionMessage_ReturnsValidInstance([Values(DeserializeMethod.String,DeserializeMethod.Stream)]DeserializeMethod deserializeMethod)
         {
             // Arrange
             var id = EnvelopeId.NewId();
@@ -2078,7 +2103,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             var target = GetTarget();
 
             // Act
-            var envelope = target.Deserialize(json);
+            var envelope = Deserialize<Message>(target, json, deserializeMethod);
 
             // Assert
             envelope.ShouldNotBeNull();
@@ -2111,14 +2136,14 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 
         [Test]
         [Category("Deserialize")]
-        public void Deserialize_DocumentSelectMessage_ReturnsValidInstance()
+        public void Deserialize_DocumentSelectMessage_ReturnsValidInstance([Values(DeserializeMethod.String,DeserializeMethod.Stream)]DeserializeMethod deserializeMethod)
         {
             // Arrange            
             var json = "{\"id\":\"message-id\",\"from\":\"andreb@msging.net\",\"type\":\"application/vnd.lime.document-select+json\",\"content\":{\"header\":{\"type\":\"application/vnd.lime.media-link+json\",\"value\":{\"title\":\"Welcome to Peter\'s Hats\",\"text\":\"We\'ve got the right hat for everyone.\",\"type\":\"image/jpeg\",\"uri\":\"http://petersapparel.parseapp.com/img/item100-thumb.png\"}},\"options\":[{\"label\":{\"type\":\"application/vnd.lime.web-link+json\",\"value\":{\"text\":\"View Website\",\"uri\":\"https://petersapparel.parseapp.com/view_item?item_id=100\"}}},{\"label\":{\"type\":\"text/plain\",\"value\":\"Start Chatting\"},\"value\":{\"type\":\"application/json\",\"value\":{\"key\":\"key1\",\"value\":1}}}]}}";
             var target = GetTarget();
 
             // Act
-            var envelope = target.Deserialize(json);
+            var envelope = Deserialize<Message>(target, json, deserializeMethod);
 
             // Assert
             envelope.ShouldNotBeNull();
@@ -2149,7 +2174,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 
         [Test]
         [Category("Deserialize")]
-        public void Deserialize_CommandWithMessage_ReturnsValidInstance()
+        public void Deserialize_CommandWithMessage_ReturnsValidInstance([Values(DeserializeMethod.String,DeserializeMethod.Stream)]DeserializeMethod deserializeMethod)
         {
             // Arrange
             var json =
@@ -2158,7 +2183,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             var target = GetTarget();
 
             // Act
-            var actual = target.Deserialize(json);
+            var actual = Deserialize<Command>(target, json, deserializeMethod);
 
             // Assert
             var actualCommand = actual.ShouldBeOfType<Command>();
@@ -2170,7 +2195,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 
         [Test]
         [Category("Deserialize")]
-        public void Deserialize_ObserveCommandWithoutId_ReturnsValidInstance()
+        public void Deserialize_ObserveCommandWithoutId_ReturnsValidInstance([Values(DeserializeMethod.String,DeserializeMethod.Stream)]DeserializeMethod deserializeMethod)
         {
             // Arrange
             var json =
@@ -2179,7 +2204,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             var target = GetTarget();
 
             // Act
-            var actual = target.Deserialize(json);
+            var actual = Deserialize<Command>(target, json, deserializeMethod);
 
             // Assert
             var actualCommand = actual.ShouldBeOfType<Command>();
@@ -2190,7 +2215,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 
         [Test]
         [Category("Deserialize")]
-        public void Deserialize_WeblinkMessage_ReturnsValidInstance()
+        public void Deserialize_WeblinkMessage_ReturnsValidInstance([Values(DeserializeMethod.String,DeserializeMethod.Stream)]DeserializeMethod deserializeMethod)
         {
             // Arrange
             var json =
@@ -2198,7 +2223,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             var target = GetTarget();
 
             // Act
-            var actual = target.Deserialize(json);
+            var actual = Deserialize<Message>(target, json, deserializeMethod);
 
             // Assert
             var actualMessage = actual.ShouldBeOfType<Message>();
@@ -2215,7 +2240,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 
         [Test]
         [Category("Deserialize")]
-        public void Deserialize_InvalidWeblinkMessage_ReturnsJsonDocument()
+        public void Deserialize_InvalidWeblinkMessage_ReturnsJsonDocument([Values(DeserializeMethod.String,DeserializeMethod.Stream)]DeserializeMethod deserializeMethod)
         {
             // Arrange
             var json =
@@ -2223,7 +2248,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             var target = GetTarget();
 
             // Act
-            var actual = target.Deserialize(json);
+            var actual = Deserialize<Message>(target, json, deserializeMethod);
 
             // Assert
             var actualMessage = actual.ShouldBeOfType<Message>();
@@ -2240,7 +2265,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 
         [Test]
         [Category("Deserialize")]
-        public void Deserialize_LocationMessage_ReturnsJsonDocument()
+        public void Deserialize_LocationMessage_ReturnsJsonDocument([Values(DeserializeMethod.String,DeserializeMethod.Stream)]DeserializeMethod deserializeMethod)
         {
             // Arrange
             var json =
@@ -2249,7 +2274,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             var target = GetTarget();
 
             // Act
-            var actual = target.Deserialize(json);
+            var actual = Deserialize<Message>(target, json, deserializeMethod);
 
             // Assert
             var actualMessage = actual.ShouldBeOfType<Message>();
@@ -2262,7 +2287,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 
         [Test]
         [Category("Deserialize")]
-        public void Deserialize_WeblinkWithEscapedUriMessage_ReturnsValidInstance()
+        public void Deserialize_WeblinkWithEscapedUriMessage_ReturnsValidInstance([Values(DeserializeMethod.String,DeserializeMethod.Stream)]DeserializeMethod deserializeMethod)
         {
             // Arrange
             var json =
@@ -2270,7 +2295,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             var target = GetTarget();
 
             // Act
-            var actual = target.Deserialize(json);
+            var actual = Deserialize<Message>(target, json, deserializeMethod);
 
             // Assert
             var actualMessage = actual.ShouldBeOfType<Message>();
@@ -2281,7 +2306,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 
         [Test]
         [Category("Deserialize")]
-        public void Deserialize_SelectMessage_ReturnsValidInstance()
+        public void Deserialize_SelectMessage_ReturnsValidInstance([Values(DeserializeMethod.String,DeserializeMethod.Stream)]DeserializeMethod deserializeMethod)
         {
             // Arrange
             var json =
@@ -2289,7 +2314,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             var target = GetTarget();
 
             // Act
-            var actual = target.Deserialize(json);
+            var actual = Deserialize<Message>(target, json, deserializeMethod);
 
             // Assert
             var actualMessage = actual.ShouldBeOfType<Message>();
@@ -2303,7 +2328,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 
         [Test]
         [Category("Deserialize")]
-        public void Deserialize_SelectWithOptionWithNullType_ReturnsValidInstance()
+        public void Deserialize_SelectWithOptionWithNullType_ReturnsValidInstance([Values(DeserializeMethod.String,DeserializeMethod.Stream)]DeserializeMethod deserializeMethod)
         {
             // Arrange
             var json =
@@ -2311,7 +2336,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             var target = GetTarget();
 
             // Act
-            var actual = target.Deserialize(json);
+            var actual = Deserialize<Message>(target, json, deserializeMethod);
 
             // Assert
             var actualMessage = actual.ShouldBeOfType<Message>();
@@ -2326,7 +2351,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 
         [Test]
         [Category("Deserialize")]
-        public void Deserialize_RawJsonMessage_ReturnsJsonDocument()
+        public void Deserialize_RawJsonMessage_ReturnsJsonDocument([Values(DeserializeMethod.String,DeserializeMethod.Stream)]DeserializeMethod deserializeMethod)
         {
             // Arrange
             var json =
@@ -2334,7 +2359,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             var target = GetTarget();
 
             // Act
-            var actual = target.Deserialize(json);
+            var actual = Deserialize<Message>(target, json, deserializeMethod);
 
             // Assert
             var actualMessage = actual.ShouldBeOfType<Message>();
@@ -2350,7 +2375,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
         [Test]
         [Category("Serialize")]
         [Category("Deserialize")]
-        public void DeserializeAndSerialize_JsonDocument_ShouldReturnValidDocument()
+        public void DeserializeAndSerialize_JsonDocument_ShouldReturnValidDocument([Values(DeserializeMethod.String,DeserializeMethod.Stream)]DeserializeMethod deserializeMethod)
         {
             // Arrange
             var json =
@@ -2358,7 +2383,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             var target = GetTarget();
 
             // Act
-            var actualDocument = target.Deserialize(target.Serialize(target.Deserialize(json)));
+            var actualDocument = Deserialize<Message>(target, target.Serialize(target.Deserialize(json)), deserializeMethod);
 
             // Assert
             var actualMessage = actualDocument.ShouldBeOfType<Message>();
