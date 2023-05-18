@@ -382,8 +382,8 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
                 Content = documentConteiner,
                 ReplyTo = new ReplyTo
                 {
-                    Content = documentConteiner,
-                    Id = id
+                    Id = id,
+                    Value = documentConteiner.Value
                 }
             };
 
@@ -1522,7 +1522,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             var text2 = text.Escape();
 
             string json =
-                $"{{\"id\":\"{id}\",\"to\":\"{to}\",\"from\":\"{@from}\",\"pp\":\"{pp}\",\"type\":\"application/vnd.lime.reply+json\",\"metadata\":{{\"{randomKey1}\":\"{randomString1.Escape()}\",\"{randomKey2}\":\"{randomString2.Escape()}\"}},\"content\":{{\"content\":{{\"type\":\"text/plain\",\"value\":\"{text1}\"}},\"replyTo\":{{\"id\":\"{id}\",\"content\":{{\"type\":\"text/plain\",\"value\":\"{text2}\"}}}}}}}}";
+                $"{{\"id\":\"{id}\",\"to\":\"{to}\",\"from\":\"{@from}\",\"pp\":\"{pp}\",\"type\":\"application/vnd.lime.reply+json\",\"metadata\":{{\"{randomKey1}\":\"{randomString1.Escape()}\",\"{randomKey2}\":\"{randomString2.Escape()}\"}},\"content\":{{\"content\":{{\"type\":\"text/plain\",\"value\":\"{text1}\"}},\"replyTo\":{{\"id\":\"{id}\",\"type\":\"text/plain\",\"value\":\"{text2}\"}}}}}}";
 
             var envelope = target.Deserialize(json);
 
@@ -1546,7 +1546,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             var replyText = reply.Content.Value.ShouldBeOfType<PlainText>();
             Assert.AreEqual(text1, replyText.Text);
 
-            var replyToText = reply.ReplyTo.Content.Value.ShouldBeOfType<PlainText>();
+            var replyToText = reply.ReplyTo.Value.ShouldBeOfType<PlainText>();
             Assert.AreEqual(text2, replyToText.Text);
         }
 

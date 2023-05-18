@@ -1,5 +1,6 @@
 ﻿using System.Runtime.Serialization;
 using Lime.Protocol;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace Lime.Messaging.Contents
 {
@@ -42,18 +43,35 @@ namespace Lime.Messaging.Contents
     public class ReplyTo
     {
         public const string ID = "id";
-        public const string CONTENT = "content";
+        public const string TYPE_KEY = "type";
+        public const string VALUE_KEY = "value";
 
         /// <summary>
         /// Gets or sets the identifier of the message being replied to.
         /// </summary>
+        /// <value>
+        /// The Id.
+        /// </value>   
         [DataMember(Name = ID)]
         public string Id { get; set; }
 
         /// <summary>
-        /// Gets or sets the content of the reply.
+        /// Gets the media type of the option <see cref="Value"/>.
         /// </summary>
-        [DataMember(Name = CONTENT)]
-        public DocumentContainer Content { get; set; }
+        /// <value>
+        /// The type.
+        /// </value>        
+        [DataMember(Name = TYPE_KEY)]
+        public MediaType Type => Value?.GetMediaType();
+
+        /// <summary>
+        /// Gets or sets the option value to be returned to the caller.
+        /// If not defined, the value of <see cref="Order"/> (if defined) or <see cref="Text"/> should be returned.
+        /// </summary>
+        /// <value>
+        /// The value.
+        /// </value>
+        [DataMember(Name = VALUE_KEY)]
+        public Document Value { get; set; }
     }
 }
