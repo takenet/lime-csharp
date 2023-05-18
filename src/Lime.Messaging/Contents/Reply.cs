@@ -56,20 +56,19 @@ namespace Lime.Messaging.Contents
         public string Id { get; set; }
 
         /// <summary>
-        /// Gets the media type of the option <see cref="Value"/>.
+        /// Gets the media type of the sensitive document.
         /// </summary>
         /// <value>
         /// The type.
-        /// </value>        
+        /// </value>
         [DataMember(Name = TYPE_KEY)]
         public MediaType Type => Value?.GetMediaType();
 
         /// <summary>
-        /// Gets or sets the option value to be returned to the caller.
-        /// If not defined, the value of <see cref="Order"/> (if defined) or <see cref="Text"/> should be returned.
+        /// Gets or sets the contained document value.
         /// </summary>
         /// <value>
-        /// The value.
+        /// The document.
         /// </value>
         [DataMember(Name = VALUE_KEY)]
         public Document Value { get; set; }
