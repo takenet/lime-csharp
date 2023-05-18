@@ -13,10 +13,10 @@ namespace Lime.Messaging.Contents
         public static readonly string MimeType = "application/vnd.lime.reply+json";
         public static readonly MediaType MediaType = MediaType.Parse(MimeType);
 
-        public const string CONTENT = "content";
-        public const string REPLY_TO = "replyTo";
+        public const string REPLIED = "replied";
+        public const string IN_REPLY_TO = "inReplyTo";
         /// <summary>
-        /// Initializes a new instance of the <see cref="Reply"/> class.
+        /// Initializes a new instance of the <see cref="Contents.Reply"/> class.
         /// </summary>
         public Reply()
             : base(MediaType)
@@ -26,21 +26,21 @@ namespace Lime.Messaging.Contents
         /// <summary>
         /// Gets or sets the content of the reply.
         /// </summary>
-        [DataMember(Name = CONTENT)]
-        public DocumentContainer Content { get; set; }
+        [DataMember(Name = REPLIED)]
+        public DocumentContainer Replied { get; set; }
 
         /// <summary>
         /// Gets or sets the reference to the message being replied to.
         /// </summary>
-        [DataMember(Name = REPLY_TO)]
-        public ReplyTo ReplyTo { get; set; }
+        [DataMember(Name = IN_REPLY_TO)]
+        public InReplyTo InReplyTo { get; set; }
     }
 
     /// <summary>
     /// Represents the document container for the reply reference.
     /// </summary>
     [DataContract]
-    public class ReplyTo
+    public class InReplyTo
     {
         public const string ID = "id";
         public const string TYPE_KEY = "type";

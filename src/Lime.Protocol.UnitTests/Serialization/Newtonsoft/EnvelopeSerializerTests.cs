@@ -379,8 +379,8 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 
             var reply = new Reply
             {
-                Content = documentConteiner,
-                ReplyTo = new ReplyTo
+                Replied = documentConteiner,
+                InReplyTo = new InReplyTo
                 {
                     Id = id,
                     Value = documentConteiner.Value
@@ -410,11 +410,11 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             Assert.IsTrue(resultString.ContainsJsonProperty(metadataKey2, metadataValue2));
 
             var dictionary = JsonConvert.DeserializeObject<Dictionary<string, object>>(resultString, target.Settings);
-            var replyObject = dictionary[Reply.CONTENT].ShouldBeAssignableTo<JObject>();
-            var contentObject = replyObject[Reply.CONTENT].ShouldBeAssignableTo<JObject>();
-            var replyToObject = replyObject[Reply.REPLY_TO].ShouldBeAssignableTo<JObject>();
+            var replyObject = dictionary[Message.CONTENT_KEY].ShouldBeAssignableTo<JObject>();
+            var contentObject = replyObject[Reply.REPLIED].ShouldBeAssignableTo<JObject>();
+            var replyToObject = replyObject[Reply.IN_REPLY_TO].ShouldBeAssignableTo<JObject>();
 
-            replyToObject[ReplyTo.ID].ShouldBe(id);
+            replyToObject[InReplyTo.ID].ShouldBe(id);
             contentObject[DocumentContainer.VALUE_KEY].ShouldBe(content.Text);
         }
 
@@ -1521,7 +1521,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             var text2 = Dummy.CreateRandomStringExtended(50);
      
             string json =
-                $"{{\"id\":\"{id}\",\"to\":\"{to}\",\"from\":\"{@from}\",\"pp\":\"{pp}\",\"type\":\"application/vnd.lime.reply+json\",\"metadata\":{{\"{randomKey1}\":\"{randomString1.Escape()}\",\"{randomKey2}\":\"{randomString2.Escape()}\"}},\"content\":{{\"content\":{{\"type\":\"text/plain\",\"value\":\"{text1.Escape()}\"}},\"replyTo\":{{\"id\":\"{id}\",\"type\":\"text/plain\",\"value\":\"{text2.Escape()}\"}}}}}}";
+                $"{{\"id\":\"{id}\",\"to\":\"{to}\",\"from\":\"{@from}\",\"pp\":\"{pp}\",\"type\":\"application/vnd.lime.reply+json\",\"metadata\":{{\"{randomKey1}\":\"{randomString1.Escape()}\",\"{randomKey2}\":\"{randomString2.Escape()}\"}},\"content\":{{\"replied\":{{\"type\":\"text/plain\",\"value\":\"{text1.Escape()}\"}},\"inReplyTo\":{{\"id\":\"{id}\",\"type\":\"text/plain\",\"value\":\"{text2.Escape()}\"}}}}}}";
 
             var envelope = target.Deserialize(json);
 
@@ -1540,12 +1540,12 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 
             var reply = (Reply)message.Content;
 
-            Assert.AreEqual(id, reply.ReplyTo.Id);
+            Assert.AreEqual(id, reply.InReplyTo.Id);
 
-            var replyText = reply.Content.Value.ShouldBeOfType<PlainText>();
+            var replyText = reply.Replied.Value.ShouldBeOfType<PlainText>();
             Assert.AreEqual(text1, replyText.Text);
 
-            var replyToText = reply.ReplyTo.Value.ShouldBeOfType<PlainText>();
+            var replyToText = reply.InReplyTo.Value.ShouldBeOfType<PlainText>();
             Assert.AreEqual(text2, replyToText.Text);
         }
 
