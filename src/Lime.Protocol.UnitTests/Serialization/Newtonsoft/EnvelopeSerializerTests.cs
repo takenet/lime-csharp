@@ -1517,12 +1517,11 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             string randomString1 = Dummy.CreateRandomStringExtended(50);
             string randomString2 = Dummy.CreateRandomStringExtended(50);
 
-            var text = Dummy.CreateRandomStringExtended(50);
-            var text1 = text.Escape();
-            var text2 = text.Escape();
-
+            var text1 = Dummy.CreateRandomStringExtended(50);
+            var text2 = Dummy.CreateRandomStringExtended(50);
+     
             string json =
-                $"{{\"id\":\"{id}\",\"to\":\"{to}\",\"from\":\"{@from}\",\"pp\":\"{pp}\",\"type\":\"application/vnd.lime.reply+json\",\"metadata\":{{\"{randomKey1}\":\"{randomString1.Escape()}\",\"{randomKey2}\":\"{randomString2.Escape()}\"}},\"content\":{{\"content\":{{\"type\":\"text/plain\",\"value\":\"{text1}\"}},\"replyTo\":{{\"id\":\"{id}\",\"type\":\"text/plain\",\"value\":\"{text2}\"}}}}}}";
+                $"{{\"id\":\"{id}\",\"to\":\"{to}\",\"from\":\"{@from}\",\"pp\":\"{pp}\",\"type\":\"application/vnd.lime.reply+json\",\"metadata\":{{\"{randomKey1}\":\"{randomString1.Escape()}\",\"{randomKey2}\":\"{randomString2.Escape()}\"}},\"content\":{{\"content\":{{\"type\":\"text/plain\",\"value\":\"{text1.Escape()}\"}},\"replyTo\":{{\"id\":\"{id}\",\"type\":\"text/plain\",\"value\":\"{text2.Escape()}\"}}}}}}";
 
             var envelope = target.Deserialize(json);
 
