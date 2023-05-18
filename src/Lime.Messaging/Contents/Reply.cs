@@ -50,7 +50,7 @@ namespace Lime.Messaging.Contents
         /// Gets or sets the identifier of the message being replied to.
         /// </summary>
         /// <value>
-        /// The Id.
+        /// The string.
         /// </value>   
         [DataMember(Name = ID)]
         public string Id { get; set; }
