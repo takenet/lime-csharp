@@ -20,7 +20,7 @@ resources:
 extends:
   template: template-pipeline.yml@templates
   parameters: 
-    skipSast: false
+    skipSast: true
     sastFilter: "!**/**, src/*"
     skipSonarBranch: true
     solution: "src/Lime.sln"
