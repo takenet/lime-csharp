@@ -5,29 +5,14 @@
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
     <RestorePackages>true</RestorePackages>
     <IsWebBootstrapper>false</IsWebBootstrapper>
-    <PublishUrl>\\smc2.takenet.com.br\Departamentos\Tecnologia\Binarios\Plataformas\Iris\Lime.Client.TestConsole\</PublishUrl>
     <Install>true</Install>
-    <InstallFrom>Unc</InstallFrom>
-    <UpdateEnabled>true</UpdateEnabled>
-    <UpdateMode>Foreground</UpdateMode>
-    <UpdateInterval>7</UpdateInterval>
-    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
-    <UpdatePeriodically>false</UpdatePeriodically>
-    <UpdateRequired>false</UpdateRequired>
-    <MapFileExtensions>true</MapFileExtensions>
-    <InstallUrl>\\smc2.takenet.com.br\Departamentos\Tecnologia\Binarios\Plataformas\Iris\Lime.Client.TestConsole\</InstallUrl>
     <ProductName>Lime Test Console</ProductName>
-    <PublisherName>Take.net</PublisherName>
+    <PublisherName>Blip</PublisherName>
     <SuiteName>Lime</SuiteName>
-    <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
-    <WebPage>index.html</WebPage>
-    <OpenBrowserOnPublish>false</OpenBrowserOnPublish>
-    <ApplicationRevision>0</ApplicationRevision>
-    <ApplicationVersion>1.11.15.0</ApplicationVersion>
+	<VersionPrefix>1.11.15.0</VersionPrefix>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
-    <BootstrapperEnabled>true</BootstrapperEnabled>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateAssemblyInfo>True</GenerateAssemblyInfo>
     <UseWPF>true</UseWPF>
     <ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
   </PropertyGroup>
@@ -45,6 +30,8 @@
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>lime.ico</ApplicationIcon>
+    <Title>LIME Test Console</Title>
+    <Company>$(PublisherName)</Company>
   </PropertyGroup>
   <ItemGroup>
     <AppDesigner Include="Properties\" />
@@ -64,18 +51,10 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.0" />
-    <PackageReference Include="Extended.Wpf.Toolkit">
-      <Version>4.5.0</Version>
-    </PackageReference>
-    <PackageReference Include="Lime.Messaging">
-      <Version>0.12.45</Version>
-    </PackageReference>
-    <PackageReference Include="Lime.Transport.Tcp">
-      <Version>0.12.45</Version>
-    </PackageReference>
-    <PackageReference Include="Lime.Transport.WebSocket">
-      <Version>0.12.45</Version>
-    </PackageReference>
+    <PackageReference Include="Extended.Wpf.Toolkit" Version="4.5.0" />
+    <PackageReference Include="Lime.Messaging" Version="0.12.45" />
+    <PackageReference Include="Lime.Transport.Tcp" Version="0.12.45" />
+    <PackageReference Include="Lime.Transport.WebSocket" Version="0.12.45" />
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
     <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.39" />
     <PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />

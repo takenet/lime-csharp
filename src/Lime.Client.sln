@@ -1,13 +1,15 @@
-
+﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.26430.14
+# Visual Studio Version 17
+VisualStudioVersion = 17.6.33723.286
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lime.Client.TestConsole", "Lime.Client.TestConsole\Lime.Client.TestConsole.csproj", "{9E13148D-726D-4E42-B924-4A1AF4F0DC3E}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lime.Client.Windows", "Lime.Client.Windows\Lime.Client.Windows.csproj", "{1847098B-FE9E-4E40-AA69-9E70FAF5D06E}"
 EndProject
 Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "Lime.Client.TestConsole.Setup", "Lime.Client.TestConsole.Setup\Lime.Client.TestConsole.Setup.vdproj", "{FF8B3AEE-EEC7-4C71-BE7A-FF8908BEAEBE}"
+EndProject
+Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "Lime.Client.TestConsole.Installer", "Lime.Client.TestConsole.Installer\Lime.Client.TestConsole.Installer.vdproj", "{AA98158D-6422-4B9A-954E-F47C38B60C3F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -25,8 +27,13 @@ Global
 		{1847098B-FE9E-4E40-AA69-9E70FAF5D06E}.Release|Any CPU.Build.0 = Release|Any CPU
 		{FF8B3AEE-EEC7-4C71-BE7A-FF8908BEAEBE}.Debug|Any CPU.ActiveCfg = Debug
 		{FF8B3AEE-EEC7-4C71-BE7A-FF8908BEAEBE}.Release|Any CPU.ActiveCfg = Release
+		{AA98158D-6422-4B9A-954E-F47C38B60C3F}.Debug|Any CPU.ActiveCfg = Debug
+		{AA98158D-6422-4B9A-954E-F47C38B60C3F}.Release|Any CPU.ActiveCfg = Release
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {1EBF3C44-1405-45E9-AB28-5057C56438AA}
 	EndGlobalSection
 EndGlobal
