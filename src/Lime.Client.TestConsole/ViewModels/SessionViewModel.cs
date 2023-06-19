@@ -565,6 +565,7 @@ namespace Lime.Client.TestConsole.ViewModels
                 OnPropertyChanged(nameof(SelectedProfile));
 
                 LoadProfileCommand.NotifyCanExecuteChanged();
+                DeleteElementProfileCommand.NotifyCanExecuteChanged();
             }
         }
 
@@ -1012,9 +1013,10 @@ namespace Lime.Client.TestConsole.ViewModels
 
         private void LoadHost()
         {
-            if (File.Exists(HOST_FILE_NAME))
+            var appDataFileName = FileUtil.GetAppDataFileName(HOST_FILE_NAME);
+            if (File.Exists(appDataFileName))
             {
-                Host = File.ReadAllText(HOST_FILE_NAME);
+                Host = File.ReadAllText(appDataFileName);
             }
         }
 
@@ -1022,7 +1024,8 @@ namespace Lime.Client.TestConsole.ViewModels
         {
             if (!string.IsNullOrEmpty(Host))
             {
-                File.WriteAllText(HOST_FILE_NAME, Host);
+                var appDataFileName = FileUtil.GetAppDataFileName(HOST_FILE_NAME);
+                File.WriteAllText(appDataFileName, Host);
             }
         }
 
