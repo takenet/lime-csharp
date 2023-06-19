@@ -15,19 +15,7 @@
     {
         "Entry"
         {
-        "MsmKey" = "8:_263E3D8F2BED4A5BBDA27590CA1959CC"
-        "OwnerKey" = "8:_UNDEFINED"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_682C684A6137499A86499C6C5C243EA3"
-        "OwnerKey" = "8:_UNDEFINED"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_6E534EED4AA34F7B8EE3D0965787CE7A"
+        "MsmKey" = "8:_0450105315BD4F2088D54065C68CD8C7"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -39,7 +27,7 @@
         }
         "Entry"
         {
-        "MsmKey" = "8:_F0C83E8B7AB34EE38FCFCAD8562CBC8D"
+        "MsmKey" = "8:_D429029495F540E282948C1D6564196F"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -61,6 +49,27 @@
         "PrivateKeyFile" = "8:"
         "TimeStampServer" = "8:"
         "InstallerBootstrapper" = "3:2"
+            "BootstrapperCfg:{63ACBE69-63AA-4F98-B2B6-99F9E24495F2}"
+            {
+            "Enabled" = "11:TRUE"
+            "PromptEnabled" = "11:TRUE"
+            "PrerequisitesLocation" = "2:1"
+            "Url" = "8:"
+            "ComponentsUrl" = "8:"
+                "Items"
+                {
+                    "{EDC2488A-8267-493A-A98E-7D9C3B36CDF3}:Microsoft.NetCore.DesktopRuntime.6.0.x64"
+                    {
+                    "Name" = "8:.NET Desktop Runtime 6.0.18 (x64)"
+                    "ProductCode" = "8:Microsoft.NetCore.DesktopRuntime.6.0.x64"
+                    }
+                    "{EDC2488A-8267-493A-A98E-7D9C3B36CDF3}:Microsoft.NetCore.DesktopRuntime.6.0.x86"
+                    {
+                    "Name" = "8:.NET Desktop Runtime 6.0.18 (x86)"
+                    "ProductCode" = "8:Microsoft.NetCore.DesktopRuntime.6.0.x86"
+                    }
+                }
+            }
         }
         "Release"
         {
@@ -77,6 +86,22 @@
         "PrivateKeyFile" = "8:"
         "TimeStampServer" = "8:"
         "InstallerBootstrapper" = "3:2"
+            "BootstrapperCfg:{63ACBE69-63AA-4F98-B2B6-99F9E24495F2}"
+            {
+            "Enabled" = "11:TRUE"
+            "PromptEnabled" = "11:TRUE"
+            "PrerequisitesLocation" = "2:1"
+            "Url" = "8:"
+            "ComponentsUrl" = "8:"
+                "Items"
+                {
+                    "{EDC2488A-8267-493A-A98E-7D9C3B36CDF3}:.NETFramework,Version=v4.7.2"
+                    {
+                    "Name" = "8:Microsoft .NET Framework 4.7.2 (x86 and x64)"
+                    "ProductCode" = "8:.NETFramework,Version=v4.7.2"
+                    }
+                }
+            }
         }
     }
     "Deployable"
@@ -108,27 +133,7 @@
         }
         "File"
         {
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_682C684A6137499A86499C6C5C243EA3"
-            {
-            "SourcePath" = "8:..\\Lime.Client.TestConsole\\Templates.txt"
-            "TargetName" = "8:Templates.txt"
-            "Tag" = "8:"
-            "Folder" = "8:_518974716D414787AED7B30C477247C3"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_6E534EED4AA34F7B8EE3D0965787CE7A"
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_0450105315BD4F2088D54065C68CD8C7"
             {
             "SourcePath" = "8:..\\Lime.Client.TestConsole\\bin\\Release\\net6.0-windows\\Lime.Client.TestConsole.exe"
             "TargetName" = "8:Lime.Client.TestConsole.exe"
@@ -168,26 +173,6 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_F0C83E8B7AB34EE38FCFCAD8562CBC8D"
-            {
-            "SourcePath" = "8:..\\Lime.Client.TestConsole\\Variables.txt"
-            "TargetName" = "8:Variables.txt"
-            "Tag" = "8:"
-            "Folder" = "8:_518974716D414787AED7B30C477247C3"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
         }
         "FileType"
         {
@@ -204,28 +189,6 @@
             "Property" = "8:TARGETDIR"
                 "Folders"
                 {
-                }
-            }
-            "{1525181F-901A-416C-8A58-119130FE478E}:_65CA023303374DB091CA8916BA8794A2"
-            {
-            "Name" = "8:#1915"
-            "AlwaysCreate" = "11:FALSE"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Property" = "8:AppDataFolder"
-                "Folders"
-                {
-                    "{9EF0B969-E518-4E46-987F-47570745A589}:_518974716D414787AED7B30C477247C3"
-                    {
-                    "Name" = "8:LIME Test Console"
-                    "AlwaysCreate" = "11:FALSE"
-                    "Condition" = "8:"
-                    "Transitive" = "11:FALSE"
-                    "Property" = "8:_390B6283541B43648EB554E24FD11315"
-                        "Folders"
-                        {
-                        }
-                    }
                 }
             }
             "{1525181F-901A-416C-8A58-119130FE478E}:_B87D390A91894D0F8901A02AE58CF69B"
@@ -265,22 +228,22 @@
         "Product"
         {
         "Name" = "8:Microsoft Visual Studio"
-        "ProductName" = "8:Lime.Client.TestConsole.Installer"
+        "ProductName" = "8:LIME Test Console"
         "ProductCode" = "8:{0ADD07FC-BD00-4B00-8B8B-094A42964954}"
-        "PackageCode" = "8:{815A837D-6B51-4267-A4EA-D858A7BB86A5}"
+        "PackageCode" = "8:{2062F3E3-C110-4BE5-84A8-14233552F019}"
         "UpgradeCode" = "8:{1D5B81B4-A3E4-4183-B997-D29CE0386869}"
         "AspNetVersion" = "8:4.0.30319.0"
         "RestartWWWService" = "11:FALSE"
-        "RemovePreviousVersions" = "11:FALSE"
+        "RemovePreviousVersions" = "11:TRUE"
         "DetectNewerInstalledVersion" = "11:TRUE"
-        "InstallAllUsers" = "11:FALSE"
-        "ProductVersion" = "8:1.0.0"
-        "Manufacturer" = "8:Default Company Name"
+        "InstallAllUsers" = "11:TRUE"
+        "ProductVersion" = "8:2.0.0"
+        "Manufacturer" = "8:Blip"
         "ARPHELPTELEPHONE" = "8:"
         "ARPHELPLINK" = "8:"
-        "Title" = "8:Lime.Client.TestConsole.Installer"
+        "Title" = "8:LIME Test Console Installer"
         "Subject" = "8:"
-        "ARPCONTACT" = "8:Default Company Name"
+        "ARPCONTACT" = "8:Blip"
         "Keywords" = "8:"
         "ARPCOMMENTS" = "8:"
         "ARPURLINFOABOUT" = "8:"
@@ -387,7 +350,7 @@
         }
         "Shortcut"
         {
-            "{970C0BB2-C7D0-45D7-ABFA-7EC378858BC0}:_7E59289BFFC44F408F8CC785229B925D"
+            "{970C0BB2-C7D0-45D7-ABFA-7EC378858BC0}:_264F3842542F43EC9901E32DE8075A1E"
             {
             "Name" = "8:LIME Test Console"
             "Arguments" = "8:"
@@ -395,7 +358,7 @@
             "ShowCmd" = "3:1"
             "IconIndex" = "3:0"
             "Transitive" = "11:FALSE"
-            "Target" = "8:_6E534EED4AA34F7B8EE3D0965787CE7A"
+            "Target" = "8:_0450105315BD4F2088D54065C68CD8C7"
             "Folder" = "8:_3A4CF7F838894475ADB3062478893E57"
             "WorkingFolder" = "8:_2303571B980B423CA52B3E70B4232E54"
             "Icon" = "8:_A62D738957F44A23A3D61D9FD6D80738"
@@ -800,7 +763,7 @@
         }
         "ProjectOutput"
         {
-            "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_263E3D8F2BED4A5BBDA27590CA1959CC"
+            "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_D429029495F540E282948C1D6564196F"
             {
             "SourcePath" = "8:..\\Lime.Client.TestConsole\\obj\\Release\\net6.0-windows\\apphost.exe"
             "TargetName" = "8:"
@@ -820,7 +783,7 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             "ProjectOutputGroupRegister" = "3:1"
-            "OutputConfiguration" = "8:"
+            "OutputConfiguration" = "8:Release|Any CPU"
             "OutputGroupCanonicalName" = "8:PublishItems"
             "OutputProjectGuid" = "8:{9E13148D-726D-4E42-B924-4A1AF4F0DC3E}"
             "ShowKeyOutput" = "11:TRUE"
