@@ -1,18 +1,11 @@
-﻿using GalaSoft.MvvmLight;
-using GalaSoft.MvvmLight.Command;
-using Lime.Messaging;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using Lime.Client.TestConsole.Mvvm;
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Lime.Client.TestConsole.ViewModels
 {
-    public class MainViewModel : ViewModelBase
+    public class MainViewModel : ObservableRecipient
     {
         public MainViewModel()
         {
@@ -35,7 +28,7 @@ namespace Lime.Client.TestConsole.ViewModels
             set 
             { 
                 _title = value;
-                RaisePropertyChanged(() => Title);
+                OnPropertyChanged(nameof(Title));
             }
         }
 
@@ -48,7 +41,7 @@ namespace Lime.Client.TestConsole.ViewModels
             set 
             { 
                 _selectedSession = value;
-                RaisePropertyChanged(() => SelectedSession);
+                OnPropertyChanged(nameof(SelectedSession));
             }
         }
 
@@ -60,7 +53,7 @@ namespace Lime.Client.TestConsole.ViewModels
             set 
             { 
                 _sessions = value;
-                RaisePropertyChanged(() => Sessions);
+                OnPropertyChanged(nameof(Sessions));
             }
         }
 

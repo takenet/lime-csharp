@@ -6,7 +6,7 @@
              xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
              xmlns:vw="clr-namespace:Lime.Client.TestConsole.Views"
              xmlns:vr="clr-namespace:Lime.Client.TestConsole.ValidationRules"
-             xmlns:i="clr-namespace:System.Windows.Interactivity;assembly=System.Windows.Interactivity"
+             xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
              mc:Ignorable="d"
              d:DataContext="{d:DesignData /DesignData/SessionDesignData.xaml}"
              d:DesignHeight="768"

@@ -5,7 +5,7 @@
         xmlns:vw="clr-namespace:Lime.Client.TestConsole.Views"
         xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"       
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"         
-        xmlns:i="clr-namespace:System.Windows.Interactivity;assembly=System.Windows.Interactivity"
+        xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
         mc:Ignorable="d" 
         DataContext="{StaticResource MainViewModel}"
         d:DataContext="{d:DesignData /DesignData/MainDesignData.xaml}"   

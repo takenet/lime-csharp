@@ -15,8 +15,8 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Data;
 using System.Windows.Threading;
-using GalaSoft.MvvmLight;
-using GalaSoft.MvvmLight.Command;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using Lime.Client.TestConsole.Macros;
 using Lime.Client.TestConsole.Mvvm;
 using Lime.Client.TestConsole.Properties;
@@ -26,11 +26,10 @@ using Lime.Protocol.Serialization;
 using Lime.Protocol.Serialization.Newtonsoft;
 using Lime.Transport.Tcp;
 using Lime.Transport.WebSocket;
-using Newtonsoft.Json.Linq;
 
 namespace Lime.Client.TestConsole.ViewModels
 {
-    public class SessionViewModel : ViewModelBase, ITraceWriter
+    public class SessionViewModel : ObservableObject, ITraceWriter
     {
         private readonly TimeSpan _operationTimeout;
 
@@ -47,9 +46,9 @@ namespace Lime.Client.TestConsole.ViewModels
             Profiles = new ObservableCollectionEx<ProfileViewModel>();
 
             // Commands
-            OpenTransportCommand = new AsyncCommand(OpenTransportAsync, CanOpenTransport);
-            CloseTransportCommand = new AsyncCommand(CloseTransportAsync, CanCloseTransport);
-            SendCommand = new AsyncCommand(SendAsync, CanSend);
+            OpenTransportCommand = new AsyncRelayCommand(OpenTransportAsync, CanOpenTransport);
+            CloseTransportCommand = new AsyncRelayCommand(CloseTransportAsync, CanCloseTransport);
+            SendCommand = new AsyncRelayCommand<string>(SendAsync, CanSend);
             ClearTraceCommand = new RelayCommand(ClearTrace);
             IndentCommand = new RelayCommand(Indent, CanIndent);
             ValidateCommand = new RelayCommand(Validate, CanValidate);
@@ -69,7 +68,7 @@ namespace Lime.Client.TestConsole.ViewModels
             Repeat = false;
             RepeatTimes = 1;
 
-            if (!IsInDesignMode)
+            if (!UIHelper.IsInDesignMode)
             {
                 LoadHost();
                 LoadVariables();
@@ -98,7 +97,7 @@ namespace Lime.Client.TestConsole.ViewModels
             set
             {
                 _tcpClient = value;
-                RaisePropertyChanged(() => TcpClient);
+                OnPropertyChanged(nameof(TcpClient));
             }
         }
 
@@ -110,7 +109,7 @@ namespace Lime.Client.TestConsole.ViewModels
             set
             {
                 _transport = value;
-                RaisePropertyChanged(() => Transport);
+                OnPropertyChanged(nameof(Transport));
             }
         }
 
@@ -122,11 +121,11 @@ namespace Lime.Client.TestConsole.ViewModels
             set
             {
                 _isBusy = value;
-                RaisePropertyChanged(() => IsBusy);
+                OnPropertyChanged(nameof(IsBusy));
 
-                OpenTransportCommand.RaiseCanExecuteChanged();
-                CloseTransportCommand.RaiseCanExecuteChanged();
-                SendCommand.RaiseCanExecuteChanged();
+                OpenTransportCommand.NotifyCanExecuteChanged();
+                CloseTransportCommand.NotifyCanExecuteChanged();
+                SendCommand.NotifyCanExecuteChanged();
             }
         }
 
@@ -138,7 +137,7 @@ namespace Lime.Client.TestConsole.ViewModels
             set
             {
                 _darkMode = value;
-                RaisePropertyChanged(() => DarkMode);
+                OnPropertyChanged(nameof(DarkMode));
             }
         }
 
@@ -150,7 +149,7 @@ namespace Lime.Client.TestConsole.ViewModels
             set
             {
                 _statusMessage = value;
-                RaisePropertyChanged(() => StatusMessage);
+                OnPropertyChanged(nameof(StatusMessage));
             }
         }
 
@@ -162,7 +161,7 @@ namespace Lime.Client.TestConsole.ViewModels
             set
             {
                 _statusMessages = value;
-                RaisePropertyChanged(() => StatusMessages);
+                OnPropertyChanged(nameof(StatusMessages));
             }
         }
 
@@ -175,7 +174,7 @@ namespace Lime.Client.TestConsole.ViewModels
             {
                 _clientCertificateThumbprint = value;
                 Settings.Default.LastCertificateThumbprint = value;
-                RaisePropertyChanged(() => ClientCertificateThumbprint);
+                OnPropertyChanged(nameof(ClientCertificateThumbprint));
             }
         }
 
@@ -187,7 +186,7 @@ namespace Lime.Client.TestConsole.ViewModels
             set
             {
                 _lastSessionState = value;
-                RaisePropertyChanged(() => LastSessionState);
+                OnPropertyChanged(nameof(LastSessionState));
             }
         }
 
@@ -199,7 +198,7 @@ namespace Lime.Client.TestConsole.ViewModels
             set
             {
                 _localNode = value;
-                RaisePropertyChanged(() => LocalNode);
+                OnPropertyChanged(nameof(LocalNode));
             }
         }
 
@@ -211,7 +210,7 @@ namespace Lime.Client.TestConsole.ViewModels
             set
             {
                 _remoteNode = value;
-                RaisePropertyChanged(() => RemoteNode);
+                OnPropertyChanged(nameof(RemoteNode));
             }
         }
 
@@ -223,7 +222,7 @@ namespace Lime.Client.TestConsole.ViewModels
             set
             {
                 _lastNotificationEvent = value;
-                RaisePropertyChanged(() => LastNotificationEvent);
+                OnPropertyChanged(nameof(LastNotificationEvent));
             }
         }
 
@@ -235,12 +234,12 @@ namespace Lime.Client.TestConsole.ViewModels
             set
             {
                 _inputJson = value;
-                RaisePropertyChanged(() => InputJson);
+                OnPropertyChanged(nameof(InputJson));
 
-                SendCommand.RaiseCanExecuteChanged();
-                IndentCommand.RaiseCanExecuteChanged();
-                ValidateCommand.RaiseCanExecuteChanged();
-                ParseCommand.RaiseCanExecuteChanged();
+                SendCommand.NotifyCanExecuteChanged();
+                IndentCommand.NotifyCanExecuteChanged();
+                ValidateCommand.NotifyCanExecuteChanged();
+                ParseCommand.NotifyCanExecuteChanged();
             }
         }
 
@@ -256,9 +255,9 @@ namespace Lime.Client.TestConsole.ViewModels
             set
             {
                 _host = value;
-                RaisePropertyChanged(() => Host);
+                OnPropertyChanged(nameof(Host));
 
-                OpenTransportCommand.RaiseCanExecuteChanged();
+                OpenTransportCommand.NotifyCanExecuteChanged();
             }
         }
 
@@ -270,7 +269,7 @@ namespace Lime.Client.TestConsole.ViewModels
             set
             {
                 _profileName = value;
-                RaisePropertyChanged(() => ProfileName);
+                OnPropertyChanged(nameof(ProfileName));
             }
         }
 
@@ -282,11 +281,11 @@ namespace Lime.Client.TestConsole.ViewModels
             set
             {
                 _isConnected = value;
-                RaisePropertyChanged(() => IsConnected);
+                OnPropertyChanged(nameof(IsConnected));
 
-                OpenTransportCommand.RaiseCanExecuteChanged();
-                CloseTransportCommand.RaiseCanExecuteChanged();
-                SendCommand.RaiseCanExecuteChanged();
+                OpenTransportCommand.NotifyCanExecuteChanged();
+                CloseTransportCommand.NotifyCanExecuteChanged();
+                SendCommand.NotifyCanExecuteChanged();
             }
         }
 
@@ -298,7 +297,7 @@ namespace Lime.Client.TestConsole.ViewModels
             set
             {
                 _envelopes = value;
-                RaisePropertyChanged(() => Envelopes);
+                OnPropertyChanged(nameof(Envelopes));
 
                 if (_envelopes != null)
                 {
@@ -322,7 +321,7 @@ namespace Lime.Client.TestConsole.ViewModels
             set
             {
                 _envelopesView = value;
-                RaisePropertyChanged(() => EnvelopesView);
+                OnPropertyChanged(nameof(EnvelopesView));
             }
         }
 
@@ -334,7 +333,7 @@ namespace Lime.Client.TestConsole.ViewModels
             set
             {
                 _showRawValues = value;
-                RaisePropertyChanged(() => ShowRawValues);
+                OnPropertyChanged(nameof(ShowRawValues));
 
                 if (EnvelopesView != null)
                 {
@@ -351,7 +350,7 @@ namespace Lime.Client.TestConsole.ViewModels
             set
             {
                 _sendAsRaw = value;
-                RaisePropertyChanged(() => SendAsRaw);
+                OnPropertyChanged(nameof(SendAsRaw));
             }
         }
 
@@ -363,7 +362,7 @@ namespace Lime.Client.TestConsole.ViewModels
             set
             {
                 _canSendAsRaw = value;
-                RaisePropertyChanged(() => CanSendAsRaw);
+                OnPropertyChanged(nameof(CanSendAsRaw));
             }
         }
 
@@ -375,7 +374,7 @@ namespace Lime.Client.TestConsole.ViewModels
             set
             {
                 _parseBeforeSend = value;
-                RaisePropertyChanged(() => ParseBeforeSend);
+                OnPropertyChanged(nameof(ParseBeforeSend));
             }
         }
 
@@ -387,7 +386,7 @@ namespace Lime.Client.TestConsole.ViewModels
             set
             {
                 _clearAfterSent = value;
-                RaisePropertyChanged(() => ClearAfterSent);
+                OnPropertyChanged(nameof(ClearAfterSent));
             }
         }
 
@@ -399,7 +398,7 @@ namespace Lime.Client.TestConsole.ViewModels
             set
             {
                 _ignoreParsingErrors = value;
-                RaisePropertyChanged(() => IgnoreParsingErrors);
+                OnPropertyChanged(nameof(IgnoreParsingErrors));
             }
         }
 
@@ -411,7 +410,7 @@ namespace Lime.Client.TestConsole.ViewModels
             set
             {
                 _repeat = value;
-                RaisePropertyChanged(() => Repeat);
+                OnPropertyChanged(nameof(Repeat));
                 ClearAfterSent = false;
             }
         }
@@ -424,7 +423,7 @@ namespace Lime.Client.TestConsole.ViewModels
             set
             {
                 _repeatTimes = value;
-                RaisePropertyChanged(() => RepeatTimes);
+                OnPropertyChanged(nameof(RepeatTimes));
             }
         }
 
@@ -436,7 +435,7 @@ namespace Lime.Client.TestConsole.ViewModels
             set
             {
                 _variables = value;
-                RaisePropertyChanged(() => Variables);
+                OnPropertyChanged(nameof(Variables));
             }
         }
 
@@ -458,7 +457,7 @@ namespace Lime.Client.TestConsole.ViewModels
                 {
                     TemplatesView.Filter = null;
                 }
-                RaisePropertyChanged(() => TemplatesView);
+                OnPropertyChanged(nameof(TemplatesView));
             }
         }
 
@@ -470,7 +469,7 @@ namespace Lime.Client.TestConsole.ViewModels
             set
             {
                 _templates = value;
-                RaisePropertyChanged(() => Templates);
+                OnPropertyChanged(nameof(Templates));
 
                 if (_templates != null)
                 {
@@ -478,7 +477,7 @@ namespace Lime.Client.TestConsole.ViewModels
                     TemplatesView.GroupDescriptions.Add(new PropertyGroupDescription("Category"));
                     TemplatesView.SortDescriptions.Add(new SortDescription("SortOrder", ListSortDirection.Ascending));
 
-                    RaisePropertyChanged(() => TemplatesView);
+                    OnPropertyChanged(nameof(TemplatesView));
                 }
             }
         }
@@ -493,9 +492,9 @@ namespace Lime.Client.TestConsole.ViewModels
             set
             {
                 _selectedTemplate = value;
-                RaisePropertyChanged(() => SelectedTemplate);
+                OnPropertyChanged(nameof(SelectedTemplate));
 
-                LoadTemplateCommand.RaiseCanExecuteChanged();
+                LoadTemplateCommand.NotifyCanExecuteChanged();
             }
         }
 
@@ -507,7 +506,7 @@ namespace Lime.Client.TestConsole.ViewModels
             set
             {
                 _macros = value;
-                RaisePropertyChanged(() => Macros);
+                OnPropertyChanged(nameof(Macros));
 
                 if (_macros != null)
                 {
@@ -515,7 +514,7 @@ namespace Lime.Client.TestConsole.ViewModels
                     MacrosView.GroupDescriptions.Add(new PropertyGroupDescription("Category"));
                     MacrosView.SortDescriptions.Add(new SortDescription("Name", ListSortDirection.Ascending));
 
-                    RaisePropertyChanged(() => TemplatesView);
+                    OnPropertyChanged(nameof(TemplatesView));
                 }
             }
         }
@@ -530,7 +529,7 @@ namespace Lime.Client.TestConsole.ViewModels
             set
             {
                 _selectedMacro = value;
-                RaisePropertyChanged(() => SelectedMacro);
+                OnPropertyChanged(nameof(SelectedMacro));
             }
         }
 
@@ -542,12 +541,12 @@ namespace Lime.Client.TestConsole.ViewModels
             set
             {
                 _profiles = value;
-                RaisePropertyChanged(() => Profiles);
+                OnPropertyChanged(nameof(Profiles));
 
                 if (_profiles != null)
                 {
                     ProfilesView = CollectionViewSource.GetDefaultView(_profiles);
-                    RaisePropertyChanged(() => ProfilesView);
+                    OnPropertyChanged(nameof(ProfilesView));
                 }
 
             }
@@ -563,9 +562,10 @@ namespace Lime.Client.TestConsole.ViewModels
             set
             {
                 _selectedProfile = value;
-                RaisePropertyChanged(() => SelectedProfile);
+                OnPropertyChanged(nameof(SelectedProfile));
 
-                LoadProfileCommand.RaiseCanExecuteChanged();
+                LoadProfileCommand.NotifyCanExecuteChanged();
+                DeleteElementProfileCommand.NotifyCanExecuteChanged();
             }
         }
 
@@ -577,11 +577,11 @@ namespace Lime.Client.TestConsole.ViewModels
             set
             {
                 _selectedProfileIndex = value;
-                RaisePropertyChanged(() => SelectedProfileIndex);
+                OnPropertyChanged(nameof(SelectedProfileIndex));
             }
         }
 
-        public AsyncCommand OpenTransportCommand { get; private set; }
+        public AsyncRelayCommand OpenTransportCommand { get; private set; }
 
         private async Task OpenTransportAsync()
         {
@@ -698,7 +698,7 @@ namespace Lime.Client.TestConsole.ViewModels
                 Uri.TryCreate(_host, UriKind.Absolute, out _hostUri);
         }
 
-        public AsyncCommand CloseTransportCommand { get; private set; }
+        public IAsyncRelayCommand CloseTransportCommand { get; private set; }
 
         private async Task CloseTransportAsync()
         {
@@ -792,7 +792,7 @@ namespace Lime.Client.TestConsole.ViewModels
             return !string.IsNullOrWhiteSpace(InputJson);
         }
 
-        public AsyncCommand SendCommand { get; private set; }
+        public IAsyncRelayCommand<string> SendCommand { get; private set; }
 
         private async Task SendAsync(object parameter)
         {
@@ -855,7 +855,7 @@ namespace Lime.Client.TestConsole.ViewModels
             } while (Repeat && RepeatTimes > ++times);
         }
 
-        private bool CanSend()
+        private bool CanSend(string parameter)
         {
             return
                 !IsBusy &&
@@ -1013,9 +1013,10 @@ namespace Lime.Client.TestConsole.ViewModels
 
         private void LoadHost()
         {
-            if (File.Exists(HOST_FILE_NAME))
+            var appDataFileName = FileUtil.GetAppDataFileName(HOST_FILE_NAME);
+            if (File.Exists(appDataFileName))
             {
-                Host = File.ReadAllText(HOST_FILE_NAME);
+                Host = File.ReadAllText(appDataFileName);
             }
         }
 
@@ -1023,7 +1024,8 @@ namespace Lime.Client.TestConsole.ViewModels
         {
             if (!string.IsNullOrEmpty(Host))
             {
-                File.WriteAllText(HOST_FILE_NAME, Host);
+                var appDataFileName = FileUtil.GetAppDataFileName(HOST_FILE_NAME);
+                File.WriteAllText(appDataFileName, Host);
             }
         }
 
@@ -1214,7 +1216,7 @@ namespace Lime.Client.TestConsole.ViewModels
 
         public void SavePreferences()
         {
-            if (!IsInDesignMode)
+            if (!UIHelper.IsInDesignMode)
             {
                 SaveHost();
                 SaveVariables();
