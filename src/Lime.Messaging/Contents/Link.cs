@@ -15,6 +15,7 @@ namespace Lime.Messaging.Contents
         public const string PREVIEW_TYPE_KEY = "previewType";
         public const string TITLE_KEY = "title";
         public const string TEXT_KEY = "text";
+        public const string AUTHORIZATION_REQUIRED_KEY = "authorizationRequired";
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Link"/> class.
@@ -70,6 +71,12 @@ namespace Lime.Messaging.Contents
         /// </value>
         [DataMember(Name = TEXT_KEY)]
         public string Text { get; set; }
+
+        /// <summary>
+        /// Defines whether authorization is required for the link.
+        /// </summary>
+        [DataMember(Name = AUTHORIZATION_REQUIRED_KEY)]
+        public bool? AuthorizationRequired { get; set; }
 
         /// <summary>
         /// Returns a <see cref="System.String" /> that represents this instance.
