@@ -45,6 +45,7 @@ namespace Lime.Messaging.Contents
         public const string ID = "id";
         public const string TYPE_KEY = "type";
         public const string VALUE_KEY = "value";
+        public const string DIRECTION_KEY = "direction";
 
         /// <summary>
         /// Gets or sets the identifier of the message being replied to.
@@ -72,5 +73,26 @@ namespace Lime.Messaging.Contents
         /// </value>
         [DataMember(Name = VALUE_KEY)]
         public Document Value { get; set; }
+
+        /// <summary>
+        /// Indicates the direction of the message in the thread.
+        /// </summary>
+        [DataMember(Name = DIRECTION_KEY)]
+        public MessageDirection Direction { get; set; }
+    }
+
+    [DataContract]
+    public enum MessageDirection
+    {
+        /// <summary>
+        /// The message was sent by the thread owner.
+        /// </summary>
+        [EnumMember(Value = "sent")]
+        Sent,
+        /// <summary>
+        /// The message was received by the thread owner.
+        /// </summary>
+        [EnumMember(Value = "received")]
+        Received
     }
 }
