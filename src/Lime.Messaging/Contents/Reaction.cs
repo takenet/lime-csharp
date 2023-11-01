@@ -10,7 +10,7 @@ namespace Lime.Messaging.Contents
         public const string MIME_TYPE = "application/vnd.lime.reaction+json";
         public static readonly MediaType MediaType = MediaType.Parse(MIME_TYPE);
 
-        public const string EMOJIS_KEY = "emojis";
+        public const string EMOJI_KEY = "emoji";
         public const string MESSAGE_ID_KEY = "id";
 
         /// <summary>
@@ -24,7 +24,7 @@ namespace Lime.Messaging.Contents
         /// <summary>
         /// Gets or sets the emojis associated with the reaction.
         /// </summary>
-        [DataMember(Name = EMOJIS_KEY)]
+        [DataMember(Name = EMOJI_KEY)]
         public Emojis Emoji { get; set; }
 
         /// <summary>

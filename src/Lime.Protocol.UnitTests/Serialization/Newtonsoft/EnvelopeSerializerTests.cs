@@ -1102,7 +1102,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             var reactionObject = dictionary[Message.CONTENT_KEY].ShouldBeAssignableTo<JObject>();
             var messageId = reactionObject[Reaction.MESSAGE_ID_KEY].ToString();
 
-            var teste = reactionObject[Reaction.EMOJIS_KEY].ToString();
+            var teste = reactionObject[Reaction.EMOJI_KEY].ToString();
 
             var fieldInfo = randomEmoji.GetType().GetField(randomEmoji.ToString());
             var attribute = fieldInfo.GetCustomAttribute<EnumMemberAttribute>();
@@ -2508,7 +2508,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
         public void Deserialize_ReactionJsonMessage_ReturnsJsonDocument()
         {
             // Arrange
-            var json = "{\"type\":\"application/vnd.lime.reaction+json\",\"content\":{\"emojis\":\"face-without-mouth\",\"id\":\"5f0883d2-c817-43e8-a5de-fb7282d6b912\"},\"id\":\"3ec73fa8-a44f-42f0-b5ea-ab31e2348f2b\",\"from\":\"5amnvakn@kl3b9idfb0.com/zgiqd\",\"pp\":\"50is5okp@4h38j41mmh.com/si2r0\",\"to\":\"n3a0moz3@xydt1hesft.com/0jezd\",\"metadata\":{\"randomString1\":\"9ji5g6s3zjojfa1c2pqtiqfptzuwvol84av98bdx3rnztv2gty\",\"randomString2\":\"8r15qflhezvxkmlvc7nira6agxz3qc7otzp7818cgw4cbimvmg\"}}";
+            var json = "{\"type\":\"application/vnd.lime.reaction+json\",\"content\":{\"emoji\":\"face-without-mouth\",\"id\":\"5f0883d2-c817-43e8-a5de-fb7282d6b912\"},\"id\":\"3ec73fa8-a44f-42f0-b5ea-ab31e2348f2b\",\"from\":\"5amnvakn@kl3b9idfb0.com/zgiqd\",\"pp\":\"50is5okp@4h38j41mmh.com/si2r0\",\"to\":\"n3a0moz3@xydt1hesft.com/0jezd\",\"metadata\":{\"randomString1\":\"9ji5g6s3zjojfa1c2pqtiqfptzuwvol84av98bdx3rnztv2gty\",\"randomString2\":\"8r15qflhezvxkmlvc7nira6agxz3qc7otzp7818cgw4cbimvmg\"}}";
             var target = GetTarget();
 
             // Act
