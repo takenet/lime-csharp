@@ -15,6 +15,9 @@ using NUnit.Framework;
 using Shouldly;
 using Lime.Messaging;
 using Lime.Protocol.Serialization.Newtonsoft.Converters;
+using System.Runtime.InteropServices;
+using Castle.DynamicProxy.Generators;
+using System.Runtime.Serialization;
 
 namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 {
@@ -1053,6 +1056,60 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             actualMessage.Property.ShouldNotBe(DummyJsonConverter1.PropertyDefaultValueConverted);
             actualMessage.Property.ShouldNotBe(guid);
         }
+
+        [Test]
+        [Category("Serialize")]
+        public void Serialize_ReactionMessage_ReturnsValidJsonString()
+        {
+            var id = EnvelopeId.NewId();
+            var target = GetTarget();
+
+            var allValues = (Emojis[])Enum.GetValues(typeof(Emojis));
+            var random = new Random();
+            int randomIndex = random.Next(allValues.Length);
+            var randomEmoji = allValues[randomIndex];
+
+            var reaction = new Reaction
+            {
+                Emoji = randomEmoji,
+                MessageId = id
+            };
+
+
+            var message = Dummy.CreateMessage(reaction);
+            message.Pp = Dummy.CreateNode();
+
+            var metadataKey1 = "randomString1";
+            var metadataValue1 = Dummy.CreateRandomString(50);
+            var metadataKey2 = "randomString2";
+            var metadataValue2 = Dummy.CreateRandomString(50);
+            message.Metadata = new Dictionary<string, string>();
+            message.Metadata.Add(metadataKey1, metadataValue1);
+            message.Metadata.Add(metadataKey2, metadataValue2);
+
+            var resultString = target.Serialize(message);
+            Assert.IsTrue(resultString.HasValidJsonStackedBrackets());
+            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.ID_KEY, message.Id));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.FROM_KEY, message.From));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.PP_KEY, message.Pp));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.TO_KEY, message.To));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Message.TYPE_KEY, message.Content.GetMediaType()));
+            Assert.IsTrue(resultString.ContainsJsonKey(Message.CONTENT_KEY));
+            Assert.IsTrue(resultString.ContainsJsonProperty(metadataKey1, metadataValue1));
+            Assert.IsTrue(resultString.ContainsJsonProperty(metadataKey2, metadataValue2));
+
+            var dictionary = JsonConvert.DeserializeObject<Dictionary<string, object>>(resultString, target.Settings);
+            var reactionObject = dictionary[Message.CONTENT_KEY].ShouldBeAssignableTo<JObject>();
+            var messageId = reactionObject[Reaction.MESSAGE_ID_KEY].ToString();
+
+            var emoji = reactionObject[Reaction.EMOJI_KEY].ToString();
+
+            var fieldInfo = randomEmoji.GetType().GetField(randomEmoji.ToString());
+            var attribute = fieldInfo.GetCustomAttribute<EnumMemberAttribute>();
+            attribute.Value.ShouldBe(emoji);
+
+            messageId.ShouldBe(id);
+        }
         #endregion
 
         #region Deserialize
@@ -1519,7 +1576,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 
             var text1 = Dummy.CreateRandomStringExtended(50);
             var text2 = Dummy.CreateRandomStringExtended(50);
-     
+
             string json =
                 $"{{\"id\":\"{id}\",\"to\":\"{to}\",\"from\":\"{@from}\",\"pp\":\"{pp}\",\"type\":\"application/vnd.lime.reply+json\",\"metadata\":{{\"{randomKey1}\":\"{randomString1.Escape()}\",\"{randomKey2}\":\"{randomString2.Escape()}\"}},\"content\":{{\"replied\":{{\"type\":\"text/plain\",\"value\":\"{text1.Escape()}\"}},\"inReplyTo\":{{\"id\":\"{id}\",\"type\":\"text/plain\",\"value\":\"{text2.Escape()}\"}}}}}}";
 
@@ -2444,6 +2501,24 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             array.Count.ShouldBe(1);
             var jObject = array[0];
             jObject["inputPrompt"].ShouldBeOfType<JObject>();
+        }
+
+        [Test]
+        [Category("Deserialize")]
+        public void Deserialize_ReactionJsonMessage_ReturnsJsonDocument()
+        {
+            // Arrange
+            var json = "{\"type\":\"application/vnd.lime.reaction+json\",\"content\":{\"emoji\":\"face-without-mouth\",\"id\":\"5f0883d2-c817-43e8-a5de-fb7282d6b912\"},\"id\":\"3ec73fa8-a44f-42f0-b5ea-ab31e2348f2b\",\"from\":\"5amnvakn@kl3b9idfb0.com/zgiqd\",\"pp\":\"50is5okp@4h38j41mmh.com/si2r0\",\"to\":\"n3a0moz3@xydt1hesft.com/0jezd\",\"metadata\":{\"randomString1\":\"9ji5g6s3zjojfa1c2pqtiqfptzuwvol84av98bdx3rnztv2gty\",\"randomString2\":\"8r15qflhezvxkmlvc7nira6agxz3qc7otzp7818cgw4cbimvmg\"}}";
+            var target = GetTarget();
+
+            // Act
+            var actual = target.Deserialize(json);
+
+            // Assert
+            var actualMessage = actual.ShouldBeOfType<Message>();
+            var reaction = actualMessage.Content.ShouldBeOfType<Reaction>();
+            reaction.Emoji.ShouldBe(Emojis.FaceWithoutMouth);
+            reaction.MessageId.ShouldNotBeNull();
         }
 
         [Test]
