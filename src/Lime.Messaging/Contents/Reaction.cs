@@ -31,16 +31,7 @@ namespace Lime.Messaging.Contents
         /// Gets or sets the identifier of the message to which the reaction is related.
         /// </summary>
         [DataMember(Name = MESSAGE_ID_KEY)]
-        public string Id { get; set; }
-
-
-        /// <summary>
-        /// Returns a <see cref="System.String" /> that represents this instance.
-        /// </summary>
-        /// <returns>
-        /// A <see cref="System.String" /> that represents this instance.
-        /// </returns>
-        public override string ToString() => Emoji.ToString();
+        public string MessageId { get; set; }
     }
 
     /// <summary>

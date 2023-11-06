@@ -1072,7 +1072,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             var reaction = new Reaction
             {
                 Emoji = randomEmoji,
-                Id = id
+                MessageId = id
             };
 
 
@@ -2518,7 +2518,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             var actualMessage = actual.ShouldBeOfType<Message>();
             var reaction = actualMessage.Content.ShouldBeOfType<Reaction>();
             reaction.Emoji.ShouldBe(Emojis.FaceWithoutMouth);
-            reaction.Id.ShouldNotBeNull();
+            reaction.MessageId.ShouldNotBeNull();
         }
 
         [Test]
