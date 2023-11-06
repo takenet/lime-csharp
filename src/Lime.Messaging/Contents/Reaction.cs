@@ -1,6 +1,5 @@
 ﻿using Lime.Protocol;
 using System.Runtime.Serialization;
-using static System.Net.WebRequestMethods;
 
 namespace Lime.Messaging.Contents
 {

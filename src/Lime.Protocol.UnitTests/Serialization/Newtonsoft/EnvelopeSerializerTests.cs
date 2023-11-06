@@ -1102,11 +1102,11 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             var reactionObject = dictionary[Message.CONTENT_KEY].ShouldBeAssignableTo<JObject>();
             var messageId = reactionObject[Reaction.MESSAGE_ID_KEY].ToString();
 
-            var teste = reactionObject[Reaction.EMOJI_KEY].ToString();
+            var emoji = reactionObject[Reaction.EMOJI_KEY].ToString();
 
             var fieldInfo = randomEmoji.GetType().GetField(randomEmoji.ToString());
             var attribute = fieldInfo.GetCustomAttribute<EnumMemberAttribute>();
-            attribute.Value.ShouldBe(teste);
+            attribute.Value.ShouldBe(emoji);
 
             messageId.ShouldBe(id);
         }
