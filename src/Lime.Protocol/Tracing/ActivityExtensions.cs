@@ -460,8 +460,8 @@ namespace Lime.Protocol.Tracing
                 return;
             }
 
-            activity?.AddTag("lime.channel.local_node", channel.LocalNode?.ToString());
-            activity?.AddTag("lime.channel.remote_node", channel.RemoteNode?.ToString());
+            activity?.SetTag("lime.channel.local_node", channel.LocalNode?.ToString());
+            activity?.SetTag("lime.channel.remote_node", channel.RemoteNode?.ToString());
         }
     }
 }
