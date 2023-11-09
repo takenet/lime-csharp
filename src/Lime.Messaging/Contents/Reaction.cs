@@ -35,7 +35,7 @@ namespace Lime.Messaging.Contents
     }
 
     /// <summary>
-    /// Represents the document container for the reply reference.
+    /// Represents the document container for the reaction reference.
     /// </summary>
     [DataContract]
     public class InReactionTo
@@ -45,29 +45,20 @@ namespace Lime.Messaging.Contents
         public const string VALUE_KEY = "value";
 
         /// <summary>
-        /// Gets or sets the identifier of the message being replied to.
-        /// </summary>
-        /// <value>
-        /// The string.
-        /// </value>   
+        /// Gets or sets the identifier of the message being reacted to.
+        /// </summary>  
         [DataMember(Name = ID)]
         public string Id { get; set; }
 
         /// <summary>
         /// Gets the media type of the sensitive document.
         /// </summary>
-        /// <value>
-        /// The type.
-        /// </value>
         [DataMember(Name = TYPE_KEY)]
         public MediaType Type => Value?.GetMediaType();
 
         /// <summary>
         /// Gets or sets the contained document value.
         /// </summary>
-        /// <value>
-        /// The document.
-        /// </value>
         [DataMember(Name = VALUE_KEY)]
         public Document Value { get; set; }
     }
