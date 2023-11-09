@@ -10,7 +10,7 @@ namespace Lime.Messaging.Contents
         public static readonly MediaType MediaType = MediaType.Parse(MIME_TYPE);
 
         public const string EMOJI_KEY = "emoji";
-        public const string MESSAGE_ID_KEY = "id";
+        public const string IN_REACTION_TO = "inReactionTo";
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Reaction"/> class.
@@ -26,11 +26,50 @@ namespace Lime.Messaging.Contents
         [DataMember(Name = EMOJI_KEY)]
         public Emojis Emoji { get; set; }
 
+
         /// <summary>
-        /// Gets or sets the identifier of the message to which the reaction is related.
+        /// Gets or sets the reference to the message to which the reaction is associated.
         /// </summary>
-        [DataMember(Name = MESSAGE_ID_KEY)]
-        public string MessageId { get; set; }
+        [DataMember(Name = IN_REACTION_TO)]
+        public InReactionTo InReactionTo { get; set; }
+    }
+
+    /// <summary>
+    /// Represents the document container for the reply reference.
+    /// </summary>
+    [DataContract]
+    public class InReactionTo
+    {
+        public const string ID = "id";
+        public const string TYPE_KEY = "type";
+        public const string VALUE_KEY = "value";
+
+        /// <summary>
+        /// Gets or sets the identifier of the message being replied to.
+        /// </summary>
+        /// <value>
+        /// The string.
+        /// </value>   
+        [DataMember(Name = ID)]
+        public string Id { get; set; }
+
+        /// <summary>
+        /// Gets the media type of the sensitive document.
+        /// </summary>
+        /// <value>
+        /// The type.
+        /// </value>
+        [DataMember(Name = TYPE_KEY)]
+        public MediaType Type => Value?.GetMediaType();
+
+        /// <summary>
+        /// Gets or sets the contained document value.
+        /// </summary>
+        /// <value>
+        /// The document.
+        /// </value>
+        [DataMember(Name = VALUE_KEY)]
+        public Document Value { get; set; }
     }
 
     /// <summary>
