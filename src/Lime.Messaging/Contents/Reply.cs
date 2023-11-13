@@ -1,6 +1,5 @@
-﻿using System.Runtime.Serialization;
-using Lime.Protocol;
-using static System.Net.Mime.MediaTypeNames;
+﻿using Lime.Protocol;
+using System.Runtime.Serialization;
 
 namespace Lime.Messaging.Contents
 {

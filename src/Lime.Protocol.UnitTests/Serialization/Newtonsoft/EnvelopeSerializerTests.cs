@@ -1069,12 +1069,17 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             int randomIndex = random.Next(allValues.Length);
             var randomEmoji = allValues[randomIndex];
 
+            var content = Dummy.CreateTextContent();
+
             var reaction = new Reaction
             {
                 Emoji = randomEmoji,
-                MessageId = id
+                InReactionTo = new InReactionTo 
+                { 
+                    Id = id, 
+                    Value = content
+                }
             };
-
 
             var message = Dummy.CreateMessage(reaction);
             message.Pp = Dummy.CreateNode();
@@ -1100,7 +1105,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 
             var dictionary = JsonConvert.DeserializeObject<Dictionary<string, object>>(resultString, target.Settings);
             var reactionObject = dictionary[Message.CONTENT_KEY].ShouldBeAssignableTo<JObject>();
-            var messageId = reactionObject[Reaction.MESSAGE_ID_KEY].ToString();
+            var inReactionTo = reactionObject[Reaction.IN_REACTION_TO].ShouldBeAssignableTo<JObject>();
 
             var emoji = reactionObject[Reaction.EMOJI_KEY].ToString();
 
@@ -1108,7 +1113,7 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             var attribute = fieldInfo.GetCustomAttribute<EnumMemberAttribute>();
             attribute.Value.ShouldBe(emoji);
 
-            messageId.ShouldBe(id);
+            inReactionTo[InReactionTo.ID].ShouldBe(id);
         }
         #endregion
 
@@ -2508,17 +2513,45 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
         public void Deserialize_ReactionJsonMessage_ReturnsJsonDocument()
         {
             // Arrange
-            var json = "{\"type\":\"application/vnd.lime.reaction+json\",\"content\":{\"emoji\":\"face-without-mouth\",\"id\":\"5f0883d2-c817-43e8-a5de-fb7282d6b912\"},\"id\":\"3ec73fa8-a44f-42f0-b5ea-ab31e2348f2b\",\"from\":\"5amnvakn@kl3b9idfb0.com/zgiqd\",\"pp\":\"50is5okp@4h38j41mmh.com/si2r0\",\"to\":\"n3a0moz3@xydt1hesft.com/0jezd\",\"metadata\":{\"randomString1\":\"9ji5g6s3zjojfa1c2pqtiqfptzuwvol84av98bdx3rnztv2gty\",\"randomString2\":\"8r15qflhezvxkmlvc7nira6agxz3qc7otzp7818cgw4cbimvmg\"}}";
             var target = GetTarget();
 
-            // Act
-            var actual = target.Deserialize(json);
+            var id = EnvelopeId.NewId();
+            var from = Dummy.CreateNode();
+            var pp = Dummy.CreateNode();
+            var to = Dummy.CreateNode();
 
-            // Assert
-            var actualMessage = actual.ShouldBeOfType<Message>();
-            var reaction = actualMessage.Content.ShouldBeOfType<Reaction>();
-            reaction.Emoji.ShouldBe(Emojis.FaceWithoutMouth);
-            reaction.MessageId.ShouldNotBeNull();
+            string randomKey1 = "randomString1";
+            string randomKey2 = "randomString2";
+            string randomString1 = Dummy.CreateRandomStringExtended(50);
+            string randomString2 = Dummy.CreateRandomStringExtended(50);
+
+            var text2 = Dummy.CreateRandomStringExtended(50);
+
+            string json =
+                $"{{\"id\":\"{id}\",\"to\":\"{to}\",\"from\":\"{@from}\",\"pp\":\"{pp}\",\"type\":\"application/vnd.lime.reaction+json\",\"metadata\":{{\"{randomKey1}\":\"{randomString1.Escape()}\",\"{randomKey2}\":\"{randomString2.Escape()}\"}},\"content\":{{\"emoji\":\"{Emojis.BeamingFace}\",\"inReactionTo\":{{\"id\":\"{id}\",\"type\":\"text/plain\",\"value\":\"{text2.Escape()}\"}}}}}}";
+
+            var envelope = target.Deserialize(json);
+
+            var message = envelope.ShouldBeOfType<Message>();
+            Assert.AreEqual(id, message.Id);
+            Assert.AreEqual(from, message.From);
+            Assert.AreEqual(pp, message.Pp);
+            Assert.AreEqual(to, message.To);
+            Assert.IsNotNull(message.Metadata);
+            Assert.IsTrue(message.Metadata.ContainsKey(randomKey1));
+            Assert.AreEqual(message.Metadata[randomKey1], randomString1);
+            Assert.IsTrue(message.Metadata.ContainsKey(randomKey2));
+            Assert.AreEqual(message.Metadata[randomKey2], randomString2);
+
+            message.Content.ShouldBeOfType<Reaction>();
+
+            var reaction = (Reaction)message.Content;
+
+            reaction.Emoji.ShouldBe(Emojis.BeamingFace);
+            Assert.AreEqual(id, reaction.InReactionTo.Id);
+
+            var reactionToText = reaction.InReactionTo.Value.ShouldBeOfType<PlainText>();
+            Assert.AreEqual(text2, reactionToText.Text);
         }
 
         [Test]
