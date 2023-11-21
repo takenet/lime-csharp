@@ -77,21 +77,6 @@ namespace Lime.Messaging.Contents
         /// Indicates the direction of the message in the thread.
         /// </summary>
         [DataMember(Name = DIRECTION_KEY)]
-        public MessageDirection Direction { get; set; }
-    }
-
-    [DataContract]
-    public enum MessageDirection
-    {
-        /// <summary>
-        /// The message was sent by the thread owner.
-        /// </summary>
-        [EnumMember(Value = "sent")]
-        Sent,
-        /// <summary>
-        /// The message was received by the thread owner.
-        /// </summary>
-        [EnumMember(Value = "received")]
-        Received
+        public MessageDirection? Direction { get; set; }
     }
 }

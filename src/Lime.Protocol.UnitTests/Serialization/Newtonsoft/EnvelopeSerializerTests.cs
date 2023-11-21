@@ -1063,21 +1063,20 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
         {
             var id = EnvelopeId.NewId();
             var target = GetTarget();
+            var testSequence = Dummy.CreateUnicodeSequence();
 
-            var allValues = (Emojis[])Enum.GetValues(typeof(Emojis));
             var random = new Random();
-            int randomIndex = random.Next(allValues.Length);
-            var randomEmoji = allValues[randomIndex];
-
+            var messageDireaction = Dummy.CreateRandomInt(1);
             var content = Dummy.CreateTextContent();
 
             var reaction = new Reaction
             {
-                Emoji = randomEmoji,
-                InReactionTo = new InReactionTo 
-                { 
-                    Id = id, 
-                    Value = content
+                Emoji = testSequence,
+                InReactionTo = new InReactionTo
+                {
+                    Id = id,
+                    Value = content,
+                    Direction = (MessageDirection)messageDireaction
                 }
             };
 
@@ -1107,13 +1106,13 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             var reactionObject = dictionary[Message.CONTENT_KEY].ShouldBeAssignableTo<JObject>();
             var inReactionTo = reactionObject[Reaction.IN_REACTION_TO].ShouldBeAssignableTo<JObject>();
 
-            var emoji = reactionObject[Reaction.EMOJI_KEY].ToString();
+            var emoji = reactionObject[Reaction.EMOJI_KEY].ShouldBeAssignableTo<JObject>();
+            var emojiArray = emoji[UnicodeSequence.VALUE_KEY].ShouldBeAssignableTo<JArray>().ToObject<uint[]>();
 
-            var fieldInfo = randomEmoji.GetType().GetField(randomEmoji.ToString());
-            var attribute = fieldInfo.GetCustomAttribute<EnumMemberAttribute>();
-            attribute.Value.ShouldBe(emoji);
-
+            emojiArray.ShouldBe(testSequence.Values);
             inReactionTo[InReactionTo.ID].ShouldBe(id);
+            var direction = inReactionTo[InReactionTo.DIRECTION_KEY].ToString();
+            direction.ShouldBe(reaction.InReactionTo.Direction.ToString().ToLowerInvariant());
         }
         #endregion
 
@@ -2520,15 +2519,17 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             var pp = Dummy.CreateNode();
             var to = Dummy.CreateNode();
 
+            var messageDireaction = Dummy.CreateRandomInt(1);
+
             string randomKey1 = "randomString1";
             string randomKey2 = "randomString2";
             string randomString1 = Dummy.CreateRandomStringExtended(50);
             string randomString2 = Dummy.CreateRandomStringExtended(50);
-
+            var emojis = Dummy.CreateUnicodeSequence();
             var text2 = Dummy.CreateRandomStringExtended(50);
 
             string json =
-                $"{{\"id\":\"{id}\",\"to\":\"{to}\",\"from\":\"{@from}\",\"pp\":\"{pp}\",\"type\":\"application/vnd.lime.reaction+json\",\"metadata\":{{\"{randomKey1}\":\"{randomString1.Escape()}\",\"{randomKey2}\":\"{randomString2.Escape()}\"}},\"content\":{{\"emoji\":\"{Emojis.BeamingFace}\",\"inReactionTo\":{{\"id\":\"{id}\",\"type\":\"text/plain\",\"value\":\"{text2.Escape()}\"}}}}}}";
+                $"{{\"id\":\"{id}\",\"to\":\"{to}\",\"from\":\"{@from}\",\"pp\":\"{pp}\",\"type\":\"application/vnd.lime.reaction+json\",\"metadata\":{{\"{randomKey1}\":\"{randomString1.Escape()}\",\"{randomKey2}\":\"{randomString2.Escape()}\"}},\"content\":{{\"emoji\":{{ \"values\":{JsonConvert.SerializeObject(emojis.Values)}}},\"inReactionTo\":{{\"id\":\"{id}\",\"type\":\"text/plain\",\"direction\":\"{(MessageDirection)messageDireaction}\",\"value\":\"{text2.Escape()}\"}}}}}}";
 
             var envelope = target.Deserialize(json);
 
@@ -2547,11 +2548,12 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 
             var reaction = (Reaction)message.Content;
 
-            reaction.Emoji.ShouldBe(Emojis.BeamingFace);
             Assert.AreEqual(id, reaction.InReactionTo.Id);
 
             var reactionToText = reaction.InReactionTo.Value.ShouldBeOfType<PlainText>();
             Assert.AreEqual(text2, reactionToText.Text);
+            Assert.AreEqual((MessageDirection)messageDireaction, reaction.InReactionTo.Direction);
+            Assert.AreEqual(emojis.ToString(), reaction.Emoji.ToString());
         }
 
         [Test]
