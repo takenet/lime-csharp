@@ -1,4 +1,5 @@
 ﻿using Lime.Protocol;
+using System.Linq;
 using System.Runtime.Serialization;
 
 namespace Lime.Messaging.Contents
@@ -24,7 +25,7 @@ namespace Lime.Messaging.Contents
         /// Gets or sets the emojis associated with the reaction.
         /// </summary>
         [DataMember(Name = EMOJI_KEY)]
-        public Emojis Emoji { get; set; }
+        public UnicodeSequence Emoji { get; set; }
 
 
         /// <summary>
@@ -43,6 +44,7 @@ namespace Lime.Messaging.Contents
         public const string ID = "id";
         public const string TYPE_KEY = "type";
         public const string VALUE_KEY = "value";
+        public const string DIRECTION_KEY = "direction";
 
         /// <summary>
         /// Gets or sets the identifier of the message being reacted to.
@@ -61,122 +63,37 @@ namespace Lime.Messaging.Contents
         /// </summary>
         [DataMember(Name = VALUE_KEY)]
         public Document Value { get; set; }
+
+        /// <summary>
+        /// Indicates the direction of the message in the thread.
+        /// </summary>
+        [DataMember(Name = DIRECTION_KEY)]
+        public MessageDirection? Direction { get; set; }
     }
 
     /// <summary>
-    /// The current chat state, represented by emojis. For more information about available emojis, 
-    /// visit the <see cref="https://design.blip.ai/d/UbKsV1JhXTK4/componentes-desenvolvimento#/icon/icones-de-emojis">documentation</see>.
+    /// Represents a sequence of Unicode characters.
     /// </summary>
-    [DataContract(Namespace = "http://limeprotocol.org/2014")]
-    public enum Emojis
+    [DataContract]
+    public class UnicodeSequence
     {
-    
-        [EnumMember(Value = "beaming-face")]
-        BeamingFace,
+        public const string VALUE_KEY = "values";
 
-        [EnumMember(Value = "confounded-face")]
-        ConfoundedFace,
- 
-        [EnumMember(Value = "crying-face")]
-        CryingFace,
+        /// <summary>
+        /// Gets or sets the Unicode representation of the sequence.
+        /// </summary>
+        [DataMember(Name = VALUE_KEY)]
+        public uint[] Values { get; set; }
 
-        [EnumMember(Value = "dizzy-face")]
-        DizzyFace,
- 
-        [EnumMember(Value = "expressionless-face")]
-        ExpressionlessFace,
-
-        [EnumMember(Value = "face-blowing-a-kiss")]
-        FaceBlowingKiss,
-
-        [EnumMember(Value = "face-with-mask")]
-        FaceWithMask,
-
-        [EnumMember(Value = "face-with-open-mouth")]
-        FaceWithOpenMouth,
-
-        [EnumMember(Value = "face-with-tears-of-joy")]
-        FaceWithTearsOfJoy,
-
-        [EnumMember(Value = "face-with-tongue")]
-        FaceWithTongue,
-
-        [EnumMember(Value = "face-without-mouth")]
-        FaceWithoutMouth,
-
-        [EnumMember(Value = "fearful-face")]
-        FearfulFace,
-
-        [EnumMember(Value = "grinning-face")]
-        GrinningFace,
-
-        [EnumMember(Value = "grinning-face-with-big-eyes")]
-        GrinningFaceWithBigEyes,
-
-        [EnumMember(Value = "grinning-face-with-smilling-eyes")]
-        GrinningFaceWithSmillingEyes,
-
-        [EnumMember(Value = "grinning-face-with-sweat")]
-        GrinningFaceWithSweat,
-
-        [EnumMember(Value = "hushed-face")]
-        HushedFace,
-
-        [EnumMember(Value = "kissing-face-with-smilling-eyes")]
-        KissingFaceWithSmillingEyes,
-
-        [EnumMember(Value = "loudly-cring-face")]
-        LoudlyCringFace,
-
-        [EnumMember(Value = "nerd-face")]
-        NerdFace,
-
-        [EnumMember(Value = "neutral-face")]
-        NeutralFace,
-
-        [EnumMember(Value = "perservering-face")]
-        PerserveringFace,
-
-        [EnumMember(Value = "pouting-face")]
-        PoutingFace,
-
-        [EnumMember(Value = "relieved-face")]
-        RelievedFace,
-
-        [EnumMember(Value = "sleeping-face")]
-        SleepingFace,
-
-        [EnumMember(Value = "slightly-frowning-face")]
-        SlightlyFrowningFace,
-
-        [EnumMember(Value = "slightly-smiling-face")]
-        SlightlySmilingFace,
-
-        [EnumMember(Value = "smiling-face")]
-        SmilingFace,
-
-        [EnumMember(Value = "smiling-face-with-halo")]
-        SmilingFaceWithHalo,
-
-        [EnumMember(Value = "smiling-face-with-heart-eyes")]
-        SmilingFaceWithHeartEyes,
-
-        [EnumMember(Value = "smiling-face-with-smiling-eyes")]
-        SmilingFaceWithSmilingEyes,
-
-        [EnumMember(Value = "smiling-face-with-sunglasses")]
-        SmilingFaceWithSunglasses,
-
-        [EnumMember(Value = "smirking-face")]
-        SmirkingFace,
-
-        [EnumMember(Value = "squirting-face-with-tongue")]
-        SquirtingFaceWithTongue,
-
-        [EnumMember(Value = "winking-face")]
-        WinkingFace,
-
-        [EnumMember(Value = "winking-face-with-tongue")]
-        WinkingFaceWithTongue,
+        /// <summary>
+        /// Converts the Unicode sequence to a string.
+        /// </summary>
+        /// <returns>
+        /// A string representation of the Unicode sequence, or an empty string if the sequence is empty.
+        /// </returns>
+        public override string ToString()
+        {
+            return Values != null ? string.Concat(Values.Select(codePoint => char.ConvertFromUtf32((int)codePoint))) : string.Empty;
+        }
     }
 }
