@@ -106,7 +106,7 @@ namespace Lime.Protocol.Network
                     Activity.Current = null;
 
                     // When new tasks are created, the ExecutionContext is captured.
-                    // We should not capture the current activity to start a listener, to avoid incorrect activity propagation.
+                    // We should not let the current activity be in the ExecutionContext starting a listener, to avoid incorrect activity propagation.
                     _sendToTransportTask = Task.Run(SendToTransportAsync);
 
                     Activity.Current = currentActivity;
