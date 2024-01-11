@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.Serialization;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Lime.Protocol
 {
@@ -95,6 +91,12 @@ namespace Lime.Protocol
         /// The node has consumed the content of the message.
         /// </summary>
         [EnumMember(Value = "consumed")]
-        Consumed
+        Consumed,
+
+        /// <summary>
+        /// The message has been deleted.
+        /// </summary>
+        [EnumMember(Value = "deleted")]
+        Deleted
     }
 }
