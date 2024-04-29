@@ -104,7 +104,7 @@ namespace Lime.Protocol.Tracing
 
             if (Activity.Current != null && !prioritizeDictionaryActivity)
             {
-                return activitySource.StartActivity(name);
+                return activitySource.StartActivity(name, kind);
             }
 
             dictionary.TryGetValue(TraceContext.TraceParent, out var traceParent);
@@ -117,7 +117,7 @@ namespace Lime.Protocol.Tracing
 
             var success = ActivityContext.TryParse(traceParent, traceState, out var resultContext);
 
-            return success ? activitySource.StartActivity(name, kind, resultContext) : activitySource.StartActivity(name);
+            return success ? activitySource.StartActivity(name, kind, resultContext) : activitySource.StartActivity(name, kind);
         }
 
         /// <summary>
@@ -158,7 +158,7 @@ namespace Lime.Protocol.Tracing
                 activity = StartActivity(envelope.Metadata, name, kind, activitySource, prioritizeDictionaryActivity: prioritizeEnvelopeActivity);
             }
 
-            activity ??= activitySource.StartActivity(name);
+            activity ??= activitySource.StartActivity(name, kind);
 
             activity?.SetEnvelopeTags(envelope);
             activity?.InjectTraceParent(envelope);
@@ -460,8 +460,8 @@ namespace Lime.Protocol.Tracing
                 return;
             }
 
-            activity?.AddTag("lime.channel.local_node", channel.LocalNode?.ToString());
-            activity?.AddTag("lime.channel.remote_node", channel.RemoteNode?.ToString());
+            activity?.SetTag("lime.channel.local_node", channel.LocalNode?.ToString());
+            activity?.SetTag("lime.channel.remote_node", channel.RemoteNode?.ToString());
         }
     }
 }

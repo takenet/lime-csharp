@@ -539,5 +539,19 @@ namespace Lime.Protocol.UnitTests
                 }
             };
         }
+
+        public static UnicodeSequence CreateUnicodeSequence()
+        {
+            Random random = new Random();
+
+            int sequenceLength = 5;
+            uint[] randomCodePoints = new uint[sequenceLength];
+            for (int i = 0; i < sequenceLength; i++)
+            {
+                randomCodePoints[i] = (uint)random.Next(0x1F600, 0x1F64F + 1);
+            }
+
+            return new UnicodeSequence { Values = randomCodePoints };
+        }
     }
 }

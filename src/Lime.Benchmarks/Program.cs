@@ -10,6 +10,7 @@ namespace Lime.Benchmarks
             //var summary = BenchmarkRunner.Run<WebSocketTransportBenchmark>();
             BenchmarkRunner.Run<TcpTransportBenchmark>();
             BenchmarkRunner.Run<PipeTcpTransportBenchmark>();
+            BenchmarkRunner.Run<DeserializeBenchmark>();
         }
     }
 }

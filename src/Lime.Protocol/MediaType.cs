@@ -221,6 +221,10 @@ namespace Lime.Protocol
             public static string Audio = "audio";
 
             public static string Video = "video";
+
+            public static string Voice = "voice";
+
+            public static string Sticker = "sticker";
         }
 
         public static class CompositeTypes

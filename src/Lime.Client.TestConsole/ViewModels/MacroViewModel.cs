@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Reflection;
-using GalaSoft.MvvmLight;
+using CommunityToolkit.Mvvm.ComponentModel;
 using Lime.Client.TestConsole.Macros;
 
 namespace Lime.Client.TestConsole.ViewModels
 {
-    public class MacroViewModel : ViewModelBase
+    public class MacroViewModel : ObservableRecipient
     {
         private string _name;
 
@@ -15,7 +15,7 @@ namespace Lime.Client.TestConsole.ViewModels
             set
             {
                 _name = value;
-                RaisePropertyChanged(() => Name);
+                OnPropertyChanged(nameof(Name));
             }
         }
 
@@ -27,7 +27,7 @@ namespace Lime.Client.TestConsole.ViewModels
             set
             {
                 _category = value;
-                RaisePropertyChanged(() => Category);
+                OnPropertyChanged(nameof(Category));
             }
         }
 
@@ -39,7 +39,7 @@ namespace Lime.Client.TestConsole.ViewModels
             set 
             { 
                 _isActive = value;
-                RaisePropertyChanged(() => IsActive);
+                OnPropertyChanged(nameof(IsActive));
             }
         }
 
@@ -51,7 +51,7 @@ namespace Lime.Client.TestConsole.ViewModels
             set 
             { 
                 _type = value;
-                RaisePropertyChanged(() => Type);
+                OnPropertyChanged(nameof(Type));
                 
                 if (_type != null)
                 {                    

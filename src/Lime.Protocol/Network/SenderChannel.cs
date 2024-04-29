@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
@@ -101,7 +102,14 @@ namespace Lime.Protocol.Network
             {
                 if (_sendToTransportTask == null)
                 {
+                    var currentActivity = Activity.Current;
+                    Activity.Current = null;
+
+                    // When new tasks are created, the ExecutionContext is captured.
+                    // We should not let the current activity be in the ExecutionContext starting a listener, to avoid incorrect activity propagation.
                     _sendToTransportTask = Task.Run(SendToTransportAsync);
+
+                    Activity.Current = currentActivity;
                 }
             }
             finally

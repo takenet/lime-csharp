@@ -1,4 +1,4 @@
-﻿using GalaSoft.MvvmLight;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using Lime.Protocol;
 using Lime.Protocol.Network;
 using Lime.Protocol.Serialization;
@@ -8,7 +8,7 @@ using System;
 
 namespace Lime.Client.TestConsole.ViewModels
 {
-    public class EnvelopeViewModel : ViewModelBase
+    public class EnvelopeViewModel : ObservableRecipient
     {
         private static IEnvelopeSerializer _serializer;
         private readonly bool _shouldIndendJson;
@@ -64,7 +64,7 @@ namespace Lime.Client.TestConsole.ViewModels
                         _json = value;
                     }
 
-                    RaisePropertyChanged(() => Json);
+                    OnPropertyChanged(nameof(Json));
 
                     // Updates the Envelope property
                     // if it is not the caller
@@ -100,7 +100,7 @@ namespace Lime.Client.TestConsole.ViewModels
                 try
                 {
                     _envelope = value;
-                    RaisePropertyChanged(() => Envelope);
+                    OnPropertyChanged(nameof(Envelope));
 
                     // Updates the Json property
                     // if it is not the caller
@@ -131,7 +131,7 @@ namespace Lime.Client.TestConsole.ViewModels
             set
             {
                 _direction = value;
-                RaisePropertyChanged(() => Direction);
+                OnPropertyChanged(nameof(Direction));
             }
         }
 
@@ -148,7 +148,7 @@ namespace Lime.Client.TestConsole.ViewModels
             set
             {
                 _isRaw = value;
-                RaisePropertyChanged(() => IsRaw);
+                OnPropertyChanged(nameof(IsRaw));
             }
         }
 

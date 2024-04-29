@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Newtonsoft.Json;
 
 namespace Lime.Client.TestConsole
@@ -89,7 +87,7 @@ namespace Lime.Client.TestConsole
             File.WriteAllText(fileName, stringContent);
         }
 
-        private static string GetAppDataFileName(string fileName)
+        internal static string GetAppDataFileName(string fileName)
         {
             var appDataFolder = Path.Combine(Environment.GetFolderPath(
                 Environment.SpecialFolder.ApplicationData),

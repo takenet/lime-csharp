@@ -1,11 +1,9 @@
-﻿using System;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using System.Collections.Generic;
-using System.Reflection;
-using GalaSoft.MvvmLight;
 
 namespace Lime.Client.TestConsole.ViewModels
 {
-    public class ProfileViewModel : ViewModelBase
+    public class ProfileViewModel : ObservableRecipient
     {
         private string _name;
 
@@ -15,7 +13,7 @@ namespace Lime.Client.TestConsole.ViewModels
             set
             {
                 _name = value;
-                RaisePropertyChanged(() => Name);
+                OnPropertyChanged(nameof(Name));
             }
         }
 
@@ -27,7 +25,7 @@ namespace Lime.Client.TestConsole.ViewModels
             set
             {
                 _jsonValues = value;
-                RaisePropertyChanged(() => JsonValues);
+                OnPropertyChanged(nameof(JsonValues));
             }
         }
     }

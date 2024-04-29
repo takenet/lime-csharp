@@ -1,9 +1,11 @@
+using System.IO;
 using BenchmarkDotNet.Attributes;
 using Lime.Messaging;
+using Lime.Protocol;
 using Lime.Protocol.Serialization;
 using Lime.Protocol.Serialization.Newtonsoft;
 
-namespace Lime.Protocol.Benchmark;
+namespace Lime.Benchmarks;
 
 [MemoryDiagnoser]
 [ThreadingDiagnoser]

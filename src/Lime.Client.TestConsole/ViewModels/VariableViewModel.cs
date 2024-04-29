@@ -1,13 +1,8 @@
-﻿using GalaSoft.MvvmLight;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace Lime.Client.TestConsole.ViewModels
 {
-    public class VariableViewModel : ViewModelBase
+    public class VariableViewModel : ObservableRecipient
     {
 
         private string _name;
@@ -18,7 +13,7 @@ namespace Lime.Client.TestConsole.ViewModels
             set 
             { 
                 _name = value;
-                RaisePropertyChanged(() => Name);
+                OnPropertyChanged(nameof(Name));
             }
         }
 
@@ -31,7 +26,7 @@ namespace Lime.Client.TestConsole.ViewModels
             set 
             { 
                 _value = value;
-                RaisePropertyChanged(() => Value);
+                OnPropertyChanged(nameof(Value));
             }
         }
     }

@@ -4,8 +4,6 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.Serialization;
-using Castle.DynamicProxy.Contributors;
 using Lime.Messaging.Contents;
 using Lime.Messaging.Resources;
 using Lime.Protocol.Security;
@@ -368,6 +366,57 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             Assert.IsFalse(resultString.ContainsJsonKey(Envelope.PP_KEY));
             Assert.IsFalse(resultString.ContainsJsonKey(Envelope.METADATA_KEY));
             Assert.IsFalse(resultString.ContainsJsonKey(Command.RESOURCE_KEY));
+        }
+
+        [Test]
+        [Category("Serialize")]
+        public void Serialize_ReplyMessage_ReturnsValidJsonString()
+        {
+            var target = GetTarget();
+
+            var content = Dummy.CreateTextContent();
+            var documentConteiner = Dummy.CreateDocumentContainer(content);
+            var id = EnvelopeId.NewId();
+
+            var reply = new Reply
+            {
+                Replied = documentConteiner,
+                InReplyTo = new InReplyTo
+                {
+                    Id = id,
+                    Value = documentConteiner.Value
+                }
+            };
+
+            var message = Dummy.CreateMessage(reply);
+            message.Pp = Dummy.CreateNode();
+
+            var metadataKey1 = "randomString1";
+            var metadataValue1 = Dummy.CreateRandomString(50);
+            var metadataKey2 = "randomString2";
+            var metadataValue2 = Dummy.CreateRandomString(50);
+            message.Metadata = new Dictionary<string, string>();
+            message.Metadata.Add(metadataKey1, metadataValue1);
+            message.Metadata.Add(metadataKey2, metadataValue2);
+
+            var resultString = target.Serialize(message);
+            Assert.IsTrue(resultString.HasValidJsonStackedBrackets());
+            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.ID_KEY, message.Id));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.FROM_KEY, message.From));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.PP_KEY, message.Pp));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.TO_KEY, message.To));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Message.TYPE_KEY, message.Content.GetMediaType()));
+            Assert.IsTrue(resultString.ContainsJsonKey(Message.CONTENT_KEY));
+            Assert.IsTrue(resultString.ContainsJsonProperty(metadataKey1, metadataValue1));
+            Assert.IsTrue(resultString.ContainsJsonProperty(metadataKey2, metadataValue2));
+
+            var dictionary = JsonConvert.DeserializeObject<Dictionary<string, object>>(resultString, target.Settings);
+            var replyObject = dictionary[Message.CONTENT_KEY].ShouldBeAssignableTo<JObject>();
+            var contentObject = replyObject[Reply.REPLIED].ShouldBeAssignableTo<JObject>();
+            var replyToObject = replyObject[Reply.IN_REPLY_TO].ShouldBeAssignableTo<JObject>();
+
+            replyToObject[InReplyTo.ID].ShouldBe(id);
+            contentObject[DocumentContainer.VALUE_KEY].ShouldBe(content.Text);
         }
 
         [Test]
@@ -1005,10 +1054,119 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             actualMessage.Property.ShouldNotBe(DummyJsonConverter1.PropertyDefaultValueConverted);
             actualMessage.Property.ShouldNotBe(guid);
         }
+
+        [Test]
+        [Category("Serialize")]
+        public void Serialize_ReactionMessage_ReturnsValidJsonString()
+        {
+            var id = EnvelopeId.NewId();
+            var target = GetTarget();
+            var testSequence = Dummy.CreateUnicodeSequence();
+
+            var random = new Random();
+            var messageDireaction = Dummy.CreateRandomInt(1);
+            var content = Dummy.CreateTextContent();
+
+            var reaction = new Reaction
+            {
+                Emoji = testSequence,
+                InReactionTo = new InReactionTo
+                {
+                    Id = id,
+                    Value = content,
+                    Direction = (MessageDirection)messageDireaction
+                }
+            };
+
+            var message = Dummy.CreateMessage(reaction);
+            message.Pp = Dummy.CreateNode();
+
+            var metadataKey1 = "randomString1";
+            var metadataValue1 = Dummy.CreateRandomString(50);
+            var metadataKey2 = "randomString2";
+            var metadataValue2 = Dummy.CreateRandomString(50);
+            message.Metadata = new Dictionary<string, string>();
+            message.Metadata.Add(metadataKey1, metadataValue1);
+            message.Metadata.Add(metadataKey2, metadataValue2);
+
+            var resultString = target.Serialize(message);
+            Assert.IsTrue(resultString.HasValidJsonStackedBrackets());
+            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.ID_KEY, message.Id));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.FROM_KEY, message.From));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.PP_KEY, message.Pp));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.TO_KEY, message.To));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Message.TYPE_KEY, message.Content.GetMediaType()));
+            Assert.IsTrue(resultString.ContainsJsonKey(Message.CONTENT_KEY));
+            Assert.IsTrue(resultString.ContainsJsonProperty(metadataKey1, metadataValue1));
+            Assert.IsTrue(resultString.ContainsJsonProperty(metadataKey2, metadataValue2));
+
+            var dictionary = JsonConvert.DeserializeObject<Dictionary<string, object>>(resultString, target.Settings);
+            var reactionObject = dictionary[Message.CONTENT_KEY].ShouldBeAssignableTo<JObject>();
+            var inReactionTo = reactionObject[Reaction.IN_REACTION_TO].ShouldBeAssignableTo<JObject>();
+
+            var emoji = reactionObject[Reaction.EMOJI_KEY].ShouldBeAssignableTo<JObject>();
+            var emojiArray = emoji[UnicodeSequence.VALUE_KEY].ShouldBeAssignableTo<JArray>().ToObject<uint[]>();
+
+            emojiArray.ShouldBe(testSequence.Values);
+            inReactionTo[InReactionTo.ID].ShouldBe(id);
+            var direction = inReactionTo[InReactionTo.DIRECTION_KEY].ToString();
+            direction.ShouldBe(reaction.InReactionTo.Direction.ToString().ToLowerInvariant());
+        }
+
+        [Test]
+        [Category("Serialize")]
+        public void Serialize_CopyAndPasteMessage_ReturnsValidJsonString()
+        {
+            var target = GetTarget();
+
+            var copyAndPaste = new CopyAndPaste
+            {
+                Header =  Dummy.CreateTextContent(),
+                Body = Dummy.CreateTextContent(),
+                Footer = Dummy.CreateTextContent(),
+                Button = new Button
+                {
+                    Value = Dummy.CreateTextContent(),
+                    Text = Dummy.CreateTextContent()
+                }
+            };
+
+            var message = Dummy.CreateMessage(copyAndPaste);
+            message.Pp = Dummy.CreateNode();
+
+            var metadataKey1 = "randomString1";
+            var metadataValue1 = Dummy.CreateRandomString(50);
+            var metadataKey2 = "randomString2";
+            var metadataValue2 = Dummy.CreateRandomString(50);
+            message.Metadata = new Dictionary<string, string>();
+            message.Metadata.Add(metadataKey1, metadataValue1);
+            message.Metadata.Add(metadataKey2, metadataValue2);
+
+            var resultString = target.Serialize(message);
+            Assert.IsTrue(resultString.HasValidJsonStackedBrackets());
+            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.ID_KEY, message.Id));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.FROM_KEY, message.From));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.PP_KEY, message.Pp));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.TO_KEY, message.To));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Message.TYPE_KEY, message.Content.GetMediaType()));
+            Assert.IsTrue(resultString.ContainsJsonKey(Message.CONTENT_KEY));
+            Assert.IsTrue(resultString.ContainsJsonProperty(metadataKey1, metadataValue1));
+            Assert.IsTrue(resultString.ContainsJsonProperty(metadataKey2, metadataValue2));
+
+            var dictionary = JsonConvert.DeserializeObject<Dictionary<string, object>>(resultString, target.Settings);
+            var copyAndPasteObject = dictionary[Message.CONTENT_KEY].ShouldBeAssignableTo<JObject>();
+            var buttonObject = copyAndPasteObject[CopyAndPaste.BUTTON_KEY].ShouldBeAssignableTo<JObject>();
+
+            copyAndPasteObject[CopyAndPaste.HEADER_KEY].ShouldBe(copyAndPaste.Header);
+            copyAndPasteObject[CopyAndPaste.FOOTER_KEY].ShouldBe(copyAndPaste.Footer);
+            copyAndPasteObject[CopyAndPaste.BODY_KEY].ShouldBe(copyAndPaste.Body);
+
+            buttonObject[Button.VALUE_KEY].ShouldBe(copyAndPaste.Button.Value);
+            buttonObject[Button.TEXT_KEY].ShouldBe(copyAndPaste.Button.Text);
+        }
         #endregion
 
         #region Deserialize
-
         public enum DeserializeMethod
         {
             String,
@@ -1029,6 +1187,47 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
                 return serializer.Deserialize<T>(reader);
             }
             throw new NotImplementedException();
+        }
+        
+        [Test]
+        [Category("Deserialize")]
+        public void Deserialize_CopyAndPasteMessage_ReturnsValidInstance([Values(DeserializeMethod.String,DeserializeMethod.Stream)]DeserializeMethod deserializeMethod)
+        {
+            var target = GetTarget();
+
+            var id = EnvelopeId.NewId();
+
+            var from = Dummy.CreateNode();
+            var pp = Dummy.CreateNode();
+            var to = Dummy.CreateNode();
+
+            var randomString1 = Dummy.CreateRandomStringExtended(50);
+            var randomString2 = Dummy.CreateRandomStringExtended(50);
+
+            var title = Dummy.CreateRandomStringExtended(50);
+            var body = Dummy.CreateRandomStringExtended(50);
+            var footer = Dummy.CreateRandomStringExtended(50);
+            var buttonText = Dummy.CreateRandomStringExtended(50);
+            var buttonValue = Dummy.CreateRandomStringExtended(50);
+
+            string json = 
+                $"{{\"type\":\"application/vnd.lime.copy-and-paste+json\",\"content\":{{\"header\":\"{title.Escape()}\",\"body\":\"{body.Escape()}\",\"footer\":\"{footer.Escape()}\",\"button\":{{\"text\":\"{buttonText.Escape()}\",\"value\":\"{buttonValue.Escape()}\"}}}},\"id\":\"{id}\",\"from\":\"{from}\",\"pp\":\"{pp}\",\"to\":\"{to}\",\"metadata\":{{\"randomString1\":\"{randomString1.Escape()}\",\"randomString2\":\"{randomString2.Escape()}\"}}}}";
+
+            var envelope = Deserialize<Message>(target,json,deserializeMethod);
+
+            var message = envelope.ShouldBeOfType<Message>();
+            Assert.AreEqual(id, message.Id);
+            Assert.AreEqual(from, message.From);
+            Assert.AreEqual(pp, message.Pp);
+            Assert.AreEqual(to, message.To);
+
+            var copyAndPaste = message.Content.ShouldBeOfType<CopyAndPaste>();
+
+            Assert.AreEqual(body, copyAndPaste.Body);
+            Assert.AreEqual(footer, copyAndPaste.Footer);
+            Assert.AreEqual(title, copyAndPaste.Header);
+            Assert.AreEqual(buttonText, copyAndPaste.Button.Text);
+            Assert.AreEqual(buttonValue, copyAndPaste.Button.Value);
         }
         
         [Test]
@@ -1473,6 +1672,54 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 
             var textContent = (PlainText)message.Content;
             Assert.AreEqual(text, textContent.Text);
+        }
+
+        [Test]
+        [Category("Deserialize")]
+        public void Deserialize_ReplyMessage_ReturnsValidInstance([Values(DeserializeMethod.String,DeserializeMethod.Stream)]DeserializeMethod deserializeMethod)
+        {
+            var target = GetTarget();
+
+            var id = EnvelopeId.NewId();
+            var from = Dummy.CreateNode();
+            var pp = Dummy.CreateNode();
+            var to = Dummy.CreateNode();
+
+            string randomKey1 = "randomString1";
+            string randomKey2 = "randomString2";
+            string randomString1 = Dummy.CreateRandomStringExtended(50);
+            string randomString2 = Dummy.CreateRandomStringExtended(50);
+
+            var text1 = Dummy.CreateRandomStringExtended(50);
+            var text2 = Dummy.CreateRandomStringExtended(50);
+
+            string json =
+                $"{{\"id\":\"{id}\",\"to\":\"{to}\",\"from\":\"{@from}\",\"pp\":\"{pp}\",\"type\":\"application/vnd.lime.reply+json\",\"metadata\":{{\"{randomKey1}\":\"{randomString1.Escape()}\",\"{randomKey2}\":\"{randomString2.Escape()}\"}},\"content\":{{\"replied\":{{\"type\":\"text/plain\",\"value\":\"{text1.Escape()}\"}},\"inReplyTo\":{{\"id\":\"{id}\",\"type\":\"text/plain\",\"value\":\"{text2.Escape()}\"}}}}}}";
+
+            var envelope = Deserialize<Message>(target, json, deserializeMethod);
+
+            var message = envelope.ShouldBeOfType<Message>();
+            Assert.AreEqual(id, message.Id);
+            Assert.AreEqual(from, message.From);
+            Assert.AreEqual(pp, message.Pp);
+            Assert.AreEqual(to, message.To);
+            Assert.IsNotNull(message.Metadata);
+            Assert.IsTrue(message.Metadata.ContainsKey(randomKey1));
+            Assert.AreEqual(message.Metadata[randomKey1], randomString1);
+            Assert.IsTrue(message.Metadata.ContainsKey(randomKey2));
+            Assert.AreEqual(message.Metadata[randomKey2], randomString2);
+
+            message.Content.ShouldBeOfType<Reply>();
+
+            var reply = (Reply)message.Content;
+
+            Assert.AreEqual(id, reply.InReplyTo.Id);
+
+            var replyText = reply.Replied.Value.ShouldBeOfType<PlainText>();
+            Assert.AreEqual(text1, replyText.Text);
+
+            var replyToText = reply.InReplyTo.Value.ShouldBeOfType<PlainText>();
+            Assert.AreEqual(text2, replyToText.Text);
         }
 
         [Test]
@@ -2370,6 +2617,55 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             array.Count.ShouldBe(1);
             var jObject = array[0];
             jObject["inputPrompt"].ShouldBeOfType<JObject>();
+        }
+
+        [Test]
+        [Category("Deserialize")]
+        public void Deserialize_ReactionJsonMessage_ReturnsJsonDocument()
+        {
+            // Arrange
+            var target = GetTarget();
+
+            var id = EnvelopeId.NewId();
+            var from = Dummy.CreateNode();
+            var pp = Dummy.CreateNode();
+            var to = Dummy.CreateNode();
+
+            var messageDireaction = Dummy.CreateRandomInt(1);
+
+            string randomKey1 = "randomString1";
+            string randomKey2 = "randomString2";
+            string randomString1 = Dummy.CreateRandomStringExtended(50);
+            string randomString2 = Dummy.CreateRandomStringExtended(50);
+            var emojis = Dummy.CreateUnicodeSequence();
+            var text2 = Dummy.CreateRandomStringExtended(50);
+
+            string json =
+                $"{{\"id\":\"{id}\",\"to\":\"{to}\",\"from\":\"{@from}\",\"pp\":\"{pp}\",\"type\":\"application/vnd.lime.reaction+json\",\"metadata\":{{\"{randomKey1}\":\"{randomString1.Escape()}\",\"{randomKey2}\":\"{randomString2.Escape()}\"}},\"content\":{{\"emoji\":{{ \"values\":{JsonConvert.SerializeObject(emojis.Values)}}},\"inReactionTo\":{{\"id\":\"{id}\",\"type\":\"text/plain\",\"direction\":\"{(MessageDirection)messageDireaction}\",\"value\":\"{text2.Escape()}\"}}}}}}";
+
+            var envelope = target.Deserialize(json);
+
+            var message = envelope.ShouldBeOfType<Message>();
+            Assert.AreEqual(id, message.Id);
+            Assert.AreEqual(from, message.From);
+            Assert.AreEqual(pp, message.Pp);
+            Assert.AreEqual(to, message.To);
+            Assert.IsNotNull(message.Metadata);
+            Assert.IsTrue(message.Metadata.ContainsKey(randomKey1));
+            Assert.AreEqual(message.Metadata[randomKey1], randomString1);
+            Assert.IsTrue(message.Metadata.ContainsKey(randomKey2));
+            Assert.AreEqual(message.Metadata[randomKey2], randomString2);
+
+            message.Content.ShouldBeOfType<Reaction>();
+
+            var reaction = (Reaction)message.Content;
+
+            Assert.AreEqual(id, reaction.InReactionTo.Id);
+
+            var reactionToText = reaction.InReactionTo.Value.ShouldBeOfType<PlainText>();
+            Assert.AreEqual(text2, reactionToText.Text);
+            Assert.AreEqual((MessageDirection)messageDireaction, reaction.InReactionTo.Direction);
+            Assert.AreEqual(emojis.ToString(), reaction.Emoji.ToString());
         }
 
         [Test]

@@ -1,13 +1,9 @@
-﻿using GalaSoft.MvvmLight;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Lime.Client.TestConsole.ViewModels
 {
-    public class StatusMessageViewModel : ViewModelBase
+    public class StatusMessageViewModel : ObservableRecipient
     {        
         private DateTimeOffset _timestamp;
 
@@ -17,8 +13,8 @@ namespace Lime.Client.TestConsole.ViewModels
             set 
             { 
                 _timestamp = value;
-                RaisePropertyChanged(() => Timestamp);
-                RaisePropertyChanged(() => TimestampFormat);
+                OnPropertyChanged(nameof(Timestamp));
+                OnPropertyChanged(nameof(TimestampFormat));
             }
         }
 
@@ -35,7 +31,7 @@ namespace Lime.Client.TestConsole.ViewModels
             set 
             { 
                 _isError = value;
-                RaisePropertyChanged(() => IsError);
+                OnPropertyChanged(nameof(IsError));
             }
         }
 
@@ -47,7 +43,7 @@ namespace Lime.Client.TestConsole.ViewModels
             set 
             { 
                 _message = value;
-                RaisePropertyChanged(() => Message);
+                OnPropertyChanged(nameof(Message));
             }
         }
     }
