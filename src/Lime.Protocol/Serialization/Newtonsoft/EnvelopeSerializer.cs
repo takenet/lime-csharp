@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using Lime.Protocol.Serialization.Newtonsoft.Converters;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
-using Newtonsoft.Json.Serialization;
 
 namespace Lime.Protocol.Serialization.Newtonsoft
 {
@@ -69,6 +69,16 @@ namespace Lime.Protocol.Serialization.Newtonsoft
             }
 
             throw new ArgumentException("JSON string is not a valid envelope", nameof(envelopeString));
+        }
+
+        /// <summary>
+        /// Deserialize an envelope from a text reader.
+        /// </summary>
+        /// <param name="reader"></param>
+        /// <returns></returns>
+        public T Deserialize<T>(TextReader reader) where T : Envelope
+        {
+            return (T)_serializer.Value.Deserialize(reader, typeof(T));
         }
 
         /// <summary>

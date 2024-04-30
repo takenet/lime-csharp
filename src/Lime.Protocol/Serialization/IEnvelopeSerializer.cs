@@ -1,4 +1,5 @@
 ﻿using System.Buffers;
+using System.IO;
 
 namespace Lime.Protocol.Serialization
 {
@@ -20,5 +21,13 @@ namespace Lime.Protocol.Serialization
         /// <param name="envelopeString"></param>
         /// <returns></returns>
         Envelope Deserialize(string envelopeString);
+
+        /// <summary>
+        /// Deserialize an envelope from a text reader.
+        /// </summary>
+        /// <param name="reader"></param>
+        /// <returns></returns>
+        T Deserialize<T>(TextReader reader)
+            where T : Envelope;
     }
 }
