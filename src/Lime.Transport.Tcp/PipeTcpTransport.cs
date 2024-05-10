@@ -1,4 +1,10 @@
+using Lime.Protocol;
+using Lime.Protocol.Network;
+using Lime.Protocol.Security;
+using Lime.Protocol.Serialization;
+using Lime.Protocol.Serialization.Newtonsoft;
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -8,13 +14,6 @@ using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
-using Lime.Protocol;
-using Lime.Protocol.Network;
-using Lime.Protocol.Security;
-using Lime.Protocol.Serialization;
-using Lime.Protocol.Serialization.Newtonsoft;
-using System.Buffers;
-using System.Text;
 using System.Threading.Tasks.Dataflow;
 
 namespace Lime.Transport.Tcp
@@ -268,7 +267,7 @@ namespace Lime.Transport.Tcp
                                 .AuthenticateAsServerAsync(
                                     _serverCertificate,
                                     true,
-                                    SslProtocols.Tls | SslProtocols.Tls11 | SslProtocols.Tls12,
+                                    SslProtocols.Tls | SslProtocols.Tls11 | SslProtocols.Tls12 | SslProtocols.None,
                                     false)
                                 .WithCancellation(cancellationToken)
                                 .ConfigureAwait(false);
