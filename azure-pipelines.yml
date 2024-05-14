@@ -15,7 +15,7 @@ resources:
   - repository: templates
     type: git
     name: Operações/template-take-blip
-    ref: refs/tags/v1.4.30
+    ref: refs/tags/stable
 
 extends:
   template: template-pipeline.yml@templates
@@ -29,6 +29,7 @@ extends:
     to: nuget
     nugetServiceConnection: Nuget.org Take
     includeSymbols: true
+    skipTestToNuget: true
     csprojToPack:
     - "Lime.Protocol.csproj"
     - "Lime.Messaging.csproj"
