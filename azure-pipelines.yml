@@ -15,13 +15,14 @@ resources:
   - repository: templates
     type: git
     name: Operações/template-take-blip
-    ref: refs/tags/v1.4.30
+    ref: refs/tags/stable
 
 extends:
   template: template-pipeline.yml@templates
   parameters: 
     skipSast: true
     sastFilter: "!**/**, src/*"
+    
     skipSonarBranch: true
     solution: "src/Lime.sln"
     packagename: lime-csharp
@@ -36,6 +37,7 @@ extends:
     - "Lime.Transport.Redis.csproj"
     - "Lime.Transport.WebSocket.csproj"
     - "Lime.Transport.AspNetCore.csproj"
+    skipTestToNuget: true
     testProjects: |
      src/Lime.Protocol.UnitTests/Lime.Protocol.UnitTests.csproj
      src/Lime.Transport.Tcp.UnitTests/Lime.Transport.Tcp.UnitTests.csproj
