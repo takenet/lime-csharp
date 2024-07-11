@@ -16,6 +16,7 @@ namespace Lime.Messaging.Resources
 
         public const string IDENTITY_KEY = "identity";
         public const string NAME_KEY = "name";
+        public const string DESCRIPTION_KEY = "description";
         public const string TYPE_KEY = "type";
         public const string PHOTO_URI_KEY = "photoUri";
         public const string CREATOR_KEY = "creator";
@@ -28,8 +29,8 @@ namespace Lime.Messaging.Resources
         public Group()
             : base(MediaType)
         {
-
         }
+
         /// <summary>
         /// Identity of the group, in the group-id@groups.domain.com format. 
         /// </summary>
@@ -41,6 +42,12 @@ namespace Lime.Messaging.Resources
         /// </summary>
         [DataMember(Name = NAME_KEY)]
         public string Name { get; set; }
+
+        /// <summary>
+        /// Description of the group.
+        /// </summary>
+        [DataMember(Name = DESCRIPTION_KEY)]
+        public string Description { get; set; }
 
         /// <summary>
         /// Type of the group.
@@ -97,7 +104,6 @@ namespace Lime.Messaging.Resources
         /// </summary>
         [EnumMember(Value = "public")]
         Public
-
     }
 
     /// <summary>
@@ -118,7 +124,6 @@ namespace Lime.Messaging.Resources
         public GroupMember()
             : base(MediaType.Parse(MIME_TYPE))
         {
-
         }
 
         /// <summary>
