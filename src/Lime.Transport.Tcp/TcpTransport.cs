@@ -415,6 +415,23 @@ namespace Lime.Transport.Tcp
         }
 
         /// <summary>
+        /// Get effective SslProtocol used in the transport.
+        /// </summary>
+        public SslProtocols? SslProtocol
+        {
+            get
+            {
+                var sslStream = _stream as SslStream;
+                if (sslStream != null)
+                {
+                    return sslStream.SslProtocol;
+                }
+
+                return null;
+            }
+        }
+
+        /// <summary>
         /// Indicates if the transport is connected.
         /// </summary>
         public override bool IsConnected => _tcpClient.Connected;
