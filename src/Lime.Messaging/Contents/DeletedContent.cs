@@ -1,5 +1,4 @@
 ﻿using Lime.Protocol;
-
 using System.Runtime.Serialization;
 
 namespace Lime.Messaging.Contents
