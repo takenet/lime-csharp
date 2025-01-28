@@ -19,18 +19,5 @@ namespace Lime.Messaging.Contents
         : base(MediaType)
         {
         }
-
-        /// <summary>
-        /// Empty message text representing deleted content
-        /// </summary>
-        public string Text => string.Empty;
-
-        /// <summary>
-        /// Returns a <see cref="System.String" /> that represents this instance of the <see cref="Contents.DeletedContent"/> class.
-        /// </summary>
-        /// <returns>
-        /// A <see cref="System.String" /> that represents this instance.
-        /// </returns>
-        public override string ToString() => Text;
     }
 }

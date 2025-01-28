@@ -2855,9 +2855,6 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             Assert.AreEqual(message.Metadata[randomKey2], randomString2);
 
             message.Content.ShouldBeOfType<DeletedContent>();
-
-            var deletedContent = (DeletedContent)message.Content;
-            deletedContent.Text.ShouldBeEmpty();
         }
         #endregion
 
