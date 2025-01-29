@@ -9,7 +9,7 @@
 	<ProductName>Lime Test Console</ProductName>
 	<PublisherName>Blip</PublisherName>
 	<SuiteName>Lime</SuiteName>
-	<VersionPrefix>2.0.0.0</VersionPrefix>
+	<VersionPrefix>2.1.0.0</VersionPrefix>
 	<UseApplicationTrust>false</UseApplicationTrust>
 	<PublishWizardCompleted>true</PublishWizardCompleted>
 	<GenerateAssemblyInfo>True</GenerateAssemblyInfo>
@@ -52,9 +52,9 @@
   <ItemGroup>
 	<PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.0" />
 	<PackageReference Include="Extended.Wpf.Toolkit" Version="4.5.0" />
-	<PackageReference Include="Lime.Messaging" Version="0.12.45" />
-	<PackageReference Include="Lime.Transport.Tcp" Version="0.12.45" />
-	<PackageReference Include="Lime.Transport.WebSocket" Version="0.12.45" />
+	<PackageReference Include="Lime.Messaging" Version="0.12.125" />
+	<PackageReference Include="Lime.Transport.Tcp" Version="0.12.125" />
+	<PackageReference Include="Lime.Transport.WebSocket" Version="0.12.125" />
 	<PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
 	<PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.39" />
 	<PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
