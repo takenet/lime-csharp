@@ -16,6 +16,8 @@ using NUnit.Framework;
 using Shouldly;
 using Lime.Messaging;
 using Lime.Protocol.Serialization.Newtonsoft.Converters;
+using static Lime.Protocol.UnitTests.Serialization.Newtonsoft.EnvelopeSerializerTests;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 {
@@ -1206,6 +1208,45 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
 
             buttonObject[Button.VALUE_KEY].ShouldBe(copyAndPaste.Button.Value);
             buttonObject[Button.TEXT_KEY].ShouldBe(copyAndPaste.Button.Text);
+        }
+
+
+        [Test]
+        [Category("Serialize")]
+        public void Serialize_DeletedContent_ReturnsValidJsonString()
+        {
+            var target = GetTarget();
+
+            var deletedContent = new DeletedContent();
+
+            var message = Dummy.CreateMessage(deletedContent);
+            message.Pp = Dummy.CreateNode();
+
+            var metadataKey1 = "randomString1";
+            var metadataValue1 = Dummy.CreateRandomString(50);
+            var metadataKey2 = "randomString2";
+            var metadataValue2 = Dummy.CreateRandomString(50);
+            message.Metadata = new Dictionary<string, string>
+            {
+                { metadataKey1, metadataValue1 },
+                { metadataKey2, metadataValue2 }
+            };
+
+            var resultString = target.Serialize(message);
+            Assert.IsTrue(resultString.HasValidJsonStackedBrackets());
+            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.ID_KEY, message.Id));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.FROM_KEY, message.From));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.PP_KEY, message.Pp));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Envelope.TO_KEY, message.To));
+            Assert.IsTrue(resultString.ContainsJsonProperty(Message.TYPE_KEY, message.Content.GetMediaType()));
+            Assert.IsTrue(resultString.ContainsJsonKey(Message.CONTENT_KEY));
+            Assert.IsTrue(resultString.ContainsJsonKey(Message.TYPE_KEY));
+            Assert.IsTrue(resultString.ContainsJsonProperty(metadataKey1, metadataValue1));
+            Assert.IsTrue(resultString.ContainsJsonProperty(metadataKey2, metadataValue2));
+
+            var dictionary = JsonConvert.DeserializeObject<Dictionary<string, object>>(resultString, target.Settings);
+            var externalObject = dictionary[Message.CONTENT_KEY].ShouldBeAssignableTo<JObject>();
+            var contentObject = externalObject[External.CONTENT_KEY].ShouldBeAssignableTo<JValue>();
         }
         #endregion
 
@@ -2776,6 +2817,44 @@ namespace Lime.Protocol.UnitTests.Serialization.Newtonsoft
             array.Count.ShouldBe(1);
             var jObject = array[0];
             jObject["inputPrompt"].ShouldBeOfType<JObject>();
+        }
+
+        [Test]
+        [Category("Deserialize")]
+        public void Deserialize_DeletedContentJsonMessage_ReturnsJsonDocument()
+        {
+            var target = GetTarget();
+
+            var id = EnvelopeId.NewId();
+            var from = Dummy.CreateNode();
+            var pp = Dummy.CreateNode();
+            var to = Dummy.CreateNode();
+            var messageDireaction = Dummy.CreateRandomInt(1);
+
+            string randomKey1 = "randomString1";
+            string randomKey2 = "randomString2";
+            string randomString1 = Dummy.CreateRandomStringExtended(50);
+            string randomString2 = Dummy.CreateRandomStringExtended(50);
+            string text = Dummy.CreateRandomStringExtended(50);
+            var emojis = Dummy.CreateUnicodeSequence();
+
+            string json =
+                $"{{\"id\":\"{id}\",\"to\":\"{to}\",\"from\":\"{@from}\",\"pp\":\"{pp}\",\"type\":\"{DeletedContent.MIME_TYPE.Escape()}\",\"metadata\":{{\"{randomKey1}\":\"{randomString1.Escape()}\",\"{randomKey2}\":\"{randomString2.Escape()}\"}},\"content\":{{\"emoji\":{{ \"values\":{JsonConvert.SerializeObject(emojis.Values)}}},\"inReactionTo\":{{\"id\":\"{id}\",\"type\":\"text/plain\",\"direction\":\"{(MessageDirection)messageDireaction}\",\"value\":\"{text.Escape()}\"}}}}}}";
+
+            var envelope = target.Deserialize(json);
+
+            var message = envelope.ShouldBeOfType<Message>();
+            Assert.AreEqual(id, message.Id);
+            Assert.AreEqual(from, message.From);
+            Assert.AreEqual(pp, message.Pp);
+            Assert.AreEqual(to, message.To);
+            Assert.IsNotNull(message.Metadata);
+            Assert.IsTrue(message.Metadata.ContainsKey(randomKey1));
+            Assert.AreEqual(message.Metadata[randomKey1], randomString1);
+            Assert.IsTrue(message.Metadata.ContainsKey(randomKey2));
+            Assert.AreEqual(message.Metadata[randomKey2], randomString2);
+
+            message.Content.ShouldBeOfType<DeletedContent>();
         }
         #endregion
 
