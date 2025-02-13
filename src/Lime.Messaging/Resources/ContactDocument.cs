@@ -29,8 +29,7 @@ namespace Lime.Messaging.Resources
         public const string LAST_NAME_KEY = "lastName";
         public const string BIRTH_DATE_KEY = "birthDate";
         public const string TAX_DOCUMENT_KEY = "taxDocument";
-        public const string CREATION_DATE_KEY = "creationDate";
-        public const string SUBSCRIPTION_STATUS_KEY = "subscriptionStatus";
+        public const string CREATION_DATE_KEY = "creationDate";        
 
 
         /// <summary>
@@ -152,11 +151,6 @@ namespace Lime.Messaging.Resources
         [DataMember(Name = CREATION_DATE_KEY)]
         public DateTimeOffset? CreationDate { get; set; }
 
-        /// <summary>
-        /// Indicates the status from the subscription status of the account person to receive communication (Opt-in / Opt-out).
-        /// </summary>
-        [DataMember(Name = SUBSCRIPTION_STATUS_KEY)]
-        public SubscriptionStatus? SubscriptionStatus { get; set; }
     }
 
     /// <summary>
@@ -178,22 +172,4 @@ namespace Lime.Messaging.Resources
         Female
     }
 
-    /// <summary>
-    /// Represents the subscription status of the account person to receive communication
-    /// </summary>
-    [DataContract(Namespace = "http://limeprotocol.org/2014")]
-    public enum SubscriptionStatus
-    {
-        /// <summary>
-        /// The Account is subscribed to receive communication
-        /// </summary>
-        [EnumMember(Value = "subscribed")]
-        Subscribed,
-
-        /// <summary>
-        /// The Account is not subscribed to receive communication
-        /// </summary>
-        [EnumMember(Value = "not-subscribed")]
-        NotSubscribed
-    }
 }
