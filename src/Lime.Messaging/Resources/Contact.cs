@@ -21,6 +21,7 @@ namespace Lime.Messaging.Resources
         public const string GROUP_KEY = "group";
         public const string LAST_MESSAGE_DATE = "lastMessageDate";
         public const string LAST_UPDATE_DATE = "lastUpdateDate";
+        public const string SUBSCRIPTION_STATUS_KEY = "subscriptionStatus";
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Contact"/> class.
@@ -82,6 +83,12 @@ namespace Lime.Messaging.Resources
         public DateTimeOffset? LastMessageDate { get; set; }
 
         /// <summary>
+        /// Indicates the status from the subscription status of the account person to receive communication (Opt-in / Opt-out).
+        /// </summary>
+        [DataMember(Name = SUBSCRIPTION_STATUS_KEY)]
+        public SubscriptionStatus? SubscriptionStatus { get; set; }
+
+        /// <summary>
         /// Indicates the last change date in any contact field.
         /// </summary>
         [DataMember(Name = LAST_UPDATE_DATE)]
@@ -128,5 +135,24 @@ namespace Lime.Messaging.Resources
         {
             return Identity?.GetHashCode() ?? 0;
         }
+    }
+
+    /// <summary>
+    /// Represents the subscription status of the account person to receive communication
+    /// </summary>
+    [DataContract(Namespace = "http://limeprotocol.org/2014")]
+    public enum SubscriptionStatus
+    {
+        /// <summary>
+        /// The Account is subscribed to receive communication
+        /// </summary>
+        [EnumMember(Value = "subscribed")]
+        Subscribed,
+
+        /// <summary>
+        /// The Account is not subscribed to receive communication
+        /// </summary>
+        [EnumMember(Value = "not-subscribed")]
+        NotSubscribed
     }
 }
