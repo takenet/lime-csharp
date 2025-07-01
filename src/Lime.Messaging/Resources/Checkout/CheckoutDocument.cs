@@ -1,8 +1,6 @@
 ﻿using Lime.Protocol;
-using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
-using System.Text;
 
 namespace Lime.Messaging.Resources.Checkout
 {
