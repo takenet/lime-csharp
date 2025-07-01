@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Runtime.Serialization;
 using System.Text;
 
-namespace Lime.Messaging.Contents.Checkout
+namespace Lime.Messaging.Resources.Checkout
 {
     /// <summary>
     /// Represents a checkout document containing customer, product, and transaction details.

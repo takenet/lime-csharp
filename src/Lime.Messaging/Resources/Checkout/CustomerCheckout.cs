@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.Serialization;
 using System.Text;
 
-namespace Lime.Messaging.Contents.Checkout
+namespace Lime.Messaging.Resources.Checkout
 {
     /// <summary>
     /// Represents the customer information required for a checkout process.
