@@ -5,6 +5,7 @@ namespace Lime.Messaging.Resources.Checkout
     /// <summary>
     /// Represents the customer information required for a checkout process.
     /// </summary>
+    [DataContract]
     public class CustomerCheckout
     {
         /// <summary>
