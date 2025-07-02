@@ -15,7 +15,7 @@ resources:
   - repository: templates
     type: git
     name: Operações/template-take-blip
-    ref: refs/tags/stable
+    ref: fix/823373-adjust-nuget-task
 
 extends:
   template: template-pipeline.yml@templates
