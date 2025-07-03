@@ -3,6 +3,9 @@ trigger:
 - main
 - beta/*
 
+pool:
+  vmImage: ubuntu-22.04
+
 name: 0.12$(Rev:.r)
   
 variables:
