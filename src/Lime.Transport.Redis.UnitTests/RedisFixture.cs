@@ -3,20 +3,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Threading;
-using System.Threading.Tasks;
-using Lime.Messaging.Contents;
-using Lime.Messaging.Resources;
-using Lime.Protocol;
-using Lime.Protocol.Network;
-using Lime.Protocol.Serialization;
-using Lime.Protocol.Serialization.Newtonsoft;
-using Lime.Protocol.UnitTests;
-using Moq;
-using NUnit.Framework;
-using Shouldly;
-using Lime.Messaging;
-using NUnit.Framework;
 
 namespace Lime.Transport.Redis.UnitTests
 {
