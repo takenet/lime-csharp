@@ -1,7 +1,4 @@
-﻿using Newtonsoft.Json;
-using System;
-
-namespace Lime.Protocol.Serialization.Newtonsoft.Converters
+﻿namespace Lime.Protocol.Serialization.Newtonsoft.Converters
 {
     public class LimeUriJsonConverter : StringBasedTypeJsonConverter<LimeUri>
     {
