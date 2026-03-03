@@ -29,7 +29,8 @@ namespace Lime.Messaging.Resources
         public const string LAST_NAME_KEY = "lastName";
         public const string BIRTH_DATE_KEY = "birthDate";
         public const string TAX_DOCUMENT_KEY = "taxDocument";
-        public const string CREATION_DATE_KEY = "creationDate";        
+        public const string CREATION_DATE_KEY = "creationDate";
+        public const string TENANT_ID_KEY = "tenantId";
 
 
         /// <summary>
@@ -151,6 +152,11 @@ namespace Lime.Messaging.Resources
         [DataMember(Name = CREATION_DATE_KEY)]
         public DateTimeOffset? CreationDate { get; set; }
 
+        /// <summary>
+        /// The contract identifier.
+        /// </summary>
+        [DataMember(Name = TENANT_ID_KEY)]
+        public string TenantId { get; set; }
     }
 
     /// <summary>
