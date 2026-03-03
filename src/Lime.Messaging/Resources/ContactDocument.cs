@@ -29,8 +29,9 @@ namespace Lime.Messaging.Resources
         public const string LAST_NAME_KEY = "lastName";
         public const string BIRTH_DATE_KEY = "birthDate";
         public const string TAX_DOCUMENT_KEY = "taxDocument";
-        public const string CREATION_DATE_KEY = "creationDate";        
-
+        public const string CREATION_DATE_KEY = "creationDate";
+        public const string TENANT_ID_KEY = "tenantId";
+        public const string IS_GROUP_ENABLED_KEY = "isGroupEnabled";
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ContactDocument"/> class.
@@ -151,6 +152,18 @@ namespace Lime.Messaging.Resources
         [DataMember(Name = CREATION_DATE_KEY)]
         public DateTimeOffset? CreationDate { get; set; }
 
+        /// <summary>
+        /// The contract identifier.
+        /// </summary>
+        [DataMember(Name = TENANT_ID_KEY)]
+        public string TenantId { get; set; }
+        
+        /// <summary>
+        /// Defines whether the contact is enabled for group conversations.
+        /// To be a group, a contact need to have a source like "WhatsApp Group"
+        /// </summary>
+        [DataMember(Name = IS_GROUP_ENABLED_KEY)]
+        public bool IsGroupEnabled { get; set; }
     }
 
     /// <summary>
@@ -169,7 +182,13 @@ namespace Lime.Messaging.Resources
         /// The female gender
         /// </summary>
         [EnumMember(Value = "female")]
-        Female
+        Female,
+        
+        /// <summary>
+        /// Non-binary gender
+        /// </summary>
+        [EnumMember(Value = "other")]
+        Other
     }
 
 }
