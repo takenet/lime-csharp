@@ -163,7 +163,7 @@ namespace Lime.Messaging.Resources
         /// To be a group, a contact need to have a source like "WhatsApp Group"
         /// </summary>
         [DataMember(Name = IS_GROUP_ENABLED_KEY)]
-        public bool IsGroupEnabled { get; set; }
+        public bool? IsGroupEnabled { get; set; }
     }
 
     /// <summary>
