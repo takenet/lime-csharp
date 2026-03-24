@@ -160,10 +160,10 @@ namespace Lime.Messaging.Resources
         
         /// <summary>
         /// Defines whether the contact is enabled for group conversations.
-        /// To be a group, a contact need to have a source like "WhatsApp Group"
+        /// To be a group, a contact needs to have a source like "WhatsApp Group"
         /// </summary>
         [DataMember(Name = IS_GROUP_ENABLED_KEY)]
-        public bool IsGroupEnabled { get; set; }
+        public bool? IsGroupEnabled { get; set; }
     }
 
     /// <summary>
