@@ -378,6 +378,7 @@ namespace Lime.Protocol.Network
         {
             if (disposing)
             {
+                Transport.Closing -= Transport_Closing;
                 _receiverChannel.Dispose();
                 _senderChannel.Dispose();
                 Transport.DisposeIfDisposable();

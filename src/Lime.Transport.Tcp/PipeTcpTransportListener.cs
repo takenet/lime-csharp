@@ -14,7 +14,7 @@ using System.Buffers;
 
 namespace Lime.Transport.Tcp
 {
-    public class PipeTcpTransportListener : ITransportListener
+    public class PipeTcpTransportListener : ITransportListener, IDisposable
     {
         private readonly X509Certificate2 _serverCertificate;
         private readonly IEnvelopeSerializer _envelopeSerializer;
@@ -180,6 +180,11 @@ namespace Lime.Transport.Tcp
             {
                 _semaphore.Release();
             }
+        }
+
+        public void Dispose()
+        {
+            _semaphore.Dispose();
         }
     }
 }

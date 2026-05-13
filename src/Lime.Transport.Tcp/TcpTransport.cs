@@ -581,6 +581,7 @@ namespace Lime.Transport.Tcp
         public void Dispose()
         {
             Dispose(true);
+            GC.SuppressFinalize(this);
         }
 
         protected virtual void Dispose(bool disposing)
@@ -592,6 +593,7 @@ namespace Lime.Transport.Tcp
                     _optionsSemaphore.Dispose();
                     _stream?.Dispose();
                     _jsonBuffer.Dispose();
+                    base.Dispose(disposing);
                 }
 
                 _disposed = true;
@@ -640,11 +642,11 @@ namespace Lime.Transport.Tcp
 
         private bool CanRead => _stream != null && _stream.CanRead && _tcpClient.Connected;
 
-        private Task CloseWithTimeoutAsync()
+        private async Task CloseWithTimeoutAsync()
         {
             using (var cts = new CancellationTokenSource(CloseTimeout))
             {
-                return CloseAsync(cts.Token);
+                await CloseAsync(cts.Token).ConfigureAwait(false);
             }
         }
 

@@ -50,6 +50,8 @@ namespace Lime.Protocol.Listeners
                 {
                     throw new InvalidOperationException("The listener is already active");
                 }
+                // Dispose the previous cancelled CTS before creating a new one.
+                _cts?.Dispose();
                 _cts = new CancellationTokenSource();
 
                 MessageListenerTask = CreateListenerTask(
@@ -81,7 +83,7 @@ namespace Lime.Protocol.Listeners
                     throw new InvalidOperationException("The listener is not active");
                 }
 
-                _cts.Cancel();                
+                _cts.Cancel();
                 MessageBuffer.Writer.TryComplete();
                 NotificationBuffer.Writer.TryComplete();
                 CommandBuffer.Writer.TryComplete();

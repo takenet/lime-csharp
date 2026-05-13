@@ -193,6 +193,7 @@ namespace Lime.Protocol.Network
         public void Dispose()
         {
             _pipeCts.Dispose();
+            _semaphore.Dispose();
         }
 
         private Task TraceAsync(string data, DataOperation operation)

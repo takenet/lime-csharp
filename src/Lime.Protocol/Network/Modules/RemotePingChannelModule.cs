@@ -202,6 +202,11 @@ namespace Lime.Protocol.Network.Modules
         {
             _disposing = true;
             _cts.CancelAndDispose();
+            try
+            {
+                _pingRemoteTask?.Wait(TimeSpan.FromSeconds(5));
+            }
+            catch { }
         }
     }
 }

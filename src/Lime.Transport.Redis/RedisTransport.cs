@@ -268,6 +268,8 @@ namespace Lime.Transport.Redis
                 {
                     _connectionMultiplexer.Dispose();
                 }
+                _semaphore.Dispose();
+                base.Dispose(disposing);
             }
         }
 
