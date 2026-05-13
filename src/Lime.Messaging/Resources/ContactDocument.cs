@@ -182,7 +182,7 @@ namespace Lime.Messaging.Resources
         public string? WhatsAppWaId { get; set; }
 
         /// <summary>
-        /// The user-chosen identifier of the contact in Meta (e.g., Instagram handle).
+        /// The user-chosen identifier of the contact in Meta.
         /// </summary>
         [DataMember(Name = WHATSAPP_USER_NAME_KEY)]
         public string? WhatsAppUserName { get; set; }
