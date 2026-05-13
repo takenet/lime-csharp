@@ -191,6 +191,7 @@ namespace Lime.Transport.WebSocket
                 WebSocket.Dispose();
                 _envelopePipe.Dispose();
                 _closeSemaphore.Dispose();
+                base.Dispose(disposing);
             }
         }
 
@@ -241,11 +242,11 @@ namespace Lime.Transport.WebSocket
             _closeStatus = WebSocketCloseStatus.NormalClosure;
         }
 
-        private Task CloseWithTimeoutAsync()
+        private async Task CloseWithTimeoutAsync()
         {
             using (var cts = new CancellationTokenSource(CloseTimeout))
             {
-                return CloseAsync(cts.Token);
+                await CloseAsync(cts.Token).ConfigureAwait(false);
             }
         }
     }

@@ -9,7 +9,7 @@ namespace Lime.Protocol.Network
     /// <summary>
     /// Base class for transport implementation.
     /// </summary>
-    public abstract class TransportBase : ITransport
+    public abstract class TransportBase : ITransport, IDisposable
     {
         private bool _isOpen; // TODO: Merge this logic with IsConnected
         private bool _closingInvoked;
@@ -237,6 +237,27 @@ namespace Lime.Protocol.Network
             {
                 _closedInvoked = true;
                 Closed.RaiseEvent(this, EventArgs.Empty);
+            }
+        }
+
+        /// <summary>
+        /// Releases resources used by this transport instance.
+        /// </summary>
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// Releases managed and - optionally - unmanaged resources.
+        /// </summary>
+        /// <param name="disposing"><c>true</c> to release managed resources.</param>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                _openCloseSemaphore.Dispose();
             }
         }
     }

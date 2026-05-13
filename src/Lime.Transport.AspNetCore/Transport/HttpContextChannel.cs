@@ -14,7 +14,7 @@ namespace Lime.Transport.AspNetCore.Transport
     /// <summary>
     /// Emulates a channel using the HttpContext to allow the application sending a envelope in the HTTP response.
     /// </summary>
-    internal sealed class HttpContextChannel : ISenderChannel
+    internal sealed class HttpContextChannel : ISenderChannel, IDisposable
     {
         private readonly HttpContext _context;
         private readonly IEnvelopeSerializer _envelopeSerializer;
@@ -97,6 +97,11 @@ namespace Lime.Transport.AspNetCore.Transport
             {
                 throw new NotSupportedException("Only one envelope can be sent per request on HTTP transport");
             }
+        }
+
+        public void Dispose()
+        {
+            _sendSemaphore.Dispose();
         }
     }
 }

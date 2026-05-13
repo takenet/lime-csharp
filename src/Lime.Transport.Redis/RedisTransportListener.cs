@@ -158,6 +158,7 @@ namespace Lime.Transport.Redis
         public void Dispose()
         {
             _connectionMultiplexer?.Dispose();
+            _semaphore.Dispose();
         }
     }
 }
