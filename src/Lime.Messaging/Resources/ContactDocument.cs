@@ -32,6 +32,10 @@ namespace Lime.Messaging.Resources
         public const string CREATION_DATE_KEY = "creationDate";
         public const string TENANT_ID_KEY = "tenantId";
         public const string IS_GROUP_ENABLED_KEY = "isGroupEnabled";
+        public const string WHATSAPP_BSUID_KEY = "whatsAppBsuid";
+        public const string WHATSAPP_WA_ID_KEY = "whatsAppWaId";
+        public const string WHATSAPP_USER_NAME_KEY = "whatsAppUserName";
+        public const string WHATSAPP_PARENT_ID_KEY = "whatsAppParentId";
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ContactDocument"/> class.
@@ -164,6 +168,30 @@ namespace Lime.Messaging.Resources
         /// </summary>
         [DataMember(Name = IS_GROUP_ENABLED_KEY)]
         public bool? IsGroupEnabled { get; set; }
+
+        /// <summary>
+        /// The unique identifier of the contact in Meta (Business Scoped User ID).
+        /// </summary>
+        [DataMember(Name = WHATSAPP_BSUID_KEY)]
+        public string? WhatsAppBsuid { get; set; }
+
+        /// <summary>
+        /// The phone number of the contact in Meta (WhatsApp ID).
+        /// </summary>
+        [DataMember(Name = WHATSAPP_WA_ID_KEY)]
+        public string? WhatsAppWaId { get; set; }
+
+        /// <summary>
+        /// The user-chosen identifier of the contact in Meta (e.g., Instagram handle).
+        /// </summary>
+        [DataMember(Name = WHATSAPP_USER_NAME_KEY)]
+        public string? WhatsAppUserName { get; set; }
+
+        /// <summary>
+        /// The identifier linking the contact to a Company in Meta.
+        /// </summary>
+        [DataMember(Name = WHATSAPP_PARENT_ID_KEY)]
+        public string? WhatsAppParentId { get; set; }
     }
 
     /// <summary>
