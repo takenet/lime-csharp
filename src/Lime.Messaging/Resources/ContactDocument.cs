@@ -179,7 +179,7 @@ namespace Lime.Messaging.Resources
         /// The phone number of the contact in Meta (WhatsApp ID).
         /// </summary>
         [DataMember(Name = WHATSAPP_WA_ID_KEY)]
-        public string? WhatsAppWaId { get; set; }
+        public long? WhatsAppWaId { get; set; }
 
         /// <summary>
         /// The user-chosen identifier of the contact in Meta.
