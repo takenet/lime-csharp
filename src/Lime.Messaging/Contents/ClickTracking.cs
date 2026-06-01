@@ -1,4 +1,4 @@
-	using Lime.Protocol;
+using Lime.Protocol;
 using System.Runtime.Serialization;
 
 namespace Lime.Messaging.Contents
@@ -88,7 +88,7 @@ namespace Lime.Messaging.Contents
     /// <summary>
     /// Represents the tracking metadata of a <see cref="ClickTracking"/> event.
     /// </summary>
-    [DataContract]
+    [DataContract(Namespace = "http://limeprotocol.org/2014")]
     public class ClickTrackingMetadata
     {
         public const string TRACKING_URL_ID_KEY = "trackingUrlId";
