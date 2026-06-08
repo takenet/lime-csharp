@@ -173,25 +173,25 @@ namespace Lime.Messaging.Resources
         /// The unique identifier of the contact in Meta (Business Scoped User ID).
         /// </summary>
         [DataMember(Name = WHATSAPP_BSUID_KEY)]
-        public string? WhatsAppBsuid { get; set; }
+        public string WhatsAppBsuid { get; set; }
 
         /// <summary>
         /// The phone number of the contact in Meta (WhatsApp ID).
         /// </summary>
         [DataMember(Name = WHATSAPP_WA_ID_KEY)]
-        public long? WhatsAppWaId { get; set; }
+        public string WhatsAppWaId { get; set; }
 
         /// <summary>
         /// The user-chosen identifier of the contact in Meta.
         /// </summary>
         [DataMember(Name = WHATSAPP_USER_NAME_KEY)]
-        public string? WhatsAppUserName { get; set; }
+        public string WhatsAppUserName { get; set; }
 
         /// <summary>
         /// The identifier linking the contact to a Company in Meta.
         /// </summary>
         [DataMember(Name = WHATSAPP_PARENT_ID_KEY)]
-        public string? WhatsAppParentId { get; set; }
+        public string WhatsAppParentId { get; set; }
     }
 
     /// <summary>
