@@ -260,7 +260,7 @@ namespace Lime.Transport.Redis
             return DomainRole.RootAuthority.AsCompletedTask();
         }
 
-        protected virtual void Dispose(bool disposing)
+        protected override void Dispose(bool disposing)
         {
             if (disposing)
             {
@@ -273,7 +273,7 @@ namespace Lime.Transport.Redis
             }
         }
 
-        public void Dispose()
+        public new void Dispose()
         {
             Dispose(true);
         }
