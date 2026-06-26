@@ -273,7 +273,7 @@ namespace Lime.Transport.Redis
             }
         }
 
-        public new void Dispose()
+        public void Dispose()
         {
             Dispose(true);
         }
