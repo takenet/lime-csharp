@@ -314,6 +314,12 @@ namespace Lime.Transport.WebSocket
             {nameof(System.Net.WebSockets.WebSocket.DefaultKeepAliveInterval), System.Net.WebSockets.WebSocket.DefaultKeepAliveInterval}
         };
 
+        public new void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
         protected override void Dispose(bool disposing)
         {
             if (disposing)

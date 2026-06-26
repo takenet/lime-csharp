@@ -272,5 +272,10 @@ namespace Lime.Transport.Redis
                 base.Dispose(disposing);
             }
         }
+
+        public new void Dispose()
+        {
+            Dispose(true);
+        }
     }
 }
