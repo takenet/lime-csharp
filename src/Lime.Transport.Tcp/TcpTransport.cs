@@ -578,12 +578,6 @@ namespace Lime.Transport.Tcp
         /// <summary>
         /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
         /// </summary>
-        public new void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
         protected override void Dispose(bool disposing)
         {
             if (!_disposed)
