@@ -130,7 +130,16 @@ namespace Lime.Protocol.Network
         
         public async Task StopAsync(CancellationToken cancellationToken)
         {
-            await _startStopSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+            if (_isDisposing) return;
+            try
+            {
+                await _startStopSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+            }
+            catch (ObjectDisposedException) when (_isDisposing)
+            {
+                return;
+            }
+
             try
             {
                 // Complete the pipeline
@@ -146,7 +155,10 @@ namespace Lime.Protocol.Network
             }
             finally
             {
-                _startStopSemaphore.Release();
+                if (!_isDisposing)
+                {
+                    _startStopSemaphore.Release();
+                }
             }
         }
 
