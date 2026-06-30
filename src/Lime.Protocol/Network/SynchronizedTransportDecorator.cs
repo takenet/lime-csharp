@@ -8,11 +8,16 @@ namespace Lime.Protocol.Network
     /// <summary>
     /// Defines a decorator for <see cref="ITransport"/> that synchronizes concurrent <see cref="SendAsync"/> and <see cref="ReceiveAsync"/> calls.
     /// </summary>
+#if NETSTANDARD2_1_OR_GREATER
+    public sealed class SynchronizedTransportDecorator : ITransport, IDisposable, IAsyncDisposable
+#else
     public sealed class SynchronizedTransportDecorator : ITransport, IDisposable
+#endif
     {
         private readonly ITransport _transport;
         private readonly SemaphoreSlim _sendSemaphore;
         private readonly SemaphoreSlim _receiveSemaphore;
+        private volatile bool _disposed;
 
         public SynchronizedTransportDecorator(ITransport transport)
         {
@@ -38,7 +43,7 @@ namespace Lime.Protocol.Network
             await _sendSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
             try
             {
-                await _transport.SendAsync(envelope, cancellationToken);
+                await _transport.SendAsync(envelope, cancellationToken).ConfigureAwait(false);
             }
             finally
             {
@@ -108,8 +113,35 @@ namespace Lime.Protocol.Network
 
         public void Dispose()
         {
+            if (_disposed)
+            {
+                return;
+            }
+            _disposed = true;
             _sendSemaphore.Dispose();
             _receiveSemaphore.Dispose();
+            (_transport as IDisposable)?.Dispose();
         }
+
+#if NETSTANDARD2_1_OR_GREATER
+        public async ValueTask DisposeAsync()
+        {
+            if (_disposed)
+            {
+                return;
+            }
+            _disposed = true;
+            _sendSemaphore.Dispose();
+            _receiveSemaphore.Dispose();
+            if (_transport is IAsyncDisposable asyncDisposable)
+            {
+                await asyncDisposable.DisposeAsync().ConfigureAwait(false);
+            }
+            else
+            {
+                (_transport as IDisposable)?.Dispose();
+            }
+        }
+#endif
     }
 }
