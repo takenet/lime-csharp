@@ -575,15 +575,7 @@ namespace Lime.Transport.Tcp
             return Task.FromResult<object>(null);
         }
 
-        /// <summary>
-        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
-        /// </summary>
-        public void Dispose()
-        {
-            Dispose(true);
-        }
-
-        protected virtual void Dispose(bool disposing)
+        protected override void Dispose(bool disposing)
         {
             if (!_disposed)
             {
@@ -592,6 +584,7 @@ namespace Lime.Transport.Tcp
                     _optionsSemaphore.Dispose();
                     _stream?.Dispose();
                     _jsonBuffer.Dispose();
+                    base.Dispose(disposing);
                 }
 
                 _disposed = true;
@@ -640,11 +633,11 @@ namespace Lime.Transport.Tcp
 
         private bool CanRead => _stream != null && _stream.CanRead && _tcpClient.Connected;
 
-        private Task CloseWithTimeoutAsync()
+        private async Task CloseWithTimeoutAsync()
         {
             using (var cts = new CancellationTokenSource(CloseTimeout))
             {
-                return CloseAsync(cts.Token);
+                await CloseAsync(cts.Token).ConfigureAwait(false);
             }
         }
 

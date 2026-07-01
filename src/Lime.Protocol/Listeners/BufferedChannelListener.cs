@@ -15,6 +15,8 @@ namespace Lime.Protocol.Listeners
         private readonly Func<Command, CancellationToken, Task<bool>> _commandConsumer;
         private readonly object _syncRoot;
         private CancellationTokenSource _cts;
+        private bool _disposed;
+
         public BufferedChannelListener(
             Func<Message, CancellationToken, Task<bool>> messageConsumer,
             Func<Notification, CancellationToken, Task<bool>> notificationConsumer,
@@ -46,10 +48,18 @@ namespace Lime.Protocol.Listeners
         {
             lock (_syncRoot)
             {
+                if (_disposed)
+                {
+                    throw new ObjectDisposedException(GetType().Name);
+                }
+                
                 if (_cts != null && !_cts.IsCancellationRequested)
                 {
                     throw new InvalidOperationException("The listener is already active");
                 }
+                
+                // Safely dispose the previous cancelled CTS before creating a new one.
+                _cts?.CancelAndDispose();
                 _cts = new CancellationTokenSource();
 
                 MessageListenerTask = CreateListenerTask(
@@ -76,12 +86,16 @@ namespace Lime.Protocol.Listeners
         {
             lock (_syncRoot)
             {
+                if (_disposed)
+                {
+                    throw new ObjectDisposedException(GetType().Name);
+                }
                 if (_cts == null || _cts.IsCancellationRequested)
                 {
                     throw new InvalidOperationException("The listener is not active");
                 }
 
-                _cts.Cancel();                
+                _cts.Cancel();
                 MessageBuffer.Writer.TryComplete();
                 NotificationBuffer.Writer.TryComplete();
                 CommandBuffer.Writer.TryComplete();
@@ -101,7 +115,7 @@ namespace Lime.Protocol.Listeners
                 producer,
                 async (i, c) =>
                 {
-                    await channel.Writer.WriteAsync(i, c);
+                    await channel.Writer.WriteAsync(i, c).ConfigureAwait(false);
                     return true;
                 },
                 linkedCts.Token,
@@ -112,12 +126,12 @@ namespace Lime.Protocol.Listeners
                 linkedCts.Token,
                 true);
 
-            await Task.WhenAny(producerToChannelTask, channelToConsumerTask);
+            await Task.WhenAny(producerToChannelTask, channelToConsumerTask).ConfigureAwait(false);
             
             // Cancel and awaits the both tasks again
             cts.Cancel();
             
-            var items = await Task.WhenAll(producerToChannelTask, channelToConsumerTask);
+            var items = await Task.WhenAll(producerToChannelTask, channelToConsumerTask).ConfigureAwait(false);
             
             return items.FirstOrDefault(i => i != null);
         }
@@ -127,7 +141,16 @@ namespace Lime.Protocol.Listeners
         /// </summary>
         public void Dispose()
         {
-            _cts?.CancelAndDispose();
+            lock (_syncRoot)
+            {
+                if (_disposed)
+                {
+                    return;
+                }
+                _disposed = true;
+                _cts?.CancelAndDispose();
+                _cts = null;
+            }   
         }
     }
 }

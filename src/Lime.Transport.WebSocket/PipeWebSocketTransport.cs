@@ -178,19 +178,14 @@ namespace Lime.Transport.WebSocket
             {nameof(System.Net.WebSockets.WebSocket.DefaultKeepAliveInterval), System.Net.WebSockets.WebSocket.DefaultKeepAliveInterval}
         };
 
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        protected virtual void Dispose(bool disposing)
+        protected override void Dispose(bool disposing)
         {
             if (disposing)
             {
                 WebSocket.Dispose();
                 _envelopePipe.Dispose();
                 _closeSemaphore.Dispose();
+                base.Dispose(disposing);
             }
         }
 
@@ -241,11 +236,11 @@ namespace Lime.Transport.WebSocket
             _closeStatus = WebSocketCloseStatus.NormalClosure;
         }
 
-        private Task CloseWithTimeoutAsync()
+        private async Task CloseWithTimeoutAsync()
         {
             using (var cts = new CancellationTokenSource(CloseTimeout))
             {
-                return CloseAsync(cts.Token);
+                await CloseAsync(cts.Token).ConfigureAwait(false);
             }
         }
     }

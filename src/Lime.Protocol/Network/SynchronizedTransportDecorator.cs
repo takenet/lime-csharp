@@ -8,11 +8,12 @@ namespace Lime.Protocol.Network
     /// <summary>
     /// Defines a decorator for <see cref="ITransport"/> that synchronizes concurrent <see cref="SendAsync"/> and <see cref="ReceiveAsync"/> calls.
     /// </summary>
-    public sealed class SynchronizedTransportDecorator : ITransport
+    public sealed class SynchronizedTransportDecorator : ITransport, IDisposable
     {
         private readonly ITransport _transport;
         private readonly SemaphoreSlim _sendSemaphore;
         private readonly SemaphoreSlim _receiveSemaphore;
+        private volatile bool _disposed;
 
         public SynchronizedTransportDecorator(ITransport transport)
         {
@@ -38,7 +39,7 @@ namespace Lime.Protocol.Network
             await _sendSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
             try
             {
-                await _transport.SendAsync(envelope, cancellationToken);
+                await _transport.SendAsync(envelope, cancellationToken).ConfigureAwait(false);
             }
             finally
             {
@@ -104,6 +105,18 @@ namespace Lime.Protocol.Network
         {
             add => _transport.Closed += value;
             remove => _transport.Closed -= value;
+        }
+
+        public void Dispose()
+        {
+            if (_disposed)
+            {
+                return;
+            }
+            _disposed = true;
+            _sendSemaphore.Dispose();
+            _receiveSemaphore.Dispose();
+            (_transport as IDisposable)?.Dispose();
         }
     }
 }

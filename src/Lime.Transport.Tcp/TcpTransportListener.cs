@@ -14,7 +14,7 @@ using System.Buffers;
 
 namespace Lime.Transport.Tcp
 {
-    public class TcpTransportListener : ITransportListener
+    public class TcpTransportListener : ITransportListener, IDisposable
     {
         private readonly X509Certificate2 _serverCertificate;
         private readonly IEnvelopeSerializer _envelopeSerializer;
@@ -25,6 +25,7 @@ namespace Lime.Transport.Tcp
         private readonly RemoteCertificateValidationCallback _clientCertificateValidationCallback;
         private readonly SemaphoreSlim _semaphore;
         private TcpListener _tcpListener;
+        private volatile bool _disposed;
 
         /// <summary>
         /// Initializes a new instance of <see cref="TcpTransportListener"/> class.
@@ -37,8 +38,6 @@ namespace Lime.Transport.Tcp
         /// <param name="arrayPool">The array pool for reusing <see cref="byte[]"/> instances.</param>
         /// <param name="traceWriter"></param>
         /// <param name="clientCertificateValidationCallback"></param>
-        /// <param name="usePipeTcpTransport"></param>
-        /// <param name="memoryPool"></param>
         public TcpTransportListener(
             Uri listenerUri,
             X509Certificate2 serverCertificate,
@@ -93,6 +92,11 @@ namespace Lime.Transport.Tcp
             await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
             try
             {
+                if (_disposed)
+                {
+                    throw new ObjectDisposedException(GetType().Name);
+                }
+
                 if (_tcpListener != null)
                 {
                     throw new InvalidOperationException("The listener is already active");
@@ -144,14 +148,15 @@ namespace Lime.Transport.Tcp
         /// <exception cref="System.InvalidOperationException">The listener was not started. Calls StartAsync first.</exception>
         public async Task<ITransport> AcceptTransportAsync(CancellationToken cancellationToken)
         {
-            if (_tcpListener == null)
-            {
+            if (_disposed) throw new ObjectDisposedException(GetType().Name);
+
+            var listener = _tcpListener;
+            if (listener == null)
                 throw new InvalidOperationException("The listener is not active. Call StartAsync first.");
-            }
 
             cancellationToken.ThrowIfCancellationRequested();
 
-            var tcpClient = await _tcpListener
+            var tcpClient = await listener
                 .AcceptTcpClientAsync()
                 .WithCancellation(cancellationToken)
                 .ConfigureAwait(false);
@@ -176,6 +181,11 @@ namespace Lime.Transport.Tcp
             await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
             try
             {
+                if (_disposed)
+                {
+                    throw new ObjectDisposedException(GetType().Name);
+                }
+
                 if (_tcpListener == null)
                 {
                     throw new InvalidOperationException("The listener is not active");
@@ -189,5 +199,28 @@ namespace Lime.Transport.Tcp
                 _semaphore.Release();
             }
         }
+
+        /// <summary>
+        /// Releases all resources used by the <see cref="TcpTransportListener"/>.
+        /// </summary>
+        public void Dispose()
+        {
+            if (_disposed) return;
+            _semaphore.Wait();
+            try
+            {
+                if (_disposed) return;
+                _disposed = true;
+                _tcpListener?.Stop();
+                _tcpListener = null;
+            }
+            finally
+            {
+                _semaphore.Dispose();
+            }
+
+            GC.SuppressFinalize(this);
+        }
+
     }
 }

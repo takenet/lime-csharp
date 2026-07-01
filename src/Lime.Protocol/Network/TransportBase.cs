@@ -9,11 +9,12 @@ namespace Lime.Protocol.Network
     /// <summary>
     /// Base class for transport implementation.
     /// </summary>
-    public abstract class TransportBase : ITransport
+    public abstract class TransportBase : ITransport, IDisposable
     {
         private bool _isOpen; // TODO: Merge this logic with IsConnected
         private bool _closingInvoked;
         private bool _closedInvoked;
+        private bool _disposed;
         private readonly SemaphoreSlim _openCloseSemaphore;
 
         protected TransportBase()
@@ -52,7 +53,7 @@ namespace Lime.Protocol.Network
                 {
                     throw new InvalidOperationException("The transport is already open");
                 }
-                
+
                 await PerformOpenAsync(uri, cancellationToken);
                 _isOpen = true;
                 _closingInvoked = false;
@@ -78,7 +79,7 @@ namespace Lime.Protocol.Network
                 {
                     throw new InvalidOperationException("The transport is not open");
                 }
-                
+
                 await OnClosingAsync().ConfigureAwait(false);
                 await PerformCloseAsync(cancellationToken).ConfigureAwait(false);
                 _isOpen = false;
@@ -237,6 +238,30 @@ namespace Lime.Protocol.Network
             {
                 _closedInvoked = true;
                 Closed.RaiseEvent(this, EventArgs.Empty);
+            }
+        }
+
+        /// <summary>
+        /// Releases resources used by this transport instance.
+        /// </summary>
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// Releases managed and - optionally - unmanaged resources.
+        /// </summary>
+        /// <param name="disposing"><c>true</c> to release managed resources.</param>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (_disposed) return;
+            _disposed = true;
+
+            if (disposing)
+            {
+                _openCloseSemaphore.Dispose();
             }
         }
     }
