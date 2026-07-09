@@ -64,7 +64,7 @@ namespace Lime.Protocol.Serialization.SystemTextJson.Converters
                 {
                     foreach (var jsonProp in doc.RootElement.EnumerateObject())
                     {
-                        dict[jsonProp.Name] = DocumentHelper.GetElementValue(jsonProp.Value);
+                        dict[jsonProp.Name] = jsonProp.Value.GetElementValue();
                     }
                 }
                 return instance;

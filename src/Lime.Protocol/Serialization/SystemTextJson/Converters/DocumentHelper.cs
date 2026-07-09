@@ -1,6 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text.Json;
 
 namespace Lime.Protocol.Serialization.SystemTextJson.Converters
@@ -35,7 +33,7 @@ namespace Lime.Protocol.Serialization.SystemTextJson.Converters
                         }
                         else
                         {
-                            var text = GetStringValue(element);
+                            var text = element.GetStringValue();
                             var parseFunc = TypeUtilEx.GetParseFuncForType(documentType);
                             return (Document)parseFunc(text);
                         }
@@ -49,11 +47,11 @@ namespace Lime.Protocol.Serialization.SystemTextJson.Converters
             // Fallback: generic JSON or plain text handling
             if (mediaType.IsJson)
             {
-                var dict = ConvertElementToDictionary(element);
+                var dict = element.ConvertToDictionary();
                 return new JsonDocument(dict, mediaType);
             }
 
-            return new PlainDocument(GetStringValue(element), mediaType);
+            return new PlainDocument(element.GetStringValue(), mediaType);
         }
 
         /// <summary>
@@ -69,47 +67,6 @@ namespace Lime.Protocol.Serialization.SystemTextJson.Converters
             else
             {
                 JsonSerializer.Serialize(writer, document, document.GetType(), options);
-            }
-        }
-
-        private static string GetStringValue(JsonElement element)
-        {
-            return element.ValueKind == JsonValueKind.String
-                ? element.GetString()
-                : element.GetRawText();
-        }
-
-        private static IDictionary<string, object> ConvertElementToDictionary(JsonElement element)
-        {
-            var dict = new Dictionary<string, object>();
-            foreach (var prop in element.EnumerateObject())
-            {
-                dict[prop.Name] = GetElementValue(prop.Value);
-            }
-            return dict;
-        }
-
-        internal static object GetElementValue(JsonElement element)
-        {
-            switch (element.ValueKind)
-            {
-                case JsonValueKind.String:
-                    return element.GetString();
-                case JsonValueKind.True:
-                    return true;
-                case JsonValueKind.False:
-                    return false;
-                case JsonValueKind.Null:
-                    return null;
-                case JsonValueKind.Number:
-                    if (element.TryGetInt64(out var longValue)) return longValue;
-                    return element.GetDouble();
-                case JsonValueKind.Array:
-                    return element.EnumerateArray().Select(GetElementValue).ToArray();
-                case JsonValueKind.Object:
-                    return element.EnumerateObject().ToDictionary(p => p.Name, p => GetElementValue(p.Value));
-                default:
-                    return element.GetRawText();
             }
         }
     }
