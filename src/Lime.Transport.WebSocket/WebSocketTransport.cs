@@ -156,7 +156,7 @@ namespace Lime.Transport.WebSocket
                     if (receiveResult.MessageType == WebSocketMessageType.Close)
                     {
                         HandleCloseMessage(receiveResult);
-                        _ = CloseWithTimeoutAsync();
+                        _ = CloseWithTimeoutAsync().ConfigureAwait(false);
                         break;
                     }
 
@@ -387,13 +387,17 @@ namespace Lime.Transport.WebSocket
                 {
                     await CloseAsync(cts.Token).ConfigureAwait(false);
                 }
-                catch (OperationCanceledException) when (_sendReceiveCts.IsCancellationRequested)
+                catch (OperationCanceledException)when(cts.IsCancellationRequested)
                 {
-                    // Expected: close timeout or already disposed
+                    // Expected: close timeout
                 }
                 catch (InvalidOperationException) when (!IsConnected)
                 {
                     // Expected: transport already closing/closed
+                }
+                catch (WebSocketException)
+                {
+                    // Expected: socket already closed/aborted
                 }
                 catch (ObjectDisposedException)
                 {

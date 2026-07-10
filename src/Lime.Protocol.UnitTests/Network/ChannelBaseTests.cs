@@ -1074,8 +1074,6 @@ namespace Lime.Protocol.UnitTests.Network
             var content = Dummy.CreateTextContent();
             var command = Dummy.CreateCommand(content);
 
-            var cancellationToken = Dummy.CreateCancellationToken();
-            var tcs = new TaskCompletionSource<Envelope>();
             _transport
                 .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
                 .Returns(Task.FromResult<Envelope>(command));
@@ -1121,7 +1119,7 @@ namespace Lime.Protocol.UnitTests.Network
                 var actual = await target.ReceiveCommandAsync(cts.Token);
                 Assert.Fail("Exception was not thrown");
             }
-            catch (OperationCanceledException ex)
+            catch (OperationCanceledException)
             {
                 
             }
