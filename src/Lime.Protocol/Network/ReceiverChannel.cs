@@ -349,8 +349,7 @@ namespace Lime.Protocol.Network
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 throw new OperationCanceledException(
-                    $"The channel listener task was gracefully stopped for session '{_channelInformation.SessionId}' (State: {_channelInformation.State}).",
-                    _consumerCts.Token
+                    $"The channel listener task was gracefully stopped for session '{_channelInformation.SessionId}' (State: {_channelInformation.State})."
                 );
             }
             catch (ChannelClosedException) when (reader.Completion.IsFaulted)
@@ -362,10 +361,8 @@ namespace Lime.Protocol.Network
             catch (ChannelClosedException) when (reader.Completion.IsCompleted)
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                _consumerCts.Token.ThrowIfCancellationRequested();
                 throw new OperationCanceledException(
-                    $"The channel was closed for session '{_channelInformation.SessionId}' (State: {_channelInformation.State}, CompletionStatus: {reader.Completion.Status}).",
-                    _consumerCts.Token
+                    $"The channel was closed for session '{_channelInformation.SessionId}' (State: {_channelInformation.State}, CompletionStatus: {reader.Completion.Status})."
                 );
             }
             catch (Exception)
