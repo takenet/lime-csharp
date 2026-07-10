@@ -353,6 +353,13 @@ namespace Lime.Protocol.Network
                     _consumerCts.Token
                 );
             }
+            catch (ChannelClosedException) when (reader.Completion.IsFaulted)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                _consumerCts.Token.ThrowIfCancellationRequested();
+                await reader.Completion.ConfigureAwait(false);
+                throw;
+            }
             catch (ChannelClosedException) when (reader.Completion.IsCompleted)
             {
                 cancellationToken.ThrowIfCancellationRequested();
@@ -364,7 +371,7 @@ namespace Lime.Protocol.Network
             }
             catch (Exception)
             {
-                // Closes the transport in case of any unexpected exception-
+                // Closes the transport in case of any unexpected exception
                 if (_transport.IsConnected)
                 {
                     using var cts = new CancellationTokenSource(_closeTimeout);

@@ -1,14 +1,15 @@
 ﻿using Lime.Protocol.Network;
-using NUnit.Framework;
+using Lime.Protocol.Util;
 using Moq;
+using NUnit.Framework;
+using Shouldly;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
-using Shouldly;
-using Lime.Protocol.Util;
 
 namespace Lime.Protocol.UnitTests.Network
 {
@@ -412,9 +413,9 @@ namespace Lime.Protocol.UnitTests.Network
             Assert.IsNotNull(messageReceived);
             messageReceived = await target.ReceiveMessageAsync(cancellationToken);
             Assert.IsNotNull(messageReceived);
-            
+
             // Assert
-            await target.ReceiveMessageAsync(cancellationToken).ShouldThrowAsync<InvalidOperationException>();
+            await target.ReceiveMessageAsync(cancellationToken).ShouldThrowAsync<TaskCanceledException>();
             actualException.ShouldBe(actualException);
         }
 

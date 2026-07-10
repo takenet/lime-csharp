@@ -44,7 +44,8 @@ namespace Lime.Transport.AspNetCore.Middlewares
                 return;
             }
 
-            using var transport = new TcpTransport(tcpClient: tcpClient,
+            using var transport = new TcpTransport(
+                tcpClient: tcpClient,
                 envelopeSerializer: _envelopeSerializer,
                 serverCertificate: transportEndPoint.ServerCertificate);
 
@@ -56,10 +57,17 @@ namespace Lime.Transport.AspNetCore.Middlewares
             }
             finally
             {
-                if (transport.IsConnected)
+                try
                 {
-                    using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
-                    await transport.CloseAsync(cts.Token);
+                    if (transport.IsConnected)
+                    {
+                        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+                        await transport.CloseAsync(cts.Token);
+                    }
+                }
+                catch (ObjectDisposedException)
+                {
+                    // The transport may already have been disposed by the channel lifecycle.
                 }
             }
         }

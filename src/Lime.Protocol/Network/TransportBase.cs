@@ -263,11 +263,11 @@ namespace Lime.Protocol.Network
         {
             if (_disposed)
                 return;
+            _disposed = true;
 
             if (disposing)
             {
                 _openCloseSemaphore.Dispose();
-                _disposed = true;
             }
         }
     }

@@ -9,7 +9,7 @@ namespace Lime.Protocol
     public enum SessionState
     {
         /// <summary>
-        /// The session is new and doesn't exists an
+        /// The session is new and doesn't have an
         /// established context. It is sent by a client
         /// node to start a session with a server.
         /// </summary>
