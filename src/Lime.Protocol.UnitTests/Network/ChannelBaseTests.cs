@@ -413,20 +413,7 @@ namespace Lime.Protocol.UnitTests.Network
             Assert.IsNotNull(messageReceived);
 
             // Assert
-            try
-            {
-                await target.ReceiveMessageAsync(cancellationToken);
-                Assert.Fail("Exception was not thrown");
-            }
-            catch (OperationCanceledException)
-            {
-                // Expected: TaskCanceledException is a subclass of OperationCanceledException
-            }
-            catch (Exception ex)
-            {
-                Assert.Fail($"Expected OperationCanceledException or derived type, but got {ex.GetType().Name}: {ex.Message}");
-            }
-
+            await target.ReceiveMessageAsync(cancellationToken).ShouldThrowAsync<ApplicationException>();
             actualException.ShouldBe(exception);
         }
 

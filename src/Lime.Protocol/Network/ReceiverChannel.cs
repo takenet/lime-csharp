@@ -356,7 +356,6 @@ namespace Lime.Protocol.Network
             catch (ChannelClosedException) when (reader.Completion.IsFaulted)
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                _consumerCts.Token.ThrowIfCancellationRequested();
                 await reader.Completion.ConfigureAwait(false);
                 throw;
             }
