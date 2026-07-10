@@ -156,7 +156,7 @@ namespace Lime.Transport.WebSocket
                     if (receiveResult.MessageType == WebSocketMessageType.Close)
                     {
                         HandleCloseMessage(receiveResult);
-                        _ = CloseWithTimeoutAsync().ConfigureAwait(false);
+                        _ = CloseWithTimeoutAsync();
                         break;
                     }
 
