@@ -28,25 +28,23 @@ namespace Lime.Protocol.Serialization.SystemTextJson.Converters
         {
             if (typeToConvert.GetTypeInfo().IsAbstract) return false;
 
-            if (!_canConvertCache.TryGetValue(typeToConvert, out var canConvert))
+            lock (_syncRoot)
             {
-                lock (_syncRoot)
+                if (_canConvertCache.TryGetValue(typeToConvert, out var cached))
                 {
-                    if (!_canConvertCache.TryGetValue(typeToConvert, out canConvert))
-                    {
-                        var properties = typeToConvert.GetProperties(BindingFlags.Public | BindingFlags.Instance);
-                        canConvert =
-                            properties.Any(p => p.PropertyType == typeof(Document)) &&
-                            properties.Any(p =>
-                                p.Name.Equals(DocumentContainer.TYPE_KEY, StringComparison.OrdinalIgnoreCase) &&
-                                p.PropertyType == typeof(MediaType));
-
-                        _canConvertCache[typeToConvert] = canConvert;
-                    }
+                    return cached;
                 }
-            }
 
-            return canConvert;
+                var properties = typeToConvert.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+                var canConvert =
+                    properties.Any(p => p.PropertyType == typeof(Document)) &&
+                    properties.Any(p =>
+                        p.Name.Equals(DocumentContainer.TYPE_KEY, StringComparison.OrdinalIgnoreCase) &&
+                        p.PropertyType == typeof(MediaType));
+
+                _canConvertCache[typeToConvert] = canConvert;
+                return canConvert;
+            }
         }
 
         public override JsonConverter CreateConverter(Type typeToConvert, JsonSerializerOptions options)

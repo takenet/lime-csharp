@@ -11,7 +11,7 @@ namespace Lime.Protocol.Serialization
         /// <summary>
         /// Serializes a <see cref="JsonDocument"/> to a JSON string using System.Text.Json.
         /// </summary>
-        public static string ToJson(this JsonDocument document, JsonSerializerOptions options = null)
+        public static string ToSystemTextJson(this JsonDocument document, JsonSerializerOptions options = null)
             => System.Text.Json.JsonSerializer.Serialize<System.Collections.Generic.IDictionary<string, object>>(
                 document, options);
     }

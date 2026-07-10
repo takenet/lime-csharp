@@ -87,12 +87,8 @@ namespace Lime.Protocol.Serialization.SystemTextJson.Converters
                 var jsonName = _options.PropertyNamingPolicy?.ConvertName(prop.Name) ?? prop.Name;
                 if (jsonProperties.TryGetValue(jsonName, out var propElement))
                 {
-                    try
-                    {
-                        var value = JsonSerializer.Deserialize(propElement.GetRawText(), prop.PropertyType, options);
-                        prop.SetValue(instance, value);
-                    }
-                    catch (JsonException) { }
+                    var value = JsonSerializer.Deserialize(propElement.GetRawText(), prop.PropertyType, options);
+                    prop.SetValue(instance, value);
                 }
             }
 

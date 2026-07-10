@@ -71,10 +71,12 @@ namespace Lime.Protocol.Serialization.SystemTextJson
         /// Must be called before any serialization or deserialization occurs.
         /// </summary>
         /// <param name="jsonConverter">The converter to add.</param>
-        /// <param name="ignoreDuplicates">Whether to skip adding if a converter of the same type already exists.</param>
+        /// <param name="ignoreDuplicates">Whether the provided <paramref name="jsonConverter"/> should be added when there is already one instance of that converter type.</param>
         /// <returns><see langword="true"/> if the converter was added; otherwise <see langword="false"/>.</returns>
         public bool TryAddConverter(JsonConverter jsonConverter, bool ignoreDuplicates = true)
         {
+            if (jsonConverter == null) throw new ArgumentNullException(nameof(jsonConverter));
+
             if (!ignoreDuplicates)
             {
                 foreach (var existing in Options.Converters)
@@ -83,15 +85,24 @@ namespace Lime.Protocol.Serialization.SystemTextJson
                 }
             }
 
-            // Insert before the DocumentJsonConverter (catch-all) if present
-            var catchAllIndex = FindCatchAllConverterIndex(Options.Converters);
-            if (catchAllIndex >= 0)
+            try
             {
-                Options.Converters.Insert(catchAllIndex, jsonConverter);
+                // Insert before the DocumentJsonConverter (catch-all) if present
+                var catchAllIndex = FindCatchAllConverterIndex(Options.Converters);
+                if (catchAllIndex >= 0)
+                {
+                    Options.Converters.Insert(catchAllIndex, jsonConverter);
+                }
+                else
+                {
+                    Options.Converters.Add(jsonConverter);
+                }
             }
-            else
+            catch (InvalidOperationException ex)
             {
-                Options.Converters.Add(jsonConverter);
+                throw new InvalidOperationException(
+                    "TryAddConverter must be called before any serialization or deserialization occurs.",
+                    ex);
             }
 
             return true;
