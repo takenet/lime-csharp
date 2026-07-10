@@ -374,16 +374,31 @@ namespace Lime.Transport.WebSocket
 
         private void HandleCloseMessage(WebSocketReceiveResult receiveResult)
         {
+            _closeReceived = true;
             CloseStatus = receiveResult.CloseStatus ?? WebSocketCloseStatus.NormalClosure;
             CloseStatusDescription = receiveResult.CloseStatusDescription ?? string.Empty;
-            _closeReceived = true;
         }
 
         private async Task CloseWithTimeoutAsync()
         {
             using (var cts = new CancellationTokenSource(CloseTimeout))
             {
-                await CloseAsync(cts.Token).ConfigureAwait(false);
+                try
+                {
+                    await CloseAsync(cts.Token).ConfigureAwait(false);
+                }
+                catch (OperationCanceledException) when (_sendReceiveCts.IsCancellationRequested)
+                {
+                    // Expected: close timeout or already disposed
+                }
+                catch (InvalidOperationException) when (!IsConnected)
+                {
+                    // Expected: transport already closing/closed
+                }
+                catch (ObjectDisposedException)
+                {
+                    // Expected: transport being disposed concurrently
+                }
             }
         }
 

@@ -1,8 +1,4 @@
-﻿using System;
-using System.Diagnostics;
-using System.Threading;
-using System.Threading.Tasks;
-using Lime.Messaging;
+﻿using Lime.Messaging;
 using Lime.Messaging.Contents;
 using Lime.Messaging.Resources;
 using Lime.Protocol;
@@ -11,8 +7,11 @@ using Lime.Protocol.Serialization;
 using Lime.Protocol.Serialization.Newtonsoft;
 using Lime.Protocol.UnitTests;
 using Moq;
-using Shouldly;
 using NUnit.Framework;
+using Shouldly;
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Lime.Transport.Redis.UnitTests
 {
