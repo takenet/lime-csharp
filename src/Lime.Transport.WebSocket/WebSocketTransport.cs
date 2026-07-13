@@ -355,7 +355,7 @@ namespace Lime.Transport.WebSocket
 
         private void EnsureOpen(string operation)
         {
-            if (!IsConnected)
+            if (WebSocket.State != WebSocketState.Open)
             {
                 throw new InvalidOperationException(
                     $"Cannot {operation} in the websocket connection state '{WebSocket.State}'"
