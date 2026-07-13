@@ -33,7 +33,6 @@ namespace Lime.Transport.WebSocket
 
         protected WebSocketCloseStatus CloseStatus;
         protected string CloseStatusDescription;
-        private volatile bool _closeReceived;
 
         protected WebSocketTransport(
             System.Net.WebSockets.WebSocket webSocket,
@@ -122,11 +121,6 @@ namespace Lime.Transport.WebSocket
 
         public override async Task<Envelope> ReceiveAsync(CancellationToken cancellationToken)
         {
-            if (_closeReceived)
-            {
-                return null;
-            }
-
             EnsureOpen("receive");
 
             var segments = new List<BufferSegment>();
@@ -156,7 +150,6 @@ namespace Lime.Transport.WebSocket
                     if (receiveResult.MessageType == WebSocketMessageType.Close)
                     {
                         HandleCloseMessage(receiveResult);
-                        _ = CloseWithTimeoutAsync();
                         break;
                     }
 
@@ -295,9 +288,7 @@ namespace Lime.Transport.WebSocket
             }
         }
 
-        public override bool IsConnected =>
-            !_closeReceived
-            && (
+        public override bool IsConnected => (
                 WebSocket.State == WebSocketState.Open
                 || WebSocket.State == WebSocketState.CloseReceived
             ); // We need to consider the CloseReceived status here to make the channel call the CloseAsync method.
@@ -374,7 +365,6 @@ namespace Lime.Transport.WebSocket
 
         private void HandleCloseMessage(WebSocketReceiveResult receiveResult)
         {
-            _closeReceived = true;
             CloseStatus = receiveResult.CloseStatus ?? WebSocketCloseStatus.NormalClosure;
             CloseStatusDescription = receiveResult.CloseStatusDescription ?? string.Empty;
         }
@@ -383,26 +373,7 @@ namespace Lime.Transport.WebSocket
         {
             using (var cts = new CancellationTokenSource(CloseTimeout))
             {
-                try
-                {
-                    await CloseAsync(cts.Token).ConfigureAwait(false);
-                }
-                catch (OperationCanceledException)when(cts.IsCancellationRequested)
-                {
-                    // Expected: close timeout
-                }
-                catch (InvalidOperationException) when (!IsConnected)
-                {
-                    // Expected: transport already closing/closed
-                }
-                catch (WebSocketException)
-                {
-                    // Expected: socket already closed/aborted
-                }
-                catch (ObjectDisposedException)
-                {
-                    // Expected: transport being disposed concurrently
-                }
+                await CloseAsync(cts.Token).ConfigureAwait(false);
             }
         }
 
