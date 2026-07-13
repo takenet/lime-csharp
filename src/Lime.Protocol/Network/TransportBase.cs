@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Net;
-using System.Threading.Tasks;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Lime.Protocol.Network
 {
@@ -101,7 +100,7 @@ namespace Lime.Protocol.Network
         }
 
         /// <summary>
-        /// Gets the current transport 
+        /// Gets the current transport
         /// compression option
         /// </summary>
         public virtual SessionCompression Compression { get; protected set; }
@@ -113,7 +112,10 @@ namespace Lime.Protocol.Network
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
         /// <exception cref="System.NotSupportedException"></exception>
-        public virtual Task SetCompressionAsync(SessionCompression compression, CancellationToken cancellationToken)
+        public virtual Task SetCompressionAsync(
+            SessionCompression compression,
+            CancellationToken cancellationToken
+        )
         {
             if (compression != SessionCompression.None)
             {
@@ -164,7 +166,10 @@ namespace Lime.Protocol.Network
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
         /// <exception cref="System.NotSupportedException"></exception>
-        public virtual Task SetEncryptionAsync(SessionEncryption encryption, CancellationToken cancellationToken)
+        public virtual Task SetEncryptionAsync(
+            SessionEncryption encryption,
+            CancellationToken cancellationToken
+        )
         {
             if (encryption != SessionEncryption.None)
             {
@@ -256,7 +261,8 @@ namespace Lime.Protocol.Network
         /// <param name="disposing"><c>true</c> to release managed resources.</param>
         protected virtual void Dispose(bool disposing)
         {
-            if (_disposed) return;
+            if (_disposed)
+                return;
             _disposed = true;
 
             if (disposing)

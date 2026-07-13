@@ -581,6 +581,7 @@ namespace Lime.Transport.Tcp
             {
                 if (disposing)
                 {
+                    _tcpClient.Close();
                     _optionsSemaphore.Dispose();
                     _stream?.Dispose();
                     _jsonBuffer.Dispose();

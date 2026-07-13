@@ -1,14 +1,13 @@
 ﻿using Lime.Protocol.Network;
-using NUnit.Framework;
+using Lime.Protocol.Util;
 using Moq;
+using NUnit.Framework;
+using Shouldly;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Shouldly;
-using Lime.Protocol.Util;
 
 namespace Lime.Protocol.UnitTests.Network
 {
@@ -406,16 +405,16 @@ namespace Lime.Protocol.UnitTests.Network
             };
 
             var cancellationToken = Dummy.CreateCancellationToken();
-            
+
             // Act
             var messageReceived = await target.ReceiveMessageAsync(cancellationToken);
             Assert.IsNotNull(messageReceived);
             messageReceived = await target.ReceiveMessageAsync(cancellationToken);
             Assert.IsNotNull(messageReceived);
-            
+
             // Assert
-            await target.ReceiveMessageAsync(cancellationToken).ShouldThrowAsync<InvalidOperationException>();
-            actualException.ShouldBe(actualException);
+            await target.ReceiveMessageAsync(cancellationToken).ShouldThrowAsync<ApplicationException>();
+            actualException.ShouldBe(exception);
         }
 
         [Test]
@@ -1054,6 +1053,68 @@ namespace Lime.Protocol.UnitTests.Network
             }            
         }
 
+        [Test]
+        [Category("ReceiveCommandAsync")]
+        public async Task ReceiveCommandAsync_ChannelNotBeingConsumer_ThrowsTimeoutException()
+        {
+            // Arrange
+            var content = Dummy.CreateTextContent();
+            var command = Dummy.CreateCommand(content);
+
+            _transport
+                .Setup(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(Task.FromResult<Envelope>(command));
+
+            var target = (TestChannel)GetTarget(SessionState.Established, buffersLimit: 1, consumeTimeout: TimeSpan.FromSeconds(1));
+
+            // Act
+            Exception exception = null;
+            target.ConsumerException += (sender, e) =>
+            {
+                exception = e.Exception;
+            };
+            target.SetState(SessionState.Established);
+
+            await Task.Delay(TimeSpan.FromSeconds(2));
+
+            // Assert
+            exception.ShouldNotBeNull();
+            var timeoutException = exception.ShouldBeOfType<TimeoutException>();
+            timeoutException.Message.ShouldBe("The transport consumer has timed out after 1 seconds.");
+        }
+
+        [Test]
+        [Category("ReceiveCommandAsync")]
+        public async Task ReceiveCommandAsync_TokenCancelled_DoNotCloseTransport()
+        {
+            // Arrange
+            var content = Dummy.CreateTextContent();
+            var command = Dummy.CreateCommand(content);
+            var tcs = new TaskCompletionSource<Envelope>();
+            _transport
+                .SetupSequence(t => t.ReceiveAsync(It.IsAny<CancellationToken>()))
+                .Returns(Task.FromResult<Envelope>(command))
+                .Returns(tcs.Task);
+            var target = GetTarget(SessionState.Established);
+            using var cts = new CancellationTokenSource();
+
+            // Act
+            cts.Cancel();
+
+            try
+            {
+                var actual = await target.ReceiveCommandAsync(cts.Token);
+                Assert.Fail("Exception was not thrown");
+            }
+            catch (OperationCanceledException)
+            {
+                
+            }
+
+            // Assert
+            _transport.Verify(t => t.CloseAsync(It.IsAny<CancellationToken>()), Times.Never());
+        }
+        
         #endregion
 
         #region ProcessCommandAsync
@@ -1479,7 +1540,7 @@ namespace Lime.Protocol.UnitTests.Network
         [Category("ReceiveNotificationAsync")]
         public async Task ReceiveNotificationAsync_MultipleRegisteredModules_CallsEachModuleOnce()
         {
-            // Arrange
+            // Arrange            
             var notification = Dummy.CreateNotification(Event.Received);
 
             var cancellationToken = Dummy.CreateCancellationToken();

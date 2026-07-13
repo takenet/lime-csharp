@@ -13,39 +13,41 @@ namespace Lime.Protocol.Util
         /// <param name="producer">The producer func.</param>
         /// <param name="consumer">The consumer func.</param>
         /// <param name="cancellationToken">The cancellation token for the consumer task.</param>
-        /// <param name="handleCancellation">Indicates if the <see cref="OperationCanceledException"/> should be handled if the provided cancellationToken is cancelled.</param>
+        /// <param name="handleCancellation">Indicates if any <see cref="OperationCanceledException"/> should be handled, stopping the loop gracefully.</param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException"></exception>
         public static Task<T> CreateAsync<T>(
             Func<CancellationToken, Task<T>> producer,
-            Func<T, CancellationToken, Task<bool>> consumer, 
-            CancellationToken cancellationToken, 
-            bool handleCancellation = false)
+            Func<T, CancellationToken, Task<bool>> consumer,
+            CancellationToken cancellationToken,
+            bool handleCancellation = false
+        )
         {
-            if (producer == null) throw new ArgumentNullException(nameof(producer));
-            if (consumer == null) throw new ArgumentNullException(nameof(consumer));
+            if (producer == null)
+                throw new ArgumentNullException(nameof(producer));
+            if (consumer == null)
+                throw new ArgumentNullException(nameof(consumer));
 
-            return Task.Run(
-                async () =>
+            return Task.Run(async () =>
+            {
+                while (true)
                 {
-                    while (true)
+                    try
                     {
-                        try
+                        var item = await producer(cancellationToken);
+                        if (!await consumer(item, cancellationToken))
                         {
-                            var item = await producer(cancellationToken);
-                            if (!await consumer(item, cancellationToken))
-                            {
-                                return item;
-                            }
-                        }
-                        catch (OperationCanceledException) when (handleCancellation && cancellationToken.IsCancellationRequested)
-                        {
-                            break;
+                            return item;
                         }
                     }
+                    catch (OperationCanceledException) when (handleCancellation)
+                    {
+                        break;
+                    }
+                }
 
-                    return default;
-                });
+                return default;
+            });
         }
     }
 
@@ -59,7 +61,11 @@ namespace Lime.Protocol.Util
         /// <param name="consumer"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public static Task<T> Consume<T>(this Func<CancellationToken, Task<T>> producer, Func<T, CancellationToken, Task<bool>> consumer, CancellationToken cancellationToken)
+        public static Task<T> Consume<T>(
+            this Func<CancellationToken, Task<T>> producer,
+            Func<T, CancellationToken, Task<bool>> consumer,
+            CancellationToken cancellationToken
+        )
         {
             return ProducerConsumer.CreateAsync(producer, consumer, cancellationToken);
         }

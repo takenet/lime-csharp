@@ -113,6 +113,7 @@ namespace Lime.Protocol.Network
             {
                 return;
             }
+
             _disposed = true;
             _sendSemaphore.Dispose();
             _receiveSemaphore.Dispose();
