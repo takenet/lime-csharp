@@ -2,6 +2,9 @@
 using System.Collections.Generic;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using JsonSerializerOptions = System.Text.Json.JsonSerializerOptions;
+using StjJsonSerializer = System.Text.Json.JsonSerializer;
+using Lime.Protocol.Serialization.SystemTextJson;
 
 namespace Lime.Protocol
 {
@@ -58,6 +61,34 @@ namespace Lime.Protocol
         }
 
         /// <summary>
+        /// Creates a <see cref="JsonDocument"/> from the specified <see cref="Command"/> using System.Text.Json.
+        /// </summary>
+        public static JsonDocument ToDocument(this Command command, JsonSerializerOptions options) => ToDocument(command, CommandMediaType, options);
+
+        /// <summary>
+        /// Creates a <see cref="JsonDocument"/> from the specified <see cref="Message"/> using System.Text.Json.
+        /// </summary>
+        public static JsonDocument ToDocument(this Message message, JsonSerializerOptions options) => ToDocument(message, MessageMediaType, options);
+
+        /// <summary>
+        /// Creates a <see cref="JsonDocument"/> from the specified <see cref="Notification"/> using System.Text.Json.
+        /// </summary>
+        public static JsonDocument ToDocument(this Notification notification, JsonSerializerOptions options) => ToDocument(notification, NotificationMediaType, options);
+
+        /// <summary>
+        /// Creates a <see cref="JsonDocument"/> from the specified <typeparamref name="T"/> using System.Text.Json.
+        /// </summary>
+        public static JsonDocument ToDocument<T>(T envelope, MediaType mediaType, JsonSerializerOptions options) where T : Envelope, new()
+        {
+            if (envelope == null) throw new ArgumentNullException(nameof(envelope));
+            if (mediaType == null) throw new ArgumentNullException(nameof(mediaType));
+            if (options == null) throw new ArgumentNullException(nameof(options));
+            var element = StjJsonSerializer.SerializeToElement(envelope, options);
+            var dictionary = element.ConvertToDictionary();
+            return new JsonDocument(dictionary, mediaType);
+        }
+
+        /// <summary>
         /// Creates a <see cref="Message"/> from the specified <see cref="JsonDocument"/>.
         /// </summary>
         /// <param name="jsonDocument">The json document.</param>
@@ -96,6 +127,41 @@ namespace Lime.Protocol
 
             var jObject = JObject.FromObject(jsonDocument, jsonSerializer);
             return (Envelope)jObject.ToObject(envelopeType, jsonSerializer);
+        }
+
+        /// <summary>
+        /// Creates a <see cref="Message"/> from the specified <see cref="JsonDocument"/> using System.Text.Json.
+        /// </summary>
+        public static Message ToMessage(this JsonDocument jsonDocument, JsonSerializerOptions options) => (Message)ToEnvelope(jsonDocument, MessageMediaType, options);
+
+        /// <summary>
+        /// Creates a <see cref="Command"/> from the specified <see cref="JsonDocument"/> using System.Text.Json.
+        /// </summary>
+        public static Command ToCommand(this JsonDocument jsonDocument, JsonSerializerOptions options) => (Command)ToEnvelope(jsonDocument, CommandMediaType, options);
+
+        /// <summary>
+        /// Creates a <see cref="Notification"/> from the specified <see cref="JsonDocument"/> using System.Text.Json.
+        /// </summary>
+        public static Notification ToNotification(this JsonDocument jsonDocument, JsonSerializerOptions options) => (Notification)ToEnvelope(jsonDocument, NotificationMediaType, options);
+
+        /// <summary>
+        /// Creates an <see cref="Envelope"/> from the specified <see cref="JsonDocument"/> using System.Text.Json.
+        /// </summary>
+        /// <exception cref="System.ArgumentException">Unknown envelope media type</exception>
+        public static Envelope ToEnvelope(this JsonDocument jsonDocument, MediaType mediaType, JsonSerializerOptions options)
+        {
+            if (jsonDocument == null) throw new ArgumentNullException(nameof(jsonDocument));
+            if (mediaType == null) throw new ArgumentNullException(nameof(mediaType));
+            if (options == null) throw new ArgumentNullException(nameof(options));
+
+            Type envelopeType;
+            if (mediaType.Equals(CommandMediaType)) envelopeType = typeof(Command);
+            else if (mediaType.Equals(MessageMediaType)) envelopeType = typeof(Message);
+            else if (mediaType.Equals(NotificationMediaType)) envelopeType = typeof(Notification);
+            else throw new ArgumentException("Unknown envelope media type");
+
+            var json = StjJsonSerializer.Serialize((IDictionary<string, object>)jsonDocument, options);
+            return (Envelope)StjJsonSerializer.Deserialize(json, envelopeType, options);
         }
 
         /// <summary>
