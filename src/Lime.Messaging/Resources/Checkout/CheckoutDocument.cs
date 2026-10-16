@@ -1,6 +1,6 @@
-﻿using Lime.Protocol;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Runtime.Serialization;
+using Lime.Protocol;
 
 namespace Lime.Messaging.Resources.Checkout
 {
@@ -13,7 +13,7 @@ namespace Lime.Messaging.Resources.Checkout
         /// <summary>
         /// The MIME type for the checkout document.
         /// </summary>
-        public const string MIME_TYPE = "application/vnd.iris.builder.checkout+json";
+        public const string MIME_TYPE = "application/vnd.iris.payment.checkout-link-request+json";
 
         /// <summary>
         /// The media type for the checkout document.
@@ -70,6 +70,24 @@ namespace Lime.Messaging.Resources.Checkout
         /// </value>
         [DataMember(Name = "source")]
         public string Source { get; set; }
+
+        /// <summary>
+        /// Gets or sets the payment methods that should be generated for checkout.
+        /// </summary>
+        [DataMember(Name = "paymentMethodsToGenerate")]
+        public List<CheckoutPaymentMethod> PaymentMethodsToGenerate { get; set; }
+
+        /// <summary>
+        /// Gets or sets the short name of the bot as defined by the service.
+        /// </summary>
+        [DataMember(Name = "botShortName")]
+        public string BotShortName { get; set; }
+
+        /// <summary>
+        /// Gets or sets the unique identifier for the merchant.
+        /// </summary>
+        [DataMember(Name = "merchantId")]
+        public string MerchantId { get; set; }
 
         /// <summary>
         /// Creates a shallow copy of the current <see cref="CheckoutDocument"/> instance.
