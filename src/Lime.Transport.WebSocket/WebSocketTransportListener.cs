@@ -86,11 +86,9 @@ namespace Lime.Transport.WebSocket
                         
                         var endPoint = new IPEndPoint(ipAddress, listenerUri.Port);                        
                         serverOptions.Listen(endPoint, listenOptions =>
-                        {                                                        
-                            listenOptions.Protocols = httpProtocols;
-
+                        {
                             if (listenerUri.Scheme == UriSchemeWebSocketSecure)
-                            {                                                                
+                            {
                                 listenOptions.UseHttps(tlsCertificate, httpsOptions =>
                                 {
                                     httpsOptions.SslProtocols = sslProtocols;
