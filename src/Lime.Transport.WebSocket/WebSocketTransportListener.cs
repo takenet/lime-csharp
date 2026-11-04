@@ -100,10 +100,21 @@ namespace Lime.Transport.WebSocket
                         
                         var endPoint = new IPEndPoint(ipAddress, listenerUri.Port);                        
                         serverOptions.Listen(endPoint, listenOptions =>
-                        {                                                        
-                            SetProtocols(listenOptions, httpProtocols);
+                        {
+                            var isSecure = listenerUri.Scheme == UriSchemeWebSocketSecure;
 
-                            if (listenerUri.Scheme == UriSchemeWebSocketSecure)
+                            // Starting on Kestrel 2.3.0, cleartext (non-TLS) connections configured with
+                            // HttpProtocols.Http1AndHttp2 are rejected, since HTTP/2 without TLS requires prior
+                            // knowledge negotiation that isn't supported here. Since ws:// is always cleartext,
+                            // downgrade to Http1 for it to avoid aborting the WebSocket handshake, while preserving
+                            // the requested protocols for wss:// (TLS) endpoints.
+                            var effectiveProtocols = !isSecure && httpProtocols == HttpProtocols.Http1AndHttp2
+                                ? HttpProtocols.Http1
+                                : httpProtocols;
+
+                            SetProtocols(listenOptions, effectiveProtocols);
+
+                            if (isSecure)
                             {                                                                
                                 listenOptions.UseHttps(tlsCertificate, httpsOptions =>
                                 {
