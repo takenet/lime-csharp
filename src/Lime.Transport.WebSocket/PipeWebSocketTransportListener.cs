@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Security;
 using System.Net.WebSockets;
+using System.Reflection;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
@@ -22,6 +23,19 @@ namespace Lime.Transport.WebSocket
 {
     public class PipeWebSocketTransportListener : ITransportListener
     {
+        // Starting on Microsoft.AspNetCore.Server.Kestrel.Core 2.3.0, ListenOptions.Protocols became an internal-only
+        // property, with no public replacement API in this servicing line. Note that 2.3.0 is effectively a reshipped
+        // 2.1.0 (see https://github.com/dotnet/aspnetcore/issues/331), and the property remains internal upstream to
+        // this day (see https://github.com/dotnet/aspnetcore/issues/61823). We use reflection to keep setting it so
+        // the existing HttpProtocols restriction behavior is preserved without changing the public constructor contract.
+        private static readonly PropertyInfo ProtocolsProperty =
+            typeof(ListenOptions).GetProperty("Protocols", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+
+        private static void SetProtocols(ListenOptions listenOptions, HttpProtocols protocols)
+        {
+            ProtocolsProperty?.SetValue(listenOptions, protocols);
+        }
+
         public static readonly string UriSchemeWebSocket = "ws";
         public static readonly string UriSchemeWebSocketSecure = "wss";
         
@@ -87,7 +101,7 @@ namespace Lime.Transport.WebSocket
                         var endPoint = new IPEndPoint(ipAddress, listenerUri.Port);                        
                         serverOptions.Listen(endPoint, listenOptions =>
                         {                                                        
-                            listenOptions.Protocols = httpProtocols;
+                            SetProtocols(listenOptions, httpProtocols);
 
                             if (listenerUri.Scheme == UriSchemeWebSocketSecure)
                             {                                                                
