@@ -55,6 +55,8 @@
 	<PackageReference Include="Lime.Messaging" Version="0.12.199" />
 	<PackageReference Include="Lime.Transport.Tcp" Version="0.12.199" />
 	<PackageReference Include="Lime.Transport.WebSocket" Version="0.12.199" />
+	<PackageReference Include="Microsoft.AspNetCore.Server.Kestrel" Version="2.3.0" />
+	<PackageReference Include="Microsoft.AspNetCore.Server.Kestrel.Core" Version="2.3.6" />
 	<PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
 	<PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.39" />
 	<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
