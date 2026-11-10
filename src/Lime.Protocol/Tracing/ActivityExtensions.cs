@@ -80,34 +80,15 @@ namespace Lime.Protocol.Tracing
         /// </summary>
         public static bool TryGetTraceId(string? traceParent, out string traceId)
         {
+            if (!string.IsNullOrWhiteSpace(traceParent)
+                && ActivityContext.TryParse(traceParent, null, out var context))
+            {
+                traceId = context.TraceId.ToHexString();
+                return true;
+            }
+
             traceId = null!;
-
-            // 2 (version) + 1 + 32 (trace-id) + 1 + 16 (span-id) + 1 + 2 (flags)
-            if (traceParent == null || traceParent.Length < 55
-                || traceParent[2] != '-' || traceParent[35] != '-')
-            {
-                return false;
-            }
-
-            var allZero = true;
-            for (var i = 3; i < 35; i++)
-            {
-                var c = traceParent[i];
-                if (!((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f')))
-                {
-                    return false;
-                }
-
-                allZero &= c == '0';
-            }
-
-            if (allZero)
-            {
-                return false;
-            }
-
-            traceId = traceParent.Substring(3, 32);
-            return true;
+            return false;
         }
 
         /// <summary>
