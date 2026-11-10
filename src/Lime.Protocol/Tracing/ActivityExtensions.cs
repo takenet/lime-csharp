@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
@@ -55,6 +56,58 @@ namespace Lime.Protocol.Tracing
             to.Metadata ??= new Dictionary<string, string>();
 
             from.Metadata.CopyTraceParent(to.Metadata);
+        }
+
+        /// <summary>
+        /// Gets the W3C trace-id (32 hex chars) from the envelope's <c>traceparent</c> metadata.
+        /// It identifies the trace the message belongs to and is used to correlate it across applications.
+        /// </summary>
+        /// <param name="envelope">The envelope.</param>
+        /// <returns>The trace-id or null if the envelope has no valid <c>traceparent</c>.</returns>
+        public static string? GetTraceId(this Envelope? envelope)
+        {
+            if (envelope?.Metadata == null
+                || !envelope.Metadata.TryGetValue(TraceContext.TraceParent, out var traceParent))
+            {
+                return null;
+            }
+
+            return TryGetTraceId(traceParent, out var traceId) ? traceId : null;
+        }
+
+        /// <summary>
+        /// Extracts the trace-id from a W3C <c>traceparent</c> value (<c>version-traceid-spanid-flags</c>).
+        /// </summary>
+        public static bool TryGetTraceId(string? traceParent, out string traceId)
+        {
+            traceId = null!;
+
+            // 2 (version) + 1 + 32 (trace-id) + 1 + 16 (span-id) + 1 + 2 (flags)
+            if (traceParent == null || traceParent.Length < 55
+                || traceParent[2] != '-' || traceParent[35] != '-')
+            {
+                return false;
+            }
+
+            var allZero = true;
+            for (var i = 3; i < 35; i++)
+            {
+                var c = traceParent[i];
+                if (!((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f')))
+                {
+                    return false;
+                }
+
+                allZero &= c == '0';
+            }
+
+            if (allZero)
+            {
+                return false;
+            }
+
+            traceId = traceParent.Substring(3, 32);
+            return true;
         }
 
         /// <summary>
@@ -161,6 +214,7 @@ namespace Lime.Protocol.Tracing
             activity ??= activitySource.StartActivity(name, kind);
 
             activity?.SetEnvelopeTags(envelope);
+            activity?.SetTag("lime.message_trace_id", envelope.GetTraceId());
             activity?.InjectTraceParent(envelope);
 
             return activity;
