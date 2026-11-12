@@ -4,7 +4,7 @@ Messages are correlated across applications by the **W3C trace-id** already carr
 No new envelope field or wire format is introduced.
 
 - `envelope.GetTraceId()` returns the 32-hex trace-id of the `traceparent` (or `null` when absent/invalid).
-- `StartActivity(envelope)` tags the span with `lime.message_trace_id` (the id carried by the envelope, read before the
+- `SetMessageTags` (called from `StartActivity(envelope)`) tags **Message** spans with `lime.message.trace_id` (the id carried by the envelope, read before the
   span rewrites `traceparent`) next to the existing `lime.envelope.id`, `lime.envelope.from/to/type` tags.
 - Applications log it as `MessageTraceId` (see iris-shared) only from envelope-processing scopes; the ambient
   `trace_id` log field keeps meaning "current activity".
@@ -17,4 +17,4 @@ correlation key; use it together with `envelope.Id` to identify a single message
 - Whole message flow: open the trace by id in Tempo (the message trace-id is the Tempo trace id).
 - One specific message: `{ span.lime.envelope.id = "<envelope id>" }`.
 - Spans of a message even when the local span was started under another trace (an ambient activity exists, so the
-  span's own trace-id differs from the envelope's): `{ span.lime.message_trace_id = "<trace id>" }`.
+  span's own trace-id differs from the envelope's): `{ span.lime.message.trace_id = "<trace id>" }`.

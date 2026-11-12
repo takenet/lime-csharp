@@ -195,7 +195,6 @@ namespace Lime.Protocol.Tracing
             activity ??= activitySource.StartActivity(name, kind);
 
             activity?.SetEnvelopeTags(envelope);
-            activity?.SetTag("lime.message_trace_id", envelope.GetTraceId());
             activity?.InjectTraceParent(envelope);
 
             return activity;
@@ -365,6 +364,7 @@ namespace Lime.Protocol.Tracing
             }
 
             activity.SetTag("lime.message.type", message.Type?.ToString());
+            activity.SetTag("lime.message.trace_id", message.GetTraceId());
         }
 
         public static void SetCommandStatusTag(this Activity activity, Command command)
