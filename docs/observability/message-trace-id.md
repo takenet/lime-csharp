@@ -4,7 +4,7 @@ Messages are correlated across applications by the **W3C trace-id** already carr
 No new envelope field or wire format is introduced.
 
 - `envelope.GetTraceId()` returns the 32-hex trace-id of the `traceparent` (or `null` when absent/invalid).
-- `SetMessageTags` (called from `StartActivity(envelope)`) tags **Message** spans with `lime.message.trace_id` (the id carried by the envelope, read before the
+- `SetMessageTags` (called from `StartActivity(envelope)`) tags **Message** spans with `lime.message.trace_id` (and **Notification** spans with `lime.notification.trace_id`) (the id carried by the envelope, read before the
   span rewrites `traceparent`) next to the existing `lime.envelope.id`, `lime.envelope.from/to/type` tags.
 - Applications log it as `MessageTraceId` (see iris-shared) only from envelope-processing scopes; the ambient
   `trace_id` log field keeps meaning "current activity".

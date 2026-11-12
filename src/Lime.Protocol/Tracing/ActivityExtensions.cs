@@ -311,6 +311,7 @@ namespace Lime.Protocol.Tracing
             }
 
             activity.SetTag("lime.notification.event", notification.Event.ToString());
+            activity.SetTag("lime.notification.trace_id", notification.GetTraceId());
 
             activity.SetNotificationStatusTag(notification);
         }

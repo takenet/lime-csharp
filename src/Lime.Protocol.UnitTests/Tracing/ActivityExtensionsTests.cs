@@ -695,6 +695,25 @@ public class ActivityExtensionsTests
 
     [Test]
     [Category("CodeCorrectness")]
+    public void SetNotificationTags_WithTraceParent_SetsTraceId()
+    {
+        var activity = new Activity("test");
+        var notification = new Notification
+        {
+            Event = Event.Received,
+            Metadata = new Dictionary<string, string>
+            {
+                [TraceContext.TraceParent] = "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01"
+            }
+        };
+
+        activity.SetEnvelopeTags(notification);
+
+        Assert.AreEqual("0af7651916cd43dd8448eb211c80319c", activity.GetTagItem("lime.notification.trace_id"));
+    }
+
+    [Test]
+    [Category("CodeCorrectness")]
     public void SetMessageTags_WithTraceParent_SetsTraceId()
     {
         var activity = new Activity("test");
