@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
@@ -55,6 +56,39 @@ namespace Lime.Protocol.Tracing
             to.Metadata ??= new Dictionary<string, string>();
 
             from.Metadata.CopyTraceParent(to.Metadata);
+        }
+
+        /// <summary>
+        /// Gets the W3C trace-id (32 hex chars) from the envelope's <c>traceparent</c> metadata.
+        /// It identifies the trace the message belongs to and is used to correlate it across applications.
+        /// </summary>
+        /// <param name="envelope">The envelope.</param>
+        /// <returns>The trace-id or null if the envelope has no valid <c>traceparent</c>.</returns>
+        public static string? GetTraceId(this Envelope? envelope)
+        {
+            if (envelope?.Metadata == null
+                || !envelope.Metadata.TryGetValue(TraceContext.TraceParent, out var traceParent))
+            {
+                return null;
+            }
+
+            return TryGetTraceId(traceParent, out var traceId) ? traceId : null;
+        }
+
+        /// <summary>
+        /// Extracts the trace-id from a W3C <c>traceparent</c> value (<c>version-traceid-spanid-flags</c>).
+        /// </summary>
+        public static bool TryGetTraceId(string? traceParent, out string traceId)
+        {
+            if (!string.IsNullOrWhiteSpace(traceParent)
+                && ActivityContext.TryParse(traceParent, null, out var context))
+            {
+                traceId = context.TraceId.ToHexString();
+                return true;
+            }
+
+            traceId = null!;
+            return false;
         }
 
         /// <summary>
@@ -277,6 +311,7 @@ namespace Lime.Protocol.Tracing
             }
 
             activity.SetTag("lime.notification.event", notification.Event.ToString());
+            activity.SetTag("lime.notification.trace_id", notification.GetTraceId());
 
             activity.SetNotificationStatusTag(notification);
         }
@@ -330,6 +365,7 @@ namespace Lime.Protocol.Tracing
             }
 
             activity.SetTag("lime.message.type", message.Type?.ToString());
+            activity.SetTag("lime.message.trace_id", message.GetTraceId());
         }
 
         public static void SetCommandStatusTag(this Activity activity, Command command)

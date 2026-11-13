@@ -690,6 +690,44 @@ public class ActivityExtensionsTests
         Assert.AreEqual("from_name@from_domain/from_instance", activity.GetTagItem("lime.envelope.from"));
         Assert.AreEqual("to_name@to_domain/to_instance", activity.GetTagItem("lime.envelope.to"));
         Assert.AreEqual("application/vnd.lime.contact+json", activity.GetTagItem("lime.message.type"));
+        Assert.IsNull(activity.GetTagItem("lime.message.trace_id"));
+    }
+
+    [Test]
+    [Category("CodeCorrectness")]
+    public void SetNotificationTags_WithTraceParent_SetsTraceId()
+    {
+        var activity = new Activity("test");
+        var notification = new Notification
+        {
+            Event = Event.Received,
+            Metadata = new Dictionary<string, string>
+            {
+                [TraceContext.TraceParent] = "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01"
+            }
+        };
+
+        activity.SetEnvelopeTags(notification);
+
+        Assert.AreEqual("0af7651916cd43dd8448eb211c80319c", activity.GetTagItem("lime.notification.trace_id"));
+    }
+
+    [Test]
+    [Category("CodeCorrectness")]
+    public void SetMessageTags_WithTraceParent_SetsTraceId()
+    {
+        var activity = new Activity("test");
+        var message = new Message
+        {
+            Metadata = new Dictionary<string, string>
+            {
+                [TraceContext.TraceParent] = "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01"
+            }
+        };
+
+        activity.SetEnvelopeTags(message);
+
+        Assert.AreEqual("0af7651916cd43dd8448eb211c80319c", activity.GetTagItem("lime.message.trace_id"));
     }
 
     [Test]
