@@ -15,6 +15,7 @@
 	<GenerateAssemblyInfo>True</GenerateAssemblyInfo>
 	<UseWPF>true</UseWPF>
 	<ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
+	<EnableWindowsTargeting>true</EnableWindowsTargeting>
   </PropertyGroup>
   <PropertyGroup>
 	<ManifestCertificateThumbprint>E9FC58BA8181DBF8AC4AD49E163A78C7C051BF92</ManifestCertificateThumbprint>
