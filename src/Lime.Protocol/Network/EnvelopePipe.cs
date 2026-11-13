@@ -1,4 +1,4 @@
-#if NETSTANDARD2_1
+#if NETSTANDARD2_1 || NETCOREAPP
 using System;
 using System.Buffers;
 using System.IO.Pipelines;
