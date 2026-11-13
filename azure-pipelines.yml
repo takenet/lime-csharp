@@ -30,6 +30,7 @@ extends:
     solution: "src/Lime.sln"
     packagename: lime-csharp
     type: dotnet
+    dotnetVersion: 6.x
     to: nuget
     nugetServiceConnection: Nuget.org Take
     includeSymbols: true
