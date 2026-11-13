@@ -5,7 +5,7 @@
     <Copyright>Copyright � 2014 Curupira S/A</Copyright>
     <AssemblyTitle>Lime.Messaging</AssemblyTitle>
     <Authors>takenet;andrebires</Authors>
-    <TargetFrameworks>netstandard2.0;net462</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;net462;net10.0</TargetFrameworks>
     <AssemblyName>Lime.Messaging</AssemblyName>
     <PackageId>Lime.Messaging</PackageId>
     <PackageTags>lime</PackageTags>
@@ -13,7 +13,7 @@
     <Version>1.0.0</Version>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <NoWarn>1591</NoWarn>
-    <LangVersion>8.0</LangVersion>
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>

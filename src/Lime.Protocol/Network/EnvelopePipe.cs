@@ -1,4 +1,4 @@
-#if NETSTANDARD2_1
+#if NETSTANDARD2_1 || NETCOREAPP
 using System;
 using System.Buffers;
 using System.IO.Pipelines;
@@ -16,6 +16,7 @@ namespace Lime.Protocol.Network
     public sealed class EnvelopePipe : IStartable, IStoppable, IDisposable
     {
         public const int DEFAULT_PAUSE_WRITER_THRESHOLD = 8192 * 1024;
+        private const int DEFAULT_RESUME_WRITER_THRESHOLD = 32768;
         
         private readonly Func<Memory<byte>, CancellationToken, ValueTask<int>> _receiveFunc;
         private readonly Func<ReadOnlyMemory<byte>, CancellationToken, ValueTask> _sendFunc;
@@ -54,7 +55,8 @@ namespace Lime.Protocol.Network
             _pauseWriterThreshold = pauseWriterThreshold > 0 ? pauseWriterThreshold : -1;
             var pipeOptions = new PipeOptions(
                 pool: memoryPool ?? MemoryPool<byte>.Shared,
-                pauseWriterThreshold: _pauseWriterThreshold);
+                pauseWriterThreshold: _pauseWriterThreshold,
+                resumeWriterThreshold: GetResumeWriterThreshold(_pauseWriterThreshold));
             
             _receivePipe = new Pipe(pipeOptions);
             _sendPipe = new Pipe(pipeOptions);
@@ -62,6 +64,16 @@ namespace Lime.Protocol.Network
             _semaphore = new SemaphoreSlim(1);
         }
         
+        /// <summary>
+        /// Gets the resume writer threshold for the given pause threshold.
+        /// Since .NET 10, <see cref="PipeOptions"/> rejects a resume threshold greater than the pause threshold,
+        /// including the implicit default (32 KiB), so it is capped to the pause threshold when the latter is smaller.
+        /// </summary>
+        private static long GetResumeWriterThreshold(int pauseWriterThreshold)
+            => pauseWriterThreshold > 0 && pauseWriterThreshold < DEFAULT_RESUME_WRITER_THRESHOLD
+                ? pauseWriterThreshold
+                : -1;
+
         /// <summary>
         /// Starts the pipe producer / consumer tasks.
         /// </summary>

@@ -23,6 +23,7 @@ resources:
 extends:
   template: template-pipeline.yml@templates
   parameters: 
+    dotnetVersion: 10.x
     skipSast: true
     sastFilter: "!**/**, src/*"
     
