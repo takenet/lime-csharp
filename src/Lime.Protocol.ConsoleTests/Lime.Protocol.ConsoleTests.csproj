@@ -2,11 +2,17 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>net6.0</TargetFrameworks>
+    <TargetFrameworks>net10.0</TargetFrameworks>
   </PropertyGroup>
 
   <PropertyGroup>
     <ServerGarbageCollection>true</ServerGarbageCollection>
+    <!--
+      Console host, not a test suite. The Lime.Transport.Tcp.UnitTests reference flows the
+      Microsoft.Testing.Platform buildTransitive assets (via NUnit3TestAdapter 6.x), which would
+      otherwise mark this project as a testing-platform app and break `dotnet test` on the .NET 10 SDK.
+    -->
+    <IsTestingPlatformApplication>false</IsTestingPlatformApplication>
   </PropertyGroup>
 
   <ItemGroup>

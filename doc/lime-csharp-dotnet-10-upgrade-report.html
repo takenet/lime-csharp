@@ -1,0 +1,609 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="description" content="Evidence-based .NET 10 migration, build, validation, and dependency security report for the Lime Protocol C# implementation (lime-csharp).">
+  <title>Lime Protocol (lime-csharp) / .NET 10 Upgrade Report</title>
+  <style>
+    :root{--bg:#080f1c;--panel:#10192b;--panel2:#14182d;--line:#253148;--text:#eef3ff;--muted:#a0aec6;--cyan:#00a4f5;--cyan-light:#62ccff;--purple:#ad70ff;--purple-light:#d0adff;--green:#42dfae;--amber:#ffc368;--red:#ff7f93;--radius:20px}
+    *{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:90px}body{margin:0;background:radial-gradient(ellipse at 90% 5%,#20133255,transparent 36%),var(--bg);color:var(--text);font:15px/1.6 "Segoe UI",Arial,sans-serif}
+    a{color:var(--cyan-light);text-decoration:none}a:hover{text-decoration:underline}button,a,summary{ -webkit-tap-highlight-color:transparent}a:focus-visible,button:focus-visible,summary:focus-visible{outline:2px solid var(--cyan-light);outline-offset:5px}
+    .wrap{max-width:1180px;margin:auto;padding:0 32px}.topbar{border-bottom:1px solid #ffffff12;background:#080e1bee;position:sticky;top:0;z-index:10;backdrop-filter:blur(16px)}.topbar .wrap{min-height:68px;display:flex;align-items:center;gap:32px}.brand{font-size:22px;font-weight:850;letter-spacing:-1px;color:var(--text);display:flex;align-items:center;gap:9px}.brand-mark{width:20px;height:20px;border-radius:7px 7px 7px 2px;background:var(--cyan);box-shadow:0 0 25px #00a4f52a}.brand span:last-child{font-size:11px;letter-spacing:1px;color:var(--muted);border-left:1px solid var(--line);margin-left:7px;padding-left:15px}
+    .layout{display:grid;grid-template-columns:220px minmax(0,1fr);gap:44px;max-width:1440px;margin:0 auto;padding:0 32px}.sidebar{position:sticky;top:69px;align-self:start;height:calc(100vh - 69px);overflow-y:auto;padding:34px 20px 30px 0;border-right:1px solid #ffffff0d}.sidebar-label{font-size:10px;font-weight:800;letter-spacing:1.6px;text-transform:uppercase;color:var(--muted);margin:0 0 12px 12px}.side-link{display:flex;align-items:center;gap:10px;padding:10px 12px;margin-bottom:4px;border:1px solid transparent;border-radius:10px;color:var(--muted);font-size:13px;font-weight:700}.side-link:before{content:"";flex:none;width:7px;height:7px;border-radius:50%;background:var(--line)}.side-link:hover,.side-sub a:hover{color:var(--text);text-decoration:none}.side-link:hover{background:#ffffff06}.side-link[aria-current="page"]{color:var(--text);background:linear-gradient(90deg,#00a4f51f,#ad70ff10);border-color:#00a4f540}.side-link[aria-current="page"]:before{background:var(--cyan);box-shadow:0 0 10px var(--cyan)}.side-sub{display:flex;flex-direction:column;margin:2px 0 12px 15px;padding-left:14px;border-left:1px solid var(--line)}.side-sub a{padding:6px 8px;border-radius:6px;color:var(--muted);font-size:12px}.content{min-width:0}.content:focus,.page:focus{outline:none}.page[hidden]{display:none}.topbar .wrap{max-width:1440px}.language-switch{margin-left:auto}.print{border:1px solid var(--line);border-radius:8px;background:#ffffff06;color:var(--text);padding:8px 13px;font:inherit;font-size:12px;cursor:pointer}.print:hover{background:#ffffff10}
+    .guide-content{padding:0 22px 22px;color:var(--muted);font-size:13px}.guide-content p{margin:0 0 12px}.guide-content ul{padding-left:20px;margin:12px 0}.guide-content li{margin:7px 0}.guide-content pre{overflow-x:auto;background:#080f1c;border:1px solid var(--line);border-radius:10px;padding:15px;color:var(--text)}.checklist{display:grid;grid-template-columns:1fr 1fr;gap:12px 24px}.checklist label{display:flex;align-items:flex-start;gap:10px;cursor:pointer;font-size:13px;color:var(--muted)}.checklist input{accent-color:var(--cyan);margin-top:5px;flex:none}.checklist input:focus-visible{outline:2px solid var(--cyan-light);outline-offset:3px}@media(max-width:650px){.checklist{grid-template-columns:1fr}}@media print{.guide-content pre{white-space:pre-wrap;overflow-wrap:anywhere;background:white}.guide-content{color:var(--muted)}}
+    .language-switch{display:flex;flex:none;border:1px solid var(--line);border-radius:8px;padding:3px;gap:2px}.language-switch button{border:0;border-radius:5px;padding:6px 8px;background:transparent;color:var(--muted);font:700 11px "Segoe UI",Arial,sans-serif;cursor:pointer;white-space:nowrap}.language-switch button[aria-pressed="true"]{background:#00a4f522;color:var(--cyan-light)}.topbar .wrap{gap:18px;flex-wrap:wrap;padding-top:10px;padding-bottom:10px}
+    main{padding-bottom:60px}.hero{padding:62px 0 30px}.eyebrow{display:inline-flex;align-items:center;gap:9px;border:1px solid var(--line);border-radius:24px;padding:5px 12px;color:var(--muted);font-size:10px;font-weight:800;letter-spacing:1.6px;text-transform:uppercase}.dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 10px #42dfae80}
+    h1{font-size:clamp(38px,5.5vw,68px);line-height:1.08;letter-spacing:-2.8px;margin:22px 0 18px;font-weight:850}.cyan{color:var(--cyan-light)}.purple{color:var(--purple-light)}.lede{color:var(--muted);max-width:770px;font-size:16px;margin:0 0 23px}.chips{display:flex;flex-wrap:wrap;gap:8px}.chip{padding:5px 10px;border:1px solid var(--line);background:#ffffff05;border-radius:8px;font-size:11px;color:#c5cfe3;font-weight:650}
+    .status-banner{display:flex;align-items:flex-start;gap:15px;border:1px solid #ffc36838;border-left:3px solid var(--amber);background:#ffc36807;border-radius:12px;padding:17px 20px;margin:0 0 24px}.status-icon{color:var(--amber);font-size:20px;font-weight:800;line-height:1.2}.status-banner strong{font-size:14px}.status-banner p{color:var(--muted);margin:3px 0 0;font-size:13px}.status-banner code{color:var(--amber)}
+    .metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.metric{border:1px solid var(--line);border-radius:var(--radius);background:linear-gradient(140deg,#111e30,#111729);padding:23px;position:relative;overflow:hidden}.metric:before{content:"";position:absolute;top:0;left:22px;width:42px;height:2px;background:var(--cyan)}.metric:nth-child(even):before{background:var(--purple)}.metric-label{text-transform:uppercase;font-size:10px;font-weight:800;letter-spacing:1.1px;color:var(--muted)}.metric-value{font-size:50px;line-height:1.25;font-weight:850;letter-spacing:-2px;margin:8px 0;color:var(--cyan-light);font-variant-numeric:tabular-nums}.metric:nth-child(even) .metric-value{color:var(--purple-light)}.metric p{font-size:12px;margin:0;color:var(--muted)}.metric p strong{color:var(--text);font-weight:600}
+    section{margin-top:42px}.section-heading{display:flex;justify-content:space-between;align-items:end;gap:20px;margin-bottom:17px}h2{font-size:24px;letter-spacing:-.7px;line-height:1.25;margin:0}h3{font-size:15px;margin:0 0 14px;letter-spacing:-.2px}.section-heading p{font-size:12px;color:var(--muted);margin:0}.kicker{color:var(--cyan-light);font-size:10px;font-weight:800;letter-spacing:1.8px;margin-bottom:6px;text-transform:uppercase}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}.panel{padding:25px;border:1px solid var(--line);border-radius:var(--radius);background:linear-gradient(130deg,var(--panel),#101525)}.panel.purple-panel{background:linear-gradient(135deg,#111b2c,#19162d);border-color:#ad70ff40}.small{color:var(--muted);font-size:12px}.panel>p{margin:8px 0 0}.comparison{display:grid;grid-template-columns:1fr 42px 1fr;align-items:center;gap:12px;margin:19px 0}.version{background:#ffffff04;border:1px solid var(--line);border-radius:12px;padding:16px}.version .label{font-size:10px;text-transform:uppercase;color:var(--muted);letter-spacing:1px}.version b{display:block;font-size:29px;letter-spacing:-1px;line-height:1.5}.version.new{border-color:#00a4f550}.arrow{text-align:center;color:var(--muted);font-size:24px}.frameworks{display:flex;gap:7px;flex-wrap:wrap;margin-top:11px}code{font:12px/1.5 Consolas,monospace;overflow-wrap:anywhere}.frameworks code{border:1px solid var(--line);padding:3px 8px;border-radius:6px;color:var(--purple-light)}.progress{height:8px;border-radius:10px;background:#ffffff0b;overflow:hidden;margin:13px 0 6px}.progress span{display:block;height:100%;background:linear-gradient(90deg,var(--cyan),var(--purple));border-radius:10px}.split-label{display:flex;justify-content:space-between;gap:12px;font-size:11px;color:var(--muted)}.split-label strong{color:var(--text)}.change-row{display:flex;justify-content:space-between;gap:20px;padding:12px 0;border-bottom:1px solid #ffffff0b}.change-row:last-of-type{border:0}.change-row strong{font-size:13px}.change-row span{color:var(--muted);font-size:12px}.change-row b{color:var(--purple-light);font-size:20px}
+    .badge{display:inline-block;font-size:10px;line-height:1.5;padding:3px 8px;border-radius:6px;border:1px solid;font-weight:750;white-space:nowrap}.pass{color:var(--green);background:#42dfae09;border-color:#42dfae30}.warn{color:var(--amber);background:#ffc36809;border-color:#ffc36830}.neutral{color:var(--muted);background:#a0aec609;border-color:#a0aec630}.high{color:var(--red);background:#ff7f9309;border-color:#ff7f9330}.critical{color:#ff9daf;background:#ff527b14;border-color:#ff527b50}
+    .chart-sub{font-size:12px;color:var(--muted);margin:-8px 0 20px}.bar-row{display:grid;grid-template-columns:100px 1fr 36px;gap:12px;align-items:center;margin:15px 0;font-size:12px}.bar-track{height:12px;border-radius:4px;background:#ffffff08;overflow:hidden}.bar-fill{height:100%;background:linear-gradient(90deg,var(--cyan),var(--cyan-light));border-radius:4px;min-width:3px}.bar-row:nth-child(even) .bar-fill{background:linear-gradient(90deg,#9254e7,var(--purple-light))}.bar-count{text-align:right;font-weight:800;font-variant-numeric:tabular-nums}.test-total{border-top:1px solid var(--line);padding-top:17px;margin-top:22px;display:flex;justify-content:space-between;gap:12px;color:var(--muted);font-size:12px}.test-total strong{color:var(--green)}
+    .result-list{margin:0;padding:0;list-style:none}.result-list li{padding:12px 0;border-bottom:1px solid #ffffff0b}.result-list li:first-child{padding-top:0}.result-list li:last-child{border:0;padding-bottom:0}.result-title{display:flex;justify-content:space-between;gap:12px;align-items:center;font-size:13px;font-weight:650}.result-list p{margin:5px 0 0;color:var(--muted);font-size:12px}.security-overview{display:flex;align-items:center;gap:28px;margin:20px 0}.donut{flex:0 0 145px;height:145px;border-radius:50%;background:conic-gradient(var(--red) 0 6.25%,var(--purple) 6.25% 56.25%,var(--amber) 56.25% 100%);display:grid;place-items:center;position:relative;transform:rotate(-90deg)}.donut:before{content:"";position:absolute;inset:13px;border-radius:50%;background:#101929}.donut-center{z-index:1;text-align:center;transform:rotate(90deg)}.donut-center strong{font-size:36px;letter-spacing:-1px;line-height:1.2;display:block}.donut-center span{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px}.legend{flex:1}.legend-row{display:flex;align-items:center;gap:9px;margin:9px 0;font-size:12px;color:var(--muted)}.swatch{width:8px;height:8px;border-radius:50%;flex:none}.legend-row b{margin-left:auto;color:var(--text)}
+    .fixed-package{margin:18px 0 15px;font-size:16px;font-weight:750;overflow-wrap:anywhere}.package-version{display:flex;align-items:center;gap:13px;font-size:25px;font-weight:750;margin:12px 0}.package-version .old{color:var(--muted);font-size:20px}.notice{border-top:1px solid var(--line);padding-top:13px;font-size:12px;color:var(--muted);margin-top:15px}
+    .table-panel{margin-top:18px;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:#101729}summary{cursor:pointer;padding:18px 22px;font-size:13px;font-weight:700}summary::marker{color:var(--cyan-light)}summary span{font-size:11px;color:var(--muted);font-weight:400;margin-left:8px}.table-scroll{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:12px;text-align:left}th{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;background:#ffffff03}th,td{padding:12px 20px;border-top:1px solid #ffffff0b;vertical-align:top}td code{font-size:11px}td a{white-space:nowrap}caption{text-align:left;padding:0 22px 15px;color:var(--muted);font-size:12px}tbody tr:hover{background:#ffffff02}.dependency-table td:first-child{max-width:220px}
+    .steps{counter-reset:step;display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.step{border:1px solid var(--line);border-radius:14px;padding:20px;background:#ffffff02}.step:before{counter-increment:step;content:"0" counter(step);display:block;font-size:12px;color:var(--purple-light);font-weight:800;margin-bottom:15px}.step h3{font-size:13px;margin:0 0 7px}.step p{font-size:12px;color:var(--muted);margin:0}.file-list{padding:0 24px 20px;margin:0;list-style:none;columns:2;column-gap:28px}.file-list li{font:11px/1.6 Consolas,monospace;color:#c2cce0;overflow-wrap:anywhere;padding:6px 0;break-inside:avoid}.file-group{padding:0 22px;color:var(--purple-light);font-size:11px;letter-spacing:1px;text-transform:uppercase}.evidence-note{margin-top:20px;border-left:2px solid var(--purple);padding-left:15px;color:var(--muted);font-size:12px}.footer{border-top:1px solid var(--line);padding:24px 0 36px;margin-top:45px;color:var(--muted);font-size:11px}.footer strong{color:#c3cee2}.footer p{margin:5px 0}.footer .meta{display:flex;justify-content:space-between;gap:20px;margin-bottom:9px}.skip{position:absolute;left:16px;top:-60px;z-index:20;background:var(--panel);padding:10px}.skip:focus{top:8px}
+    @media(min-width:1500px){.hero{padding-top:75px}}
+    @media(max-width:850px){.topbar .wrap{gap:15px}.brand span:last-child{display:none}.layout{grid-template-columns:1fr;gap:0}.sidebar{position:static;height:auto;padding:12px 0;border-right:0;border-bottom:1px solid var(--line)}.sidebar nav{display:flex;gap:8px;overflow-x:auto}.sidebar-label,.side-sub{display:none}.side-link{margin:0;white-space:nowrap}.metrics{grid-template-columns:repeat(2,1fr)}.steps{grid-template-columns:repeat(2,1fr)}.security-overview{gap:18px}.grid2{grid-template-columns:1fr}.section-heading{align-items:start}.hero{padding-top:40px}}
+    @media(max-width:540px){.wrap{padding:0 19px}.topbar .wrap{flex-wrap:wrap;padding-top:12px;padding-bottom:12px;gap:10px}.layout{padding:0 19px}h1{letter-spacing:-1.5px}.hero{padding-top:30px}.lede{font-size:14px}.metric{padding:17px}.metric-value{font-size:42px}.metric-label{font-size:9px;letter-spacing:.6px}.section-heading{display:block}.section-heading p{margin-top:8px}.panel{padding:20px}.steps{grid-template-columns:1fr}.file-list{columns:1}.footer .meta{display:block}.comparison{gap:7px;grid-template-columns:1fr 25px 1fr}.version{padding:12px}.version b{font-size:25px}.security-overview{gap:18px}.donut{flex-basis:125px;height:125px}}
+    @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+    @media print{ :root{color-scheme:light;--text:#142033;--muted:#475569;--line:#ccd3df;--cyan-light:#006b9e;--purple-light:#7443ad;--green:#087c58;--amber:#8c5600;--red:#b52f48}body{background:white;color:var(--text);font-size:11px}.wrap{max-width:none;padding:0}.topbar,.print,.skip,.sidebar{display:none}.layout{display:block;max-width:none;padding:0}.hero{padding-top:0}h1{font-size:40px}.metric,.panel,.step,.table-panel,.status-banner{background:white!important;break-inside:avoid}.metric-value{font-size:38px}.metrics{grid-template-columns:repeat(4,1fr)}.grid2{grid-template-columns:1fr 1fr}section{margin-top:25px}.donut:before{background:white}.table-panel{overflow:visible}.table-scroll{overflow:visible}table{font-size:10px}th,td{padding:8px}.footer{padding-bottom:0}.chip,.frameworks code{color:var(--text)}a{color:#006b9e}.step{padding:12px}.steps{grid-template-columns:repeat(2,1fr)}.file-list{columns:2}.evidence-note{break-inside:avoid}summary{padding:12px}.badge{white-space:normal}}
+  </style>
+</head>
+<body>
+  <a class="skip" href="#main-content">Skip to report</a>
+  <header class="topbar"><div class="wrap">
+    <a class="brand" href="#overview" aria-label="lime-csharp report overview"><span class="brand-mark" aria-hidden="true"></span>lime<span>CSHARP ENGINEERING REPORT</span></a>
+    <div class="language-switch" role="group" aria-label="Report language">
+      <button type="button" lang="en" data-language="en" aria-pressed="true" aria-label="English">EN</button>
+      <button type="button" lang="pt-BR" data-language="pt-BR" aria-pressed="false" aria-label="Português brasileiro">PT-BR</button>
+    </div>
+    <button class="print" type="button" id="print-report">Print / Save PDF</button>
+  </div></header>
+  <div class="layout">
+    <aside class="sidebar">
+      <nav aria-label="Documentation">
+        <div class="sidebar-label">Documentation</div>
+        <a class="side-link" href="#overview" data-page-link="overview" aria-current="page">Overview</a>
+        <div class="side-sub"><a href="#migration">Migration</a><a href="#validation">Validation</a><a href="#security">Security</a><a href="#next">Follow-up</a></div>
+        <a class="side-link" href="#upgrade-guide" data-page-link="guide">Upgrade guide</a>
+      </nav>
+    </aside>
+    <main class="content" id="main-content" tabindex="-1">
+      <div class="page" id="overview" data-page="overview" tabindex="-1">
+        <div class="hero">
+          <div class="eyebrow"><span class="dot" aria-hidden="true"></span>Platform upgrade · 13 Nov 2026</div>
+          <h1>A new foundation.<br><span class="cyan">.NET 10</span> <span class="purple">migration report.</span></h1>
+          <p class="lede">All 6 LIME library packages now also ship a net10.0 asset, with every previous target kept. Tools, samples, and tests target net10.0. Restore, the Release build, and pack pass. Remaining test failures are the same ones already seen on master; runtime smoke tests and the Azure DevOps pipeline are still open.</p>
+          <div class="chips"><span class="chip">Take &middot; lime-csharp</span><span class="chip">SDK 10.0.404</span><span class="chip">+ net10.0 (additive)</span><span class="chip">Validation snapshot</span></div>
+        </div>
+        <aside class="status-banner" aria-label="Overall validation status">
+          <span class="status-icon" aria-hidden="true">!</span>
+          <div><strong>Build and pack pass; test and runtime gates remain.</strong><p>dotnet test exits with code 1 on both master and this branch: 4 WebSocket endpoint tests fail because of reflection on runtime internals, and timing-dependent tests in Lime.Protocol.UnitTests are flaky. No upgrade regression remains. The sample smoke test and the Azure DevOps pipeline were not run.</p></div>
+        </aside>
+        <div class="metrics" aria-label="Key reported metrics">
+          <article class="metric"><div class="metric-label">Library packages with net10.0</div><div class="metric-value">6 / 6</div><p><strong>All public packages</strong><br>Previous targets kept</p></article>
+          <article class="metric"><div class="metric-label">Release build errors</div><div class="metric-value">0</div><p><strong>426 warnings (269 on master)</strong><br>Full solution build succeeded</p></article>
+          <article class="metric"><div class="metric-label">Advisory records after upgrade</div><div class="metric-value">1</div><p><strong>Moderate · WebUtilities 2.3.0</strong><br>netstandard2.1 asset only; none new</p></article>
+          <article class="metric"><div class="metric-label">Tests passed</div><div class="metric-value">853 / 860</div><p><strong>7 failed: 4 pre-existing, 3 flaky</strong><br>0 skipped; Redis suite not exercised</p></article>
+        </div>
+        <section id="migration" aria-labelledby="migration-title">
+          <div class="section-heading"><div><div class="kicker">01 / Migration scope</div><h2 id="migration-title">Additive targets. No asset removed.</h2></div><p>19 solution projects · 6 packages</p></div>
+          <div class="grid2">
+            <article class="panel">
+              <h3>Framework transition</h3>
+              <div class="comparison"><div class="version"><div class="label">Previous targets</div><b class="purple">.NET Std / 6</b><code>netstandard2.x · net462 · net6.0</code></div><div class="arrow" aria-hidden="true">&rarr;</div><div class="version new"><div class="label">Added target</div><b class="cyan">.NET 10</b><code>+ net10.0</code></div></div>
+              <div class="split-label"><strong>Packages with a net10.0 asset</strong><span>6 / 6 &middot; 100%</span></div>
+              <div class="progress" role="img" aria-label="6 of 6 library packages ship a net10.0 asset, 100 percent"><span style="width:100%"></span></div>
+              <div class="notice"><strong>Out of scope:</strong> appveyor.yml, projects outside src/Lime.sln, StackExchange.Redis 2.x, NUnit 4, TLS defaults, and removal of any existing target framework.</div>
+            </article>
+            <article class="panel purple-panel">
+              <h3>Changes in this branch</h3>
+              <div class="change-row"><div><strong>Project files</strong><br><span>Target frameworks, inbox package conditions, test stack</span></div><b>19</b></div>
+              <div class="change-row"><div><strong>Source files</strong><br><span>EnvelopePipe guard and .NET 10 fix; 3 using fixes</span></div><b>4</b></div>
+              <div class="change-row"><div><strong>Azure DevOps pipeline</strong><br><span>dotnetVersion: 10.x</span></div><b>1</b></div>
+              <p class="small">On net10.0, inbox System.* packages are no longer referenced and Lime.Transport.WebSocket uses the ASP.NET Core shared framework instead of Kestrel 2.x. The netstandard2.x, net462, and net6.0 dependency groups are unchanged, except that two redundant inbox references were removed from Lime.Transport.Tcp (netstandard2.1) to clear NU1510.</p>
+              <p class="small">Details, deviations from the approved plan, and the full evidence are in docs/dotnet-10-upgrade.md.</p>
+            </article>
+          </div>
+          <div class="table-panel table-scroll"><table class="dependency-table">
+            <caption style="padding-top:18px">Target frameworks per package and compatibility boundaries.</caption>
+            <thead><tr><th scope="col">Package / area</th><th scope="col">Targets after upgrade</th><th scope="col">Boundary / action</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Lime.Protocol</strong></td><td><code>netstandard2.0; netstandard2.1; net462; net10.0</code></td><td>EnvelopePipe now ships in net10.0; its PipeOptions setup was fixed for .NET 10.</td></tr>
+              <tr><td><strong>Lime.Messaging</strong></td><td><code>netstandard2.0; net462; net10.0</code></td><td>No code change.</td></tr>
+              <tr><td><strong>Lime.Transport.Redis</strong></td><td><code>netstandard2.0; net462; net10.0</code></td><td>StackExchange.Redis stays at 1.2.6 in every group.</td></tr>
+              <tr><td><strong>Lime.Transport.Tcp</strong></td><td><code>netstandard2.1; net10.0</code></td><td>SslProtocols defaults unchanged; SYSLIB0039 accepted.</td></tr>
+              <tr><td><strong>Lime.Transport.WebSocket</strong></td><td><code>netstandard2.1; net10.0</code></td><td>netstandard2.1 consumers still receive Kestrel 2.x and WebUtilities 2.3.0.</td></tr>
+              <tr><td><strong>Lime.Transport.AspNetCore</strong></td><td><code>net6.0; net10.0</code></td><td>net6.0 is out of support and kept for compatibility; it causes MSB3277 warnings.</td></tr>
+              <tr><td><strong>azure-pipelines.yml</strong></td><td><code>dotnetVersion: 10.x</code></td><td>Pipeline execution not validated.</td></tr>
+            </tbody>
+          </table></div>
+        </section>
+
+        <section id="validation" aria-labelledby="validation-title">
+          <div class="section-heading"><div><div class="kicker">02 / Build &amp; test evidence</div><h2 id="validation-title">Build and pack pass. Tests match the master baseline.</h2></div><p>Local validation on 13 Nov 2026</p></div>
+          <div class="grid2">
+            <article class="panel">
+              <h3>Build and restore results</h3>
+              <ul class="result-list">
+                <li><div class="result-title"><span>Solution restore</span><span class="badge pass">Succeeded</span></div><p>No NU1101, NU1102, NU1201, or NU1510. One pre-existing NU1902 advisory warning.</p></li>
+                <li><div class="result-title"><span>Full solution Release build</span><span class="badge pass">Succeeded</span></div><p>0 errors and 426 warnings (269 on master). New warnings: SYSLIB0039 (TLS), ASPDEPR004/008 (WebHostBuilder), SYSLIB0057, and MSB3277 in the net6.0 AspNetCore build.</p></li>
+                <li><div class="result-title"><span>Pack of the 6 packages</span><span class="badge pass">Succeeded</span></div><p>Every package contains lib/net10.0 plus all previous lib folders. EnvelopePipe ships in net10.0 and netstandard2.1.</p></li>
+                <li><div class="result-title"><span>Vulnerability audit</span><span class="badge warn">1 finding</span></div><p>No advisory absent from the baseline. WebUtilities 2.3.0 remains on the netstandard2.1 asset of Lime.Transport.WebSocket.</p></li>
+              </ul>
+            </article>
+            <article class="panel purple-panel">
+              <h3>Tests and runtime boundaries</h3>
+              <ul class="result-list">
+                <li><div class="result-title"><span>Solution tests (TestCategory!=Redis)</span><span class="badge warn">Exit code 1</span></div><p>853 passed, 7 failed, 0 skipped. master also exits with code 1.</p></li>
+                <li><div class="result-title"><span>Tcp, AspNetCore, and LoadTests</span><span class="badge pass">185 passed</span></div><p>108 + 36 + 41, no failures. A .NET 10 PipeOptions regression found in Tcp was fixed.</p></li>
+                <li><div class="result-title"><span>WebSocket endpoint tests</span><span class="badge high">4 failed</span></div><p>Pre-existing on master: reading ClientWebSocket internals by reflection throws MissingMemberException. Behavior kept as the plan requires.</p></li>
+                <li><div class="result-title"><span>Protocol unit tests</span><span class="badge warn">Flaky</span></div><p>602 of 605 passed. The failing timing-dependent tests vary between runs on both master and this branch.</p></li>
+                <li><div class="result-title"><span>Redis tests</span><span class="badge neutral">Not exercised</span></div><p>Excluded by category. When run explicitly, RedisFixture did not detect Redis in the sandbox, on either side.</p></li>
+                <li><div class="result-title"><span>Samples and Azure DevOps pipeline</span><span class="badge neutral">Not run</span></div><p>Server/client smoke test over net.tcp and pipeline execution remain manual gates.</p></li>
+              </ul>
+              <div class="notice"><strong>Performance:</strong> no benchmark or before/after profile was run. This report makes no performance claim.</div>
+            </article>
+          </div>
+          <div class="table-panel table-scroll"><table>
+            <caption>Tests per project: total / passed / failed / skipped</caption>
+            <thead><tr><th scope="col">Test project</th><th scope="col">master (baseline)</th><th scope="col">After upgrade</th><th scope="col">Notes</th></tr></thead>
+            <tbody>
+              <tr><td><code>Lime.Protocol.UnitTests</code></td><td>605 / 603 / 2 / 0</td><td>605 / 602 / 3 / 0</td><td>Flaky timing tests on both sides.</td></tr>
+              <tr><td><code>Lime.Transport.Tcp.UnitTests</code></td><td>108 / 108 / 0 / 0</td><td>108 / 108 / 0 / 0</td><td>Validates the EnvelopePipe fix.</td></tr>
+              <tr><td><code>Lime.Transport.WebSocket.UnitTests</code></td><td>70 / 66 / 4 / 0</td><td>70 / 66 / 4 / 0</td><td>Same 4 endpoint failures; baseline value from a clean rerun.</td></tr>
+              <tr><td><code>Lime.Transport.AspNetCore.UnitTests</code></td><td>36 / 36 / 0 / 0</td><td>36 / 36 / 0 / 0</td><td>Nullable warnings-as-errors build passes.</td></tr>
+              <tr><td><code>Lime.Transport.Redis.UnitTests</code></td><td>0</td><td>0</td><td>All tests are in the Redis category.</td></tr>
+              <tr><td><code>Lime.Protocol.LoadTests</code></td><td>41 / 41 / 0 / 0</td><td>41 / 41 / 0 / 0</td><td>No change.</td></tr>
+            </tbody>
+          </table></div>
+          <details class="table-panel"><summary>Command evidence <span>Commands run locally and recorded outcomes</span></summary>
+            <div class="table-scroll"><table><thead><tr><th scope="col">Command</th><th scope="col">Recorded result</th></tr></thead><tbody>
+              <tr><td><code>dotnet restore src/Lime.sln</code></td><td>Exit code 0; no NU1510.</td></tr>
+              <tr><td><code>dotnet build src/Lime.sln --configuration Release --no-restore --no-incremental</code></td><td>Exit code 0; 0 errors, 426 warnings.</td></tr>
+              <tr><td><code>dotnet pack src/&lt;project&gt;/&lt;project&gt;.csproj --configuration Release --no-build --output ./artifacts</code></td><td>Exit code 0 for each of the 6 packages (run one project at a time; the multi-project form fails with MSB1008).</td></tr>
+              <tr><td><code>dotnet test src/Lime.sln --configuration Release --no-build --filter "TestCategory!=Redis"</code></td><td>Exit code 1; 853 passed, 7 failed, 0 skipped (master: exit code 1).</td></tr>
+              <tr><td><code>dotnet list src/Lime.sln package --vulnerable --include-transitive</code></td><td>Exit code 0; one Moderate record. A successful command does not mean a clean audit.</td></tr>
+            </tbody></table></div>
+          </details>
+          <div class="evidence-note"><strong>Evidence boundary.</strong> Results come from local runs on 13 Nov 2026 on the local branch chore/fro-607-dotnet-10-upgrade, compared with master at 6e44e3be, using SDK 10.0.404 on Linux. Nothing was pushed and no CI run exists. A passing build does not establish runtime compatibility or release readiness.</div>
+        </section>
+
+        <section id="security" aria-labelledby="security-title">
+          <div class="section-heading"><div><div class="kicker">03 / Dependency security</div><h2 id="security-title">No new advisory. One legacy finding remains.</h2></div><p>Full-solution audit after the upgrade</p></div>
+          <div class="grid2">
+            <article class="panel">
+              <h3>NuGet audit findings by severity</h3>
+              <div class="security-overview">
+                <div class="donut" style="background:var(--amber)" role="img" aria-label="One moderate-severity advisory; zero critical and high findings."><div class="donut-center"><strong>1</strong><span>Records</span></div></div>
+                <div class="legend"><div class="legend-row"><span class="swatch" style="background:var(--red)"></span>Critical<b>0</b></div><div class="legend-row"><span class="swatch" style="background:var(--purple)"></span>High<b>0</b></div><div class="legend-row"><span class="swatch" style="background:var(--amber)"></span>Moderate<b>1</b></div></div>
+              </div>
+              <div class="split-label"><strong>Distinct vulnerable package versions</strong><span>1</span></div>
+              <div class="notice">The .NET 10 SDK prunes platform packages from the restore graph of every target in a project that targets net10.0. This hides some legacy transitive findings for netstandard2.0 and net6.0 targets from the audit. The published dependency groups are unchanged, so those findings still apply to consumers of the legacy assets.</div>
+            </article>
+            <article class="panel purple-panel">
+              <h3>Remediation status</h3>
+              <div class="result-title"><span>Critical findings</span><span class="badge pass">0 unresolved</span></div>
+              <p class="small">No critical advisory was reported before or after the upgrade.</p>
+              <div class="result-title" style="margin-top:20px"><span>High findings</span><span class="badge warn">Masked, not fixed</span></div>
+              <p class="small">System.Net.Http, System.Net.Security, System.Text.RegularExpressions 4.3.0 and System.Formats.Asn1 5.0.0 no longer appear. In tool, sample, and test projects (now net10.0 only) they are gone; in library legacy targets they are hidden only by package pruning.</p>
+              <div class="result-title" style="margin-top:20px"><span>Moderate findings</span><span class="badge warn">1 unresolved</span></div>
+              <p class="small">Microsoft.AspNetCore.WebUtilities 2.3.0 comes through Kestrel 2.x on the netstandard2.1 asset of Lime.Transport.WebSocket. The Swashbuckle UI finding was fixed by the bump to 11.0.1.</p>
+              <div class="notice"><strong>Remediation of pre-existing findings was out of scope for this change and is not complete.</strong></div>
+            </article>
+          </div>
+          <div class="table-panel table-scroll"><table>
+            <caption>Current unresolved vulnerability</caption>
+            <thead><tr><th scope="col">Package</th><th scope="col">Resolved version</th><th scope="col">Severity</th><th scope="col">Advisory / action</th></tr></thead>
+            <tbody><tr><td><code>Microsoft.AspNetCore.WebUtilities</code></td><td>2.3.0</td><td><span class="badge warn">Moderate</span></td><td><a href="https://github.com/advisories/GHSA-6527-9fp8-r4x6" target="_blank" rel="noopener noreferrer">GHSA-6527-9fp8-r4x6</a><p>Track in a dedicated issue: move the netstandard2.1 asset off Kestrel 2.x or decide to drop it, then rerun the audit.</p></td></tr></tbody>
+          </table></div>
+          <div class="table-panel table-scroll"><table>
+            <caption>Package updates applied in this change</caption>
+            <thead><tr><th scope="col">Package or dependency chain</th><th scope="col">Updated version / resolution</th></tr></thead>
+            <tbody>
+              <tr><td><code>Swashbuckle.AspNetCore</code></td><td>11.0.1; fixes GHSA-qrmm-w75w-3wpx (sample only).</td></tr>
+              <tr><td><code>Microsoft.AspNetCore.Mvc.NewtonsoftJson</code></td><td>10.0.15 (sample only).</td></tr>
+              <tr><td><code>Microsoft.NET.Test.Sdk / NUnit3TestAdapter / NUnit</code></td><td>18.12.0 / 6.3.1 / 3.14.0 (still NUnit 3).</td></tr>
+              <tr><td><code>Moq / Shouldly</code></td><td>4.21.0 / 4.3.0</td></tr>
+              <tr><td><code>ReflectionMagic</code></td><td>6.0.0 (Lime.Transport.WebSocket).</td></tr>
+              <tr><td><code>SimpleInjector</code></td><td>5.6.0 (Lime.Cli).</td></tr>
+              <tr><td><code>Kestrel / WebSockets 2.x, System.* inbox packages</code></td><td>Not referenced on net10.0; replaced by the shared framework.</td></tr>
+            </tbody>
+          </table></div>
+          <details class="table-panel">
+            <summary>Historical vulnerability inventory <span>master baseline before the upgrade; only WebUtilities remains in the current audit</span></summary>
+            <div class="table-scroll"><table><thead><tr><th scope="col">Package</th><th scope="col">Resolved version</th><th scope="col">Severity</th><th scope="col">Advisory</th></tr></thead><tbody>
+<tr><td><code>Microsoft.AspNetCore.WebUtilities</code></td><td>2.3.0</td><td><span class="badge warn">Moderate</span></td><td><a href="https://github.com/advisories/GHSA-6527-9fp8-r4x6" target="_blank" rel="noopener noreferrer">GHSA-6527-9fp8-r4x6</a></td></tr>
+<tr><td><code>System.Formats.Asn1</code></td><td>5.0.0</td><td><span class="badge high">High</span></td><td><a href="https://github.com/advisories/GHSA-447r-wph3-92pm" target="_blank" rel="noopener noreferrer">GHSA-447r-wph3-92pm</a></td></tr>
+<tr><td><code>System.Text.RegularExpressions</code></td><td>4.3.0</td><td><span class="badge high">High</span></td><td><a href="https://github.com/advisories/GHSA-cmhx-cq75-c4mj" target="_blank" rel="noopener noreferrer">GHSA-cmhx-cq75-c4mj</a></td></tr>
+<tr><td><code>System.Net.Http</code></td><td>4.3.0</td><td><span class="badge high">High</span></td><td><a href="https://github.com/advisories/GHSA-7jgj-8wvc-jh57" target="_blank" rel="noopener noreferrer">GHSA-7jgj-8wvc-jh57</a></td></tr>
+<tr><td><code>System.Net.Security</code></td><td>4.3.0</td><td><span class="badge high">High</span></td><td><a href="https://github.com/advisories/GHSA-6xh7-4v2w-36q6" target="_blank" rel="noopener noreferrer">GHSA-6xh7-4v2w-36q6</a></td></tr>
+<tr><td><code>System.Net.Security</code></td><td>4.3.0</td><td><span class="badge high">High</span></td><td><a href="https://github.com/advisories/GHSA-qhqf-ghgh-x2m4" target="_blank" rel="noopener noreferrer">GHSA-qhqf-ghgh-x2m4</a></td></tr>
+<tr><td><code>System.Net.Security</code></td><td>4.3.0</td><td><span class="badge warn">Moderate</span></td><td><a href="https://github.com/advisories/GHSA-ch6p-4jcm-h8vh" target="_blank" rel="noopener noreferrer">GHSA-ch6p-4jcm-h8vh</a></td></tr>
+<tr><td><code>System.Net.Security</code></td><td>4.3.0</td><td><span class="badge warn">Moderate</span></td><td><a href="https://github.com/advisories/GHSA-j8f4-2w4p-mhjc" target="_blank" rel="noopener noreferrer">GHSA-j8f4-2w4p-mhjc</a></td></tr>
+<tr><td><code>Swashbuckle.AspNetCore.SwaggerUI</code></td><td>5.6.3</td><td><span class="badge warn">Moderate</span></td><td><a href="https://github.com/advisories/GHSA-qrmm-w75w-3wpx" target="_blank" rel="noopener noreferrer">GHSA-qrmm-w75w-3wpx</a></td></tr>
+            </tbody></table></div>
+          </details>
+        </section>
+
+        <section id="next" aria-labelledby="next-title">
+          <div class="section-heading"><div><div class="kicker">04 / Follow-up</div><h2 id="next-title">What closes the remaining gaps.</h2></div></div>
+          <div class="steps">
+            <article class="step"><h3>Run the manual gates</h3><p>Smoke-test Lime.Sample.Server and Lime.Sample.Client on net10.0 over net.tcp://localhost:55321, and run the Azure DevOps PR pipeline with SDK 10.x.</p></article>
+            <article class="step"><h3>Fix WebSocket endpoints</h3><p>Replace reflection on ClientWebSocket internals so LocalEndPoint and RemoteEndPoint work on .NET 8+ and the 4 failing tests pass.</p></article>
+            <article class="step"><h3>Remediate legacy dependencies</h3><p>Handle WebUtilities 2.3.0 and the findings hidden by pruning in the legacy targets; then rerun the audit.</p></article>
+            <article class="step"><h3>Stabilize the test suite</h3><p>Remove timing dependencies in ResendMessagesChannelModuleTests and ChannelBaseTests, and make Redis detection in RedisFixture reliable.</p></article>
+            <article class="step"><h3>Modernize hosting and TLS</h3><p>Move the WebSocket listeners off WebHostBuilder, review SslProtocols defaults, and decide whether to drop net6.0.</p></article>
+          </div>
+        </section>
+        <footer class="footer">
+          <div class="meta"><strong>LIME-CSHARP / .NET 10 UPGRADE REPORT</strong><span>Validation date: 2026-11-13 · Report generated: 2026-11-13 · SDK 10.0.404</span></div>
+          <p><strong>Sources:</strong> <a href="../docs/dotnet-10-upgrade.md"><code>docs/dotnet-10-upgrade.md</code></a> and the local command logs of the validation run. This report is a static summary, not a live build or package audit.</p>
+          <p><strong>Counting rules:</strong> Test totals count executed tests of the solution-wide run with the TestCategory!=Redis filter. Audit counts are distinct package/version/advisory records, not affected projects. Warning totals are the MSBuild summary of a full Release build.</p>
+          <p><strong>Limitations:</strong> Baseline tests ran net6.0 binaries on runtime 8 through roll-forward. Samples, the Azure DevOps pipeline, and Redis-backed tests were not exercised. Visual and interactive checks of this HTML were not run; only static checks were.</p>
+        </footer>
+      </div>
+
+      <div class="page" id="upgrade-guide" data-page="guide" tabindex="-1" hidden>
+        <div class="hero">
+          <div class="eyebrow"><span class="dot" aria-hidden="true"></span>Team upgrade guide</div>
+          <h1 id="guide-title">A repeatable path to <span class="cyan">.NET 10</span></h1>
+          <p class="lede">How this upgrade was done for lime-csharp, step by step. Adding a target framework is not proof of runtime readiness; the scope decisions and open gates below still apply.</p>
+        </div>
+        <section id="guide" aria-labelledby="guide-steps-title">
+          <div class="section-heading"><div><div class="kicker">Step by step</div><h2 id="guide-steps-title">Nine upgrade steps</h2></div><p>9 steps · commands · completion checklist</p></div>
+          <details class="table-panel" open><summary>1. Inventory the repository</summary><div class="guide-content">
+            <p>List the solution members and their current targets. Separate published libraries from tools, samples, and tests, and note projects outside the solution.</p>
+            <pre><code>dotnet sln src/Lime.sln list
+dotnet --list-sdks
+grep -rn "&lt;TargetFramework" src --include=*.csproj</code></pre>
+            <p>src/Lime.sln has 19 projects, 6 of them published as NuGet packages. Lime.Client.* projects and Lime.Client.sln are outside the scope.</p>
+          </div></details>
+          <details class="table-panel"><summary>2. Choose the target framework policy</summary><div class="guide-content">
+            <p>Libraries add net10.0 next to their existing targets so current consumers keep the same assets. Tools, samples, and tests move to net10.0 only.</p>
+            <p>Dropping netstandard2.x, net462, or net6.0 is a separate compatibility decision and was not made here.</p>
+          </div></details>
+          <details class="table-panel"><summary>3. Align SDK and build environments</summary><div class="guide-content">
+            <p>Install the .NET 10 SDK locally. The repository has no global.json. The Azure DevOps template receives dotnetVersion: 10.x, which it passes to UseDotNet@2.</p>
+            <pre><code>curl -sSL https://dot.net/v1/dotnet-install.sh -o dotnet-install.sh
+bash dotnet-install.sh --channel 10.0 --install-dir ~/.dotnet</code></pre>
+          </div></details>
+          <details class="table-panel"><summary>4. Record the baseline</summary><div class="guide-content">
+            <p>Before changing anything, run restore, build, tests, and the vulnerability audit on master with the same SDK. This is what separates pre-existing failures from regressions.</p>
+            <pre><code>dotnet restore src/Lime.sln
+dotnet build src/Lime.sln --configuration Release --no-restore
+DOTNET_ROLL_FORWARD=Major dotnet test src/Lime.sln --configuration Release --no-build --filter "TestCategory!=Redis"
+dotnet list src/Lime.sln package --vulnerable --include-transitive</code></pre>
+          </div></details>
+          <details class="table-panel"><summary>5. Resolve framework and package compatibility</summary><div class="guide-content">
+            <p>Condition inbox System.* packages to the legacy targets, and use the Microsoft.AspNetCore.App framework reference instead of Kestrel 2.x on net10.0.</p>
+            <p>Package pruning in the .NET 10 SDK applies to every target of a project that targets net10.0. Remove references flagged with NU1510 instead of suppressing the warning.</p>
+          </div></details>
+          <details class="table-panel"><summary>6. Build in increasing scope</summary><div class="guide-content">
+            <p>Fix compile errors in the project that owns them. Here, only using directives changed: the Microsoft.OpenApi 2.x namespace and a Kestrel namespace removed from ASP.NET Core 10.</p>
+            <pre><code>dotnet build src/Lime.sln --configuration Release --no-restore --no-incremental</code></pre>
+          </div></details>
+          <details class="table-panel"><summary>7. Run tests and validate runtime behavior</summary><div class="guide-content">
+            <p>Run the tests on net10.0 and compare them with the baseline. A real .NET 10 regression appeared here: PipeOptions rejects a resume threshold above the pause threshold, and the fix was made in EnvelopePipe.</p>
+            <pre><code>dotnet test src/Lime.sln --configuration Release --no-build --filter "TestCategory!=Redis" --logger trx</code></pre>
+            <p>Current evidence: 853 of 860 tests passed. The 7 failures are pre-existing or flaky on master too. The sample smoke test and Redis-backed tests are still pending.</p>
+          </div></details>
+          <details class="table-panel"><summary>8. Triage NuGet security findings</summary><div class="guide-content">
+            <p>Compare the post-upgrade audit with the baseline. No new advisory appeared. WebUtilities 2.3.0 remains on the netstandard2.1 asset of Lime.Transport.WebSocket.</p>
+            <p>Do not read a shorter audit as remediation: pruning hides legacy findings that consumers of the older assets still resolve.</p>
+          </div></details>
+          <details class="table-panel"><summary>9. Document scope and release readiness</summary><div class="guide-content">
+            <p>Pack every library, inspect lib folders and nuspec dependency groups, and record the evidence in docs/dotnet-10-upgrade.md. Publishing a package with net10.0 changes its distribution contract; follow the release policy.</p>
+            <p>Do not claim performance gains from the newer runtime alone. No benchmark is part of this evidence.</p>
+          </div></details>
+          <article class="panel" style="margin-top:18px" aria-labelledby="checklist-title">
+            <h3 id="checklist-title">Completion checklist</h3>
+            <p class="small">Planning aid only: checkmarks are not saved and do not change reported validation results.</p>
+            <div class="checklist" style="margin-top:18px">
+              <label><input type="checkbox"><span>Every library has an explicit target framework decision, and existing targets are kept.</span></label>
+              <label><input type="checkbox"><span>.NET 10 SDK selection is consistent locally and in the Azure DevOps pipeline.</span></label>
+              <label><input type="checkbox"><span>Restore and the full Release build pass without NU1510.</span></label>
+              <label><input type="checkbox"><span>Each package contains lib/net10.0 and all previous lib folders.</span></label>
+              <label><input type="checkbox"><span>Test results are compared with the master baseline.</span></label>
+              <label><input type="checkbox"><span>The sample server and client establish a LIME session on net10.0.</span></label>
+              <label><input type="checkbox"><span>NuGet findings are remediated or formally accepted with owners and dates.</span></label>
+              <label><input type="checkbox"><span>WebSocket endpoint reflection is fixed or accepted.</span></label>
+              <label><input type="checkbox"><span>Performance claims are supported by measurements.</span></label>
+            </div>
+          </article>
+        </section>
+        <footer class="footer">
+          <div class="meta"><strong>LIME-CSHARP / .NET 10 UPGRADE GUIDE</strong></div>
+          <p><strong>Guide source:</strong> <a href="../docs/dotnet-10-upgrade.md"><code>docs/dotnet-10-upgrade.md</code></a>. This guide presents repository-specific migration steps and caveats; it is not evidence that the completion checklist is satisfied.</p>
+        </footer>
+      </div>
+    </main>
+  </div>
+<script>
+    const portuguese = {
+      "Skip to report": "Ir para o relatório",
+      "lime-csharp report overview": "Visão geral do relatório lime-csharp",
+      "CSHARP ENGINEERING REPORT": "RELATÓRIO DE ENGENHARIA CSHARP",
+      "Report language": "Idioma do relatório",
+      "Print / Save PDF": "Imprimir / Salvar PDF",
+      "Documentation": "Documentação",
+      "Overview": "Visão geral",
+      "Migration": "Migração",
+      "Validation": "Validação",
+      "Security": "Segurança",
+      "Follow-up": "Próximos passos",
+      "Upgrade guide": "Guia de atualização",
+      "Platform upgrade · 13 Nov 2026": "Atualização da plataforma · 13 nov 2026",
+      "A new foundation.": "Uma nova base.",
+      "migration report.": "relatório de migração.",
+      "All 6 LIME library packages now also ship a net10.0 asset, with every previous target kept. Tools, samples, and tests target net10.0. Restore, the Release build, and pack pass. Remaining test failures are the same ones already seen on master; runtime smoke tests and the Azure DevOps pipeline are still open.": "Os 6 pacotes de biblioteca LIME agora também publicam um asset net10.0, mantendo todos os targets anteriores. Ferramentas, exemplos e testes usam net10.0. Restore, compilação Release e pack passaram. As falhas de teste restantes são as mesmas já vistas na master; testes de fumaça em runtime e o pipeline do Azure DevOps continuam pendentes.",
+      "+ net10.0 (additive)": "+ net10.0 (aditivo)",
+      "Validation snapshot": "Retrato da validação",
+      "Overall validation status": "Status geral da validação",
+      "Build and pack pass; test and runtime gates remain.": "Compilação e pack passaram; ainda há etapas de teste e runtime pendentes.",
+      "dotnet test exits with code 1 on both master and this branch: 4 WebSocket endpoint tests fail because of reflection on runtime internals, and timing-dependent tests in Lime.Protocol.UnitTests are flaky. No upgrade regression remains. The sample smoke test and the Azure DevOps pipeline were not run.": "dotnet test termina com código 1 tanto na master quanto nesta branch: 4 testes de endpoint do WebSocket falham por reflexão sobre internos do runtime, e testes dependentes de tempo em Lime.Protocol.UnitTests são instáveis. Nenhuma regressão do upgrade permanece. O teste de fumaça dos exemplos e o pipeline do Azure DevOps não foram executados.",
+      "Key reported metrics": "Principais métricas reportadas",
+      "Library packages with net10.0": "Pacotes de biblioteca com net10.0",
+      "All public packages": "Todos os pacotes públicos",
+      "Previous targets kept": "Targets anteriores mantidos",
+      "Release build errors": "Erros na compilação Release",
+      "426 warnings (269 on master)": "426 avisos (269 na master)",
+      "Full solution build succeeded": "Compilação completa da solução aprovada",
+      "Advisory records after upgrade": "Registros de alerta após o upgrade",
+      "Moderate · WebUtilities 2.3.0": "Moderado · WebUtilities 2.3.0",
+      "netstandard2.1 asset only; none new": "Somente no asset netstandard2.1; nenhum novo",
+      "Tests passed": "Testes aprovados",
+      "7 failed: 4 pre-existing, 3 flaky": "7 falharam: 4 preexistentes, 3 instáveis",
+      "0 skipped; Redis suite not exercised": "0 ignorados; suíte Redis não exercitada",
+      "01 / Migration scope": "01 / Escopo da migração",
+      "Additive targets. No asset removed.": "Targets aditivos. Nenhum asset removido.",
+      "19 solution projects · 6 packages": "19 projetos da solução · 6 pacotes",
+      "Framework transition": "Transição de framework",
+      "Previous targets": "Targets anteriores",
+      "Added target": "Target adicionado",
+      "Packages with a net10.0 asset": "Pacotes com asset net10.0",
+      "6 of 6 library packages ship a net10.0 asset, 100 percent": "6 de 6 pacotes de biblioteca publicam um asset net10.0, 100 por cento",
+      "Out of scope:": "Fora do escopo:",
+      "appveyor.yml, projects outside src/Lime.sln, StackExchange.Redis 2.x, NUnit 4, TLS defaults, and removal of any existing target framework.": "appveyor.yml, projetos fora de src/Lime.sln, StackExchange.Redis 2.x, NUnit 4, defaults de TLS e remoção de qualquer target framework existente.",
+      "Changes in this branch": "Alterações nesta branch",
+      "Project files": "Arquivos de projeto",
+      "Target frameworks, inbox package conditions, test stack": "Target frameworks, condições de pacotes inbox, stack de testes",
+      "Source files": "Arquivos de código",
+      "EnvelopePipe guard and .NET 10 fix; 3 using fixes": "Guarda e correção .NET 10 no EnvelopePipe; 3 ajustes de using",
+      "Azure DevOps pipeline": "Pipeline do Azure DevOps",
+      "dotnetVersion: 10.x": "dotnetVersion: 10.x",
+      "On net10.0, inbox System.* packages are no longer referenced and Lime.Transport.WebSocket uses the ASP.NET Core shared framework instead of Kestrel 2.x. The netstandard2.x, net462, and net6.0 dependency groups are unchanged, except that two redundant inbox references were removed from Lime.Transport.Tcp (netstandard2.1) to clear NU1510.": "Em net10.0, os pacotes System.* inbox deixaram de ser referenciados e Lime.Transport.WebSocket usa o shared framework do ASP.NET Core em vez do Kestrel 2.x. Os grupos de dependência netstandard2.x, net462 e net6.0 não mudaram, exceto pela remoção de duas referências inbox redundantes em Lime.Transport.Tcp (netstandard2.1) para eliminar o NU1510.",
+      "Details, deviations from the approved plan, and the full evidence are in docs/dotnet-10-upgrade.md.": "Detalhes, desvios do plano aprovado e a evidência completa estão em docs/dotnet-10-upgrade.md.",
+      "Target frameworks per package and compatibility boundaries.": "Target frameworks por pacote e limites de compatibilidade.",
+      "Package / area": "Pacote / área",
+      "Targets after upgrade": "Targets após o upgrade",
+      "Boundary / action": "Limite / ação",
+      "EnvelopePipe now ships in net10.0; its PipeOptions setup was fixed for .NET 10.": "EnvelopePipe agora é publicado em net10.0; a configuração de PipeOptions foi corrigida para o .NET 10.",
+      "No code change.": "Nenhuma alteração de código.",
+      "StackExchange.Redis stays at 1.2.6 in every group.": "StackExchange.Redis continua em 1.2.6 em todos os grupos.",
+      "SslProtocols defaults unchanged; SYSLIB0039 accepted.": "Defaults de SslProtocols inalterados; SYSLIB0039 aceito.",
+      "netstandard2.1 consumers still receive Kestrel 2.x and WebUtilities 2.3.0.": "Consumidores netstandard2.1 ainda recebem Kestrel 2.x e WebUtilities 2.3.0.",
+      "net6.0 is out of support and kept for compatibility; it causes MSB3277 warnings.": "net6.0 está fora de suporte e foi mantido por compatibilidade; gera avisos MSB3277.",
+      "Pipeline execution not validated.": "Execução do pipeline não validada.",
+      "02 / Build & test evidence": "02 / Evidências de compilação e testes",
+      "Build and pack pass. Tests match the master baseline.": "Compilação e pack passaram. Os testes equivalem ao baseline da master.",
+      "Local validation on 13 Nov 2026": "Validação local em 13 nov 2026",
+      "Build and restore results": "Resultados de restore e compilação",
+      "Solution restore": "Restore da solução",
+      "Succeeded": "Aprovada",
+      "No NU1101, NU1102, NU1201, or NU1510. One pre-existing NU1902 advisory warning.": "Sem NU1101, NU1102, NU1201 ou NU1510. Um aviso NU1902 de alerta preexistente.",
+      "Full solution Release build": "Compilação Release da solução",
+      "0 errors and 426 warnings (269 on master). New warnings: SYSLIB0039 (TLS), ASPDEPR004/008 (WebHostBuilder), SYSLIB0057, and MSB3277 in the net6.0 AspNetCore build.": "0 erros e 426 avisos (269 na master). Avisos novos: SYSLIB0039 (TLS), ASPDEPR004/008 (WebHostBuilder), SYSLIB0057 e MSB3277 na compilação net6.0 do AspNetCore.",
+      "Pack of the 6 packages": "Pack dos 6 pacotes",
+      "Every package contains lib/net10.0 plus all previous lib folders. EnvelopePipe ships in net10.0 and netstandard2.1.": "Todos os pacotes contêm lib/net10.0 e todas as pastas lib anteriores. EnvelopePipe é publicado em net10.0 e netstandard2.1.",
+      "Vulnerability audit": "Auditoria de vulnerabilidades",
+      "1 finding": "1 achado",
+      "No advisory absent from the baseline. WebUtilities 2.3.0 remains on the netstandard2.1 asset of Lime.Transport.WebSocket.": "Nenhum alerta ausente do baseline. WebUtilities 2.3.0 permanece no asset netstandard2.1 de Lime.Transport.WebSocket.",
+      "Tests and runtime boundaries": "Limites de testes e runtime",
+      "Solution tests (TestCategory!=Redis)": "Testes da solução (TestCategory!=Redis)",
+      "Exit code 1": "Código de saída 1",
+      "853 passed, 7 failed, 0 skipped. master also exits with code 1.": "853 aprovados, 7 falharam, 0 ignorados. A master também termina com código 1.",
+      "Tcp, AspNetCore, and LoadTests": "Tcp, AspNetCore e LoadTests",
+      "185 passed": "185 aprovados",
+      "108 + 36 + 41, no failures. A .NET 10 PipeOptions regression found in Tcp was fixed.": "108 + 36 + 41, sem falhas. Uma regressão de PipeOptions do .NET 10 encontrada no Tcp foi corrigida.",
+      "WebSocket endpoint tests": "Testes de endpoint do WebSocket",
+      "4 failed": "4 falharam",
+      "Pre-existing on master: reading ClientWebSocket internals by reflection throws MissingMemberException. Behavior kept as the plan requires.": "Preexistente na master: ler internos do ClientWebSocket por reflexão lança MissingMemberException. Comportamento mantido conforme o plano.",
+      "Protocol unit tests": "Testes unitários do Protocol",
+      "Flaky": "Instáveis",
+      "602 of 605 passed. The failing timing-dependent tests vary between runs on both master and this branch.": "602 de 605 aprovados. Os testes dependentes de tempo que falham variam entre execuções tanto na master quanto nesta branch.",
+      "Redis tests": "Testes do Redis",
+      "Not exercised": "Não exercitados",
+      "Excluded by category. When run explicitly, RedisFixture did not detect Redis in the sandbox, on either side.": "Excluídos pela categoria. Executados explicitamente, o RedisFixture não detectou o Redis no sandbox, em nenhum dos lados.",
+      "Samples and Azure DevOps pipeline": "Exemplos e pipeline do Azure DevOps",
+      "Not run": "Não executados",
+      "Server/client smoke test over net.tcp and pipeline execution remain manual gates.": "Teste de fumaça servidor/cliente via net.tcp e execução do pipeline continuam como etapas manuais.",
+      "Performance:": "Desempenho:",
+      "no benchmark or before/after profile was run. This report makes no performance claim.": "nenhum benchmark ou perfil antes/depois foi executado. Este relatório não afirma ganho de desempenho.",
+      "Tests per project: total / passed / failed / skipped": "Testes por projeto: total / aprovados / falhos / ignorados",
+      "Test project": "Projeto de teste",
+      "master (baseline)": "master (baseline)",
+      "After upgrade": "Após o upgrade",
+      "Notes": "Observações",
+      "Flaky timing tests on both sides.": "Testes de tempo instáveis nos dois lados.",
+      "Validates the EnvelopePipe fix.": "Valida a correção do EnvelopePipe.",
+      "Same 4 endpoint failures; baseline value from a clean rerun.": "Mesmas 4 falhas de endpoint; valor do baseline obtido em reexecução limpa.",
+      "Nullable warnings-as-errors build passes.": "Compilação com nullable como erro passa.",
+      "All tests are in the Redis category.": "Todos os testes estão na categoria Redis.",
+      "No change.": "Sem alteração.",
+      "Command evidence": "Evidências de comandos",
+      "Commands run locally and recorded outcomes": "Comandos executados localmente e resultados registrados",
+      "Command": "Comando",
+      "Recorded result": "Resultado registrado",
+      "Exit code 0; no NU1510.": "Código de saída 0; sem NU1510.",
+      "Exit code 0; 0 errors, 426 warnings.": "Código de saída 0; 0 erros, 426 avisos.",
+      "Exit code 0 for each of the 6 packages (run one project at a time; the multi-project form fails with MSB1008).": "Código de saída 0 para cada um dos 6 pacotes (executado um projeto por vez; a forma com vários projetos falha com MSB1008).",
+      "Exit code 1; 853 passed, 7 failed, 0 skipped (master: exit code 1).": "Código de saída 1; 853 aprovados, 7 falharam, 0 ignorados (master: código de saída 1).",
+      "Exit code 0; one Moderate record. A successful command does not mean a clean audit.": "Código de saída 0; um registro Moderado. Um comando bem-sucedido não significa auditoria limpa.",
+      "Evidence boundary.": "Limite das evidências.",
+      "Results come from local runs on 13 Nov 2026 on the local branch chore/fro-607-dotnet-10-upgrade, compared with master at 6e44e3be, using SDK 10.0.404 on Linux. Nothing was pushed and no CI run exists. A passing build does not establish runtime compatibility or release readiness.": "Os resultados vêm de execuções locais em 13 nov 2026 na branch local chore/fro-607-dotnet-10-upgrade, comparada com a master em 6e44e3be, usando o SDK 10.0.404 no Linux. Nada foi enviado ao remoto e não há execução de CI. Uma compilação aprovada não comprova compatibilidade em runtime nem prontidão para release.",
+      "03 / Dependency security": "03 / Segurança das dependências",
+      "No new advisory. One legacy finding remains.": "Nenhum alerta novo. Um achado legado permanece.",
+      "Full-solution audit after the upgrade": "Auditoria da solução completa após o upgrade",
+      "NuGet audit findings by severity": "Achados da auditoria NuGet por gravidade",
+      "One moderate-severity advisory; zero critical and high findings.": "Um alerta de gravidade moderada; zero achados críticos e altos.",
+      "Records": "Registros",
+      "Critical": "Crítico",
+      "High": "Alto",
+      "Moderate": "Moderado",
+      "Distinct vulnerable package versions": "Versões distintas de pacotes vulneráveis",
+      "The .NET 10 SDK prunes platform packages from the restore graph of every target in a project that targets net10.0. This hides some legacy transitive findings for netstandard2.0 and net6.0 targets from the audit. The published dependency groups are unchanged, so those findings still apply to consumers of the legacy assets.": "O SDK do .NET 10 remove (pruning) pacotes de plataforma do grafo de restore de todos os targets de um projeto que usa net10.0. Isso oculta da auditoria alguns achados transitivos legados dos targets netstandard2.0 e net6.0. Os grupos de dependência publicados não mudaram, então esses achados continuam valendo para consumidores dos assets legados.",
+      "Remediation status": "Status da correção",
+      "Critical findings": "Achados críticos",
+      "0 unresolved": "0 sem resolução",
+      "No critical advisory was reported before or after the upgrade.": "Nenhum alerta crítico foi reportado antes ou depois do upgrade.",
+      "High findings": "Achados altos",
+      "Masked, not fixed": "Ocultos, não corrigidos",
+      "System.Net.Http, System.Net.Security, System.Text.RegularExpressions 4.3.0 and System.Formats.Asn1 5.0.0 no longer appear. In tool, sample, and test projects (now net10.0 only) they are gone; in library legacy targets they are hidden only by package pruning.": "System.Net.Http, System.Net.Security, System.Text.RegularExpressions 4.3.0 e System.Formats.Asn1 5.0.0 não aparecem mais. Nos projetos de ferramenta, exemplo e teste (agora só net10.0) eles saíram de fato; nos targets legados das bibliotecas estão apenas ocultos pelo pruning de pacotes.",
+      "Moderate findings": "Achados moderados",
+      "1 unresolved": "1 sem resolução",
+      "Microsoft.AspNetCore.WebUtilities 2.3.0 comes through Kestrel 2.x on the netstandard2.1 asset of Lime.Transport.WebSocket. The Swashbuckle UI finding was fixed by the bump to 11.0.1.": "Microsoft.AspNetCore.WebUtilities 2.3.0 vem pelo Kestrel 2.x no asset netstandard2.1 de Lime.Transport.WebSocket. O achado do Swashbuckle UI foi corrigido pela atualização para 11.0.1.",
+      "Remediation of pre-existing findings was out of scope for this change and is not complete.": "A correção dos achados preexistentes estava fora do escopo desta mudança e não está concluída.",
+      "Current unresolved vulnerability": "Vulnerabilidade atual sem resolução",
+      "Package": "Pacote",
+      "Resolved version": "Versão resolvida",
+      "Severity": "Gravidade",
+      "Advisory / action": "Alerta / ação",
+      "Track in a dedicated issue: move the netstandard2.1 asset off Kestrel 2.x or decide to drop it, then rerun the audit.": "Acompanhar em issue própria: tirar o asset netstandard2.1 do Kestrel 2.x ou decidir removê-lo e, em seguida, reexecutar a auditoria.",
+      "Package updates applied in this change": "Atualizações de pacotes aplicadas nesta mudança",
+      "Package or dependency chain": "Pacote ou cadeia de dependências",
+      "Updated version / resolution": "Versão atualizada / resolução",
+      "11.0.1; fixes GHSA-qrmm-w75w-3wpx (sample only).": "11.0.1; corrige GHSA-qrmm-w75w-3wpx (somente no exemplo).",
+      "10.0.15 (sample only).": "10.0.15 (somente no exemplo).",
+      "18.12.0 / 6.3.1 / 3.14.0 (still NUnit 3).": "18.12.0 / 6.3.1 / 3.14.0 (ainda NUnit 3).",
+      "4.21.0 / 4.3.0": "4.21.0 / 4.3.0",
+      "6.0.0 (Lime.Transport.WebSocket).": "6.0.0 (Lime.Transport.WebSocket).",
+      "5.6.0 (Lime.Cli).": "5.6.0 (Lime.Cli).",
+      "Not referenced on net10.0; replaced by the shared framework.": "Não referenciados em net10.0; substituídos pelo shared framework.",
+      "Historical vulnerability inventory": "Inventário histórico de vulnerabilidades",
+      "master baseline before the upgrade; only WebUtilities remains in the current audit": "Baseline da master antes do upgrade; somente WebUtilities permanece na auditoria atual",
+      "Advisory": "Alerta",
+      "04 / Follow-up": "04 / Próximos passos",
+      "What closes the remaining gaps.": "Como resolver as pendências.",
+      "Run the manual gates": "Executar as validações manuais",
+      "Smoke-test Lime.Sample.Server and Lime.Sample.Client on net10.0 over net.tcp://localhost:55321, and run the Azure DevOps PR pipeline with SDK 10.x.": "Fazer teste de fumaça de Lime.Sample.Server e Lime.Sample.Client em net10.0 via net.tcp://localhost:55321 e executar o pipeline de PR do Azure DevOps com o SDK 10.x.",
+      "Fix WebSocket endpoints": "Corrigir endpoints do WebSocket",
+      "Replace reflection on ClientWebSocket internals so LocalEndPoint and RemoteEndPoint work on .NET 8+ and the 4 failing tests pass.": "Substituir a reflexão sobre internos do ClientWebSocket para que LocalEndPoint e RemoteEndPoint funcionem no .NET 8+ e os 4 testes com falha passem.",
+      "Remediate legacy dependencies": "Corrigir dependências legadas",
+      "Handle WebUtilities 2.3.0 and the findings hidden by pruning in the legacy targets; then rerun the audit.": "Tratar o WebUtilities 2.3.0 e os achados ocultos pelo pruning nos targets legados; depois reexecutar a auditoria.",
+      "Stabilize the test suite": "Estabilizar a suíte de testes",
+      "Remove timing dependencies in ResendMessagesChannelModuleTests and ChannelBaseTests, and make Redis detection in RedisFixture reliable.": "Remover dependências de tempo em ResendMessagesChannelModuleTests e ChannelBaseTests e tornar confiável a detecção do Redis no RedisFixture.",
+      "Modernize hosting and TLS": "Modernizar hospedagem e TLS",
+      "Move the WebSocket listeners off WebHostBuilder, review SslProtocols defaults, and decide whether to drop net6.0.": "Tirar os listeners WebSocket do WebHostBuilder, revisar os defaults de SslProtocols e decidir sobre a remoção do net6.0.",
+      "LIME-CSHARP / .NET 10 UPGRADE REPORT": "LIME-CSHARP / RELATÓRIO DE ATUALIZAÇÃO PARA .NET 10",
+      "Validation date: 2026-11-13 · Report generated: 2026-11-13 · SDK 10.0.404": "Data de validação: 13/11/2026 · Relatório gerado em: 13/11/2026 · SDK 10.0.404",
+      "Sources:": "Fontes:",
+      "and the local command logs of the validation run. This report is a static summary, not a live build or package audit.": "e os logs locais dos comandos da validação. Este relatório é um resumo estático, não uma compilação ou auditoria de pacotes ao vivo.",
+      "Counting rules:": "Regras de contagem:",
+      "Test totals count executed tests of the solution-wide run with the TestCategory!=Redis filter. Audit counts are distinct package/version/advisory records, not affected projects. Warning totals are the MSBuild summary of a full Release build.": "Os totais de testes contam os testes executados na rodada da solução com o filtro TestCategory!=Redis. As contagens da auditoria são registros distintos de pacote/versão/alerta, não projetos afetados. Os totais de avisos são o resumo do MSBuild de uma compilação Release completa.",
+      "Limitations:": "Limitações:",
+      "Baseline tests ran net6.0 binaries on runtime 8 through roll-forward. Samples, the Azure DevOps pipeline, and Redis-backed tests were not exercised. Visual and interactive checks of this HTML were not run; only static checks were.": "Os testes do baseline executaram binários net6.0 no runtime 8 via roll-forward. Exemplos, pipeline do Azure DevOps e testes com Redis não foram exercitados. Verificações visuais e interativas deste HTML não foram feitas; somente verificações estáticas.",
+      "Team upgrade guide": "Guia de atualização da equipe",
+      "A repeatable path to": "Um caminho repetível para",
+      "How this upgrade was done for lime-csharp, step by step. Adding a target framework is not proof of runtime readiness; the scope decisions and open gates below still apply.": "Como este upgrade foi feito no lime-csharp, passo a passo. Adicionar um target framework não comprova prontidão em runtime; as decisões de escopo e as pendências abaixo continuam valendo.",
+      "Step by step": "Passo a passo",
+      "Nine upgrade steps": "Nove etapas de atualização",
+      "9 steps · commands · completion checklist": "9 etapas · comandos · checklist de conclusão",
+      "1. Inventory the repository": "1. Inventariar o repositório",
+      "List the solution members and their current targets. Separate published libraries from tools, samples, and tests, and note projects outside the solution.": "Liste os membros da solução e seus targets atuais. Separe bibliotecas publicadas de ferramentas, exemplos e testes, e anote os projetos fora da solução.",
+      "src/Lime.sln has 19 projects, 6 of them published as NuGet packages. Lime.Client.* projects and Lime.Client.sln are outside the scope.": "src/Lime.sln tem 19 projetos, 6 deles publicados como pacotes NuGet. Os projetos Lime.Client.* e o Lime.Client.sln estão fora do escopo.",
+      "2. Choose the target framework policy": "2. Definir a política de target framework",
+      "Libraries add net10.0 next to their existing targets so current consumers keep the same assets. Tools, samples, and tests move to net10.0 only.": "Bibliotecas adicionam net10.0 ao lado dos targets existentes para que os consumidores atuais mantenham os mesmos assets. Ferramentas, exemplos e testes passam a usar somente net10.0.",
+      "Dropping netstandard2.x, net462, or net6.0 is a separate compatibility decision and was not made here.": "Remover netstandard2.x, net462 ou net6.0 é uma decisão de compatibilidade separada e não foi tomada aqui.",
+      "3. Align SDK and build environments": "3. Alinhar SDK e ambientes de build",
+      "Install the .NET 10 SDK locally. The repository has no global.json. The Azure DevOps template receives dotnetVersion: 10.x, which it passes to UseDotNet@2.": "Instale o SDK do .NET 10 localmente. O repositório não tem global.json. O template do Azure DevOps recebe dotnetVersion: 10.x, repassado ao UseDotNet@2.",
+      "4. Record the baseline": "4. Registrar o baseline",
+      "Before changing anything, run restore, build, tests, and the vulnerability audit on master with the same SDK. This is what separates pre-existing failures from regressions.": "Antes de alterar qualquer coisa, execute restore, build, testes e auditoria de vulnerabilidades na master com o mesmo SDK. É isso que separa falhas preexistentes de regressões.",
+      "5. Resolve framework and package compatibility": "5. Resolver compatibilidade de framework e pacotes",
+      "Condition inbox System.* packages to the legacy targets, and use the Microsoft.AspNetCore.App framework reference instead of Kestrel 2.x on net10.0.": "Condicione os pacotes System.* inbox aos targets legados e use a framework reference Microsoft.AspNetCore.App em vez do Kestrel 2.x em net10.0.",
+      "Package pruning in the .NET 10 SDK applies to every target of a project that targets net10.0. Remove references flagged with NU1510 instead of suppressing the warning.": "O pruning de pacotes do SDK do .NET 10 vale para todos os targets de um projeto que usa net10.0. Remova as referências sinalizadas com NU1510 em vez de suprimir o aviso.",
+      "6. Build in increasing scope": "6. Compilar em escopo crescente",
+      "Fix compile errors in the project that owns them. Here, only using directives changed: the Microsoft.OpenApi 2.x namespace and a Kestrel namespace removed from ASP.NET Core 10.": "Corrija os erros de compilação no projeto onde eles ocorrem. Aqui, só mudaram diretivas using: o namespace do Microsoft.OpenApi 2.x e um namespace do Kestrel removido do ASP.NET Core 10.",
+      "7. Run tests and validate runtime behavior": "7. Executar testes e validar o comportamento em runtime",
+      "Run the tests on net10.0 and compare them with the baseline. A real .NET 10 regression appeared here: PipeOptions rejects a resume threshold above the pause threshold, and the fix was made in EnvelopePipe.": "Execute os testes em net10.0 e compare com o baseline. Uma regressão real do .NET 10 apareceu aqui: PipeOptions rejeita resume threshold acima do pause threshold, e a correção foi feita no EnvelopePipe.",
+      "Current evidence: 853 of 860 tests passed. The 7 failures are pre-existing or flaky on master too. The sample smoke test and Redis-backed tests are still pending.": "Evidência atual: 853 de 860 testes aprovados. As 7 falhas são preexistentes ou instáveis também na master. O teste de fumaça dos exemplos e os testes com Redis continuam pendentes.",
+      "8. Triage NuGet security findings": "8. Triar achados de segurança do NuGet",
+      "Compare the post-upgrade audit with the baseline. No new advisory appeared. WebUtilities 2.3.0 remains on the netstandard2.1 asset of Lime.Transport.WebSocket.": "Compare a auditoria pós-upgrade com o baseline. Nenhum alerta novo apareceu. WebUtilities 2.3.0 permanece no asset netstandard2.1 de Lime.Transport.WebSocket.",
+      "Do not read a shorter audit as remediation: pruning hides legacy findings that consumers of the older assets still resolve.": "Não interprete uma auditoria menor como correção: o pruning oculta achados legados que os consumidores dos assets antigos ainda resolvem.",
+      "9. Document scope and release readiness": "9. Documentar escopo e prontidão para release",
+      "Pack every library, inspect lib folders and nuspec dependency groups, and record the evidence in docs/dotnet-10-upgrade.md. Publishing a package with net10.0 changes its distribution contract; follow the release policy.": "Gere o pack de cada biblioteca, inspecione as pastas lib e os grupos de dependência do nuspec e registre a evidência em docs/dotnet-10-upgrade.md. Publicar um pacote com net10.0 muda o contrato de distribuição; siga a política de release.",
+      "Do not claim performance gains from the newer runtime alone. No benchmark is part of this evidence.": "Não afirme ganho de desempenho apenas pelo runtime mais novo. Nenhum benchmark faz parte desta evidência.",
+      "Completion checklist": "Checklist de conclusão",
+      "Planning aid only: checkmarks are not saved and do not change reported validation results.": "Apenas apoio ao planejamento: as marcações não são salvas e não alteram os resultados de validação reportados.",
+      "Every library has an explicit target framework decision, and existing targets are kept.": "Toda biblioteca tem decisão explícita de target framework, e os targets existentes foram mantidos.",
+      ".NET 10 SDK selection is consistent locally and in the Azure DevOps pipeline.": "A seleção do SDK do .NET 10 é consistente localmente e no pipeline do Azure DevOps.",
+      "Restore and the full Release build pass without NU1510.": "Restore e compilação Release completa passam sem NU1510.",
+      "Each package contains lib/net10.0 and all previous lib folders.": "Cada pacote contém lib/net10.0 e todas as pastas lib anteriores.",
+      "Test results are compared with the master baseline.": "Os resultados de teste foram comparados com o baseline da master.",
+      "The sample server and client establish a LIME session on net10.0.": "O servidor e o cliente de exemplo estabelecem uma sessão LIME em net10.0.",
+      "NuGet findings are remediated or formally accepted with owners and dates.": "Os achados do NuGet foram corrigidos ou aceitos formalmente com responsáveis e datas.",
+      "WebSocket endpoint reflection is fixed or accepted.": "A reflexão de endpoints do WebSocket foi corrigida ou aceita.",
+      "Performance claims are supported by measurements.": "Afirmações de desempenho são sustentadas por medições.",
+      "LIME-CSHARP / .NET 10 UPGRADE GUIDE": "LIME-CSHARP / GUIA DE ATUALIZAÇÃO PARA .NET 10",
+      "Guide source:": "Fonte do guia:",
+      ". This guide presents repository-specific migration steps and caveats; it is not evidence that the completion checklist is satisfied.": ". Este guia apresenta etapas e ressalvas de migração específicas do repositório; não é evidência de que o checklist de conclusão foi cumprido."
+    };
+    const translatedText = [];
+    const walker = document.createTreeWalker(document.documentElement, NodeFilter.SHOW_TEXT);
+    while (walker.nextNode()) {
+      const node = walker.currentNode;
+      if (node.parentElement.closest("script, style, code, pre, .language-switch")) continue;
+      const original = node.textContent;
+      const key = original.trim();
+      if (Object.hasOwn(portuguese, key)) {
+        translatedText.push({ node, original, translated: original.replace(key, () => portuguese[key]) });
+      }
+    }
+    const translatedAttributes = [];
+    for (const element of document.querySelectorAll("[aria-label]")) {
+      const original = element.getAttribute("aria-label");
+      if (Object.hasOwn(portuguese, original)) {
+        translatedAttributes.push({ element, original, translated: portuguese[original] });
+      }
+    }
+    const englishTitle = document.title;
+    function setLanguage(language) {
+      const usePortuguese = language === "pt-BR";
+      document.documentElement.lang = language;
+      for (const entry of translatedText) entry.node.textContent = usePortuguese ? entry.translated : entry.original;
+      for (const entry of translatedAttributes) {
+        entry.element.setAttribute("aria-label", usePortuguese ? entry.translated : entry.original);
+      }
+      document.title = usePortuguese ? "Lime Protocol (lime-csharp) / Relatório de atualização para .NET 10" : englishTitle;
+      for (const button of document.querySelectorAll("[data-language]")) {
+        button.setAttribute("aria-pressed", String(button.dataset.language === language));
+      }
+    }
+    for (const button of document.querySelectorAll("[data-language]")) {
+      button.addEventListener("click", () => setLanguage(button.dataset.language));
+    }
+    const pages = [...document.querySelectorAll("[data-page]")];
+    const pageLinks = [...document.querySelectorAll("[data-page-link]")];
+    function showPage(name) {
+      for (const page of pages) page.hidden = page.dataset.page !== name;
+      for (const link of pageLinks) {
+        if (link.dataset.pageLink === name) link.setAttribute("aria-current", "page");
+        else link.removeAttribute("aria-current");
+      }
+    }
+    function routeFromHash() {
+      const id = decodeURIComponent(location.hash.slice(1));
+      const target = id ? document.getElementById(id) : null;
+      if (!target) {
+        if (!id) showPage("overview");
+        return;
+      }
+      const page = target.closest("[data-page]");
+      if (!page) return;
+      const changedPage = page.hidden;
+      showPage(page.dataset.page);
+      if (target === page) {
+        window.scrollTo(0, 0);
+        if (changedPage) page.focus({ preventScroll: true });
+      } else {
+        target.scrollIntoView();
+      }
+    }
+    window.addEventListener("hashchange", routeFromHash);
+    routeFromHash();
+    let collapsedBeforePrint = [];
+    window.addEventListener("beforeprint", () => {
+      collapsedBeforePrint = [...document.querySelectorAll("details:not([open])")];
+      collapsedBeforePrint.forEach(detail => { detail.open = true; });
+    });
+    window.addEventListener("afterprint", () => {
+      collapsedBeforePrint.forEach(detail => { detail.open = false; });
+      collapsedBeforePrint = [];
+    });
+    document.getElementById("print-report").addEventListener("click", () => window.print());
+  </script>
+</body>
+</html>

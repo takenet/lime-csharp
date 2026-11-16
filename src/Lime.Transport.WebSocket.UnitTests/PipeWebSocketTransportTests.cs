@@ -3,7 +3,6 @@ using Lime.Protocol.Serialization;
 using Lime.Protocol.Server;
 using Lime.Protocol.UnitTests.Common.Network;
 using Lime.Transport.WebSocket.Kestrel;
-using Microsoft.AspNetCore.Server.Kestrel.Transport.Abstractions.Internal;
 using NUnit.Framework;
 using ITransport = Lime.Protocol.Network.ITransport;
 

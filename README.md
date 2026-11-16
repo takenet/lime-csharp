@@ -27,6 +27,22 @@ Finally it has built-in support for authentication, transport encryption and com
 - **Lime.Sample.Client**: Sample client implementation
 - **Lime.Sample.AspNetCore**: Sample ASP.NET Core server implementation
 
+### Supported target frameworks
+
+| Package | Target frameworks |
+|---------|-------------------|
+| `Lime.Protocol` | `netstandard2.0`, `netstandard2.1`, `net462`, `net10.0` |
+| `Lime.Messaging` | `netstandard2.0`, `net462`, `net10.0` |
+| `Lime.Transport.Redis` | `netstandard2.0`, `net462`, `net10.0` |
+| `Lime.Transport.Tcp` | `netstandard2.1`, `net10.0` |
+| `Lime.Transport.WebSocket` | `netstandard2.1`, `net10.0` |
+| `Lime.Transport.AspNetCore` | `net6.0`, `net10.0` |
+
+- Building the solution requires the **.NET 10 SDK**. Tools, samples, and test projects target `net10.0` only.
+- `net6.0` is out of support; it is kept in `Lime.Transport.AspNetCore` only for compatibility with existing consumers.
+- On `net10.0`, `Lime.Transport.WebSocket` uses the ASP.NET Core shared framework (`Microsoft.AspNetCore.App`). Consumers of the `netstandard2.1` asset still receive the legacy Kestrel 2.x / `Microsoft.AspNetCore.WebSockets` 2.x packages, as before.
+- See [docs/dotnet-10-upgrade.md](docs/dotnet-10-upgrade.md) for the migration details, known limitations, and validation evidence.
+
 Implementation overview
 -----------------------
 
