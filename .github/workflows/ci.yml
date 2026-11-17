@@ -16,7 +16,7 @@ env:
   DOTNET_NOLOGO: true
   DOTNET_CLI_TELEMETRY_OPTOUT: true
   SOLUTION: src/Lime.sln
-  VERSION_PREFIX: '0.12'
+  VERSION_PREFIX: '0.13'
 
 jobs:
   build-test:
