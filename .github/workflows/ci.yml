@@ -1,0 +1,89 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [master, main, 'beta/*']
+  push:
+    branches: [master, main, 'beta/*']
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: 'Publish packages to nuget.org (only on master/main)'
+        type: boolean
+        default: false
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  SOLUTION: src/Lime.sln
+  VERSION_PREFIX: '0.13'
+
+jobs:
+  build-test:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.x
+          dotnet-quality: ga
+
+      - name: Restore
+        run: dotnet restore ${{ env.SOLUTION }}
+
+      - name: Build
+        run: dotnet build ${{ env.SOLUTION }} --configuration Release --no-restore
+
+      - name: Test
+        run: |
+          for p in \
+            src/Lime.Protocol.UnitTests/Lime.Protocol.UnitTests.csproj \
+            src/Lime.Transport.Tcp.UnitTests/Lime.Transport.Tcp.UnitTests.csproj \
+            src/Lime.Transport.WebSocket.UnitTests/Lime.Transport.WebSocket.UnitTests.csproj; do
+            dotnet test "$p" --configuration Release --no-build --logger "trx;LogFileName=$(basename "$p").trx" --results-directory TestResults
+          done
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: TestResults/*.trx
+          if-no-files-found: ignore
+
+  pack:
+    # Manual runs only, from the main branch
+    if: github.event_name == 'workflow_dispatch' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+    needs: build-test
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.x
+          dotnet-quality: ga
+
+      - name: Pack
+        run: |
+          VERSION="${{ env.VERSION_PREFIX }}.${{ github.run_number }}"
+          for p in Lime.Protocol Lime.Messaging Lime.Transport.Tcp Lime.Transport.Redis Lime.Transport.WebSocket Lime.Transport.AspNetCore; do
+            dotnet pack "src/$p/$p.csproj" --configuration Release \
+              -p:Version="$VERSION" -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg \
+              --output ./artifacts
+          done
+
+      - name: Upload packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: nuget-packages
+          path: artifacts/*nupkg
+
+      - name: Publish to nuget.org
+        if: ${{ inputs.publish }}
+        run: |
+          dotnet nuget push "artifacts/*.nupkg" \
+            --api-key "${{ secrets.NUGET_API_KEY }}" \
+            --source https://api.nuget.org/v3/index.json \
+            --skip-duplicate
