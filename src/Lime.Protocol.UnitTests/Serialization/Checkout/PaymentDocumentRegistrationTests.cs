@@ -6,6 +6,8 @@ using Lime.Protocol.Serialization;
 using NUnit.Framework;
 using Shouldly;
 
+#pragma warning disable CS0618 // The obsolete document is checked against the new documents.
+
 namespace Lime.Protocol.UnitTests.Serialization.Checkout
 {
     [TestFixture]
