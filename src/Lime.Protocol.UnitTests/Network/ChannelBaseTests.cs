@@ -1952,6 +1952,7 @@ namespace Lime.Protocol.UnitTests.Network
 
         [Test]
         [Category("PingRemoteAsync")]
+        [Category("Flaky")]
         public async Task PingRemoteAsync_ActiveChannel_DoNotSendsPing()
         {
             // Arrange

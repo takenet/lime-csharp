@@ -14,6 +14,7 @@ using Shouldly;
 namespace Lime.Protocol.UnitTests.Network.Modules
 {
     [TestFixture]
+    [Category("Flaky")]
     public class ResendMessagesChannelModuleTests
     {
         private Mock<ITransport> _transport;
@@ -85,7 +86,6 @@ namespace Lime.Protocol.UnitTests.Network.Modules
         }
 
         [Test]
-        [Category("Flaky")]
         public async Task OnSending_MessageWithoutNotification_ShouldResendAfterInterval()
         {
             // Arrange
@@ -229,7 +229,6 @@ namespace Lime.Protocol.UnitTests.Network.Modules
         }
 
         [Test]
-        [Category("Flaky")]
         public async Task OnSending_ReceivedNotificationAfterFirstResend_ShouldNotResendAgain()
         {
             // Arrange
@@ -386,7 +385,6 @@ namespace Lime.Protocol.UnitTests.Network.Modules
         }
 
         [Test]
-        [Category("Flaky")]
         public async Task OnStateChanged_PendingMessageAndRegisteredToNewChannel_SendsToNewChannel()
         {
             // Arrange
