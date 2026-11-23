@@ -15,7 +15,9 @@ namespace Lime.Messaging.Resources.Checkout
         public string Code { get; set; }
 
         /// <summary>
-        /// Gets or sets the expiration date, in ISO 8601 UTC format.
+        /// Gets or sets the expiration date, written in ISO 8601 UTC format.
+        /// When read by the Newtonsoft envelope serializer, the value may arrive in the invariant date format
+        /// (for example, <c>12/01/2026 12:00:00</c>); readers should parse it with the invariant culture and as UTC.
         /// </summary>
         [DataMember(Name = "expiresAt")]
         public string ExpiresAt { get; set; }
