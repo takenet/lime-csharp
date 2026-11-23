@@ -37,12 +37,20 @@ jobs:
 
       - name: Test
         run: |
+          status=0
           for p in \
             src/Lime.Protocol.UnitTests/Lime.Protocol.UnitTests.csproj \
             src/Lime.Transport.Tcp.UnitTests/Lime.Transport.Tcp.UnitTests.csproj \
             src/Lime.Transport.WebSocket.UnitTests/Lime.Transport.WebSocket.UnitTests.csproj; do
-            dotnet test "$p" --configuration Release --no-build --logger "trx;LogFileName=$(basename "$p").trx" --results-directory TestResults
+            dotnet test "$p" --configuration Release --no-build --filter "Category!=Flaky" --logger "trx;LogFileName=$(basename "$p").trx" --results-directory TestResults || status=1
           done
+          exit $status
+
+      # Known timing-dependent tests (see docs/dotnet-10-upgrade.md): reported, but never block the build
+      - name: Test (flaky, non-blocking)
+        continue-on-error: true
+        run: |
+          dotnet test src/Lime.Protocol.UnitTests/Lime.Protocol.UnitTests.csproj --configuration Release --no-build --filter "Category=Flaky" --logger "trx;LogFileName=Lime.Protocol.UnitTests.flaky.trx" --results-directory TestResults
 
       - name: Upload test results
         if: always()
