@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Serialization;
+using Lime.Messaging.Resources.Checkout;
 using Newtonsoft.Json.Linq;
 using NUnit.Framework;
 using Shouldly;
@@ -13,6 +14,118 @@ namespace Lime.Protocol.UnitTests.Serialization.Checkout
     [TestFixture]
     public class PaymentDocumentContractTests
     {
+        private static readonly IReadOnlyDictionary<Type, IReadOnlyDictionary<string, Type>> ContractMembers = new Dictionary<Type, IReadOnlyDictionary<string, Type>>
+        {
+            {
+                typeof(PaymentCheckoutRequest), new Dictionary<string, Type>
+                {
+                    { "contractVersion", typeof(int?) },
+                    { "idempotencyKey", typeof(string) },
+                    { "contactIdentity", typeof(string) },
+                    { "channel", typeof(string) },
+                    { "blockId", typeof(string) },
+                    { "merchantId", typeof(string) },
+                    { "currency", typeof(string) },
+                    { "items", typeof(PaymentCheckoutItem[]) },
+                    { "paymentMethods", typeof(string[]) },
+                    { "linkMessages", typeof(PaymentStatusMessages) },
+                    { "pixMessages", typeof(PaymentStatusMessages) },
+                    { "productType", typeof(string) },
+                }
+            },
+            {
+                typeof(PaymentCheckoutItem), new Dictionary<string, Type>
+                {
+                    { "description", typeof(string) },
+                    { "quantity", typeof(int?) },
+                    { "amount", typeof(long?) },
+                }
+            },
+            {
+                typeof(PaymentStatusMessages), new Dictionary<string, Type>
+                {
+                    { "mode", typeof(string) },
+                    { "approved", typeof(string) },
+                    { "denied", typeof(string) },
+                    { "expired", typeof(string) },
+                }
+            },
+            {
+                typeof(PaymentCheckoutResult), new Dictionary<string, Type>
+                {
+                    { "contractVersion", typeof(int?) },
+                    { "checkoutId", typeof(string) },
+                    { "referenceId", typeof(string) },
+                    { "status", typeof(string) },
+                    { "paymentLink", typeof(string) },
+                    { "pix", typeof(PaymentCheckoutPix) },
+                }
+            },
+            {
+                typeof(PaymentCheckoutPix), new Dictionary<string, Type>
+                {
+                    { "code", typeof(string) },
+                    { "expiresAt", typeof(string) },
+                    { "merchantName", typeof(string) },
+                    { "key", typeof(string) },
+                }
+            },
+            {
+                typeof(CustomerLastCardRequest), new Dictionary<string, Type>
+                {
+                    { "contractVersion", typeof(int?) },
+                    { "purchaseId", typeof(string) },
+                }
+            },
+            {
+                typeof(CustomerLastCardResult), new Dictionary<string, Type>
+                {
+                    { "contractVersion", typeof(int?) },
+                    { "hasCard", typeof(bool?) },
+                    { "id", typeof(string) },
+                    { "lastFourDigits", typeof(string) },
+                }
+            },
+            {
+                typeof(SavedCardPaymentRequest), new Dictionary<string, Type>
+                {
+                    { "contractVersion", typeof(int?) },
+                    { "purchaseId", typeof(string) },
+                    { "cardId", typeof(string) },
+                    { "idempotencyKey", typeof(string) },
+                }
+            },
+            {
+                typeof(SavedCardPaymentResult), new Dictionary<string, Type>
+                {
+                    { "contractVersion", typeof(int?) },
+                    { "purchaseId", typeof(string) },
+                    { "status", typeof(string) },
+                }
+            },
+        };
+
+        [TestCaseSource(nameof(AllTypeCases))]
+        public void PaymentType_Members_MatchFixedContractList(Type type)
+        {
+            var expected = ContractMembers[type];
+            var members = type
+                .GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
+                .ToDictionary(p => p.GetCustomAttribute<DataMemberAttribute>()?.Name ?? p.Name, p => p.PropertyType);
+
+            members.Count.ShouldBe(expected.Count);
+            foreach (var member in expected)
+            {
+                members.ShouldContainKey(member.Key);
+                members[member.Key].ShouldBe(member.Value, member.Key);
+            }
+        }
+
+        [Test]
+        public void ContractMembers_CoversEveryPaymentType()
+        {
+            ContractMembers.Keys.ShouldBe(PaymentDocumentCatalog.AllTypes, ignoreOrder: true);
+        }
         [TestCaseSource(nameof(AllTypeCases))]
         public void PaymentType_Members_FollowDocumentContract(Type type)
         {
