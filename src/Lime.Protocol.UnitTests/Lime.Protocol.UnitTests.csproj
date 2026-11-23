@@ -30,4 +30,8 @@
     <Folder Include="Properties" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="Serialization\Checkout\Fixtures\*.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

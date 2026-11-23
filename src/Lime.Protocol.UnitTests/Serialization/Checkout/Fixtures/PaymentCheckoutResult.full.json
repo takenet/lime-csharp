@@ -1,0 +1,8 @@
+{
+  "contractVersion": 1,
+  "checkoutId": "0b6e2c8f-91a4-4f3d-8e2b-5c7d9a1e3f60",
+  "referenceId": "0b6e2c8f91a44f3d8e2b5c7d9a1e3f60",
+  "status": "created",
+  "paymentLink": "https://checkout.example/pay/0b6e2c8f",
+  "pix": { "code": "000201...", "expiresAt": "2026-12-01T12:00:00Z", "merchantName": "Store A", "key": "12345678000199" }
+}
