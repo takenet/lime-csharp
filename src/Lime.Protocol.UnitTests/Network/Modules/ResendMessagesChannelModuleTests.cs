@@ -13,6 +13,13 @@ using Shouldly;
 
 namespace Lime.Protocol.UnitTests.Network.Modules
 {
+    /// <remarks>
+    /// The module checks for expired messages every resend window, and a message expires exactly one or more
+    /// windows after it is stored. Since both happen within a few milliseconds, each resend may occur either
+    /// on the current check or on the next one, depending on timer jitter. Therefore, these tests wait for the
+    /// expected condition (with a generous timeout) instead of sleeping for a fixed period. Assertions that
+    /// something does NOT happen wait for a settle period long enough to cover the next possible resend.
+    /// </remarks>
     [TestFixture]
     public class ResendMessagesChannelModuleTests
     {
@@ -24,6 +31,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
         private bool _filterByDestination;
         private CancellationToken _cancellationToken;
         private List<ResendMessagesChannelModule> _targets;
+        private ConcurrentDictionary<(IChannel Channel, Message Message), int> _completedSends;
 
         [SetUp]
         public void SetUp()
@@ -37,6 +45,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
             _cancellationToken = CancellationToken.None;
             _filterByDestination = false;
             _targets = new List<ResendMessagesChannelModule>();
+            _completedSends = new ConcurrentDictionary<(IChannel, Message), int>();
         }
 
         [TearDown]
@@ -47,6 +56,17 @@ namespace Lime.Protocol.UnitTests.Network.Modules
 
         private TimeSpan ResendLimit => TimeSpan.FromTicks(
             (Enumerable.Range(1, _resendMessageTryCount + 1).Sum() + _resendMessageTryCount) * _resendMessageIntervalWithSafeMargin.Ticks);
+
+        /// <summary>
+        /// Maximum time to wait for an expected condition. Only reached when the test fails.
+        /// </summary>
+        private TimeSpan WaitTimeout => TimeSpan.FromTicks(ResendLimit.Ticks * 2);
+
+        /// <summary>
+        /// Period that covers the next possible resend, used to assert that no further resend happens.
+        /// A message resent N times expires N + 1 windows later, plus up to one window until the next check.
+        /// </summary>
+        private TimeSpan SettlePeriod => TimeSpan.FromTicks(_resendMessageInterval.Ticks * (_resendMessageTryCount + 2));
 
         private Mock<IChannel> CreateChannel(Node localNode = null, Node remoteNode = null)
         {
@@ -76,12 +96,40 @@ namespace Lime.Protocol.UnitTests.Network.Modules
 
             channel
                 .Setup(c => c.SendMessageAsync(It.IsAny<Message>(), It.IsAny<CancellationToken>()))
-                .Returns((Message m, CancellationToken c) => ((IChannelModule<Message>)target).OnSendingAsync(m, _cancellationToken));
+                .Returns(async (Message m, CancellationToken c) =>
+                {
+                    var result = await ((IChannelModule<Message>)target).OnSendingAsync(m, _cancellationToken);
+                    // Counted only after the module stored the message again, so tests can react to a resend safely
+                    _completedSends.AddOrUpdate((channel.Object, m), 1, (_, count) => count + 1);
+                    return result;
+                });
 
             if (setEstablishedState) target.OnStateChanged(SessionState.Established);
             
             _targets.Add(target);
             return target;
+        }
+
+        private int GetSendCount(Mock<IChannel> channel, Message message)
+            => _completedSends.TryGetValue((channel.Object, message), out var count) ? count : 0;
+
+        private static int GetInvocationCount(Mock mock, string methodName, object firstArgument)
+            => mock.Invocations.ToArray().Count(i => i.Method.Name == methodName && ReferenceEquals(i.Arguments[0], firstArgument));
+
+        private static int GetDeadMessageCount(Mock<IDeadMessageHandler> deadMessageHandler, Message message)
+            => GetInvocationCount(deadMessageHandler, nameof(IDeadMessageHandler.HandleDeadMessageAsync), message);
+
+        /// <summary>
+        /// Waits until the condition is met or the timeout expires. On timeout, it returns without failing
+        /// so the subsequent assertion reports the actual state.
+        /// </summary>
+        private async Task WaitUntilAsync(Func<bool> condition)
+        {
+            using var cts = new CancellationTokenSource(WaitTimeout);
+            while (!condition() && !cts.IsCancellationRequested)
+            {
+                await Task.Delay(10);
+            }
         }
 
         [Test]
@@ -95,7 +143,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
 
             // Act
             var actual = await ((IChannelModule<Message>)target).OnSendingAsync(message, _cancellationToken);
-            await Task.Delay(_resendMessageIntervalWithSafeMargin);
+            await WaitUntilAsync(() => GetSendCount(_channel, message) >= 1);
 
             // Assert
             actual.ShouldBe(message);
@@ -106,6 +154,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
         public async Task OnSending_MultipleMessagesWithoutNotification_ShouldResendAfterInterval()
         {
             // Arrange
+            var deadMessageHandler = new Mock<IDeadMessageHandler>();
             var messages = new List<Message>();
             for (int i = 0; i < Dummy.CreateRandomInt(100) + 1; i++)
             {
@@ -114,7 +163,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
                 messages.Add(message);
             }
             _resendMessageTryCount = 1;
-            var target = GetTarget();
+            var target = GetTarget(deadMessageHandler: deadMessageHandler.Object);
 
             // Act
             var actuals = new List<Message>();
@@ -123,7 +172,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
                 var actual = await ((IChannelModule<Message>)target).OnSendingAsync(message, _cancellationToken);
                 actuals.Add(actual);
             }
-            await Task.Delay(ResendLimit);
+            await WaitUntilAsync(() => messages.All(m => GetDeadMessageCount(deadMessageHandler, m) >= 1));
 
             // Assert
             foreach (var message in messages)
@@ -144,7 +193,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
 
             // Act
             var actual = await ((IChannelModule<Message>)target).OnSendingAsync(message, _cancellationToken);
-            await Task.Delay(ResendLimit);
+            await WaitUntilAsync(() => GetDeadMessageCount(deadMessageHandler, message) >= 1);
 
             // Assert
             actual.ShouldBe(message);
@@ -167,7 +216,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
             // Act
             var actual = await ((IChannelModule<Message>)target).OnSendingAsync(message, _cancellationToken);
             await ((IChannelModule<Notification>)target).OnReceivingAsync(notification, _cancellationToken);
-            await Task.Delay(ResendLimit);
+            await WaitUntilAsync(() => GetDeadMessageCount(deadMessageHandler, message) >= 1);
 
             // Assert
             actual.ShouldBe(message);
@@ -179,6 +228,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
         public async Task OnSending_MultipleMessagesWithoutNotification_ShouldResendUntilLimit()
         {
             // Arrange
+            var deadMessageHandler = new Mock<IDeadMessageHandler>();
             var messages = new List<Message>();
             for (int i = 0; i < Dummy.CreateRandomInt(100) + 1; i++)
             {
@@ -186,7 +236,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
                 message.Id = EnvelopeId.NewId();
                 messages.Add(message);
             }
-            var target = GetTarget();
+            var target = GetTarget(deadMessageHandler: deadMessageHandler.Object);
 
             // Act
             var actuals = new List<Message>();
@@ -195,7 +245,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
                 var actual = await ((IChannelModule<Message>)target).OnSendingAsync(message, _cancellationToken);
                 actuals.Add(actual);
             }
-            await Task.Delay(ResendLimit);
+            await WaitUntilAsync(() => messages.All(m => GetDeadMessageCount(deadMessageHandler, m) >= 1));
 
             // Assert            
             foreach (var message in messages)
@@ -219,12 +269,12 @@ namespace Lime.Protocol.UnitTests.Network.Modules
             // Act
             var actualMessage = await ((IChannelModule<Message>)target).OnSendingAsync(message, _cancellationToken);
             var actualNotification = await ((IChannelModule<Notification>)target).OnReceivingAsync(notification, _cancellationToken);
-            await Task.Delay(_resendMessageIntervalWithSafeMargin);
+            await Task.Delay(SettlePeriod);
 
             // Assert
             actualMessage.ShouldBe(message);
             actualNotification.ShouldBe(notification);
-            _channel.Verify(c => c.SendMessageAsync(message, CancellationToken.None), Times.Never);
+            _channel.Verify(c => c.SendMessageAsync(message, It.IsAny<CancellationToken>()), Times.Never);
         }
 
         [Test]
@@ -240,9 +290,9 @@ namespace Lime.Protocol.UnitTests.Network.Modules
 
             // Act
             var actualMessage = await ((IChannelModule<Message>)target).OnSendingAsync(message, _cancellationToken);
-            await Task.Delay(_resendMessageIntervalWithSafeMargin);
+            await WaitUntilAsync(() => GetSendCount(_channel, message) >= 1);
             var actualNotification = await ((IChannelModule<Notification>)target).OnReceivingAsync(notification, _cancellationToken);
-            await Task.Delay(_resendMessageIntervalWithSafeMargin);
+            await Task.Delay(SettlePeriod);
 
             // Assert
             actualMessage.ShouldBe(message);
@@ -254,18 +304,19 @@ namespace Lime.Protocol.UnitTests.Network.Modules
         public async Task OnSending_ReceivedNotificationAFromDifferentSenderWhenFilteringByDestination_ShouldResendUntilLimit()
         {
             // Arrange
+            var deadMessageHandler = new Mock<IDeadMessageHandler>();
             var message = Dummy.CreateMessage(Dummy.CreateTextContent());
             message.Id = EnvelopeId.NewId();
             var notification = Dummy.CreateNotification(Event.Received);
             notification.Id = message.Id;
             notification.From = Dummy.CreateNode(); // Other sender
             _filterByDestination = true;
-            var target = GetTarget();
+            var target = GetTarget(deadMessageHandler: deadMessageHandler.Object);
 
             // Act
             var actual = await ((IChannelModule<Message>)target).OnSendingAsync(message, _cancellationToken);            
             var actualNotification = await ((IChannelModule<Notification>)target).OnReceivingAsync(notification, _cancellationToken);
-            await Task.Delay(ResendLimit);
+            await WaitUntilAsync(() => GetDeadMessageCount(deadMessageHandler, message) >= 1);
 
             // Assert
             actual.ShouldBe(message);
@@ -301,7 +352,8 @@ namespace Lime.Protocol.UnitTests.Network.Modules
 
             // Act
             var actual = await ((IChannelModule<Message>)target).OnSendingAsync(message, _cancellationToken);
-            await Task.Delay(ResendLimit);
+            await WaitUntilAsync(() => GetInvocationCount(channel, nameof(IChannel.SendMessageAsync), message) >= 2);
+            await Task.Delay(SettlePeriod);
 
             // Assert
             actual.ShouldBe(message);
@@ -319,11 +371,11 @@ namespace Lime.Protocol.UnitTests.Network.Modules
             // Act
             var actual = await ((IChannelModule<Message>)target).OnSendingAsync(message, _cancellationToken);
             target.OnStateChanged(SessionState.Finished);
-            await Task.Delay(_resendMessageIntervalWithSafeMargin);
+            await Task.Delay(SettlePeriod);
 
             // Assert
             actual.ShouldBe(message);
-            _channel.Verify(c => c.SendMessageAsync(message, CancellationToken.None), Times.Never);
+            _channel.Verify(c => c.SendMessageAsync(message, It.IsAny<CancellationToken>()), Times.Never);
         }
 
 
@@ -337,9 +389,9 @@ namespace Lime.Protocol.UnitTests.Network.Modules
 
             // Act
             var actual = await ((IChannelModule<Message>)target).OnSendingAsync(message, _cancellationToken);
-            await Task.Delay(TimeSpan.FromTicks(_resendMessageIntervalWithSafeMargin.Ticks * 3));
+            await WaitUntilAsync(() => GetSendCount(_channel, message) >= 2);
             target.OnStateChanged(SessionState.Finished);
-            await Task.Delay(_resendMessageIntervalWithSafeMargin);
+            await Task.Delay(SettlePeriod);
 
             // Assert
             actual.ShouldBe(message);
@@ -357,7 +409,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
             // Act
             var actual = await ((IChannelModule<Message>)target).OnSendingAsync(message, _cancellationToken);
             target.OnStateChanged(SessionState.Failed);
-            await Task.Delay(_resendMessageIntervalWithSafeMargin);
+            await Task.Delay(SettlePeriod);
 
             // Assert
             actual.ShouldBe(message);
@@ -374,9 +426,9 @@ namespace Lime.Protocol.UnitTests.Network.Modules
 
             // Act
             var actual = await ((IChannelModule<Message>)target).OnSendingAsync(message, _cancellationToken);
-            await Task.Delay(TimeSpan.FromTicks(_resendMessageIntervalWithSafeMargin.Ticks * 4));
+            await WaitUntilAsync(() => GetSendCount(_channel, message) >= 2);
             target.OnStateChanged(SessionState.Failed);
-            await Task.Delay(_resendMessageIntervalWithSafeMargin);
+            await Task.Delay(SettlePeriod);
 
             // Assert
             actual.ShouldBe(message);
@@ -397,7 +449,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
             var actual = await ((IChannelModule<Message>)target1).OnSendingAsync(message, _cancellationToken);
             target1.OnStateChanged(SessionState.Finished);
             var target2 = GetTarget(messageStorage: messageStorage, channel: channel2Mock);
-            await Task.Delay(_resendMessageIntervalWithSafeMargin);
+            await WaitUntilAsync(() => GetSendCount(channel2Mock, message) >= 1);
 
             // Assert
             actual.ShouldBe(message);
@@ -429,7 +481,7 @@ namespace Lime.Protocol.UnitTests.Network.Modules
             }
             target1.OnStateChanged(SessionState.Finished);
             var target2 = GetTarget(messageStorage: messageStorage, channel: channel2Mock);
-            await Task.Delay(_resendMessageIntervalWithSafeMargin);
+            await WaitUntilAsync(() => messages.All(m => GetSendCount(channel2Mock, m) >= 1));
 
             // Assert
             foreach (var message in messages)
