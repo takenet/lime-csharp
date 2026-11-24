@@ -68,6 +68,9 @@ jobs:
     if: github.event_name == 'workflow_dispatch' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
     needs: build-test
     runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - uses: actions/checkout@v4
 
@@ -91,10 +94,17 @@ jobs:
           name: nuget-packages
           path: artifacts/*nupkg
 
+      - name: NuGet login (trusted publishing)
+        if: ${{ inputs.publish }}
+        id: nuget-login
+        uses: NuGet/login@v1
+        with:
+          user: ${{ vars.NUGET_USER }}
+
       - name: Publish to nuget.org
         if: ${{ inputs.publish }}
         run: |
           dotnet nuget push "artifacts/*.nupkg" \
-            --api-key "${{ secrets.NUGET_API_KEY }}" \
+            --api-key "${{ steps.nuget-login.outputs.NUGET_API_KEY }}" \
             --source https://api.nuget.org/v3/index.json \
             --skip-duplicate
