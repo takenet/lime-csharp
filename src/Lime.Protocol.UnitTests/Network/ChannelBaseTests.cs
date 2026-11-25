@@ -115,6 +115,7 @@ namespace Lime.Protocol.UnitTests.Network
 
         [Test]
         [Category("SendMessageAsync")]
+        [Category("Flaky")]
         public async Task SendMessageAsync_TransportThrowsException_SendToTransportThenThrowException()
         {
             // Arrange
@@ -1928,6 +1929,7 @@ namespace Lime.Protocol.UnitTests.Network
 
         [Test]
         [Category("PingRemoteAsync")]
+        [Category("Flaky")]
         public async Task PingRemoteAsync_IdleChannel_SendsPing()
         {
             // Arrange
@@ -1950,6 +1952,7 @@ namespace Lime.Protocol.UnitTests.Network
 
         [Test]
         [Category("PingRemoteAsync")]
+        [Category("Flaky")]
         public async Task PingRemoteAsync_ActiveChannel_DoNotSendsPing()
         {
             // Arrange
