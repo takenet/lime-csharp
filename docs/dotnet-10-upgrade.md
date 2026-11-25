@@ -158,6 +158,10 @@ How to read these results:
   - The failing tests change from run to run. They are timing-dependent Moq verifications in `ResendMessagesChannelModuleTests` / `ChannelBaseTests`.
   - Running only those two fixtures (81 tests) three times per side gave 4, 1, and 1 failures after the upgrade, and 2, 1, and 2 failures on the baseline.
   - Tests seen failing on the baseline: `OnSending_MessageWithoutNotification_ShouldResendAfterInterval`, `OnStateChanged_PendingMessageAndRegisteredToNewChannel_SendsToNewChannel`, `OnSending_ReceivedNotificationAfterFirstResend_ShouldNotResendAgain`, `ChannelBaseTests.SendMessageAsync_TransportThrowsException_SendToTransportThenThrowException`, and `PingRemoteAsync_IdleChannel_SendsPing`.
+  - **Update (BUSC-145):** the `ResendMessagesChannelModuleTests` failures were later traced to a timing race in the tests, not to the upgrade. They reproduce on .NET 6 and .NET 8 with the old test packages, in 8 to 10 of every 10 fixture runs.
+    - The module stores a message to expire exactly one resend window later and checks for expired messages every window, so each resend lands on the current check or on the next one depending on timer jitter.
+    - The tests slept for fixed margins (600 ms, 1800 ms) and expected every resend on the earliest check.
+    - The tests now wait for the expected condition and use a settle period for "no further resend" assertions. The module itself was not changed.
 - **`Lime.Transport.WebSocket.UnitTests`: 4 pre-existing failures, identical on both sides.**
   - Failing tests: `LocalEndPoint_ConnectedTransport_ShouldEqualsClientRemoteEndPoint` and `RemoteEndPoint_ConnectedTransport_ShouldEqualsClientLocalEndPoint`, in both `WebSocketTransportTests` and `PipeWebSocketTransportTests` (see the next section).
   - The first baseline run had 27 failures (70 / 43 / 27). Most of them came from the environment: `address already in use` on port 8081, another process was using the port. A clean baseline rerun gave 70 / 66 / 4 with the same 4 failures.
@@ -232,7 +236,7 @@ Project `Lime.Transport.WebSocket` has the following vulnerable packages
 - Upgrade `StackExchange.Redis` from 1.2.6 to 2.x (breaking for consumers).
 - Migrate the tests to NUnit 4 (`ClassicAssert`).
 - Fix the pre-existing vulnerable dependencies in the legacy targets, including `Microsoft.AspNetCore.WebUtilities 2.3.0` in `Lime.Transport.WebSocket` `netstandard2.1` and the findings masked by pruning.
-- Stabilize the flaky `ResendMessagesChannelModuleTests` / `ChannelBaseTests` and make the Redis detection in `RedisFixture` reliable.
+- Stabilize the flaky `ChannelBaseTests` and make the Redis detection in `RedisFixture` reliable. (`ResendMessagesChannelModuleTests` was fixed in BUSC-145.)
 - Still out of scope: `appveyor.yml`, projects outside `src/Lime.sln`, `global.json` / `Directory.*.props`, and running tests in the Azure pipeline.
 - Decide whether to drop the out-of-support `net6.0` target of `Lime.Transport.AspNetCore`, which would also remove the `MSB3277` warnings.
 
