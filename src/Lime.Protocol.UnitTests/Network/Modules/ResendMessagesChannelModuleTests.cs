@@ -14,7 +14,6 @@ using Shouldly;
 namespace Lime.Protocol.UnitTests.Network.Modules
 {
     [TestFixture]
-    [Category("Flaky")]
     public class ResendMessagesChannelModuleTests
     {
         private Mock<ITransport> _transport;
