@@ -7,6 +7,7 @@ namespace Lime.Messaging.Resources.Checkout
     /// <summary>
     /// Represents a checkout document containing customer, product, and transaction details.
     /// </summary>
+    [System.Obsolete("Use PaymentCheckoutRequest.")]
     [DataContract]
     public class CheckoutDocument : Document
     {

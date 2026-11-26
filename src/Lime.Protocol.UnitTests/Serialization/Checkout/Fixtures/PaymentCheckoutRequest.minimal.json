@@ -1,0 +1,12 @@
+{
+  "contractVersion": 1,
+  "idempotencyKey": "6f0c2b1e9a514d8e8f0e3b7a2c9d1e44",
+  "contactIdentity": "5511999990000@wa.gw.msging.net",
+  "channel": "whatsapp",
+  "blockId": "payment-7d1f",
+  "merchantId": "d4a8f1e2-6b3c-4c9d-a7e5-1f2b3c4d5e6f",
+  "currency": "BRL",
+  "items": [{ "description": "T-shirt", "quantity": 1, "amount": 4990 }],
+  "paymentMethods": ["pix"],
+  "pixMessages": { "mode": "default" }
+}
